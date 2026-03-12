@@ -14,6 +14,9 @@ Root directory:
 Copy/paste template:
 - [frontend-next/vercel.env.example](C:/Dev/Flora_fauna/frontend-next/vercel.env.example)
 
+Runtime pin:
+- Node.js `24.x` via [frontend-next/package.json](C:/Dev/Flora_fauna/frontend-next/package.json)
+
 Required env:
 - `CORE_API_ORIGIN=https://<your-backend-project>.vercel.app`
 - `IMPACT_API_ORIGIN=https://<your-impact-project>.vercel.app`
@@ -35,6 +38,9 @@ Entrypoint:
 
 Copy/paste template:
 - [flora-fauna/backend/vercel.env.example](C:/Dev/Flora_fauna/flora-fauna/backend/vercel.env.example)
+
+Runtime pin:
+- Python `3.12` via [flora-fauna/backend/.python-version](C:/Dev/Flora_fauna/flora-fauna/backend/.python-version)
 
 Required env:
 - `VERCEL=1`
@@ -69,6 +75,9 @@ Entrypoint:
 
 Copy/paste template:
 - [services/impact-service/vercel.env.example](C:/Dev/Flora_fauna/services/impact-service/vercel.env.example)
+
+Runtime pin:
+- Node.js `24.x` via [services/impact-service/package.json](C:/Dev/Flora_fauna/services/impact-service/package.json)
 
 Required env:
 - `DATABASE_URL=postgresql://...`

@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Manara impact service - memberships, pools, credits, and memetic liquidity",
   "main": "src/server.ts",
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
