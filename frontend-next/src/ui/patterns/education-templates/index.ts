@@ -1,0 +1,11 @@
+export type { TemplateId, CourseSection, CourseData, TemplateInfo } from './types';
+export { TEMPLATE_REGISTRY } from './templates';
+export { TemplateSelector } from './TemplateSelector';
+export { TemplateRenderer } from './TemplateRenderer';
+export { ScrollSnapTemplate } from './ScrollSnapTemplate';
+export { TimeTravelTemplate } from './TimeTravelTemplate';
+export { ZoomFocusTemplate } from './ZoomFocusTemplate';
+export { CosmicClockTemplate } from './CosmicClockTemplate';
+export { RetroPixelTemplate } from './RetroPixelTemplate';
+export { PhysicsWireTemplate } from './PhysicsWireTemplate';
+export { MOCK_COURSES } from './mockCourses';

@@ -1,0 +1,11 @@
+venv/
+tests/
+logs/
+reports/
+mock_data/
+instance/
+pytest-cache-files-*/
+site.db
+site.db.bak
+mock_testing_base.db
+.coverage

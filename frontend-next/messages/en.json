@@ -1,0 +1,62 @@
+{
+  "home": {
+    "title": "Welcome to Flora & Fauna",
+    "subtitle": "Connect with environmental and community-focused actions, events, and content",
+    "featuredActions": "Featured Actions",
+    "featuredEvents": "Featured Events",
+    "viewAll": "View All",
+    "loading": "Loading...",
+    "noActions": "No actions available",
+    "noEvents": "No events available"
+  },
+  "actions": {
+    "title": "Community Actions",
+    "subtitle": "Join environmental and community initiatives",
+    "all": "All Actions",
+    "online": "Online Only",
+    "local": "Local Only",
+    "loading": "Loading actions...",
+    "noActions": "No actions found",
+    "points": "points",
+    "complete": "Complete Action"
+  },
+  "events": {
+    "title": "Community Events",
+    "subtitle": "Discover and attend local environmental events",
+    "all": "All Events",
+    "upcoming": "Upcoming",
+    "past": "Past Events",
+    "loading": "Loading events...",
+    "noEvents": "No events found",
+    "attend": "Attend Event"
+  },
+  "community": {
+    "title": "Community",
+    "subtitle": "Share ideas, discuss topics, and connect with fellow community members",
+    "news": "News",
+    "opinion": "Opinion",
+    "creative": "Creative",
+    "categories": {
+      "news": "News",
+      "opinion": "Opinion",
+      "creative": "Creative"
+    },
+    "noArticles": "No posts yet in this category",
+    "showComments": "Show Comments",
+    "addComment": "Add a comment...",
+    "comment": "Comment"
+  },
+  "marketplace": {
+    "title": "Marketplace",
+    "subtitle": "Discover sustainable products and support eco-friendly businesses",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "addToCart": "Add to Cart",
+    "unavailable": "Unavailable",
+    "cart": "Cart",
+    "emptyCart": "Your cart is empty",
+    "yourCart": "Your Cart",
+    "total": "Total",
+    "checkout": "Checkout"
+  }
+}

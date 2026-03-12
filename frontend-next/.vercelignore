@@ -1,0 +1,7 @@
+coverage/
+node_modules/
+tests/
+.next/
+*.log
+lint-report.json
+.eslint-warnings.json

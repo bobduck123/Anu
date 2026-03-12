@@ -1,0 +1,586 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// MEMBERSHIP & SUBSCRIPTIONS
+// ============================================================================
+
+model MembershipPlan {
+  id                 String         @id @default(cuid())
+  name               String         @unique        // "Seed" | "Sapling" | "Forest"
+  stripePriceId      String         @unique
+  stripeProductId    String
+  amountCents        Int            // Price in cents
+  intervalMonths     Int            @default(1)
+  creditGrantMonthly Int            // Monthly credit grant
+  poolAllocationPct  Decimal        @db.Decimal(5,4)   // e.g. 0.2000 = 20%
+  isActive           Boolean        @default(true)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  subscriptions      Subscription[]
+
+  @@map("MembershipPlans")
+}
+
+enum SubscriptionStatus {
+  active
+  past_due
+  canceled
+  trialing
+  incomplete
+  incomplete_expired
+  unpaid
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique // Flask User.id as string
+  username             String
+  planId               String
+  plan                 MembershipPlan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String             @unique
+  stripeSubscriptionId String             @unique
+  status               SubscriptionStatus
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  streakMonths         Int                @default(0)
+  lastPaymentAt        DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  creditTransactions   ImpactCreditTransaction[]
+  revenueEvents        RevenueEvent[]
+
+  @@index([stripeCustomerId])
+  @@map("Subscriptions")
+}
+
+// ============================================================================
+// IMPACT POOLS & LEDGER (APPEND-ONLY)
+// ============================================================================
+
+model ImpactPool {
+  id              String              @id @default(cuid())
+  name            String
+  description     String
+  category        String
+  targetAmountCents Int
+  isActive        Boolean             @default(true)
+  createdBy       String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  ledgerEntries   ImpactLedgerEntry[]
+
+  @@map("ImpactPools")
+}
+
+enum LedgerEntryType {
+  subscription_credit   // Monthly subscription allocation
+  manual_credit         // Organizer manual credit
+  allocation_debit      // Allocation to beneficiary (Phase 2)
+  reversal              // Reversal of previous entry
+}
+
+// APPEND-ONLY: enforced via PostgreSQL RULE + Prisma middleware
+model ImpactLedgerEntry {
+  id            String          @id @default(cuid())
+  poolId        String
+  pool          ImpactPool      @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  entryType     LedgerEntryType
+  amountCents   Int             // positive = credit, negative = debit
+  description   String
+  referenceId   String?         // e.g. subscription ID, invoice ID
+  referenceType String?         // e.g. "subscription", "invoice"
+  reversalOf    String?         // ID of original entry if this is a reversal
+  createdAt     DateTime        @default(now())
+  createdBy     String
+
+  @@index([poolId])
+  @@index([createdAt])
+  @@map("ImpactLedgerEntries")
+}
+
+// ============================================================================
+// IMPACT CREDITS (APPEND-ONLY)
+// ============================================================================
+
+enum CreditTxType {
+  monthly_grant    // Monthly subscription grant
+  streak_bonus     // Bonus for maintaining streak
+  spend            // Spent on something
+  adjustment       // Manual adjustment
+  reversal         // Reversal of previous transaction
+}
+
+// APPEND-ONLY: enforced via PostgreSQL RULE + Prisma middleware
+model ImpactCreditTransaction {
+  id              String        @id @default(cuid())
+  userId          String
+  subscriptionId  String?
+  subscription    Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  transactionType CreditTxType
+  amountCredits   Int           // positive = earned, negative = spent
+  description     String
+  referenceId     String?       // e.g. invoice ID, pool ID
+  createdAt       DateTime      @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("ImpactCreditTransactions")
+}
+
+// ============================================================================
+// AUDIT LOG (APPEND-ONLY)
+// ============================================================================
+
+// APPEND-ONLY: enforced via PostgreSQL RULE + Prisma middleware
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  actorRole  String   // "participant" | "organizer"
+  action     String   // e.g. "subscribe", "invoice_paid", "pool_credit"
+  targetType String   // e.g. "subscription", "pool", "ledger_entry"
+  targetId   String
+  before     Json?    // Previous state (if applicable)
+  after      Json?    // New state (if applicable)
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@map("AuditLogs")
+}
+
+// ============================================================================
+// STRIPE WEBHOOKS (IDEMPOTENCY)
+// ============================================================================
+
+model StripeEvent {
+  id           String   @id    // evt_xxx from Stripe
+  type         String         // e.g. "invoice.paid", "checkout.session.completed"
+  processedAt  DateTime @default(now())
+  status       String         // "processed" | "failed" | "skipped"
+  errorMessage String?
+  payload      Json?          // Store original event payload for debugging
+
+  @@index([processedAt])
+  @@map("StripeEvents")
+}
+
+// ============================================================================
+// FLORA FAUNA MEMETIC MUTUAL-AID SUBSYSTEM
+// ============================================================================
+
+enum MemeLineageRelationType {
+  remix
+  reference
+  response
+  seed
+}
+
+model CreatorChannel {
+  id                       String                    @id @default(cuid())
+  slug                     String                    @unique
+  creatorUserId            String
+  title                    String
+  description              String?
+  manifesto                String?
+  sharePolicy              String                    @default("free_shareable")
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  memes                    Meme[]
+  nutrientSnapshots        NutrientSnapshot[]
+  geologicalFormSnapshots  GeologicalFormSnapshot[]
+  revenueEvents            RevenueEvent[]
+  moderationCases          ModerationCase[]
+  riskFlags                RiskFlag[]
+
+  @@index([creatorUserId])
+  @@map("creator_channels")
+}
+
+model Meme {
+  id                String                 @id @default(cuid())
+  channelId         String
+  channel           CreatorChannel         @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  slug              String                 @unique
+  title             String
+  body              String?
+  summary           String?
+  mediaUrl          String?
+  attentionScore    Decimal                @default(0) @db.Decimal(10,4)
+  shareable         Boolean                @default(true)
+  createdBy         String
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  parentEdges       MemeLineageEdge[]      @relation("LineageChild")
+  childEdges        MemeLineageEdge[]      @relation("LineageParent")
+  nutrientSnapshots NutrientSnapshot[]
+  revenueEvents     RevenueEvent[]
+  moderationCases   ModerationCase[]
+  riskFlags         RiskFlag[]
+
+  @@index([channelId, createdAt])
+  @@index([createdBy, createdAt])
+  @@map("memes")
+}
+
+model MemeLineageEdge {
+  id             String                  @id @default(cuid())
+  parentMemeId   String
+  childMemeId    String
+  relationType   MemeLineageRelationType
+  createdBy      String
+  createdAt      DateTime                @default(now())
+  parentMeme     Meme                    @relation("LineageParent", fields: [parentMemeId], references: [id], onDelete: Cascade)
+  childMeme      Meme                    @relation("LineageChild", fields: [childMemeId], references: [id], onDelete: Cascade)
+
+  @@unique([parentMemeId, childMemeId, relationType])
+  @@index([childMemeId])
+  @@map("meme_lineage_edges")
+}
+
+model NutrientSnapshot {
+  id                   String                   @id @default(cuid())
+  channelId            String
+  memeId               String?
+  capturedAt           DateTime                 @default(now())
+  careIndex            Decimal                  @db.Decimal(5,4)
+  reciprocityIndex     Decimal                  @db.Decimal(5,4)
+  resonanceIndex       Decimal                  @db.Decimal(5,4)
+  originalityIndex     Decimal                  @db.Decimal(5,4)
+  stewardshipIndex     Decimal                  @db.Decimal(5,4)
+  mycelialDensityIndex Decimal                  @db.Decimal(5,4)
+  ecologyIdentity      String
+  identityConfidence   Decimal                  @db.Decimal(5,4)
+  nutrientVector       Json
+  capturedBy           String
+  createdAt            DateTime                 @default(now())
+  channel              CreatorChannel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  meme                 Meme?                    @relation(fields: [memeId], references: [id], onDelete: SetNull)
+  geologicalForm       GeologicalFormSnapshot?
+
+  @@index([channelId, capturedAt])
+  @@index([memeId])
+  @@map("nutrient_snapshots")
+}
+
+model GeologicalFormSnapshot {
+  id                    String           @id @default(cuid())
+  channelId             String
+  nutrientSnapshotId    String           @unique
+  formKey               String
+  strataSummary         String
+  permeabilityIndex     Decimal          @db.Decimal(5,4)
+  volatilityIndex       Decimal          @db.Decimal(5,4)
+  stabilityIndex        Decimal          @db.Decimal(5,4)
+  rationale             Json
+  createdAt             DateTime         @default(now())
+  channel               CreatorChannel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  nutrientSnapshot      NutrientSnapshot @relation(fields: [nutrientSnapshotId], references: [id], onDelete: Cascade)
+
+  @@index([channelId, createdAt])
+  @@map("geological_form_snapshots")
+}
+
+enum RevenueSourceType {
+  subscription
+  attention_sponsorship
+  partnership
+  grant
+  other_downstream
+}
+
+enum AttributionRecipientType {
+  creator
+  platform
+  pool
+}
+
+model RevenueEvent {
+  id               String                    @id @default(cuid())
+  subscriptionId   String?
+  channelId        String?
+  memeId           String?
+  sourceType       RevenueSourceType
+  grossAmountCents Int
+  netAmountCents   Int
+  currency         String                    @default("usd")
+  memo             String?
+  recognizedAt     DateTime                  @default(now())
+  createdBy        String
+  createdAt        DateTime                  @default(now())
+  subscription     Subscription?             @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  channel          CreatorChannel?           @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  meme             Meme?                     @relation(fields: [memeId], references: [id], onDelete: SetNull)
+  attributionSplits AttributionSplit[]
+
+  @@index([subscriptionId, recognizedAt])
+  @@index([channelId, recognizedAt])
+  @@map("revenue_events")
+}
+
+model AttributionSplit {
+  id               String                    @id @default(cuid())
+  revenueEventId   String
+  recipientType    AttributionRecipientType
+  recipientId      String
+  sharePct         Decimal                   @db.Decimal(5,4)
+  amountCents      Int
+  metadata         Json?
+  createdAt        DateTime                  @default(now())
+  revenueEvent     RevenueEvent              @relation(fields: [revenueEventId], references: [id], onDelete: Cascade)
+
+  @@index([revenueEventId])
+  @@index([recipientType, recipientId])
+  @@map("attribution_splits")
+}
+
+enum LedgerAccountType {
+  treasury
+  allocation_reserve
+  revenue_clearing
+  creator_reserve
+  mutual_aid_disbursed
+  platform_reserve
+}
+
+enum PoolLedgerEntryKind {
+  funding_inflow
+  allocation_reservation
+  allocation_release
+  creator_allocation
+  pool_allocation
+  disbursement
+  adjustment
+}
+
+model LiquidityPool {
+  id                  String               @id @default(cuid())
+  slug                String               @unique
+  name                String
+  description         String?
+  policyJson          Json?
+  isActive            Boolean              @default(true)
+  createdBy           String
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  ledgerAccounts      LedgerAccount[]
+  ledgerEntries       LedgerEntry[]
+  allocationRequests  AllocationRequest[]
+  disbursements       Disbursement[]
+
+  @@map("liquidity_pools")
+}
+
+model LedgerAccount {
+  id             String             @id @default(cuid())
+  poolId         String
+  code           String
+  name           String
+  accountType    LedgerAccountType
+  currency       String             @default("usd")
+  isSystem       Boolean            @default(true)
+  createdAt      DateTime           @default(now())
+  pool           LiquidityPool      @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  entries        LedgerEntry[]
+
+  @@unique([poolId, code])
+  @@index([poolId, accountType])
+  @@map("ledger_accounts")
+}
+
+model LedgerEntry {
+  id               String              @id @default(cuid())
+  journalId        String
+  poolId           String
+  accountId        String
+  entryKind        PoolLedgerEntryKind
+  amountCents      Int
+  referenceType    String?
+  referenceId      String?
+  memo             String
+  createdBy        String
+  createdAt        DateTime            @default(now())
+  pool             LiquidityPool       @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  account          LedgerAccount       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([poolId, createdAt])
+  @@index([journalId])
+  @@index([accountId, createdAt])
+  @@map("ledger_entries")
+}
+
+enum AllocationRequestStatus {
+  pending
+  approved
+  rejected
+  disbursed
+  canceled
+}
+
+model AllocationRequest {
+  id             String                  @id @default(cuid())
+  poolId         String
+  requestedBy    String
+  beneficiaryId  String
+  purpose        String
+  amountCents    Int
+  status         AllocationRequestStatus @default(pending)
+  rationale      String?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  pool           LiquidityPool           @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  disbursements  Disbursement[]
+
+  @@index([poolId, status, createdAt])
+  @@index([beneficiaryId, createdAt])
+  @@map("allocation_requests")
+}
+
+enum DisbursementStatus {
+  pending
+  sent
+  settled
+  failed
+  reversed
+}
+
+model Disbursement {
+  id                  String              @id @default(cuid())
+  allocationRequestId String
+  poolId              String
+  amountCents         Int
+  status              DisbursementStatus  @default(pending)
+  destinationRef      String?
+  executedBy          String?
+  executedAt          DateTime?
+  createdAt           DateTime            @default(now())
+  allocationRequest   AllocationRequest   @relation(fields: [allocationRequestId], references: [id], onDelete: Cascade)
+  pool                LiquidityPool       @relation(fields: [poolId], references: [id], onDelete: Cascade)
+
+  @@index([poolId, status, createdAt])
+  @@map("disbursements")
+}
+
+enum ModerationSeverity {
+  low
+  medium
+  high
+  critical
+}
+
+enum ModerationCaseStatus {
+  open
+  reviewed
+  actioned
+  closed
+}
+
+enum ModerationActionType {
+  note
+  warn
+  label
+  limit
+  remove
+  restore
+  close
+  escalate
+}
+
+model ModerationCase {
+  id           String                @id @default(cuid())
+  channelId    String?
+  memeId       String?
+  openedBy     String
+  status       ModerationCaseStatus  @default(open)
+  severity     ModerationSeverity
+  summary      String
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  channel      CreatorChannel?       @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  meme         Meme?                 @relation(fields: [memeId], references: [id], onDelete: SetNull)
+  actions      ModerationAction[]
+  riskFlags    RiskFlag[]
+
+  @@index([status, createdAt])
+  @@index([channelId])
+  @@index([memeId])
+  @@map("moderation_cases")
+}
+
+model ModerationAction {
+  id         String                @id @default(cuid())
+  caseId      String
+  actionType  ModerationActionType
+  actorId     String
+  notes       String?
+  createdAt   DateTime             @default(now())
+  moderationCase ModerationCase    @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId, createdAt])
+  @@map("moderation_actions")
+}
+
+model RiskFlag {
+  id          String              @id @default(cuid())
+  channelId   String?
+  memeId      String?
+  caseId      String?
+  flagType    String
+  severity    ModerationSeverity
+  reason      String
+  status      String              @default("open")
+  createdBy   String
+  createdAt   DateTime            @default(now())
+  channel     CreatorChannel?     @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  meme        Meme?               @relation(fields: [memeId], references: [id], onDelete: SetNull)
+  moderationCase ModerationCase?  @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  @@index([severity, createdAt])
+  @@index([channelId])
+  @@index([memeId])
+  @@map("risk_flags")
+}
+
+model DomainEvent {
+  id             String    @id @default(cuid())
+  aggregateType  String
+  aggregateId    String
+  eventType      String
+  payload        Json
+  actorId        String?
+  correlationId  String?
+  occurredAt     DateTime  @default(now())
+
+  @@index([aggregateType, aggregateId, occurredAt])
+  @@index([eventType, occurredAt])
+  @@map("domain_events")
+}
+
+model AuditEvent {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  action     String
+  actorId    String?
+  before     Json?
+  after      Json?
+  ip         String?
+  requestId  String?
+  occurredAt DateTime @default(now())
+
+  @@index([entityType, entityId, occurredAt])
+  @@index([actorId, occurredAt])
+  @@map("audit_events")
+}

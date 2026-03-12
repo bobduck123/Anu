@@ -1,0 +1,128 @@
+from __future__ import annotations
+
+from typing import Iterable
+
+
+NEED_STATES = [
+    "DRAFT",
+    "SUBMITTED",
+    "INTAKE_SCREEN",
+    "AWAITING_VERIFICATION",
+    "VERIFIED",
+    "ROUTING_ACTIVE",
+    "PARTIALLY_FULFILLED",
+    "FULFILLED_PENDING_PROOF",
+    "CLOSED_FULFILLED",
+    "REJECTED",
+    "NEED_MORE_INFO",
+    "EXPIRED",
+    "FROZEN",
+    "ESCALATED",
+]
+
+OFFER_STATES = [
+    "PROPOSED",
+    "MATCHED_TO_NEED",
+    "ACCEPTED",
+    "IN_PROGRESS",
+    "DELIVERED_PENDING_CONFIRMATION",
+    "CONFIRMED",
+    "DISPUTED",
+    "WITHDRAWN",
+    "FAILED",
+]
+
+MICROCOSM_STATES = ["PROPOSED", "ACTIVE", "DORMANT", "MERGED", "ARCHIVED"]
+TREASURY_STATES = [
+    "PLEDGE_INTENT",
+    "RECEIVED",
+    "SPLIT_ALLOCATED",
+    "ESCROWED",
+    "RELEASED",
+    "FROZEN",
+    "REVERSED",
+    "DISBURSED",
+]
+INCIDENT_STATES = ["FILED", "TRIAGED", "INVESTIGATING", "RESOLVED", "ESCALATED", "SANCTIONED", "DISMISSED"]
+
+
+NEED_TRANSITIONS = {
+    "DRAFT": {"SUBMITTED", "REJECTED", "EXPIRED"},
+    "SUBMITTED": {"INTAKE_SCREEN", "NEED_MORE_INFO", "REJECTED", "FROZEN"},
+    "INTAKE_SCREEN": {"AWAITING_VERIFICATION", "NEED_MORE_INFO", "REJECTED", "FROZEN"},
+    "AWAITING_VERIFICATION": {"VERIFIED", "NEED_MORE_INFO", "REJECTED", "FROZEN"},
+    "VERIFIED": {"ROUTING_ACTIVE", "ESCALATED", "FROZEN", "EXPIRED"},
+    "ROUTING_ACTIVE": {"PARTIALLY_FULFILLED", "FULFILLED_PENDING_PROOF", "ESCALATED", "FROZEN", "EXPIRED"},
+    "PARTIALLY_FULFILLED": {"FULFILLED_PENDING_PROOF", "ROUTING_ACTIVE", "ESCALATED", "FROZEN"},
+    "FULFILLED_PENDING_PROOF": {"CLOSED_FULFILLED", "PARTIALLY_FULFILLED", "ESCALATED", "FROZEN"},
+    "CLOSED_FULFILLED": set(),
+    "REJECTED": set(),
+    "NEED_MORE_INFO": {"SUBMITTED", "INTAKE_SCREEN", "REJECTED", "FROZEN"},
+    "EXPIRED": set(),
+    "FROZEN": {"SUBMITTED", "INTAKE_SCREEN", "AWAITING_VERIFICATION", "VERIFIED", "ROUTING_ACTIVE", "ESCALATED"},
+    "ESCALATED": {
+        "ROUTING_ACTIVE",
+        "PARTIALLY_FULFILLED",
+        "FULFILLED_PENDING_PROOF",
+        "REJECTED",
+        "FROZEN",
+        "CLOSED_FULFILLED",
+    },
+}
+
+OFFER_TRANSITIONS = {
+    "PROPOSED": {"MATCHED_TO_NEED", "WITHDRAWN", "FAILED"},
+    "MATCHED_TO_NEED": {"ACCEPTED", "DISPUTED", "WITHDRAWN", "FAILED"},
+    "ACCEPTED": {"IN_PROGRESS", "DISPUTED", "WITHDRAWN", "FAILED"},
+    "IN_PROGRESS": {"DELIVERED_PENDING_CONFIRMATION", "DISPUTED", "FAILED"},
+    "DELIVERED_PENDING_CONFIRMATION": {"CONFIRMED", "DISPUTED", "FAILED"},
+    "CONFIRMED": set(),
+    "DISPUTED": {"IN_PROGRESS", "FAILED", "CONFIRMED"},
+    "WITHDRAWN": set(),
+    "FAILED": set(),
+}
+
+MICROCOSM_TRANSITIONS = {
+    "PROPOSED": {"ACTIVE", "ARCHIVED"},
+    "ACTIVE": {"DORMANT", "MERGED", "ARCHIVED"},
+    "DORMANT": {"ACTIVE", "MERGED", "ARCHIVED"},
+    "MERGED": {"ARCHIVED"},
+    "ARCHIVED": set(),
+}
+
+TREASURY_TRANSITIONS = {
+    "PLEDGE_INTENT": {"RECEIVED", "REVERSED"},
+    "RECEIVED": {"SPLIT_ALLOCATED", "REVERSED"},
+    "SPLIT_ALLOCATED": {"ESCROWED", "FROZEN", "REVERSED"},
+    "ESCROWED": {"RELEASED", "FROZEN", "REVERSED"},
+    "RELEASED": {"DISBURSED", "FROZEN", "REVERSED"},
+    "FROZEN": {"RELEASED", "REVERSED"},
+    "REVERSED": set(),
+    "DISBURSED": set(),
+}
+
+INCIDENT_TRANSITIONS = {
+    "FILED": {"TRIAGED", "DISMISSED"},
+    "TRIAGED": {"INVESTIGATING", "DISMISSED", "ESCALATED"},
+    "INVESTIGATING": {"RESOLVED", "ESCALATED", "SANCTIONED", "DISMISSED"},
+    "RESOLVED": set(),
+    "ESCALATED": {"INVESTIGATING", "RESOLVED", "SANCTIONED", "DISMISSED"},
+    "SANCTIONED": set(),
+    "DISMISSED": set(),
+}
+
+
+def validate_transition(machine: dict[str, set[str]], from_state: str, to_state: str, label: str) -> None:
+    if from_state == to_state:
+        return
+    allowed = machine.get(from_state, set())
+    if to_state not in allowed:
+        raise ValueError(f"Invalid {label} transition: {from_state} -> {to_state}")
+
+
+def ensure_states_known(states: Iterable[str], allowed_states: list[str], label: str) -> None:
+    allowed = set(allowed_states)
+    for state in states:
+        if state not in allowed:
+            raise ValueError(f"Unknown {label} state: {state}")
+

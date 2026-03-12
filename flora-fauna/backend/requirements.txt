@@ -1,0 +1,55 @@
+# Flora Fauna Civic Commons - Hardened Dependencies
+# Generated: 2026-02-25
+# Security: All packages pinned to specific versions
+# Audit: Run 'pip-audit' to check for CVEs
+
+# Core Flask & Extensions
+Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
+Flask-CORS==4.0.1
+Werkzeug==3.0.3
+flask-login==0.6.3
+Flask-JWT-Extended==4.6.0
+Flask-Mail==0.10.0
+Flask-Migrate==4.0.7
+
+# Security Hardening (SEC-2026-001, SEC-2026-009, SEC-2026-010)
+Flask-Limiter==3.7.0
+Flask-Talisman==1.1.0
+marshmallow==3.21.3
+bleach==6.1.0
+
+# Authentication & Cryptography
+cryptography==42.0.8
+PyJWT==2.8.0
+
+# Database
+SQLAlchemy==2.0.31
+alembic==1.13.2
+psycopg2-binary==2.9.9
+
+# Payment Processing
+stripe==9.12.0
+
+# Monitoring & Observability (SEC-2026-012)
+sentry-sdk[flask]==2.5.1
+structlog==24.2.0
+prometheus-flask-exporter==0.23.1
+
+# Redis (for distributed rate limiting)
+redis==5.0.6
+
+# Utilities
+python-dotenv==1.0.1
+python-dateutil==2.9.0
+geopy==2.4.1
+requests==2.32.3
+
+# Testing
+pytest==8.2.2
+pytest-cov==5.0.0
+pytest-xdist==3.6.1
+factory-boy==3.3.0
+
+# Production Server
+gunicorn==22.0.0

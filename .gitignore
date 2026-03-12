@@ -1,0 +1,62 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Git / local tooling scratch
+.tmp/
+.tmp_test/
+.claude/
+.cursor/
+*.log
+*.pid
+
+# Node
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+dist/
+**/dist/
+build/
+**/build/
+coverage/
+**/coverage/
+npm-cache/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+**/.pytest_cache/
+.coverage
+htmlcov/
+flora-fauna/venv/
+flora-fauna/backend/instance/
+flora-fauna/backend/logs/
+flora-fauna/backend/pytest-cache-files-*/
+
+# Databases / local state
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Vercel / env
+.env
+.env.local
+.env.*.local
+.vercel/
+
+# Generated assets / caches
+lint-report.json
+directory_structure.txt
+_docx_extract/
+_docx_extract_docs/
+Common_math*.docx
+Common_math*.zip
+tmp_action.jpg

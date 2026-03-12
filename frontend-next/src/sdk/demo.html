@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manara SDK Demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 24px; background: #faf9f7; color: #2c241b; }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    .subtitle { color: #78736c; margin-bottom: 24px; }
+    .demo-section { margin-bottom: 32px; }
+    .demo-section h2 { font-size: 18px; border-bottom: 1px solid #e7e5e4; padding-bottom: 8px; margin-bottom: 16px; }
+    .config-form { background: #fff; border: 1px solid #e7e5e4; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+    .config-form label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+    .config-form input { width: 100%; padding: 8px; border: 1px solid #e7e5e4; border-radius: 6px; margin-bottom: 12px; font-size: 14px; }
+    .config-form button { padding: 8px 24px; background: #1e3a5f; color: #fff; border: none; border-radius: 999px; cursor: pointer; font-size: 14px; }
+    .config-form button:hover { background: #152a45; }
+    #events-container, #booking-container { min-height: 100px; }
+  </style>
+</head>
+<body>
+  <h1>Manara Embeddable SDK Demo</h1>
+  <p class="subtitle">This page demonstrates embedding Manara modules into any website while keeping a legacy FloraFauna alias available.</p>
+
+  <div class="config-form">
+    <label for="api-base">API Base URL</label>
+    <input type="text" id="api-base" value="/_core" />
+    <label for="api-token">API Token (JWT)</label>
+    <input type="text" id="api-token" placeholder="Paste a JWT token here..." />
+    <button onclick="initSDK()">Initialize &amp; Load</button>
+  </div>
+
+  <div class="demo-section">
+    <h2>Events Module</h2>
+    <div id="events-container">
+      <p style="color:#78736c">Click "Initialize &amp; Load" above to see events.</p>
+    </div>
+  </div>
+
+  <div class="demo-section">
+    <h2>Booking Module (Shifts)</h2>
+    <div id="booking-container">
+      <p style="color:#78736c">Click "Initialize &amp; Load" above to see available shifts.</p>
+    </div>
+  </div>
+
+  <script>
+    // Inline SDK (in production this would be a hosted script)
+    var Manara = {
+      _config: null,
+      init: function(config) { this._config = config; },
+      embed: function(module, container) {
+        if (!this._config) { alert('Call Manara.init() first'); return; }
+        var config = this._config;
+
+        if (module === 'events') {
+          container.innerHTML = '<p>Loading events...</p>';
+          fetch(config.apiBase + '/api/events', { headers: { Authorization: 'Bearer ' + config.token } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              var events = data.data || data || [];
+              if (!events.length) { container.innerHTML = '<p style="color:#78736c">No events found.</p>'; return; }
+              container.innerHTML = events.slice(0,10).map(function(e) {
+                return '<div style="border:1px solid #e7e5e4;border-radius:8px;padding:12px;margin-bottom:8px">' +
+                  '<div style="font-weight:600">' + e.title + '</div>' +
+                  '<div style="font-size:12px;color:#666;margin-top:4px">' + (e.date || '') + '</div>' +
+                  '<div style="font-size:13px;margin-top:8px">' + ((e.description || '').substring(0,100)) + '</div>' +
+                  '</div>';
+              }).join('');
+            })
+            .catch(function(err) { container.innerHTML = '<p style="color:red">Error: ' + err + '</p>'; });
+        }
+
+        if (module === 'booking') {
+          container.innerHTML = '<p>Loading shifts...</p>';
+          var now = new Date();
+          var start = now.toISOString().slice(0,10);
+          var end = new Date(now.getFullYear(), now.getMonth()+2, 0).toISOString().slice(0,10);
+          fetch(config.apiBase + '/api/calendar/shifts?start=' + start + '&end=' + end, { headers: { Authorization: 'Bearer ' + config.token } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              var shifts = data.data || data || [];
+              if (!shifts.length) { container.innerHTML = '<p style="color:#78736c">No shifts available.</p>'; return; }
+              container.innerHTML = shifts.slice(0,10).map(function(s) {
+                return '<div style="border:1px solid #e7e5e4;border-radius:8px;padding:12px;margin-bottom:8px">' +
+                  '<div style="font-weight:600">' + s.title + '</div>' +
+                  '<div style="font-size:12px;color:#666;margin-top:4px">' + (s.date||'') + ' ' + ((s.start_time||'').slice(0,5)) + ' - ' + ((s.end_time||'').slice(0,5)) + '</div>' +
+                  '<div style="font-size:12px;margin-top:4px">' + (s.assigned_count||0) + '/' + (s.max_volunteers||0) + ' volunteers</div>' +
+                  '<button onclick="Manara._signUp(' + s.id + ')" style="margin-top:8px;padding:6px 16px;background:#2d5a3d;color:#fff;border:none;border-radius:999px;cursor:pointer;font-size:13px">Sign Up</button>' +
+                  '</div>';
+              }).join('');
+            })
+            .catch(function(err) { container.innerHTML = '<p style="color:red">Error: ' + err + '</p>'; });
+        }
+      },
+      _signUp: function(shiftId) {
+        if (!this._config) return;
+        fetch(this._config.apiBase + '/api/calendar/shifts/' + shiftId + '/assign', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + this._config.token }
+        })
+        .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+        .then(function(result) { alert(result.ok ? 'Signed up!' : (result.data.error?.message || 'Failed')); })
+        .catch(function() { alert('Network error'); });
+      }
+    };
+
+    function initSDK() {
+      var apiBase = document.getElementById('api-base').value.trim();
+      var token = document.getElementById('api-token').value.trim();
+      if (!token) { alert('Please enter an API token (JWT)'); return; }
+      Manara.init({ apiBase: apiBase, token: token });
+      Manara.embed('events', document.getElementById('events-container'));
+      Manara.embed('booking', document.getElementById('booking-container'));
+    }
+
+    window.FloraFauna = Manara;
+
+    // Check URL params for auto-init
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('token')) {
+      document.getElementById('api-token').value = params.get('token');
+      if (params.get('apiBase')) document.getElementById('api-base').value = params.get('apiBase');
+      initSDK();
+    }
+  </script>
+</body>
+</html>
