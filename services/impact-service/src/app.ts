@@ -128,6 +128,16 @@ export const createApp = (prisma: PrismaClient): Express => {
   // ============================================================================
   // HEALTH CHECK
   // ============================================================================
+  app.get('/', (req, res) => {
+    res.json({
+      service: 'impact-service',
+      brand: 'Manara',
+      status: 'ok',
+      health: '/health',
+      apiRoots: ['/api', '/api/manara', '/api/flora-fauna'],
+    });
+  });
+
   app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'impact-service' });
   });

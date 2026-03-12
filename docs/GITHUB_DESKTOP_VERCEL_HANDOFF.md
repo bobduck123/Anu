@@ -36,6 +36,7 @@ Create three Vercel projects from the same GitHub repository.
 
 - Project root: `frontend-next`
 - Framework preset: `Next.js`
+- Copy vars from [frontend-next/vercel.env.example](C:/Dev/Flora_fauna/frontend-next/vercel.env.example)
 
 Required env:
 
@@ -48,6 +49,7 @@ Required env:
 
 - Project root: `flora-fauna/backend`
 - Uses [vercel.json](C:/Dev/Flora_fauna/flora-fauna/backend/vercel.json)
+- Copy vars from [flora-fauna/backend/vercel.env.example](C:/Dev/Flora_fauna/flora-fauna/backend/vercel.env.example)
 
 Required env:
 
@@ -68,6 +70,7 @@ Required env:
 
 - Project root: `services/impact-service`
 - Uses [vercel.json](C:/Dev/Flora_fauna/services/impact-service/vercel.json)
+- Copy vars from [services/impact-service/vercel.env.example](C:/Dev/Flora_fauna/services/impact-service/vercel.env.example)
 
 Required env:
 

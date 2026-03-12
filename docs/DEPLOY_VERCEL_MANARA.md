@@ -11,6 +11,9 @@ Deploy the app as three Vercel projects with separate root directories:
 Root directory:
 - `frontend-next`
 
+Copy/paste template:
+- [frontend-next/vercel.env.example](C:/Dev/Flora_fauna/frontend-next/vercel.env.example)
+
 Required env:
 - `CORE_API_ORIGIN=https://<your-backend-project>.vercel.app`
 - `IMPACT_API_ORIGIN=https://<your-impact-project>.vercel.app`
@@ -29,6 +32,9 @@ Root directory:
 Entrypoint:
 - `app.py`
 - `vercel.json` now routes all requests to that Flask entrypoint explicitly.
+
+Copy/paste template:
+- [flora-fauna/backend/vercel.env.example](C:/Dev/Flora_fauna/flora-fauna/backend/vercel.env.example)
 
 Required env:
 - `VERCEL=1`
@@ -61,6 +67,9 @@ Entrypoint:
 - `app.ts`
 - `vercel.json` now routes all requests through that Express entrypoint explicitly.
 
+Copy/paste template:
+- [services/impact-service/vercel.env.example](C:/Dev/Flora_fauna/services/impact-service/vercel.env.example)
+
 Required env:
 - `DATABASE_URL=postgresql://...`
 - `JWT_SECRET_KEY=...`
@@ -74,6 +83,7 @@ Required env:
 Routes:
 - Legacy API remains at `/api/flora-fauna/*`
 - New public alias is `/api/manara/*`
+- Project root `/` now returns a small JSON status payload for direct Vercel URL checks.
 
 ## Free tier notes
 
