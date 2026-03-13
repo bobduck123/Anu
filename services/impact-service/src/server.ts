@@ -4,11 +4,11 @@ import { buildServerApp } from './bootstrapApp';
 import { initializeJobs } from './jobs/scheduler';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+const prisma = config.hasDatabase ? new PrismaClient() : null;
 const app = buildServerApp(prisma);
 
 // Initialize scheduled jobs
-if (!process.env.VERCEL && process.env.DISABLE_SCHEDULED_JOBS !== 'true') {
+if (!process.env.VERCEL && process.env.DISABLE_SCHEDULED_JOBS !== 'true' && prisma) {
   initializeJobs();
 }
 
@@ -22,7 +22,9 @@ const server = app.listen(PORT, () => {
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');
   server.close(async () => {
-    await prisma.$disconnect();
+    if (prisma) {
+      await prisma.$disconnect();
+    }
     logger.info('Server closed');
     process.exit(0);
   });
@@ -31,7 +33,9 @@ process.on('SIGTERM', async () => {
 process.on('SIGINT', async () => {
   logger.info('SIGINT received, shutting down gracefully');
   server.close(async () => {
-    await prisma.$disconnect();
+    if (prisma) {
+      await prisma.$disconnect();
+    }
     logger.info('Server closed');
     process.exit(0);
   });

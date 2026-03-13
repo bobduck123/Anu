@@ -2,9 +2,15 @@ import Stripe from 'stripe';
 import config from '../config';
 import logger from '../utils/logger';
 
-const stripe = new Stripe(config.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16'
-});
+function getStripeClient(): Stripe {
+  if (!config.hasStripe) {
+    throw new Error('Stripe is not configured for this deployment');
+  }
+
+  return new Stripe(config.STRIPE_SECRET_KEY, {
+    apiVersion: '2023-10-16'
+  });
+}
 
 export class StripeService {
   /**
@@ -17,6 +23,7 @@ export class StripeService {
     cancelUrl: string
   ): Promise<string> {
     try {
+      const stripe = getStripeClient();
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         payment_method_types: ['card'],
@@ -44,6 +51,7 @@ export class StripeService {
    */
   static async createBillingPortalSession(customerId: string, returnUrl: string): Promise<string> {
     try {
+      const stripe = getStripeClient();
       const session = await stripe.billingPortal.sessions.create({
         customer: customerId,
         return_url: returnUrl
@@ -62,6 +70,7 @@ export class StripeService {
    */
   static async cancelSubscription(subscriptionId: string, immediate: boolean = false): Promise<void> {
     try {
+      const stripe = getStripeClient();
       await stripe.subscriptions.update(subscriptionId, {
         cancel_at_period_end: !immediate,
         ...(immediate && { cancel_at: Math.floor(Date.now() / 1000) })
@@ -79,6 +88,7 @@ export class StripeService {
    */
   static async getSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
     try {
+      const stripe = getStripeClient();
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
       return subscription;
     } catch (err) {
@@ -92,6 +102,7 @@ export class StripeService {
    */
   static async getInvoice(invoiceId: string): Promise<Stripe.Invoice> {
     try {
+      const stripe = getStripeClient();
       const invoice = await stripe.invoices.retrieve(invoiceId);
       return invoice;
     } catch (err) {
@@ -105,6 +116,7 @@ export class StripeService {
    */
   static constructWebhookEvent(body: Buffer, signature: string): Stripe.Event {
     try {
+      const stripe = getStripeClient();
       const event = stripe.webhooks.constructEvent(body, signature, config.STRIPE_WEBHOOK_SECRET);
       logger.debug({ eventId: event.id, type: event.type }, 'Webhook event verified');
       return event;

@@ -2,6 +2,21 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+function isPlaceholder(value: string | undefined): boolean {
+  const raw = (value || '').trim();
+  if (!raw) {
+    return true;
+  }
+
+  const normalized = raw.toLowerCase();
+  return (
+    normalized.startsWith('todo') ||
+    normalized.includes('replace_me') ||
+    normalized.includes('required_') ||
+    raw.includes('<')
+  );
+}
+
 function required(envVar: string): string {
   const value = process.env[envVar];
   if (!value) {
@@ -14,22 +29,34 @@ function optional(envVar: string, defaultValue: string): string {
   return process.env[envVar] || defaultValue;
 }
 
+const allowPlaceholderInfra = optional('BETA_ALLOW_PLACEHOLDER_INFRA', 'false') === 'true';
+const hasDatabase = !isPlaceholder(process.env.DATABASE_URL);
+const hasStripe =
+  !isPlaceholder(process.env.STRIPE_SECRET_KEY) &&
+  !isPlaceholder(process.env.STRIPE_WEBHOOK_SECRET) &&
+  !isPlaceholder(process.env.STRIPE_PUBLISHABLE_KEY);
+
 export const config = {
   // Server
   PORT: parseInt(optional('PORT', '5003'), 10),
   NODE_ENV: optional('NODE_ENV', 'development'),
+  allowPlaceholderInfra,
+  hasDatabase,
+  hasStripe,
+  betaPlaceholderDatabase: allowPlaceholderInfra && !hasDatabase,
+  betaPlaceholderStripe: allowPlaceholderInfra && !hasStripe,
 
   // Database
-  DATABASE_URL: required('DATABASE_URL'),
+  DATABASE_URL: process.env.DATABASE_URL || '',
   TEST_DATABASE_URL: optional('TEST_DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/impact_test'),
 
   // JWT
   JWT_SECRET_KEY: required('JWT_SECRET_KEY'),
 
   // Stripe
-  STRIPE_SECRET_KEY: required('STRIPE_SECRET_KEY'),
-  STRIPE_WEBHOOK_SECRET: required('STRIPE_WEBHOOK_SECRET'),
-  STRIPE_PUBLISHABLE_KEY: required('STRIPE_PUBLISHABLE_KEY'),
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || '',
+  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || '',
+  STRIPE_PUBLISHABLE_KEY: process.env.STRIPE_PUBLISHABLE_KEY || '',
 
   // Logging
   LOG_LEVEL: optional('LOG_LEVEL', 'info'),
@@ -41,12 +68,20 @@ export const config = {
 
 // Validate required vars on startup
 try {
-  required('DATABASE_URL');
   required('JWT_SECRET_KEY');
-  required('STRIPE_SECRET_KEY');
-  required('STRIPE_WEBHOOK_SECRET');
-  required('STRIPE_PUBLISHABLE_KEY');
-  console.log('[Config] All required environment variables loaded');
+  if (!hasDatabase && !allowPlaceholderInfra) {
+    required('DATABASE_URL');
+  }
+  if (!hasStripe && !allowPlaceholderInfra) {
+    required('STRIPE_SECRET_KEY');
+    required('STRIPE_WEBHOOK_SECRET');
+    required('STRIPE_PUBLISHABLE_KEY');
+  }
+  console.log('[Config] Startup configuration loaded', {
+    allowPlaceholderInfra,
+    hasDatabase,
+    hasStripe,
+  });
 } catch (err) {
   console.error('[Config] Startup validation failed:', err instanceof Error ? err.message : String(err));
   process.exit(1);

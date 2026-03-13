@@ -31,6 +31,23 @@ def _is_vercel_runtime() -> bool:
     return _is_truthy(os.environ.get("VERCEL"))
 
 
+def _is_placeholder_value(value: str | None) -> bool:
+    raw = str(value or "").strip()
+    if not raw:
+        return True
+    normalized = raw.lower()
+    return (
+        normalized.startswith("todo")
+        or "replace_me" in normalized
+        or "<" in raw
+        or "required_" in normalized
+    )
+
+
+def _allow_beta_placeholder_infra() -> bool:
+    return _is_truthy(os.environ.get("BETA_ALLOW_PLACEHOLDER_INFRA"))
+
+
 def _default_writable_runtime_root() -> str:
     if "WRITABLE_RUNTIME_ROOT" in os.environ:
         return os.environ.get("WRITABLE_RUNTIME_ROOT", "").strip()
@@ -268,6 +285,9 @@ class Config:
     # CORS - Strict defaults
     CORS_ORIGINS: List[str] = []
     CORS_SUPPORTS_CREDENTIALS = True
+    BETA_ALLOW_PLACEHOLDER_INFRA = False
+    BETA_PLACEHOLDER_DATABASE = False
+    BETA_PLACEHOLDER_STRIPE = False
     
     def __init__(self):
         """Initialize configuration from environment variables."""
@@ -277,13 +297,18 @@ class Config:
     def _load_from_environment(self):
         """Load configuration from environment variables."""
         self.FLASK_ENV = resolve_runtime_environment()
+        self.BETA_ALLOW_PLACEHOLDER_INFRA = _allow_beta_placeholder_infra()
 
         # Core secrets - NO FALLBACKS
         self.SECRET_KEY = os.environ.get('SECRET_KEY')
         self.JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
         
         # Database
-        self.SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+        raw_database_url = os.environ.get('DATABASE_URL')
+        self.BETA_PLACEHOLDER_DATABASE = self.BETA_ALLOW_PLACEHOLDER_INFRA and _is_placeholder_value(raw_database_url)
+        self.SQLALCHEMY_DATABASE_URI = (
+            'sqlite:///:memory:' if self.BETA_PLACEHOLDER_DATABASE else raw_database_url
+        )
         if _is_vercel_runtime() and self.SQLALCHEMY_DATABASE_URI and 'sqlite' not in self.SQLALCHEMY_DATABASE_URI.lower():
             self.SQLALCHEMY_ENGINE_OPTIONS.update({
                 'pool_size': 1,
@@ -304,6 +329,8 @@ class Config:
         self.SQLALCHEMY_ENGINE_OPTIONS['pool_recycle'] = int(
             os.environ.get('DB_POOL_RECYCLE', 1800)
         )
+        if self.SQLALCHEMY_DATABASE_URI and self.SQLALCHEMY_DATABASE_URI.startswith('sqlite'):
+            self.SQLALCHEMY_ENGINE_OPTIONS = {}
         
         # File upload limits (5MB max)
         max_content = os.environ.get('MAX_CONTENT_LENGTH')
@@ -314,9 +341,17 @@ class Config:
         )
         
         # Stripe
-        self.STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
-        self.STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
-        self.STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY')
+        raw_stripe_secret_key = os.environ.get('STRIPE_SECRET_KEY')
+        raw_stripe_webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
+        raw_stripe_publishable_key = os.environ.get('STRIPE_PUBLISHABLE_KEY')
+        self.BETA_PLACEHOLDER_STRIPE = self.BETA_ALLOW_PLACEHOLDER_INFRA and (
+            _is_placeholder_value(raw_stripe_secret_key)
+            or _is_placeholder_value(raw_stripe_webhook_secret)
+            or _is_placeholder_value(raw_stripe_publishable_key)
+        )
+        self.STRIPE_SECRET_KEY = None if self.BETA_PLACEHOLDER_STRIPE else raw_stripe_secret_key
+        self.STRIPE_WEBHOOK_SECRET = None if self.BETA_PLACEHOLDER_STRIPE else raw_stripe_webhook_secret
+        self.STRIPE_PUBLISHABLE_KEY = None if self.BETA_PLACEHOLDER_STRIPE else raw_stripe_publishable_key
         
         # Encryption
         self.ENCRYPTION_MASTER_KEY = os.environ.get('ENCRYPTION_MASTER_KEY')
@@ -591,11 +626,11 @@ class ProductionConfig(Config):
         
         # Critical: PostgreSQL required in production
         db_url = os.environ.get('DATABASE_URL', '')
-        if not db_url:
+        if not db_url and not self.BETA_PLACEHOLDER_DATABASE:
             security_errors.append(
                 "DATABASE_URL must be set in production (SQLite not allowed)"
             )
-        elif 'sqlite' in db_url.lower():
+        elif db_url and 'sqlite' in db_url.lower() and not self.BETA_PLACEHOLDER_DATABASE:
             security_errors.append(
                 "SQLite is not allowed in production. Use PostgreSQL."
             )
@@ -626,7 +661,7 @@ class ProductionConfig(Config):
             )
         
         # Critical: Stripe keys required
-        if not os.environ.get('STRIPE_SECRET_KEY'):
+        if not os.environ.get('STRIPE_SECRET_KEY') and not self.BETA_PLACEHOLDER_STRIPE:
             security_errors.append(
                 "STRIPE_SECRET_KEY must be set in production"
             )
@@ -656,6 +691,12 @@ class ProductionConfig(Config):
         
         if errors:
             print("\n".join(errors))
+
+        if self.BETA_PLACEHOLDER_DATABASE or self.BETA_PLACEHOLDER_STRIPE:
+            print(
+                "BETA PLACEHOLDER INFRA MODE ENABLED: startup is allowed with TODO database/Stripe values. "
+                "DB-backed and Stripe-backed features remain unavailable until real credentials are configured."
+            )
         
         # Call parent validation
         super().validate()

@@ -3,6 +3,7 @@ import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import logger from './utils/logger';
 import { rawBodyMiddleware } from './middleware/rawBody';
+import config from './config';
 
 function parseCorsOrigins(rawValue?: string): string[] {
   if (!rawValue?.trim()) {
@@ -26,7 +27,7 @@ function parseCorsAllowedSuffixes(rawValue?: string): string[] {
     .filter(Boolean);
 }
 
-export const createApp = (prisma: PrismaClient): Express => {
+export const createApp = (prisma: PrismaClient | null): Express => {
   const app = express();
 
   // ============================================================================
@@ -80,30 +81,32 @@ export const createApp = (prisma: PrismaClient): Express => {
   // ============================================================================
   // PRISMA MIDDLEWARE: Append-only enforcement
   // ============================================================================
-  prisma.$use(async (params, next) => {
-    const appendOnlyModels = [
-      'ImpactLedgerEntry',
-      'AuditLog',
-      'ImpactCreditTransaction',
-      'LedgerEntry',
-      'DomainEvent',
-      'AuditEvent',
-      'NutrientSnapshot',
-      'GeologicalFormSnapshot',
-      'ModerationAction',
-      'RevenueEvent',
-      'AttributionSplit'
-    ];
+  if (prisma) {
+    prisma.$use(async (params, next) => {
+      const appendOnlyModels = [
+        'ImpactLedgerEntry',
+        'AuditLog',
+        'ImpactCreditTransaction',
+        'LedgerEntry',
+        'DomainEvent',
+        'AuditEvent',
+        'NutrientSnapshot',
+        'GeologicalFormSnapshot',
+        'ModerationAction',
+        'RevenueEvent',
+        'AttributionSplit'
+      ];
 
-    if (appendOnlyModels.includes(params.model ?? '')) {
-      const forbiddenActions = ['update', 'updateMany', 'delete', 'deleteMany'];
-      if (forbiddenActions.includes(params.action)) {
-        throw new Error(`${params.action} is forbidden on ${params.model} (append-only table)`);
+      if (appendOnlyModels.includes(params.model ?? '')) {
+        const forbiddenActions = ['update', 'updateMany', 'delete', 'deleteMany'];
+        if (forbiddenActions.includes(params.action)) {
+          throw new Error(`${params.action} is forbidden on ${params.model} (append-only table)`);
+        }
       }
-    }
 
-    return next(params);
-  });
+      return next(params);
+    });
+  }
 
   // ============================================================================
   // REQUEST LOGGING
@@ -129,17 +132,32 @@ export const createApp = (prisma: PrismaClient): Express => {
   // HEALTH CHECK
   // ============================================================================
   app.get('/', (req, res) => {
+    const fullyConfigured = config.hasDatabase && config.hasStripe;
     res.json({
       service: 'impact-service',
       brand: 'Manara',
-      status: 'ok',
+      status: fullyConfigured ? 'ok' : 'degraded',
       health: '/health',
       apiRoots: ['/api', '/api/manara', '/api/flora-fauna'],
+      betaPlaceholderInfra: config.allowPlaceholderInfra,
+      dependencies: {
+        database: config.hasDatabase ? 'configured' : 'todo',
+        stripe: config.hasStripe ? 'configured' : 'todo',
+      },
     });
   });
 
   app.get('/health', (req, res) => {
-    res.json({ status: 'ok', service: 'impact-service' });
+    const fullyConfigured = config.hasDatabase && config.hasStripe;
+    res.json({
+      status: fullyConfigured ? 'ok' : 'degraded',
+      service: 'impact-service',
+      betaPlaceholderInfra: config.allowPlaceholderInfra,
+      dependencies: {
+        database: config.hasDatabase ? 'configured' : 'todo',
+        stripe: config.hasStripe ? 'configured' : 'todo',
+      },
+    });
   });
 
   // ============================================================================

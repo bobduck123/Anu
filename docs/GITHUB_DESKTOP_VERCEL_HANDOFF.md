@@ -43,7 +43,8 @@ Required env:
 - `CORE_API_ORIGIN=https://<core-api-project>.vercel.app`
 - `IMPACT_API_ORIGIN=https://<impact-api-project>.vercel.app`
 - `NEXT_PUBLIC_SITE_URL=https://<frontend-project>.vercel.app`
-- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=...`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=TODO_SET_WHEN_STRIPE_EXISTS`
+- `NEXT_PUBLIC_ENABLE_MOCK_FALLBACK=true`
 
 ### Core API
 
@@ -55,16 +56,17 @@ Required env:
 
 - `VERCEL=1`
 - `FLASK_ENV=production`
+- `BETA_ALLOW_PLACEHOLDER_INFRA=true` while DB/Stripe are still TODOs
 - `SECRET_KEY=...`
 - `JWT_SECRET_KEY=...`
 - `PUBLIC_JWT_SECRET_KEY=...`
 - `CONTROL_JWT_SECRET_KEY=...`
-- `DATABASE_URL=postgresql://...`
+- `DATABASE_URL=TODO_REQUIRED_POSTGRES_DATABASE_URL`
 - `CORS_ORIGINS=https://<frontend-project>.vercel.app`
 - `CONTROL_PLANE_HOSTS=<core-api-project>.vercel.app`
 - `CONTROL_PLANE_SHARED_SECRET=...`
 - `FRONTEND_BASE_URL=https://<frontend-project>.vercel.app`
-- Stripe keys
+- Stripe TODO placeholders
 
 ### Impact API
 
@@ -74,9 +76,10 @@ Required env:
 
 Required env:
 
-- `DATABASE_URL=postgresql://...`
+- `BETA_ALLOW_PLACEHOLDER_INFRA=true` while DB/Stripe are still TODOs
+- `DATABASE_URL=TODO_REQUIRED_POSTGRES_DATABASE_URL`
 - `JWT_SECRET_KEY=...`
-- Stripe keys
+- Stripe TODO placeholders
 - `CORS_ORIGINS=https://<frontend-project>.vercel.app`
 - `CORS_ALLOWED_ORIGIN_SUFFIXES=.vercel.app`
 - `DISABLE_SCHEDULED_JOBS=true`

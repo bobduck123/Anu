@@ -45,17 +45,18 @@ Runtime pin:
 Required env:
 - `VERCEL=1`
 - `FLASK_ENV=production`
+- `BETA_ALLOW_PLACEHOLDER_INFRA=true` for beta boot without real DB/Stripe
 - `SECRET_KEY=...`
 - `JWT_SECRET_KEY=...`
 - `PUBLIC_JWT_SECRET_KEY=...`
 - `CONTROL_JWT_SECRET_KEY=...`
-- `DATABASE_URL=postgresql://...`
+- `DATABASE_URL=TODO_REQUIRED_POSTGRES_DATABASE_URL` in beta, then replace with Postgres before launch
 - `CORS_ORIGINS=https://<your-frontend-project>.vercel.app`
 - `CONTROL_PLANE_HOSTS=<your-backend-project>.vercel.app`
 - `CONTROL_PLANE_SHARED_SECRET=...`
-- `STRIPE_SECRET_KEY=...`
-- `STRIPE_WEBHOOK_SECRET=...`
-- `STRIPE_PUBLISHABLE_KEY=...`
+- `STRIPE_SECRET_KEY=TODO_REQUIRED_STRIPE_SECRET_KEY` in beta
+- `STRIPE_WEBHOOK_SECRET=TODO_REQUIRED_STRIPE_WEBHOOK_SECRET` in beta
+- `STRIPE_PUBLISHABLE_KEY=TODO_REQUIRED_STRIPE_PUBLISHABLE_KEY` in beta
 - `FRONTEND_BASE_URL=https://<your-frontend-project>.vercel.app`
 
 Runtime notes:
@@ -63,6 +64,7 @@ Runtime notes:
 - Uploads are served from `/media/uploads/*` and are suitable for ephemeral/serverless use.
 - If you need durable media, point uploads at external object storage before launch.
 - The included `vercel.json` keeps the project on a single Python serverless entrypoint, which is the least-friction path on the free tier.
+- With `BETA_ALLOW_PLACEHOLDER_INFRA=true`, the service boots with placeholder DB/Stripe values and reports `degraded` health until those integrations are configured.
 
 ## Impact service project
 
@@ -80,11 +82,12 @@ Runtime pin:
 - Node.js `24.x` via [services/impact-service/package.json](C:/Dev/Flora_fauna/services/impact-service/package.json)
 
 Required env:
-- `DATABASE_URL=postgresql://...`
+- `BETA_ALLOW_PLACEHOLDER_INFRA=true` for beta boot without real DB/Stripe
+- `DATABASE_URL=TODO_REQUIRED_POSTGRES_DATABASE_URL` in beta, then replace with Postgres before launch
 - `JWT_SECRET_KEY=...`
-- `STRIPE_SECRET_KEY=...`
-- `STRIPE_WEBHOOK_SECRET=...`
-- `STRIPE_PUBLISHABLE_KEY=...`
+- `STRIPE_SECRET_KEY=TODO_REQUIRED_STRIPE_SECRET_KEY` in beta
+- `STRIPE_WEBHOOK_SECRET=TODO_REQUIRED_STRIPE_WEBHOOK_SECRET` in beta
+- `STRIPE_PUBLISHABLE_KEY=TODO_REQUIRED_STRIPE_PUBLISHABLE_KEY` in beta
 - `CORS_ORIGINS=https://<your-frontend-project>.vercel.app`
 - `CORS_ALLOWED_ORIGIN_SUFFIXES=.vercel.app`
 - `DISABLE_SCHEDULED_JOBS=true`
@@ -93,6 +96,7 @@ Routes:
 - Legacy API remains at `/api/flora-fauna/*`
 - New public alias is `/api/manara/*`
 - Project root `/` now returns a small JSON status payload for direct Vercel URL checks.
+- With `BETA_ALLOW_PLACEHOLDER_INFRA=true`, DB-backed and billing-backed routes return `503 BetaDependencyMissing` until real infrastructure is configured.
 
 ## Free tier notes
 
