@@ -452,20 +452,32 @@ def _register_cli_commands(app):
 
 def _init_database(app):
     """Initialize database schema and seed data."""
-    from sqlalchemy import text
-    
     # Register Hell/Earth/Heaven models
     from . import hell_models  # noqa: F401
     
     env = os.environ.get("FLASK_ENV", "development")
+    database_uri = str(app.config.get("SQLALCHEMY_DATABASE_URI", ""))
+    is_sqlite = database_uri.startswith("sqlite")
+    auto_create_all = bool(app.config.get("AUTO_CREATE_ALL", False))
     
-    # Only auto-create in development/testing with SQLite
-    if app.config.get("AUTO_CREATE_ALL", False):
+    if auto_create_all and app.config.get("BETA_PLACEHOLDER_DATABASE"):
+        app.logger.warning(
+            "AUTO_CREATE_ALL was requested but ignored because DATABASE_URL is still a placeholder."
+        )
+        return
+
+    # Provision schema when explicitly requested, otherwise keep auto-create scoped to local SQLite.
+    if auto_create_all:
+        app.logger.warning(
+            "AUTO_CREATE_ALL is enabled; ensuring database schema, default node, and optional alpha data exist."
+        )
         db.create_all()
-    elif (
-        str(app.config.get("SQLALCHEMY_DATABASE_URI", "")).startswith("sqlite")
-        and env != "production"
-    ):
+        _ensure_default_node()
+        _ensure_alpha_user(app)
+        _seed_alpha_data(app)
+        if is_sqlite:
+            _ensure_sqlite_schema(app)
+    elif is_sqlite and env != "production":
         db.create_all()
         _ensure_sqlite_schema(app)
         _ensure_default_node()

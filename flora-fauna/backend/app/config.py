@@ -243,6 +243,7 @@ class Config:
     ALPHA_SEED = False
     ALPHA_AUTH_OPTIONAL = False
     ALPHA_DEFAULT_USERNAME = 'alpha_public'
+    AUTO_CREATE_ALL = False
 
     # Public vs Control plane JWT audiences
     PUBLIC_JWT_AUDIENCE = "public"
@@ -374,6 +375,7 @@ class Config:
         # Alpha flags
         self.ALPHA_PUBLIC = os.environ.get('ALPHA_PUBLIC', '').lower() == 'true'
         self.ALPHA_SEED = os.environ.get('ALPHA_SEED', '').lower() == 'true'
+        self.AUTO_CREATE_ALL = os.environ.get('AUTO_CREATE_ALL', '').lower() == 'true'
         self.ALPHA_AUTH_OPTIONAL = os.environ.get(
             'ALPHA_AUTH_OPTIONAL', ''
         ).lower() == 'true'

@@ -57,6 +57,7 @@ Required env:
 - `VERCEL=1`
 - `FLASK_ENV=production`
 - `BETA_ALLOW_PLACEHOLDER_INFRA=true` while DB/Stripe are still TODOs
+- `AUTO_CREATE_ALL=true` for the first deploy against a fresh Postgres database
 - `SECRET_KEY=...`
 - `JWT_SECRET_KEY=...`
 - `PUBLIC_JWT_SECRET_KEY=...`
@@ -67,6 +68,8 @@ Required env:
 - `CONTROL_PLANE_SHARED_SECRET=...`
 - `FRONTEND_BASE_URL=https://maanara.vercel.app`
 - Stripe TODO placeholders
+
+After the first successful schema bootstrap, you can set `AUTO_CREATE_ALL=false` again if you want to avoid running `db.create_all()` on future cold starts.
 
 ### Impact API
 

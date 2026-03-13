@@ -46,6 +46,7 @@ Required env:
 - `VERCEL=1`
 - `FLASK_ENV=production`
 - `BETA_ALLOW_PLACEHOLDER_INFRA=true` for beta boot without real DB/Stripe
+- `AUTO_CREATE_ALL=true` once when attaching a fresh Postgres database, then optional `false` after schema bootstrap
 - `SECRET_KEY=...`
 - `JWT_SECRET_KEY=...`
 - `PUBLIC_JWT_SECRET_KEY=...`
@@ -65,6 +66,7 @@ Runtime notes:
 - If you need durable media, point uploads at external object storage before launch.
 - The included `vercel.json` keeps the project on a single Python serverless entrypoint, which is the least-friction path on the free tier.
 - With `BETA_ALLOW_PLACEHOLDER_INFRA=true`, the service boots with placeholder DB/Stripe values and reports `degraded` health until those integrations are configured.
+- `AUTO_CREATE_ALL=true` is ignored while `DATABASE_URL` is still a placeholder, so it is safe to leave in beta env blocks until the real Postgres URL is pasted.
 
 ## Impact service project
 
