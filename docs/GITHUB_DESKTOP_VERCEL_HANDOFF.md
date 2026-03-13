@@ -40,9 +40,9 @@ Create three Vercel projects from the same GitHub repository.
 
 Required env:
 
-- `CORE_API_ORIGIN=https://<core-api-project>.vercel.app`
-- `IMPACT_API_ORIGIN=https://<impact-api-project>.vercel.app`
-- `NEXT_PUBLIC_SITE_URL=https://<frontend-project>.vercel.app`
+- `CORE_API_ORIGIN=https://anu-back-end.vercel.app`
+- `IMPACT_API_ORIGIN=https://anu-impact-service.vercel.app`
+- `NEXT_PUBLIC_SITE_URL=https://maanara.vercel.app`
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=TODO_SET_WHEN_STRIPE_EXISTS`
 - `NEXT_PUBLIC_ENABLE_MOCK_FALLBACK=true`
 
@@ -62,10 +62,10 @@ Required env:
 - `PUBLIC_JWT_SECRET_KEY=...`
 - `CONTROL_JWT_SECRET_KEY=...`
 - `DATABASE_URL=TODO_REQUIRED_POSTGRES_DATABASE_URL`
-- `CORS_ORIGINS=https://<frontend-project>.vercel.app`
+- `CORS_ORIGINS=https://maanara.vercel.app,https://anu-front-end.vercel.app`
 - `CONTROL_PLANE_HOSTS=<core-api-project>.vercel.app`
 - `CONTROL_PLANE_SHARED_SECRET=...`
-- `FRONTEND_BASE_URL=https://<frontend-project>.vercel.app`
+- `FRONTEND_BASE_URL=https://maanara.vercel.app`
 - Stripe TODO placeholders
 
 ### Impact API
@@ -80,7 +80,7 @@ Required env:
 - `DATABASE_URL=TODO_REQUIRED_POSTGRES_DATABASE_URL`
 - `JWT_SECRET_KEY=...`
 - Stripe TODO placeholders
-- `CORS_ORIGINS=https://<frontend-project>.vercel.app`
+- `CORS_ORIGINS=https://maanara.vercel.app,https://anu-front-end.vercel.app`
 - `CORS_ALLOWED_ORIGIN_SUFFIXES=.vercel.app`
 - `DISABLE_SCHEDULED_JOBS=true`
 

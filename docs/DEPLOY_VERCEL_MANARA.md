@@ -18,9 +18,9 @@ Runtime pin:
 - Node.js `24.x` via [frontend-next/package.json](C:/Dev/Flora_fauna/frontend-next/package.json)
 
 Required env:
-- `CORE_API_ORIGIN=https://<your-backend-project>.vercel.app`
-- `IMPACT_API_ORIGIN=https://<your-impact-project>.vercel.app`
-- `NEXT_PUBLIC_SITE_URL=https://<your-frontend-project>.vercel.app`
+- `CORE_API_ORIGIN=https://anu-back-end.vercel.app`
+- `IMPACT_API_ORIGIN=https://anu-impact-service.vercel.app`
+- `NEXT_PUBLIC_SITE_URL=https://maanara.vercel.app`
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=...`
 
 Notes:
@@ -51,13 +51,13 @@ Required env:
 - `PUBLIC_JWT_SECRET_KEY=...`
 - `CONTROL_JWT_SECRET_KEY=...`
 - `DATABASE_URL=TODO_REQUIRED_POSTGRES_DATABASE_URL` in beta, then replace with Postgres before launch
-- `CORS_ORIGINS=https://<your-frontend-project>.vercel.app`
+- `CORS_ORIGINS=https://maanara.vercel.app,https://anu-front-end.vercel.app`
 - `CONTROL_PLANE_HOSTS=<your-backend-project>.vercel.app`
 - `CONTROL_PLANE_SHARED_SECRET=...`
 - `STRIPE_SECRET_KEY=TODO_REQUIRED_STRIPE_SECRET_KEY` in beta
 - `STRIPE_WEBHOOK_SECRET=TODO_REQUIRED_STRIPE_WEBHOOK_SECRET` in beta
 - `STRIPE_PUBLISHABLE_KEY=TODO_REQUIRED_STRIPE_PUBLISHABLE_KEY` in beta
-- `FRONTEND_BASE_URL=https://<your-frontend-project>.vercel.app`
+- `FRONTEND_BASE_URL=https://maanara.vercel.app`
 
 Runtime notes:
 - Relative writable paths are automatically remapped into `/tmp/manara`.
@@ -88,7 +88,7 @@ Required env:
 - `STRIPE_SECRET_KEY=TODO_REQUIRED_STRIPE_SECRET_KEY` in beta
 - `STRIPE_WEBHOOK_SECRET=TODO_REQUIRED_STRIPE_WEBHOOK_SECRET` in beta
 - `STRIPE_PUBLISHABLE_KEY=TODO_REQUIRED_STRIPE_PUBLISHABLE_KEY` in beta
-- `CORS_ORIGINS=https://<your-frontend-project>.vercel.app`
+- `CORS_ORIGINS=https://maanara.vercel.app,https://anu-front-end.vercel.app`
 - `CORS_ALLOWED_ORIGIN_SUFFIXES=.vercel.app`
 - `DISABLE_SCHEDULED_JOBS=true`
 
