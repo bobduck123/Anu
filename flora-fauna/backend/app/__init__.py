@@ -28,7 +28,7 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from prometheus_flask_exporter import PrometheusMetrics
 from werkzeug.security import generate_password_hash
 from datetime import date, datetime, timedelta, time as time_obj
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 import re
 
 mail = Mail()
@@ -344,6 +344,9 @@ def _register_error_handlers(app):
         if app.config.get('TESTING'):
             raise exc
 
+        if isinstance(exc, SQLAlchemyError):
+            db.session.rollback()
+
         if (
             app.config.get("BETA_PLACEHOLDER_DATABASE")
             and isinstance(exc, OperationalError)
@@ -388,6 +391,7 @@ def _register_request_handlers(app):
             g.node = node
             g.node_id = node.id if node else None
         except Exception:
+            db.session.rollback()
             g.node = None
             g.node_id = None
     

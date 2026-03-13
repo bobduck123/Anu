@@ -39,5 +39,6 @@ def resolve_node_from_request(req=None):
             if domain:
                 return Node.query.get(domain.node_id)
         except Exception:
+            db.session.rollback()
             return get_default_node()
     return get_default_node()

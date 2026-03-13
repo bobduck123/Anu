@@ -310,7 +310,12 @@ class Config:
         self.SQLALCHEMY_DATABASE_URI = (
             'sqlite:///:memory:' if self.BETA_PLACEHOLDER_DATABASE else raw_database_url
         )
-        if _is_vercel_runtime() and self.SQLALCHEMY_DATABASE_URI and 'sqlite' not in self.SQLALCHEMY_DATABASE_URI.lower():
+        is_vercel_database = (
+            _is_vercel_runtime()
+            and self.SQLALCHEMY_DATABASE_URI
+            and 'sqlite' not in self.SQLALCHEMY_DATABASE_URI.lower()
+        )
+        if is_vercel_database:
             self.SQLALCHEMY_ENGINE_OPTIONS.update({
                 'pool_size': 1,
                 'max_overflow': 0,
@@ -319,10 +324,10 @@ class Config:
 
         # Connection pooling overrides
         self.SQLALCHEMY_ENGINE_OPTIONS['pool_size'] = int(
-            os.environ.get('DB_POOL_SIZE', 10)
+            os.environ.get('DB_POOL_SIZE', 1 if is_vercel_database else 10)
         )
         self.SQLALCHEMY_ENGINE_OPTIONS['max_overflow'] = int(
-            os.environ.get('DB_MAX_OVERFLOW', 20)
+            os.environ.get('DB_MAX_OVERFLOW', 0 if is_vercel_database else 20)
         )
         self.SQLALCHEMY_ENGINE_OPTIONS['pool_timeout'] = int(
             os.environ.get('DB_POOL_TIMEOUT', 30)
