@@ -28,6 +28,7 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from prometheus_flask_exporter import PrometheusMetrics
 from werkzeug.security import generate_password_hash
 from datetime import date, datetime, timedelta, time as time_obj
+from sqlalchemy.exc import OperationalError
 import re
 
 mail = Mail()
@@ -259,6 +260,28 @@ def _register_blueprints(app):
 
 def _register_error_handlers(app):
     """Register global error handlers."""
+
+    def _beta_dependency_response(message: str, *, status_code: int = 503):
+        return jsonify({
+            "ok": False,
+            "error": {
+                "code": "BetaDependencyMissing",
+                "message": message,
+            },
+            "dependencies": {
+                "database": (
+                    "todo"
+                    if app.config.get("BETA_PLACEHOLDER_DATABASE")
+                    else "configured"
+                ),
+                "stripe": (
+                    "todo"
+                    if app.config.get("BETA_PLACEHOLDER_STRIPE")
+                    else "configured"
+                ),
+            },
+            "request_id": getattr(g, 'request_id', None),
+        }), status_code
     
     @app.errorhandler(ConfigError)
     def handle_config_error(error):
@@ -320,6 +343,15 @@ def _register_error_handlers(app):
         """Handle unhandled exceptions."""
         if app.config.get('TESTING'):
             raise exc
+
+        if (
+            app.config.get("BETA_PLACEHOLDER_DATABASE")
+            and isinstance(exc, OperationalError)
+            and "no such table" in str(exc).lower()
+        ):
+            return _beta_dependency_response(
+                "This endpoint requires the production database. The backend is running in beta-limited mode until DATABASE_URL is configured."
+            )
         
         # Log the error with traceback
         import traceback
