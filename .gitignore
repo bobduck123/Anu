@@ -50,6 +50,8 @@ flora-fauna/backend/pytest-cache-files-*/
 .env
 .env.local
 .env.*.local
+vercel.env*.local
+**/vercel.env*.local
 .vercel/
 
 # Generated assets / caches
