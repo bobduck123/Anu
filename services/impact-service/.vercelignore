@@ -1,7 +1,6 @@
 coverage/
 dist/
 tests/
-impact-service/
 *.log
 *.out
 *.err
