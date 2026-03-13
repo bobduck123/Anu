@@ -33,7 +33,7 @@ Root directory:
 - `flora-fauna/backend`
 
 Entrypoint:
-- `app.py`
+- `vercel_app.py`
 - `vercel.json` now routes all requests to that Flask entrypoint explicitly.
 
 Copy/paste template:
