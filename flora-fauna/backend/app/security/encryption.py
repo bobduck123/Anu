@@ -1,5 +1,28 @@
 import base64
+import hashlib
 from cryptography.fernet import Fernet, InvalidToken
+
+
+def _normalize_fernet_key(key: bytes | str) -> tuple[bytes, bool]:
+    if isinstance(key, str):
+        raw = key.encode("utf-8")
+    else:
+        raw = key
+
+    try:
+        Fernet(raw)
+        return raw, False
+    except Exception:
+        pass
+
+    try:
+        decoded = bytes.fromhex(raw.decode("ascii"))
+        if len(decoded) == 32:
+            return base64.urlsafe_b64encode(decoded), True
+    except Exception:
+        pass
+
+    return base64.urlsafe_b64encode(hashlib.sha256(raw).digest()), True
 
 
 class EncryptionManager:
@@ -9,9 +32,12 @@ class EncryptionManager:
     def init_app(self, app):
         key = app.config.get("ENCRYPTION_MASTER_KEY")
         if key:
-            if isinstance(key, str):
-                key = key.encode("utf-8")
-            self._fernet = Fernet(key)
+            normalized_key, normalized = _normalize_fernet_key(key)
+            if normalized:
+                app.logger.warning(
+                    "ENCRYPTION_MASTER_KEY was normalized into a Fernet-compatible key format"
+                )
+            self._fernet = Fernet(normalized_key)
 
     def encrypt(self, plaintext: str) -> str:
         if plaintext is None:
