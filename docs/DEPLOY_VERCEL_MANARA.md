@@ -72,7 +72,7 @@ Root directory:
 - `services/impact-service`
 
 Entrypoint:
-- `app.ts`
+- `api/index.ts`
 - `vercel.json` now routes all requests through that Express entrypoint explicitly.
 
 Copy/paste template:
