@@ -8,6 +8,7 @@ import secrets
 import json
 import tempfile
 from typing import List, Optional
+from sqlalchemy.pool import NullPool
 
 
 class ConfigError(Exception):
@@ -315,26 +316,37 @@ class Config:
             and self.SQLALCHEMY_DATABASE_URI
             and 'sqlite' not in self.SQLALCHEMY_DATABASE_URI.lower()
         )
+        uses_supabase_transaction_pooler = bool(
+            is_vercel_database
+            and 'pooler.supabase.com:6543' in (self.SQLALCHEMY_DATABASE_URI or '')
+        )
         if is_vercel_database:
             self.SQLALCHEMY_ENGINE_OPTIONS.update({
                 'pool_size': 1,
                 'max_overflow': 0,
                 'pool_pre_ping': True,
             })
+        if uses_supabase_transaction_pooler:
+            # For serverless SQLAlchemy, Supabase recommends transaction mode + NullPool.
+            self.SQLALCHEMY_ENGINE_OPTIONS = {
+                'poolclass': NullPool,
+                'pool_pre_ping': True,
+            }
 
         # Connection pooling overrides
-        self.SQLALCHEMY_ENGINE_OPTIONS['pool_size'] = int(
-            os.environ.get('DB_POOL_SIZE', 1 if is_vercel_database else 10)
-        )
-        self.SQLALCHEMY_ENGINE_OPTIONS['max_overflow'] = int(
-            os.environ.get('DB_MAX_OVERFLOW', 0 if is_vercel_database else 20)
-        )
-        self.SQLALCHEMY_ENGINE_OPTIONS['pool_timeout'] = int(
-            os.environ.get('DB_POOL_TIMEOUT', 30)
-        )
-        self.SQLALCHEMY_ENGINE_OPTIONS['pool_recycle'] = int(
-            os.environ.get('DB_POOL_RECYCLE', 1800)
-        )
+        if 'poolclass' not in self.SQLALCHEMY_ENGINE_OPTIONS:
+            self.SQLALCHEMY_ENGINE_OPTIONS['pool_size'] = int(
+                os.environ.get('DB_POOL_SIZE', 1 if is_vercel_database else 10)
+            )
+            self.SQLALCHEMY_ENGINE_OPTIONS['max_overflow'] = int(
+                os.environ.get('DB_MAX_OVERFLOW', 0 if is_vercel_database else 20)
+            )
+            self.SQLALCHEMY_ENGINE_OPTIONS['pool_timeout'] = int(
+                os.environ.get('DB_POOL_TIMEOUT', 30)
+            )
+            self.SQLALCHEMY_ENGINE_OPTIONS['pool_recycle'] = int(
+                os.environ.get('DB_POOL_RECYCLE', 1800)
+            )
         if self.SQLALCHEMY_DATABASE_URI and self.SQLALCHEMY_DATABASE_URI.startswith('sqlite'):
             self.SQLALCHEMY_ENGINE_OPTIONS = {}
         

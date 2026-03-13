@@ -67,6 +67,7 @@ Runtime notes:
 - The included `vercel.json` keeps the project on a single Python serverless entrypoint, which is the least-friction path on the free tier.
 - With `BETA_ALLOW_PLACEHOLDER_INFRA=true`, the service boots with placeholder DB/Stripe values and reports `degraded` health until those integrations are configured.
 - `AUTO_CREATE_ALL=true` is ignored while `DATABASE_URL` is still a placeholder, so it is safe to leave in beta env blocks until the real Postgres URL is pasted.
+- If you are using Supabase from Vercel, prefer the Supavisor transaction pooler connection string on port `6543`. The backend now switches to `NullPool` automatically for that connection shape.
 
 ## Impact service project
 
