@@ -782,6 +782,48 @@ export class PrismaFalakRepository implements FalakRepository {
     return mapEdgeRow(rows[0]!);
   }
 
+  private async createVerifiedEdges(context: RequestContext, inputs: readonly CreateEdgeInput[]): Promise<EdgeRecord[]> {
+    if (inputs.length === 0) {
+      return [];
+    }
+
+    await this.setTenantSession(context.tenantId);
+    const actorId = context.actor?.id ?? null;
+    const values = inputs.map((input) => Prisma.sql`(
+      ${context.tenantId}::uuid,
+      ${input.fromNode}::uuid,
+      ${input.toNode}::uuid,
+      ${input.relation},
+      'active'::falak.falak_edge_status,
+      ${input.weight},
+      ${input.validFrom ? new Date(input.validFrom) : null}::timestamptz,
+      ${input.validTo ? new Date(input.validTo) : null}::timestamptz,
+      CAST(${JSON.stringify(input.evidence)} AS jsonb),
+      CAST(${stringifyJson(input.metadata)} AS jsonb),
+      ${actorId}::uuid
+    )`);
+
+    const rows = await this.prisma.$queryRaw<EdgeRow[]>(Prisma.sql`
+      INSERT INTO falak.edges (
+        tenant_id,
+        from_node,
+        to_node,
+        relation,
+        status,
+        weight,
+        valid_from,
+        valid_to,
+        evidence,
+        metadata,
+        created_by
+      )
+      VALUES ${Prisma.join(values, ', ')}
+      RETURNING id, tenant_id, from_node, to_node, relation, status, weight, valid_from, valid_to, evidence, metadata, created_at
+    `);
+
+    return rows.map(mapEdgeRow);
+  }
+
   async getGraph(context: RequestContext, nodeId: string, depth: number): Promise<GraphRecord> {
     await this.setTenantSession(context.tenantId);
     const rootNode = await this.getNodeById(context, nodeId);
@@ -1146,8 +1188,8 @@ export class PrismaFalakRepository implements FalakRepository {
       timeEnd: input.timeEnd
     });
 
-    const links: EdgeRecord[] = [
-      await this.createEdge(context, {
+    const edgeInputs: CreateEdgeInput[] = [
+      {
         fromNode: event.id,
         toNode: venueNode.id,
         relation: 'occurs_at',
@@ -1156,8 +1198,8 @@ export class PrismaFalakRepository implements FalakRepository {
         validTo: input.timeEnd,
         evidence: [],
         metadata: {}
-      }),
-      await this.createEdge(context, {
+      },
+      {
         fromNode: venueNode.id,
         toNode: event.id,
         relation: 'hosts',
@@ -1166,7 +1208,7 @@ export class PrismaFalakRepository implements FalakRepository {
         validTo: input.timeEnd,
         evidence: [],
         metadata: {}
-      })
+      }
     ];
 
     const linkedNodes = [venueNode, communityNode, campaignNode, poolNode]
@@ -1174,7 +1216,7 @@ export class PrismaFalakRepository implements FalakRepository {
       .map(mapNodeRow);
 
     if (communityNode) {
-      links.push(await this.createEdge(context, {
+      edgeInputs.push({
         fromNode: event.id,
         toNode: communityNode.id,
         relation: 'benefits',
@@ -1183,11 +1225,11 @@ export class PrismaFalakRepository implements FalakRepository {
         validTo: input.timeEnd,
         evidence: [],
         metadata: {}
-      }));
+      });
     }
 
     if (campaignNode) {
-      links.push(await this.createEdge(context, {
+      edgeInputs.push({
         fromNode: event.id,
         toNode: campaignNode.id,
         relation: 'benefits',
@@ -1196,11 +1238,11 @@ export class PrismaFalakRepository implements FalakRepository {
         validTo: input.timeEnd,
         evidence: [],
         metadata: {}
-      }));
+      });
     }
 
     if (poolNode) {
-      links.push(await this.createEdge(context, {
+      edgeInputs.push({
         fromNode: event.id,
         toNode: poolNode.id,
         relation: 'tied_to_pool',
@@ -1209,8 +1251,10 @@ export class PrismaFalakRepository implements FalakRepository {
         validTo: input.timeEnd,
         evidence: [],
         metadata: {}
-      }));
+      });
     }
+
+    const links = await this.createVerifiedEdges(context, edgeInputs);
 
     return {
       event,
