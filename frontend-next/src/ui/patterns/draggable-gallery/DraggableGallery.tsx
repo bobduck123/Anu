@@ -25,6 +25,9 @@ let pluginsRegistered = false;
 
 type DraggableInstance = {
   kill: () => void;
+  disable?: () => void;
+  enable?: () => void;
+  endDrag?: (...args: unknown[]) => void;
 };
 
 type DraggablePlugin = {
@@ -156,9 +159,30 @@ const AVATAR_COLORS = [
   '#4f7942', '#6b8e6b', '#2e8b57', '#3b7a57', '#5f9ea0',
   '#4682b4', '#6a5acd', '#7b68ee', '#9370db', '#db7093',
 ];
+const TILE_GRADIENTS = [
+  ['#16324f', '#0f172a'],
+  ['#3f6212', '#14532d'],
+  ['#7c2d12', '#431407'],
+  ['#5b21b6', '#1e1b4b'],
+  ['#0f766e', '#134e4a'],
+  ['#9a3412', '#4a044e'],
+];
 
 function avatarColor(name: string): string {
   return AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length];
+}
+
+function tileGradient(post: CommunityPost): string {
+  const seedSource = post.id || post.author.pseudonym || 'community';
+  const seed = Array.from(seedSource).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const [start, end] = TILE_GRADIENTS[seed % TILE_GRADIENTS.length];
+  return `linear-gradient(145deg, ${start} 0%, ${end} 100%)`;
+}
+
+function tileEyebrow(post: CommunityPost): string {
+  if (post.sourceName) return post.sourceName;
+  if (post.tags[0]) return post.tags[0].replace(/-/g, ' ');
+  return post.author.role;
 }
 
 const TAG_COLORS: Record<string, string> = {
@@ -363,12 +387,14 @@ export function DraggableGallery({
   const didDragRef = useRef(false);
   const introPlayedRef = useRef(false);
   const zoomAnimatingRef = useRef(false);
+  const hiddenTileSurfaceRef = useRef<HTMLElement | null>(null);
 
   /* ---- State ---- */
   const [currentZoom, setCurrentZoom] = useState(0.6);
   const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [ready, setReady] = useState(false);
+  const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
 
   /* ---- Grid layout computation ---- */
   const gridData = useMemo(() => {
@@ -472,6 +498,18 @@ export function DraggableGallery({
     createDraggable(Draggable, canvas, bounds);
   }, [calculateBounds, createDraggable]);
 
+  useEffect(() => {
+    setBrokenImages((prev) => {
+      const next: Record<string, boolean> = {};
+      posts.forEach((post) => {
+        if (prev[post.id]) {
+          next[post.id] = true;
+        }
+      });
+      return next;
+    });
+  }, [posts]);
+
   /* ---- IntersectionObserver fading ---- */
   useEffect(() => {
     if (!ready) return;
@@ -501,10 +539,38 @@ export function DraggableGallery({
 
   /* ---- Intro animation ---- */
   useEffect(() => {
-    if (!ready || introPlayedRef.current || prefersReducedMotion()) return;
+    if (!ready || introPlayedRef.current) return;
     const canvas = canvasRef.current;
     const viewport = viewportRef.current;
     if (!canvas || !viewport) return;
+
+    if (prefersReducedMotion()) {
+      introPlayedRef.current = true;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const scaledW = totalWidth * currentZoom;
+      const scaledH = totalHeight * currentZoom;
+      gsap.set(viewport, { opacity: 1 });
+      gsap.set(canvas, {
+        scale: currentZoom,
+        x: Math.min((vw - scaledW) / 2, 100),
+        y: Math.min((vh - scaledH) / 2, 100),
+        transformOrigin: '0 0',
+      });
+      itemRefs.current.forEach((el) => {
+        const postId = el.getAttribute('data-post-id');
+        const item = gridItems.find((gridItem) => gridItem.post.id === postId);
+        if (!item) return;
+        gsap.set(el, {
+          left: item.baseX,
+          top: item.baseY,
+          scale: 1,
+          opacity: 1,
+        });
+      });
+      initDraggable();
+      return;
+    }
 
     introPlayedRef.current = true;
 
@@ -573,6 +639,42 @@ export function DraggableGallery({
       },
     });
   }, [ready, gridItems, gridData, currentZoom, totalWidth, totalHeight, initDraggable]);
+
+  useEffect(() => {
+    if (!selectedPost) return;
+    draggableRef.current?.disable?.();
+    draggableRef.current?.endDrag?.();
+    return () => {
+      draggableRef.current?.enable?.();
+    };
+  }, [selectedPost]);
+
+  const restoreHiddenTileSurface = useCallback(() => {
+    if (!hiddenTileSurfaceRef.current) return;
+    gsap.set(hiddenTileSurfaceRef.current, { opacity: 1 });
+    hiddenTileSurfaceRef.current = null;
+  }, []);
+
+  const revealDetailContent = useCallback((splitContainer: HTMLElement) => {
+    const textEls = splitContainer.querySelectorAll('[data-detail-text]');
+    gsap.fromTo(
+      textEls,
+      { y: 40, opacity: 0, clipPath: 'inset(100% 0 0 0)' },
+      {
+        y: 0,
+        opacity: 1,
+        clipPath: 'inset(0% 0 0 0)',
+        duration: 0.8,
+        stagger: 0.1,
+        ease: 'power4.inOut',
+      }
+    );
+
+    const closeBtn = document.getElementById('gallery-close-btn');
+    if (closeBtn) {
+      gsap.to(closeBtn, { opacity: 1, x: 0, duration: 0.6, ease: 'power2.out' });
+    }
+  }, []);
 
   /* ---- Zoom system ---- */
   const setZoom = useCallback(
@@ -661,11 +763,13 @@ export function DraggableGallery({
   const handleTileClick = useCallback(
     (post: CommunityPost, el: HTMLDivElement) => {
       if (didDragRef.current) return;
+      if (selectedPost) return;
       setSelectedPost(post);
 
       // Get tile rect for the Flip source
       const rect = el.getBoundingClientRect();
       const imgEl = el.querySelector('img') as HTMLImageElement | null;
+      const sourceSurface = (imgEl ?? el) as HTMLElement;
 
       // Create scaling overlay
       const overlay = document.createElement('div');
@@ -680,22 +784,32 @@ export function DraggableGallery({
         overflow: hidden;
         pointer-events: none;
       `;
-      if (imgEl) {
-        const clonedImg = imgEl.cloneNode(true) as HTMLImageElement;
-        clonedImg.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-        overlay.appendChild(clonedImg);
+      const previewNode = sourceSurface.cloneNode(true) as HTMLElement;
+      previewNode.style.position = 'relative';
+      previewNode.style.left = '0';
+      previewNode.style.top = '0';
+      previewNode.style.width = '100%';
+      previewNode.style.height = '100%';
+      previewNode.style.transform = 'none';
+      previewNode.style.margin = '0';
+      previewNode.style.pointerEvents = 'none';
+      if (previewNode instanceof HTMLImageElement) {
+        previewNode.style.objectFit = 'cover';
       }
+      overlay.appendChild(previewNode);
       document.body.appendChild(overlay);
 
-      // Hide original tile image
-      if (imgEl) gsap.set(imgEl, { opacity: 0 });
+      // Hide the source surface so the animated overlay owns the transition.
+      hiddenTileSurfaceRef.current = sourceSurface;
+      gsap.set(sourceSurface, { opacity: 0 });
 
       // Show split container and animate
       const splitContainer = document.getElementById('gallery-split-screen');
       const zoomTarget = document.getElementById('gallery-zoom-target');
       if (!splitContainer || !zoomTarget) {
         overlay.remove();
-        if (imgEl) gsap.set(imgEl, { opacity: 1 });
+        restoreHiddenTileSurface();
+        setSelectedPost(null);
         return;
       }
 
@@ -710,26 +824,7 @@ export function DraggableGallery({
           ease: 'power4.inOut',
           absolute: true,
           onComplete: () => {
-            // Animate text in
-            const textEls = splitContainer.querySelectorAll('[data-detail-text]');
-            gsap.fromTo(
-              textEls,
-              { y: 40, opacity: 0, clipPath: 'inset(100% 0 0 0)' },
-              {
-                y: 0,
-                opacity: 1,
-                clipPath: 'inset(0% 0 0 0)',
-                duration: 0.8,
-                stagger: 0.1,
-                ease: 'power4.inOut',
-              }
-            );
-
-            // Show close button
-            const closeBtn = document.getElementById('gallery-close-btn');
-            if (closeBtn) {
-              gsap.to(closeBtn, { opacity: 1, x: 0, duration: 0.6, ease: 'power2.out' });
-            }
+            revealDetailContent(splitContainer);
           },
         });
       } catch {
@@ -741,10 +836,13 @@ export function DraggableGallery({
           width: zoomTarget.getBoundingClientRect().width,
           height: zoomTarget.getBoundingClientRect().height,
           ease: 'power4.inOut',
+          onComplete: () => {
+            revealDetailContent(splitContainer);
+          },
         });
       }
     },
-    []
+    [restoreHiddenTileSurface, revealDetailContent, selectedPost]
   );
 
   /* ---- Close detail ---- */
@@ -754,6 +852,7 @@ export function DraggableGallery({
     const closeBtn = document.getElementById('gallery-close-btn');
 
     if (!overlay || !selectedPost) {
+      restoreHiddenTileSurface();
       setSelectedPost(null);
       return;
     }
@@ -772,6 +871,7 @@ export function DraggableGallery({
     if (!tileEl) {
       overlay.remove();
       if (splitContainer) gsap.set(splitContainer, { opacity: 0, pointerEvents: 'none' });
+      restoreHiddenTileSurface();
       setSelectedPost(null);
       return;
     }
@@ -787,8 +887,7 @@ export function DraggableGallery({
         ease: 'power4.inOut',
         absolute: true,
         onComplete: () => {
-          const imgEl = tileEl.querySelector('img');
-          if (imgEl) gsap.set(imgEl, { opacity: 1 });
+          restoreHiddenTileSurface();
           overlay.remove();
           if (splitContainer) gsap.set(splitContainer, { opacity: 0, pointerEvents: 'none' });
           setSelectedPost(null);
@@ -803,15 +902,14 @@ export function DraggableGallery({
         height: rect.height,
         ease: 'power4.inOut',
         onComplete: () => {
-          const imgEl = tileEl.querySelector('img');
-          if (imgEl) gsap.set(imgEl, { opacity: 1 });
+          restoreHiddenTileSurface();
           overlay.remove();
           if (splitContainer) gsap.set(splitContainer, { opacity: 0, pointerEvents: 'none' });
           setSelectedPost(null);
         },
       });
     }
-  }, [selectedPost]);
+  }, [restoreHiddenTileSurface, selectedPost]);
 
   /* ---- Escape key to close ---- */
   useEffect(() => {
@@ -874,6 +972,7 @@ export function DraggableGallery({
           <div ref={gridRef} className="relative" style={{ width: totalWidth, height: totalHeight }}>
             {gridItems.map((item) => {
               const gap = gapForZoom(currentZoom);
+              const imageFailed = brokenImages[item.post.id];
               return (
                 <div
                   key={item.post.id}
@@ -887,7 +986,7 @@ export function DraggableGallery({
                     const el = itemRefs.current.get(item.post.id);
                     if (el) handleTileClick(item.post, el);
                   }}
-                  className="absolute cursor-pointer"
+                  className="absolute cursor-pointer overflow-hidden border border-white/10 bg-black shadow-[0_18px_60px_rgba(0,0,0,0.35)]"
                   style={{
                     width: ITEM_SIZE,
                     height: ITEM_SIZE,
@@ -895,25 +994,48 @@ export function DraggableGallery({
                     top: item.row * (ITEM_SIZE + gap),
                     willChange: 'transform, opacity',
                     transition: 'opacity 0.6s ease',
+                    background: tileGradient(item.post),
                   }}
                 >
-                  {/* Tile image */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.post.coverImage}
-                    alt=""
-                    loading="lazy"
-                    className="w-full h-full object-cover"
-                    draggable={false}
-                  />
-                  {/* Tile overlay on hover */}
-                  <div className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-colors duration-300 flex items-end p-3 opacity-0 hover:opacity-100">
-                    <div className="text-white">
-                      <p className="text-xs font-semibold truncate">
+                  {!imageFailed && (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={item.post.coverImage}
+                        alt={item.post.title || item.post.author.pseudonym}
+                        loading="lazy"
+                        className="absolute inset-0 h-full w-full object-cover"
+                        style={{ filter: 'contrast(1.05) saturate(1.05)' }}
+                        draggable={false}
+                        onError={() => {
+                          setBrokenImages((prev) => (prev[item.post.id] ? prev : { ...prev, [item.post.id]: true }));
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/5" />
+                    </>
+                  )}
+
+                  {imageFailed && (
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background: `${tileGradient(item.post)}, radial-gradient(circle at top left, rgba(255,255,255,0.18), transparent 55%)`,
+                      }}
+                    />
+                  )}
+
+                  <div className="absolute inset-0 border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent_40%,rgba(0,0,0,0.18))]" />
+                  <div className="absolute inset-x-0 top-0 flex items-start justify-between p-3 text-[10px] uppercase tracking-[0.22em] text-white/70">
+                    <span className="max-w-[70%] truncate">{tileEyebrow(item.post)}</span>
+                    <span>{timeAgo(item.post.createdAt)}</span>
+                  </div>
+                  <div className="absolute inset-x-0 bottom-0 p-4">
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold leading-snug text-white line-clamp-2">
                         {item.post.title || item.post.author.pseudonym}
                       </p>
-                      <p className="text-[10px] text-white/60 truncate">
-                        {item.post.title ? item.post.author.pseudonym : timeAgo(item.post.createdAt)}
+                      <p className="text-[11px] leading-relaxed text-white/72 line-clamp-3">
+                        {item.post.content}
                       </p>
                     </div>
                   </div>
@@ -1042,7 +1164,11 @@ export function DraggableGallery({
         {/* Image panel */}
         <div
           className="relative flex items-center justify-center cursor-pointer"
-          onClick={closeDetail}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              closeDetail();
+            }
+          }}
           style={{
             width: isDetailHorizontal ? imgSizePct : '100%',
             height: isDetailHorizontal ? '100%' : imgSizePct,
@@ -1052,6 +1178,7 @@ export function DraggableGallery({
         >
           <div
             id="gallery-zoom-target"
+            onClick={(event) => event.stopPropagation()}
             style={{
               width: isDetailHorizontal ? '80%' : '60%',
               height: isDetailHorizontal ? '80%' : '80%',
@@ -1062,7 +1189,11 @@ export function DraggableGallery({
         {/* Content panel */}
         <div
           className="relative flex flex-col justify-center overflow-y-auto"
-          onClick={closeDetail}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              closeDetail();
+            }
+          }}
           style={{
             width: isDetailHorizontal ? contentSizePct : '100%',
             height: isDetailHorizontal ? '100%' : contentSizePct,
