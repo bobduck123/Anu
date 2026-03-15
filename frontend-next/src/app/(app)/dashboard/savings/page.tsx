@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthGateCard from '@/components/auth/AuthGateCard';
 import { wcleApi, WCLESavingsSummary, WCLECommunitySavings } from '@/lib/api/wcleApi';
 
 function cents(v: number | null | undefined): string {
@@ -10,11 +12,21 @@ function cents(v: number | null | undefined): string {
 }
 
 export default function SavingsDashboard() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [savings, setSavings] = useState<WCLESavingsSummary | null>(null);
   const [community, setCommunity] = useState<WCLECommunitySavings | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
     Promise.all([
       wcleApi.mySavings().catch(() => null),
       wcleApi.communitySavings().catch(() => null),
@@ -22,13 +34,25 @@ export default function SavingsDashboard() {
       setSavings(s);
       setCommunity(c);
     }).finally(() => setLoading(false));
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
       </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <AuthGateCard
+        eyebrow="Savings Dashboard"
+        title="Sign in to track your savings"
+        description="Personal savings, participation streaks, and run history are tied to your account. Sign in to see your dashboard."
+        secondaryHref="/cost-lowering"
+        secondaryLabel="Browse runs"
+      />
     );
   }
 

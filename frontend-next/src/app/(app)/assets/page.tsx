@@ -1,18 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthGateCard from '@/components/auth/AuthGateCard';
 import { assetsRegistryApi, type CommunityAsset } from '@/lib/api/endpoints';
 
 export default function AssetsRegistryPage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [assets, setAssets] = useState<CommunityAsset[]>([]);
   const [error, setError] = useState('');
   const [bookingAssetId, setBookingAssetId] = useState<number | null>(null);
 
   useEffect(() => {
+    if (authLoading || !isAuthenticated) {
+      return;
+    }
+
     assetsRegistryApi.list()
       .then((data) => setAssets(data.assets || []))
       .catch(() => setError('Failed to load assets registry'));
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
   const requestBooking = async (assetId: number) => {
     try {
@@ -27,6 +34,24 @@ export default function AssetsRegistryPage() {
       setError('Failed to request booking');
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-institutional)]"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <AuthGateCard
+        eyebrow="Community Assets"
+        title="Sign in to browse and book shared assets"
+        description="Asset registries and booking requests are managed within the member workspace so communities can coordinate shared equipment safely."
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

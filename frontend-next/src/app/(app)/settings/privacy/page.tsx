@@ -1,17 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from '@/contexts/AuthContext';
+import AuthGateCard from '@/components/auth/AuthGateCard';
 import { consentApi } from "@/lib/api/endpoints";
 
 export default function PrivacySettingsPage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [consents, setConsents] = useState<Record<string, boolean>>({});
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading || !isAuthenticated) {
+      return;
+    }
+
     consentApi.get()
       .then((res) => setConsents(res.consents))
       .catch(() => setConsents({}));
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
   const toggle = (key: string) => {
     setConsents((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -22,6 +29,24 @@ export default function PrivacySettingsPage() {
     setConsents(res.consents);
     setStatus("Saved.");
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-institutional)]"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <AuthGateCard
+        eyebrow="Privacy Settings"
+        title="Sign in to manage your privacy settings"
+        description="Consent preferences belong to your account and cannot be edited anonymously."
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
