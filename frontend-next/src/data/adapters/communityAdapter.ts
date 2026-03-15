@@ -3,6 +3,7 @@
  * Provides mock posts and integrates with the real community API.
  */
 
+import type { Article, StoryPost } from '@/lib/api';
 import { seededRandom, pickRandom } from './types';
 
 /* -------------------------------------------------------------------------- */
@@ -23,6 +24,7 @@ export interface PostLayout {
 
 export interface CommunityPost {
   id: string;
+  title?: string;
   author: {
     id: number;
     username: string;
@@ -91,6 +93,10 @@ const DEFAULT_COVERS: Record<string, string> = {
   'governance':   'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=400&h=400&fit=crop',
   'impact':       'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=400&h=400&fit=crop',
   'stories':      'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=400&h=400&fit=crop',
+  'news':         'https://images.unsplash.com/photo-1495020689067-958852a7765e?w=400&h=400&fit=crop',
+  'opinion':      'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=400&h=400&fit=crop',
+  'creative':     'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=400&fit=crop',
+  'community':    'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=400&fit=crop',
 };
 
 const IMAGE_POSITIONS: ImagePosition[] = ['left', 'right', 'top', 'bottom'];
@@ -106,6 +112,118 @@ function resolveCoverImage(image: string | undefined, tags: string[]): string {
     if (DEFAULT_COVERS[tag]) return DEFAULT_COVERS[tag];
   }
   return PLACEHOLDER_IMAGES[0];
+}
+
+function hashString(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+function deriveLayout(seed: string): PostLayout {
+  const hash = hashString(seed);
+  return {
+    imagePosition: IMAGE_POSITIONS[hash % IMAGE_POSITIONS.length],
+    imageSize: IMAGE_SIZES[Math.floor(hash / IMAGE_POSITIONS.length) % IMAGE_SIZES.length],
+  };
+}
+
+function toUsername(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'community-member';
+}
+
+function isImageUrl(url?: string): boolean {
+  return Boolean(url && /\.(avif|gif|jpe?g|png|svg|webp)(\?.*)?$/i.test(url));
+}
+
+function normalizeCategoryTag(category: string): string {
+  return category.trim().toLowerCase() || 'community';
+}
+
+function countStoryReactions(story: StoryPost): number {
+  return Object.values(story.reactions || {}).reduce((sum, count) => sum + Number(count || 0), 0);
+}
+
+export function buildGalleryPostFromArticle(article: Article): CommunityPost {
+  const categoryTag = normalizeCategoryTag(article.category);
+  const tags = article.featured ? [categoryTag, 'community'] : [categoryTag];
+  const authorName = article.authorPseudonym || 'Anonymous';
+
+  return {
+    id: `article-${article.id}`,
+    title: article.title,
+    author: {
+      id: Number(article.authorId || article.id) || 0,
+      username: toUsername(authorName),
+      pseudonym: authorName,
+      role: article.featured ? 'editor' : 'member',
+    },
+    content: article.content,
+    coverImage: resolveCoverImage(undefined, tags),
+    layout: deriveLayout(`article:${article.id}:${categoryTag}`),
+    likes: article.likes ?? 0,
+    comments: article.comments ?? 0,
+    shares: 0,
+    tags,
+    createdAt: article.createdAt,
+    liked: false,
+  };
+}
+
+export function buildGalleryPostFromStory(story: StoryPost): CommunityPost {
+  const authorName = story.author_pseudonym || 'Anonymous';
+  const hasImage = isImageUrl(story.media_url);
+  const tags = story.featured ? ['stories', 'community'] : ['stories'];
+
+  return {
+    id: `story-${story.id}`,
+    title: story.title,
+    author: {
+      id: story.author_id,
+      username: toUsername(authorName),
+      pseudonym: authorName,
+      role: story.featured ? 'featured storyteller' : 'storyteller',
+    },
+    content: story.content,
+    image: hasImage ? story.media_url : undefined,
+    coverImage: resolveCoverImage(hasImage ? story.media_url : undefined, tags),
+    layout: deriveLayout(`story:${story.id}:${story.author_id}`),
+    likes: countStoryReactions(story),
+    comments: 0,
+    shares: 0,
+    tags,
+    createdAt: story.created_at,
+    liked: false,
+  };
+}
+
+export function buildGalleryPosts({
+  articles,
+  stories,
+}: {
+  articles: { opinion: Article[]; news: Article[]; creative: Article[] };
+  stories: StoryPost[];
+}): CommunityPost[] {
+  const articlePosts = [
+    ...(articles.news || []),
+    ...(articles.opinion || []),
+    ...(articles.creative || []),
+  ].map(buildGalleryPostFromArticle);
+  const storyPosts = (stories || []).map(buildGalleryPostFromStory);
+  const merged = [...storyPosts, ...articlePosts];
+  const seen = new Set<string>();
+
+  return merged.filter((post) => {
+    if (seen.has(post.id)) return false;
+    seen.add(post.id);
+    return true;
+  });
 }
 
 /* -------------------------------------------------------------------------- */

@@ -105,6 +105,56 @@ describe('communityAdapter', () => {
       expect(score(sorted[i - 1])).toBeGreaterThanOrEqual(score(sorted[i]));
     }
   });
+
+  it('maps live stories and articles into gallery posts', async () => {
+    const { buildGalleryPosts } = await import('@/data/adapters/communityAdapter');
+    const input = {
+      articles: {
+        opinion: [],
+        news: [
+          {
+            id: '12',
+            title: 'Neighbourhood update',
+            content: 'The co-op garden doubled its capacity this month.',
+            category: 'News',
+            authorPseudonym: 'River Stone',
+            createdAt: '2026-03-01T00:00:00.000Z',
+            likes: 3,
+            comments: 2,
+          },
+        ],
+        creative: [],
+      },
+      stories: [
+        {
+          id: 4,
+          title: 'Flood response recap',
+          content: 'Mutual-aid teams distributed supplies across three suburbs.',
+          author_id: 8,
+          author_pseudonym: 'Morning Dew',
+          created_at: '2026-03-02T00:00:00.000Z',
+          reactions: { clap: 2, heart: 1 },
+          media_url: 'https://images.example.com/story.webp',
+        },
+      ],
+    };
+    const posts = buildGalleryPosts(input);
+    const postsAgain = buildGalleryPosts(input);
+
+    expect(posts).toHaveLength(2);
+    expect(posts[0]).toMatchObject({
+      id: 'story-4',
+      title: 'Flood response recap',
+      likes: 3,
+      coverImage: 'https://images.example.com/story.webp',
+    });
+    expect(posts[1]).toMatchObject({
+      id: 'article-12',
+      title: 'Neighbourhood update',
+      comments: 2,
+    });
+    expect(posts[1].layout).toEqual(postsAgain[1].layout);
+  });
 });
 
 // --- Color Harmony ---

@@ -112,6 +112,7 @@ export interface DraggableGalleryProps {
   sortMode: SortMode;
   onSortChange: (mode: SortMode) => void;
   className?: string;
+  showComposer?: boolean;
 }
 
 interface GridItem {
@@ -171,6 +172,10 @@ const TAG_COLORS: Record<string, string> = {
   governance: 'bg-indigo-500/20 text-indigo-300',
   impact: 'bg-rose-500/20 text-rose-300',
   stories: 'bg-orange-500/20 text-orange-300',
+  news: 'bg-sky-500/20 text-sky-300',
+  opinion: 'bg-fuchsia-500/20 text-fuchsia-300',
+  creative: 'bg-teal-500/20 text-teal-300',
+  community: 'bg-zinc-200/20 text-zinc-200',
 };
 
 function tagClass(tag: string): string {
@@ -346,6 +351,7 @@ export function DraggableGallery({
   sortMode,
   onSortChange,
   className = '',
+  showComposer = false,
 }: DraggableGalleryProps) {
   /* ---- Refs ---- */
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -903,8 +909,12 @@ export function DraggableGallery({
                   {/* Tile overlay on hover */}
                   <div className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-colors duration-300 flex items-end p-3 opacity-0 hover:opacity-100">
                     <div className="text-white">
-                      <p className="text-xs font-semibold truncate">{item.post.author.pseudonym}</p>
-                      <p className="text-[10px] text-white/60">{timeAgo(item.post.createdAt)}</p>
+                      <p className="text-xs font-semibold truncate">
+                        {item.post.title || item.post.author.pseudonym}
+                      </p>
+                      <p className="text-[10px] text-white/60 truncate">
+                        {item.post.title ? item.post.author.pseudonym : timeAgo(item.post.createdAt)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1007,14 +1017,16 @@ export function DraggableGallery({
       </div>
 
       {/* Create post button — bottom-right */}
-      <button
-        type="button"
-        onClick={() => setShowCreate(true)}
-        className="fixed bottom-5 right-5 z-10 w-12 h-12 rounded-full bg-white text-black flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-        aria-label="Create post"
-      >
-        <Plus className="w-6 h-6" />
-      </button>
+      {showComposer && (
+        <button
+          type="button"
+          onClick={() => setShowCreate(true)}
+          className="fixed bottom-5 right-5 z-10 w-12 h-12 rounded-full bg-white text-black flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+          aria-label="Create post"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+      )}
 
       {/* ---- Split-screen detail ---- */}
       <div
@@ -1065,10 +1077,20 @@ export function DraggableGallery({
                 {selectedPost.id.replace('post-', '#')}
               </p>
 
-              {/* Author as title */}
-              <h1 data-detail-text className="text-white text-3xl lg:text-4xl font-semibold leading-tight">
-                {selectedPost.author.pseudonym}
-              </h1>
+              {selectedPost.title ? (
+                <>
+                  <p data-detail-text className="text-white/50 text-xs uppercase tracking-[0.2em]">
+                    {selectedPost.author.pseudonym}
+                  </p>
+                  <h1 data-detail-text className="text-white text-3xl lg:text-4xl font-semibold leading-tight">
+                    {selectedPost.title}
+                  </h1>
+                </>
+              ) : (
+                <h1 data-detail-text className="text-white text-3xl lg:text-4xl font-semibold leading-tight">
+                  {selectedPost.author.pseudonym}
+                </h1>
+              )}
 
               {/* Content */}
               <p data-detail-text className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">
@@ -1143,7 +1165,7 @@ export function DraggableGallery({
       </button>
 
       {/* Create post modal */}
-      {showCreate && <CreatePostModal onClose={() => setShowCreate(false)} />}
+      {showComposer && showCreate && <CreatePostModal onClose={() => setShowCreate(false)} />}
     </div>
   );
 }
