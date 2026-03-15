@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import config from '../config';
 import logger from '../utils/logger';
 import { buildFalakApp } from './app';
+import { buildFalakUnavailableResponse, writeJsonResponse } from './vercelUnavailable';
 
 type FalakVercelRuntime = Awaited<ReturnType<typeof buildFalakApp>>;
 
@@ -42,6 +43,32 @@ async function getFalakVercelRuntime(): Promise<FalakVercelRuntime> {
 }
 
 export default async function falakVercelHandler(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  const { app } = await getFalakVercelRuntime();
-  app.server.emit('request', req, res);
+  if (!config.hasDatabase) {
+    writeJsonResponse(res, buildFalakUnavailableResponse(req.url, {
+      code: 'FALAK_DATABASE_UNAVAILABLE',
+      message: 'Falak requires DATABASE_URL with PostgreSQL + PostGIS configured',
+      statusCode: 503,
+      healthStatusCode: 200,
+    }));
+    return;
+  }
+
+  try {
+    const { app } = await getFalakVercelRuntime();
+    app.server.emit('request', req, res);
+  } catch (error) {
+    logger.error(
+      {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+      'Falak Vercel runtime failed to initialize'
+    );
+
+    writeJsonResponse(res, buildFalakUnavailableResponse(req.url, {
+      code: 'FALAK_STARTUP_FAILED',
+      message: 'Falak could not start in the current Vercel environment',
+      statusCode: 503,
+    }));
+  }
 }
