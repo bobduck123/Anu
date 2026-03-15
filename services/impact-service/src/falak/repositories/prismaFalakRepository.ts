@@ -1065,18 +1065,18 @@ export class PrismaFalakRepository implements FalakRepository {
     // ST_DWithin/ST_Distance or computed distance projection safely through the ORM.
     const rows = await this.withTenantSession(context.tenantId, (db) => db.$queryRaw<NodeRow[]>(Prisma.sql`
       WITH anchor AS (
-        SELECT falak.ST_SetSRID(falak.ST_MakePoint(${filters.lng}, ${filters.lat}), 4326)::geography AS reference
+        SELECT falak.ST_SetSRID(falak.ST_MakePoint(${filters.lng}, ${filters.lat}), 4326)::falak.geography AS reference
       )
       SELECT
         ${nodeSelectColumns('n')},
-        falak.ST_Distance(n.geometry::geography, anchor.reference) AS distance_meters
+        falak.ST_Distance(n.geometry::falak.geography, anchor.reference) AS distance_meters
       FROM falak.nodes n
       CROSS JOIN anchor
       WHERE n.tenant_id = ${context.tenantId}::uuid
         AND n.status <> 'deleted'::falak.falak_node_status
         AND n.visibility IN (${Prisma.join(allowedVisibilities.map((value) => Prisma.sql`${value}::falak.falak_visibility`))})
         AND n.geometry IS NOT NULL
-        AND falak.ST_DWithin(n.geometry::geography, anchor.reference, ${filters.radiusMeters})
+        AND falak.ST_DWithin(n.geometry::falak.geography, anchor.reference, ${filters.radiusMeters})
         ${typeClause}
       ORDER BY distance_meters ASC
     `));
