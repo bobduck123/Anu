@@ -1,5 +1,7 @@
 -- Impact service baseline schema required before Flora Fauna memetics extensions
 
+SET search_path TO public, falak;
+
 CREATE TYPE "SubscriptionStatus" AS ENUM ('active', 'past_due', 'canceled', 'trialing', 'incomplete', 'incomplete_expired', 'unpaid');
 CREATE TYPE "LedgerEntryType" AS ENUM ('subscription_credit', 'manual_credit', 'allocation_debit', 'reversal');
 CREATE TYPE "CreditTxType" AS ENUM ('monthly_grant', 'streak_bonus', 'spend', 'adjustment', 'reversal');

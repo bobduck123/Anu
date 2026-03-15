@@ -4,9 +4,45 @@
     {
       "src": "api/index.ts",
       "use": "@vercel/node"
+    },
+    {
+      "src": "api/falak.ts",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
+    {
+      "src": "/v1/falak/health",
+      "dest": "api/falak.ts"
+    },
+    {
+      "src": "/v1/falak/readiness",
+      "dest": "api/falak.ts"
+    },
+    {
+      "src": "/v1/falak/(.*)",
+      "dest": "api/falak.ts"
+    },
+    {
+      "src": "/v1/education/maps",
+      "dest": "api/falak.ts"
+    },
+    {
+      "src": "/v1/education/maps/(.*)",
+      "dest": "api/falak.ts"
+    },
+    {
+      "src": "/docs",
+      "dest": "api/falak.ts"
+    },
+    {
+      "src": "/docs/(.*)",
+      "dest": "api/falak.ts"
+    },
+    {
+      "src": "/openapi.json",
+      "dest": "api/falak.ts"
+    },
     {
       "src": "/(.*)",
       "dest": "api/index.ts"

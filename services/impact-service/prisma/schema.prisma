@@ -3,11 +3,13 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["public", "falak"]
 }
 
 // ============================================================================
@@ -29,6 +31,7 @@ model MembershipPlan {
   subscriptions      Subscription[]
 
   @@map("MembershipPlans")
+  @@schema("public")
 }
 
 enum SubscriptionStatus {
@@ -39,6 +42,8 @@ enum SubscriptionStatus {
   incomplete
   incomplete_expired
   unpaid
+
+  @@schema("public")
 }
 
 model Subscription {
@@ -62,6 +67,7 @@ model Subscription {
 
   @@index([stripeCustomerId])
   @@map("Subscriptions")
+  @@schema("public")
 }
 
 // ============================================================================
@@ -81,6 +87,7 @@ model ImpactPool {
   ledgerEntries   ImpactLedgerEntry[]
 
   @@map("ImpactPools")
+  @@schema("public")
 }
 
 enum LedgerEntryType {
@@ -88,6 +95,8 @@ enum LedgerEntryType {
   manual_credit         // Organizer manual credit
   allocation_debit      // Allocation to beneficiary (Phase 2)
   reversal              // Reversal of previous entry
+
+  @@schema("public")
 }
 
 // APPEND-ONLY: enforced via PostgreSQL RULE + Prisma middleware
@@ -107,6 +116,7 @@ model ImpactLedgerEntry {
   @@index([poolId])
   @@index([createdAt])
   @@map("ImpactLedgerEntries")
+  @@schema("public")
 }
 
 // ============================================================================
@@ -119,6 +129,8 @@ enum CreditTxType {
   spend            // Spent on something
   adjustment       // Manual adjustment
   reversal         // Reversal of previous transaction
+
+  @@schema("public")
 }
 
 // APPEND-ONLY: enforced via PostgreSQL RULE + Prisma middleware
@@ -136,6 +148,7 @@ model ImpactCreditTransaction {
   @@index([userId])
   @@index([createdAt])
   @@map("ImpactCreditTransactions")
+  @@schema("public")
 }
 
 // ============================================================================
@@ -159,6 +172,7 @@ model AuditLog {
   @@index([targetType, targetId])
   @@index([createdAt])
   @@map("AuditLogs")
+  @@schema("public")
 }
 
 // ============================================================================
@@ -175,6 +189,7 @@ model StripeEvent {
 
   @@index([processedAt])
   @@map("StripeEvents")
+  @@schema("public")
 }
 
 // ============================================================================
@@ -186,6 +201,8 @@ enum MemeLineageRelationType {
   reference
   response
   seed
+
+  @@schema("public")
 }
 
 model CreatorChannel {
@@ -207,6 +224,7 @@ model CreatorChannel {
 
   @@index([creatorUserId])
   @@map("creator_channels")
+  @@schema("public")
 }
 
 model Meme {
@@ -233,6 +251,7 @@ model Meme {
   @@index([channelId, createdAt])
   @@index([createdBy, createdAt])
   @@map("memes")
+  @@schema("public")
 }
 
 model MemeLineageEdge {
@@ -248,6 +267,7 @@ model MemeLineageEdge {
   @@unique([parentMemeId, childMemeId, relationType])
   @@index([childMemeId])
   @@map("meme_lineage_edges")
+  @@schema("public")
 }
 
 model NutrientSnapshot {
@@ -273,6 +293,7 @@ model NutrientSnapshot {
   @@index([channelId, capturedAt])
   @@index([memeId])
   @@map("nutrient_snapshots")
+  @@schema("public")
 }
 
 model GeologicalFormSnapshot {
@@ -291,6 +312,7 @@ model GeologicalFormSnapshot {
 
   @@index([channelId, createdAt])
   @@map("geological_form_snapshots")
+  @@schema("public")
 }
 
 enum RevenueSourceType {
@@ -299,12 +321,16 @@ enum RevenueSourceType {
   partnership
   grant
   other_downstream
+
+  @@schema("public")
 }
 
 enum AttributionRecipientType {
   creator
   platform
   pool
+
+  @@schema("public")
 }
 
 model RevenueEvent {
@@ -328,6 +354,7 @@ model RevenueEvent {
   @@index([subscriptionId, recognizedAt])
   @@index([channelId, recognizedAt])
   @@map("revenue_events")
+  @@schema("public")
 }
 
 model AttributionSplit {
@@ -344,6 +371,7 @@ model AttributionSplit {
   @@index([revenueEventId])
   @@index([recipientType, recipientId])
   @@map("attribution_splits")
+  @@schema("public")
 }
 
 enum LedgerAccountType {
@@ -353,6 +381,8 @@ enum LedgerAccountType {
   creator_reserve
   mutual_aid_disbursed
   platform_reserve
+
+  @@schema("public")
 }
 
 enum PoolLedgerEntryKind {
@@ -363,6 +393,8 @@ enum PoolLedgerEntryKind {
   pool_allocation
   disbursement
   adjustment
+
+  @@schema("public")
 }
 
 model LiquidityPool {
@@ -381,6 +413,7 @@ model LiquidityPool {
   disbursements       Disbursement[]
 
   @@map("liquidity_pools")
+  @@schema("public")
 }
 
 model LedgerAccount {
@@ -398,6 +431,7 @@ model LedgerAccount {
   @@unique([poolId, code])
   @@index([poolId, accountType])
   @@map("ledger_accounts")
+  @@schema("public")
 }
 
 model LedgerEntry {
@@ -419,6 +453,7 @@ model LedgerEntry {
   @@index([journalId])
   @@index([accountId, createdAt])
   @@map("ledger_entries")
+  @@schema("public")
 }
 
 enum AllocationRequestStatus {
@@ -427,6 +462,8 @@ enum AllocationRequestStatus {
   rejected
   disbursed
   canceled
+
+  @@schema("public")
 }
 
 model AllocationRequest {
@@ -446,6 +483,7 @@ model AllocationRequest {
   @@index([poolId, status, createdAt])
   @@index([beneficiaryId, createdAt])
   @@map("allocation_requests")
+  @@schema("public")
 }
 
 enum DisbursementStatus {
@@ -454,6 +492,8 @@ enum DisbursementStatus {
   settled
   failed
   reversed
+
+  @@schema("public")
 }
 
 model Disbursement {
@@ -471,6 +511,7 @@ model Disbursement {
 
   @@index([poolId, status, createdAt])
   @@map("disbursements")
+  @@schema("public")
 }
 
 enum ModerationSeverity {
@@ -478,6 +519,8 @@ enum ModerationSeverity {
   medium
   high
   critical
+
+  @@schema("public")
 }
 
 enum ModerationCaseStatus {
@@ -485,6 +528,8 @@ enum ModerationCaseStatus {
   reviewed
   actioned
   closed
+
+  @@schema("public")
 }
 
 enum ModerationActionType {
@@ -496,6 +541,8 @@ enum ModerationActionType {
   restore
   close
   escalate
+
+  @@schema("public")
 }
 
 model ModerationCase {
@@ -517,6 +564,7 @@ model ModerationCase {
   @@index([channelId])
   @@index([memeId])
   @@map("moderation_cases")
+  @@schema("public")
 }
 
 model ModerationAction {
@@ -530,6 +578,7 @@ model ModerationAction {
 
   @@index([caseId, createdAt])
   @@map("moderation_actions")
+  @@schema("public")
 }
 
 model RiskFlag {
@@ -551,6 +600,7 @@ model RiskFlag {
   @@index([channelId])
   @@index([memeId])
   @@map("risk_flags")
+  @@schema("public")
 }
 
 model DomainEvent {
@@ -566,6 +616,7 @@ model DomainEvent {
   @@index([aggregateType, aggregateId, occurredAt])
   @@index([eventType, occurredAt])
   @@map("domain_events")
+  @@schema("public")
 }
 
 model AuditEvent {
@@ -583,4 +634,737 @@ model AuditEvent {
   @@index([entityType, entityId, occurredAt])
   @@index([actorId, occurredAt])
   @@map("audit_events")
+  @@schema("public")
+}
+
+// ============================================================================
+// FALAK PROTOCOL
+// ============================================================================
+
+enum FalakNodeStatus {
+  draft
+  active
+  archived
+  deleted
+
+  @@map("falak_node_status")
+  @@schema("falak")
+}
+
+enum FalakVisibility {
+  public
+  tenant
+  restricted
+
+  @@map("falak_visibility")
+  @@schema("falak")
+}
+
+enum FalakEdgeStatus {
+  active
+  deprecated
+
+  @@map("falak_edge_status")
+  @@schema("falak")
+}
+
+enum FalakPolicyEffect {
+  allow
+  deny
+  requires_approval
+
+  @@map("falak_policy_effect")
+  @@schema("falak")
+}
+
+enum FalakEventPolicyResult {
+  allowed
+  denied
+  pending
+
+  @@map("falak_event_policy_result")
+  @@schema("falak")
+}
+
+enum FalakApprovalStatus {
+  pending
+  approved
+  rejected
+  cancelled
+
+  @@map("falak_approval_status")
+  @@schema("falak")
+}
+
+enum FalakLedgerCategory {
+  financial
+  governance
+  verification
+  moderation
+  security
+  publication
+
+  @@map("falak_ledger_category")
+  @@schema("falak")
+}
+
+model FalakTenant {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug             String             @unique
+  name             String
+  status           String             @default("active")
+  settings         Json               @default("{}")
+  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
+  actors           FalakActor[]
+  actorRoles       FalakActorRole[]
+  nodes            FalakNode[]
+  edges            FalakEdge[]
+  policies         FalakPolicy[]
+  approvals        FalakApproval[]
+  contributions    FalakContribution[]
+  events           FalakEvent[]
+  ledgerEntries    FalakLedgerEntry[]
+  allocationProposals FalakAllocationProposal[]
+  subscriptions    FalakSubscription[]
+  derivedViews     FalakDerivedView[]
+  auditLogEntries  FalakAuditLog[]
+  mapDefinitions   FalakMapDefinition[]
+  mapJobs          FalakMapJob[]
+
+  @@map("tenants")
+  @@schema("falak")
+}
+
+model FalakActor {
+  id                   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId             String            @map("tenant_id") @db.Uuid
+  actorType            String            @map("actor_type")
+  externalAuthId       String?           @map("external_auth_id")
+  email                String?
+  displayName          String?           @map("display_name")
+  metadata             Json              @default("{}")
+  createdAt            DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6)
+  tenant               FalakTenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  roles                FalakActorRole[]
+  createdNodes         FalakNode[]       @relation("FalakNodeCreatedBy")
+  updatedNodes         FalakNode[]       @relation("FalakNodeUpdatedBy")
+  createdEdges         FalakEdge[]       @relation("FalakEdgeCreatedBy")
+  createdPolicies      FalakPolicy[]     @relation("FalakPolicyCreatedBy")
+  updatedPolicies      FalakPolicy[]     @relation("FalakPolicyUpdatedBy")
+  requestedApprovals   FalakApproval[]   @relation("FalakApprovalRequestedBy")
+  resolvedApprovals    FalakApproval[]   @relation("FalakApprovalResolvedBy")
+  approvalVotes        FalakApprovalVote[]
+  contributions        FalakContribution[] @relation("FalakContributionActor")
+  requestedAllocationProposals FalakAllocationProposal[] @relation("FalakAllocationProposalRequestedBy")
+  events               FalakEvent[]
+  auditLogEntries      FalakAuditLog[]
+
+  @@unique([tenantId, externalAuthId])
+  @@index([tenantId])
+  @@map("actors")
+  @@schema("falak")
+}
+
+model FalakActorRole {
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String      @map("tenant_id") @db.Uuid
+  actorId      String      @map("actor_id") @db.Uuid
+  roleName     String      @map("role_name")
+  regionNodeId String?     @map("region_node_id") @db.Uuid
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  tenant       FalakTenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  actor        FalakActor  @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  regionNode   FalakNode?  @relation("FalakActorRoleRegion", fields: [regionNodeId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, actorId, roleName, regionNodeId])
+  @@index([actorId])
+  @@index([tenantId, actorId])
+  @@map("actor_roles")
+  @@schema("falak")
+}
+
+model FalakNode {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String           @map("tenant_id") @db.Uuid
+  type             String
+  status           FalakNodeStatus  @default(draft)
+  visibility       FalakVisibility  @default(tenant)
+  sensitivityClass String           @map("sensitivity_class") @default("normal")
+  slug             String?
+  title            String?
+  summary          String?
+  metadata         Json             @default("{}")
+  // PostGIS geometry is represented in the database, but Prisma cannot project it
+  // into typed client fields. Geometry reads/writes stay in repository raw SQL.
+  geometry         Unsupported("geometry(Geometry,4326)")? @map("geometry")
+  timeStart        DateTime?        @map("time_start") @db.Timestamptz(6)
+  timeEnd          DateTime?        @map("time_end") @db.Timestamptz(6)
+  createdById      String?          @map("created_by") @db.Uuid
+  updatedById      String?          @map("updated_by") @db.Uuid
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  version          BigInt           @default(1)
+  tenant           FalakTenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdBy        FalakActor?      @relation("FalakNodeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy        FalakActor?      @relation("FalakNodeUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  outgoingEdges    FalakEdge[]      @relation("FalakEdgeFrom")
+  incomingEdges    FalakEdge[]      @relation("FalakEdgeTo")
+  contributionNode FalakContribution? @relation("FalakContributionNode")
+  contributionEvents FalakContribution[] @relation("FalakContributionEvent")
+  contributionPools FalakContribution[] @relation("FalakContributionPool")
+  allocationProposalNode FalakAllocationProposal? @relation("FalakAllocationProposalNode")
+  allocationProposalEvents FalakAllocationProposal[] @relation("FalakAllocationProposalEvent")
+  allocationProposalPools FalakAllocationProposal[] @relation("FalakAllocationProposalPool")
+  allocationProposalTargets FalakAllocationProposal[] @relation("FalakAllocationProposalTarget")
+  regionalAssignments FalakActorRole[] @relation("FalakActorRoleRegion")
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([type])
+  @@index([status])
+  @@index([visibility])
+  @@index([tenantId, type, status])
+  @@index([timeStart])
+  @@index([timeEnd])
+  @@map("nodes")
+  @@schema("falak")
+}
+
+model FalakEdge {
+  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId   String           @map("tenant_id") @db.Uuid
+  fromNodeId String           @map("from_node") @db.Uuid
+  toNodeId   String           @map("to_node") @db.Uuid
+  relation   String
+  status     FalakEdgeStatus  @default(active)
+  weight     Decimal          @default(1.0) @db.Decimal(10, 4)
+  validFrom  DateTime?        @map("valid_from") @db.Timestamptz(6)
+  validTo    DateTime?        @map("valid_to") @db.Timestamptz(6)
+  evidence   Json             @default("[]")
+  metadata   Json             @default("{}")
+  createdById String?         @map("created_by") @db.Uuid
+  createdAt  DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  tenant     FalakTenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  fromNode   FalakNode        @relation("FalakEdgeFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNode     FalakNode        @relation("FalakEdgeTo", fields: [toNodeId], references: [id], onDelete: Cascade)
+  createdBy  FalakActor?      @relation("FalakEdgeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([fromNodeId])
+  @@index([toNodeId])
+  @@index([relation])
+  @@index([tenantId, fromNodeId, relation])
+  @@index([tenantId, toNodeId, relation])
+  @@map("edges")
+  @@schema("falak")
+}
+
+model FalakPolicy {
+  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String             @map("tenant_id") @db.Uuid
+  name         String
+  resourceType String             @map("resource_type")
+  action       String
+  effect       FalakPolicyEffect
+  priority     Int                @default(100)
+  enabled      Boolean            @default(true)
+  conditions   Json               @default("{}")
+  description  String?
+  createdById  String?            @map("created_by") @db.Uuid
+  updatedById  String?            @map("updated_by") @db.Uuid
+  createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
+  tenant       FalakTenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdBy    FalakActor?        @relation("FalakPolicyCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy    FalakActor?        @relation("FalakPolicyUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, name])
+  @@index([tenantId, resourceType, action, enabled, priority])
+  @@map("policies")
+  @@schema("falak")
+}
+
+model FalakApproval {
+  id                String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId          String               @map("tenant_id") @db.Uuid
+  requestType       String               @map("request_type")
+  targetType        String               @map("target_type")
+  targetId          String               @map("target_id") @db.Uuid
+  status            FalakApprovalStatus  @default(pending)
+  requiredApprovals Int                  @map("required_approvals") @default(1)
+  currentApprovals  Int                  @map("current_approvals") @default(0)
+  requestedById     String?              @map("requested_by") @db.Uuid
+  resolvedById      String?              @map("resolved_by") @db.Uuid
+  context           Json                 @default("{}")
+  createdAt         DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime             @default(now()) @map("updated_at") @db.Timestamptz(6)
+  resolvedAt        DateTime?            @map("resolved_at") @db.Timestamptz(6)
+  tenant            FalakTenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  requestedBy       FalakActor?          @relation("FalakApprovalRequestedBy", fields: [requestedById], references: [id], onDelete: SetNull)
+  resolvedBy        FalakActor?          @relation("FalakApprovalResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+  votes             FalakApprovalVote[]
+  allocationProposal FalakAllocationProposal? @relation("FalakAllocationProposalApproval")
+
+  @@index([tenantId, status, requestType])
+  @@index([targetType, targetId])
+  @@map("approvals")
+  @@schema("falak")
+}
+
+model FalakApprovalVote {
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  approvalId String          @map("approval_id") @db.Uuid
+  actorId    String          @map("actor_id") @db.Uuid
+  vote       String
+  note       String?
+  createdAt  DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  approval   FalakApproval   @relation(fields: [approvalId], references: [id], onDelete: Cascade)
+  actor      FalakActor      @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@unique([approvalId, actorId])
+  @@index([approvalId])
+  @@map("approval_votes")
+  @@schema("falak")
+}
+
+model FalakContribution {
+  id                 String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId           String      @map("tenant_id") @db.Uuid
+  nodeId             String      @unique @map("node_id") @db.Uuid
+  eventNodeId        String      @map("event_node_id") @db.Uuid
+  poolNodeId         String      @map("pool_node_id") @db.Uuid
+  contributorActorId String?     @map("contributor_actor_id") @db.Uuid
+  amount             Decimal     @db.Decimal(18, 6)
+  currency           String
+  note               String?
+  reference          String?
+  contributedAt      DateTime    @map("contributed_at") @db.Timestamptz(6)
+  createdAt          DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  tenant             FalakTenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  node               FalakNode   @relation("FalakContributionNode", fields: [nodeId], references: [id], onDelete: Cascade)
+  eventNode          FalakNode   @relation("FalakContributionEvent", fields: [eventNodeId], references: [id], onDelete: Cascade)
+  poolNode           FalakNode   @relation("FalakContributionPool", fields: [poolNodeId], references: [id], onDelete: Cascade)
+  contributorActor   FalakActor? @relation("FalakContributionActor", fields: [contributorActorId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, eventNodeId, createdAt(sort: Desc)])
+  @@index([tenantId, poolNodeId, createdAt(sort: Desc)])
+  @@map("contributions")
+  @@schema("falak")
+}
+
+model FalakAllocationProposal {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String         @map("tenant_id") @db.Uuid
+  nodeId       String         @unique @map("node_id") @db.Uuid
+  eventNodeId  String?        @map("event_node_id") @db.Uuid
+  poolNodeId   String         @map("pool_node_id") @db.Uuid
+  targetNodeId String         @map("target_node_id") @db.Uuid
+  requestedById String?       @map("requested_by") @db.Uuid
+  amount       Decimal        @db.Decimal(18, 6)
+  currency     String
+  rationale    String?
+  status       String         @default("pending")
+  approvalId   String?        @unique @map("approval_id") @db.Uuid
+  approvedAt   DateTime?      @map("approved_at") @db.Timestamptz(6)
+  executedAt   DateTime?      @map("executed_at") @db.Timestamptz(6)
+  rejectedAt   DateTime?      @map("rejected_at") @db.Timestamptz(6)
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime       @default(now()) @map("updated_at") @db.Timestamptz(6)
+  tenant       FalakTenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  node         FalakNode      @relation("FalakAllocationProposalNode", fields: [nodeId], references: [id], onDelete: Cascade)
+  eventNode    FalakNode?     @relation("FalakAllocationProposalEvent", fields: [eventNodeId], references: [id], onDelete: SetNull)
+  poolNode     FalakNode      @relation("FalakAllocationProposalPool", fields: [poolNodeId], references: [id], onDelete: Cascade)
+  targetNode   FalakNode      @relation("FalakAllocationProposalTarget", fields: [targetNodeId], references: [id], onDelete: Cascade)
+  requestedBy  FalakActor?    @relation("FalakAllocationProposalRequestedBy", fields: [requestedById], references: [id], onDelete: SetNull)
+  approval     FalakApproval? @relation("FalakAllocationProposalApproval", fields: [approvalId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, eventNodeId, createdAt(sort: Desc)])
+  @@index([tenantId, poolNodeId, status, createdAt(sort: Desc)])
+  @@index([tenantId, targetNodeId, status])
+  @@map("allocation_proposals")
+  @@schema("falak")
+}
+
+model FalakEvent {
+  id           String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String                  @map("tenant_id") @db.Uuid
+  eventType    String                  @map("event_type")
+  actorId      String?                 @map("actor_id") @db.Uuid
+  targetType   String                  @map("target_type")
+  targetId     String?                 @map("target_id") @db.Uuid
+  correlationId String?                @map("correlation_id") @db.Uuid
+  causationId  String?                 @map("causation_id") @db.Uuid
+  traceId      String?                 @map("trace_id") @db.Uuid
+  policyResult FalakEventPolicyResult  @map("policy_result")
+  payload      Json                    @default("{}")
+  occurredAt   DateTime                @default(now()) @map("occurred_at") @db.Timestamptz(6)
+  recordedAt   DateTime                @default(now()) @map("recorded_at") @db.Timestamptz(6)
+  tenant       FalakTenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  actor        FalakActor?             @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  ledgerEntries FalakLedgerEntry[]
+
+  @@index([tenantId, occurredAt(sort: Desc)])
+  @@index([tenantId, eventType, occurredAt(sort: Desc)])
+  @@index([targetType, targetId])
+  @@index([traceId])
+  @@map("events")
+  @@schema("falak")
+}
+
+model FalakLedgerEntry {
+  id            String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String               @map("tenant_id") @db.Uuid
+  category      FalakLedgerCategory
+  eventId       String?              @map("event_id") @db.Uuid
+  referenceType String               @map("reference_type")
+  referenceId   String?              @map("reference_id") @db.Uuid
+  amount        Decimal?             @db.Decimal(18, 6)
+  currency      String?
+  hash          String
+  metadata      Json                 @default("{}")
+  recordedAt    DateTime             @default(now()) @map("recorded_at") @db.Timestamptz(6)
+  tenant        FalakTenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  event         FalakEvent?          @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, category, recordedAt(sort: Desc)])
+  @@index([referenceType, referenceId])
+  @@map("ledger_entries")
+  @@schema("falak")
+}
+
+model FalakSubscription {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String       @map("tenant_id") @db.Uuid
+  actorId          String?      @map("actor_id") @db.Uuid
+  subscriptionType String       @map("subscription_type")
+  targetId         String?      @map("target_id") @db.Uuid
+  filters          Json         @default("{}")
+  deliveryChannel  String       @map("delivery_channel") @default("in_app")
+  enabled          Boolean      @default(true)
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  tenant           FalakTenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, actorId, subscriptionType, targetId, deliveryChannel])
+  @@index([tenantId, actorId])
+  @@map("subscriptions")
+  @@schema("falak")
+}
+
+model FalakDerivedView {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String      @map("tenant_id") @db.Uuid
+  viewName      String      @map("view_name")
+  targetType    String      @map("target_type")
+  targetId      String?     @map("target_id") @db.Uuid
+  data          Json        @default("{}")
+  lastRebuiltAt DateTime    @default(now()) @map("last_rebuilt_at") @db.Timestamptz(6)
+  tenant        FalakTenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, viewName, targetType, targetId])
+  @@index([tenantId, viewName, targetType, targetId])
+  @@map("derived_views")
+  @@schema("falak")
+}
+
+model FalakAuditLog {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String?      @map("tenant_id") @db.Uuid
+  actorId      String?      @map("actor_id") @db.Uuid
+  plane        String
+  action       String
+  resourceType String       @map("resource_type")
+  resourceId   String?      @map("resource_id") @db.Uuid
+  ipAddress    String?      @map("ip_address") @db.Inet
+  userAgent    String?      @map("user_agent")
+  metadata     Json         @default("{}")
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  tenant       FalakTenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  actor        FalakActor?  @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt(sort: Desc)])
+  @@index([resourceType, resourceId])
+  @@map("audit_log")
+  @@schema("falak")
+}
+
+enum FalakMapArchetype {
+  theory
+  organization
+  technology
+  place
+  event
+  myth
+  ecosystem
+  person
+
+  @@map("falak_map_archetype")
+  @@schema("falak")
+}
+
+enum FalakMapStatus {
+  draft
+  reviewed
+  published
+
+  @@map("falak_map_status")
+  @@schema("falak")
+}
+
+enum FalakMapCompileMode {
+  auto_seed
+  auto_expand
+  curated_refine
+
+  @@map("falak_map_compile_mode")
+  @@schema("falak")
+}
+
+enum FalakMapJobStatus {
+  queued
+  running
+  completed
+  failed
+
+  @@map("falak_map_job_status")
+  @@schema("falak")
+}
+
+enum FalakMapRelation {
+  influences
+  contradicts
+  extends
+  belongs_to
+  derived_from
+  similar_to
+  co_occurs_with
+
+  @@map("falak_map_relation")
+  @@schema("falak")
+}
+
+model FalakMapDefinition {
+  id                String               @id
+  tenantId          String               @map("tenant_id") @db.Uuid
+  topicKey          String               @map("topic_key")
+  title             String
+  archetype         FalakMapArchetype
+  entityType        String               @map("entity_type")
+  description       String?
+  status            FalakMapStatus       @default(draft)
+  sizeFormula       String               @map("size_formula")
+  version           Int                  @default(1)
+  currentSnapshotId String?              @map("current_snapshot_id")
+  confidence        Json                 @default("{}")
+  createdAt         DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  tenant            FalakTenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  categories        FalakMapCategory[]
+  axes              FalakMapAxis[]
+  nodes             FalakMapNode[]
+  edges             FalakMapEdge[]
+  aliases           FalakMapAlias[]
+  snapshots         FalakMapLayoutSnapshot[]
+  jobs              FalakMapJob[]
+  overrides         FalakMapOverride[]
+  nodeSources       FalakMapNodeSource[]
+
+  @@unique([tenantId, topicKey])
+  @@index([tenantId, status])
+  @@map("map_definitions")
+  @@schema("falak")
+}
+
+model FalakMapCategory {
+  id          String               @id
+  mapId       String               @map("map_id")
+  key         String
+  label       String
+  colorToken  String               @map("color_token")
+  parentKey   String?              @map("parent_key")
+  description String?
+  order       Int                  @default(0)
+  map         FalakMapDefinition   @relation(fields: [mapId], references: [id], onDelete: Cascade)
+
+  @@unique([mapId, key])
+  @@index([mapId, order])
+  @@map("map_categories")
+  @@schema("falak")
+}
+
+model FalakMapAxis {
+  id            String               @id
+  mapId         String               @map("map_id")
+  key           String
+  label         String
+  minLabel      String               @map("min_label")
+  maxLabel      String               @map("max_label")
+  description   String?
+  scoringMethod String               @map("scoring_method")
+  map           FalakMapDefinition   @relation(fields: [mapId], references: [id], onDelete: Cascade)
+
+  @@unique([mapId, key])
+  @@map("map_axes")
+  @@schema("falak")
+}
+
+model FalakMapNode {
+  id             String               @id
+  mapId          String               @map("map_id")
+  label          String
+  aliases        String[]
+  entityType     String               @map("entity_type")
+  categoryKey    String?              @map("category_key")
+  subcategoryKey String?              @map("subcategory_key")
+  tags           String[]
+  summary        String?
+  longDescription String?             @map("long_description")
+  metadata       Json                 @default("{}")
+  axisScores     Json                 @map("axis_scores")
+  axisMeta       Json                 @default("[]") @map("axis_meta")
+  metrics        Json                 @default("{}")
+  position       Json                 @default("{}")
+  confidence     Json                 @default("{}")
+  pinned         Boolean              @default(false)
+  clusterId      String?              @map("cluster_id")
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  map            FalakMapDefinition   @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  sources        FalakMapNodeSource[]
+  outgoingEdges  FalakMapEdge[]       @relation("FalakMapEdgeSource")
+  incomingEdges  FalakMapEdge[]       @relation("FalakMapEdgeTarget")
+  aliasesTable   FalakMapAlias[]
+
+  @@unique([mapId, label])
+  @@index([mapId, categoryKey])
+  @@map("map_nodes")
+  @@schema("falak")
+}
+
+model FalakMapEdge {
+  id         String             @id
+  mapId      String             @map("map_id")
+  sourceId   String             @map("source_id")
+  targetId   String             @map("target_id")
+  relation   FalakMapRelation
+  weight     Decimal            @db.Decimal(10, 4)
+  confidence Decimal            @db.Decimal(10, 4)
+  evidence   String?
+  createdAt  DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  map        FalakMapDefinition @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  source     FalakMapNode       @relation("FalakMapEdgeSource", fields: [sourceId], references: [id], onDelete: Cascade)
+  target     FalakMapNode       @relation("FalakMapEdgeTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@index([mapId, relation])
+  @@index([sourceId])
+  @@index([targetId])
+  @@map("map_edges")
+  @@schema("falak")
+}
+
+model FalakMapNodeSource {
+  id          String             @id
+  mapId       String             @map("map_id")
+  nodeId      String             @map("node_id")
+  url         String
+  title       String?
+  domain      String?
+  snippet     String?
+  extractedAt DateTime?          @map("extracted_at") @db.Timestamptz(6)
+  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  map         FalakMapDefinition @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  node        FalakMapNode       @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@index([mapId])
+  @@index([nodeId])
+  @@map("map_node_sources")
+  @@schema("falak")
+}
+
+model FalakMapLayoutSnapshot {
+  id        String             @id
+  mapId     String             @map("map_id")
+  version   Int
+  name      String
+  nodesJson Json               @map("nodes_json")
+  createdBy String?            @map("created_by")
+  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  map       FalakMapDefinition @relation(fields: [mapId], references: [id], onDelete: Cascade)
+
+  @@unique([mapId, version])
+  @@index([mapId, createdAt(sort: Desc)])
+  @@map("map_layout_snapshots")
+  @@schema("falak")
+}
+
+model FalakMapJob {
+  id            String               @id
+  tenantId      String               @map("tenant_id") @db.Uuid
+  mapId         String?              @map("map_id")
+  topicKey      String               @map("topic_key")
+  requestedTopic String              @map("requested_topic")
+  mode          FalakMapCompileMode
+  status        FalakMapJobStatus
+  errorMessage  String?              @map("error_message")
+  startedAt     DateTime?            @map("started_at") @db.Timestamptz(6)
+  completedAt   DateTime?            @map("completed_at") @db.Timestamptz(6)
+  createdAt     DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  tenant        FalakTenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  map           FalakMapDefinition?  @relation(fields: [mapId], references: [id], onDelete: SetNull)
+  logs          FalakMapJobLog[]
+
+  @@index([tenantId, status, createdAt(sort: Desc)])
+  @@index([mapId])
+  @@map("map_jobs")
+  @@schema("falak")
+}
+
+model FalakMapJobLog {
+  id        String          @id
+  jobId     String          @map("job_id")
+  step      String
+  status    String
+  message   String
+  payload   Json            @default("{}")
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  job       FalakMapJob     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId, createdAt(sort: Asc)])
+  @@map("map_job_logs")
+  @@schema("falak")
+}
+
+model FalakMapAlias {
+  id             String             @id
+  mapId          String             @map("map_id")
+  nodeId         String             @map("node_id")
+  alias          String
+  canonicalLabel String             @map("canonical_label")
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  map            FalakMapDefinition @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  node           FalakMapNode       @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([mapId, alias])
+  @@index([nodeId])
+  @@map("map_aliases")
+  @@schema("falak")
+}
+
+model FalakMapOverride {
+  id         String             @id
+  mapId      String             @map("map_id")
+  targetType String             @map("target_type")
+  targetId   String?            @map("target_id")
+  patch      Json               @default("{}")
+  note       String?
+  createdBy  String?            @map("created_by")
+  createdAt  DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  map        FalakMapDefinition @relation(fields: [mapId], references: [id], onDelete: Cascade)
+
+  @@index([mapId, createdAt(sort: Desc)])
+  @@map("map_overrides")
+  @@schema("falak")
 }

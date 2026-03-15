@@ -1,10 +1,12 @@
 -- Flora Fauna memetic mutual-aid subsystem foundation
 
+SET search_path TO public, falak;
+
 CREATE TYPE "MemeLineageRelationType" AS ENUM ('remix', 'reference', 'response', 'seed');
 CREATE TYPE "RevenueSourceType" AS ENUM ('subscription', 'attention_sponsorship', 'partnership', 'grant', 'other_downstream');
 CREATE TYPE "AttributionRecipientType" AS ENUM ('creator', 'platform', 'pool');
-CREATE TYPE "LedgerAccountType" AS ENUM ('treasury', 'revenue_clearing', 'creator_reserve', 'mutual_aid_disbursed', 'platform_reserve');
-CREATE TYPE "PoolLedgerEntryKind" AS ENUM ('funding_inflow', 'creator_allocation', 'pool_allocation', 'disbursement', 'adjustment');
+CREATE TYPE "LedgerAccountType" AS ENUM ('treasury', 'allocation_reserve', 'revenue_clearing', 'creator_reserve', 'mutual_aid_disbursed', 'platform_reserve');
+CREATE TYPE "PoolLedgerEntryKind" AS ENUM ('funding_inflow', 'allocation_reservation', 'allocation_release', 'creator_allocation', 'pool_allocation', 'disbursement', 'adjustment');
 CREATE TYPE "AllocationRequestStatus" AS ENUM ('pending', 'approved', 'rejected', 'disbursed', 'canceled');
 CREATE TYPE "DisbursementStatus" AS ENUM ('pending', 'sent', 'settled', 'failed', 'reversed');
 CREATE TYPE "ModerationSeverity" AS ENUM ('low', 'medium', 'high', 'critical');

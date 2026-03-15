@@ -31,10 +31,12 @@ function optional(envVar: string, defaultValue: string): string {
 
 const allowPlaceholderInfra = optional('BETA_ALLOW_PLACEHOLDER_INFRA', 'false') === 'true';
 const hasDatabase = !isPlaceholder(process.env.DATABASE_URL);
+const hasRedis = !isPlaceholder(process.env.REDIS_URL);
 const hasStripe =
   !isPlaceholder(process.env.STRIPE_SECRET_KEY) &&
   !isPlaceholder(process.env.STRIPE_WEBHOOK_SECRET) &&
   !isPlaceholder(process.env.STRIPE_PUBLISHABLE_KEY);
+const requireStripeInfra = optional('REQUIRE_STRIPE_INFRA', 'false') === 'true';
 
 export const config = {
   // Server
@@ -42,13 +44,16 @@ export const config = {
   NODE_ENV: optional('NODE_ENV', 'development'),
   allowPlaceholderInfra,
   hasDatabase,
+  hasRedis,
   hasStripe,
+  requireStripeInfra,
   betaPlaceholderDatabase: allowPlaceholderInfra && !hasDatabase,
   betaPlaceholderStripe: allowPlaceholderInfra && !hasStripe,
 
   // Database
   DATABASE_URL: process.env.DATABASE_URL || '',
   TEST_DATABASE_URL: optional('TEST_DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/impact_test'),
+  REDIS_URL: process.env.REDIS_URL || '',
 
   // JWT
   JWT_SECRET_KEY: required('JWT_SECRET_KEY'),
@@ -72,7 +77,7 @@ try {
   if (!hasDatabase && !allowPlaceholderInfra) {
     required('DATABASE_URL');
   }
-  if (!hasStripe && !allowPlaceholderInfra) {
+  if (requireStripeInfra && !hasStripe && !allowPlaceholderInfra) {
     required('STRIPE_SECRET_KEY');
     required('STRIPE_WEBHOOK_SECRET');
     required('STRIPE_PUBLISHABLE_KEY');
@@ -80,7 +85,9 @@ try {
   console.log('[Config] Startup configuration loaded', {
     allowPlaceholderInfra,
     hasDatabase,
+    hasRedis,
     hasStripe,
+    requireStripeInfra,
   });
 } catch (err) {
   console.error('[Config] Startup validation failed:', err instanceof Error ? err.message : String(err));

@@ -1,0 +1,104 @@
+name: ANU Falak Staging Verify
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_seed:
+        description: Run the hosted staging seed before verification
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/impact-service
+    env:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      STAGING_BASE_URL: ${{ secrets.FALAK_STAGING_BASE_URL }}
+      PRODUCTION_BASE_URL: ${{ secrets.FALAK_PRODUCTION_BASE_URL }}
+      FALAK_STAGING_HOST_FRAGMENT: ${{ secrets.FALAK_STAGING_HOST_FRAGMENT }}
+      FALAK_STAGING_ENVIRONMENT_NAME: ${{ secrets.FALAK_STAGING_ENVIRONMENT_NAME }}
+      FALAK_STAGING_ALLOW_MUTATIONS: "true"
+      DATABASE_URL: ${{ secrets.FALAK_STAGING_DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.FALAK_STAGING_DIRECT_URL }}
+      FALAK_STAGING_DATABASE_EXPECTED_NAME: ${{ secrets.FALAK_STAGING_DATABASE_EXPECTED_NAME }}
+      JWT_SECRET_KEY: ${{ secrets.FALAK_STAGING_JWT_SECRET_KEY }}
+      FALAK_ROUTE_GUARD_MODE: tenant_allowlist
+      FALAK_MAP_ROUTE_GUARD_MODE: tenant_allowlist
+      FALAK_ALLOWED_TENANT_SLUGS: anu-beta
+      FALAK_ALLOWED_ACTOR_EXTERNAL_AUTH_IDS: anu-admin,anu-governor
+      FALAK_TRUST_X_ACTOR_ID: "false"
+      FALAK_REQUIRE_VERIFIED_ACTOR: "true"
+      REDIS_URL: ${{ secrets.FALAK_STAGING_REDIS_URL }}
+      STRIPE_SECRET_KEY: ${{ secrets.FALAK_STAGING_STRIPE_SECRET_KEY }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.FALAK_STAGING_STRIPE_WEBHOOK_SECRET }}
+      STRIPE_PUBLISHABLE_KEY: ${{ secrets.FALAK_STAGING_STRIPE_PUBLISHABLE_KEY }}
+      REQUIRE_STRIPE_INFRA: "false"
+      BETA_ALLOW_PLACEHOLDER_INFRA: "false"
+      DISABLE_SCHEDULED_JOBS: "true"
+      FALAK_SMOKE_TENANT_SLUG: anu-beta
+      FALAK_SMOKE_ADMIN_EXTERNAL_AUTH_ID: anu-admin
+      FALAK_SMOKE_GOVERNOR_EXTERNAL_AUTH_ID: anu-governor
+      FALAK_SMOKE_VENUE_SLUG: anu-school-of-music
+      FALAK_SMOKE_COMMUNITY_SLUG: ngunnawal-arts-circle
+      FALAK_SMOKE_CAMPAIGN_SLUG: first-nations-stage-fund
+      FALAK_SMOKE_POOL_SLUG: weaving-futures-pool
+      FALAK_SMOKE_RESTRICTED_STORY_SLUG: songlines-of-lake-burley
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: services/impact-service/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Generate Prisma Client
+        run: npm run falak:prisma:generate:staging
+
+      - name: Deploy Prisma Migrations
+        run: npm run falak:migrate:staging
+
+      - name: Seed Hosted Staging
+        if: ${{ inputs.run_seed }}
+        run: npm run falak:seed:staging
+
+      - name: Readiness Checks
+        run: npm run falak:readiness:staging
+
+      - name: Smoke Checks
+        run: npm run falak:smoke:staging
+
+      - name: Integration Tests
+        run: npx jest tests/falak/falakService.test.ts --runInBand
+
+      - name: Publish Verification Artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: anu-falak-staging-verify
+          path: |
+            services/impact-service/dist
+            services/impact-service/docs/anu-falak-staging-rollout.md
+            services/impact-service/docs/anu-falak-hosted-execution-runbook.md
+            services/impact-service/docs/anu-falak-db-replacement-strategy.md
+            services/impact-service/docs/anu-falak-vercel-staging.md
+            services/impact-service/docs/anu-falak-production-gating.md
+            services/impact-service/docs/anu-falak-production-rollback.md
+            services/impact-service/docs/anu-falak-production-operations.md
+            services/impact-service/.env.falak-staging.example
+            services/impact-service/.env.falak-production-dark-launch.example
+            services/impact-service/.env.falak-production-admin-only.example
+            services/impact-service/vercel.staging.env.example

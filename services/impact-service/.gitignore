@@ -1,6 +1,8 @@
 node_modules/
 dist/
 .env
+.env.falak-local
+.env.falak-staging
 .env.local
 .env.*.local
 *.log
