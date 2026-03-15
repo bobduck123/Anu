@@ -20,6 +20,7 @@ jobs:
       LOG_LEVEL: info
       STAGING_BASE_URL: ${{ secrets.FALAK_STAGING_BASE_URL }}
       PRODUCTION_BASE_URL: ${{ secrets.FALAK_PRODUCTION_BASE_URL }}
+      STAGING_FRONTEND_BASE_URL: ${{ secrets.FALAK_STAGING_FRONTEND_BASE_URL }}
       FALAK_STAGING_HOST_FRAGMENT: ${{ secrets.FALAK_STAGING_HOST_FRAGMENT }}
       FALAK_STAGING_ENVIRONMENT_NAME: ${{ secrets.FALAK_STAGING_ENVIRONMENT_NAME }}
       FALAK_STAGING_ALLOW_MUTATIONS: "true"
@@ -48,6 +49,8 @@ jobs:
       FALAK_SMOKE_CAMPAIGN_SLUG: first-nations-stage-fund
       FALAK_SMOKE_POOL_SLUG: weaving-futures-pool
       FALAK_SMOKE_RESTRICTED_STORY_SLUG: songlines-of-lake-burley
+      PRODUCTION_PROXY_MAP_ROUTE_MODE: legacy
+      PRODUCTION_MANARA_FEED_MODE: placeholder
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -80,6 +83,9 @@ jobs:
 
       - name: Smoke Checks
         run: npm run falak:smoke:staging
+
+      - name: Route Contract Checks
+        run: npm run falak:contract:staging
 
       - name: Integration Tests
         run: npx jest tests/falak/falakService.test.ts --runInBand

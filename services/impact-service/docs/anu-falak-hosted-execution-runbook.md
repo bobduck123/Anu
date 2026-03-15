@@ -93,6 +93,7 @@ npm run falak:migrate:staging
 npm run falak:seed:staging
 npm run falak:readiness:staging
 npm run falak:smoke:staging
+npm run falak:contract:staging
 ```
 
 Optional one-shot verification:
@@ -111,6 +112,7 @@ npm run falak:verify:staging
 6. `npm run falak:seed:staging`
 7. `npm run falak:readiness:staging`
 8. `npm run falak:smoke:staging`
+9. `npm run falak:contract:staging`
 
 ### Hosted Staging Go / No-Go Criteria
 
@@ -122,6 +124,7 @@ Go only if all are true:
 - `prisma migrate deploy` succeeds on the fresh DB
 - readiness passes
 - smoke passes
+- route contract checks pass
 - maps guard behavior matches the staging posture
 - event creation, contribution recording, allocation proposal, approval voting, allocation execution, ledger writes, and impact queries pass over HTTP
 - map resolve, map detail fetch, and guarded map admin mutation pass over HTTP

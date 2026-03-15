@@ -6,6 +6,12 @@ Deploy the app as three Vercel projects with separate root directories:
 2. `flora-fauna/backend`
 3. `services/impact-service`
 
+Project role map:
+
+- `frontend-next`: public site and proxy layer
+- `flora-fauna/backend`: core Flask API behind `/_core/*`
+- `services/impact-service`: legacy impact routes behind `/_impact/api/*` and Falak routes behind `/_impact/v1/*`
+
 ## Frontend project
 
 Root directory:
@@ -60,6 +66,10 @@ Required env:
 - `STRIPE_PUBLISHABLE_KEY=TODO_REQUIRED_STRIPE_PUBLISHABLE_KEY` in beta
 - `FRONTEND_BASE_URL=https://maanara.vercel.app`
 
+Auth contract:
+- Core login is the active public token issuer.
+- If public login tokens are minted with `PUBLIC_JWT_SECRET_KEY`, then the impact service `JWT_SECRET_KEY` must validate that same token family, or the impact service must be updated to support dual verification explicitly.
+
 Runtime notes:
 - Relative writable paths are automatically remapped into `/tmp/manara`.
 - Uploads are served from `/media/uploads/*` and are suitable for ephemeral/serverless use.
@@ -75,8 +85,9 @@ Root directory:
 - `services/impact-service`
 
 Entrypoint:
-- `api/index.ts`
-- `vercel.json` now routes all requests through that Express entrypoint explicitly.
+- `api/index.ts` for the legacy impact and Manara route family
+- `api/falak.ts` for Falak and education maps
+- [services/impact-service/vercel.json](C:/Dev/Flora_fauna/services/impact-service/vercel.json) splits those route families explicitly
 
 Copy/paste template:
 - [services/impact-service/vercel.env.example](C:/Dev/Flora_fauna/services/impact-service/vercel.env.example)
@@ -98,8 +109,13 @@ Required env:
 Routes:
 - Legacy API remains at `/api/flora-fauna/*`
 - New public alias is `/api/manara/*`
+- Falak health and data routes live under `/v1/falak/*`
+- Education maps live under `/v1/education/maps*`
 - Project root `/` now returns a small JSON status payload for direct Vercel URL checks.
 - With `BETA_ALLOW_PLACEHOLDER_INFRA=true`, DB-backed and billing-backed routes return `503 BetaDependencyMissing` until real infrastructure is configured.
+
+Auth contract:
+- `JWT_SECRET_KEY` must be compatible with the core-issued frontend auth token family until auth ownership changes.
 
 ## Free tier notes
 
@@ -107,6 +123,20 @@ Routes:
 - Use a shared Postgres database for both APIs.
 - Keep cron/background work disabled inside serverless functions; the impact service now respects `DISABLE_SCHEDULED_JOBS=true`.
 - Frontend requests should go through `/_core/*` and `/_impact/*` rewrites so browser bundles do not ship private internal origins.
+
+## Verification Env Contract
+
+These values are for operator and CI verification, not for browser runtime:
+
+- `STAGING_BASE_URL`: direct hosted staging impact-service URL
+- `PRODUCTION_BASE_URL`: public frontend URL used for proxy checks, currently `https://maanara.vercel.app`
+- `STAGING_FRONTEND_BASE_URL`: optional staging frontend URL if proxy checks should also run against a staging frontend deploy
+- `STAGING_PROXY_MAP_ROUTE_MODE`: optional override for the staging frontend maps route contract, defaults to `falak`
+- `STAGING_MANARA_FEED_MODE`: optional override for the staging frontend Manara feed contract
+- `STAGING_FALAK_TENANT_ID`: optional tenant header used for staging frontend Falak proxy checks
+- `PRODUCTION_PROXY_MAP_ROUTE_MODE=legacy` until Falak is promoted through the frontend proxy, then change to `falak`
+- `PRODUCTION_MANARA_FEED_MODE=placeholder` until `/manara` is data-backed, then change to `real`
+- `PRODUCTION_FALAK_TENANT_ID`: optional tenant header value used once production proxy checks need to exercise a live Falak maps route through `/_impact/v1/*`
 
 ## Verification
 
@@ -116,4 +146,6 @@ After deployment, verify:
 2. `/manara` loads from the frontend project.
 3. `/_core/health` rewrites to the Flask backend.
 4. `/_impact/health` rewrites to the impact service.
-5. Authenticated organizer flows can open `/dumb-dumb/manage`.
+5. `/_impact/api/manara/feed` returns JSON from the impact service.
+6. `/_impact/v1/education/maps` matches the declared route mode for the current rollout stage.
+7. Authenticated organizer flows can open `/dumb-dumb/manage`.

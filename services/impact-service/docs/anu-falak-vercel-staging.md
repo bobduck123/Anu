@@ -127,7 +127,11 @@ Preview or staging project settings:
 - `CORS_ORIGINS=https://falak-staging.example.vercel.app`
 - `CORS_ALLOWED_ORIGIN_SUFFIXES=.vercel.app`
 - `STAGING_BASE_URL=https://falak-staging.example.vercel.app`
-- `PRODUCTION_BASE_URL=https://maanara.vercel.app`
+- `PRODUCTION_BASE_URL=https://maanara.vercel.app` for proxy checks against the public frontend host
+- `STAGING_FRONTEND_BASE_URL=https://frontend-staging.example.vercel.app` if a staging frontend deploy exists
+- `STAGING_PROXY_MAP_ROUTE_MODE=falak`
+- `STAGING_MANARA_FEED_MODE=placeholder`
+- `STAGING_FALAK_TENANT_ID=<tenant-uuid-if-needed>`
 - `FALAK_STAGING_HOST_FRAGMENT=vercel.app`
 - `FALAK_STAGING_ENVIRONMENT_NAME=falak-vercel-staging`
 - `FALAK_STAGING_ALLOW_MUTATIONS=false`
@@ -140,6 +144,8 @@ Preview or staging project settings:
 - `FALAK_REQUIRE_VERIFIED_ACTOR=true`
 - `REQUIRE_STRIPE_INFRA=false`
 - `DISABLE_SCHEDULED_JOBS=true`
+- `PRODUCTION_PROXY_MAP_ROUTE_MODE=legacy` until the frontend proxy is routing Falak live
+- `PRODUCTION_MANARA_FEED_MODE=placeholder` until `/manara` is data-backed
 
 Important:
 
@@ -199,6 +205,7 @@ From [services/impact-service](/C:/Dev/Flora_fauna/services/impact-service):
 npm run falak:target:staging
 npm run falak:readiness:staging
 npm run falak:smoke:staging
+npm run falak:contract:staging
 ```
 
 Manual checks:
@@ -207,6 +214,7 @@ Manual checks:
 - `GET /v1/falak/health`
 - `GET /v1/falak/readiness`
 - `GET /v1/education/maps`
+- public frontend proxy checks via `PRODUCTION_BASE_URL`
 
 ### Go / No-Go
 

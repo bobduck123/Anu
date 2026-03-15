@@ -2,6 +2,12 @@
 
 This workspace is set up to publish as one Git repository and deploy as three Vercel projects.
 
+Project role map:
+
+- `frontend-next`: public site and proxy layer
+- `flora-fauna/backend`: core API behind `/_core/*`
+- `services/impact-service`: impact and Manara routes behind `/_impact/api/*`, plus Falak routes behind `/_impact/v1/*`
+
 ## 1. Open in GitHub Desktop
 
 Use `File -> Add local repository...` and choose:
@@ -69,6 +75,11 @@ Required env:
 - `FRONTEND_BASE_URL=https://maanara.vercel.app`
 - Stripe TODO placeholders
 
+Auth contract:
+
+- Core login is the active public token issuer.
+- If frontend login tokens are minted with `PUBLIC_JWT_SECRET_KEY`, then the impact service `JWT_SECRET_KEY` must validate that same token family unless impact auth is upgraded to explicit dual verification.
+
 After the first successful schema bootstrap, you can set `AUTO_CREATE_ALL=false` again if you want to avoid running `db.create_all()` on future cold starts.
 
 ### Impact API
@@ -87,6 +98,26 @@ Required env:
 - `CORS_ALLOWED_ORIGIN_SUFFIXES=.vercel.app`
 - `DISABLE_SCHEDULED_JOBS=true`
 
+Routing contract:
+
+- [services/impact-service/vercel.json](C:/Dev/Flora_fauna/services/impact-service/vercel.json) sends legacy and Manara routes to `api/index.ts`
+- the same file sends Falak and education maps routes to `api/falak.ts`
+
+Auth contract:
+
+- `JWT_SECRET_KEY` must be kept compatible with the current core-issued frontend auth token family until auth ownership changes
+
+Verification env contract for CI and operator checks:
+
+- `STAGING_BASE_URL`: direct hosted staging impact-service URL
+- `PRODUCTION_BASE_URL`: public frontend URL used for proxy checks, currently `https://maanara.vercel.app`
+- `STAGING_FRONTEND_BASE_URL`: optional staging frontend URL
+- `STAGING_PROXY_MAP_ROUTE_MODE`: optional override for the staging frontend maps route contract, defaults to `falak`
+- `STAGING_MANARA_FEED_MODE`: optional override for the staging frontend Manara feed contract
+- `STAGING_FALAK_TENANT_ID`: optional tenant header used for staging frontend Falak proxy checks
+- `PRODUCTION_PROXY_MAP_ROUTE_MODE=legacy` until the frontend proxy is routing Falak live, then `falak`
+- `PRODUCTION_MANARA_FEED_MODE=placeholder` until `/manara` is data-backed, then `real`
+
 ## 4. Production checks
 
 After the first deploy, verify:
@@ -95,7 +126,9 @@ After the first deploy, verify:
 2. `https://<frontend-project>.vercel.app/manara` loads.
 3. `https://<frontend-project>.vercel.app/_core/health` works.
 4. `https://<frontend-project>.vercel.app/_impact/health` works.
-5. Dumb Dumb and organizer flows work with production auth/secrets.
+5. `https://<frontend-project>.vercel.app/_impact/api/manara/feed` returns JSON.
+6. `https://<frontend-project>.vercel.app/_impact/v1/education/maps` matches the declared rollout mode.
+7. Dumb Dumb and organizer flows work with production auth/secrets.
 
 ## 5. Known launch constraint
 

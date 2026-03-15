@@ -52,6 +52,20 @@ export function parseUrl(value, message) {
   }
 }
 
+export function normalizeBaseUrl(name, fallback = '') {
+  const rawValue = (process.env[name] ?? fallback).trim();
+  if (!rawValue) {
+    return null;
+  }
+
+  const parsed = parseUrl(rawValue, `${name} must be a valid URL.`);
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    throw new Error(`${name} must use http or https.`);
+  }
+
+  return rawValue.replace(/\/+$/, '');
+}
+
 export function assertSafeHostedStagingTarget(commandName, options = {}) {
   const baseUrl = required('STAGING_BASE_URL');
   const parsedBaseUrl = parseUrl(baseUrl, `[Falak Staging Guard] ${commandName} requires STAGING_BASE_URL to be a valid URL.`);
@@ -263,6 +277,10 @@ export async function resolveSeedFixture(prisma) {
 
 export async function requestJson(method, routePath, options = {}) {
   const baseUrl = required('STAGING_BASE_URL').replace(/\/+$/, '');
+  return requestAt(baseUrl, method, routePath, options);
+}
+
+export async function requestAt(baseUrl, method, routePath, options = {}) {
   const response = await fetch(`${baseUrl}${routePath}`, {
     method,
     headers: {
@@ -273,7 +291,16 @@ export async function requestJson(method, routePath, options = {}) {
   });
 
   const text = await response.text();
-  const parsed = text ? JSON.parse(text) : null;
+  const contentType = response.headers.get('content-type') ?? '';
+  let parsed = null;
+  if (text) {
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = null;
+    }
+  }
+
   if (options.expectedStatus !== undefined && response.status !== options.expectedStatus) {
     throw new Error(
       `Expected ${method} ${routePath} to return ${options.expectedStatus}, got ${response.status}: ${text}`
@@ -282,7 +309,10 @@ export async function requestJson(method, routePath, options = {}) {
 
   return {
     status: response.status,
-    json: parsed
+    json: parsed,
+    text,
+    contentType,
+    headers: response.headers
   };
 }
 

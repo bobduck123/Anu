@@ -32,6 +32,7 @@
     "falak:target:staging": "node scripts/falak-staging/print-target.mjs",
     "falak:readiness:staging": "node scripts/falak-staging/readiness.mjs",
     "falak:smoke:staging": "node scripts/falak-staging/smoke.mjs",
+    "falak:contract:staging": "node scripts/falak-staging/route-contract.mjs",
     "falak:verify:staging": "node scripts/falak-staging/verify.mjs"
   },
   "keywords": [],
