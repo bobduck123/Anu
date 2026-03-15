@@ -3,7 +3,6 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useStats } from '@/hooks/useStats';
 import { ArrowDown, Heart, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { brand } from '@/lib/brand';
@@ -18,9 +17,6 @@ export function HeroSection() {
   const subtextRef = useRef<HTMLParagraphElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
-  
-  // Fetch real stats
-  const { data: stats, isLoading: statsLoading } = useStats();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -147,7 +143,7 @@ export function HeroSection() {
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm mb-8">
           <span className="w-2 h-2 rounded-full bg-[var(--color-beacon)] animate-pulse" />
-          <span className="text-white/80 text-sm font-medium">Beaconing mutual aid across 12 communities</span>
+          <span className="text-white/80 text-sm font-medium">Beaconing mutual aid with accountable local stewardship</span>
         </div>
 
         {/* Main Heading - Word by word reveal */}
@@ -205,22 +201,16 @@ export function HeroSection() {
           className="grid grid-cols-3 gap-8 max-w-lg mx-auto"
         >
           <div className="text-center">
-            <div className="text-3xl md:text-4xl font-semibold text-white mb-1 font-mono-data">
-              {statsLoading ? '$2.4M' : `$${((stats?.totalDistributed || 2480000) / 1000000).toFixed(1)}M`}
-            </div>
-            <div className="text-white/50 text-sm">Distributed</div>
+            <div className="text-2xl md:text-3xl font-semibold text-white mb-1">Auditable</div>
+            <div className="text-white/50 text-sm">Append-only ledgers</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl md:text-4xl font-semibold text-white mb-1 font-mono-data">
-              {statsLoading ? '1,247' : (stats?.totalMembers || 1247).toLocaleString()}
-            </div>
-            <div className="text-white/50 text-sm">Members</div>
+            <div className="text-2xl md:text-3xl font-semibold text-white mb-1">Local</div>
+            <div className="text-white/50 text-sm">Node-led stewardship</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl md:text-4xl font-semibold text-white mb-1 font-mono-data">
-              {statsLoading ? '89%' : `${Math.round(((stats?.totalDistributed || 2480000) - (stats?.totalDistributed || 2480000) * (stats?.adminRatio || 0.08)) / (stats?.totalDistributed || 2480000) * 100)}%`}
-            </div>
-            <div className="text-white/50 text-sm">To Relief</div>
+            <div className="text-2xl md:text-3xl font-semibold text-white mb-1">Private</div>
+            <div className="text-white/50 text-sm">Consent-based access</div>
           </div>
         </div>
       </div>

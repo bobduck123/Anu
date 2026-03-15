@@ -42,8 +42,16 @@ def node_summary():
     relief_count = ReliefRequest.query.filter_by(node_id=node.id).count()
     approved = ReliefRequest.query.filter(ReliefRequest.node_id == node.id, ReliefRequest.status.in_(["approved", "approved_under_cap", "disbursed"])).count()
     approval_ratio = (approved / relief_count) if relief_count else 0
-    response_times = db.session.query(db.func.julianday(ReliefRequest.updated_at) - db.func.julianday(ReliefRequest.submitted_at)).filter(ReliefRequest.node_id == node.id, ReliefRequest.updated_at.isnot(None)).all()
-    response_vals = sorted([v[0] for v in response_times if v[0] is not None])
+    response_windows = ReliefRequest.query.filter(
+        ReliefRequest.node_id == node.id,
+        ReliefRequest.submitted_at.isnot(None),
+        ReliefRequest.updated_at.isnot(None),
+    ).with_entities(ReliefRequest.submitted_at, ReliefRequest.updated_at).all()
+    response_vals = sorted([
+        max(0.0, (updated_at - submitted_at).total_seconds() / 86400.0)
+        for submitted_at, updated_at in response_windows
+        if submitted_at is not None and updated_at is not None
+    ])
     median_response_days = response_vals[len(response_vals)//2] if response_vals else 0
     recent_receipts = (
         ImpactLedgerEntry.query

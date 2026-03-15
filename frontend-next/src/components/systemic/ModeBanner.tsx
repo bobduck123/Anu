@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { getCoreApiBase } from '@/lib/runtime';
 
 const API_BASE = getCoreApiBase();
@@ -30,13 +31,24 @@ export function ModeBanner() {
   const [mode, setMode] = useState<ModeResponse | null>(null);
   const [error, setError] = useState('');
   const pathname = usePathname();
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setMode(null);
+      setError('');
+      return;
+    }
+
     fetch(`${API_BASE}/api/systemic/mode`, { headers: getAuthHeaders() })
       .then((res) => res.json())
       .then((data) => setMode(data.data || null))
       .catch(() => setError('Failed to load system mode'));
-  }, []);
+  }, [isAuthenticated, isLoading]);
 
   if (pathname?.startsWith('/wishlist/') || error || !mode || mode.mode === 'NORMAL') return null;
 

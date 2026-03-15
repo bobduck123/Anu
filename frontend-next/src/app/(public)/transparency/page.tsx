@@ -21,7 +21,14 @@ export default function TransparencyPage() {
           <h1 className="text-3xl font-serif font-semibold">Node Summary</h1>
           <p className="text-sm text-muted-foreground">Aggregate, privacy-preserving totals only.</p>
         </header>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+            <p className="text-sm font-medium text-red-700">Public transparency is temporarily unavailable.</p>
+            <p className="text-sm text-red-600 mt-1">
+              Reporting infrastructure is still being stabilised for the hosted deployment. Try again later.
+            </p>
+          </div>
+        )}
         {!data && !error && <p className="text-sm text-muted-foreground">Loading...</p>}
         {data && (
           <div className="space-y-6">

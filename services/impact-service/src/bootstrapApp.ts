@@ -7,6 +7,7 @@ import createWebhooksRoutes from './routes/webhooks';
 import createPoolsRoutes from './routes/pools';
 import createCreditsRoutes from './routes/credits';
 import createFloraFaunaRoutes from './routes/floraFauna';
+import createFloraFaunaPlaceholderRoutes from './routes/floraFaunaPlaceholder';
 import { errorHandler } from './utils/errors';
 import { NextFunction, Request, Response, Router } from 'express';
 import config from './config';
@@ -50,8 +51,8 @@ export const buildServerApp = (prisma: PrismaClient | null): Express => {
     app.use('/api/pools', dependencyUnavailable);
     app.use('/api/credits', dependencyUnavailable);
     app.use('/api/stripe', dependencyUnavailable);
-    app.use('/api/flora-fauna', dependencyUnavailable);
-    app.use('/api/manara', dependencyUnavailable);
+    app.use('/api/flora-fauna', createFloraFaunaPlaceholderRoutes());
+    app.use('/api/manara', createFloraFaunaPlaceholderRoutes());
   }
 
   app.use(errorHandler);

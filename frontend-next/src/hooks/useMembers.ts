@@ -2,7 +2,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { api, MemberResponse } from '@/lib/api';
-import { mockMembers } from '@/lib/mockData';
 
 const STALE_TIME = 1000 * 60 * 10; // 10 minutes
 
@@ -40,16 +39,11 @@ function transformMember(m: MemberResponse, index: number): Member {
 }
 
 async function fetchMembers(): Promise<Member[]> {
-  try {
-    const data = await api.members.getAll();
-    return data.map((m, i) => transformMember(m, i));
-  } catch (error) {
-    console.warn('API failed, using mock data:', error);
-    return mockMembers;
-  }
+  const data = await api.members.getAll();
+  return data.map((m, i) => transformMember(m, i));
 }
 
-export function useMembers(limit?: number) {
+export function useMembers(limit?: number, options: { enabled?: boolean } = {}) {
   return useQuery<Member[]>({
     queryKey: ['members', limit],
     queryFn: async () => {
@@ -57,30 +51,23 @@ export function useMembers(limit?: number) {
       return limit ? members.slice(0, limit) : members;
     },
     staleTime: STALE_TIME,
+    enabled: options.enabled ?? true,
   });
 }
 
-export function useMemberStats() {
+export function useMemberStats(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ['members', 'stats'],
     queryFn: async () => {
-      try {
-        const data = await api.members.getAll();
-        return {
-          total: data.length,
-          validators: data.filter(m => m.role === 'validator').length,
-          organizers: data.filter(m => m.role === 'organizer').length,
-          activeNodes: new Set(data.map(m => m.node_id).filter(Boolean)).size,
-        };
-      } catch {
-        return {
-          total: 1247,
-          validators: 156,
-          organizers: 42,
-          activeNodes: 12,
-        };
-      }
+      const data = await api.members.getAll();
+      return {
+        total: data.length,
+        validators: data.filter(m => m.role === 'validator').length,
+        organizers: data.filter(m => m.role === 'organizer').length,
+        activeNodes: new Set(data.map(m => m.node_id).filter(Boolean)).size,
+      };
     },
     staleTime: STALE_TIME,
+    enabled: options.enabled ?? true,
   });
 }

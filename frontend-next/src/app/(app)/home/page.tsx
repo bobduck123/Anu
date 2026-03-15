@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoadingState } from '@/ui-system/states/LoadingState';
 import VolunteerDashboard from './VolunteerDashboard';
@@ -12,6 +13,30 @@ export default function HomePage() {
   const { user, isLoading } = useAuth();
 
   if (isLoading) return <LoadingState fullPage />;
+
+  if (!user) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="card-civic">
+          <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-earth-medium)] mb-3">Personal Dashboard</p>
+          <h1 className="text-3xl font-semibold text-[var(--color-earth-dark)] mb-4" style={{ fontFamily: 'var(--font-serif)' }}>
+            Sign in to open your node dashboard
+          </h1>
+          <p className="text-[var(--color-earth-medium)] leading-relaxed mb-6">
+            `/home` is a personalized workspace for members, organisers, and admins. Public visitors should start from the commons landing page or the Manara feed.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link href="/auth" className="btn-pill btn-pill-primary text-center">
+              Sign in
+            </Link>
+            <Link href="/manara" className="btn-pill btn-pill-outline text-center">
+              Open Manara
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const role = user?.role || 'participant';
 

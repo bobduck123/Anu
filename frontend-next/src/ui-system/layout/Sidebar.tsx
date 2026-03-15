@@ -4,9 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Home, Leaf, Users, Store, Calendar, GraduationCap, BarChart3,
-  Heart, Compass, Droplets, Eye, Shield, ChevronLeft, ChevronRight, X,
-  Wallet, MapPin, Sparkles, LayoutGrid,
+  Home, Users, GraduationCap, BarChart3,
+  Heart, Eye, Shield, ChevronLeft, ChevronRight, X,
+  MapPin, Sparkles, LayoutGrid,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,6 +17,7 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   module?: string;
+  authRequired?: boolean;
 }
 
 interface NavSection {
@@ -27,63 +28,21 @@ interface NavSection {
 
 const navSections: NavSection[] = [
   {
-    title: 'Main',
+    title: 'Core',
     items: [
-      { href: '/home', label: 'Home', icon: Home },
-      { href: '/explore', label: 'Explore', icon: Compass },
-      { href: '/intel-feed', label: 'Intel Feed', icon: Eye },
-      { href: '/discover', label: 'Discover', icon: Compass },
-      { href: '/quests', label: 'Quests', icon: Heart },
-      { href: '/actions', label: 'Actions', icon: Heart },
-      { href: '/events', label: 'Events', icon: Calendar },
+      { href: '/home', label: 'Home', icon: Home, authRequired: true },
+      { href: '/manara', label: 'Manara', icon: Sparkles, module: 'impact' },
+      { href: '/impact', label: 'Impact', icon: BarChart3, module: 'impact', authRequired: true },
+      { href: '/community', label: 'Community', icon: Users, module: 'community' },
     ],
   },
   {
-    title: 'Cost Lowering',
+    title: 'Trust',
     items: [
-      { href: '/cost-lowering', label: 'Cost Lowering', icon: Leaf, module: 'costLowering' },
-      { href: '/pledges', label: 'My Pledges', icon: Leaf, module: 'costLowering' },
-      { href: '/dashboard/savings', label: 'Savings', icon: Wallet, module: 'costLowering' },
-    ],
-  },
-  {
-    title: 'Community',
-    items: [
-      { href: '/community', label: 'Hub', icon: Users, module: 'community' },
-      { href: '/universe', label: 'Universe', icon: Sparkles, module: 'community' },
-      { href: '/constellations', label: 'Constellations', icon: Sparkles, module: 'community' },
-      { href: '/teams', label: 'Teams', icon: Users, module: 'community' },
-    ],
-  },
-  {
-    title: 'Marketplace',
-    items: [
-      { href: '/marketplace', label: 'Marketplace', icon: Store, module: 'marketplace' },
-      { href: '/merchants', label: 'Merchants', icon: Store, module: 'marketplace' },
-    ],
-  },
-  {
-    title: 'Calendar',
-    items: [
-      { href: '/calendar', label: 'Calendar', icon: Calendar, module: 'calendar' },
-    ],
-  },
-  {
-    title: 'Education',
-    items: [
-      { href: '/learn', label: 'Learn', icon: GraduationCap, module: 'education' },
-      { href: '/education', label: 'Education', icon: GraduationCap, module: 'education' },
-      { href: '/education/templates', label: 'Templates', icon: LayoutGrid, module: 'education' },
-    ],
-  },
-  {
-    title: 'Impact',
-    items: [
-      { href: '/impact', label: 'Impact', icon: BarChart3, module: 'impact' },
-      { href: '/pools', label: 'Pools', icon: Droplets, module: 'impact' },
-      { href: '/dumb-dumb', label: 'Dumb Dumb Mode', icon: Sparkles },
+      { href: '/memberships', label: 'Memberships', icon: Heart },
       { href: '/transparency', label: 'Transparency', icon: Eye },
-      { href: '/earth', label: 'Earth', icon: Leaf },
+      { href: '/docs', label: 'Docs', icon: LayoutGrid },
+      { href: '/contact', label: 'Contact', icon: MapPin },
     ],
   },
   {
@@ -128,6 +87,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const tenant = useTenant();
   const pathname = usePathname();
   const isAdmin = user && adminRoles.has(user.role);
+  const isAuthenticated = !!user;
 
   const toggle = () => {
     const next = !collapsed;
@@ -143,7 +103,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         {navSections.map((section) => {
           if (section.adminOnly && !isAdmin) return null;
           const visibleItems = section.items.filter(
-            (item) => !item.module || tenant.modules[item.module]
+            (item) => (!item.module || tenant.modules[item.module]) && (!item.authRequired || isAuthenticated)
           );
           if (visibleItems.length === 0) return null;
 

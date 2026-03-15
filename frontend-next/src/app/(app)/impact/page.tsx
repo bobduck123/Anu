@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import ImpactHeader from '@/components/impact/ImpactHeader';
 import PoolCards from '@/components/impact/PoolCards';
 import StreakWidget from '@/components/impact/StreakWidget';
@@ -54,6 +55,7 @@ const toImpactSummaryData = (value: unknown): ImpactSummaryData | null => {
 };
 
 export default function ImpactHomePage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [pools, setPools] = useState<ImpactPool[]>([]);
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [collaborative, setCollaborative] = useState<CollaborativeChallenge[]>([]);
@@ -69,6 +71,15 @@ export default function ImpactHomePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
     Promise.all([
       membershipsApi.status(),
       poolsApi.list(),
@@ -98,9 +109,13 @@ export default function ImpactHomePage() {
       })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Failed to load impact data'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
     const loadCollab = async () => {
       try {
         const scopeId = collabScope === 'microcosm' && selectedMicrocosm ? parseInt(selectedMicrocosm) : undefined;
@@ -110,7 +125,54 @@ export default function ImpactHomePage() {
       } catch { /* ignore */ }
     };
     loadCollab();
-  }, [collabScope, selectedMicrocosm]);
+  }, [collabScope, isAuthenticated, selectedMicrocosm]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-[var(--color-institutional)]" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
+        <div className="max-w-5xl mx-auto px-4 md:px-8 pt-28 pb-20 space-y-8">
+          <section className="card-civic">
+            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-earth-medium)] mb-3">Impact Workspace</p>
+            <h1 className="text-4xl font-semibold text-[var(--color-earth-dark)] mb-4" style={{ fontFamily: 'var(--font-serif)' }}>
+              Sign in for live pool, streak, and membership data
+            </h1>
+            <p className="text-[var(--color-earth-medium)] leading-relaxed max-w-3xl">
+              The authenticated impact workspace pulls membership status, pool balances, collaborative challenges, and node metrics. Public visitors can still use the Manara feed, transparency surface, and memberships route.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
+              <Link href="/auth" className="btn-pill btn-pill-primary text-center">
+                Sign in
+              </Link>
+              <Link href={manaraPath()} className="btn-pill btn-pill-outline text-center">
+                Open Manara
+              </Link>
+            </div>
+          </section>
+
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              ['Memberships', 'Subscription status, streaks, and checkout live here after sign-in.'],
+              ['Pools', 'Node-level balances and pool metrics require authenticated context.'],
+              ['Challenges', 'Collaborative goals are scoped to your node or microcosm.'],
+            ].map(([title, body]) => (
+              <div key={title} className="card-civic">
+                <h2 className="text-xl font-semibold text-[var(--color-earth-dark)] mb-3">{title}</h2>
+                <p className="text-[var(--color-earth-medium)] leading-relaxed">{body}</p>
+              </div>
+            ))}
+          </section>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>

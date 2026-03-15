@@ -4,6 +4,7 @@ import { useEffect, useRef, useMemo } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ImpactPoolCard } from '@/components/civic/ImpactPoolCard';
+import { useAuth } from '@/contexts/AuthContext';
 import { useCounter } from '@/lib/animations';
 import { usePools } from '@/hooks/usePools';
 import { ArrowRight, Wallet, Activity, Loader2 } from 'lucide-react';
@@ -28,15 +29,29 @@ export function DashboardSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
-  
-  // Fetch pools data with React Query
-  const { data: pools, isLoading, error } = usePools();
+  const { isAuthenticated } = useAuth();
+  const { data: pools, isLoading, error } = usePools({ enabled: isAuthenticated });
 
   // Calculate total balance from pools
   const totalBalance = useMemo(() => {
-    if (!pools) return 248000; // fallback
+    if (!pools) return 0;
     return pools.reduce((sum, pool) => sum + (pool.balance || 0), 0);
   }, [pools]);
+
+  const previewPools = [
+    {
+      name: 'Relief Pool',
+      description: 'Emergency mutual-aid allocations with council review and ledger-backed disbursement.',
+    },
+    {
+      name: 'Sovereignty Pool',
+      description: 'Local stewardship capacity for nodes, organisers, and long-horizon governance work.',
+    },
+    {
+      name: 'Infrastructure Pool',
+      description: 'Shared platform operations, tooling, and transparent service maintenance.',
+    },
+  ];
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -109,9 +124,14 @@ export function DashboardSection() {
                 Transparent allocation of resources across relief, sovereignty, and 
                 infrastructure. Every dollar is tracked on our append-only ledger.
               </p>
+              {!isAuthenticated && (
+                <p className="text-xs text-[var(--color-earth-medium)] mt-2">
+                  Live balances appear after sign-in. Public ledger reporting is being brought online separately.
+                </p>
+              )}
               {error && (
                 <p className="text-xs text-amber-600 mt-2">
-                  Using offline data (API unavailable)
+                  Live pool balances are unavailable right now.
                 </p>
               )}
             </div>
@@ -120,21 +140,43 @@ export function DashboardSection() {
             <div className="card-civic-dark min-w-[280px]">
               <div className="flex items-center gap-3 mb-2">
                 <Wallet className="w-5 h-5 text-[rgb(var(--color-sage))]" />
-                <span className="text-white/70 text-sm">Total Commons Balance</span>
+                <span className="text-white/70 text-sm">
+                  {isAuthenticated ? 'Total Commons Balance' : 'Live Ledger Status'}
+                </span>
               </div>
-              <div className="text-4xl font-semibold text-white font-mono-data">
-                <TotalBalance value={totalBalance} />
-              </div>
-              <div className="flex items-center gap-2 mt-2 text-sm">
-                <span className="text-[rgb(var(--color-sage))]">+23%</span>
-                <span className="text-white/50">vs last quarter</span>
-              </div>
+              {isAuthenticated ? (
+                <>
+                  <div className="text-4xl font-semibold text-white font-mono-data">
+                    <TotalBalance value={totalBalance} />
+                  </div>
+                  <div className="flex items-center gap-2 mt-2 text-sm">
+                    <span className="text-white/50">Visible from your signed-in node context</span>
+                  </div>
+                </>
+              ) : (
+                <div className="text-sm text-white/70 leading-relaxed">
+                  Public visitors see structure and purpose here. Signed-in members see live balances.
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Pool Cards Grid */}
-        {isLoading ? (
+        {!isAuthenticated ? (
+          <div
+            ref={cardsRef}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {previewPools.map((pool) => (
+              <div key={pool.name} className="card-civic">
+                <p className="text-xs uppercase tracking-[0.18em] text-earth-medium mb-3">Preview</p>
+                <h3 className="text-xl font-semibold text-earth-dark mb-3">{pool.name}</h3>
+                <p className="text-earth-medium leading-relaxed">{pool.description}</p>
+              </div>
+            ))}
+          </div>
+        ) : isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
               <div key={i} className="card-civic animate-pulse">
@@ -143,6 +185,12 @@ export function DashboardSection() {
                 <div className="h-4 bg-gray-200 rounded w-1/2" />
               </div>
             ))}
+          </div>
+        ) : error ? (
+          <div className="card-civic">
+            <p className="text-earth-medium">
+              Live pool data is unavailable right now. Use Transparency for the current public status, or try again after signing in.
+            </p>
           </div>
         ) : (
           <div 
@@ -164,6 +212,11 @@ export function DashboardSection() {
                 sparklineData={pool.sparklineData}
               />
             ))}
+            {pools?.length === 0 && (
+              <div className="card-civic lg:col-span-3">
+                <p className="text-earth-medium">No impact pools are configured for this node yet.</p>
+              </div>
+            )}
           </div>
         )}
 

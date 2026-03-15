@@ -2,7 +2,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { reliefApi, type ReliefRequestInput, type ReliefRequestStatus, type ReliefRequestRecord } from '@/lib/api/endpoints';
-import { mockReliefRequests } from '@/lib/mockData';
 
 const STALE_TIME = 1000 * 60 * 2; // 2 minutes
 
@@ -46,38 +45,30 @@ function transformRequest(req: ReliefRequestRecord, index: number): ReliefReques
 }
 
 async function fetchMyRequests(): Promise<ReliefRequest[]> {
-  try {
-    const requests = await reliefApi.myRequests();
-    return requests.map((req, i) => transformRequest(req, i));
-  } catch (error) {
-    console.warn('API failed, using mock data:', error);
-    return mockReliefRequests;
-  }
+  const requests = await reliefApi.myRequests();
+  return requests.map((req, i) => transformRequest(req, i));
 }
 
 async function fetchQueue(): Promise<ReliefRequest[]> {
-  try {
-    const requests = await reliefApi.queue();
-    return requests.map((req, i) => transformRequest(req, i));
-  } catch (error) {
-    console.warn('API failed, using mock data:', error);
-    return mockReliefRequests;
-  }
+  const requests = await reliefApi.queue();
+  return requests.map((req, i) => transformRequest(req, i));
 }
 
-export function useMyReliefRequests() {
+export function useMyReliefRequests(options: { enabled?: boolean } = {}) {
   return useQuery<ReliefRequest[]>({
     queryKey: ['relief', 'my-requests'],
     queryFn: fetchMyRequests,
     staleTime: STALE_TIME,
+    enabled: options.enabled ?? true,
   });
 }
 
-export function useReliefQueue() {
+export function useReliefQueue(options: { enabled?: boolean } = {}) {
   return useQuery<ReliefRequest[]>({
     queryKey: ['relief', 'queue'],
     queryFn: fetchQueue,
     staleTime: STALE_TIME,
+    enabled: options.enabled ?? true,
   });
 }
 

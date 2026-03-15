@@ -2,7 +2,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { poolsApi, type ImpactPool } from '@/lib/api/endpoints';
-import { mockPools } from '@/lib/mockData';
 
 const STALE_TIME = 1000 * 60 * 5; // 5 minutes
 
@@ -41,21 +40,16 @@ function transformPool(pool: ImpactPool): PoolWithUI {
 }
 
 async function fetchPools(): Promise<PoolWithUI[]> {
-  try {
-    const pools = await poolsApi.list();
-    return pools.map(transformPool);
-  } catch (error) {
-    console.warn('API failed, using mock data:', error);
-    // Return mock data transformed to match PoolWithUI
-    return mockPools;
-  }
+  const pools = await poolsApi.list();
+  return pools.map(transformPool);
 }
 
-export function usePools() {
+export function usePools(options: { enabled?: boolean } = {}) {
   return useQuery<PoolWithUI[]>({
     queryKey: ['pools'],
     queryFn: fetchPools,
     staleTime: STALE_TIME,
+    enabled: options.enabled ?? true,
   });
 }
 

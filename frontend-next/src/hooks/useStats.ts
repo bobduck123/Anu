@@ -2,7 +2,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { transparencyApi } from '@/lib/api/endpoints';
-import { mockStats, mockTransparencySummary } from '@/lib/mockData';
 
 const STALE_TIME = 1000 * 60 * 5; // 5 minutes
 
@@ -18,24 +17,18 @@ interface CommonsStats {
 }
 
 async function fetchStats(): Promise<CommonsStats> {
-  try {
-    // Try to get stats from transparency API
-    const summary = await transparencyApi.nodeSummary();
-    
-    return {
-      totalDistributed: summary.totals.outflows_30d / 100,
-      totalMembers: mockStats.totalMembers, // Not in transparency API
-      validators: mockStats.validators,
-      organizers: mockStats.organizers,
-      activeNodes: mockStats.activeNodes,
-      monthlyGrantsRemaining: summary.relief_capacity.monthly_grants_remaining,
-      avgProcessingDays: summary.relief_capacity.avg_processing_days,
-      adminRatio: summary.totals.admin_ratio_30d,
-    };
-  } catch (error) {
-    console.warn('API failed, using mock data:', error);
-    return mockStats;
-  }
+  const summary = await transparencyApi.nodeSummary();
+
+  return {
+    totalDistributed: summary.totals.outflows_30d / 100,
+    totalMembers: 0,
+    validators: 0,
+    organizers: 0,
+    activeNodes: 0,
+    monthlyGrantsRemaining: summary.relief_capacity.monthly_grants_remaining,
+    avgProcessingDays: summary.relief_capacity.avg_processing_days,
+    adminRatio: summary.totals.admin_ratio_30d,
+  };
 }
 
 export function useStats() {
@@ -49,14 +42,7 @@ export function useStats() {
 export function useTransparencySummary(node?: string) {
   return useQuery({
     queryKey: ['transparency', 'summary', node],
-    queryFn: async () => {
-      try {
-        return await transparencyApi.nodeSummary(node);
-      } catch (error) {
-        console.warn('API failed, using mock data:', error);
-        return mockTransparencySummary;
-      }
-    },
+    queryFn: async () => transparencyApi.nodeSummary(node),
     staleTime: STALE_TIME,
   });
 }

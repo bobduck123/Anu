@@ -17,6 +17,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const tenant = useTenant();
   const [profileOpen, setProfileOpen] = useState(false);
+  const homeHref = isAuthenticated ? '/home' : '/';
 
   const organizerRoles = new Set(['organizer', 'node_admin', 'platform_admin', 'board_member', 'treasury_guardian']);
   const isOrganizer = user && organizerRoles.has(user.role);
@@ -48,7 +49,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
           >
             <Menu className="w-5 h-5" />
           </button>
-          <Link href="/home" className="flex items-center gap-2 focus-ring rounded-lg">
+          <Link href={homeHref} className="flex items-center gap-2 focus-ring rounded-lg">
             {tenant.logo ? (
               <Image src={tenant.logo} alt={tenant.name} width={28} height={28} unoptimized className="rounded-full object-cover" />
             ) : (

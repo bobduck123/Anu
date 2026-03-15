@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 import { Clock, Users, AlertCircle, CheckCircle, Hourglass, Loader2 } from 'lucide-react';
 import { useMyReliefRequests } from '@/hooks/useRelief';
 
@@ -220,9 +222,22 @@ export function ReliefRequestCard({
 export function ReliefSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
-  
-  // Fetch relief requests with React Query
-  const { data: requests, isLoading, error } = useMyReliefRequests();
+  const { isAuthenticated } = useAuth();
+  const { data: requests, isLoading, error } = useMyReliefRequests({ enabled: isAuthenticated });
+  const previewSteps = [
+    {
+      title: 'Submit',
+      body: 'Members file requests with only the minimum information needed to start support.',
+    },
+    {
+      title: 'Review',
+      body: 'Micro-councils and assigned workers review urgency, evidence, and allocation fit.',
+    },
+    {
+      title: 'Disburse',
+      body: 'Approved support is released against an auditable decision trail.',
+    },
+  ];
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -276,20 +291,35 @@ export function ReliefSection() {
               Anonymous requests for community support. Reviewed by micro-councils 
               with transparent voting and allocation.
             </p>
+            {!isAuthenticated && (
+              <p className="text-xs text-earth-medium mt-2">
+                Relief timelines are private by default. Sign in to view your own requests and updates.
+              </p>
+            )}
             {error && (
               <p className="text-xs text-amber-600 mt-2">
-                Using offline data (API unavailable)
+                Live relief status is unavailable right now.
               </p>
             )}
           </div>
 
-          <button className="btn-pill-accent">
-            Submit Request
-          </button>
+          <Link href={isAuthenticated ? '/relief' : '/auth'} className="btn-pill-accent">
+            {isAuthenticated ? 'Submit Request' : 'Sign In to Submit'}
+          </Link>
         </div>
 
         {/* Cards Grid */}
-        {isLoading ? (
+        {!isAuthenticated ? (
+          <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {previewSteps.map((step) => (
+              <div key={step.title} className="card-civic">
+                <p className="text-xs uppercase tracking-[0.18em] text-earth-medium mb-3">{step.title}</p>
+                <p className="text-earth-dark font-medium mb-2">{step.title} relief support</p>
+                <p className="text-earth-medium leading-relaxed">{step.body}</p>
+              </div>
+            ))}
+          </div>
+        ) : isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
               <div key={i} className="card-civic animate-pulse">
@@ -298,6 +328,12 @@ export function ReliefSection() {
                 <div className="h-4 bg-gray-200 rounded w-1/2" />
               </div>
             ))}
+          </div>
+        ) : error ? (
+          <div className="card-civic">
+            <p className="text-earth-medium">
+              Your relief requests could not be loaded. Try again after signing in or when the core service is available.
+            </p>
           </div>
         ) : (
           <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -315,6 +351,11 @@ export function ReliefSection() {
                 anonId={request.anonId}
               />
             ))}
+            {requests?.length === 0 && (
+              <div className="card-civic lg:col-span-3">
+                <p className="text-earth-medium">No relief requests are attached to this account yet.</p>
+              </div>
+            )}
           </div>
         )}
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { membershipsApi, MembershipPlan, SubscriptionStatus } from '@/lib/api/endpoints';
 import { CreditCard, Check, Flame, Loader2, Star, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -44,6 +45,7 @@ const FALLBACK_STATUS: SubscriptionStatus = {
 };
 
 export default function MembershipsPage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +53,16 @@ export default function MembershipsPage() {
   const [subscribing, setSubscribing] = useState<number | null>(null);
 
   useEffect(() => {
-    Promise.all([membershipsApi.listPlans(), membershipsApi.status()])
+    if (authLoading) {
+      return;
+    }
+
+    setLoading(true);
+
+    Promise.all([
+      membershipsApi.listPlans(),
+      isAuthenticated ? membershipsApi.status() : Promise.resolve(FALLBACK_STATUS),
+    ])
       .then(([planData, statusData]) => {
         setPlans(planData.length ? planData : FALLBACK_PLANS);
         setStatus(statusData || FALLBACK_STATUS);
@@ -63,7 +74,7 @@ export default function MembershipsPage() {
         setStatus(FALLBACK_STATUS);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
   const subscribe = async (planId: number) => {
     try {

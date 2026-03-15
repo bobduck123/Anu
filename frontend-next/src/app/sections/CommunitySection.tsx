@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useAuth } from '@/contexts/AuthContext';
 import { MemberTile } from '@/components/civic/MemberTile';
 import { useMembers, useMemberStats } from '@/hooks/useMembers';
 import { Users, ArrowRight, Loader2 } from 'lucide-react';
@@ -19,20 +20,24 @@ const marqueeItems = [
   'Brisbane Node',
   'Perth Node',
   'Adelaide Node',
-  '1,247 Members',
-  '$2.4M Distributed',
-  '89% To Relief',
   'Transparent Ledger',
   'Community Governance',
+  'Consent-Based Profiles',
+  'Local Stewardship',
 ];
 
 export function CommunitySection() {
   const sectionRef = useRef<HTMLElement>(null);
   const marqueeRef = useRef<HTMLDivElement>(null);
-  
-  // Fetch members and stats with React Query
-  const { data: members, isLoading: membersLoading, error: membersError } = useMembers(8);
-  const { data: stats, isLoading: statsLoading } = useMemberStats();
+  const { isAuthenticated } = useAuth();
+  const { data: members, isLoading: membersLoading, error: membersError } = useMembers(8, { enabled: isAuthenticated });
+  const { data: stats, isLoading: statsLoading, error: statsError } = useMemberStats({ enabled: isAuthenticated });
+  const previewRoles = [
+    { title: 'Participants', body: 'People contributing time, care, and local knowledge.' },
+    { title: 'Organisers', body: 'Operators coordinating requests, pools, and follow-through.' },
+    { title: 'Validators', body: 'Members reviewing evidence, governance, and allocations.' },
+    { title: 'Case Workers', body: 'Assigned support roles with limited, consent-based access.' },
+  ];
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -116,9 +121,14 @@ export function CommunitySection() {
               A diverse network of validators, organizers, and participants building 
               resilient communities together.
             </p>
+            {!isAuthenticated && (
+              <p className="text-xs text-white/50 mt-2">
+                Public roster data stays private by default. Signed-in members see node-specific profiles.
+              </p>
+            )}
             {membersError && (
               <p className="text-xs text-amber-300 mt-2">
-                Using offline data (API unavailable)
+                Live member data is unavailable right now.
               </p>
             )}
           </div>
@@ -133,7 +143,16 @@ export function CommunitySection() {
         </div>
 
         {/* Member Grid - 2 rows of 4 */}
-        {isLoading ? (
+        {!isAuthenticated ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {previewRoles.map((role) => (
+              <div key={role.title} className="bg-white/10 rounded-xl p-5 border border-white/10">
+                <p className="text-sm font-semibold text-white mb-2">{role.title}</p>
+                <p className="text-sm text-white/60 leading-relaxed">{role.body}</p>
+              </div>
+            ))}
+          </div>
+        ) : isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <div key={i} className="bg-white/10 rounded-xl p-5 animate-pulse">
@@ -142,6 +161,12 @@ export function CommunitySection() {
                 <div className="h-3 bg-white/20 rounded w-1/2" />
               </div>
             ))}
+          </div>
+        ) : membersError ? (
+          <div className="bg-white/10 rounded-xl p-5 border border-white/10">
+            <p className="text-sm text-white/70">
+              Member profiles could not be loaded. Try again after signing in or when the core service is stable.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -158,27 +183,27 @@ export function CommunitySection() {
         <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 py-8 border-t border-white/10">
           <div className="text-center">
             <div className="text-3xl font-semibold text-white mb-1 font-mono-data">
-              {statsLoading ? '-' : (stats?.total || 1247).toLocaleString()}
+              {isAuthenticated && !statsLoading && !statsError ? stats?.total.toLocaleString() : 'Private'}
             </div>
-            <div className="text-white/50 text-sm">Total Members</div>
+            <div className="text-white/50 text-sm">{isAuthenticated ? 'Total Members' : 'Member roster'}</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-semibold text-white mb-1 font-mono-data">
-              {statsLoading ? '-' : (stats?.validators || 156).toLocaleString()}
+              {isAuthenticated && !statsLoading && !statsError ? stats?.validators.toLocaleString() : 'Scoped'}
             </div>
-            <div className="text-white/50 text-sm">Validators</div>
+            <div className="text-white/50 text-sm">{isAuthenticated ? 'Validators' : 'Role-based access'}</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-semibold text-white mb-1 font-mono-data">
-              {statsLoading ? '-' : (stats?.organizers || 42).toLocaleString()}
+              {isAuthenticated && !statsLoading && !statsError ? stats?.organizers.toLocaleString() : 'Local'}
             </div>
-            <div className="text-white/50 text-sm">Organizers</div>
+            <div className="text-white/50 text-sm">{isAuthenticated ? 'Organizers' : 'Node stewardship'}</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-semibold text-white mb-1 font-mono-data">
-              {statsLoading ? '-' : (stats?.activeNodes || 12).toLocaleString()}
+              {isAuthenticated && !statsLoading && !statsError ? stats?.activeNodes.toLocaleString() : 'Consent'}
             </div>
-            <div className="text-white/50 text-sm">Active Nodes</div>
+            <div className="text-white/50 text-sm">{isAuthenticated ? 'Active Nodes' : 'Data sharing model'}</div>
           </div>
         </div>
       </div>

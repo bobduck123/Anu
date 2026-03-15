@@ -1,5 +1,4 @@
-// React Query hooks with mock data fallback
-// All hooks gracefully fall back to mock data when API is unavailable
+// React Query hooks for live platform data
 
 export { usePools, usePoolDashboard } from './usePools';
 export { 
