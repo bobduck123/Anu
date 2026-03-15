@@ -34,9 +34,9 @@ try {
       to_regclass('public._prisma_migrations')::text AS public_migrations_table
   `);
   const migrationsTable =
-    migrationsInfo?.falak_migrations_table === 'falak._prisma_migrations'
+    migrationsInfo?.falak_migrations_table
       ? 'falak._prisma_migrations'
-      : migrationsInfo?.public_migrations_table === 'public._prisma_migrations'
+      : migrationsInfo?.public_migrations_table
         ? 'public._prisma_migrations'
         : null;
   assert(migrationsTable, 'Prisma migrations table is missing.');

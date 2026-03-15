@@ -67,9 +67,9 @@ export class FalakHealthService {
       `);
 
       const migrationsTable =
-        schemaInfo?.falak_migrations_table === 'falak._prisma_migrations'
+        schemaInfo?.falak_migrations_table
           ? 'falak._prisma_migrations'
-          : schemaInfo?.public_migrations_table === 'public._prisma_migrations'
+          : schemaInfo?.public_migrations_table
             ? 'public._prisma_migrations'
             : null;
 
