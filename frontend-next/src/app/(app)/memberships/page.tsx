@@ -44,6 +44,8 @@ const FALLBACK_STATUS: SubscriptionStatus = {
   subscription: null,
 };
 
+const BLOCKED_SUBSCRIPTION_STATUSES = new Set(['pending', 'active', 'trialing', 'past_due', 'unpaid', 'incomplete']);
+
 export default function MembershipsPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const authHref = '/auth';
@@ -53,6 +55,8 @@ export default function MembershipsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [subscribing, setSubscribing] = useState<number | null>(null);
+  const subscriptionStatus = status?.subscription?.status || null;
+  const hasGuardedSubscription = subscriptionStatus ? BLOCKED_SUBSCRIPTION_STATUSES.has(subscriptionStatus) : false;
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -209,6 +213,22 @@ export default function MembershipsPage() {
           </div>
         )}
 
+        {subscriptionStatus === 'pending' && checkoutNotice !== 'success' && (
+          <div className="p-4 rounded-xl border mb-8" style={{ backgroundColor: 'var(--color-sage-light)', borderColor: 'var(--color-sage)' }}>
+            <p className="text-sm text-[var(--color-earth-dark)]">
+              Your membership checkout is still processing. We&apos;ll unlock the active subscription view after payment confirmation lands.
+            </p>
+          </div>
+        )}
+
+        {(subscriptionStatus === 'past_due' || subscriptionStatus === 'unpaid') && (
+          <div className="p-4 rounded-xl border mb-8" style={{ backgroundColor: 'var(--color-accent-light)', borderColor: 'var(--color-accent)' }}>
+            <p className="text-sm text-[var(--color-accent)]">
+              Your current membership needs payment attention before you can start another plan.
+            </p>
+          </div>
+        )}
+
         {!isAuthenticated && !authLoading && (
           <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] mb-8">
             <p className="text-sm text-[var(--color-earth-medium)]">
@@ -306,17 +326,38 @@ export default function MembershipsPage() {
 
                   {/* Subscribe button */}
                   {isAuthenticated ? (
-                    <button
-                      onClick={() => subscribe(plan.id)}
-                      disabled={subscribing !== null}
-                      className="btn-pill w-full justify-center text-white"
-                      style={{ backgroundColor: meta.accent }}
-                    >
-                      {subscribing === plan.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      ) : null}
-                      {subscribing === plan.id ? 'Redirecting...' : 'Subscribe'}
-                    </button>
+                    hasGuardedSubscription ? (
+                      status?.is_subscribed ? (
+                        <Link
+                          href="/impact"
+                          className="btn-pill w-full justify-center text-center text-white"
+                          style={{ backgroundColor: meta.accent }}
+                        >
+                          View impact
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled
+                          className="btn-pill w-full justify-center text-white opacity-80 cursor-not-allowed"
+                          style={{ backgroundColor: meta.accent }}
+                        >
+                          {subscriptionStatus === 'pending' || subscriptionStatus === 'incomplete' ? 'Checkout pending' : 'Resolve current plan'}
+                        </button>
+                      )
+                    ) : (
+                      <button
+                        onClick={() => subscribe(plan.id)}
+                        disabled={subscribing !== null}
+                        className="btn-pill w-full justify-center text-white"
+                        style={{ backgroundColor: meta.accent }}
+                      >
+                        {subscribing === plan.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        ) : null}
+                        {subscribing === plan.id ? 'Redirecting...' : 'Subscribe'}
+                      </button>
+                    )
                   ) : (
                     <Link
                       href={authHref}

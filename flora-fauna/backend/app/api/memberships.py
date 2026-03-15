@@ -11,6 +11,7 @@ from .utils import ok, error
 
 
 memberships_bp = Blueprint("memberships", __name__, url_prefix="/memberships")
+BLOCKED_SUBSCRIPTION_STATUSES = {"pending", "active", "trialing", "past_due", "unpaid", "incomplete"}
 
 
 @memberships_bp.route("/plans", methods=["GET"])
@@ -71,6 +72,20 @@ def checkout_session():
     user = get_current_user()
     if not user:
         return error("unauthorized", "Unauthorized", status=401)
+    existing_subscription = (
+        Subscription.query
+        .filter_by(user_id=user.id)
+        .filter(Subscription.status.in_(BLOCKED_SUBSCRIPTION_STATUSES))
+        .order_by(Subscription.created_at.desc())
+        .first()
+    )
+    if existing_subscription:
+        return error(
+            "conflict",
+            "You already have a membership in progress. Resolve the current subscription before starting another.",
+            status=409,
+            details={"subscription_id": existing_subscription.id, "status": existing_subscription.status},
+        )
     plan = MembershipPlan.query.get(plan_id)
     if not plan:
         return error("not_found", "Plan not found", status=404)
