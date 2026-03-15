@@ -46,6 +46,7 @@ const FALLBACK_STATUS: SubscriptionStatus = {
 
 export default function MembershipsPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const authHref = '/auth';
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,6 +78,10 @@ export default function MembershipsPage() {
   }, [authLoading, isAuthenticated]);
 
   const subscribe = async (planId: number) => {
+    if (!isAuthenticated) {
+      return;
+    }
+
     try {
       setSubscribing(planId);
       const res = await membershipsApi.createCheckout(planId);
@@ -152,6 +157,14 @@ export default function MembershipsPage() {
         {error && (
           <div className="p-4 rounded-xl bg-[var(--color-accent-light)] border border-[var(--color-accent)] mb-8">
             <p className="text-sm text-[var(--color-accent)]">{error}</p>
+          </div>
+        )}
+
+        {!isAuthenticated && !authLoading && (
+          <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] mb-8">
+            <p className="text-sm text-[var(--color-earth-medium)]">
+              Plans are public. Sign in when you&rsquo;re ready to start secure checkout and track your membership.
+            </p>
           </div>
         )}
 
@@ -243,17 +256,27 @@ export default function MembershipsPage() {
                   </div>
 
                   {/* Subscribe button */}
-                  <button
-                    onClick={() => subscribe(plan.id)}
-                    disabled={subscribing !== null}
-                    className="btn-pill w-full justify-center text-white"
-                    style={{ backgroundColor: meta.accent }}
-                  >
-                    {subscribing === plan.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    ) : null}
-                    {subscribing === plan.id ? 'Redirecting...' : 'Subscribe'}
-                  </button>
+                  {isAuthenticated ? (
+                    <button
+                      onClick={() => subscribe(plan.id)}
+                      disabled={subscribing !== null}
+                      className="btn-pill w-full justify-center text-white"
+                      style={{ backgroundColor: meta.accent }}
+                    >
+                      {subscribing === plan.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : null}
+                      {subscribing === plan.id ? 'Redirecting...' : 'Subscribe'}
+                    </button>
+                  ) : (
+                    <Link
+                      href={authHref}
+                      className="btn-pill w-full justify-center text-center text-white"
+                      style={{ backgroundColor: meta.accent }}
+                    >
+                      Sign in to subscribe
+                    </Link>
+                  )}
                 </div>
               );
             })}
