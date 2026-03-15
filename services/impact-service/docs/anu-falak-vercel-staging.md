@@ -66,6 +66,8 @@ Why:
 ### Preview / Staging
 
 Use [vercel.staging.env.example](/C:/Dev/Flora_fauna/services/impact-service/vercel.staging.env.example).
+Use [anu-falak-vercel-input-checklist.md](/C:/Dev/Flora_fauna/services/impact-service/docs/anu-falak-vercel-input-checklist.md)
+to collect the real hosted inputs before verification.
 
 Key rules:
 
@@ -136,6 +138,15 @@ Preview or staging project settings:
 - `FALAK_REQUIRE_VERIFIED_ACTOR=true`
 - `REQUIRE_STRIPE_INFRA=false`
 - `DISABLE_SCHEDULED_JOBS=true`
+
+Important:
+
+- keep `FALAK_STAGING_ALLOW_MUTATIONS=false` in Vercel runtime env
+- use a separate local or CI `.env.falak-staging` for operator verification
+- in that operator env, set `FALAK_STAGING_ALLOW_MUTATIONS=true` only while
+  running `falak:migrate:staging` and `falak:seed:staging`
+- do not treat placeholders in either template as valid hosted inputs
+- do not continue until the fresh staging DB has been explicitly confirmed
 
 Production project settings:
 
