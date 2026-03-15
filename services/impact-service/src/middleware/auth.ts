@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import config from '../config';
+import { extractUserPrincipal, verifyJwtClaims } from '../auth/jwt';
 import { errors } from '../utils/errors';
 import logger from '../utils/logger';
 
@@ -33,19 +33,17 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
   const token = parts[1];
 
   try {
-    // Flask stores identity under 'sub' claim as { username: string, role: string }
-    const decoded = jwt.verify(token, config.JWT_SECRET_KEY) as unknown;
-    const payload = decoded as Record<string, unknown>;
+    const payload = verifyJwtClaims(token);
+    const principal = extractUserPrincipal(payload);
 
-    const sub = payload.sub as Record<string, unknown> | undefined;
-    if (!sub || typeof sub.username !== 'string' || typeof sub.role !== 'string') {
-      logger.debug({ decoded }, 'Invalid JWT structure - missing sub.username or sub.role');
+    if (!principal.username || !principal.role) {
+      logger.debug({ payload }, 'Invalid JWT structure - missing compatible username or role');
       return next(errors.unauthorized('Invalid token structure'));
     }
 
     req.user = {
-      username: sub.username,
-      role: sub.role
+      username: principal.username,
+      role: principal.role
     };
 
     logger.debug({ username: req.user.username, role: req.user.role }, 'JWT verified');
@@ -73,14 +71,13 @@ export const optionalAuth = (req: Request, res: Response, next: NextFunction) =>
   const token = parts[1];
 
   try {
-    const decoded = jwt.verify(token, config.JWT_SECRET_KEY) as unknown;
-    const payload = decoded as Record<string, unknown>;
-    const sub = payload.sub as Record<string, unknown> | undefined;
+    const payload = verifyJwtClaims(token);
+    const principal = extractUserPrincipal(payload);
 
-    if (sub && typeof sub.username === 'string' && typeof sub.role === 'string') {
+    if (principal.username && principal.role) {
       req.user = {
-        username: sub.username,
-        role: sub.role
+        username: principal.username,
+        role: principal.role
       };
     }
   } catch {

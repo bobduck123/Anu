@@ -57,6 +57,7 @@ export const config = {
 
   // JWT
   JWT_SECRET_KEY: required('JWT_SECRET_KEY'),
+  PUBLIC_JWT_SECRET_KEY: process.env.PUBLIC_JWT_SECRET_KEY || '',
 
   // Stripe
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || '',

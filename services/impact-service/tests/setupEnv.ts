@@ -10,6 +10,7 @@ if (process.env.FALAK_ENV_FILE) {
 
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || 'falak-test-secret';
+process.env.PUBLIC_JWT_SECRET_KEY = process.env.PUBLIC_JWT_SECRET_KEY || 'falak-public-test-secret';
 process.env.BETA_ALLOW_PLACEHOLDER_INFRA = 'true';
 
 if (process.env.FALAK_INTEGRATION_LOCAL === 'true') {

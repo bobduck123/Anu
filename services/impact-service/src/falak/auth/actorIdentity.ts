@@ -1,49 +1,12 @@
 import { FastifyRequest } from 'fastify';
 import jwt from 'jsonwebtoken';
-import config from '../../config';
+import { extractIdentityCandidates as extractJwtIdentityCandidates, verifyJwtClaims } from '../../auth/jwt';
 import { errors } from '../../utils/errors';
 import { FalakRuntimeConfig } from '../config/falakRuntimeConfig';
 import { FalakRepository, RequestContext } from '../domain/types';
 
-interface JwtSubjectObject {
-  external_auth_id?: string;
-  username?: string;
-  email?: string;
-  role?: string;
-}
-
-function pushIdentity(candidates: string[], value: unknown) {
-  if (typeof value !== 'string') {
-    return;
-  }
-
-  const trimmed = value.trim();
-  if (!trimmed || candidates.includes(trimmed)) {
-    return;
-  }
-
-  candidates.push(trimmed);
-}
-
 function extractIdentityCandidates(token: string): string[] {
-  const decoded = jwt.verify(token, config.JWT_SECRET_KEY) as Record<string, unknown>;
-  const subject = decoded.sub;
-  const identities: string[] = [];
-
-  if (typeof subject === 'string') {
-    pushIdentity(identities, subject);
-  } else if (subject && typeof subject === 'object') {
-    const typed = subject as JwtSubjectObject;
-    pushIdentity(identities, typed.external_auth_id);
-    pushIdentity(identities, typed.username);
-    pushIdentity(identities, typed.email);
-  }
-
-  pushIdentity(identities, decoded.external_auth_id);
-  pushIdentity(identities, decoded.preferred_username);
-  pushIdentity(identities, decoded.email);
-
-  return identities;
+  return extractJwtIdentityCandidates(verifyJwtClaims(token));
 }
 
 function requestedActorId(request: FastifyRequest): string | null {
