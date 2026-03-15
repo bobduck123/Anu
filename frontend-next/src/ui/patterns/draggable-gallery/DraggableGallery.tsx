@@ -98,12 +98,12 @@ const getFlipPlugin = (): FlipPlugin | undefined => {
 
 async function ensurePlugins() {
   if (pluginsRegistered || typeof window === 'undefined') return;
-  const all = (await import(/* webpackIgnore: true */ 'gsap/all')) as GsapAllModule;
-  const Draggable = all.Draggable ?? all.default?.Draggable;
-  const Flip = all.Flip ?? all.default?.Flip;
-  // Register whatever we got — gsap/all auto-registers most plugins
-  if (Draggable) gsap.registerPlugin(Draggable);
-  if (Flip) gsap.registerPlugin(Flip);
+  const all = (await import('gsap/all')) as GsapAllModule;
+  const draggablePlugin = all.Draggable ?? all.default?.Draggable;
+  const flipPlugin = all.Flip ?? all.default?.Flip;
+  // Register whichever plugin exports resolved in the current bundle.
+  if (draggablePlugin) gsap.registerPlugin(draggablePlugin);
+  if (flipPlugin) gsap.registerPlugin(flipPlugin);
   pluginsRegistered = true;
 }
 
@@ -502,7 +502,24 @@ export function DraggableGallery({
 
   /* ---- Plugin init ---- */
   useEffect(() => {
-    ensurePlugins().then(() => setReady(true));
+    let cancelled = false;
+
+    const initPlugins = async () => {
+      try {
+        await ensurePlugins();
+      } catch (error) {
+        console.error('Failed to initialize community gallery plugins', error);
+      } finally {
+        if (!cancelled) {
+          setReady(true);
+        }
+      }
+    };
+
+    void initPlugins();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useLayoutEffect(() => {
