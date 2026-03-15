@@ -105,6 +105,8 @@ Build behavior:
 
 - Vercel uses [vercel.json](/C:/Dev/Flora_fauna/services/impact-service/vercel.json)
 - `@vercel/node` serves [api/index.ts](/C:/Dev/Flora_fauna/services/impact-service/api/index.ts) and [api/falak.ts](/C:/Dev/Flora_fauna/services/impact-service/api/falak.ts)
+- the service install/build path must run `prisma generate` so cached Vercel
+  dependencies do not leave Prisma Client stale
 - do not embed `prisma migrate deploy` into the Vercel build
 
 Safe migration strategy:
