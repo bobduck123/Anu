@@ -185,6 +185,71 @@ function tileEyebrow(post: CommunityPost): string {
   return post.author.role;
 }
 
+function createDetailPreviewNode(post: CommunityPost, image: HTMLImageElement | null): HTMLElement {
+  if (image) {
+    const clone = image.cloneNode(true) as HTMLImageElement;
+    clone.style.position = 'relative';
+    clone.style.left = '0';
+    clone.style.top = '0';
+    clone.style.width = '100%';
+    clone.style.height = '100%';
+    clone.style.objectFit = 'cover';
+    clone.style.margin = '0';
+    clone.style.pointerEvents = 'none';
+    return clone;
+  }
+
+  const preview = document.createElement('div');
+  preview.style.cssText = `
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 22px;
+    background: ${tileGradient(post)};
+    color: white;
+    pointer-events: none;
+    overflow: hidden;
+  `;
+
+  const glow = document.createElement('div');
+  glow.style.cssText = `
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at top left, rgba(255,255,255,0.22), transparent 42%),
+      linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.12) 40%, rgba(0,0,0,0.45) 100%);
+  `;
+  preview.appendChild(glow);
+
+  const eyebrow = document.createElement('p');
+  eyebrow.textContent = tileEyebrow(post).toUpperCase();
+  eyebrow.style.cssText = `
+    position: relative;
+    margin: 0 0 10px;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    opacity: 0.7;
+  `;
+  preview.appendChild(eyebrow);
+
+  const title = document.createElement('h3');
+  title.textContent = post.title || post.author.pseudonym;
+  title.style.cssText = `
+    position: relative;
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.05;
+    font-weight: 600;
+    max-width: 80%;
+  `;
+  preview.appendChild(title);
+
+  return preview;
+}
+
 const TAG_COLORS: Record<string, string> = {
   'mutual-aid': 'bg-emerald-500/20 text-emerald-300',
   garden: 'bg-green-500/20 text-green-300',
@@ -515,6 +580,7 @@ export function DraggableGallery({
     if (!ready) return;
 
     observerRef.current?.disconnect();
+    const viewport = viewportRef.current;
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
@@ -522,14 +588,26 @@ export function DraggableGallery({
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.remove('out-of-view');
-            gsap.to(entry.target, { opacity: 1, duration: 0.6, ease: 'power2.out' });
+            gsap.to(entry.target, {
+              opacity: 1,
+              scale: 1,
+              duration: 0.45,
+              ease: 'power2.out',
+              overwrite: 'auto',
+            });
           } else {
             entry.target.classList.add('out-of-view');
-            gsap.to(entry.target, { opacity: 0.1, duration: 0.6, ease: 'power2.out' });
+            gsap.to(entry.target, {
+              opacity: 0.58,
+              scale: 0.985,
+              duration: 0.45,
+              ease: 'power2.out',
+              overwrite: 'auto',
+            });
           }
         });
       },
-      { root: null, threshold: 0.15, rootMargin: '10%' }
+      { root: viewport, threshold: 0.05, rootMargin: '18%' }
     );
 
     itemRefs.current.forEach((el) => observerRef.current!.observe(el));
@@ -784,18 +862,8 @@ export function DraggableGallery({
         overflow: hidden;
         pointer-events: none;
       `;
-      const previewNode = sourceSurface.cloneNode(true) as HTMLElement;
-      previewNode.style.position = 'relative';
-      previewNode.style.left = '0';
-      previewNode.style.top = '0';
-      previewNode.style.width = '100%';
-      previewNode.style.height = '100%';
+      const previewNode = createDetailPreviewNode(post, imgEl);
       previewNode.style.transform = 'none';
-      previewNode.style.margin = '0';
-      previewNode.style.pointerEvents = 'none';
-      if (previewNode instanceof HTMLImageElement) {
-        previewNode.style.objectFit = 'cover';
-      }
       overlay.appendChild(previewNode);
       document.body.appendChild(overlay);
 
@@ -946,6 +1014,7 @@ export function DraggableGallery({
   const imgSizePct = `${detailLayout.imageSize}${isDetailHorizontal ? 'vw' : 'vh'}`;
   const contentSizePct = `${100 - detailLayout.imageSize}${isDetailHorizontal ? 'vw' : 'vh'}`;
   const isReversed = detailLayout.imagePosition === 'right' || detailLayout.imagePosition === 'bottom';
+  const detailImageFailed = selectedPost ? brokenImages[selectedPost.id] : false;
 
   /* ---- Render ---- */
   return (
@@ -986,7 +1055,7 @@ export function DraggableGallery({
                     const el = itemRefs.current.get(item.post.id);
                     if (el) handleTileClick(item.post, el);
                   }}
-                  className="absolute cursor-pointer overflow-hidden border border-white/10 bg-black shadow-[0_18px_60px_rgba(0,0,0,0.35)]"
+                  className="absolute cursor-pointer overflow-hidden rounded-[1.6rem] border border-white/18 bg-[#05070c] shadow-[0_26px_80px_rgba(0,0,0,0.42)]"
                   style={{
                     width: ITEM_SIZE,
                     height: ITEM_SIZE,
@@ -1024,17 +1093,17 @@ export function DraggableGallery({
                     />
                   )}
 
-                  <div className="absolute inset-0 border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent_40%,rgba(0,0,0,0.18))]" />
-                  <div className="absolute inset-x-0 top-0 flex items-start justify-between p-3 text-[10px] uppercase tracking-[0.22em] text-white/70">
+                  <div className="absolute inset-0 border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),transparent_34%,rgba(0,0,0,0.28))]" />
+                  <div className="absolute inset-x-0 top-0 flex items-start justify-between p-4 text-[10px] uppercase tracking-[0.22em] text-white/76">
                     <span className="max-w-[70%] truncate">{tileEyebrow(item.post)}</span>
                     <span>{timeAgo(item.post.createdAt)}</span>
                   </div>
-                  <div className="absolute inset-x-0 bottom-0 p-4">
+                  <div className="absolute inset-x-0 bottom-0 p-5">
                     <div className="space-y-1">
-                      <p className="text-sm font-semibold leading-snug text-white line-clamp-2">
+                      <p className="text-base font-semibold leading-[1.05] text-white line-clamp-2">
                         {item.post.title || item.post.author.pseudonym}
                       </p>
-                      <p className="text-[11px] leading-relaxed text-white/72 line-clamp-3">
+                      <p className="text-[12px] leading-relaxed text-white/80 line-clamp-3">
                         {item.post.content}
                       </p>
                     </div>
@@ -1159,11 +1228,12 @@ export function DraggableGallery({
           opacity: 0,
           pointerEvents: 'none',
           flexDirection: isDetailHorizontal ? 'row' : 'column',
+          background: 'rgba(2, 6, 14, 0.92)',
         }}
       >
         {/* Image panel */}
         <div
-          className="relative flex items-center justify-center cursor-pointer"
+          className="relative flex items-center justify-center cursor-pointer overflow-hidden"
           onClick={(event) => {
             if (event.target === event.currentTarget) {
               closeDetail();
@@ -1172,16 +1242,76 @@ export function DraggableGallery({
           style={{
             width: isDetailHorizontal ? imgSizePct : '100%',
             height: isDetailHorizontal ? '100%' : imgSizePct,
-            background: 'rgba(0,0,0,0.6)',
+            background: 'rgba(4, 10, 20, 0.88)',
             order: isReversed ? 1 : 0,
           }}
         >
+          {selectedPost && (
+            <>
+              {!detailImageFailed && (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={selectedPost.coverImage}
+                    alt={selectedPost.title || selectedPost.author.pseudonym}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    onError={() => {
+                      setBrokenImages((prev) => (prev[selectedPost.id] ? prev : { ...prev, [selectedPost.id]: true }));
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,14,0.16),rgba(2,6,14,0.08)_28%,rgba(2,6,14,0.78)_100%)]" />
+                </>
+              )}
+
+              {detailImageFailed && (
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `${tileGradient(selectedPost)}, radial-gradient(circle at top left, rgba(255,255,255,0.18), transparent 42%)`,
+                  }}
+                />
+              )}
+
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] p-6 lg:p-8">
+                <div className="max-w-xl rounded-[1.75rem] border border-white/10 bg-black/18 px-5 py-4 backdrop-blur-md">
+                  <p
+                    data-detail-text
+                    className="mb-2 text-[10px] uppercase tracking-[0.24em] text-white/60"
+                  >
+                    {tileEyebrow(selectedPost)}
+                  </p>
+                  <h2
+                    data-detail-text
+                    className="max-w-lg text-2xl font-semibold leading-[1.02] text-white lg:text-[2.4rem]"
+                  >
+                    {selectedPost.title || selectedPost.author.pseudonym}
+                  </h2>
+                  <div
+                    data-detail-text
+                    className="mt-3 flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.18em] text-white/58"
+                  >
+                    <span>{timeAgo(selectedPost.createdAt)}</span>
+                    <span className="h-1 w-1 rounded-full bg-white/30" />
+                    <span>{selectedPost.author.pseudonym}</span>
+                    {selectedPost.microcosm && (
+                      <>
+                        <span className="h-1 w-1 rounded-full bg-white/30" />
+                        <span>{selectedPost.microcosm}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
           <div
             id="gallery-zoom-target"
             onClick={(event) => event.stopPropagation()}
+            className="relative z-[3] overflow-hidden rounded-[1.75rem] border border-white/12 shadow-[0_35px_120px_rgba(0,0,0,0.55)]"
             style={{
-              width: isDetailHorizontal ? '80%' : '60%',
-              height: isDetailHorizontal ? '80%' : '80%',
+              width: isDetailHorizontal ? '72%' : '64%',
+              height: isDetailHorizontal ? '78%' : '72%',
             }}
           />
         </div>
@@ -1197,96 +1327,95 @@ export function DraggableGallery({
           style={{
             width: isDetailHorizontal ? contentSizePct : '100%',
             height: isDetailHorizontal ? '100%' : contentSizePct,
-            background: 'rgba(0,0,0,0.6)',
+            background: 'rgba(5, 9, 18, 0.9)',
             order: isReversed ? 0 : 1,
           }}
         >
           {selectedPost && (
-            <div className="px-8 py-10 lg:px-12 space-y-6 max-w-xl" onClick={(e) => e.stopPropagation()}>
-              {/* Number */}
-              <p data-detail-text className="text-white/30 text-xs font-mono uppercase tracking-widest">
-                {selectedPost.id.replace('post-', '#')}
-              </p>
+            <div className="flex min-h-full items-center px-6 py-8 lg:px-10" onClick={(e) => e.stopPropagation()}>
+              <div className="w-full max-w-xl rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 shadow-[0_28px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:p-8">
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <p data-detail-text className="text-[10px] font-mono uppercase tracking-[0.28em] text-white/42">
+                      {selectedPost.id.replace('post-', '#')}
+                    </p>
+                    <div data-detail-text className="flex items-center gap-3">
+                      <span
+                        className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-white"
+                        style={{ backgroundColor: avatarColor(selectedPost.author.pseudonym) }}
+                      >
+                        {selectedPost.author.pseudonym.charAt(0)}
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium text-white">{selectedPost.author.pseudonym}</p>
+                        <p className="text-xs capitalize text-white/48">{selectedPost.author.role}</p>
+                      </div>
+                    </div>
+                  </div>
 
-              {selectedPost.title ? (
-                <>
-                  <p data-detail-text className="text-white/50 text-xs uppercase tracking-[0.2em]">
-                    {selectedPost.author.pseudonym}
+                  <p data-detail-text className="text-base leading-relaxed text-white/78 whitespace-pre-wrap lg:text-[1.02rem]">
+                    {selectedPost.content}
                   </p>
-                  <h1 data-detail-text className="text-white text-3xl lg:text-4xl font-semibold leading-tight">
-                    {selectedPost.title}
-                  </h1>
-                </>
-              ) : (
-                <h1 data-detail-text className="text-white text-3xl lg:text-4xl font-semibold leading-tight">
-                  {selectedPost.author.pseudonym}
-                </h1>
-              )}
 
-              {/* Content */}
-              <p data-detail-text className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">
-                {selectedPost.content}
-              </p>
+                  {selectedPost.tags.length > 0 && (
+                    <div data-detail-text className="flex flex-wrap gap-2">
+                      {selectedPost.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className={`rounded-full px-3 py-1 text-[10px] font-mono uppercase ${tagClass(tag)}`}
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
-              {selectedPost.sourceUrl && (
-                <a
-                  data-detail-text
-                  href={selectedPost.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex w-fit items-center rounded-full border border-white/15 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-white/80 transition-colors hover:border-white/30 hover:text-white"
-                >
-                  Read Original Story
-                </a>
-              )}
+                  <div data-detail-text className="grid grid-cols-2 gap-3 text-white/70 sm:grid-cols-4">
+                    <div className="rounded-2xl border border-white/8 bg-black/18 px-4 py-3">
+                      <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-white/38">Likes</p>
+                      <div className="flex items-center gap-2 text-sm text-white">
+                        <Heart className={`h-4 w-4 ${selectedPost.liked ? 'fill-red-500 text-red-500' : ''}`} />
+                        {selectedPost.likes}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-white/8 bg-black/18 px-4 py-3">
+                      <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-white/38">Comments</p>
+                      <div className="flex items-center gap-2 text-sm text-white">
+                        <MessageCircle className="h-4 w-4" />
+                        {selectedPost.comments}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-white/8 bg-black/18 px-4 py-3">
+                      <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-white/38">Shares</p>
+                      <div className="flex items-center gap-2 text-sm text-white">
+                        <Share2 className="h-4 w-4" />
+                        {selectedPost.shares}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-white/8 bg-black/18 px-4 py-3">
+                      <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-white/38">Place</p>
+                      <div className="flex items-center gap-2 text-sm text-white">
+                        <MapPin className="h-4 w-4" />
+                        {selectedPost.microcosm || 'Community'}
+                      </div>
+                    </div>
+                  </div>
 
-              {/* Tags */}
-              {selectedPost.tags.length > 0 && (
-                <div data-detail-text className="flex flex-wrap gap-2">
-                  {selectedPost.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className={`text-[10px] font-mono uppercase px-2.5 py-1 rounded ${tagClass(tag)}`}
-                    >
-                      #{tag}
+                  <div data-detail-text className="flex flex-wrap items-center gap-3">
+                    {selectedPost.sourceUrl && (
+                      <a
+                        href={selectedPost.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex w-fit items-center rounded-full border border-white/16 bg-white/6 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-white/86 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
+                      >
+                        Read Original Story
+                      </a>
+                    )}
+                    <span className="text-xs uppercase tracking-[0.16em] text-white/38">
+                      Published {timeAgo(selectedPost.createdAt)}
                     </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Stats */}
-              <div data-detail-text className="flex items-center gap-6 text-white/50">
-                <span className="flex items-center gap-1.5 text-sm">
-                  <Heart className={`w-4 h-4 ${selectedPost.liked ? 'fill-red-500 text-red-500' : ''}`} />
-                  {selectedPost.likes}
-                </span>
-                <span className="flex items-center gap-1.5 text-sm">
-                  <MessageCircle className="w-4 h-4" />
-                  {selectedPost.comments}
-                </span>
-                <span className="flex items-center gap-1.5 text-sm">
-                  <Share2 className="w-4 h-4" />
-                  {selectedPost.shares}
-                </span>
-                {selectedPost.microcosm && (
-                  <span className="flex items-center gap-1 text-sm ml-auto">
-                    <MapPin className="w-3.5 h-3.5" />
-                    {selectedPost.microcosm}
-                  </span>
-                )}
-              </div>
-
-              {/* Meta */}
-              <div data-detail-text className="flex items-center gap-3 pt-2">
-                <span
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold"
-                  style={{ backgroundColor: avatarColor(selectedPost.author.pseudonym) }}
-                >
-                  {selectedPost.author.pseudonym.charAt(0)}
-                </span>
-                <div>
-                  <p className="text-white/60 text-xs capitalize">{selectedPost.author.role}</p>
-                  <p className="text-white/40 text-xs">{timeAgo(selectedPost.createdAt)}</p>
+                  </div>
                 </div>
               </div>
             </div>
