@@ -14,6 +14,11 @@ const getAuthHeaders = (): Record<string, string> => {
   }
 };
 
+const getErrorMessage = async (res: Response, fallback: string): Promise<string> => {
+  const payload = await res.json().catch(() => null);
+  return payload?.error?.message || payload?.message || fallback;
+};
+
 export interface Action {
   _id: string;
   title: string;
@@ -901,20 +906,12 @@ export const api = {
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
-        if (res.status === 401 || res.status === 403 || res.status === 404 || res.status >= 500) {
-          console.warn('Stories API not available, using mock post');
-          return {
-            id: Date.now(),
-            title: payload.title,
-            content: payload.content,
-            media_url: payload.media_url,
-            author_id: 0,
-            author_pseudonym: 'Anonymous',
-            created_at: new Date().toISOString(),
-            reactions: {},
-          };
-        }
-        throw new Error('Failed to create story');
+        throw new Error(await getErrorMessage(
+          res,
+          res.status === 401 || res.status === 403
+            ? 'Sign in to publish a story.'
+            : 'Failed to publish story.',
+        ));
       }
       const data = await res.json();
       return data.data || data;
@@ -1469,22 +1466,12 @@ export const api = {
       });
 
       if (!res.ok) {
-        // For beta testing, if API is not available or auth is missing, simulate success
-        if (res.status === 401 || res.status === 403 || res.status === 404 || res.status >= 500) {
-          console.warn('Community API not available, simulating success for beta testing');
-          return {
-            id: `mock_${Date.now()}`,
-            title: article.title,
-            content: article.content,
-            category: article.category,
-            authorPseudonym: 'Anonymous',
-            createdAt: new Date().toISOString(),
-            microcosmId: article.microcosmId,
-            likes: 0,
-            comments: 0
-          } as Article;
-        }
-        throw new Error('Failed to create article');
+        throw new Error(await getErrorMessage(
+          res,
+          res.status === 401 || res.status === 403
+            ? 'Sign in to publish an article.'
+            : 'Failed to publish article.',
+        ));
       }
 
       const data = await res.json();

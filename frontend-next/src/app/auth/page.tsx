@@ -1,12 +1,28 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 
-export default function AuthPage() {
+function AuthPageFallback() {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-xl card-civic">
+        <h1 className="text-3xl font-semibold mb-2" style={{ fontFamily: 'var(--font-serif)' }}>
+          Loading account access
+        </h1>
+        <p className="text-sm text-[var(--color-muted-foreground)]">
+          Preparing your sign-in route and return path.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function AuthPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, register, isLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
@@ -14,6 +30,9 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const returnTo = searchParams.get('returnTo');
+  const nextHref = returnTo && returnTo.startsWith('/') ? returnTo : '/profile';
+  const backHref = returnTo && returnTo.startsWith('/') ? returnTo : '/';
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -24,7 +43,7 @@ export default function AuthPage() {
       } else {
         await register(username, email, password, pseudonym || username);
       }
-      router.push('/profile');
+      router.push(nextHref);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Authentication failed';
       setError(message);
@@ -40,11 +59,13 @@ export default function AuthPage() {
               {isLogin ? 'Welcome back' : 'Create your account'}
             </h1>
             <p className="text-sm text-[var(--color-muted-foreground)]">
-              {isLogin ? 'Log in to continue.' : 'Sign up to join the commons.'}
+              {isLogin
+                ? (returnTo ? 'Log in to continue where you left off.' : 'Log in to continue.')
+                : (returnTo ? 'Sign up to continue where you left off.' : 'Sign up to join the commons.')}
             </p>
           </div>
-          <Link href="/" className="text-sm text-[var(--color-institutional)] hover:underline">
-            Back home
+          <Link href={backHref} className="text-sm text-[var(--color-institutional)] hover:underline">
+            {returnTo ? 'Back' : 'Back home'}
           </Link>
         </div>
 
@@ -132,3 +153,12 @@ export default function AuthPage() {
     </div>
   );
 }
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<AuthPageFallback />}>
+      <AuthPageContent />
+    </Suspense>
+  );
+}
+

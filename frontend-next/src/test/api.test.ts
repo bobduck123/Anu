@@ -70,23 +70,31 @@ describe('api client', () => {
     expect(actions[0].location?.coordinates).toEqual([-118.25, 34.05]);
   });
 
-  it('creates a mock article when API returns 404', async () => {
+  it('surfaces article publish errors instead of creating mock content', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 404,
       json: async () => ({ message: 'missing' }),
     });
 
-    const article = await api.community.createArticle({
+    await expect(api.community.createArticle({
       title: 'New Article',
       content: 'Hello world',
       category: 'news',
+    })).rejects.toThrow('missing');
+  });
+
+  it('surfaces story publish auth errors instead of creating mock content', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      json: async () => ({ message: 'Unauthorized' }),
     });
 
-    expect(article.id).toMatch(/^mock_/);
-    expect(article.authorPseudonym).toBe('Anonymous');
-    expect(article.category).toBe('news');
-    expect(article.likes).toBe(0);
+    await expect(api.stories.create({
+      title: 'Field note',
+      content: 'A quick update from the node.',
+    })).rejects.toThrow('Unauthorized');
   });
 
   it('fetches and normalizes articles with defaults', async () => {
