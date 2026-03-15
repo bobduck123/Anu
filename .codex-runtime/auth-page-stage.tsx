@@ -30,7 +30,6 @@ function AuthPageContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const showLocalHint = process.env.NODE_ENV !== 'production';
   const returnTo = searchParams.get('returnTo');
   const nextHref = returnTo && returnTo.startsWith('/') ? returnTo : '/profile';
   const backHref = returnTo && returnTo.startsWith('/') ? returnTo : '/';
@@ -86,13 +85,6 @@ function AuthPageContent() {
             Sign up
           </button>
         </div>
-
-        {showLocalHint && (
-          <div className="mb-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-4 py-3 text-sm text-[var(--color-muted-foreground)]">
-            Local admin account: <span className="font-medium text-foreground">alpha_public</span> /
-            <span className="font-medium text-foreground"> alpha_public</span>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
@@ -169,3 +161,4 @@ export default function AuthPage() {
     </Suspense>
   );
 }
+

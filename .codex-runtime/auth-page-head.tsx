@@ -1,28 +1,12 @@
 'use client';
 
-import { Suspense, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 
-function AuthPageFallback() {
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-xl card-civic">
-        <h1 className="text-3xl font-semibold mb-2" style={{ fontFamily: 'var(--font-serif)' }}>
-          Loading account access
-        </h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          Preparing your sign-in route and return path.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function AuthPageContent() {
+export default function AuthPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { login, register, isLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
@@ -30,10 +14,6 @@ function AuthPageContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const showLocalHint = process.env.NODE_ENV !== 'production';
-  const returnTo = searchParams.get('returnTo');
-  const nextHref = returnTo && returnTo.startsWith('/') ? returnTo : '/profile';
-  const backHref = returnTo && returnTo.startsWith('/') ? returnTo : '/';
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -44,7 +24,7 @@ function AuthPageContent() {
       } else {
         await register(username, email, password, pseudonym || username);
       }
-      router.push(nextHref);
+      router.push('/profile');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Authentication failed';
       setError(message);
@@ -60,13 +40,11 @@ function AuthPageContent() {
               {isLogin ? 'Welcome back' : 'Create your account'}
             </h1>
             <p className="text-sm text-[var(--color-muted-foreground)]">
-              {isLogin
-                ? (returnTo ? 'Log in to continue where you left off.' : 'Log in to continue.')
-                : (returnTo ? 'Sign up to continue where you left off.' : 'Sign up to join the commons.')}
+              {isLogin ? 'Log in to continue.' : 'Sign up to join the commons.'}
             </p>
           </div>
-          <Link href={backHref} className="text-sm text-[var(--color-institutional)] hover:underline">
-            {returnTo ? 'Back' : 'Back home'}
+          <Link href="/" className="text-sm text-[var(--color-institutional)] hover:underline">
+            Back home
           </Link>
         </div>
 
@@ -86,13 +64,6 @@ function AuthPageContent() {
             Sign up
           </button>
         </div>
-
-        {showLocalHint && (
-          <div className="mb-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-4 py-3 text-sm text-[var(--color-muted-foreground)]">
-            Local admin account: <span className="font-medium text-foreground">alpha_public</span> /
-            <span className="font-medium text-foreground"> alpha_public</span>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
@@ -159,13 +130,5 @@ function AuthPageContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function AuthPage() {
-  return (
-    <Suspense fallback={<AuthPageFallback />}>
-      <AuthPageContent />
-    </Suspense>
   );
 }

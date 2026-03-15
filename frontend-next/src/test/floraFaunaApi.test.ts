@@ -28,11 +28,11 @@ describe('floraFaunaApi', () => {
       ),
     );
 
-    await expect(floraFaunaApi.listRevenueEvents(5)).rejects.toMatchObject<Partial<FloraFaunaApiError>>({
+    await expect(floraFaunaApi.listRevenueEvents(5)).rejects.toMatchObject({
       name: 'FloraFaunaApiError',
       status: 403,
       code: 'FORBIDDEN',
-    });
+    } satisfies Partial<FloraFaunaApiError>);
   });
 
   it('returns null for missing detail records on 404', async () => {

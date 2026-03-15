@@ -27,6 +27,7 @@ import type { Star, Constellation } from '@/data/adapters/starfieldAdapter';
 interface InternalNode {
   star: Star;
   position: THREE.Vector3;
+  anchor: THREE.Vector3;
   velocity: THREE.Vector3;
   acceleration: THREE.Vector3;
   mass: number;
@@ -34,6 +35,7 @@ interface InternalNode {
   type: number;       // 0 = core, 1 = leaf
   level: number;      // palette color index
   distanceFromRoot: number;
+  semantic: boolean;
   connections: { nodeIndex: number; strength: number }[];
 }
 
@@ -50,6 +52,7 @@ const R_BOUNDARY = 45;        // Soft boundary radius
 const K_BOUNDARY = 0.02;      // Boundary spring constant
 const MASS_MIN = 0.5;         // Mass for impact=0
 const MASS_MAX = 5.0;         // Mass for impact=100
+const K_SEMANTIC = 0.16;      // Spring force toward semantic anchors
 
 // ---------------------------------------------------------------------------
 // Color palettes
@@ -420,6 +423,7 @@ export class QuantumEngine {
 
   // Data
   private nodes: InternalNode[] = [];
+  private visibleNodes: InternalNode[] = [];
   private stars: Star[] = [];
   private constellations: Constellation[] = [];
 
@@ -428,6 +432,16 @@ export class QuantumEngine {
   private paused = false;
   private animFrameId = 0;
   private densityFactor = 1.0;
+  private layoutMode: 'orbital' | 'semantic' = 'orbital';
+  private flattenFactor = 0;
+  private connectionsVisible = true;
+  private focusStarId: string | null = null;
+  private focusTarget = new THREE.Vector3();
+  private focusCameraPosition = new THREE.Vector3();
+  private focusActive = false;
+  private autoRotateTimeout: number | null = null;
+  private readonly overviewTarget = new THREE.Vector3(0, 0, 0);
+  private readonly overviewCameraPosition = new THREE.Vector3(0, 12, 55);
 
   // Interaction helpers
   private raycaster = new THREE.Raycaster();
@@ -446,7 +460,7 @@ export class QuantumEngine {
 
     // Camera
     this.camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-    this.camera.position.set(0, 12, 55);
+    this.camera.position.copy(this.overviewCameraPosition);
 
     // Renderer
     this.renderer = new THREE.WebGLRenderer({
@@ -512,12 +526,57 @@ export class QuantumEngine {
 
   setTheme(paletteIndex: number): void {
     this.paletteIndex = Math.max(0, Math.min(2, paletteIndex));
-    this.updateColors();
+    this.buildVisualization();
   }
 
   setDensity(factor: number): void {
     this.densityFactor = Math.max(0.3, Math.min(1.0, factor));
     this.buildVisualization();
+  }
+
+  setLayoutMode(mode: 'orbital' | 'semantic'): void {
+    this.layoutMode = mode;
+    this.seedPositions();
+    this.seedVelocities();
+    this.computeAccelerations();
+    this.buildVisualization();
+  }
+
+  setFlattenFactor(factor: number): void {
+    this.flattenFactor = THREE.MathUtils.clamp(factor, 0, 1);
+  }
+
+  setConnectionsVisible(visible: boolean): void {
+    this.connectionsVisible = visible;
+    this.buildVisualization();
+  }
+
+  focusStar(starId: string | null): void {
+    this.focusStarId = starId;
+    if (!starId) {
+      this.focusTarget.copy(this.overviewTarget);
+      this.focusCameraPosition.copy(this.overviewCameraPosition);
+      this.focusActive = true;
+      this.controls.autoRotate = false;
+      this.resumeAutoRotateAfter(2200);
+      return;
+    }
+
+    const node = this.nodes.find((candidate) => candidate.star.id === starId);
+    if (!node) {
+      this.focusTarget.copy(this.overviewTarget);
+      this.focusCameraPosition.copy(this.overviewCameraPosition);
+      this.focusActive = true;
+      this.controls.autoRotate = false;
+      this.resumeAutoRotateAfter(2200);
+      return;
+    }
+
+    const direction = node.position.clone().normalize().multiplyScalar(Math.max(10, node.size * 4 + 8));
+    this.focusTarget.copy(node.position);
+    this.focusCameraPosition.copy(node.position.clone().add(direction));
+    this.focusActive = true;
+    this.controls.autoRotate = false;
   }
 
   scatter(): void {
@@ -541,7 +600,7 @@ export class QuantumEngine {
     }
     this.computeAccelerations();
     this.controls.autoRotate = false;
-    setTimeout(() => { this.controls.autoRotate = true; }, 2500);
+    this.resumeAutoRotateAfter(2500);
   }
 
   togglePause(): boolean {
@@ -552,8 +611,11 @@ export class QuantumEngine {
 
   resetCamera(): void {
     this.controls.reset();
+    this.focusTarget.copy(this.overviewTarget);
+    this.focusCameraPosition.copy(this.overviewCameraPosition);
+    this.focusActive = true;
     this.controls.autoRotate = false;
-    setTimeout(() => { this.controls.autoRotate = true; }, 2000);
+    this.resumeAutoRotateAfter(2000);
   }
 
   start(): void {
@@ -563,6 +625,7 @@ export class QuantumEngine {
 
   stop(): void {
     cancelAnimationFrame(this.animFrameId);
+    this.clearAutoRotateTimeout();
     this.canvas.removeEventListener('click', this.handleClick);
     this.canvas.removeEventListener('touchstart', this.handleTouch);
     this.disposeNetwork();
@@ -634,6 +697,21 @@ export class QuantumEngine {
     this.scene.add(this.starField);
   }
 
+  private clearAutoRotateTimeout(): void {
+    if (this.autoRotateTimeout !== null) {
+      window.clearTimeout(this.autoRotateTimeout);
+      this.autoRotateTimeout = null;
+    }
+  }
+
+  private resumeAutoRotateAfter(delayMs: number): void {
+    this.clearAutoRotateTimeout();
+    this.autoRotateTimeout = window.setTimeout(() => {
+      this.controls.autoRotate = !this.focusStarId;
+      this.autoRotateTimeout = null;
+    }, delayMs);
+  }
+
   // -----------------------------------------------------------------------
   // Star -> Node mapping
   // -----------------------------------------------------------------------
@@ -649,9 +727,11 @@ export class QuantumEngine {
       starIndex.set(star.id, idx);
       const impact = Number(star.metadata.impact) || 0;
       const isCore = constellationStarIds.has(star.id);
+      const semantic = star.metadata.layoutMode === 'semantic' || star.metadata.authoritativePosition === true;
       return {
         star,
         position: new THREE.Vector3(),
+        anchor: new THREE.Vector3(star.x, star.y, star.z),
         velocity: new THREE.Vector3(),
         acceleration: new THREE.Vector3(),
         mass: MASS_MIN + (impact / 100) * (MASS_MAX - MASS_MIN),
@@ -659,6 +739,7 @@ export class QuantumEngine {
         type: isCore ? 0 : 1,
         level: TYPE_TO_LEVEL[star.type] ?? 0,
         distanceFromRoot: 0,
+        semantic,
         connections: [],
       };
     });
@@ -701,6 +782,12 @@ export class QuantumEngine {
 
   private seedPositions(): void {
     for (const node of this.nodes) {
+      if (this.layoutMode === 'semantic' || node.semantic) {
+        node.position.copy(node.anchor);
+        node.distanceFromRoot = node.position.length();
+        continue;
+      }
+
       const hashBase = djb2(node.star.label);
       const typeIndex = TYPE_TO_LEVEL[node.star.type] ?? 0;
       const typeAngle = (typeIndex / 7) * Math.PI * 2;
@@ -724,6 +811,7 @@ export class QuantumEngine {
         r * Math.sin(phi) * Math.sin(theta),
         r * Math.cos(phi),
       );
+      node.anchor.copy(node.position);
       node.distanceFromRoot = node.position.length();
     }
 
@@ -745,6 +833,11 @@ export class QuantumEngine {
     const right = new THREE.Vector3(1, 0, 0);
 
     for (const node of this.nodes) {
+      if (this.layoutMode === 'semantic' || node.semantic) {
+        node.velocity.set(0, 0, 0);
+        continue;
+      }
+
       const hashVel = djb2(node.star.label + node.star.id);
       const participants = Number(node.star.metadata.participants) || 0;
 
@@ -803,6 +896,16 @@ export class QuantumEngine {
         ni.acceleration.addScaledVector(rij, fMag * nj.mass);
         // a_j -= G * m_i * rij / (|rij|^2 + eps^2)^(3/2)
         nj.acceleration.addScaledVector(rij, -fMag * ni.mass);
+      }
+    }
+
+    if (this.layoutMode === 'semantic') {
+      for (let i = 0; i < n; i++) {
+        const node = this.nodes[i];
+        const targetZ = THREE.MathUtils.lerp(node.anchor.z, 0, this.flattenFactor);
+        node.acceleration.x += (node.anchor.x - node.position.x) * K_SEMANTIC;
+        node.acceleration.y += (node.anchor.y - node.position.y) * K_SEMANTIC;
+        node.acceleration.z += (targetZ - node.position.z) * K_SEMANTIC;
       }
     }
 
@@ -884,11 +987,10 @@ export class QuantumEngine {
     let segIdx = 0;
 
     // Re-walk connections in same order as buildVisualization
-    const visibleSet = this.getVisibleNodes();
     const visibleNodeToIndex = new Map<InternalNode, number>();
-    visibleSet.forEach((n, i) => visibleNodeToIndex.set(n, i));
+    this.visibleNodes.forEach((n, i) => visibleNodeToIndex.set(n, i));
 
-    for (const node of visibleSet) {
+    for (const node of this.visibleNodes) {
       for (const conn of node.connections) {
         const target = this.nodes[conn.nodeIndex];
         if (!visibleNodeToIndex.has(target)) continue;
@@ -936,6 +1038,7 @@ export class QuantumEngine {
     if (this.nodes.length === 0) return;
 
     const visibleNodes = this.getVisibleNodes();
+    this.visibleNodes = visibleNodes;
     const visibleSet = new Set(visibleNodes);
     const palette = COLOR_PALETTES[this.paletteIndex];
 
@@ -980,6 +1083,12 @@ export class QuantumEngine {
 
     this.nodesMesh = new THREE.Points(nodesGeo, nodesMat);
     this.scene.add(this.nodesMesh);
+
+    palette.forEach((color, i) => {
+      if (i < 3) {
+        nodesMat.uniforms.uPulseColors.value[i].copy(color);
+      }
+    });
 
     // --- Connections geometry ---
     const connPositions: number[] = [];
@@ -1026,7 +1135,7 @@ export class QuantumEngine {
       }
     }
 
-    if (connPositions.length > 0) {
+    if (this.connectionsVisible && connPositions.length > 0) {
       const connGeo = new THREE.BufferGeometry();
       connGeo.setAttribute('position', new THREE.Float32BufferAttribute(connPositions, 3));
       connGeo.setAttribute('startPoint', new THREE.Float32BufferAttribute(startPoints, 3));
@@ -1058,6 +1167,7 @@ export class QuantumEngine {
   }
 
   private disposeNetwork(): void {
+    this.visibleNodes = [];
     if (this.nodesMesh) {
       this.scene.remove(this.nodesMesh);
       this.nodesMesh.geometry.dispose();
@@ -1156,7 +1266,9 @@ export class QuantumEngine {
     let bestDist = 2.0;
     let bestNode: InternalNode | null = null;
 
-    for (const node of this.nodes) {
+    const candidates = this.visibleNodes.length > 0 ? this.visibleNodes : this.nodes;
+
+    for (const node of candidates) {
       const projected = node.position.clone().project(this.camera);
       const dx = projected.x - this.pointer.x;
       const dy = projected.y - this.pointer.y;
@@ -1198,6 +1310,14 @@ export class QuantumEngine {
     if (this.starField) {
       this.starField.rotation.y += 0.0002;
       (this.starField.material as THREE.ShaderMaterial).uniforms.uTime.value = t;
+    }
+
+    if (this.focusActive) {
+      this.controls.target.lerp(this.focusTarget, 0.08);
+      this.camera.position.lerp(this.focusCameraPosition, 0.08);
+      if (this.camera.position.distanceTo(this.focusCameraPosition) < 0.05) {
+        this.focusActive = false;
+      }
     }
 
     this.controls.update();
