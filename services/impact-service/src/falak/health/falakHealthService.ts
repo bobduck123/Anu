@@ -49,27 +49,38 @@ export class FalakHealthService {
 
       const [schemaInfo] = await this.prisma.$queryRawUnsafe<Array<{
         falak_schema: string | null;
-        migrations_table: string | null;
+        falak_migrations_table: string | null;
+        public_migrations_table: string | null;
       }>>(`
         SELECT
           to_regnamespace('falak')::text AS falak_schema,
-          to_regclass('falak._prisma_migrations')::text AS migrations_table
+          to_regclass('falak._prisma_migrations')::text AS falak_migrations_table,
+          to_regclass('public._prisma_migrations')::text AS public_migrations_table
       `);
 
+      const migrationsTable =
+        schemaInfo?.falak_migrations_table === 'falak._prisma_migrations'
+          ? 'falak._prisma_migrations'
+          : schemaInfo?.public_migrations_table === 'public._prisma_migrations'
+            ? 'public._prisma_migrations'
+            : null;
+
       let migrationFailures = 0;
-      if (schemaInfo?.migrations_table === 'falak._prisma_migrations') {
+      if (migrationsTable) {
         const [migrationInfo] = await this.prisma.$queryRawUnsafe<Array<{
           failed_count: bigint | number;
-        }>>(`
+        }>>(
+          `
           SELECT COUNT(*) FILTER (WHERE finished_at IS NULL AND rolled_back_at IS NULL) AS failed_count
-          FROM falak._prisma_migrations
-        `);
+          FROM ${migrationsTable}
+        `
+        );
         migrationFailures = Number(migrationInfo?.failed_count ?? 0);
       }
 
       const falakSchemaOk = schemaInfo?.falak_schema === 'falak';
       const postgisOk = Boolean(databaseInfo?.postgis_version);
-      const migrationsOk = schemaInfo?.migrations_table === 'falak._prisma_migrations' && migrationFailures === 0;
+      const migrationsOk = Boolean(migrationsTable) && migrationFailures === 0;
       const healthy = falakSchemaOk && postgisOk;
       const ready = healthy && migrationsOk;
 

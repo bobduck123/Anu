@@ -23,10 +23,18 @@ try {
   stagePass('Stage A.2', 'PostGIS is available');
 
   const [migrationsInfo] = await prisma.$queryRawUnsafe(`
-    SELECT to_regclass('falak._prisma_migrations') AS migrations_table
+    SELECT
+      to_regclass('falak._prisma_migrations')::text AS falak_migrations_table,
+      to_regclass('public._prisma_migrations')::text AS public_migrations_table
   `);
-  assert(migrationsInfo?.migrations_table === 'falak._prisma_migrations', 'falak._prisma_migrations is missing.');
-  stagePass('Stage A.3', 'Prisma migrations table exists in falak schema');
+  const migrationsTable =
+    migrationsInfo?.falak_migrations_table === 'falak._prisma_migrations'
+      ? 'falak._prisma_migrations'
+      : migrationsInfo?.public_migrations_table === 'public._prisma_migrations'
+        ? 'public._prisma_migrations'
+        : null;
+  assert(migrationsTable, 'Prisma migrations table is missing.');
+  stagePass('Stage A.3', `Prisma migrations table exists at ${migrationsTable}`);
 
   const tenant = await prisma.falakTenant.findUnique({
     where: {
