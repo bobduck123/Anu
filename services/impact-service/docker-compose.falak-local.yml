@@ -1,0 +1,23 @@
+services:
+  falak-postgis:
+    image: postgis/postgis:16-3.4
+    container_name: falak-postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: anu_falak_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "55433:5432"
+    volumes:
+      - falak-postgis-data:/var/lib/postgresql/data
+      - ./docker/falak-local/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d anu_falak_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+volumes:
+  falak-postgis-data:

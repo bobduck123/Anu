@@ -1,6 +1,21 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
+import { randomUUID } from 'crypto';
+import { assertSafeLocalVerificationEnvironment } from '../src/falak/utils/localVerificationGuard';
+import { assertSafeHostedStagingEnvironment } from '../src/falak/utils/stagingRolloutGuard';
+import { PrismaFalakRepository } from '../src/falak/repositories/prismaFalakRepository';
+import { AllocationWorkflowService } from '../src/falak/services/allocationWorkflowService';
+import { ContributionWorkflowService } from '../src/falak/services/contributionWorkflowService';
+import { EventWorkflowService } from '../src/falak/services/eventWorkflowService';
+import { NoopFanoutPublisher } from '../src/falak/services/fanoutPublisher';
+import { PolicyEngine } from '../src/falak/services/policyEngine';
+import { RequestContext, ResolvedActor } from '../src/falak/domain/types';
 
 const prisma = new PrismaClient();
+
+interface RunSeedOptions {
+  commandName: string;
+  guardMode: 'local' | 'staging';
+}
 
 async function ensureMembershipPlans() {
   return Promise.all([
@@ -472,24 +487,1109 @@ async function ensureMemeticMutualAidSeed() {
   };
 }
 
-async function main() {
+async function upsertFalakNode(args: {
+  tenantId: string;
+  actorId: string;
+  type: string;
+  slug: string;
+  visibility: 'public' | 'tenant' | 'restricted';
+  sensitivityClass: string;
+  title: string;
+  summary: string;
+  metadata: Record<string, unknown>;
+  geometry?: Record<string, unknown> | null;
+  timeStart?: string | null;
+  timeEnd?: string | null;
+}) {
+  const geometrySql = args.geometry
+    ? Prisma.sql`falak.ST_SetSRID(falak.ST_GeomFromGeoJSON(${JSON.stringify(args.geometry)}), 4326)`
+    : Prisma.sql`NULL`;
+
+  const rows = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+    INSERT INTO falak.nodes (
+      tenant_id,
+      type,
+      status,
+      visibility,
+      sensitivity_class,
+      slug,
+      title,
+      summary,
+      metadata,
+      geometry,
+      time_start,
+      time_end,
+      created_by,
+      updated_by
+    )
+    VALUES (
+      ${args.tenantId}::uuid,
+      ${args.type},
+      'active'::falak.falak_node_status,
+      ${args.visibility}::falak.falak_visibility,
+      ${args.sensitivityClass},
+      ${args.slug},
+      ${args.title},
+      ${args.summary},
+      CAST(${JSON.stringify(args.metadata)} AS jsonb),
+      ${geometrySql},
+      ${args.timeStart ? new Date(args.timeStart) : null}::timestamptz,
+      ${args.timeEnd ? new Date(args.timeEnd) : null}::timestamptz,
+      ${args.actorId}::uuid,
+      ${args.actorId}::uuid
+    )
+    ON CONFLICT (tenant_id, slug) DO UPDATE
+    SET type = EXCLUDED.type,
+        status = 'active'::falak.falak_node_status,
+        visibility = EXCLUDED.visibility,
+        sensitivity_class = EXCLUDED.sensitivity_class,
+        title = EXCLUDED.title,
+        summary = EXCLUDED.summary,
+        metadata = EXCLUDED.metadata,
+        geometry = EXCLUDED.geometry,
+        time_start = EXCLUDED.time_start,
+        time_end = EXCLUDED.time_end,
+        updated_by = EXCLUDED.updated_by
+    RETURNING id
+  `);
+
+  return rows[0]!.id;
+}
+
+function makeSeedContext(
+  tenantId: string,
+  actor: ResolvedActor | null,
+  plane: RequestContext['plane']
+): RequestContext {
+  return {
+    traceId: randomUUID(),
+    tenantId,
+    tenantSlug: 'anu-beta',
+    plane,
+    actor,
+    actorResolution: {
+      source: actor ? 'verified_auth' : 'none',
+      isVerified: actor !== null,
+      authenticatedIdentity: actor?.externalAuthId ?? actor?.email ?? null,
+      requestedActorId: null
+    },
+    routeGuard: {
+      applies: false,
+      mode: 'enabled',
+      access: plane === 'public' ? 'public' : 'privileged'
+    },
+    ipAddress: '127.0.0.1',
+    userAgent: 'prisma-seed'
+  };
+}
+
+async function ensureFalakSeed() {
+  const tenant = await prisma.falakTenant.upsert({
+    where: { slug: 'anu-beta' },
+    update: {
+      name: 'ANU Beta',
+      status: 'active',
+      settings: {
+        protocol: 'falak',
+        region: 'canberra',
+        visibilityPolicy: 'culturally-aware',
+      },
+    },
+    create: {
+      slug: 'anu-beta',
+      name: 'ANU Beta',
+      status: 'active',
+      settings: {
+        protocol: 'falak',
+        region: 'canberra',
+        visibilityPolicy: 'culturally-aware',
+      },
+    },
+  });
+
+  const [admin, curator, governor, publicActor] = await Promise.all([
+    prisma.falakActor.upsert({
+      where: {
+        tenantId_externalAuthId: {
+          tenantId: tenant.id,
+          externalAuthId: 'anu-admin',
+        },
+      },
+      update: {
+        actorType: 'user',
+        email: 'admin@anu.beta',
+        displayName: 'ANU Tenant Admin',
+      },
+      create: {
+        tenantId: tenant.id,
+        actorType: 'user',
+        externalAuthId: 'anu-admin',
+        email: 'admin@anu.beta',
+        displayName: 'ANU Tenant Admin',
+      },
+    }),
+    prisma.falakActor.upsert({
+      where: {
+        tenantId_externalAuthId: {
+          tenantId: tenant.id,
+          externalAuthId: 'anu-curator',
+        },
+      },
+      update: {
+        actorType: 'user',
+        email: 'curator@anu.beta',
+        displayName: 'ANU Curator',
+      },
+      create: {
+        tenantId: tenant.id,
+        actorType: 'user',
+        externalAuthId: 'anu-curator',
+        email: 'curator@anu.beta',
+        displayName: 'ANU Curator',
+      },
+    }),
+    prisma.falakActor.upsert({
+      where: {
+        tenantId_externalAuthId: {
+          tenantId: tenant.id,
+          externalAuthId: 'anu-governor',
+        },
+      },
+      update: {
+        actorType: 'user',
+        email: 'governor@anu.beta',
+        displayName: 'ANU Governor',
+      },
+      create: {
+        tenantId: tenant.id,
+        actorType: 'user',
+        externalAuthId: 'anu-governor',
+        email: 'governor@anu.beta',
+        displayName: 'ANU Governor',
+      },
+    }),
+    prisma.falakActor.upsert({
+      where: {
+        tenantId_externalAuthId: {
+          tenantId: tenant.id,
+          externalAuthId: 'anu-public',
+        },
+      },
+      update: {
+        actorType: 'user',
+        email: 'public@anu.beta',
+        displayName: 'ANU Public Member',
+      },
+      create: {
+        tenantId: tenant.id,
+        actorType: 'user',
+        externalAuthId: 'anu-public',
+        email: 'public@anu.beta',
+        displayName: 'ANU Public Member',
+      },
+    }),
+  ]);
+
+  await prisma.falakActorRole.createMany({
+    data: [
+      { tenantId: tenant.id, actorId: admin.id, roleName: 'tenant_admin' },
+      { tenantId: tenant.id, actorId: curator.id, roleName: 'curator' },
+      { tenantId: tenant.id, actorId: governor.id, roleName: 'governor' },
+      { tenantId: tenant.id, actorId: publicActor.id, roleName: 'viewer' },
+    ],
+    skipDuplicates: true,
+  });
+
+  const regionNodeId = await upsertFalakNode({
+    tenantId: tenant.id,
+    actorId: admin.id,
+    type: 'region',
+    slug: 'ngunnawal-country',
+    visibility: 'public',
+    sensitivityClass: 'normal',
+    title: 'Ngunnawal Country',
+    summary: 'Regional anchor for ANU cultural coordination.',
+    metadata: {
+      kind: 'region',
+      custodianship: 'Ngunnawal Country',
+    },
+    geometry: {
+      type: 'Point',
+      coordinates: [149.1187, -35.2777],
+    },
+  });
+
+  const venueNodeId = await upsertFalakNode({
+    tenantId: tenant.id,
+    actorId: curator.id,
+    type: 'venue',
+    slug: 'anu-school-of-music',
+    visibility: 'public',
+    sensitivityClass: 'normal',
+    title: 'ANU School of Music',
+    summary: 'Venue node for performances, rehearsals, and cultural gatherings.',
+    metadata: {
+      capacity: 240,
+      access: 'public_programs',
+    },
+    geometry: {
+      type: 'Point',
+      coordinates: [149.1201, -35.2792],
+    },
+  });
+
+  const organisationNodeId = await upsertFalakNode({
+    tenantId: tenant.id,
+    actorId: admin.id,
+    type: 'organisation',
+    slug: 'anu-cultural-commons',
+    visibility: 'tenant',
+    sensitivityClass: 'normal',
+    title: 'ANU Cultural Commons',
+    summary: 'Tenant-scoped organisational node coordinating cultural programs.',
+    metadata: {
+      scope: 'tenant',
+      stewardingModel: 'shared-governance',
+    },
+    geometry: {
+      type: 'Point',
+      coordinates: [149.1236, -35.2811],
+    },
+  });
+
+  const communityNodeId = await upsertFalakNode({
+    tenantId: tenant.id,
+    actorId: admin.id,
+    type: 'community',
+    slug: 'ngunnawal-arts-circle',
+    visibility: 'tenant',
+    sensitivityClass: 'normal',
+    title: 'Ngunnawal Arts Circle',
+    summary: 'Tenant-scoped community node for the first ANU Falak feature slice.',
+    metadata: {
+      scope: 'tenant',
+      slice: 'cultural-event-contribution-allocation',
+    },
+    geometry: {
+      type: 'Point',
+      coordinates: [149.1192, -35.2801],
+    },
+  });
+
+  const campaignNodeId = await upsertFalakNode({
+    tenantId: tenant.id,
+    actorId: admin.id,
+    type: 'campaign',
+    slug: 'first-nations-stage-fund',
+    visibility: 'public',
+    sensitivityClass: 'normal',
+    title: 'First Nations Stage Fund',
+    summary: 'Public campaign node for governed cultural allocations.',
+    metadata: {
+      scope: 'public',
+      slice: 'cultural-event-contribution-allocation',
+    },
+    geometry: {
+      type: 'Point',
+      coordinates: [149.1212, -35.2799],
+    },
+  });
+
+  const poolNodeId = await upsertFalakNode({
+    tenantId: tenant.id,
+    actorId: admin.id,
+    type: 'liquidity_pool',
+    slug: 'weaving-futures-pool',
+    visibility: 'public',
+    sensitivityClass: 'normal',
+    title: 'Weaving Futures Pool',
+    summary: 'Liquidity pool used by the first ANU governed coordination slice.',
+    metadata: {
+      slice: 'cultural-event-contribution-allocation',
+      currency: 'AUD',
+    },
+    geometry: null,
+  });
+
+  const eventNodeId = await upsertFalakNode({
+    tenantId: tenant.id,
+    actorId: curator.id,
+    type: 'event',
+    slug: 'weaving-futures-festival',
+    visibility: 'public',
+    sensitivityClass: 'normal',
+    title: 'Weaving Futures Festival',
+    summary: 'Public cultural event coordinated through the Falak graph.',
+    metadata: {
+      format: 'festival',
+      programTrack: 'culture-and-care',
+    },
+    geometry: {
+      type: 'Point',
+      coordinates: [149.1205, -35.2795],
+    },
+    timeStart: '2026-05-01T08:00:00.000Z',
+    timeEnd: '2026-05-03T18:00:00.000Z',
+  });
+
+  const storyNodeId = await upsertFalakNode({
+    tenantId: tenant.id,
+    actorId: curator.id,
+    type: 'story',
+    slug: 'songlines-of-lake-burley',
+    visibility: 'restricted',
+    sensitivityClass: 'cultural-sensitive',
+    title: 'Songlines of Lake Burley Griffin',
+    summary: 'Restricted cultural narrative node requiring custodial visibility controls.',
+    metadata: {
+      exportPolicy: 'custodian-review',
+      culturalCare: 'restricted',
+    },
+    geometry: {
+      type: 'Point',
+      coordinates: [149.1169, -35.2922],
+    },
+  });
+
+  const existingEdges = await prisma.$queryRaw<Array<{ relation: string; from_node: string; to_node: string }>>(Prisma.sql`
+    SELECT relation, from_node, to_node
+    FROM falak.edges
+    WHERE tenant_id = ${tenant.id}::uuid
+      AND (
+        (from_node = ${venueNodeId}::uuid AND to_node = ${regionNodeId}::uuid AND relation = 'located_in')
+        OR (from_node = ${eventNodeId}::uuid AND to_node = ${venueNodeId}::uuid AND relation = 'occurs_at')
+        OR (from_node = ${eventNodeId}::uuid AND to_node = ${organisationNodeId}::uuid AND relation = 'hosted_by')
+        OR (from_node = ${storyNodeId}::uuid AND to_node = ${regionNodeId}::uuid AND relation = 'rooted_in')
+      )
+  `);
+
+  const hasEdge = (relation: string, fromNode: string, toNode: string) =>
+    existingEdges.some((edge) => edge.relation === relation && edge.from_node === fromNode && edge.to_node === toNode);
+
+  if (!hasEdge('located_in', venueNodeId, regionNodeId)) {
+    await prisma.$executeRaw(Prisma.sql`
+      INSERT INTO falak.edges (tenant_id, from_node, to_node, relation, status, weight, evidence, metadata, created_by)
+      VALUES (
+        ${tenant.id}::uuid,
+        ${venueNodeId}::uuid,
+        ${regionNodeId}::uuid,
+        'located_in',
+        'active'::falak.falak_edge_status,
+        1,
+        '[]'::jsonb,
+        '{}'::jsonb,
+        ${admin.id}::uuid
+      )
+    `);
+  }
+
+  if (!hasEdge('occurs_at', eventNodeId, venueNodeId)) {
+    await prisma.$executeRaw(Prisma.sql`
+      INSERT INTO falak.edges (tenant_id, from_node, to_node, relation, status, weight, evidence, metadata, created_by)
+      VALUES (
+        ${tenant.id}::uuid,
+        ${eventNodeId}::uuid,
+        ${venueNodeId}::uuid,
+        'occurs_at',
+        'active'::falak.falak_edge_status,
+        1,
+        '[]'::jsonb,
+        '{}'::jsonb,
+        ${curator.id}::uuid
+      )
+    `);
+  }
+
+  if (!hasEdge('hosted_by', eventNodeId, organisationNodeId)) {
+    await prisma.$executeRaw(Prisma.sql`
+      INSERT INTO falak.edges (tenant_id, from_node, to_node, relation, status, weight, evidence, metadata, created_by)
+      VALUES (
+        ${tenant.id}::uuid,
+        ${eventNodeId}::uuid,
+        ${organisationNodeId}::uuid,
+        'hosted_by',
+        'active'::falak.falak_edge_status,
+        1,
+        '[]'::jsonb,
+        '{}'::jsonb,
+        ${curator.id}::uuid
+      )
+    `);
+  }
+
+  if (!hasEdge('rooted_in', storyNodeId, regionNodeId)) {
+    await prisma.$executeRaw(Prisma.sql`
+      INSERT INTO falak.edges (tenant_id, from_node, to_node, relation, status, weight, evidence, metadata, created_by)
+      VALUES (
+        ${tenant.id}::uuid,
+        ${storyNodeId}::uuid,
+        ${regionNodeId}::uuid,
+        'rooted_in',
+        'active'::falak.falak_edge_status,
+        1,
+        '[]'::jsonb,
+        '{}'::jsonb,
+        ${curator.id}::uuid
+      )
+    `);
+  }
+
+  await Promise.all([
+    prisma.falakPolicy.upsert({
+      where: {
+        tenantId_name: {
+          tenantId: tenant.id,
+          name: 'node-create-admin-curator',
+        },
+      },
+      update: {
+        resourceType: 'node',
+        action: 'create',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+      },
+      create: {
+        tenantId: tenant.id,
+        name: 'node-create-admin-curator',
+        resourceType: 'node',
+        action: 'create',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    }),
+    prisma.falakPolicy.upsert({
+      where: {
+        tenantId_name: {
+          tenantId: tenant.id,
+          name: 'node-update-restricted-needs-approval',
+        },
+      },
+      update: {
+        resourceType: 'node',
+        action: 'update',
+        effect: 'requires_approval',
+        priority: 5,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          resource_visibility_in: ['restricted'],
+          approval_threshold: 2,
+          require_actor: true,
+        },
+      },
+      create: {
+        tenantId: tenant.id,
+        name: 'node-update-restricted-needs-approval',
+        resourceType: 'node',
+        action: 'update',
+        effect: 'requires_approval',
+        priority: 5,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          resource_visibility_in: ['restricted'],
+          approval_threshold: 2,
+          require_actor: true,
+        },
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    }),
+    prisma.falakPolicy.upsert({
+      where: {
+        tenantId_name: {
+          tenantId: tenant.id,
+          name: 'node-update-admin-curator',
+        },
+      },
+      update: {
+        resourceType: 'node',
+        action: 'update',
+        effect: 'allow',
+        priority: 20,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+      },
+      create: {
+        tenantId: tenant.id,
+        name: 'node-update-admin-curator',
+        resourceType: 'node',
+        action: 'update',
+        effect: 'allow',
+        priority: 20,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    }),
+    prisma.falakPolicy.upsert({
+      where: {
+        tenantId_name: {
+          tenantId: tenant.id,
+          name: 'node-delete-viewer-deny',
+        },
+      },
+      update: {
+        resourceType: 'node',
+        action: 'delete',
+        effect: 'deny',
+        priority: 1,
+        conditions: {
+          roles_any: ['viewer'],
+          require_actor: true,
+        },
+      },
+      create: {
+        tenantId: tenant.id,
+        name: 'node-delete-viewer-deny',
+        resourceType: 'node',
+        action: 'delete',
+        effect: 'deny',
+        priority: 1,
+        conditions: {
+          roles_any: ['viewer'],
+          require_actor: true,
+        },
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    }),
+    prisma.falakPolicy.upsert({
+      where: {
+        tenantId_name: {
+          tenantId: tenant.id,
+          name: 'edge-create-admin-curator',
+        },
+      },
+      update: {
+        resourceType: 'edge',
+        action: 'create',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+      },
+      create: {
+        tenantId: tenant.id,
+        name: 'edge-create-admin-curator',
+        resourceType: 'edge',
+        action: 'create',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    }),
+    prisma.falakPolicy.upsert({
+      where: {
+        tenantId_name: {
+          tenantId: tenant.id,
+          name: 'approval-create-admin-curator',
+        },
+      },
+      update: {
+        resourceType: 'approval',
+        action: 'create',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+      },
+      create: {
+        tenantId: tenant.id,
+        name: 'approval-create-admin-curator',
+        resourceType: 'approval',
+        action: 'create',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    }),
+    prisma.falakPolicy.upsert({
+      where: {
+        tenantId_name: {
+          tenantId: tenant.id,
+          name: 'approval-vote-governor-admin',
+        },
+      },
+      update: {
+        resourceType: 'approval',
+        action: 'vote',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin', 'governor'],
+          require_actor: true,
+        },
+      },
+      create: {
+        tenantId: tenant.id,
+        name: 'approval-vote-governor-admin',
+        resourceType: 'approval',
+        action: 'vote',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin', 'governor'],
+          require_actor: true,
+        },
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    }),
+    prisma.falakPolicy.upsert({
+      where: {
+        tenantId_name: {
+          tenantId: tenant.id,
+          name: 'event-create-admin-curator',
+        },
+      },
+      update: {
+        resourceType: 'event',
+        action: 'create',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+      },
+      create: {
+        tenantId: tenant.id,
+        name: 'event-create-admin-curator',
+        resourceType: 'event',
+        action: 'create',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    }),
+    prisma.falakPolicy.upsert({
+      where: {
+        tenantId_name: {
+          tenantId: tenant.id,
+          name: 'contribution-record-admin-curator',
+        },
+      },
+      update: {
+        resourceType: 'contribution',
+        action: 'record',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+      },
+      create: {
+        tenantId: tenant.id,
+        name: 'contribution-record-admin-curator',
+        resourceType: 'contribution',
+        action: 'record',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    }),
+    prisma.falakPolicy.upsert({
+      where: {
+        tenantId_name: {
+          tenantId: tenant.id,
+          name: 'contribution-record-anonymous',
+        },
+      },
+      update: {
+        resourceType: 'contribution',
+        action: 'record',
+        effect: 'allow',
+        priority: 20,
+        conditions: {
+          context_equals: {
+            anonymous: true,
+          },
+        },
+      },
+      create: {
+        tenantId: tenant.id,
+        name: 'contribution-record-anonymous',
+        resourceType: 'contribution',
+        action: 'record',
+        effect: 'allow',
+        priority: 20,
+        conditions: {
+          context_equals: {
+            anonymous: true,
+          },
+        },
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    }),
+    prisma.falakPolicy.upsert({
+      where: {
+        tenantId_name: {
+          tenantId: tenant.id,
+          name: 'allocation-propose-admin-curator',
+        },
+      },
+      update: {
+        resourceType: 'allocation',
+        action: 'propose',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+      },
+      create: {
+        tenantId: tenant.id,
+        name: 'allocation-propose-admin-curator',
+        resourceType: 'allocation',
+        action: 'propose',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    }),
+    prisma.falakPolicy.upsert({
+      where: {
+        tenantId_name: {
+          tenantId: tenant.id,
+          name: 'allocation-execute-approval-threshold',
+        },
+      },
+      update: {
+        resourceType: 'allocation',
+        action: 'execute',
+        effect: 'requires_approval',
+        priority: 5,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          context_equals: {
+            currency: 'AUD',
+          },
+          context_number_gt: {
+            amount: 500,
+          },
+          approval_threshold: 2,
+          require_actor: true,
+        },
+      },
+      create: {
+        tenantId: tenant.id,
+        name: 'allocation-execute-approval-threshold',
+        resourceType: 'allocation',
+        action: 'execute',
+        effect: 'requires_approval',
+        priority: 5,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          context_equals: {
+            currency: 'AUD',
+          },
+          context_number_gt: {
+            amount: 500,
+          },
+          approval_threshold: 2,
+          require_actor: true,
+        },
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    }),
+    prisma.falakPolicy.upsert({
+      where: {
+        tenantId_name: {
+          tenantId: tenant.id,
+          name: 'allocation-execute-admin-curator',
+        },
+      },
+      update: {
+        resourceType: 'allocation',
+        action: 'execute',
+        effect: 'allow',
+        priority: 20,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+      },
+      create: {
+        tenantId: tenant.id,
+        name: 'allocation-execute-admin-curator',
+        resourceType: 'allocation',
+        action: 'execute',
+        effect: 'allow',
+        priority: 20,
+        conditions: {
+          roles_any: ['tenant_admin', 'curator'],
+          require_actor: true,
+        },
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    }),
+    prisma.falakPolicy.upsert({
+      where: {
+        tenantId_name: {
+          tenantId: tenant.id,
+          name: 'federation-link-admin',
+        },
+      },
+      update: {
+        resourceType: 'federation_link',
+        action: 'create',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin'],
+          require_actor: true,
+        },
+      },
+      create: {
+        tenantId: tenant.id,
+        name: 'federation-link-admin',
+        resourceType: 'federation_link',
+        action: 'create',
+        effect: 'allow',
+        priority: 10,
+        conditions: {
+          roles_any: ['tenant_admin'],
+          require_actor: true,
+        },
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    }),
+  ]);
+
+  const repository = new PrismaFalakRepository(prisma);
+  const policyEngine = new PolicyEngine(repository);
+  const fanoutPublisher = new NoopFanoutPublisher();
+  const eventWorkflowService = new EventWorkflowService(repository, policyEngine, fanoutPublisher);
+  const contributionWorkflowService = new ContributionWorkflowService(repository, policyEngine, fanoutPublisher);
+  const allocationWorkflowService = new AllocationWorkflowService(repository, policyEngine, fanoutPublisher);
+
+  const adminActor: ResolvedActor = {
+    id: admin.id,
+    tenantId: tenant.id,
+    actorType: admin.actorType,
+    externalAuthId: admin.externalAuthId,
+    email: admin.email,
+    displayName: admin.displayName,
+    roles: [{ id: `${admin.id}-tenant-admin`, roleName: 'tenant_admin', regionNodeId: null }],
+  };
+  const governorActor: ResolvedActor = {
+    id: governor.id,
+    tenantId: tenant.id,
+    actorType: governor.actorType,
+    externalAuthId: governor.externalAuthId,
+    email: governor.email,
+    displayName: governor.displayName,
+    roles: [{ id: `${governor.id}-governor`, roleName: 'governor', regionNodeId: null }],
+  };
+
+  const adminContext = makeSeedContext(tenant.id, adminActor, 'privileged');
+  const governorContext = makeSeedContext(tenant.id, governorActor, 'privileged');
+  const anonymousContributionContext = makeSeedContext(tenant.id, null, 'public');
+
+  const sliceEventSlug = 'anu-cultural-night';
+  const existingSliceEvents = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+    SELECT id
+    FROM falak.nodes
+    WHERE tenant_id = ${tenant.id}::uuid
+      AND slug = ${sliceEventSlug}
+    LIMIT 1
+  `);
+  const sliceEventId = existingSliceEvents[0]?.id ?? (
+    await eventWorkflowService.createEvent(adminContext, {
+      visibility: 'public',
+      sensitivityClass: 'normal',
+      slug: sliceEventSlug,
+      title: 'ANU Cultural Night',
+      summary: 'Seeded end-to-end ANU event on the Falak protocol slice.',
+      metadata: {
+        seed: true,
+        slice: 'cultural-event-contribution-allocation',
+      },
+      geometry: {
+        type: 'Point',
+        coordinates: [149.1206, -35.2794],
+      },
+      timeStart: '2026-05-10T08:00:00.000Z',
+      timeEnd: '2026-05-10T12:00:00.000Z',
+      venueNodeId,
+      communityNodeId,
+      campaignNodeId,
+      poolNodeId,
+    })
+  ).event.id;
+
+  const existingContributionRefs = await prisma.$queryRaw<Array<{ reference: string | null }>>(Prisma.sql`
+    SELECT reference
+    FROM falak.contributions
+    WHERE tenant_id = ${tenant.id}::uuid
+      AND event_node_id = ${sliceEventId}::uuid
+      AND reference IN ('anu-seed-contribution-1', 'anu-seed-contribution-2')
+  `);
+  const existingContributionRefSet = new Set(existingContributionRefs.map((row) => row.reference).filter(Boolean));
+
+  if (!existingContributionRefSet.has('anu-seed-contribution-1')) {
+    await contributionWorkflowService.recordContribution(anonymousContributionContext, {
+      eventNodeId: sliceEventId,
+      poolNodeId,
+      amount: 250,
+      currency: 'AUD',
+      note: 'Seeded public contribution',
+      reference: 'anu-seed-contribution-1',
+      contributedAt: '2026-05-10T09:00:00.000Z',
+    });
+  }
+
+  if (!existingContributionRefSet.has('anu-seed-contribution-2')) {
+    await contributionWorkflowService.recordContribution(anonymousContributionContext, {
+      eventNodeId: sliceEventId,
+      poolNodeId,
+      amount: 475,
+      currency: 'AUD',
+      note: 'Seeded public contribution',
+      reference: 'anu-seed-contribution-2',
+      contributedAt: '2026-05-10T09:30:00.000Z',
+    });
+  }
+
+  const existingSliceProposal = await prisma.$queryRaw<Array<{ id: string; approval_id: string | null; status: string }>>(Prisma.sql`
+    SELECT id, approval_id, status
+    FROM falak.allocation_proposals
+    WHERE tenant_id = ${tenant.id}::uuid
+      AND event_node_id = ${sliceEventId}::uuid
+      AND rationale = 'Seed governed allocation proposal'
+    LIMIT 1
+  `);
+
+  let seedProposalStatus = existingSliceProposal[0]?.status ?? null;
+  let seedApprovalId = existingSliceProposal[0]?.approval_id ?? null;
+  if (!existingSliceProposal[0]) {
+    const proposalWorkflow = await allocationWorkflowService.proposeAllocation(adminContext, {
+      eventNodeId: sliceEventId,
+      poolNodeId,
+      targetNodeId: campaignNodeId,
+      amount: 600,
+      currency: 'AUD',
+      rationale: 'Seed governed allocation proposal',
+    });
+    seedProposalStatus = proposalWorkflow.proposal.status;
+    seedApprovalId = proposalWorkflow.approval?.id ?? null;
+  }
+
+  return {
+    tenant: tenant.slug,
+    actors: [admin.displayName, curator.displayName, governor.displayName, publicActor.displayName],
+    nodes: [
+      'ngunnawal-country',
+      'anu-school-of-music',
+      'anu-cultural-commons',
+      'weaving-futures-festival',
+      'ngunnawal-arts-circle',
+      'first-nations-stage-fund',
+      'weaving-futures-pool',
+      sliceEventSlug,
+      'songlines-of-lake-burley',
+    ],
+    anuSlice: {
+      event: sliceEventSlug,
+      community: 'ngunnawal-arts-circle',
+      campaign: 'first-nations-stage-fund',
+      pool: 'weaving-futures-pool',
+      pendingApprovalId: seedApprovalId,
+      proposalStatus: seedProposalStatus,
+    },
+  };
+}
+
+export async function runSeed(options: RunSeedOptions) {
+  if (options.guardMode === 'local') {
+    assertSafeLocalVerificationEnvironment({
+      commandName: options.commandName,
+      envVarNames: ['DATABASE_URL']
+    });
+  } else {
+    assertSafeHostedStagingEnvironment({
+      commandName: options.commandName,
+      envVarNames: ['DATABASE_URL']
+    });
+  }
+
   console.log('Seeding impact-service database...');
 
   const plans = await ensureMembershipPlans();
   await ensureLegacyImpactPools();
   const memeticSeed = await ensureMemeticMutualAidSeed();
+  const falakSeed = await ensureFalakSeed();
 
   console.log('Seed complete', {
     membershipPlans: plans.map((plan) => plan.name),
     memeticSeed,
+    falakSeed,
   });
 }
 
-main()
-  .catch((error) => {
-    console.error('Seeding failed:', error);
-    process.exit(1);
+export async function disconnectSeedPrisma(): Promise<void> {
+  await prisma.$disconnect();
+}
+
+if (require.main === module) {
+  runSeed({
+    commandName: 'Prisma seed',
+    guardMode: 'local'
   })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+    .catch((error) => {
+      console.error('Seeding failed:', error);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await disconnectSeedPrisma();
+    });
+}
