@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthGateCard from '@/components/auth/AuthGateCard';
 import { Wallet, CreditCard } from 'lucide-react';
 import { api, type LedgerEntry } from '@/lib/api';
 import { Card, CardTitle } from '@/ui-system/primitives/Card';
@@ -10,11 +12,21 @@ import { EmptyState } from '@/ui-system/states/EmptyState';
 import { StatusBadge } from '@/ui-system/primitives/StatusBadge';
 
 export default function WalletLedgerPage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
     const load = async () => {
       try {
         const [ledgerRes, balRes] = await Promise.allSettled([
@@ -30,7 +42,7 @@ export default function WalletLedgerPage() {
       finally { setLoading(false); }
     };
     load();
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
   const columns: Column<LedgerEntry>[] = [
     { key: 'id', label: '#', sortable: true, className: 'w-16' },
@@ -55,7 +67,19 @@ export default function WalletLedgerPage() {
     },
   ];
 
-  if (loading) return <LoadingState fullPage message="Loading wallet..." />;
+  if (authLoading || loading) return <LoadingState fullPage message="Loading wallet..." />;
+
+  if (!isAuthenticated) {
+    return (
+      <AuthGateCard
+        eyebrow="Wallet Ledger"
+        title="Sign in to review your wallet ledger"
+        description="Detailed credit ledger entries are tied to your account and remain private until you sign in."
+        secondaryHref="/wallet"
+        secondaryLabel="Wallet overview"
+      />
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-react';
 
 interface PoolCardsProps {
   pools: ImpactPool[];
+  linkBasePath?: string | null;
 }
 
 const categoryColors: Record<string, string> = {
@@ -15,7 +16,7 @@ const categoryColors: Record<string, string> = {
   default: 'var(--color-sage)',
 };
 
-export default function PoolCards({ pools }: PoolCardsProps) {
+export default function PoolCards({ pools, linkBasePath = '/pools' }: PoolCardsProps) {
   if (!pools?.length) {
     return (
       <div className="card-civic text-center py-10">
@@ -31,14 +32,8 @@ export default function PoolCards({ pools }: PoolCardsProps) {
         const balance = pool.current_balance_cents / 100;
         const target = pool.target_amount_cents ? pool.target_amount_cents / 100 : null;
         const progress = target ? Math.min(100, (balance / target) * 100) : 0;
-
-        return (
-          <Link
-            key={pool.id}
-            href={`/pools/${pool.id}`}
-            className="card-civic group"
-          >
-            {/* Category badge */}
+        const content = (
+          <>
             <div className="flex items-center justify-between mb-4">
               <span
                 className="text-xs font-medium uppercase tracking-wider px-2.5 py-1 rounded-full"
@@ -49,10 +44,11 @@ export default function PoolCards({ pools }: PoolCardsProps) {
               >
                 {pool.category || 'pool'}
               </span>
-              <ArrowRight className="w-4 h-4 text-[var(--color-earth-medium)] group-hover:text-[var(--color-institutional)] group-hover:translate-x-1 transition-all duration-300" />
+              {linkBasePath && (
+                <ArrowRight className="w-4 h-4 text-[var(--color-earth-medium)] group-hover:text-[var(--color-institutional)] group-hover:translate-x-1 transition-all duration-300" />
+              )}
             </div>
 
-            {/* Name + Description */}
             <h3
               className="font-semibold text-lg text-[var(--color-earth-dark)] mb-2"
               style={{ fontFamily: 'var(--font-serif)' }}
@@ -63,7 +59,6 @@ export default function PoolCards({ pools }: PoolCardsProps) {
               {pool.description || 'Shared community resources.'}
             </p>
 
-            {/* Balance */}
             <div className="pt-4 border-t border-[var(--color-border)]">
               <div className="flex items-baseline justify-between">
                 <div>
@@ -82,7 +77,6 @@ export default function PoolCards({ pools }: PoolCardsProps) {
                 )}
               </div>
 
-              {/* Progress bar */}
               {target && (
                 <div className="progress-bar mt-3">
                   <div
@@ -95,7 +89,21 @@ export default function PoolCards({ pools }: PoolCardsProps) {
                 </div>
               )}
             </div>
+          </>
+        );
+
+        return linkBasePath ? (
+          <Link
+            key={pool.id}
+            href={`${linkBasePath}/${pool.id}`}
+            className="card-civic group"
+          >
+            {content}
           </Link>
+        ) : (
+          <div key={pool.id} className="card-civic">
+            {content}
+          </div>
         );
       })}
     </div>

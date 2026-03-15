@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth } from '@/contexts/AuthContext';
+import AuthGateCard from '@/components/auth/AuthGateCard';
 import { api, TodoResponse, NotificationResponse, Challenge, Article } from "@/lib/api";
 import { timebankApi, burnoutApi, type TimeEntry } from "@/lib/api/endpoints";
 import { useFeatureFlag } from '@/lib/featureFlags';
@@ -26,6 +28,7 @@ interface OrganizerStatus {
 }
 
 export default function ProfilePage() {
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [todos, setTodos] = useState<TodoResponse[]>([]);
   const [notifications, setNotifications] = useState<NotificationResponse[]>([]);
@@ -50,9 +53,22 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    fetchProfileData();
-    fetchOrganizerStatus();
-  }, []);
+    if (authLoading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setIsLoading(false);
+      return;
+    }
+
+    const load = async () => {
+      await Promise.all([fetchProfileData(), fetchOrganizerStatus()]);
+      setIsLoading(false);
+    };
+
+    void load();
+  }, [authLoading, isAuthenticated, user]);
 
   useEffect(() => {
     try {
@@ -67,16 +83,22 @@ export default function ProfilePage() {
   }, [profile]);
 
   const fetchProfileData = async () => {
+    const fallbackProfile = user ? {
+      id: Number(user.id) || 0,
+      username: user.username,
+      pseudonym: user.pseudonym || user.username,
+      role: user.role,
+      points: user.points || 0,
+      level: user.level || 1,
+      points_to_level_up: 100,
+      node_id: user.nodeId ? Number(user.nodeId) : null,
+    } : null;
+
     try {
       const userData = await api.users.me();
       setProfile(userData);
     } catch {
-      // Fallback to mock data
-      setProfile({
-        id: 1, username: 'johndoe', pseudonym: 'GreenLeaf',
-        role: 'participant', points: 1250, level: 5,
-        points_to_level_up: 100, node_id: null
-      });
+      setProfile(fallbackProfile);
     }
 
     try {
@@ -164,8 +186,6 @@ export default function ProfilePage() {
       setOrganizerStatus(data);
     } catch {
       setOrganizerStatus({ hasApplied: false, isOrganizer: false, role: 'participant' });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -204,11 +224,23 @@ export default function ProfilePage() {
   const pendingTodos = todos.filter(t => !t.is_completed);
   const progressPct = profile ? Math.min(100, (profile.points / profile.points_to_level_up) * 100) : 0;
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-institutional)]"></div>
       </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return (
+      <AuthGateCard
+        eyebrow="Profile Cockpit"
+        title="Sign in to open your profile cockpit"
+        description="Your profile, organizer status, civic todos, notifications, and member progress are private to your account."
+        secondaryHref="/manara"
+        secondaryLabel="Open Manara"
+      />
     );
   }
 

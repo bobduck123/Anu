@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { poolsApi, PoolDashboard } from '@/lib/api/endpoints';
 import { api, LedgerEntry } from '@/lib/api';
+import AuthGateCard from '@/components/auth/AuthGateCard';
 import {
   ArrowLeft, ArrowDown, ArrowUp, Loader2, Shield,
   TrendingUp, TrendingDown, ChevronLeft, ChevronRight,
@@ -12,6 +14,7 @@ import Link from 'next/link';
 
 export default function PoolDetailPage() {
   const params = useParams<{ poolId: string }>();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const poolId = Number(params.poolId);
   const [data, setData] = useState<PoolDashboard | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,12 +25,21 @@ export default function PoolDetailPage() {
   const [ledgerLoading, setLedgerLoading] = useState(false);
 
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
     poolsApi
       .dashboard(poolId)
       .then(setData)
       .catch((err) => setError(err.message || 'Failed to load pool'))
       .finally(() => setLoading(false));
-  }, [poolId]);
+  }, [authLoading, isAuthenticated, poolId]);
 
   const fetchLedger = useCallback(async (page: number) => {
     setLedgerLoading(true);
@@ -44,14 +56,29 @@ export default function PoolDetailPage() {
   }, [poolId]);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
     void fetchLedger(ledgerPage);
-  }, [ledgerPage, fetchLedger]);
+  }, [fetchLedger, isAuthenticated, ledgerPage]);
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-background)' }}>
         <Loader2 className="w-6 h-6 animate-spin text-[var(--color-institutional)]" />
       </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <AuthGateCard
+        eyebrow="Pool Dashboard"
+        title="Sign in to open detailed pool dashboards"
+        description="Public visitors can review current pool balances from the pools overview. Detailed ledger filtering and 30-day flow dashboards are member-only."
+        secondaryHref="/pools"
+        secondaryLabel="View public pool summaries"
+      />
     );
   }
 

@@ -2,22 +2,58 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthGateCard from '@/components/auth/AuthGateCard';
 import { api, CreditSummary, CreditTx } from '@/lib/api';
 import { Wallet, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 export default function WalletPage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [summary, setSummary] = useState<CreditSummary>({ balance: 0, earned: 0, spent: 0 });
   const [transactions, setTransactions] = useState<CreditTx[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
     Promise.all([api.credits.balance(), api.credits.history(50)])
       .then(([balance, history]) => {
         setSummary(balance);
         setTransactions(history);
       })
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : 'Failed to load wallet data');
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [authLoading, isAuthenticated]);
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-institutional)]"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <AuthGateCard
+        eyebrow="Wallet"
+        title="Sign in to open your credits wallet"
+        description="Your credit balance, transaction history, and marketplace spending power are tied to your member account."
+        secondaryHref="/marketplace"
+        secondaryLabel="Browse marketplace"
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -26,6 +62,12 @@ export default function WalletPage() {
           <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'var(--font-serif)' }}>Community Credits Wallet</h1>
           <p className="text-[var(--color-muted-foreground)]">Track credits earned and spent across the commons.</p>
         </div>
+
+        {error && (
+          <div className="p-4 rounded-xl bg-[var(--color-accent-light)] border border-[var(--color-accent)]">
+            <p className="text-sm text-[var(--color-accent)]">{error}</p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="card-civic">
