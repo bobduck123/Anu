@@ -49,9 +49,30 @@ export default function MembershipsPage() {
   const authHref = '/auth';
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
+  const [checkoutNotice, setCheckoutNotice] = useState<'success' | 'canceled' | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [subscribing, setSubscribing] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    const isSuccess = url.searchParams.get('success') === '1';
+    const isCanceled = url.searchParams.get('canceled') === '1';
+
+    if (!isSuccess && !isCanceled) {
+      return;
+    }
+
+    setCheckoutNotice(isSuccess ? 'success' : 'canceled');
+    url.searchParams.delete('success');
+    url.searchParams.delete('canceled');
+    const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState({}, '', nextUrl);
+  }, []);
 
   useEffect(() => {
     if (authLoading) {
@@ -76,6 +97,18 @@ export default function MembershipsPage() {
       })
       .finally(() => setLoading(false));
   }, [authLoading, isAuthenticated]);
+
+  useEffect(() => {
+    if (checkoutNotice !== 'success' || authLoading || !isAuthenticated) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      membershipsApi.status().then(setStatus).catch(() => undefined);
+    }, 4000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [authLoading, checkoutNotice, isAuthenticated]);
 
   const subscribe = async (planId: number) => {
     if (!isAuthenticated) {
@@ -157,6 +190,22 @@ export default function MembershipsPage() {
         {error && (
           <div className="p-4 rounded-xl bg-[var(--color-accent-light)] border border-[var(--color-accent)] mb-8">
             <p className="text-sm text-[var(--color-accent)]">{error}</p>
+          </div>
+        )}
+
+        {checkoutNotice === 'success' && (
+          <div className="p-4 rounded-xl border mb-8" style={{ backgroundColor: 'var(--color-sage-light)', borderColor: 'var(--color-sage)' }}>
+            <p className="text-sm text-[var(--color-earth-dark)]">
+              Checkout received. Your membership will appear here as soon as payment confirmation finishes syncing.
+            </p>
+          </div>
+        )}
+
+        {checkoutNotice === 'canceled' && (
+          <div className="p-4 rounded-xl border mb-8" style={{ backgroundColor: 'var(--color-muted)', borderColor: 'var(--color-border)' }}>
+            <p className="text-sm text-[var(--color-earth-medium)]">
+              Checkout was canceled. No charge was made, and you can choose a plan whenever you&apos;re ready.
+            </p>
           </div>
         )}
 
