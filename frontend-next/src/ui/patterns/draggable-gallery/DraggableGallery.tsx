@@ -1286,8 +1286,11 @@ export function DraggableGallery({
           className="relative flex min-h-[58vh] flex-1 flex-col justify-center overflow-y-auto bg-[rgba(5,9,18,0.9)] px-4 py-5 lg:min-h-0 lg:w-[42vw] lg:flex-none lg:px-8 lg:py-8"
         >
           {selectedPost && (
-            <div className="flex min-h-full items-center" onClick={(e) => e.stopPropagation()}>
-              <div className="w-full max-w-xl rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 shadow-[0_28px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:p-8">
+            <div className="flex min-h-full items-center">
+              <div
+                className="w-full max-w-xl rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 shadow-[0_28px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:p-8"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="space-y-6">
                   <div className="space-y-3">
                     <p data-detail-text className="text-[10px] font-mono uppercase tracking-[0.28em] text-white/42">
