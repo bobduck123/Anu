@@ -67,28 +67,26 @@ export class FalakHealthService {
       `);
 
       const migrationsTable =
-        schemaInfo?.falak_migrations_table
+        schemaInfo?.falak_migrations_table === 'falak._prisma_migrations'
           ? 'falak._prisma_migrations'
-          : schemaInfo?.public_migrations_table
+          : schemaInfo?.public_migrations_table === 'public._prisma_migrations'
             ? 'public._prisma_migrations'
             : null;
 
       let migrationFailures = 0;
       let migrationsChecked = false;
-      
       if (migrationsTable) {
         try {
           const migrationQuery = migrationsTable === 'falak._prisma_migrations'
             ? `SELECT COUNT(*) AS failed_count FROM falak._prisma_migrations WHERE finished_at IS NULL AND rolled_back_at IS NULL`
             : `SELECT COUNT(*) AS failed_count FROM public._prisma_migrations WHERE finished_at IS NULL AND rolled_back_at IS NULL`;
-          
+
           const [migrationInfo] = await this.prisma.$queryRawUnsafe<Array<{
             failed_count: number | bigint;
           }>>(migrationQuery);
           migrationFailures = Number(migrationInfo?.failed_count ?? 0);
           migrationsChecked = true;
-        } catch (err) {
-          // If migrations table query fails, mark as checked with failures
+        } catch {
           migrationsChecked = true;
           migrationFailures = 1;
         }
@@ -96,7 +94,6 @@ export class FalakHealthService {
 
       const falakSchemaOk = schemaInfo?.falak_schema === 'falak';
       const postgisOk = Boolean(databaseInfo?.postgis_version);
-      // Migrations are ok if either: no migrations table yet (fresh start) OR migrations table exists and has no failures
       const migrationsOk = !migrationsTable || (migrationsChecked && migrationFailures === 0);
       const healthy = falakSchemaOk && postgisOk;
       const ready = healthy && migrationsOk;
