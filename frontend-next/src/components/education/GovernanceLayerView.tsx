@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { PlantKnowledgeEntry, SensitivityLevel, educationStackApi } from "@/lib/api/educationStack";
@@ -29,8 +30,13 @@ const INITIAL_FORM = {
 };
 
 export function GovernanceLayerView() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const canVerify = useMemo(() => VERIFIER_ROLES.has(user?.role || ""), [user?.role]);
+  const authHref = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("returnTo", "/education/governance");
+    return `/auth?${params.toString()}`;
+  }, []);
   const [entries, setEntries] = useState<PlantKnowledgeEntry[]>([]);
   const [pendingEntries, setPendingEntries] = useState<PlantKnowledgeEntry[]>([]);
   const [statusFilter, setStatusFilter] = useState("approved");
@@ -115,75 +121,87 @@ export function GovernanceLayerView() {
           <h2 className="mb-3 text-2xl font-semibold" style={{ fontFamily: "var(--font-serif)" }}>
             Submit Knowledge Entry
           </h2>
-          <form onSubmit={submitKnowledge} className="grid gap-3 md:grid-cols-2">
-            <input
-              required
-              value={form.region}
-              onChange={(event) => setForm((prev) => ({ ...prev, region: event.target.value }))}
-              placeholder="Region"
-              className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
-            />
-            <input
-              required
-              value={form.language_group}
-              onChange={(event) => setForm((prev) => ({ ...prev, language_group: event.target.value }))}
-              placeholder="Language group"
-              className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
-            />
-            <input
-              required
-              value={form.indigenous_name}
-              onChange={(event) => setForm((prev) => ({ ...prev, indigenous_name: event.target.value }))}
-              placeholder="Indigenous plant name"
-              className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
-            />
-            <input
-              required
-              value={form.season}
-              onChange={(event) => setForm((prev) => ({ ...prev, season: event.target.value }))}
-              placeholder="Season"
-              className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
-            />
-            <textarea
-              required
-              value={form.traditional_uses}
-              onChange={(event) => setForm((prev) => ({ ...prev, traditional_uses: event.target.value }))}
-              placeholder="Traditional uses"
-              className="min-h-[84px] rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm md:col-span-2"
-            />
-            <textarea
-              value={form.preparation_methods}
-              onChange={(event) => setForm((prev) => ({ ...prev, preparation_methods: event.target.value }))}
-              placeholder="Preparation methods"
-              className="min-h-[70px] rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
-            />
-            <textarea
-              value={form.cultural_context}
-              onChange={(event) => setForm((prev) => ({ ...prev, cultural_context: event.target.value }))}
-              placeholder="Cultural context"
-              className="min-h-[70px] rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
-            />
-            <textarea
-              value={form.scientific_notes}
-              onChange={(event) => setForm((prev) => ({ ...prev, scientific_notes: event.target.value }))}
-              placeholder="Scientific notes"
-              className="min-h-[70px] rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
-            />
-            <select
-              value={form.sensitivity_level}
-              onChange={(event) => setForm((prev) => ({ ...prev, sensitivity_level: event.target.value as SensitivityLevel }))}
-              className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
-            >
-              <option value="public">public</option>
-              <option value="community">community</option>
-              <option value="restricted">restricted</option>
-            </select>
-            <div className="md:col-span-2">
-              <button type="submit" disabled={submitting} className="btn-pill btn-pill-primary text-sm disabled:opacity-60">
-                {submitting ? "Submitting..." : "Submit For Verification"}
-              </button>
-            </div>
-          </form>
+          {authLoading ? (
+            <p className="text-sm text-[var(--color-muted-foreground)]">Checking submission access...</p>
+          ) : !isAuthenticated ? (
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              Approved knowledge is public.{" "}
+              <Link href={authHref} className="font-medium text-[var(--color-institutional)] hover:underline">
+                Sign in
+              </Link>{" "}
+              to submit new entries for verification.
+            </p>
+          ) : (
+            <form onSubmit={submitKnowledge} className="grid gap-3 md:grid-cols-2">
+              <input
+                required
+                value={form.region}
+                onChange={(event) => setForm((prev) => ({ ...prev, region: event.target.value }))}
+                placeholder="Region"
+                className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+              />
+              <input
+                required
+                value={form.language_group}
+                onChange={(event) => setForm((prev) => ({ ...prev, language_group: event.target.value }))}
+                placeholder="Language group"
+                className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+              />
+              <input
+                required
+                value={form.indigenous_name}
+                onChange={(event) => setForm((prev) => ({ ...prev, indigenous_name: event.target.value }))}
+                placeholder="Indigenous plant name"
+                className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+              />
+              <input
+                required
+                value={form.season}
+                onChange={(event) => setForm((prev) => ({ ...prev, season: event.target.value }))}
+                placeholder="Season"
+                className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+              />
+              <textarea
+                required
+                value={form.traditional_uses}
+                onChange={(event) => setForm((prev) => ({ ...prev, traditional_uses: event.target.value }))}
+                placeholder="Traditional uses"
+                className="min-h-[84px] rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm md:col-span-2"
+              />
+              <textarea
+                value={form.preparation_methods}
+                onChange={(event) => setForm((prev) => ({ ...prev, preparation_methods: event.target.value }))}
+                placeholder="Preparation methods"
+                className="min-h-[70px] rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+              />
+              <textarea
+                value={form.cultural_context}
+                onChange={(event) => setForm((prev) => ({ ...prev, cultural_context: event.target.value }))}
+                placeholder="Cultural context"
+                className="min-h-[70px] rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+              />
+              <textarea
+                value={form.scientific_notes}
+                onChange={(event) => setForm((prev) => ({ ...prev, scientific_notes: event.target.value }))}
+                placeholder="Scientific notes"
+                className="min-h-[70px] rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+              />
+              <select
+                value={form.sensitivity_level}
+                onChange={(event) => setForm((prev) => ({ ...prev, sensitivity_level: event.target.value as SensitivityLevel }))}
+                className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+              >
+                <option value="public">public</option>
+                <option value="community">community</option>
+                <option value="restricted">restricted</option>
+              </select>
+              <div className="md:col-span-2">
+                <button type="submit" disabled={submitting} className="btn-pill btn-pill-primary text-sm disabled:opacity-60">
+                  {submitting ? "Submitting..." : "Submit For Verification"}
+                </button>
+              </div>
+            </form>
+          )}
         </section>
 
         {canVerify && (

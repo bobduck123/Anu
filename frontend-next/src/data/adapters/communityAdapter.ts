@@ -3,7 +3,7 @@
  * Provides mock posts and integrates with the real community API.
  */
 
-import type { Article, StoryPost } from '@/lib/api';
+import type { Article, CommunityNewsItem, StoryPost } from '@/lib/api';
 import { seededRandom, pickRandom } from './types';
 
 /* -------------------------------------------------------------------------- */
@@ -43,6 +43,8 @@ export interface CommunityPost {
   createdAt: string;
   microcosm?: string;
   liked?: boolean;
+  sourceUrl?: string;
+  sourceName?: string;
 }
 
 export type SortMode = 'new' | 'trending' | 'near-me';
@@ -203,12 +205,40 @@ export function buildGalleryPostFromStory(story: StoryPost): CommunityPost {
   };
 }
 
+export function buildGalleryPostFromTrustedNews(item: CommunityNewsItem): CommunityPost {
+  const tags = ['news'];
+  return {
+    id: `news-${item.id}`,
+    title: item.title,
+    author: {
+      id: hashString(`${item.sourceName}:${item.id}`),
+      username: toUsername(item.sourceName),
+      pseudonym: item.sourceName,
+      role: 'trusted source',
+    },
+    content: item.summary || 'Open the original story for the full article.',
+    image: isImageUrl(item.imageUrl) ? item.imageUrl : undefined,
+    coverImage: resolveCoverImage(isImageUrl(item.imageUrl) ? item.imageUrl : undefined, tags),
+    layout: deriveLayout(`news:${item.id}:${item.sourceName}`),
+    likes: 0,
+    comments: 0,
+    shares: 0,
+    tags,
+    createdAt: item.publishedAt,
+    liked: false,
+    sourceUrl: item.url,
+    sourceName: item.sourceName,
+  };
+}
+
 export function buildGalleryPosts({
   articles,
   stories,
+  newsFeed = [],
 }: {
   articles: { opinion: Article[]; news: Article[]; creative: Article[] };
   stories: StoryPost[];
+  newsFeed?: CommunityNewsItem[];
 }): CommunityPost[] {
   const articlePosts = [
     ...(articles.news || []),
@@ -216,7 +246,8 @@ export function buildGalleryPosts({
     ...(articles.creative || []),
   ].map(buildGalleryPostFromArticle);
   const storyPosts = (stories || []).map(buildGalleryPostFromStory);
-  const merged = [...storyPosts, ...articlePosts];
+  const newsPosts = (newsFeed || []).map(buildGalleryPostFromTrustedNews);
+  const merged = [...storyPosts, ...newsPosts, ...articlePosts];
   const seen = new Set<string>();
 
   return merged.filter((post) => {

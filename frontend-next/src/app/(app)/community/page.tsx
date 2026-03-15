@@ -7,7 +7,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle, Loader2, Plus, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeatureFlag } from '@/lib/featureFlags';
-import { api, type Article, type StoryPost } from '@/lib/api';
+import { api, type Article, type CommunityNewsFeed, type StoryPost } from '@/lib/api';
 import {
   buildGalleryPosts,
   sortPosts,
@@ -59,6 +59,11 @@ function CommunityPageContent() {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isComposerOpen, setIsComposerOpen] = useState(false);
+  const [trustedNewsMeta, setTrustedNewsMeta] = useState<{ count: number; stale: boolean; sourceNames: string[] }>({
+    count: 0,
+    stale: false,
+    sourceNames: [],
+  });
   const latestPostsRef = useRef<CommunityPost[]>([]);
 
   const authHref = useMemo(() => {
@@ -82,13 +87,15 @@ function CommunityPageContent() {
     setIsLoading(true);
     setLoadError(null);
 
-    const [articlesResult, storiesResult] = await Promise.allSettled([
+    const [articlesResult, storiesResult, trustedNewsResult] = await Promise.allSettled([
       api.community.getArticles(),
       api.stories.getAll(1, 60),
+      api.community.getTrustedNews(12),
     ]);
 
     let articles: ArticleGroups = emptyArticleGroups();
     let stories: StoryPost[] = [];
+    let trustedNews: CommunityNewsFeed['items'] = [];
     const nextWarnings: string[] = [];
 
     if (articlesResult.status === 'fulfilled') {
@@ -103,10 +110,25 @@ function CommunityPageContent() {
       nextWarnings.push('Stories are unavailable right now.');
     }
 
-    const livePosts = buildGalleryPosts({ articles, stories });
+    if (trustedNewsResult.status === 'fulfilled') {
+      trustedNews = trustedNewsResult.value.items;
+      setTrustedNewsMeta({
+        count: trustedNewsResult.value.items.length,
+        stale: trustedNewsResult.value.stale,
+        sourceNames: trustedNewsResult.value.sources.map((source) => source.sourceName),
+      });
+      if (trustedNewsResult.value.stale && trustedNewsResult.value.items.length > 0) {
+        nextWarnings.push('Trusted news is showing cached items.');
+      }
+    } else {
+      setTrustedNewsMeta({ count: 0, stale: false, sourceNames: [] });
+      nextWarnings.push('Trusted news is unavailable right now.');
+    }
+
+    const livePosts = buildGalleryPosts({ articles, stories, newsFeed: trustedNews });
     const preserveCurrentFeed =
       livePosts.length === 0 &&
-      nextWarnings.length === 2 &&
+      nextWarnings.length === 3 &&
       latestPostsRef.current.length > 0;
     const nextPosts = preserveCurrentFeed ? latestPostsRef.current : livePosts;
 
@@ -118,7 +140,7 @@ function CommunityPageContent() {
         : nextWarnings,
     );
     setLoadError(
-      nextPosts.length === 0 && nextWarnings.length === 2
+      nextPosts.length === 0 && nextWarnings.length === 3
         ? 'The live community feed could not be loaded.'
         : null,
     );
@@ -190,6 +212,15 @@ function CommunityPageContent() {
             </span>
           ) : (
             <span>{posts.length} live posts</span>
+          )}
+          {!isLoading && trustedNewsMeta.count > 0 && (
+            <>
+              <span className="h-1 w-1 rounded-full bg-white/20" />
+              <span>
+                {trustedNewsMeta.count} trusted news
+                {trustedNewsMeta.sourceNames.length > 0 ? ` from ${Array.from(new Set(trustedNewsMeta.sourceNames)).join(' + ')}` : ''}
+              </span>
+            </>
           )}
           {warnings.length > 0 && (
             <>

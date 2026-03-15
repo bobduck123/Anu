@@ -88,6 +88,31 @@ export interface Article {
   authorId?: string;
 }
 
+export interface CommunityNewsItem {
+  id: string;
+  title: string;
+  summary: string;
+  url: string;
+  sourceName: string;
+  feedLabel: string;
+  homepage: string;
+  publishedAt: string;
+  imageUrl?: string;
+}
+
+export interface CommunityNewsFeed {
+  items: CommunityNewsItem[];
+  sources: Array<{
+    key: string;
+    sourceName: string;
+    feedLabel: string;
+    feedUrl: string;
+    homepage: string;
+  }>;
+  fetchedAt?: string | null;
+  stale: boolean;
+}
+
 export interface Comment {
   id: string;
   content: string;
@@ -570,6 +595,31 @@ type ArticlesResponse = {
   opinion?: ArticleResponse[];
   news?: ArticleResponse[];
   creative?: ArticleResponse[];
+};
+
+type CommunityNewsItemResponse = {
+  id: string;
+  title: string;
+  summary?: string;
+  url: string;
+  source_name: string;
+  feed_label: string;
+  homepage: string;
+  published_at?: string | null;
+  image_url?: string | null;
+};
+
+type CommunityNewsFeedResponse = {
+  items?: CommunityNewsItemResponse[];
+  sources?: Array<{
+    key: string;
+    source_name: string;
+    feed_label: string;
+    feed_url: string;
+    homepage: string;
+  }>;
+  fetched_at?: string | null;
+  stale?: boolean;
 };
 
 type ArticleResponse = {
@@ -1208,6 +1258,23 @@ export const api = {
       const payload = data.data || data;
       return payload.certifications || payload;
     },
+    getPublicCertifications: async (): Promise<CertificationRecord[]> => {
+      const res = await fetch(`${API_BASE}/api/education/certifications/public`);
+      if (!res.ok) {
+        throw new Error(await getErrorMessage(res, 'Public certification registry is unavailable.'));
+      }
+      const data = await res.json();
+      const payload = data.data || data;
+      return (payload.certifications || payload).map((cert: Partial<CertificationRecord>) => ({
+        id: cert.id ?? 0,
+        certificate_uid: cert.certificate_uid || '',
+        module_id: cert.module_id ?? 0,
+        issued_at: cert.issued_at,
+        expires_at: cert.expires_at ?? null,
+        status: cert.status || 'active',
+        public_visible: cert.public_visible ?? true,
+      }));
+    },
     getCompetencyProfile: async (): Promise<CompetencyProfile> => {
       const res = await fetch(`${API_BASE}/api/education/competency-profile`, {
         headers: getAuthHeaders(),
@@ -1448,6 +1515,36 @@ export const api = {
         opinion: (data.opinion || []).map(normalizeArticle),
         news: (data.news || []).map(normalizeArticle),
         creative: (data.creative || []).map(normalizeArticle),
+      };
+    },
+    getTrustedNews: async (limit = 12): Promise<CommunityNewsFeed> => {
+      const res = await fetch(`${API_BASE}/public/community-news?limit=${Math.max(1, Math.min(20, limit))}`);
+      if (!res.ok) {
+        throw new Error(await getErrorMessage(res, 'Failed to load trusted news.'));
+      }
+      const raw = await res.json() as { data?: CommunityNewsFeedResponse } | CommunityNewsFeedResponse;
+      const data = (raw as { data?: CommunityNewsFeedResponse }).data || (raw as CommunityNewsFeedResponse);
+      return {
+        items: (data.items || []).map((item) => ({
+          id: item.id,
+          title: item.title,
+          summary: item.summary || '',
+          url: item.url,
+          sourceName: item.source_name,
+          feedLabel: item.feed_label,
+          homepage: item.homepage,
+          publishedAt: item.published_at || new Date().toISOString(),
+          imageUrl: item.image_url || undefined,
+        })),
+        sources: (data.sources || []).map((source) => ({
+          key: source.key,
+          sourceName: source.source_name,
+          feedLabel: source.feed_label,
+          feedUrl: source.feed_url,
+          homepage: source.homepage,
+        })),
+        fetchedAt: data.fetched_at || null,
+        stale: Boolean(data.stale),
       };
     },
     createArticle: async (article: { title: string; content: string; category: string; microcosmId?: string }): Promise<Article> => {

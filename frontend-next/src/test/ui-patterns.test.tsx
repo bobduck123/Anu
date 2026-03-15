@@ -137,11 +137,24 @@ describe('communityAdapter', () => {
           media_url: 'https://images.example.com/story.webp',
         },
       ],
+      newsFeed: [
+        {
+          id: 'bbc-1',
+          title: 'Trusted source bulletin',
+          summary: 'A public-interest news item.',
+          url: 'https://example.com/trusted-story',
+          sourceName: 'BBC News',
+          feedLabel: 'World',
+          homepage: 'https://www.bbc.co.uk/news/10628494',
+          publishedAt: '2026-03-03T00:00:00.000Z',
+          imageUrl: 'https://images.example.com/news.jpg',
+        },
+      ],
     };
     const posts = buildGalleryPosts(input);
     const postsAgain = buildGalleryPosts(input);
 
-    expect(posts).toHaveLength(2);
+    expect(posts).toHaveLength(3);
     expect(posts[0]).toMatchObject({
       id: 'story-4',
       title: 'Flood response recap',
@@ -149,11 +162,16 @@ describe('communityAdapter', () => {
       coverImage: 'https://images.example.com/story.webp',
     });
     expect(posts[1]).toMatchObject({
+      id: 'news-bbc-1',
+      title: 'Trusted source bulletin',
+      sourceUrl: 'https://example.com/trusted-story',
+    });
+    expect(posts[2]).toMatchObject({
       id: 'article-12',
       title: 'Neighbourhood update',
       comments: 2,
     });
-    expect(posts[1].layout).toEqual(postsAgain[1].layout);
+    expect(posts[2].layout).toEqual(postsAgain[2].layout);
   });
 });
 

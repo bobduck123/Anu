@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Compass, Leaf, ShieldCheck, Sprout, TreePine } from "lucide-react";
+import { Award, BookOpen, Compass, Leaf, ShieldCheck, Sprout } from "lucide-react";
 
 const layerCards = [
   {
@@ -21,30 +21,30 @@ const layerCards = [
   {
     href: "/education/curriculum",
     title: "Curriculum Layer",
-    description: "Program → Module → Topic → Reflection → Action progression.",
+    description: "Browse program structure anonymously, then sign in to track progress and reflections.",
     icon: BookOpen,
-    label: "Structured learning",
+    label: "Public + learner",
   },
   {
     href: "/education/governance",
     title: "Governance Layer",
-    description: "Sensitivity tiers, lineage, and verifier approvals.",
+    description: "Browse approved knowledge publicly and sign in to submit new entries for verification.",
     icon: ShieldCheck,
-    label: "Cultural authority",
+    label: "Public registry",
   },
   {
     href: "/education/regeneration",
     title: "Regeneration Layer",
-    description: "Knowledge completion unlocks subtle regenerative actions.",
+    description: "Preview how learning unlocks real-world actions, then sign in to log completions.",
     icon: Sprout,
-    label: "Action link",
+    label: "Action preview",
   },
   {
-    href: "/admin/education",
-    title: "Education Admin",
-    description: "Program metrics, reflection insights, and approval visibility.",
-    icon: TreePine,
-    label: "Educator cockpit",
+    href: "/education/certifications",
+    title: "Certifications",
+    description: "Public certificate registry plus signed-in competency and credential history.",
+    icon: Award,
+    label: "Public registry",
   },
 ];
 
@@ -55,15 +55,16 @@ export function EducationLayerBrief() {
         <p className="text-sm uppercase tracking-wide text-[var(--edu-accent)]">Layered Pathways</p>
         <h2 className="text-2xl font-semibold">Navigate the education stack</h2>
         <p className="text-sm text-[var(--edu-foreground)]/70">
-          Each layer aligns with the indigenous museum interface, systems literacy, structured curriculum, governance, and applied regeneration.
+          Start with the public knowledge layers, then sign in only for learner-specific progress,
+          credentials, and action logging.
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {layerCards.map((card) => {
           const Icon = card.icon;
           return (
-            <Link key={card.href} href={card.href} className="edu-card p-4 space-y-2 hover:shadow-lg transition">
-              <div className="flex items-center justify-between">
+            <Link key={card.href} href={card.href} className="edu-card p-4 space-y-2 transition hover:shadow-lg">
+              <div className="flex items-center justify-between gap-3">
                 <h3 className="text-lg font-semibold">{card.title}</h3>
                 <span className="edu-pill text-[var(--edu-accent)]">{card.label}</span>
               </div>

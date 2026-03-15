@@ -137,6 +137,55 @@ describe('api client', () => {
     expect(articles.creative).toEqual([]);
   });
 
+  it('fetches and normalizes trusted news feed items', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: {
+          items: [
+            {
+              id: 'bbc-1',
+              title: 'Trusted update',
+              summary: 'Verified public-interest coverage.',
+              url: 'https://example.com/story',
+              source_name: 'BBC News',
+              feed_label: 'World',
+              homepage: 'https://www.bbc.co.uk/news/10628494',
+              published_at: '2026-03-15T00:00:00.000Z',
+              image_url: 'https://images.example.com/news.jpg',
+            },
+          ],
+          sources: [
+            {
+              key: 'bbc-world',
+              source_name: 'BBC News',
+              feed_label: 'World',
+              feed_url: 'https://feeds.bbci.co.uk/news/world/rss.xml',
+              homepage: 'https://www.bbc.co.uk/news/10628494',
+            },
+          ],
+          fetched_at: '2026-03-15T00:05:00.000Z',
+          stale: false,
+        },
+      }),
+    });
+
+    const feed = await api.community.getTrustedNews(8);
+
+    expect(feed.items[0]).toMatchObject({
+      id: 'bbc-1',
+      title: 'Trusted update',
+      sourceName: 'BBC News',
+      feedLabel: 'World',
+      publishedAt: '2026-03-15T00:00:00.000Z',
+    });
+    expect(feed.sources[0]).toMatchObject({
+      sourceName: 'BBC News',
+      feedUrl: 'https://feeds.bbci.co.uk/news/world/rss.xml',
+    });
+    expect(feed.stale).toBe(false);
+  });
+
   it('uses auth headers when completing actions', async () => {
     localStorage.setItem('auth_token', 'token-123');
     mockFetch.mockResolvedValueOnce({
@@ -197,6 +246,16 @@ describe('api client', () => {
     const products = await api.marketplace.getProducts();
 
     expect(products).toEqual([]);
+  });
+
+  it('surfaces public certification registry errors', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      json: async () => ({ message: 'registry disabled' }),
+    });
+
+    await expect(api.education.getPublicCertifications()).rejects.toThrow('registry disabled');
   });
 
   it('creates a mock product when API fails', async () => {

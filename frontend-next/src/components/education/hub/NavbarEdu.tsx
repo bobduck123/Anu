@@ -3,14 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Sun, Moon, Menu, X, ShieldCheck, Leaf, Sparkles } from "lucide-react";
+import { Sun, Moon, Menu, X, Award, BookOpen, Home, Leaf, ShieldCheck, Sparkles } from "lucide-react";
 import { useTheme } from "@/components/education/ui/theme-provider";
 import { Button } from "@/components/education/ui/button";
 
 const navItems = [
+  { href: "/education", label: "Hub", icon: Home },
   { href: "/education/immersive", label: "Immersive", icon: Leaf },
   { href: "/education/systems", label: "Systems", icon: Sparkles },
-  { href: "/education/curriculum", label: "Curriculum", icon: ShieldCheck },
+  { href: "/education/curriculum", label: "Curriculum", icon: BookOpen },
+  { href: "/education/governance", label: "Governance", icon: ShieldCheck },
+  { href: "/education/certifications", label: "Certs", icon: Award },
 ];
 
 export function NavbarEdu() {

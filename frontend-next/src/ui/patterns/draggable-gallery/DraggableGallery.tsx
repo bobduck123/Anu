@@ -1097,6 +1097,18 @@ export function DraggableGallery({
                 {selectedPost.content}
               </p>
 
+              {selectedPost.sourceUrl && (
+                <a
+                  data-detail-text
+                  href={selectedPost.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex w-fit items-center rounded-full border border-white/15 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-white/80 transition-colors hover:border-white/30 hover:text-white"
+                >
+                  Read Original Story
+                </a>
+              )}
+
               {/* Tags */}
               {selectedPost.tags.length > 0 && (
                 <div data-detail-text className="flex flex-wrap gap-2">

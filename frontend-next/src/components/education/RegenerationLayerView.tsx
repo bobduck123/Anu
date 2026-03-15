@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { RegenerationLog, RegenerationUnlock, educationStackApi } from "@/lib/api/educationStack";
@@ -17,8 +18,13 @@ const VERIFIER_ROLES = new Set([
 ]);
 
 export function RegenerationLayerView() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const canVerify = useMemo(() => VERIFIER_ROLES.has(user?.role || ""), [user?.role]);
+  const authHref = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("returnTo", "/education/regeneration");
+    return `/auth?${params.toString()}`;
+  }, []);
   const [unlocks, setUnlocks] = useState<RegenerationUnlock[]>([]);
   const [logs, setLogs] = useState<RegenerationLog[]>([]);
   const [processingLinkId, setProcessingLinkId] = useState<number | null>(null);
@@ -44,8 +50,62 @@ export function RegenerationLayerView() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!isAuthenticated) {
+      setLoading(false);
+      setUnlocks([]);
+      setLogs([]);
+      return;
+    }
+    void loadData();
+  }, [isAuthenticated]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <p className="text-sm text-[var(--color-muted-foreground)]">Checking learner session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
+          <header className="space-y-3">
+            <h1 className="text-4xl font-semibold" style={{ fontFamily: "var(--font-serif)" }}>
+              Regeneration Layer
+            </h1>
+            <p className="text-sm text-[var(--color-muted-foreground)]">
+              This layer turns learner completion into grounded actions. Anonymous visitors can preview the
+              flow, but action logging and verification stay tied to a signed-in learner account.
+            </p>
+          </header>
+
+          <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
+            <h2 className="mb-3 text-2xl font-semibold" style={{ fontFamily: "var(--font-serif)" }}>
+              How it works
+            </h2>
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4 text-sm">
+                1. Complete curriculum topics and modules.
+              </div>
+              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4 text-sm">
+                2. Unlock regenerative actions with cultural guidance attached.
+              </div>
+              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4 text-sm">
+                3. Log completion, then route verification to the right custodial or verifier role.
+              </div>
+            </div>
+            <Link href={authHref} className="mt-4 inline-flex btn-pill btn-pill-primary text-sm">
+              Sign in to access regeneration actions
+            </Link>
+          </section>
+        </div>
+      </div>
+    );
+  }
 
   const logCompletion = async (unlock: RegenerationUnlock) => {
     setProcessingLinkId(unlock.regeneration_link_id);
