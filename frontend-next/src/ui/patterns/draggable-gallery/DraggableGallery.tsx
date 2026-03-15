@@ -3,6 +3,7 @@
 import {
   useRef,
   useEffect,
+  useLayoutEffect,
   useState,
   useCallback,
   useMemo,
@@ -449,6 +450,9 @@ export function DraggableGallery({
   const draggableRef = useRef<DraggableInstance | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const splitScreenRef = useRef<HTMLDivElement>(null);
+  const zoomTargetRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const didDragRef = useRef(false);
   const introPlayedRef = useRef(false);
   const zoomAnimatingRef = useRef(false);
@@ -499,6 +503,18 @@ export function DraggableGallery({
   /* ---- Plugin init ---- */
   useEffect(() => {
     ensurePlugins().then(() => setReady(true));
+  }, []);
+
+  useLayoutEffect(() => {
+    if (viewportRef.current) {
+      gsap.set(viewportRef.current, { opacity: 0 });
+    }
+    if (splitScreenRef.current) {
+      gsap.set(splitScreenRef.current, { opacity: 0 });
+    }
+    if (closeButtonRef.current) {
+      gsap.set(closeButtonRef.current, { opacity: 0, x: 40 });
+    }
   }, []);
 
   /* ---- Calculate bounds ---- */
@@ -748,7 +764,7 @@ export function DraggableGallery({
       }
     );
 
-    const closeBtn = document.getElementById('gallery-close-btn');
+    const closeBtn = closeButtonRef.current;
     if (closeBtn) {
       gsap.to(closeBtn, { opacity: 1, x: 0, duration: 0.6, ease: 'power2.out' });
     }
@@ -872,8 +888,8 @@ export function DraggableGallery({
       gsap.set(sourceSurface, { opacity: 0 });
 
       // Show split container and animate
-      const splitContainer = document.getElementById('gallery-split-screen');
-      const zoomTarget = document.getElementById('gallery-zoom-target');
+      const splitContainer = splitScreenRef.current;
+      const zoomTarget = zoomTargetRef.current;
       if (!splitContainer || !zoomTarget) {
         overlay.remove();
         restoreHiddenTileSurface();
@@ -916,8 +932,8 @@ export function DraggableGallery({
   /* ---- Close detail ---- */
   const closeDetail = useCallback(() => {
     const overlay = document.getElementById('gallery-scaling-overlay');
-    const splitContainer = document.getElementById('gallery-split-screen');
-    const closeBtn = document.getElementById('gallery-close-btn');
+    const splitContainer = splitScreenRef.current;
+    const closeBtn = closeButtonRef.current;
 
     if (!overlay || !selectedPost) {
       restoreHiddenTileSurface();
@@ -1008,12 +1024,6 @@ export function DraggableGallery({
     });
   }, [posts, sortMode, ready, currentZoom, gridData.cols]);
 
-  /* ---- Detail layout helpers ---- */
-  const detailLayout = selectedPost?.layout ?? { imagePosition: 'left', imageSize: 50 };
-  const isDetailHorizontal = detailLayout.imagePosition === 'left' || detailLayout.imagePosition === 'right';
-  const imgSizePct = `${detailLayout.imageSize}${isDetailHorizontal ? 'vw' : 'vh'}`;
-  const contentSizePct = `${100 - detailLayout.imageSize}${isDetailHorizontal ? 'vw' : 'vh'}`;
-  const isReversed = detailLayout.imagePosition === 'right' || detailLayout.imagePosition === 'bottom';
   const detailImageFailed = selectedPost ? brokenImages[selectedPost.id] : false;
 
   /* ---- Render ---- */
@@ -1023,7 +1033,7 @@ export function DraggableGallery({
       <div
         ref={viewportRef}
         className="fixed inset-0 overflow-hidden"
-        style={{ zIndex: 1, opacity: 0, cursor: 'grab' }}
+        style={{ zIndex: 1, cursor: 'grab' }}
       >
         {/* Canvas wrapper */}
         <div
@@ -1221,125 +1231,66 @@ export function DraggableGallery({
 
       {/* ---- Split-screen detail ---- */}
       <div
+        ref={splitScreenRef}
         id="gallery-split-screen"
-        className="fixed inset-0 flex"
+        className="fixed inset-0 flex flex-col lg:flex-row"
+        onClick={closeDetail}
         style={{
           zIndex: 50,
-          opacity: 0,
-          pointerEvents: 'none',
-          flexDirection: isDetailHorizontal ? 'row' : 'column',
           background: 'rgba(2, 6, 14, 0.92)',
+          pointerEvents: selectedPost ? 'auto' : 'none',
+          visibility: selectedPost ? 'visible' : 'hidden',
         }}
       >
         {/* Image panel */}
         <div
-          className="relative flex items-center justify-center cursor-pointer overflow-hidden"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) {
-              closeDetail();
-            }
-          }}
-          style={{
-            width: isDetailHorizontal ? imgSizePct : '100%',
-            height: isDetailHorizontal ? '100%' : imgSizePct,
-            background: 'rgba(4, 10, 20, 0.88)',
-            order: isReversed ? 1 : 0,
-          }}
+          className="relative flex min-h-[42vh] items-center justify-center overflow-hidden bg-[rgba(4,10,20,0.88)] px-4 py-6 lg:min-h-0 lg:w-[58vw] lg:flex-none lg:px-8 lg:py-8"
         >
-          {selectedPost && (
-            <>
-              {!detailImageFailed && (
-                <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={selectedPost.coverImage}
-                    alt={selectedPost.title || selectedPost.author.pseudonym}
-                    className="absolute inset-0 h-full w-full object-cover"
-                    onError={() => {
-                      setBrokenImages((prev) => (prev[selectedPost.id] ? prev : { ...prev, [selectedPost.id]: true }));
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,14,0.16),rgba(2,6,14,0.08)_28%,rgba(2,6,14,0.78)_100%)]" />
-                </>
-              )}
-
-              {detailImageFailed && (
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background: `${tileGradient(selectedPost)}, radial-gradient(circle at top left, rgba(255,255,255,0.18), transparent 42%)`,
-                  }}
-                />
-              )}
-
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] p-6 lg:p-8">
-                <div className="max-w-xl rounded-[1.75rem] border border-white/10 bg-black/18 px-5 py-4 backdrop-blur-md">
-                  <p
-                    data-detail-text
-                    className="mb-2 text-[10px] uppercase tracking-[0.24em] text-white/60"
-                  >
-                    {tileEyebrow(selectedPost)}
-                  </p>
-                  <h2
-                    data-detail-text
-                    className="max-w-lg text-2xl font-semibold leading-[1.02] text-white lg:text-[2.4rem]"
-                  >
-                    {selectedPost.title || selectedPost.author.pseudonym}
-                  </h2>
-                  <div
-                    data-detail-text
-                    className="mt-3 flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.18em] text-white/58"
-                  >
-                    <span>{timeAgo(selectedPost.createdAt)}</span>
-                    <span className="h-1 w-1 rounded-full bg-white/30" />
-                    <span>{selectedPost.author.pseudonym}</span>
-                    {selectedPost.microcosm && (
-                      <>
-                        <span className="h-1 w-1 rounded-full bg-white/30" />
-                        <span>{selectedPost.microcosm}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.03),rgba(2,6,14,0.28)_35%,rgba(2,6,14,0.68)_100%)]" />
+          {selectedPost && detailImageFailed && (
+            <div
+              className="absolute inset-0 opacity-45"
+              style={{
+                background: `${tileGradient(selectedPost)}, radial-gradient(circle at top left, rgba(255,255,255,0.16), transparent 42%)`,
+              }}
+            />
           )}
 
           <div
+            ref={zoomTargetRef}
             id="gallery-zoom-target"
             onClick={(event) => event.stopPropagation()}
-            className="relative z-[3] overflow-hidden rounded-[1.75rem] border border-white/12 shadow-[0_35px_120px_rgba(0,0,0,0.55)]"
-            style={{
-              width: isDetailHorizontal ? '72%' : '64%',
-              height: isDetailHorizontal ? '78%' : '72%',
-            }}
+            className="relative z-[3] h-full max-h-[72vh] w-full max-w-[min(92vw,760px)] overflow-hidden rounded-[1.75rem] border border-white/12 shadow-[0_35px_120px_rgba(0,0,0,0.55)] lg:max-h-[84vh]"
           />
         </div>
 
         {/* Content panel */}
         <div
-          className="relative flex flex-col justify-center overflow-y-auto"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) {
-              closeDetail();
-            }
-          }}
-          style={{
-            width: isDetailHorizontal ? contentSizePct : '100%',
-            height: isDetailHorizontal ? '100%' : contentSizePct,
-            background: 'rgba(5, 9, 18, 0.9)',
-            order: isReversed ? 0 : 1,
-          }}
+          className="relative flex min-h-[58vh] flex-1 flex-col justify-center overflow-y-auto bg-[rgba(5,9,18,0.9)] px-4 py-5 lg:min-h-0 lg:w-[42vw] lg:flex-none lg:px-8 lg:py-8"
         >
           {selectedPost && (
-            <div className="flex min-h-full items-center px-6 py-8 lg:px-10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex min-h-full items-center" onClick={(e) => e.stopPropagation()}>
               <div className="w-full max-w-xl rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 shadow-[0_28px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:p-8">
                 <div className="space-y-6">
                   <div className="space-y-3">
                     <p data-detail-text className="text-[10px] font-mono uppercase tracking-[0.28em] text-white/42">
-                      {selectedPost.id.replace('post-', '#')}
+                      {tileEyebrow(selectedPost)}
                     </p>
-                    <div data-detail-text className="flex items-center gap-3">
+                    <h1 data-detail-text className="text-3xl font-semibold leading-[0.98] text-white lg:text-[2.7rem]">
+                      {selectedPost.title || selectedPost.author.pseudonym}
+                    </h1>
+                    <div data-detail-text className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.18em] text-white/48">
+                      <span>{selectedPost.id.replace('post-', '#')}</span>
+                      <span className="h-1 w-1 rounded-full bg-white/22" />
+                      <span>{timeAgo(selectedPost.createdAt)}</span>
+                      {selectedPost.microcosm && (
+                        <>
+                          <span className="h-1 w-1 rounded-full bg-white/22" />
+                          <span>{selectedPost.microcosm}</span>
+                        </>
+                      )}
+                    </div>
+                    <div data-detail-text className="flex items-center gap-3 pt-1">
                       <span
                         className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-white"
                         style={{ backgroundColor: avatarColor(selectedPost.author.pseudonym) }}
@@ -1425,10 +1376,11 @@ export function DraggableGallery({
 
       {/* Close button — right edge arrow */}
       <button
+        ref={closeButtonRef}
         id="gallery-close-btn"
         onClick={closeDetail}
         className="fixed top-1/2 right-5 -translate-y-1/2 flex items-center justify-center"
-        style={{ zIndex: 55, opacity: 0, transform: 'translate(40px, -50%)', pointerEvents: selectedPost ? 'auto' : 'none' }}
+        style={{ zIndex: 55, transform: 'translate(40px, -50%)', pointerEvents: selectedPost ? 'auto' : 'none', visibility: selectedPost ? 'visible' : 'hidden' }}
         aria-label="Close detail"
       >
         <svg width="64" height="64" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'rotate(180deg)' }}>
