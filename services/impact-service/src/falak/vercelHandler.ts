@@ -1,8 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import { PrismaClient } from '@prisma/client';
-import config from '../config';
-import logger from '../utils/logger';
-import { buildFalakApp } from './app';
+import type { PrismaClient } from '@prisma/client';
+import type { buildFalakApp } from './app';
 import { buildFalakUnavailableResponse, writeJsonResponse } from './vercelUnavailable';
 
 type FalakVercelRuntime = Awaited<ReturnType<typeof buildFalakApp>>;
@@ -12,10 +10,34 @@ const globalForFalak = globalThis as typeof globalThis & {
   __falakVercelRuntimePromise?: Promise<FalakVercelRuntime>;
 };
 
+function isPlaceholder(value: string | undefined): boolean {
+  const raw = (value || '').trim();
+  if (!raw) {
+    return true;
+  }
+
+  const normalized = raw.toLowerCase();
+  return (
+    normalized.startsWith('todo') ||
+    normalized.includes('replace_me') ||
+    normalized.includes('required_') ||
+    raw.includes('<')
+  );
+}
+
+function hasDatabase(): boolean {
+  return !isPlaceholder(process.env.DATABASE_URL);
+}
+
 async function createFalakVercelRuntime(): Promise<FalakVercelRuntime> {
-  if (!config.hasDatabase) {
+  if (!hasDatabase()) {
     throw new Error('Falak Vercel runtime requires DATABASE_URL with PostgreSQL + PostGIS configured');
   }
+
+  const [{ PrismaClient }, { buildFalakApp }] = await Promise.all([
+    import('@prisma/client'),
+    import('./app')
+  ]);
 
   const prisma = globalForFalak.__falakVercelPrisma ?? new PrismaClient();
   globalForFalak.__falakVercelPrisma = prisma;
@@ -23,10 +45,9 @@ async function createFalakVercelRuntime(): Promise<FalakVercelRuntime> {
   const runtime = await buildFalakApp(prisma);
   await runtime.app.ready();
 
-  logger.info({
-    category: 'falak.vercel',
+  console.info('[Falak Vercel] runtime ready', {
     routeGuardMode: process.env.FALAK_ROUTE_GUARD_MODE ?? 'disabled'
-  }, 'Falak Vercel runtime ready');
+  });
 
   return runtime;
 }
@@ -43,7 +64,7 @@ async function getFalakVercelRuntime(): Promise<FalakVercelRuntime> {
 }
 
 export default async function falakVercelHandler(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  if (!config.hasDatabase) {
+  if (!hasDatabase()) {
     writeJsonResponse(res, buildFalakUnavailableResponse(req.url, {
       code: 'FALAK_DATABASE_UNAVAILABLE',
       message: 'Falak requires DATABASE_URL with PostgreSQL + PostGIS configured',
@@ -57,13 +78,10 @@ export default async function falakVercelHandler(req: IncomingMessage, res: Serv
     const { app } = await getFalakVercelRuntime();
     app.server.emit('request', req, res);
   } catch (error) {
-    logger.error(
-      {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-      },
-      'Falak Vercel runtime failed to initialize'
-    );
+    console.error('[Falak Vercel] runtime failed to initialize', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
 
     writeJsonResponse(res, buildFalakUnavailableResponse(req.url, {
       code: 'FALAK_STARTUP_FAILED',

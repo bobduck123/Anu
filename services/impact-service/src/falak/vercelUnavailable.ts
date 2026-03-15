@@ -1,5 +1,4 @@
 import { ServerResponse } from 'http';
-import config from '../config';
 
 export interface FalakUnavailableReason {
   code: string;
@@ -15,6 +14,29 @@ export interface FalakUnavailableResponse {
 
 function falakPath(url: string | undefined): string {
   return new URL(url ?? '/', 'http://localhost').pathname;
+}
+
+function isPlaceholder(value: string | undefined): boolean {
+  const raw = (value || '').trim();
+  if (!raw) {
+    return true;
+  }
+
+  const normalized = raw.toLowerCase();
+  return (
+    normalized.startsWith('todo') ||
+    normalized.includes('replace_me') ||
+    normalized.includes('required_') ||
+    raw.includes('<')
+  );
+}
+
+function hasDatabase(): boolean {
+  return !isPlaceholder(process.env.DATABASE_URL);
+}
+
+function hasRedis(): boolean {
+  return !isPlaceholder(process.env.REDIS_URL);
 }
 
 function falakRuntimePayload() {
@@ -46,8 +68,8 @@ export function buildFalakUnavailableResponse(
         protocol: 'Falak Protocol',
         runtime: falakRuntimePayload(),
         dependencies: {
-          database: config.hasDatabase ? 'configured' : 'missing',
-          redis: config.hasRedis ? 'configured' : 'missing',
+          database: hasDatabase() ? 'configured' : 'missing',
+          redis: hasRedis() ? 'configured' : 'missing',
         },
         error: {
           code: reason.code,
