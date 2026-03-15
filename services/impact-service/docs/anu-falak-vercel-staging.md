@@ -156,6 +156,15 @@ Important:
 - do not treat placeholders in either template as valid hosted inputs
 - do not continue until the fresh staging DB has been explicitly confirmed
 
+Important:
+
+- keep `FALAK_STAGING_ALLOW_MUTATIONS=false` in Vercel runtime env
+- use a separate local or CI `.env.falak-staging` for operator verification
+- in that operator env, set `FALAK_STAGING_ALLOW_MUTATIONS=true` only while
+  running `falak:migrate:staging` and `falak:seed:staging`
+- do not treat placeholders in either template as valid hosted inputs
+- do not continue until the fresh staging DB has been explicitly confirmed
+
 Production project settings:
 
 - keep the existing production values
