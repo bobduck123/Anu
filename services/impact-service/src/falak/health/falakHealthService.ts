@@ -44,7 +44,7 @@ export class FalakHealthService {
         database_name: string | null;
         postgis_version: string | null;
       }>>(`
-        SELECT current_database() AS database_name, postgis_full_version() AS postgis_version
+        SELECT current_database() AS database_name, falak.postgis_full_version() AS postgis_version
       `);
 
       const [schemaInfo] = await this.prisma.$queryRawUnsafe<Array<{

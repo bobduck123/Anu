@@ -502,7 +502,7 @@ async function upsertFalakNode(args: {
   timeEnd?: string | null;
 }) {
   const geometrySql = args.geometry
-    ? Prisma.sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(args.geometry)}), 4326)`
+    ? Prisma.sql`falak.ST_SetSRID(falak.ST_GeomFromGeoJSON(${JSON.stringify(args.geometry)}), 4326)`
     : Prisma.sql`NULL`;
 
   const rows = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`

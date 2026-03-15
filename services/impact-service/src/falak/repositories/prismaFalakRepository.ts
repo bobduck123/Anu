@@ -211,7 +211,7 @@ const nodeSelectColumns = (alias: string, includeDistance = false): Prisma.Sql =
     ${tableAlias}.metadata,
     CASE
       WHEN ${tableAlias}.geometry IS NULL THEN NULL
-      ELSE ST_AsGeoJSON(${tableAlias}.geometry)::jsonb
+      ELSE falak.ST_AsGeoJSON(${tableAlias}.geometry)::jsonb
     END AS geometry,
     ${tableAlias}.time_start,
     ${tableAlias}.time_end,
@@ -590,7 +590,7 @@ export class PrismaFalakRepository implements FalakRepository {
     // Prisma cannot round-trip PostGIS geometry columns, so geometry mutations use
     // parameterized raw SQL around ST_GeomFromGeoJSON / ST_AsGeoJSON.
     const geometrySql = input.geometry
-      ? Prisma.sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(input.geometry)}), 4326)`
+      ? Prisma.sql`falak.ST_SetSRID(falak.ST_GeomFromGeoJSON(${JSON.stringify(input.geometry)}), 4326)`
       : Prisma.sql`NULL`;
 
     const rows = await this.prisma.$queryRaw<NodeRow[]>(Prisma.sql`
@@ -661,7 +661,7 @@ export class PrismaFalakRepository implements FalakRepository {
     if (Object.prototype.hasOwnProperty.call(input, 'geometry')) {
       assignments.push(
         input.geometry
-          ? Prisma.sql`geometry = ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(input.geometry)}), 4326)`
+          ? Prisma.sql`geometry = falak.ST_SetSRID(falak.ST_GeomFromGeoJSON(${JSON.stringify(input.geometry)}), 4326)`
           : Prisma.sql`geometry = NULL`
       );
     }
@@ -1023,18 +1023,18 @@ export class PrismaFalakRepository implements FalakRepository {
     // ST_DWithin/ST_Distance or computed distance projection safely through the ORM.
     const rows = await this.withTenantSession(context.tenantId, (db) => db.$queryRaw<NodeRow[]>(Prisma.sql`
       WITH anchor AS (
-        SELECT ST_SetSRID(ST_MakePoint(${filters.lng}, ${filters.lat}), 4326)::geography AS reference
+        SELECT falak.ST_SetSRID(falak.ST_MakePoint(${filters.lng}, ${filters.lat}), 4326)::geography AS reference
       )
       SELECT
         ${nodeSelectColumns('n')},
-        ST_Distance(n.geometry::geography, anchor.reference) AS distance_meters
+        falak.ST_Distance(n.geometry::geography, anchor.reference) AS distance_meters
       FROM falak.nodes n
       CROSS JOIN anchor
       WHERE n.tenant_id = ${context.tenantId}::uuid
         AND n.status <> 'deleted'::falak.falak_node_status
         AND n.visibility IN (${Prisma.join(allowedVisibilities.map((value) => Prisma.sql`${value}::falak.falak_visibility`))})
         AND n.geometry IS NOT NULL
-        AND ST_DWithin(n.geometry::geography, anchor.reference, ${filters.radiusMeters})
+        AND falak.ST_DWithin(n.geometry::geography, anchor.reference, ${filters.radiusMeters})
         ${typeClause}
       ORDER BY distance_meters ASC
     `));
@@ -1911,7 +1911,7 @@ export class PrismaFalakRepository implements FalakRepository {
   ): Promise<NodeRecord> {
     const actorId = context.actor?.id ?? null;
     const geometrySql = input.geometry
-      ? Prisma.sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(input.geometry)}), 4326)`
+      ? Prisma.sql`falak.ST_SetSRID(falak.ST_GeomFromGeoJSON(${JSON.stringify(input.geometry)}), 4326)`
       : Prisma.sql`NULL`;
 
     const rows = await this.prisma.$queryRaw<NodeRow[]>(Prisma.sql`
