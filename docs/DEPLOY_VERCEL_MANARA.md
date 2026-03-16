@@ -87,6 +87,7 @@ Runtime pin:
 Required env:
 - `BETA_ALLOW_PLACEHOLDER_INFRA=true` for beta boot without real DB/Stripe
 - `DATABASE_URL=TODO_REQUIRED_POSTGRES_DATABASE_URL` in beta, then replace with Postgres before launch
+- `MANARA_FEED_MODE=placeholder` until the production impact-service DB and feed rollout are explicitly approved
 - `JWT_SECRET_KEY=...`
 - `STRIPE_SECRET_KEY=TODO_REQUIRED_STRIPE_SECRET_KEY` in beta
 - `STRIPE_WEBHOOK_SECRET=TODO_REQUIRED_STRIPE_WEBHOOK_SECRET` in beta
@@ -98,6 +99,8 @@ Required env:
 Routes:
 - Legacy API remains at `/api/flora-fauna/*`
 - New public alias is `/api/manara/*`
+- `MANARA_FEED_MODE=placeholder` keeps `/api/manara/feed` on the placeholder preview path without relying on the production impact-service database
+- `MANARA_FEED_MODE=live` re-enables the Prisma-backed `/api/manara/feed` path and should only be used after explicit production DB readiness review
 - Project root `/` now returns a small JSON status payload for direct Vercel URL checks.
 - With `BETA_ALLOW_PLACEHOLDER_INFRA=true`, DB-backed and billing-backed routes return `503 BetaDependencyMissing` until real infrastructure is configured.
 

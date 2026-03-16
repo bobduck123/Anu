@@ -344,13 +344,7 @@ function betaDependencyMissing(res: Response, route: string) {
 export const createFloraFaunaPlaceholderRoutes = (): Router => {
   const router = Router();
 
-  router.get('/feed', (req: Request, res: Response) => {
-    const limit = parseLimit(req.query.limit, 12);
-    res.json({
-      feed: placeholderFeed.slice(0, limit),
-      placeholder: true,
-    });
-  });
+  router.use(createFloraFaunaPlaceholderFeedRoutes());
 
   router.get('/channels', (req: Request, res: Response) => {
     const limit = parseLimit(req.query.limit, 12);
@@ -417,6 +411,20 @@ export const createFloraFaunaPlaceholderRoutes = (): Router => {
   });
 
   router.all('*', (req: Request, res: Response) => betaDependencyMissing(res, req.path));
+
+  return router;
+};
+
+export const createFloraFaunaPlaceholderFeedRoutes = (): Router => {
+  const router = Router();
+
+  router.get('/feed', (req: Request, res: Response) => {
+    const limit = parseLimit(req.query.limit, 12);
+    res.json({
+      feed: placeholderFeed.slice(0, limit),
+      placeholder: true,
+    });
+  });
 
   return router;
 };

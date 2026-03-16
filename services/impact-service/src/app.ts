@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import logger from './utils/logger';
 import { rawBodyMiddleware } from './middleware/rawBody';
 import config from './config';
+import { ManaraFeedMode, resolveManaraFeedState } from './manaraFeed';
 
 function parseCorsOrigins(rawValue?: string): string[] {
   if (!rawValue?.trim()) {
@@ -27,8 +28,15 @@ function parseCorsAllowedSuffixes(rawValue?: string): string[] {
     .filter(Boolean);
 }
 
-export const createApp = (prisma: PrismaClient | null): Express => {
+export const createApp = (
+  prisma: PrismaClient | null,
+  options: { manaraFeedMode?: ManaraFeedMode } = {}
+): Express => {
   const app = express();
+  const manaraFeed = resolveManaraFeedState({
+    configuredMode: options.manaraFeedMode ?? config.manaraFeedMode,
+    hasPrisma: Boolean(prisma)
+  });
 
   // ============================================================================
   // STRIPE WEBHOOK: Raw body middleware BEFORE json parser
@@ -144,6 +152,7 @@ export const createApp = (prisma: PrismaClient | null): Express => {
         database: config.hasDatabase ? 'configured' : 'todo',
         stripe: config.hasStripe ? 'configured' : 'todo',
       },
+      manaraFeed,
     });
   });
 
@@ -157,6 +166,7 @@ export const createApp = (prisma: PrismaClient | null): Express => {
         database: config.hasDatabase ? 'configured' : 'todo',
         stripe: config.hasStripe ? 'configured' : 'todo',
       },
+      manaraFeed,
     });
   });
 

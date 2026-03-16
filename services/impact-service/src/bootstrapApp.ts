@@ -8,9 +8,11 @@ import createPoolsRoutes from './routes/pools';
 import createCreditsRoutes from './routes/credits';
 import createFloraFaunaRoutes from './routes/floraFauna';
 import createFloraFaunaPlaceholderRoutes from './routes/floraFaunaPlaceholder';
+import createManaraRoutes from './routes/manara';
 import { errorHandler } from './utils/errors';
 import { NextFunction, Request, Response, Router } from 'express';
 import config from './config';
+import { ManaraFeedMode } from './manaraFeed';
 
 const createDependencyUnavailableRouter = (serviceName: string): Router => {
   const router = Router();
@@ -32,9 +34,13 @@ const createDependencyUnavailableRouter = (serviceName: string): Router => {
   return router;
 };
 
-export const buildServerApp = (prisma: PrismaClient | null): Express => {
-  const app = createApp(prisma);
-  const routes = createRoutes();
+export const buildServerApp = (
+  prisma: PrismaClient | null,
+  options: { manaraFeedMode?: ManaraFeedMode } = {}
+): Express => {
+  const manaraFeedMode = options.manaraFeedMode ?? config.manaraFeedMode;
+  const app = createApp(prisma, { manaraFeedMode });
+  const routes = createRoutes({ hasPrisma: Boolean(prisma), manaraFeedMode });
 
   app.use('/api', routes);
 
@@ -44,7 +50,7 @@ export const buildServerApp = (prisma: PrismaClient | null): Express => {
     app.use('/api/pools', createPoolsRoutes(prisma));
     app.use('/api/credits', createCreditsRoutes(prisma));
     app.use('/api/flora-fauna', createFloraFaunaRoutes(prisma));
-    app.use('/api/manara', createFloraFaunaRoutes(prisma));
+    app.use('/api/manara', createManaraRoutes(prisma, { feedMode: manaraFeedMode }));
   } else {
     const dependencyUnavailable = createDependencyUnavailableRouter('Impact service');
     app.use('/api/memberships', dependencyUnavailable);

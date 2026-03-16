@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { resolveManaraFeedMode } from './manaraFeed';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ function optional(envVar: string, defaultValue: string): string {
 }
 
 const allowPlaceholderInfra = optional('BETA_ALLOW_PLACEHOLDER_INFRA', 'false') === 'true';
+const nodeEnv = optional('NODE_ENV', 'development');
 const hasDatabase = !isPlaceholder(process.env.DATABASE_URL);
 const hasRedis = !isPlaceholder(process.env.REDIS_URL);
 const hasStripe =
@@ -37,11 +39,12 @@ const hasStripe =
   !isPlaceholder(process.env.STRIPE_WEBHOOK_SECRET) &&
   !isPlaceholder(process.env.STRIPE_PUBLISHABLE_KEY);
 const requireStripeInfra = optional('REQUIRE_STRIPE_INFRA', 'false') === 'true';
+const manaraFeedMode = resolveManaraFeedMode(process.env.MANARA_FEED_MODE, nodeEnv);
 
 export const config = {
   // Server
   PORT: parseInt(optional('PORT', '5003'), 10),
-  NODE_ENV: optional('NODE_ENV', 'development'),
+  NODE_ENV: nodeEnv,
   allowPlaceholderInfra,
   hasDatabase,
   hasRedis,
@@ -49,6 +52,7 @@ export const config = {
   requireStripeInfra,
   betaPlaceholderDatabase: allowPlaceholderInfra && !hasDatabase,
   betaPlaceholderStripe: allowPlaceholderInfra && !hasStripe,
+  manaraFeedMode,
 
   // Database
   DATABASE_URL: process.env.DATABASE_URL || '',
@@ -68,8 +72,8 @@ export const config = {
   LOG_LEVEL: optional('LOG_LEVEL', 'info'),
 
   // Derived
-  isDevelopment: optional('NODE_ENV', 'development') === 'development',
-  isTest: optional('NODE_ENV', 'development') === 'test'
+  isDevelopment: nodeEnv === 'development',
+  isTest: nodeEnv === 'test'
 };
 
 // Validate required vars on startup
@@ -89,6 +93,7 @@ try {
     hasRedis,
     hasStripe,
     requireStripeInfra,
+    manaraFeedMode,
   });
 } catch (err) {
   console.error('[Config] Startup validation failed:', err instanceof Error ? err.message : String(err));
