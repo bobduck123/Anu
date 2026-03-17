@@ -204,6 +204,14 @@ export const mapStatusBodySchema = z.object({
   status: mapStatusSchema,
 });
 
+export const mapCategoryUpdateBodySchema = z.object({
+  label: z.string().min(1).optional(),
+  colorToken: z.string().min(1).optional(),
+  parentKey: z.string().min(1).nullable().optional(),
+  description: z.string().min(1).nullable().optional(),
+  order: z.number().int().min(0).optional(),
+});
+
 export const mapNodeUpdateBodySchema = z.object({
   categoryKey: z.string().optional(),
   summary: z.string().optional(),
@@ -238,3 +246,7 @@ export const mapEntityIndexSchema = z.array(z.object({
   evidence: z.number(),
   confidence: z.number(),
 }));
+
+export const mapSnapshotRestoreBodySchema = z.object({
+  snapshotId: z.string().min(2),
+});

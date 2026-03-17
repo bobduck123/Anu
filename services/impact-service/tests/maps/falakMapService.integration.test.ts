@@ -199,6 +199,38 @@ class InMemoryFalakMapRepository {
     return clone(resource);
   }
 
+  async updateCategory(
+    tenantId: string,
+    topicKey: string,
+    categoryKey: string,
+    patch: Partial<Pick<MapResource['categories'][number], 'label' | 'colorToken' | 'parentKey' | 'description' | 'order'>>,
+  ): Promise<MapResource | null> {
+    const resource = this.maps.get(resourceKey(tenantId, topicKey));
+    if (!resource) {
+      return null;
+    }
+
+    const category = resource.categories.find((entry) => entry.key === categoryKey);
+    if (!category) {
+      return null;
+    }
+
+    Object.assign(category, patch);
+    resource.definition.updatedAt = new Date().toISOString();
+    this.overrides.push({
+      id: stableId('override', resource.definition.id, category.id, `${this.overrides.length}`),
+      mapId: resource.definition.id,
+      targetType: 'category',
+      targetId: category.id,
+      patch: { categoryKey, ...patch } as MapOverride['patch'],
+      createdAt: new Date().toISOString(),
+      createdBy: null,
+      note: undefined,
+    });
+
+    return clone(resource);
+  }
+
   async updateEdge(
     tenantId: string,
     topicKey: string,
@@ -286,6 +318,54 @@ class InMemoryFalakMapRepository {
         snapshotId,
         snapshotVersion,
         pinnedNodeCount: resource.nodes.filter((node) => node.pinned).length,
+      },
+      createdAt: new Date().toISOString(),
+      createdBy: null,
+      note: undefined,
+    });
+
+    return clone(resource);
+  }
+
+  async restoreSnapshot(tenantId: string, topicKey: string, snapshotId: string): Promise<MapResource | null> {
+    const resource = this.maps.get(resourceKey(tenantId, topicKey));
+    if (!resource) {
+      return null;
+    }
+
+    const snapshot = resource.snapshots.find((entry) => entry.id === snapshotId);
+    if (!snapshot) {
+      return null;
+    }
+
+    const snapshotNodes = new Map(snapshot.nodes.map((entry) => [entry.nodeId, entry]));
+    resource.nodes = resource.nodes.map((node) => {
+      const restored = snapshotNodes.get(node.id);
+      if (!restored) {
+        return node;
+      }
+
+      return {
+        ...node,
+        position: restored.position,
+        pinned: restored.pinned,
+        clusterId: restored.clusterId,
+        confidence: {
+          ...node.confidence,
+          positioning: restored.confidence,
+        },
+      };
+    });
+    resource.definition.currentSnapshotId = snapshot.id;
+    resource.definition.updatedAt = new Date().toISOString();
+    this.overrides.push({
+      id: stableId('override', resource.definition.id, snapshot.id, `${this.overrides.length}`),
+      mapId: resource.definition.id,
+      targetType: 'layout',
+      targetId: snapshot.id,
+      patch: {
+        restoredSnapshotId: snapshot.id,
+        restoredSnapshotVersion: snapshot.version,
       },
       createdAt: new Date().toISOString(),
       createdBy: null,
@@ -392,6 +472,42 @@ describe('FalakMapService integration', () => {
     );
   });
 
+  it('persists taxonomy/category edits as first-class overrides', async () => {
+    const { repository, service } = createServiceWithRepository();
+    const resource = await repository.seedMap(TENANT_ID, {
+      topic: 'software architecture patterns',
+      mode: 'auto_seed',
+    });
+    const category = resource.categories[0];
+
+    const updated = await service.updateCategory(TENANT_ID, resource.definition.topicKey, category.key, {
+      label: 'Execution Models',
+      description: 'Sandbox editorial relabel for verification.',
+      colorToken: 'amber',
+      order: 7,
+    });
+
+    const updatedCategory = updated?.categories.find((entry) => entry.key === category.key);
+    expect(updatedCategory).toMatchObject({
+      label: 'Execution Models',
+      description: 'Sandbox editorial relabel for verification.',
+      colorToken: 'amber',
+      order: 7,
+    });
+    expect(repository.overrides).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targetType: 'category',
+          targetId: category.id,
+          patch: expect.objectContaining({
+            categoryKey: category.key,
+            label: 'Execution Models',
+          }),
+        }),
+      ]),
+    );
+  });
+
   it('re-runs layout without moving pinned nodes and persists a new snapshot', async () => {
     const { repository, service } = createServiceWithRepository();
     const resource = await repository.seedMap(TENANT_ID, {
@@ -421,6 +537,44 @@ describe('FalakMapService integration', () => {
           targetType: 'layout',
           targetId: latestSnapshot?.id,
           patch: expect.objectContaining({ pinnedNodeCount: 1 }),
+        }),
+      ]),
+    );
+  });
+
+  it('restores an older snapshot and reapplies pinned positions from that snapshot', async () => {
+    const { repository, service } = createServiceWithRepository();
+    const resource = await repository.seedMap(TENANT_ID, {
+      topic: 'ancient levantine deities',
+      mode: 'auto_seed',
+    });
+    const pinnedNode = resource.nodes[0];
+    const originalSnapshotId = resource.snapshots[0]?.id;
+    const pinnedPosition = { x: 8.5, y: -2.25, z: 4.1 };
+
+    await service.updateNode(TENANT_ID, resource.definition.topicKey, pinnedNode.id, {
+      pinned: true,
+      position: pinnedPosition,
+    });
+
+    const rerun = await service.rerunLayout(TENANT_ID, resource.definition.topicKey);
+    expect(rerun?.definition.currentSnapshotId).not.toBe(originalSnapshotId);
+
+    const restored = await service.restoreSnapshot(TENANT_ID, resource.definition.topicKey, originalSnapshotId!);
+    const restoredNode = restored?.nodes.find((entry) => entry.id === pinnedNode.id);
+    const originalSnapshotNode = resource.snapshots[0]?.nodes.find((entry) => entry.nodeId === pinnedNode.id);
+
+    expect(restored?.definition.currentSnapshotId).toBe(originalSnapshotId);
+    expect(restoredNode?.position).toEqual(originalSnapshotNode?.position);
+    expect(restoredNode?.pinned).toBe(originalSnapshotNode?.pinned);
+    expect(repository.overrides).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targetType: 'layout',
+          targetId: originalSnapshotId,
+          patch: expect.objectContaining({
+            restoredSnapshotId: originalSnapshotId,
+          }),
         }),
       ]),
     );

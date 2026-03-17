@@ -289,9 +289,9 @@ These commands assume:
 PowerShell:
 
 ```powershell
-$env:DATABASE_URL = "postgresql://USER:PASSWORD@HOST:5432/NEW_STAGING_DB?schema=public"
+$env:DATABASE_URL = "postgresql://postgres.PROJECT_REF:PASSWORD@POOLER_HOST:6543/postgres?pgbouncer=true&connection_limit=1"
 $env:DIRECT_URL = $env:DATABASE_URL
-$env:SHADOW_DATABASE_URL = "postgresql://USER:PASSWORD@HOST:5432/NEW_STAGING_SHADOW?schema=public"
+$env:SHADOW_DATABASE_URL = "postgresql://postgres:PASSWORD@db.PROJECT_REF.supabase.co:5432/postgres"
 
 npx prisma migrate status --schema prisma/schema.prisma
 npx prisma generate --schema prisma/schema.prisma

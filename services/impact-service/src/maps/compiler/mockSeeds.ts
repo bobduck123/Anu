@@ -481,6 +481,87 @@ export const MAP_MOCK_SEEDS: SeedCorpus[] = [
       },
     ],
   },
+  {
+    topicKey: 'toy-commons-loop',
+    title: 'Toy Commons Loop',
+    archetype: 'ecosystem',
+    description: 'A tiny seed map for rapid sandbox rendering and editor verification.',
+    documents: [
+      {
+        id: 'toy-loop',
+        url: 'https://example.org/toy-commons-loop',
+        title: 'Toy Commons Loop',
+        type: 'source_pack',
+        summary: 'Minimal three-node loop used for local Falak map sandbox verification.',
+        sections: [
+          {
+            heading: 'Loop',
+            kind: 'list',
+            lines: ['Community Need', 'Care Guild', 'Tool Library'],
+          },
+        ],
+      },
+    ],
+    entities: [
+      {
+        label: 'Community Need',
+        categoryKey: 'signals',
+        tags: ['need', 'signal'],
+        summary: 'The initiating signal that something in the commons needs care.',
+        axisScores: { x: -0.4, y: 0.2, z: 0.3 },
+        metrics: {
+          importance: 0.72,
+          popularity: 0.41,
+          evidence: 0.52,
+          centrality: 0.66,
+          complexity: 0.24,
+          controversy: 0.08,
+          freshness: 0.61,
+        },
+        relations: [
+          { target: 'Care Guild', relation: 'influences', weight: 0.84, confidence: 0.82, evidence: 'Needs trigger coordinated care work.' },
+        ],
+      },
+      {
+        label: 'Care Guild',
+        categoryKey: 'actors',
+        tags: ['coordination', 'stewardship'],
+        summary: 'A small stewarding group that interprets need and mobilizes response.',
+        axisScores: { x: 0.15, y: 0.64, z: 0.48 },
+        metrics: {
+          importance: 0.76,
+          popularity: 0.46,
+          evidence: 0.57,
+          centrality: 0.71,
+          complexity: 0.33,
+          controversy: 0.11,
+          freshness: 0.55,
+        },
+        relations: [
+          { target: 'Tool Library', relation: 'extends', weight: 0.72, confidence: 0.78, evidence: 'Guild activity routes into shared tools and logistics.' },
+        ],
+      },
+      {
+        label: 'Tool Library',
+        categoryKey: 'infrastructure',
+        tags: ['infrastructure', 'shared-assets'],
+        summary: 'Shared practical infrastructure that closes the loop back into community readiness.',
+        axisScores: { x: 0.35, y: -0.1, z: 0.18 },
+        metrics: {
+          importance: 0.68,
+          popularity: 0.38,
+          evidence: 0.61,
+          centrality: 0.63,
+          complexity: 0.29,
+          controversy: 0.05,
+          freshness: 0.49,
+        },
+        relations: [
+          { target: 'Community Need', relation: 'co_occurs_with', weight: 0.58, confidence: 0.73, evidence: 'Shared infrastructure often emerges from repeated needs.' },
+        ],
+      },
+    ],
+  },
 ];
 
 export function findMockSeed(topicKey: string): SeedCorpus | undefined {

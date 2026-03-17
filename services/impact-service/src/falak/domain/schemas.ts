@@ -233,6 +233,8 @@ export const falakOperationalHealthSchema = z.object({
   service: z.string(),
   protocol: z.string(),
   runtime: z.object({
+    mode: z.enum(['default', 'map_sandbox']),
+    sandbox: z.boolean(),
     route_guard_mode: z.enum(['disabled', 'admin_only', 'tenant_allowlist', 'enabled']),
     dark_launch: z.boolean(),
     map_route_guard_mode: z.enum(['disabled', 'admin_only', 'tenant_allowlist', 'enabled']),

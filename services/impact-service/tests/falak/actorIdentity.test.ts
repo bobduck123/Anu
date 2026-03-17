@@ -43,4 +43,34 @@ describe('Falak actor identity', () => {
       })
     });
   });
+
+  test('resolves sandbox actors from trusted x-actor-id identity values when sandbox mode is enabled', async () => {
+    const fixture = createSeededFalakRepository();
+
+    const result = await resolveActorIdentity(
+      {
+        headers: {
+          'x-actor-id': 'anu-admin'
+        }
+      } as unknown as FastifyRequest,
+      fixture.repository,
+      readFalakRuntimeConfig({
+        NODE_ENV: 'development',
+        FALAK_MODE: 'map_sandbox',
+      }),
+      fixture.adminContext.tenantId
+    );
+
+    expect(result).toMatchObject({
+      actor: expect.objectContaining({
+        externalAuthId: 'anu-admin'
+      }),
+      actorResolution: expect.objectContaining({
+        source: 'trusted_header_override',
+        isVerified: false,
+        authenticatedIdentity: 'anu-admin',
+        requestedActorId: 'anu-admin'
+      })
+    });
+  });
 });

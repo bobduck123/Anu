@@ -21,6 +21,11 @@ Detailed setup:
 - [DEPLOY_VERCEL_MANARA.md](C:/Dev/Flora_fauna/docs/DEPLOY_VERCEL_MANARA.md)
 - [GITHUB_DESKTOP_VERCEL_HANDOFF.md](C:/Dev/Flora_fauna/docs/GITHUB_DESKTOP_VERCEL_HANDOFF.md)
 
+Local Falak sandbox:
+
+- [SANDBOX_SETUP.md](C:/Dev/Flora_fauna/docs/SANDBOX_SETUP.md)
+- [SANDBOX_VERIFICATION.md](C:/Dev/Flora_fauna/docs/SANDBOX_VERIFICATION.md)
+
 ## Current Manara routes
 
 - Frontend: `/manara`

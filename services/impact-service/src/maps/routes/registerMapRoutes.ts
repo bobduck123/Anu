@@ -7,6 +7,7 @@ import { FalakRepository } from '../../falak/domain/types';
 import { buildRequestContextHook, requireFalakContext } from '../../falak/plugins/requestContext';
 import {
   mapCategoryParamsSchema,
+  mapCategoryUpdateBodySchema,
   mapEntityIndexSchema,
   mapListQuerySchema,
   mapNodeParamsSchema,
@@ -16,6 +17,7 @@ import {
   mapPathParamsSchema,
   mapResolveBodySchema,
   mapResourceSchema,
+  mapSnapshotRestoreBodySchema,
   mapStatusBodySchema,
   mapDefinitionSchema,
 } from '../domain/schemas';
@@ -186,6 +188,36 @@ export async function registerMapRoutes(
       return updated;
     });
 
+    privilegedApi.patch('/education/maps/:topicKey/categories/:categoryKey', {
+      schema: {
+        tags: ['Education Maps'],
+        summary: 'Update Education map taxonomy metadata',
+        security: [{ bearerAuth: [] }],
+        params: mapCategoryParamsSchema,
+        body: mapCategoryUpdateBodySchema,
+        response: {
+          200: mapResourceSchema,
+          404: errorResponseSchema,
+        },
+      },
+      }, async (request, reply) => {
+        const context = requireFalakContext(request);
+        const updated = await service.updateCategory(
+          context.tenantId,
+          request.params.topicKey,
+          request.params.categoryKey,
+          {
+            ...request.body,
+            parentKey: request.body.parentKey ?? undefined,
+            description: request.body.description ?? undefined,
+          },
+        );
+        if (!updated) {
+          return reply.status(404).send(sendNotFound(context.traceId));
+        }
+        return updated;
+    });
+
     privilegedApi.patch('/education/maps/:topicKey/nodes/:nodeId', {
       schema: {
         tags: ['Education Maps'],
@@ -242,6 +274,27 @@ export async function registerMapRoutes(
     }, async (request, reply) => {
       const context = requireFalakContext(request);
       const updated = await service.rerunLayout(context.tenantId, request.params.topicKey);
+      if (!updated) {
+        return reply.status(404).send(sendNotFound(context.traceId));
+      }
+      return updated;
+    });
+
+    privilegedApi.post('/education/maps/:topicKey/layout/restore', {
+      schema: {
+        tags: ['Education Maps'],
+        summary: 'Restore a saved layout snapshot',
+        security: [{ bearerAuth: [] }],
+        params: mapPathParamsSchema,
+        body: mapSnapshotRestoreBodySchema,
+        response: {
+          200: mapResourceSchema,
+          404: errorResponseSchema,
+        },
+      },
+    }, async (request, reply) => {
+      const context = requireFalakContext(request);
+      const updated = await service.restoreSnapshot(context.tenantId, request.params.topicKey, request.body.snapshotId);
       if (!updated) {
         return reply.status(404).send(sendNotFound(context.traceId));
       }

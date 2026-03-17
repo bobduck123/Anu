@@ -1,0 +1,23 @@
+services:
+  falak-map-sandbox-postgis:
+    image: postgis/postgis:16-3.4
+    container_name: falak-map-sandbox-postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: anu_falak_sandbox
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "55443:5432"
+    volumes:
+      - falak-map-sandbox-postgis-data:/var/lib/postgresql/data
+      - ./docker/falak-sandbox/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d anu_falak_sandbox"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+volumes:
+  falak-map-sandbox-postgis-data:

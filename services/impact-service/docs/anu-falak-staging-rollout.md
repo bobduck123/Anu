@@ -141,7 +141,7 @@ Do not use `prisma migrate resolve` as part of normal rollout.
 The hosted staging readiness script verifies:
 
 - DB connection
-- PostGIS availability via `postgis_full_version()`
+- PostGIS extension availability
 - Prisma metadata table exists in `falak._prisma_migrations`
 - `/v1/falak/health` reports healthy Falak runtime checks
 - `/v1/falak/readiness` reports ready migration and schema state

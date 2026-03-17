@@ -15,7 +15,13 @@ const prisma = await createPrismaClient();
 
 try {
   const [databaseInfo] = await prisma.$queryRawUnsafe(`
-    SELECT current_database() AS database_name, falak.postgis_full_version() AS postgis_version
+    SELECT
+      current_database() AS database_name,
+      (
+        SELECT extversion
+        FROM pg_extension
+        WHERE extname = 'postgis'
+      ) AS postgis_version
   `);
   assert(databaseInfo?.database_name, 'Database connection check failed.');
   assert(databaseInfo?.postgis_version, 'PostGIS extension check failed.');

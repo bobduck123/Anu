@@ -248,6 +248,25 @@ describe('Falak route guard config', () => {
     expect(config.trustXActorId).toBe(false);
   });
 
+  test('map sandbox mode enables local Falak routes and trusted actor overrides by default', () => {
+    const config = readFalakRuntimeConfig({
+      NODE_ENV: 'development',
+      FALAK_MODE: 'map_sandbox'
+    } as NodeJS.ProcessEnv);
+
+    expect(config).toMatchObject({
+      mode: 'map_sandbox',
+      isSandbox: true,
+      routeGuardMode: 'enabled',
+      mapRouteGuardMode: 'enabled',
+      trustXActorIdRequested: true,
+      trustXActorId: true,
+      requireVerifiedActor: false,
+      darkLaunch: false,
+      mapDarkLaunch: false,
+    });
+  });
+
   test('admin_only denies access when allowlists are missing', () => {
     const decision = evaluateFalakRouteAccess(readFalakRuntimeConfig({
       NODE_ENV: 'production',

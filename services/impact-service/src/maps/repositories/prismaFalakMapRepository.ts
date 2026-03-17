@@ -21,7 +21,21 @@ import { stableId } from '../compiler/utils';
 type PrismaExecutor = PrismaClient | Prisma.TransactionClient;
 
 function asNumber(value: unknown, fallback = 0): number {
-  return typeof value === 'number' ? value : fallback;
+  if (typeof value === 'number') {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+
+  if (value && typeof value === 'object' && 'toNumber' in value && typeof (value as { toNumber: () => number }).toNumber === 'function') {
+    const parsed = (value as { toNumber: () => number }).toNumber();
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+
+  return fallback;
 }
 
 function asString(value: unknown): string | undefined {
@@ -140,6 +154,15 @@ function mapJobRecord(row: any): MapJob {
 
 export class PrismaFalakMapRepository {
   constructor(private readonly prisma: PrismaExecutor) {}
+
+  private async touchMapDefinition(db: PrismaExecutor, mapId: string): Promise<void> {
+    await (db as any).falakMapDefinition.update({
+      where: { id: mapId },
+      data: {
+        updatedAt: new Date(),
+      },
+    });
+  }
 
   private async setTenantSessionOn(db: PrismaExecutor, tenantId: string): Promise<void> {
     await db.$executeRaw(Prisma.sql`
@@ -507,6 +530,55 @@ export class PrismaFalakMapRepository {
     });
   }
 
+  async updateCategory(
+    tenantId: string,
+    topicKey: string,
+    categoryKey: string,
+    patch: Partial<Pick<CategoryDef, 'label' | 'colorToken' | 'parentKey' | 'description' | 'order'>>,
+  ): Promise<MapResource | null> {
+    return this.withTenantSession(tenantId, async (db) => {
+      const map = await this.getMapResourceWithDb(db, tenantId, topicKey);
+      if (!map) {
+        return null;
+      }
+
+      const category = map.categories.find((entry) => entry.key === categoryKey);
+      if (!category) {
+        return null;
+      }
+
+      const updateData: Record<string, unknown> = {};
+      if (patch.label !== undefined) updateData.label = patch.label;
+      if (patch.colorToken !== undefined) updateData.colorToken = patch.colorToken;
+      if (patch.parentKey !== undefined) updateData.parentKey = patch.parentKey;
+      if (patch.description !== undefined) updateData.description = patch.description;
+      if (patch.order !== undefined) updateData.order = patch.order;
+
+      if (Object.keys(updateData).length === 0) {
+        return map;
+      }
+
+      await (db as any).falakMapCategory.update({
+        where: { id: category.id },
+        data: updateData,
+      });
+      await this.touchMapDefinition(db, map.definition.id);
+      await (db as any).falakMapOverride.create({
+        data: {
+          id: stableId('override', map.definition.id, category.id, new Date().toISOString()),
+          mapId: map.definition.id,
+          targetType: 'category',
+          targetId: category.id,
+          patch: {
+            categoryKey,
+            ...updateData,
+          },
+        },
+      });
+      return this.getMapResourceWithDb(db, tenantId, topicKey);
+    });
+  }
+
   async updateNode(tenantId: string, topicKey: string, nodeId: string, patch: Partial<Pick<MapNode, 'categoryKey' | 'summary' | 'longDescription' | 'pinned' | 'position'>>): Promise<MapResource | null> {
     return this.withTenantSession(tenantId, async (db) => {
       const map = await this.getMapResourceWithDb(db, tenantId, topicKey);
@@ -528,6 +600,7 @@ export class PrismaFalakMapRepository {
         where: { id: nodeId },
         data: updateData,
       });
+      await this.touchMapDefinition(db, map.definition.id);
       await (db as any).falakMapOverride.create({
         data: {
           id: stableId('override', map.definition.id, nodeId, new Date().toISOString()),
@@ -561,6 +634,7 @@ export class PrismaFalakMapRepository {
         where: { id: edgeId },
         data: updateData,
       });
+      await this.touchMapDefinition(db, map.definition.id);
       await (db as any).falakMapOverride.create({
         data: {
           id: stableId('override', map.definition.id, edgeId, new Date().toISOString()),
@@ -624,6 +698,7 @@ export class PrismaFalakMapRepository {
         where: { id: resource.definition.id },
         data: {
           currentSnapshotId: snapshotId,
+          updatedAt: new Date(),
         },
       });
       await (db as any).falakMapOverride.create({
@@ -636,6 +711,62 @@ export class PrismaFalakMapRepository {
             snapshotId,
             snapshotVersion,
             pinnedNodeCount: resource.nodes.filter((node) => node.pinned).length,
+          },
+        },
+      });
+      return this.getMapResourceWithDb(db, tenantId, topicKey);
+    });
+  }
+
+  async restoreSnapshot(tenantId: string, topicKey: string, snapshotId: string): Promise<MapResource | null> {
+    return this.withTenantSession(tenantId, async (db) => {
+      const resource = await this.getMapResourceWithDb(db, tenantId, topicKey);
+      if (!resource) {
+        return null;
+      }
+
+      const snapshot = resource.snapshots.find((entry) => entry.id === snapshotId);
+      if (!snapshot) {
+        return null;
+      }
+
+      const nodesById = new Map(snapshot.nodes.map((entry) => [entry.nodeId, entry]));
+      for (const node of resource.nodes) {
+        const persisted = nodesById.get(node.id);
+        if (!persisted) {
+          continue;
+        }
+
+        await (db as any).falakMapNode.update({
+          where: { id: node.id },
+          data: {
+            position: persisted.position,
+            pinned: persisted.pinned,
+            clusterId: persisted.clusterId ?? null,
+            confidence: {
+              ...node.confidence,
+              positioning: persisted.confidence,
+            },
+          },
+        });
+      }
+
+      await (db as any).falakMapDefinition.update({
+        where: { id: resource.definition.id },
+        data: {
+          currentSnapshotId: snapshot.id,
+          updatedAt: new Date(),
+        },
+      });
+      await (db as any).falakMapOverride.create({
+        data: {
+          id: stableId('override', resource.definition.id, snapshot.id, new Date().toISOString()),
+          mapId: resource.definition.id,
+          targetType: 'layout',
+          targetId: snapshot.id,
+          patch: {
+            restoredSnapshotId: snapshot.id,
+            restoredSnapshotVersion: snapshot.version,
           },
         },
       });

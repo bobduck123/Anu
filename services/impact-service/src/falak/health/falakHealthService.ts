@@ -11,6 +11,8 @@ export interface FalakHealthReport {
     migrations: 'ok' | 'error' | 'skipped';
   };
   runtime: {
+    mode: FalakRuntimeConfig['mode'];
+    sandbox: boolean;
     routeGuardMode: FalakRuntimeConfig['routeGuardMode'];
     darkLaunch: boolean;
     mapRouteGuardMode: FalakRuntimeConfig['mapRouteGuardMode'];
@@ -44,7 +46,13 @@ export class FalakHealthService {
         database_name: string | null;
         postgis_version: string | null;
       }>>(`
-        SELECT current_database() AS database_name, falak.postgis_full_version() AS postgis_version
+        SELECT
+          current_database() AS database_name,
+          (
+            SELECT extversion
+            FROM pg_extension
+            WHERE extname = 'postgis'
+          ) AS postgis_version
       `);
 
       const [schemaInfo] = await this.prisma.$queryRawUnsafe<Array<{
@@ -94,6 +102,8 @@ export class FalakHealthService {
           migrations: migrationsOk ? 'ok' : 'error'
         },
         runtime: {
+          mode: this.runtimeConfig.mode,
+          sandbox: this.runtimeConfig.isSandbox,
           routeGuardMode: this.runtimeConfig.routeGuardMode,
           darkLaunch: this.runtimeConfig.darkLaunch,
           mapRouteGuardMode: this.runtimeConfig.mapRouteGuardMode,
@@ -117,6 +127,8 @@ export class FalakHealthService {
           migrations: 'skipped'
         },
         runtime: {
+          mode: this.runtimeConfig.mode,
+          sandbox: this.runtimeConfig.isSandbox,
           routeGuardMode: this.runtimeConfig.routeGuardMode,
           darkLaunch: this.runtimeConfig.darkLaunch,
           mapRouteGuardMode: this.runtimeConfig.mapRouteGuardMode,

@@ -178,7 +178,7 @@ export interface MapAlias {
 export interface MapOverride {
   id: string;
   mapId: string;
-  targetType: 'map' | 'node' | 'edge' | 'axis' | 'layout';
+  targetType: 'map' | 'node' | 'edge' | 'axis' | 'layout' | 'category';
   targetId?: string | null;
   patch: JsonObject;
   note?: string;

@@ -77,6 +77,19 @@ export async function resolveActorIdentity(
         }
       };
     }
+
+    const identityActor = await repository.findActorByIdentity(tenantId, requestedActorOverride);
+    if (identityActor) {
+      return {
+        actor: identityActor,
+        actorResolution: {
+          source: 'trusted_header_override',
+          isVerified: false,
+          authenticatedIdentity: requestedActorOverride,
+          requestedActorId: requestedActorOverride
+        }
+      };
+    }
   }
 
   return {

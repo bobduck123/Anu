@@ -32,6 +32,15 @@ export class FalakMapService {
     return this.repository.updateMapStatus(tenantId, topicKey, status);
   }
 
+  updateCategory(
+    tenantId: string,
+    topicKey: string,
+    categoryKey: string,
+    patch: Parameters<PrismaFalakMapRepository['updateCategory']>[3],
+  ) {
+    return this.repository.updateCategory(tenantId, topicKey, categoryKey, patch);
+  }
+
   updateNode(
     tenantId: string,
     topicKey: string,
@@ -52,6 +61,10 @@ export class FalakMapService {
 
   rerunLayout(tenantId: string, topicKey: string) {
     return this.repository.rerunLayout(tenantId, topicKey);
+  }
+
+  restoreSnapshot(tenantId: string, topicKey: string, snapshotId: string) {
+    return this.repository.restoreSnapshot(tenantId, topicKey, snapshotId);
   }
 
   getCategoryView(tenantId: string, topicKey: string, categoryKey: string) {

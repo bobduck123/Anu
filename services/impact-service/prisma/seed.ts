@@ -3,14 +3,36 @@ import { randomUUID } from 'crypto';
 import { assertSafeLocalVerificationEnvironment } from '../src/falak/utils/localVerificationGuard';
 import { assertSafeHostedStagingEnvironment } from '../src/falak/utils/stagingRolloutGuard';
 import { PrismaFalakRepository } from '../src/falak/repositories/prismaFalakRepository';
+import { PrismaFalakMapRepository } from '../src/maps/repositories/prismaFalakMapRepository';
 import { AllocationWorkflowService } from '../src/falak/services/allocationWorkflowService';
 import { ContributionWorkflowService } from '../src/falak/services/contributionWorkflowService';
 import { EventWorkflowService } from '../src/falak/services/eventWorkflowService';
 import { NoopFanoutPublisher } from '../src/falak/services/fanoutPublisher';
 import { PolicyEngine } from '../src/falak/services/policyEngine';
 import { RequestContext, ResolvedActor } from '../src/falak/domain/types';
+import { normalizeTopicKey } from '../src/maps/compiler/utils';
 
 const prisma = new PrismaClient();
+
+const SANDBOX_TENANT_ID = '11111111-1111-4111-8111-111111111111';
+const SANDBOX_ADMIN_ACTOR_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const SANDBOX_CURATOR_ACTOR_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const SANDBOX_GOVERNOR_ACTOR_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+const SANDBOX_PUBLIC_ACTOR_ID = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+const SANDBOX_MAP_TOPICS = [
+  'consciousness theories',
+  'ancient levantine deities',
+  'software architecture patterns',
+  'toy commons loop',
+] as const;
+
+function isMapSandboxMode(): boolean {
+  return (process.env.FALAK_MODE ?? '').trim().toLowerCase() === 'map_sandbox';
+}
+
+function shouldSeedSandboxMaps(): boolean {
+  return isMapSandboxMode() || process.env.FALAK_SEED_MAPS === 'true';
+}
 
 interface RunSeedOptions {
   commandName: string;
@@ -584,6 +606,7 @@ function makeSeedContext(
 }
 
 async function ensureFalakSeed() {
+  const sandboxMode = isMapSandboxMode();
   const tenant = await prisma.falakTenant.upsert({
     where: { slug: 'anu-beta' },
     update: {
@@ -596,6 +619,7 @@ async function ensureFalakSeed() {
       },
     },
     create: {
+      ...(sandboxMode ? { id: SANDBOX_TENANT_ID } : {}),
       slug: 'anu-beta',
       name: 'ANU Beta',
       status: 'active',
@@ -621,6 +645,7 @@ async function ensureFalakSeed() {
         displayName: 'ANU Tenant Admin',
       },
       create: {
+        ...(sandboxMode ? { id: SANDBOX_ADMIN_ACTOR_ID } : {}),
         tenantId: tenant.id,
         actorType: 'user',
         externalAuthId: 'anu-admin',
@@ -641,6 +666,7 @@ async function ensureFalakSeed() {
         displayName: 'ANU Curator',
       },
       create: {
+        ...(sandboxMode ? { id: SANDBOX_CURATOR_ACTOR_ID } : {}),
         tenantId: tenant.id,
         actorType: 'user',
         externalAuthId: 'anu-curator',
@@ -661,6 +687,7 @@ async function ensureFalakSeed() {
         displayName: 'ANU Governor',
       },
       create: {
+        ...(sandboxMode ? { id: SANDBOX_GOVERNOR_ACTOR_ID } : {}),
         tenantId: tenant.id,
         actorType: 'user',
         externalAuthId: 'anu-governor',
@@ -681,6 +708,7 @@ async function ensureFalakSeed() {
         displayName: 'ANU Public Member',
       },
       create: {
+        ...(sandboxMode ? { id: SANDBOX_PUBLIC_ACTOR_ID } : {}),
         tenantId: tenant.id,
         actorType: 'user',
         externalAuthId: 'anu-public',
@@ -1524,6 +1552,43 @@ async function ensureFalakSeed() {
     seedApprovalId = proposalWorkflow.approval?.id ?? null;
   }
 
+  let mapSeedSummary: {
+    seededTopics: string[];
+    publishedTopics: string[];
+  } | null = null;
+  if (shouldSeedSandboxMaps()) {
+    const mapRepository = new PrismaFalakMapRepository(prisma);
+    const seededTopics: string[] = [];
+    const publishedTopics: string[] = [];
+
+    for (const topic of SANDBOX_MAP_TOPICS) {
+      const topicKey = normalizeTopicKey(topic);
+      let resource = await mapRepository.getMapResource(tenant.id, topicKey);
+      if (!resource) {
+        const request = {
+          topic,
+          mode: 'auto_seed' as const,
+        };
+        const job = await mapRepository.createJob(tenant.id, request);
+        resource = await mapRepository.compileAndPersist(tenant.id, request, job.id);
+      }
+
+      seededTopics.push(resource.definition.topicKey);
+      if (resource.definition.status !== 'published') {
+        const published = await mapRepository.updateMapStatus(tenant.id, resource.definition.topicKey, 'published');
+        if (published) {
+          resource = published;
+        }
+      }
+      publishedTopics.push(resource.definition.topicKey);
+    }
+
+    mapSeedSummary = {
+      seededTopics,
+      publishedTopics,
+    };
+  }
+
   return {
     tenant: tenant.slug,
     actors: [admin.displayName, curator.displayName, governor.displayName, publicActor.displayName],
@@ -1546,6 +1611,7 @@ async function ensureFalakSeed() {
       pendingApprovalId: seedApprovalId,
       proposalStatus: seedProposalStatus,
     },
+    maps: mapSeedSummary,
   };
 }
 

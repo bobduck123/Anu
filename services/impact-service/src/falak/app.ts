@@ -104,6 +104,8 @@ export async function buildFalakApp(prisma: PrismaClient) {
 
   logger.info({
     category: 'falak.runtime',
+    mode: runtimeConfig.mode,
+    isSandbox: runtimeConfig.isSandbox,
     routeGuardMode: runtimeConfig.routeGuardMode,
     darkLaunch: runtimeConfig.darkLaunch,
     mapRouteGuardMode: runtimeConfig.mapRouteGuardMode,

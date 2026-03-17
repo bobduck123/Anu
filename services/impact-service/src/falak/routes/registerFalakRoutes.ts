@@ -163,6 +163,8 @@ export async function registerFalakRoutes(
         service: 'impact-service',
         protocol: 'Falak Protocol',
         runtime: {
+          mode: runtime.runtimeConfig.mode,
+          sandbox: runtime.runtimeConfig.isSandbox,
           route_guard_mode: runtime.runtimeConfig.routeGuardMode,
           dark_launch: runtime.runtimeConfig.darkLaunch,
           map_route_guard_mode: runtime.runtimeConfig.mapRouteGuardMode,
@@ -190,6 +192,8 @@ export async function registerFalakRoutes(
       service: 'impact-service',
       protocol: 'Falak Protocol',
       runtime: {
+        mode: report.runtime.mode,
+        sandbox: report.runtime.sandbox,
         route_guard_mode: report.runtime.routeGuardMode,
         dark_launch: report.runtime.darkLaunch,
         map_route_guard_mode: report.runtime.mapRouteGuardMode,
@@ -228,6 +232,8 @@ export async function registerFalakRoutes(
         service: 'impact-service',
         protocol: 'Falak Protocol',
         runtime: {
+          mode: runtime.runtimeConfig.mode,
+          sandbox: runtime.runtimeConfig.isSandbox,
           route_guard_mode: runtime.runtimeConfig.routeGuardMode,
           dark_launch: runtime.runtimeConfig.darkLaunch,
           map_route_guard_mode: runtime.runtimeConfig.mapRouteGuardMode,
@@ -255,6 +261,8 @@ export async function registerFalakRoutes(
       service: 'impact-service',
       protocol: 'Falak Protocol',
       runtime: {
+        mode: report.runtime.mode,
+        sandbox: report.runtime.sandbox,
         route_guard_mode: report.runtime.routeGuardMode,
         dark_launch: report.runtime.darkLaunch,
         map_route_guard_mode: report.runtime.mapRouteGuardMode,

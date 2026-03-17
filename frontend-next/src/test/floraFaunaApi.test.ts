@@ -8,6 +8,12 @@ describe('floraFaunaApi', () => {
   });
 
   it('throws a structured API error for organizer-only endpoints', async () => {
+    const expectedError: Partial<FloraFaunaApiError> = {
+      name: 'FloraFaunaApiError',
+      status: 403,
+      code: 'FORBIDDEN',
+    };
+
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
@@ -28,11 +34,7 @@ describe('floraFaunaApi', () => {
       ),
     );
 
-    await expect(floraFaunaApi.listRevenueEvents(5)).rejects.toMatchObject<Partial<FloraFaunaApiError>>({
-      name: 'FloraFaunaApiError',
-      status: 403,
-      code: 'FORBIDDEN',
-    });
+    await expect(floraFaunaApi.listRevenueEvents(5)).rejects.toMatchObject(expectedError);
   });
 
   it('returns null for missing detail records on 404', async () => {

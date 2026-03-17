@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "prisma generate && tsc",
+    "typecheck": "tsc --noEmit",
     "start": "node dist/server.js",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -33,7 +34,18 @@
     "falak:readiness:staging": "node scripts/falak-staging/readiness.mjs",
     "falak:smoke:staging": "node scripts/falak-staging/smoke.mjs",
     "falak:contract:staging": "node scripts/falak-staging/route-contract.mjs",
-    "falak:verify:staging": "node scripts/falak-staging/verify.mjs"
+    "falak:verify:staging": "node scripts/falak-staging/verify.mjs",
+    "falak:sandbox:db:up": "node scripts/falak-sandbox/docker-compose.mjs up",
+    "falak:sandbox:db:down": "node scripts/falak-sandbox/docker-compose.mjs down",
+    "falak:sandbox:db:logs": "node scripts/falak-sandbox/docker-compose.mjs logs",
+    "falak:sandbox:db:ps": "node scripts/falak-sandbox/docker-compose.mjs ps",
+    "falak:sandbox:prisma:generate": "node scripts/falak-sandbox/prisma-generate.mjs",
+    "falak:sandbox:migrate": "node scripts/falak-sandbox/migrate.mjs",
+    "falak:sandbox:reset": "node scripts/falak-sandbox/reset.mjs",
+    "falak:sandbox:seed": "node scripts/falak-sandbox/seed.mjs",
+    "falak:sandbox:test:db": "node scripts/falak-sandbox/integration-tests.mjs",
+    "falak:sandbox:verify": "node scripts/falak-sandbox/verify.mjs",
+    "falak:sandbox:backend": "node scripts/falak-sandbox/run-backend.mjs"
   },
   "keywords": [],
   "author": "",

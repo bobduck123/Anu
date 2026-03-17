@@ -121,8 +121,8 @@ Preview or staging project settings:
 - `NODE_ENV=production`
 - `LOG_LEVEL=info`
 - `BETA_ALLOW_PLACEHOLDER_INFRA=false`
-- `DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/anu_falak_staging?schema=public`
-- `DIRECT_URL=postgresql://USER:PASSWORD@HOST:5432/anu_falak_staging?schema=public`
+- `DATABASE_URL=postgresql://postgres.PROJECT_REF:PASSWORD@POOLER_HOST:6543/postgres?pgbouncer=true&connection_limit=1`
+- `DIRECT_URL=postgresql://postgres:PASSWORD@db.PROJECT_REF.supabase.co:5432/postgres`
 - `JWT_SECRET_KEY=staging-only-secret`
 - `CORS_ORIGINS=https://falak-staging.example.vercel.app`
 - `CORS_ALLOWED_ORIGIN_SUFFIXES=.vercel.app`
