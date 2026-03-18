@@ -21,12 +21,22 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   process.exit(1);
 }
 
-// SQL migration files
+// Use absolute paths from the project directory
+const projectScriptsDir = '/vercel/share/v0-project/scripts';
+
+// SQL migration files - with absolute paths
 const migrations = [
-  path.join(__dirname, '001_core_schema.sql'),
-  path.join(__dirname, '002_impact_schema.sql'),
-  path.join(__dirname, '003_falak_schema.sql'),
+  path.join(projectScriptsDir, '001_core_schema.sql'),
+  path.join(projectScriptsDir, '002_impact_schema.sql'),
+  path.join(projectScriptsDir, '003_falak_schema.sql'),
 ];
+
+console.log('[v0] Script directory:', __dirname);
+console.log('[v0] Migration files:');
+migrations.forEach(m => {
+  const exists = fs.existsSync(m);
+  console.log(`[v0]   ${m} - ${exists ? 'EXISTS' : 'NOT FOUND'}`);
+});
 
 async function executeViaSql(sqlContent) {
   /**
