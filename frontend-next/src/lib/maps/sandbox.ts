@@ -24,6 +24,15 @@ export function getFalakSandboxTenantId(): string {
   return process.env.NEXT_PUBLIC_FALAK_SANDBOX_TENANT_ID?.trim() || DEFAULT_TENANT_ID;
 }
 
+export function getFalakRequestTenantId(): string | null {
+  const hostedTenantId = process.env.NEXT_PUBLIC_FALAK_TENANT_ID?.trim();
+  if (hostedTenantId) {
+    return hostedTenantId;
+  }
+
+  return isFalakMapSandbox() ? getFalakSandboxTenantId() : null;
+}
+
 export function getFalakSandboxDefaultActor(): string {
   return process.env.NEXT_PUBLIC_FALAK_SANDBOX_DEFAULT_ACTOR?.trim() || DEFAULT_ACTOR;
 }

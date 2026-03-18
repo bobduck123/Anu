@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useDeferredValue, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ArrowRight, Layers3, Search, SlidersHorizontal } from 'lucide-react';
 import { MapResource } from '@/lib/api/educationMaps';
-import { FalakMapScene } from './FalakMapScene';
 import {
   categoryColor,
   categoryLabel,
@@ -16,6 +16,20 @@ import {
   statusBadgeClass,
   summarizeMap,
 } from './presentation';
+
+const FalakMapScene = dynamic(
+  () => import('./FalakMapScene').then((module) => module.FalakMapScene),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[28rem] w-full overflow-hidden rounded-[1.5rem] border border-slate-800 bg-slate-950 md:h-[36rem]">
+        <div className="flex h-full items-center justify-center text-sm text-slate-400">
+          Loading interactive map renderer...
+        </div>
+      </div>
+    ),
+  },
+);
 
 interface FalakMapViewerProps {
   map: MapResource | null;

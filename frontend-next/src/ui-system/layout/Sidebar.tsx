@@ -34,6 +34,8 @@ const navSections: NavSection[] = [
       { href: '/manara', label: 'Manara', icon: Sparkles, module: 'impact' },
       { href: '/impact', label: 'Impact', icon: BarChart3, module: 'impact', authRequired: true },
       { href: '/community', label: 'Community', icon: Users, module: 'community' },
+      { href: '/education', label: 'Education', icon: GraduationCap },
+      { href: '/universe', label: 'Universe', icon: Sparkles },
     ],
   },
   {

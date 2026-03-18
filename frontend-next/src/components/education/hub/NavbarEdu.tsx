@@ -8,8 +8,9 @@ import { useTheme } from "@/components/education/ui/theme-provider";
 import { Button } from "@/components/education/ui/button";
 
 const navItems = [
-  { href: "/education", label: "Hub", icon: Home },
+  { href: "/education", label: "Education", icon: Home },
   { href: "/education/maps", label: "Maps", icon: Sparkles },
+  { href: "/universe", label: "Universe", icon: Sparkles },
   { href: "/education/immersive", label: "Immersive", icon: Leaf },
   { href: "/education/systems", label: "Systems", icon: Sparkles },
   { href: "/education/curriculum", label: "Curriculum", icon: BookOpen },

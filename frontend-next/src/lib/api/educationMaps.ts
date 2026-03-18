@@ -1,5 +1,5 @@
 import { getImpactApiBase } from '@/lib/runtime';
-import { getFalakSandboxTenantId } from '@/lib/maps/sandbox';
+import { getFalakRequestTenantId, isFalakMapSandbox } from '@/lib/maps/sandbox';
 
 export type MapStatus = 'draft' | 'reviewed' | 'published';
 export type MapCompileMode = 'auto_seed' | 'auto_expand' | 'curated_refine';
@@ -191,14 +191,18 @@ function authHeaders(): Record<string, string> {
 
 async function educationMapFetch<T>(path: string, options: RequestInit = {}, actorId: string | null = null): Promise<T> {
   const base = getImpactApiBase();
+  const tenantId = getFalakRequestTenantId();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'X-Tenant-Id': getFalakSandboxTenantId(),
     ...authHeaders(),
     ...(options.headers as Record<string, string> | undefined),
   };
 
-  if (actorId) {
+  if (tenantId) {
+    headers['X-Tenant-Id'] = tenantId;
+  }
+
+  if (actorId && isFalakMapSandbox()) {
     headers['X-Actor-Id'] = actorId;
   }
 

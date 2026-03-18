@@ -428,6 +428,7 @@ export class QuantumEngine {
   private paused = false;
   private animFrameId = 0;
   private densityFactor = 1.0;
+  private starfieldCount: number;
 
   // Interaction helpers
   private raycaster = new THREE.Raycaster();
@@ -439,6 +440,10 @@ export class QuantumEngine {
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
+    this.starfieldCount = Math.min(
+      6000,
+      (window.devicePixelRatio || 1) > 1.5 ? 4500 : 6000,
+    );
 
     // Scene
     this.scene = new THREE.Scene();
@@ -455,7 +460,7 @@ export class QuantumEngine {
       powerPreference: 'high-performance',
     });
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     this.renderer.setClearColor(0x000000);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
@@ -516,7 +521,11 @@ export class QuantumEngine {
   }
 
   setDensity(factor: number): void {
-    this.densityFactor = Math.max(0.3, Math.min(1.0, factor));
+    const nextDensity = Math.max(0.3, Math.min(1.0, factor));
+    if (Math.abs(nextDensity - this.densityFactor) < 0.01) {
+      return;
+    }
+    this.densityFactor = nextDensity;
     this.buildVisualization();
   }
 
@@ -595,7 +604,7 @@ export class QuantumEngine {
   // -----------------------------------------------------------------------
 
   private createStarfield(): void {
-    const count = 8000;
+    const count = this.starfieldCount;
     const positions: number[] = [];
     const colors: number[] = [];
     const sizes: number[] = [];

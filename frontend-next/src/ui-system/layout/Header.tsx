@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
-import { Menu, Bell, User, LogOut, ChevronDown } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Menu, Bell, User, LogOut, ChevronDown, GraduationCap, Sparkles } from 'lucide-react';
 import ManaraMark from '@/components/branding/ManaraMark';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from './TenantBrandWrapper';
@@ -17,7 +18,12 @@ export function Header({ onMenuToggle }: HeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const tenant = useTenant();
   const [profileOpen, setProfileOpen] = useState(false);
+  const pathname = usePathname();
   const homeHref = isAuthenticated ? '/home' : '/';
+  const quickLinks = [
+    { href: '/education', label: 'Education', icon: GraduationCap },
+    { href: '/universe', label: 'Universe', icon: Sparkles },
+  ];
 
   const organizerRoles = new Set(['organizer', 'node_admin', 'platform_admin', 'board_member', 'treasury_guardian']);
   const isOrganizer = user && organizerRoles.has(user.role);
@@ -63,6 +69,27 @@ export function Header({ onMenuToggle }: HeaderProps) {
             </span>
           </Link>
         </div>
+
+        <nav className="hidden lg:flex items-center gap-2">
+          {quickLinks.map((link) => {
+            const Icon = link.icon;
+            const active = pathname === link.href || pathname?.startsWith(`${link.href}/`);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+                  active
+                    ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
+                    : 'text-[var(--color-foreground)] hover:bg-[var(--color-muted)]'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {link.label}
+              </Link>
+            );
+          })}
+        </nav>
 
         {/* Right: theme + notifications + avatar */}
         <div className="flex items-center gap-1">

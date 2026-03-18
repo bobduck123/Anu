@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useCallback, type RefObject } from 'react';
+import { useState, useMemo, useRef, useCallback, useDeferredValue, type RefObject } from 'react';
 import { useFeatureFlag } from '@/lib/featureFlags';
 import { generateMockUniverse, type Star, type StarType } from '@/data/adapters/starfieldAdapter';
 import { QuantumCanvas, type QuantumCanvasHandle } from '@/ui/patterns/starfield/QuantumCanvas';
@@ -60,6 +60,7 @@ export default function UniversePage() {
   const [density, setDensity] = useState(100);
   const [activeTypes, setActiveTypes] = useState<Set<StarType>>(new Set());
   const [paused, setPaused] = useState(false);
+  const deferredDensity = useDeferredValue(density);
 
   const fullData = useMemo(() => generateMockUniverse(500, 7), []);
 
@@ -109,7 +110,7 @@ export default function UniversePage() {
         ref={quantumRef}
         data={filteredData}
         paletteIndex={paletteIndex}
-        densityFactor={density / 100}
+        densityFactor={deferredDensity / 100}
         onStarClick={handleStarClick}
       />
 
