@@ -320,17 +320,28 @@ class Config:
             is_vercel_database
             and 'pooler.supabase.com:6543' in (self.SQLALCHEMY_DATABASE_URI or '')
         )
+        # Detect Neon pooler (uses -pooler suffix in hostname)
+        uses_neon_pooler = bool(
+            is_vercel_database
+            and '-pooler.' in (self.SQLALCHEMY_DATABASE_URI or '')
+            and 'neon.tech' in (self.SQLALCHEMY_DATABASE_URI or '')
+        )
         if is_vercel_database:
             self.SQLALCHEMY_ENGINE_OPTIONS.update({
                 'pool_size': 1,
                 'max_overflow': 0,
                 'pool_pre_ping': True,
             })
-        if uses_supabase_transaction_pooler:
-            # For serverless SQLAlchemy, Supabase recommends transaction mode + NullPool.
+        if uses_supabase_transaction_pooler or uses_neon_pooler:
+            # For serverless SQLAlchemy with external poolers (Supabase/Neon),
+            # use NullPool to let the external pooler manage connections.
             self.SQLALCHEMY_ENGINE_OPTIONS = {
                 'poolclass': NullPool,
                 'pool_pre_ping': True,
+                'connect_args': {
+                    'connect_timeout': 10,
+                    'options': '-c statement_timeout=30000',  # 30s timeout
+                },
             }
 
         # Connection pooling overrides

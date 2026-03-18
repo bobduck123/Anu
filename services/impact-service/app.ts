@@ -1,16 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import { buildServerApp } from './src/bootstrapApp';
-import config from './src/config';
+import { getPrismaClient } from './src/lib/prisma';
 
-const globalForPrisma = globalThis as typeof globalThis & {
-  __manaraImpactPrisma?: PrismaClient | null;
-};
-
-const prisma = globalForPrisma.__manaraImpactPrisma ?? (config.hasDatabase ? new PrismaClient() : null);
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.__manaraImpactPrisma = prisma;
-}
+// Use shared Prisma client with connection pooling
+const prisma = getPrismaClient();
 
 const app = buildServerApp(prisma);
 
