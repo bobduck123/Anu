@@ -21,9 +21,34 @@ const impactApiOrigin =
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  
+  // Image optimization for faster loading
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 31536000, // 1 year
+    remotePatterns: [
+      { protocol: 'https', hostname: '**.anu.eco' },
+      { protocol: 'https', hostname: '**.vercel.app' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: '**.supabase.co' },
+    ],
+  },
+  
+  // Bundle optimizations for faster cold starts
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'date-fns',
+      'framer-motion',
+      '@radix-ui/react-icons',
+      'gsap',
+    ],
+  },
+  
   turbopack: {
     root: __dirname,
   },
+  
   async rewrites() {
     const rules = [];
 

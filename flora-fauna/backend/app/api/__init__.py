@@ -67,6 +67,7 @@ from .admin_tenants import admin_tenants_bp
 from .cultural_public import cultural_public_bp
 from .cultural_control import cultural_control_bp
 from .dumb_dumb import dumb_dumb_bp
+from .domain_resolution import domain_resolution_bp
 
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -138,3 +139,4 @@ api_bp.register_blueprint(admin_tenants_bp)
 api_bp.register_blueprint(cultural_public_bp)
 api_bp.register_blueprint(cultural_control_bp)
 api_bp.register_blueprint(dumb_dumb_bp)
+api_bp.register_blueprint(domain_resolution_bp)
