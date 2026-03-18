@@ -213,12 +213,14 @@ export function FalakMapLibraryPage() {
                         >
                           Open map
                         </Link>
-                        <Link
-                          href={`/admin/maps?topic=${encodeURIComponent(map.topicKey)}`}
-                          className="inline-flex items-center justify-center rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
-                        >
-                          Admin edit
-                        </Link>
+                        {!fallbackActive ? (
+                          <Link
+                            href={`/admin/maps?topic=${encodeURIComponent(map.topicKey)}`}
+                            className="inline-flex items-center justify-center rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
+                          >
+                            Admin edit
+                          </Link>
+                        ) : null}
                         <button
                           type="button"
                           onClick={() =>

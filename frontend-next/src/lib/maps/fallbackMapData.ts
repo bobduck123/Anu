@@ -16,6 +16,13 @@ type CategorySeed = {
   order: number;
 };
 
+type NodeSourceSeed = {
+  url: string;
+  title: string;
+  domain: string;
+  snippet: string;
+};
+
 type NodeSeed = {
   key: string;
   label: string;
@@ -36,6 +43,7 @@ type NodeSeed = {
     controversy: number;
     freshness: number;
   };
+  sources?: NodeSourceSeed[];
   pinned?: boolean;
 };
 
@@ -85,6 +93,30 @@ const DEFAULT_AXES: AxisSeed[] = [
     minLabel: 'Signal',
     maxLabel: 'Action',
     description: 'Whether the concept primarily senses conditions or directly changes them.',
+  },
+];
+
+const SEP_AXES: AxisSeed[] = [
+  {
+    key: 'x',
+    label: 'Historical to contemporary',
+    minLabel: 'Historical',
+    maxLabel: 'Contemporary',
+    description: 'Whether an entry is anchored in classical philosophy or in modern and contemporary problem spaces.',
+  },
+  {
+    key: 'y',
+    label: 'Canonical to plural',
+    minLabel: 'Canonical',
+    maxLabel: 'Plural',
+    description: 'Whether an entry mainly sits inside the canonical frame or expands the map through broader traditions and interventions.',
+  },
+  {
+    key: 'z',
+    label: 'Formal to civic',
+    minLabel: 'Formal',
+    maxLabel: 'Civic',
+    description: 'Whether an entry emphasizes formal reasoning or reaches more directly into lived institutions, power, and public life.',
   },
 ];
 
@@ -349,10 +381,261 @@ const FALLBACK_MAP_SEEDS: FallbackMapSeed[] = [
       { source: 'mutual-aid-pods', target: 'ritual-reflection', relation: 'extends', weight: 0.47, confidence: 0.6, evidence: 'Care structures make reflective practice socially durable.' },
     ],
   },
+  {
+    topicKey: 'stanford-encyclopedia-philosophy-atlas',
+    title: 'Stanford Encyclopedia of Philosophy Atlas',
+    archetype: 'philosophy-knowledge-graph',
+    entityType: 'reference-map',
+    description: 'A read-only atlas seeded from the Stanford Encyclopedia of Philosophy contents page, linking anchor figures, core domains, plural traditions, and contemporary frontier topics.',
+    status: 'published',
+    categories: [
+      { key: 'anchors', label: 'Canonical Anchors', colorToken: 'amber', description: 'Major historical figures that structure large parts of the SEP landscape.', order: 0 },
+      { key: 'domains', label: 'Core Domains', colorToken: 'sky', description: 'Persistent fields that organize philosophical questions across eras.', order: 1 },
+      { key: 'methods', label: 'Methods and Language', colorToken: 'violet', description: 'Entries focused on formal reasoning, inference, and linguistic analysis.', order: 2 },
+      { key: 'traditions', label: 'Traditions and Interventions', colorToken: 'emerald', description: 'Entries that widen the canon through distinct traditions and critical interventions.', order: 3 },
+      { key: 'frontiers', label: 'Contemporary Frontiers', colorToken: 'rose', description: 'Topics where philosophy is actively entangled with present-day technology and contested belief.', order: 4 },
+    ],
+    axes: SEP_AXES,
+    nodes: [
+      {
+        key: 'plato',
+        label: 'Plato',
+        entityType: 'philosopher',
+        categoryKey: 'anchors',
+        tags: ['ancient', 'dialogues', 'canon'],
+        summary: 'A canonical anchor whose questions about politics, knowledge, and reality still shape how many later entries are framed.',
+        longDescription: 'The SEP entry presents Plato as a wide-ranging and deeply influential writer whose dialogues continue to structure debates about knowledge, justice, metaphysics, and philosophical method.',
+        position: { x: -1.55, y: -1.15, z: 0.15 },
+        axisScores: { x: 0.06, y: 0.12, z: 0.46 },
+        metrics: { importance: 0.97, popularity: 0.88, evidence: 0.82, centrality: 0.94, complexity: 0.71, controversy: 0.18, freshness: 0.52 },
+        sources: [
+          {
+            url: 'https://plato.stanford.edu/entries/plato/',
+            title: 'Plato (Stanford Encyclopedia of Philosophy)',
+            domain: 'plato.stanford.edu',
+            snippet: 'SEP presents Plato as one of the most influential philosophical writers, spanning politics, method, and metaphysics.',
+          },
+          {
+            url: 'https://plato.stanford.edu/contents.html',
+            title: 'Table of Contents (Stanford Encyclopedia of Philosophy)',
+            domain: 'plato.stanford.edu',
+            snippet: 'The contents page lists Plato among the major anchor entries in the encyclopedia.',
+          },
+        ],
+        pinned: true,
+      },
+      {
+        key: 'aristotle',
+        label: 'Aristotle',
+        entityType: 'philosopher',
+        categoryKey: 'anchors',
+        tags: ['ancient', 'systematic', 'canon'],
+        summary: 'A second major anchor whose work spans logic, metaphysics, biology, ethics, and politics.',
+        longDescription: 'The SEP entry frames Aristotle as a philosopher with enormous historical influence and unusual breadth, connecting formal reasoning with empirical inquiry and social theory.',
+        position: { x: -1.18, y: -0.95, z: 0.36 },
+        axisScores: { x: 0.1, y: 0.14, z: 0.58 },
+        metrics: { importance: 0.96, popularity: 0.85, evidence: 0.82, centrality: 0.91, complexity: 0.75, controversy: 0.17, freshness: 0.51 },
+        sources: [
+          {
+            url: 'https://plato.stanford.edu/entries/aristotle/',
+            title: 'Aristotle (Stanford Encyclopedia of Philosophy)',
+            domain: 'plato.stanford.edu',
+            snippet: 'SEP presents Aristotle as a peer of Plato in influence, with work ranging from logic and metaphysics to ethics and biology.',
+          },
+          {
+            url: 'https://plato.stanford.edu/contents.html',
+            title: 'Table of Contents (Stanford Encyclopedia of Philosophy)',
+            domain: 'plato.stanford.edu',
+            snippet: 'The contents page places Aristotle alongside major figures and topic clusters that branch into specialized subentries.',
+          },
+        ],
+        pinned: true,
+      },
+      {
+        key: 'metaphysics',
+        label: 'Metaphysics',
+        entityType: 'field',
+        categoryKey: 'domains',
+        tags: ['being', 'ontology', 'first-causes'],
+        summary: 'A core domain concerned with what there is and how philosophers characterize reality at the most general level.',
+        longDescription: 'The SEP entry treats metaphysics as an enduring but contested field, no longer defined by a single subject matter, yet still central to disputes over what exists and how philosophical claims are framed.',
+        position: { x: -0.28, y: -0.5, z: 0.18 },
+        axisScores: { x: 0.42, y: 0.2, z: 0.28 },
+        metrics: { importance: 0.91, popularity: 0.77, evidence: 0.8, centrality: 0.87, complexity: 0.72, controversy: 0.27, freshness: 0.63 },
+        sources: [
+          {
+            url: 'https://plato.stanford.edu/entries/metaphysics/',
+            title: 'Metaphysics (Stanford Encyclopedia of Philosophy)',
+            domain: 'plato.stanford.edu',
+            snippet: 'SEP describes metaphysics as difficult to define cleanly, yet still centered on broad claims about being and reality.',
+          },
+        ],
+      },
+      {
+        key: 'epistemology',
+        label: 'Epistemology',
+        entityType: 'field',
+        categoryKey: 'domains',
+        tags: ['knowledge', 'justification', 'belief'],
+        summary: 'A core domain that studies knowledge, understanding, justification, and the standards for belief.',
+        longDescription: 'The SEP entry traces epistemology from its Greek roots through long-running debates about what it is to know and how knowledge differs from true opinion, error, and mere confidence.',
+        position: { x: 0.12, y: -0.1, z: 0.34 },
+        axisScores: { x: 0.5, y: 0.24, z: 0.34 },
+        metrics: { importance: 0.92, popularity: 0.8, evidence: 0.81, centrality: 0.89, complexity: 0.68, controversy: 0.25, freshness: 0.67 },
+        sources: [
+          {
+            url: 'https://plato.stanford.edu/entries/epistemology/',
+            title: 'Epistemology (Stanford Encyclopedia of Philosophy)',
+            domain: 'plato.stanford.edu',
+            snippet: 'SEP frames epistemology as an old field organized around knowledge, understanding, and reasons for belief.',
+          },
+        ],
+      },
+      {
+        key: 'modal-logic',
+        label: 'Modal Logic',
+        entityType: 'method',
+        categoryKey: 'methods',
+        tags: ['logic', 'necessity', 'possibility'],
+        summary: 'A formal method for tracking necessity, possibility, and related families of reasoning.',
+        longDescription: 'The SEP entry describes modal logic as the study of reasoning with necessity and possibility while also branching into deontic, temporal, epistemic, and computationally useful systems.',
+        position: { x: 0.76, y: -0.08, z: -1.05 },
+        axisScores: { x: 0.64, y: 0.29, z: 0.11 },
+        metrics: { importance: 0.82, popularity: 0.63, evidence: 0.84, centrality: 0.74, complexity: 0.73, controversy: 0.19, freshness: 0.66 },
+        sources: [
+          {
+            url: 'https://plato.stanford.edu/entries/logic-modal/',
+            title: 'Modal Logic (Stanford Encyclopedia of Philosophy)',
+            domain: 'plato.stanford.edu',
+            snippet: 'SEP presents modal logic as a family of systems built around necessity and possibility, with applications in philosophy and computer science.',
+          },
+        ],
+      },
+      {
+        key: 'feminist-philosophy',
+        label: 'Feminist Philosophy',
+        entityType: 'tradition',
+        categoryKey: 'traditions',
+        tags: ['feminism', 'intervention', 'canon'],
+        summary: 'A critical intervention that reorganizes philosophical inquiry around gender, power, standpoint, and neglected questions.',
+        longDescription: 'The SEP entry introduces feminist philosophy as a section with approaches, interventions, and topic clusters, showing it as a durable reworking of what counts as central philosophical work.',
+        position: { x: 0.48, y: 1.05, z: 1.12 },
+        axisScores: { x: 0.73, y: 0.87, z: 0.8 },
+        metrics: { importance: 0.86, popularity: 0.72, evidence: 0.77, centrality: 0.8, complexity: 0.63, controversy: 0.31, freshness: 0.7 },
+        sources: [
+          {
+            url: 'https://plato.stanford.edu/entries/feminist-philosophy/',
+            title: 'Feminist Philosophy (Stanford Encyclopedia of Philosophy)',
+            domain: 'plato.stanford.edu',
+            snippet: 'SEP describes feminist philosophy as an organized field with approaches, interventions, and focused topic areas.',
+          },
+        ],
+      },
+      {
+        key: 'africana-philosophy',
+        label: 'Africana Philosophy',
+        entityType: 'tradition',
+        categoryKey: 'traditions',
+        tags: ['diaspora', 'metaphilosophy', 'pluralism'],
+        summary: 'A plural field that organizes many philosophizing traditions and discourses across Africa and its diasporas.',
+        longDescription: 'The SEP entry presents Africana philosophy not as one doctrine but as an umbrella for intellectual work by African and African-descended peoples, widening the map of philosophy beyond a narrow canonical frame.',
+        position: { x: -0.2, y: 1.34, z: 1.24 },
+        axisScores: { x: 0.68, y: 0.95, z: 0.88 },
+        metrics: { importance: 0.83, popularity: 0.64, evidence: 0.78, centrality: 0.77, complexity: 0.65, controversy: 0.22, freshness: 0.6 },
+        sources: [
+          {
+            url: 'https://plato.stanford.edu/entries/africana/',
+            title: 'Africana Philosophy (Stanford Encyclopedia of Philosophy)',
+            domain: 'plato.stanford.edu',
+            snippet: 'SEP presents Africana philosophy as an umbrella field for reflective and critical work across Africa and its diasporas.',
+          },
+        ],
+      },
+      {
+        key: 'chinese-logic-language',
+        label: 'Logic and Language in Early Chinese Philosophy',
+        entityType: 'tradition',
+        categoryKey: 'traditions',
+        tags: ['china', 'language', 'reasoning'],
+        summary: 'An entry that shows sophisticated work on logic and language inside early Chinese philosophy rather than only inside familiar Western formal traditions.',
+        longDescription: 'The SEP entry centers Mohism and related debates to show how early Chinese philosophers developed explicit views on logic, language, and reasoning in relation to ethics and governance.',
+        position: { x: 0.94, y: 1.22, z: 0.48 },
+        axisScores: { x: 0.24, y: 0.9, z: 0.62 },
+        metrics: { importance: 0.78, popularity: 0.55, evidence: 0.79, centrality: 0.7, complexity: 0.66, controversy: 0.16, freshness: 0.62 },
+        sources: [
+          {
+            url: 'https://plato.stanford.edu/entries/chinese-logic-language/',
+            title: 'Logic and Language in Early Chinese Philosophy (Stanford Encyclopedia of Philosophy)',
+            domain: 'plato.stanford.edu',
+            snippet: 'SEP highlights early Chinese debates on logic and language, especially around Mohism and governance.',
+          },
+        ],
+      },
+      {
+        key: 'artificial-intelligence',
+        label: 'Artificial Intelligence',
+        entityType: 'frontier-topic',
+        categoryKey: 'frontiers',
+        tags: ['ai', 'technology', 'philosophy-of-mind'],
+        summary: 'A frontier topic where formal systems, reasoning, personhood, and machine agency meet.',
+        longDescription: 'The SEP entry frames AI as both a technical field and a philosophical one, connecting logic, planning, probability, personhood, and debates about the limits of artificial agents.',
+        position: { x: 1.48, y: 0.2, z: 0.82 },
+        axisScores: { x: 0.96, y: 0.58, z: 0.74 },
+        metrics: { importance: 0.88, popularity: 0.86, evidence: 0.79, centrality: 0.82, complexity: 0.7, controversy: 0.36, freshness: 0.91 },
+        sources: [
+          {
+            url: 'https://plato.stanford.edu/entries/artificial-intelligence/',
+            title: 'Artificial Intelligence (Stanford Encyclopedia of Philosophy)',
+            domain: 'plato.stanford.edu',
+            snippet: 'SEP describes AI as building artificial creatures or persons and ties it directly to logic, planning, and philosophy of AI.',
+          },
+        ],
+        pinned: true,
+      },
+      {
+        key: 'religion-epistemology',
+        label: 'The Epistemology of Religion',
+        entityType: 'frontier-topic',
+        categoryKey: 'frontiers',
+        tags: ['religion', 'evidentialism', 'disagreement'],
+        summary: 'A boundary topic where general epistemic standards meet disagreement, faith, experience, and moral stakes.',
+        longDescription: 'The SEP entry focuses on evidentialism and disagreement in religion, using them to show how general questions about justification become sharper in settings shaped by expertise, privacy, and commitment.',
+        position: { x: 0.28, y: 0.52, z: 1.3 },
+        axisScores: { x: 0.75, y: 0.52, z: 0.72 },
+        metrics: { importance: 0.75, popularity: 0.57, evidence: 0.76, centrality: 0.68, complexity: 0.61, controversy: 0.34, freshness: 0.84 },
+        sources: [
+          {
+            url: 'https://plato.stanford.edu/entries/religion-epistemology/',
+            title: 'The Epistemology of Religion (Stanford Encyclopedia of Philosophy)',
+            domain: 'plato.stanford.edu',
+            snippet: 'SEP focuses this entry on evidentialism and disagreement, showing how religion stresses broader epistemic questions.',
+          },
+        ],
+      },
+    ],
+    edges: [
+      { source: 'plato', target: 'aristotle', relation: 'influences', weight: 0.95, confidence: 0.94, evidence: 'The SEP contents and entries present Plato and Aristotle as the two dominant canonical anchors for much later philosophy.' },
+      { source: 'plato', target: 'epistemology', relation: 'influences', weight: 0.8, confidence: 0.86, evidence: 'The SEP epistemology entry explicitly points back to Plato when explaining early questions about knowledge and true opinion.' },
+      { source: 'aristotle', target: 'metaphysics', relation: 'influences', weight: 0.87, confidence: 0.88, evidence: 'The SEP Aristotle entry links him directly to metaphysics, and the metaphysics entry still uses categories shaped by that inheritance.' },
+      { source: 'metaphysics', target: 'epistemology', relation: 'co_occurs_with', weight: 0.62, confidence: 0.73, evidence: 'Questions about what exists and what can be known remain tightly coupled across the SEP map.' },
+      { source: 'epistemology', target: 'modal-logic', relation: 'extends', weight: 0.68, confidence: 0.77, evidence: 'Formal reasoning about knowledge, belief, necessity, and possibility links epistemology to modal logic.' },
+      { source: 'modal-logic', target: 'artificial-intelligence', relation: 'influences', weight: 0.74, confidence: 0.82, evidence: 'The SEP AI entry names logic-based formalisms and intensional logics as part of AI\'s philosophical and technical foundation.' },
+      { source: 'religion-epistemology', target: 'epistemology', relation: 'belongs_to', weight: 0.81, confidence: 0.85, evidence: 'The SEP entry explicitly frames religion-focused evidentialism and disagreement as general epistemological issues under special pressure.' },
+      { source: 'feminist-philosophy', target: 'epistemology', relation: 'extends', weight: 0.64, confidence: 0.74, evidence: 'Feminist interventions expand what counts as a knower, a standpoint, and an adequately situated account of evidence.' },
+      { source: 'africana-philosophy', target: 'feminist-philosophy', relation: 'co_occurs_with', weight: 0.52, confidence: 0.68, evidence: 'Both entries widen the philosophical field by challenging narrow canonical boundaries and recentering lived histories.' },
+      { source: 'chinese-logic-language', target: 'modal-logic', relation: 'similar_to', weight: 0.49, confidence: 0.65, evidence: 'Each entry organizes careful attention to inference, terms, and the structure of reasoning, though from different traditions.' },
+      { source: 'chinese-logic-language', target: 'epistemology', relation: 'extends', weight: 0.55, confidence: 0.69, evidence: 'The early Chinese logic-and-language entry broadens the geography of how philosophical reflection on knowledge and argument is mapped.' },
+      { source: 'feminist-philosophy', target: 'artificial-intelligence', relation: 'influences', weight: 0.46, confidence: 0.61, evidence: 'Critical work on power, embodiment, and social categories is directly relevant when philosophical questions about AI move into public systems.' },
+    ],
+  },
 ];
 
 function roundMetric(value: number): number {
   return Number(value.toFixed(2));
+}
+
+function buildAxisExplanation(axis: AxisSeed, nodeLabel: string, score: number): string {
+  return `${nodeLabel} sits at ${Math.round(score * 100)}% on the "${axis.label}" axis, between ${axis.minLabel.toLowerCase()} and ${axis.maxLabel.toLowerCase()}.`;
 }
 
 function buildFallbackMap(seed: FallbackMapSeed): MapResource {
@@ -374,11 +657,11 @@ function buildFallbackMap(seed: FallbackMapSeed): MapResource {
       fallbackTopic: seed.topicKey,
     },
     axisScores: node.axisScores,
-    axisMeta: [
-      { key: 'x' as const, explanation: `${node.label} leans from embodied practice toward abstraction at ${Math.round(node.axisScores.x * 100)}%.`, confidence: 0.72 },
-      { key: 'y' as const, explanation: `${node.label} spans local-to-federated scope at ${Math.round(node.axisScores.y * 100)}%.`, confidence: 0.7 },
-      { key: 'z' as const, explanation: `${node.label} sits on the signal-to-action axis at ${Math.round(node.axisScores.z * 100)}%.`, confidence: 0.74 },
-    ],
+    axisMeta: seed.axes.map((axis) => ({
+      key: axis.key,
+      explanation: buildAxisExplanation(axis, node.label, node.axisScores[axis.key]),
+      confidence: axis.key === 'y' ? 0.7 : axis.key === 'x' ? 0.72 : 0.74,
+    })),
     metrics: {
       ...node.metrics,
       sizeScore: roundMetric((node.metrics.importance + node.metrics.centrality) / 2),
@@ -390,17 +673,26 @@ function buildFallbackMap(seed: FallbackMapSeed): MapResource {
       classification: 0.8,
       positioning: 0.78,
     },
-    sources: [
-      {
-        id: `${mapId}-source-${node.key}`,
+    sources:
+      node.sources?.map((source, index) => ({
+        id: `${mapId}-source-${node.key}-${index + 1}`,
         nodeId: `${mapId}-node-${node.key}`,
-        url: `https://example.org/falak/${seed.topicKey}/${node.key}`,
-        title: `${seed.title}: ${node.label}`,
-        domain: 'example.org',
-        snippet: node.summary,
+        url: source.url,
+        title: source.title,
+        domain: source.domain,
+        snippet: source.snippet,
         extractedAt: CREATED_AT,
-      },
-    ],
+      })) ?? [
+        {
+          id: `${mapId}-source-${node.key}`,
+          nodeId: `${mapId}-node-${node.key}`,
+          url: `https://example.org/falak/${seed.topicKey}/${node.key}`,
+          title: `${seed.title}: ${node.label}`,
+          domain: 'example.org',
+          snippet: node.summary,
+          extractedAt: CREATED_AT,
+        },
+      ],
     pinned: Boolean(node.pinned),
     clusterId: node.categoryKey,
   }));
@@ -529,3 +821,4 @@ export function listFallbackEducationMaps(filters: { q?: string; status?: MapSta
 export function getFallbackEducationMap(topicKey: string): MapResource | null {
   return FALLBACK_MAPS.find((resource) => resource.definition.topicKey === topicKey || resource.definition.id === topicKey) ?? null;
 }
+

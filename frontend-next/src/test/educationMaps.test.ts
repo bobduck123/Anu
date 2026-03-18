@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EducationMapApiError, getEducationMap, listEducationMaps, shouldUseEducationMapsFallback } from '@/lib/api/educationMaps';
+import { getFallbackEducationMap, listFallbackEducationMaps } from '@/lib/maps/fallbackMapData';
 
 describe('educationMaps client', () => {
   const fetchMock = vi.fn();
@@ -153,5 +154,17 @@ describe('educationMaps client', () => {
 
     expect(error).toBeInstanceOf(EducationMapApiError);
     expect(shouldUseEducationMapsFallback(error)).toBe(true);
+  });
+
+  it('ships a Stanford encyclopedia fallback map with live SEP sources', () => {
+    const map = getFallbackEducationMap('stanford-encyclopedia-philosophy-atlas');
+
+    expect(map?.definition.title).toBe('Stanford Encyclopedia of Philosophy Atlas');
+    expect(listFallbackEducationMaps({ q: 'stanford encyclopedia of philosophy' })).toHaveLength(1);
+
+    const aiNode = map?.nodes.find((node) => node.label === 'Artificial Intelligence');
+
+    expect(aiNode?.sources[0]?.url).toBe('https://plato.stanford.edu/entries/artificial-intelligence/');
+    expect(aiNode?.sources[0]?.domain).toBe('plato.stanford.edu');
   });
 });
