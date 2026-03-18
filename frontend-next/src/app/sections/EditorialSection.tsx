@@ -72,52 +72,59 @@ export function EditorialSection() {
         const text = block.querySelector('.editorial-text');
         const image = block.querySelector('.editorial-image');
 
-        gsap.fromTo(text,
-          { y: 50, opacity: 0 },
+        if (text) {
+          gsap.fromTo(text,
+            { y: 50, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              duration: 0.8,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: block,
+                start: 'top 80%',
+                once: true
+              }
+            }
+          );
+        }
+
+        if (image) {
+          gsap.fromTo(image,
+            { y: 80, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              duration: 1,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: block,
+                start: 'top 80%',
+                once: true
+              }
+            }
+          );
+        }
+      });
+
+      // Pull quote animation
+      const pullQuote = sectionRef.current?.querySelector('.pull-quote-block');
+      if (pullQuote) {
+        gsap.fromTo(pullQuote,
+          { y: 40, opacity: 0 },
           {
             y: 0,
             opacity: 1,
             duration: 0.8,
             ease: 'power3.out',
             scrollTrigger: {
-              trigger: block,
-              start: 'top 80%',
+              trigger: pullQuote,
+              start: 'top 85%',
               once: true
             }
           }
         );
-
-        gsap.fromTo(image,
-          { y: 80, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 1,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: block,
-              start: 'top 80%',
-              once: true
-            }
-          }
-        );
-      });
-
-      // Pull quote animation
-      gsap.fromTo('.pull-quote-block',
-        { y: 40, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.8,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: '.pull-quote-block',
-            start: 'top 85%',
-            once: true
-          }
-        }
-      );
+      }
     }, sectionRef);
 
     return () => ctx.revert();

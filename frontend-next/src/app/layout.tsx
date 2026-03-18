@@ -48,7 +48,6 @@ export default async function RootLayout({
     <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
-        style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif' }}
       >
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>
