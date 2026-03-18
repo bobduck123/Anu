@@ -305,34 +305,51 @@ class Config:
         self.SECRET_KEY = os.environ.get('SECRET_KEY')
         self.JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
         
-        # Database
-        raw_database_url = os.environ.get('DATABASE_URL')
+        # Database - Support multiple env var names for flexibility
+        # Priority: DATABASE_URL > POSTGRES_URL > POSTGRES_PRISMA_URL
+        raw_database_url = (
+            os.environ.get('DATABASE_URL')
+            or os.environ.get('POSTGRES_URL')
+            or os.environ.get('POSTGRES_PRISMA_URL')
+        )
         self.BETA_PLACEHOLDER_DATABASE = self.BETA_ALLOW_PLACEHOLDER_INFRA and _is_placeholder_value(raw_database_url)
         self.SQLALCHEMY_DATABASE_URI = (
             'sqlite:///:memory:' if self.BETA_PLACEHOLDER_DATABASE else raw_database_url
         )
+        db_uri_lower = (self.SQLALCHEMY_DATABASE_URI or '').lower()
         is_vercel_database = (
             _is_vercel_runtime()
             and self.SQLALCHEMY_DATABASE_URI
-            and 'sqlite' not in self.SQLALCHEMY_DATABASE_URI.lower()
+            and 'sqlite' not in db_uri_lower
         )
-        uses_supabase_transaction_pooler = bool(
+        # Detect Supabase pooler - multiple formats:
+        # - pooler.supabase.com (old format)
+        # - aws-0-*.pooler.supabase.com (new regional format)
+        # - Any URL with supabase and port 6543
+        uses_supabase_pooler = bool(
             is_vercel_database
-            and 'pooler.supabase.com:6543' in (self.SQLALCHEMY_DATABASE_URI or '')
+            and 'supabase' in db_uri_lower
+            and (
+                'pooler.supabase.com' in db_uri_lower
+                or ':6543' in (self.SQLALCHEMY_DATABASE_URI or '')
+            )
         )
         # Detect Neon pooler (uses -pooler suffix in hostname)
         uses_neon_pooler = bool(
             is_vercel_database
-            and '-pooler.' in (self.SQLALCHEMY_DATABASE_URI or '')
-            and 'neon.tech' in (self.SQLALCHEMY_DATABASE_URI or '')
+            and '-pooler.' in db_uri_lower
+            and 'neon.tech' in db_uri_lower
         )
+        # Also detect any postgres URL on Vercel as needing serverless config
+        is_serverless_postgres = is_vercel_database and 'postgres' in db_uri_lower
+        
         if is_vercel_database:
             self.SQLALCHEMY_ENGINE_OPTIONS.update({
                 'pool_size': 1,
                 'max_overflow': 0,
                 'pool_pre_ping': True,
             })
-        if uses_supabase_transaction_pooler or uses_neon_pooler:
+        if uses_supabase_pooler or uses_neon_pooler or is_serverless_postgres:
             # For serverless SQLAlchemy with external poolers (Supabase/Neon),
             # use NullPool to let the external pooler manage connections.
             self.SQLALCHEMY_ENGINE_OPTIONS = {

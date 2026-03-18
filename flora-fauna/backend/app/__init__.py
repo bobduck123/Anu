@@ -488,6 +488,15 @@ def _init_database(app):
     database_uri = str(app.config.get("SQLALCHEMY_DATABASE_URI", ""))
     is_sqlite = database_uri.startswith("sqlite")
     auto_create_all = bool(app.config.get("AUTO_CREATE_ALL", False))
+    is_vercel = os.environ.get("VERCEL", "").lower() in ("1", "true")
+    
+    # NEVER run db.create_all() on Vercel - use migrations instead
+    # This prevents connection errors on cold starts
+    if is_vercel and not is_sqlite:
+        app.logger.info(
+            "Skipping db.create_all() on Vercel serverless - use migrations for schema changes"
+        )
+        return
     
     if auto_create_all and app.config.get("BETA_PLACEHOLDER_DATABASE"):
         app.logger.warning(
