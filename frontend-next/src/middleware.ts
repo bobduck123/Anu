@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { updateSupabaseSession } from '@/lib/supabase/middleware';
 
 /**
- * Multi-tenant white-label middleware for domain-based tenant resolution.
+ * Multi-tenant white-label middleware for domain-based tenant resolution
+ * with integrated Supabase authentication.
  * 
  * This middleware:
- * 1. Resolves tenant/node from custom domains or subdomains
- * 2. Sets tenant context headers for downstream use
- * 3. Handles tenant-specific routing for white-label sites
+ * 1. Refreshes Supabase auth session tokens
+ * 2. Resolves tenant/node from custom domains or subdomains
+ * 3. Sets tenant context headers for downstream use
+ * 4. Handles tenant-specific routing for white-label sites
  */
 
 // Cache for domain-to-tenant mappings (in-memory, refreshed on cold start)
@@ -113,9 +116,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Skip for platform domains and Vercel preview deployments
+  // Update Supabase session first (refreshes auth tokens)
+  const { supabaseResponse, user } = await updateSupabaseSession(request);
+
+  // Skip tenant resolution for platform domains and Vercel preview deployments
   if (isPlatformDomain(hostname) || isVercelPreviewDomain(hostname)) {
-    return NextResponse.next();
+    return supabaseResponse;
   }
 
   // This is a custom domain - resolve tenant
@@ -127,8 +133,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('https://anu.eco', request.url));
   }
 
-  // Create response with tenant headers
-  const response = NextResponse.next();
+  // Use the Supabase response (preserves cookies) and add tenant headers
+  const response = supabaseResponse;
 
   // Set tenant context headers for use in RSC and client components
   response.headers.set('x-tenant-id', String(tenantInfo.nodeId));
