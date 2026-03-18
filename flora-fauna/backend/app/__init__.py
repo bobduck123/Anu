@@ -23,18 +23,36 @@ import uuid
 import os
 import click
 from flask import current_app
-import sentry_sdk
-from sentry_sdk.integrations.flask import FlaskIntegration
-from prometheus_flask_exporter import PrometheusMetrics
 from werkzeug.security import generate_password_hash
 from datetime import date, datetime, timedelta, time as time_obj
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 import re
 
+# Lazy imports for cold start optimization
+# These are only imported when needed to reduce initial parse time
+_sentry_sdk = None
+_prometheus_metrics = None
+
+def _get_sentry():
+    """Lazy import Sentry SDK to reduce cold start time."""
+    global _sentry_sdk
+    if _sentry_sdk is None:
+        import sentry_sdk
+        from sentry_sdk.integrations.flask import FlaskIntegration
+        _sentry_sdk = (sentry_sdk, FlaskIntegration)
+    return _sentry_sdk
+
+def _get_prometheus():
+    """Lazy import Prometheus metrics to reduce cold start time."""
+    global _prometheus_metrics
+    if _prometheus_metrics is None:
+        from prometheus_flask_exporter import PrometheusMetrics
+        _prometheus_metrics = PrometheusMetrics
+    return _prometheus_metrics
+
 mail = Mail()
 encryption = EncryptionManager()
 jwt = JWTManager()
-metrics = PrometheusMetrics
 
 # Security headers with Talisman
 talisman = Talisman()
@@ -79,9 +97,10 @@ def create_app(config_overrides=None):
     # Initialize logging first
     init_logging()
     
-    # Initialize Sentry (before other extensions)
+    # Initialize Sentry lazily (reduces cold start by ~200ms)
     sentry_dsn = app.config.get('SENTRY_DSN') or os.environ.get('SENTRY_DSN')
     if sentry_dsn:
+        sentry_sdk, FlaskIntegration = _get_sentry()
         sentry_sdk.init(
             dsn=sentry_dsn,
             environment=app.config.get('FLASK_ENV', 'development'),
@@ -95,8 +114,10 @@ def create_app(config_overrides=None):
     jwt.init_app(app)
     _init_jwt_key_routing(app)
     
-    # Initialize Prometheus metrics
-    metrics(app)
+    # Initialize Prometheus metrics lazily (only if enabled)
+    if os.environ.get('ENABLE_PROMETHEUS', '').lower() in ('1', 'true', 'yes'):
+        PrometheusMetrics = _get_prometheus()
+        PrometheusMetrics(app)
     
     # Initialize database
     db.init_app(app)
@@ -360,9 +381,13 @@ def _register_error_handlers(app):
         import traceback
         app.logger.exception("Unhandled exception")
         
-        # Report to Sentry if configured
-        if sentry_sdk.Hub.current.client:
-            sentry_sdk.capture_exception(exc)
+        # Report to Sentry if configured (lazy check)
+        try:
+            sentry_sdk, _ = _get_sentry()
+            if sentry_sdk.Hub.current.client:
+                sentry_sdk.capture_exception(exc)
+        except Exception:
+            pass  # Sentry not initialized
         
         # Return generic error (don't expose internals)
         response = {

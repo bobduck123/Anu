@@ -1,33 +1,119 @@
 'use client';
 
 import { useEffect } from 'react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-
-// Sections
-import { HeroSection } from './sections/HeroSection';
-import { DashboardSection } from './sections/DashboardSection';
-import { ReliefSection } from '@/components/civic/ReliefRequestCard';
-import { CommunitySection } from './sections/CommunitySection';
-import { EditorialSection } from './sections/EditorialSection';
 import { brand } from '@/lib/brand';
 
-// Register GSAP plugins
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger);
-}
+// Dynamically import GSAP-heavy sections to reduce initial bundle
+// These sections use GSAP animations which add ~60KB to the bundle
+const HeroSection = dynamic(
+  () => import('./sections/HeroSection').then((mod) => mod.HeroSection),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted">
+        <div className="text-center space-y-4 animate-pulse">
+          <div className="h-12 w-64 mx-auto bg-muted rounded-lg" />
+          <div className="h-6 w-96 max-w-full mx-auto bg-muted/60 rounded" />
+        </div>
+      </div>
+    ),
+  }
+);
+
+const DashboardSection = dynamic(
+  () => import('./sections/DashboardSection').then((mod) => mod.DashboardSection),
+  {
+    ssr: false,
+    loading: () => (
+      <section className="py-24 bg-muted/30">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="h-8 w-48 bg-muted animate-pulse rounded-lg mb-8" />
+          <div className="grid md:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-48 bg-muted/50 animate-pulse rounded-2xl" />
+            ))}
+          </div>
+        </div>
+      </section>
+    ),
+  }
+);
+
+const ReliefSection = dynamic(
+  () => import('@/components/civic/ReliefRequestCard').then((mod) => mod.ReliefSection),
+  {
+    ssr: false,
+    loading: () => (
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="h-8 w-48 bg-muted animate-pulse rounded-lg mb-8" />
+          <div className="h-64 bg-muted/30 animate-pulse rounded-2xl" />
+        </div>
+      </section>
+    ),
+  }
+);
+
+const CommunitySection = dynamic(
+  () => import('./sections/CommunitySection').then((mod) => mod.CommunitySection),
+  {
+    ssr: false,
+    loading: () => (
+      <section className="py-24 bg-muted/20">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="h-8 w-48 bg-muted animate-pulse rounded-lg mb-8" />
+          <div className="flex gap-4 overflow-hidden">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-32 w-32 flex-shrink-0 bg-muted/50 animate-pulse rounded-full" />
+            ))}
+          </div>
+        </div>
+      </section>
+    ),
+  }
+);
+
+const EditorialSection = dynamic(
+  () => import('./sections/EditorialSection').then((mod) => mod.EditorialSection),
+  {
+    ssr: false,
+    loading: () => (
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="h-96 bg-muted/30 animate-pulse rounded-2xl" />
+            <div className="space-y-4">
+              <div className="h-8 w-3/4 bg-muted animate-pulse rounded-lg" />
+              <div className="h-4 w-full bg-muted/60 animate-pulse rounded" />
+              <div className="h-4 w-5/6 bg-muted/60 animate-pulse rounded" />
+            </div>
+          </div>
+        </div>
+      </section>
+    ),
+  }
+);
 
 export default function HomePage() {
   useEffect(() => {
-    // Refresh ScrollTrigger after all content loads
-    const timer = setTimeout(() => {
-      ScrollTrigger.refresh();
-    }, 100);
+    // Dynamically load GSAP and register ScrollTrigger only when needed
+    const loadGsap = async () => {
+      const gsapModule = await import('gsap');
+      const scrollTriggerModule = await import('gsap/ScrollTrigger');
+      
+      gsapModule.gsap.registerPlugin(scrollTriggerModule.ScrollTrigger);
+      
+      // Refresh ScrollTrigger after all content loads
+      const timer = setTimeout(() => {
+        scrollTriggerModule.ScrollTrigger.refresh();
+      }, 100);
 
-    return () => {
-      clearTimeout(timer);
+      return () => clearTimeout(timer);
     };
+
+    loadGsap();
   }, []);
 
   return (
@@ -47,7 +133,7 @@ export default function HomePage() {
       {/* Editorial - Asymmetric layouts with parallax images */}
       <EditorialSection />
       
-      {/* Simple Footer */}
+      {/* Simple Footer - Keep in main bundle as it's lightweight */}
       <footer className="bg-[var(--color-earth-dark)] text-white py-16">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
