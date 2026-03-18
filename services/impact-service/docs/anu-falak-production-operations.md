@@ -168,6 +168,7 @@ Database restoration is not the normal rollback path.
 ## Related Docs
 
 - [anu-falak-production-gating.md](/C:/Dev/Flora_fauna/services/impact-service/docs/anu-falak-production-gating.md)
+- [anu-impact-service-admin-only-handoff.md](/C:/Dev/Flora_fauna/services/impact-service/docs/anu-impact-service-admin-only-handoff.md)
 - [anu-falak-production-rollback.md](/C:/Dev/Flora_fauna/services/impact-service/docs/anu-falak-production-rollback.md)
 - [anu-falak-staging-rollout.md](/C:/Dev/Flora_fauna/services/impact-service/docs/anu-falak-staging-rollout.md)
 - [anu-falak-hosted-execution-runbook.md](/C:/Dev/Flora_fauna/services/impact-service/docs/anu-falak-hosted-execution-runbook.md)

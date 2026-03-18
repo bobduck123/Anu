@@ -64,7 +64,7 @@ The maps guard is applied to the Falak-backed education maps surface registered 
 Privileged actor resolution now works in this order:
 
 1. inspect `Authorization: Bearer ...`
-2. verify the JWT with `JWT_SECRET_KEY`
+2. verify the JWT with `PUBLIC_JWT_SECRET_KEY` or `JWT_SECRET_KEY`
 3. extract authenticated identity candidates from existing claims
 4. map that identity to a Falak actor by `external_auth_id` or email
 5. attach verified actor context if the mapping succeeds
