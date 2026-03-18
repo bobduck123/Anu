@@ -29,7 +29,9 @@ function AuthPageContent() {
   const [pseudonym, setPseudonym] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const returnTo = searchParams.get('returnTo');
   const nextHref = returnTo && returnTo.startsWith('/') ? returnTo : '/profile';
   const backHref = returnTo && returnTo.startsWith('/') ? returnTo : '/';
@@ -37,13 +39,21 @@ function AuthPageContent() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
+    setSuccess('');
+
+    if (!isLogin && password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     try {
       if (isLogin) {
-        await login(username, password);
+        await login(email, password);
+        router.push(nextHref);
       } else {
-        await register(username, email, password, pseudonym || username);
+        await register(username || email.split('@')[0], email, password, pseudonym || username);
+        setSuccess('Check your email to confirm your account before logging in.');
       }
-      router.push(nextHref);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Authentication failed';
       setError(message);
@@ -87,62 +97,83 @@ function AuthPageContent() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Email</label>
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-background"
+              placeholder="you@example.com"
+              type="email"
+              required
+              autoComplete="email"
+            />
+          </div>
           {!isLogin && (
             <>
               <div>
-                <label className="block text-sm font-medium mb-2">Pseudonym</label>
+                <label className="block text-sm font-medium mb-2">Username</label>
                 <input
-                  value={pseudonym}
-                  onChange={(e) => setPseudonym(e.target.value)}
-                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
-                  placeholder="Public name"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-background"
+                  placeholder="Username (optional)"
                   type="text"
+                  autoComplete="username"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Email</label>
+                <label className="block text-sm font-medium mb-2">Display Name</label>
                 <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
-                  placeholder="you@example.com"
-                  type="email"
-                  required
+                  value={pseudonym}
+                  onChange={(e) => setPseudonym(e.target.value)}
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-background"
+                  placeholder="Public name (optional)"
+                  type="text"
                 />
               </div>
             </>
           )}
           <div>
-            <label className="block text-sm font-medium mb-2">Username</label>
-            <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
-              placeholder="Username"
-              type="text"
-              required
-            />
-          </div>
-          <div>
             <label className="block text-sm font-medium mb-2">Password</label>
             <input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-background"
               placeholder="Password"
               type="password"
               required
+              autoComplete={isLogin ? "current-password" : "new-password"}
+              minLength={6}
             />
           </div>
+          {!isLogin && (
+            <div>
+              <label className="block text-sm font-medium mb-2">Confirm Password</label>
+              <input
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-background"
+                placeholder="Confirm password"
+                type="password"
+                required
+                autoComplete="new-password"
+                minLength={6}
+              />
+            </div>
+          )}
           {error && (
-            <div className="text-sm text-[var(--color-danger)]">{error}</div>
+            <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+          )}
+          {success && (
+            <div className="text-sm text-green-600 dark:text-green-400">{success}</div>
           )}
           <button
             type="submit"
             disabled={isLoading}
             className="btn-pill btn-pill-primary w-full"
           >
-            {isLoading ? 'Please wait...' : (isLogin ? 'Login' : 'Register')}
+            {isLoading ? 'Please wait...' : (isLogin ? 'Login' : 'Create Account')}
           </button>
         </form>
 
