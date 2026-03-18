@@ -97,6 +97,7 @@ export function FalakMapDraftPage() {
           error={error}
           loading={loading}
           titlePrefix={jobCreated ? 'Generated draft' : 'Resolved map'}
+          eyebrowLabel="Falak compiler preview"
         />
       </div>
     </div>

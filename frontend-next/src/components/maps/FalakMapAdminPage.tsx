@@ -520,7 +520,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
             >
               {map?.edges.map((edge) => (
                 <option key={edge.id} value={edge.id}>
-                  {edge.sourceId.slice(0, 4)} → {edge.targetId.slice(0, 4)} ({edge.relation})
+                  {edge.sourceId.slice(0, 4)} {'->'} {edge.targetId.slice(0, 4)} ({edge.relation})
                 </option>
               ))}
             </select>
@@ -640,6 +640,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
             error={error}
             onRetry={() => (selectedTopic ? loadMap(selectedTopic) : undefined)}
             titlePrefix="Admin"
+            eyebrowLabel="Falak admin sandbox"
             footerActions={
               <div className="flex flex-wrap items-center gap-3 text-sm text-slate-200">
                 <span>Actor: {actorId || 'public'}</span>

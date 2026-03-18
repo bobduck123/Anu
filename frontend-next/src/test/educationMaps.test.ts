@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { listEducationMaps } from '@/lib/api/educationMaps';
+import { EducationMapApiError, getEducationMap, listEducationMaps, shouldUseEducationMapsFallback } from '@/lib/api/educationMaps';
 
 describe('educationMaps client', () => {
   const fetchMock = vi.fn();
   const originalFalakMode = process.env.NEXT_PUBLIC_FALAK_MODE;
   const originalFalakTenantId = process.env.NEXT_PUBLIC_FALAK_TENANT_ID;
   const originalSandboxTenantId = process.env.NEXT_PUBLIC_FALAK_SANDBOX_TENANT_ID;
+  const originalMockFallback = process.env.NEXT_PUBLIC_ENABLE_MOCK_FALLBACK;
 
   beforeEach(() => {
     fetchMock.mockReset();
@@ -30,6 +31,12 @@ describe('educationMaps client', () => {
       delete process.env.NEXT_PUBLIC_FALAK_SANDBOX_TENANT_ID;
     } else {
       process.env.NEXT_PUBLIC_FALAK_SANDBOX_TENANT_ID = originalSandboxTenantId;
+    }
+
+    if (originalMockFallback === undefined) {
+      delete process.env.NEXT_PUBLIC_ENABLE_MOCK_FALLBACK;
+    } else {
+      process.env.NEXT_PUBLIC_ENABLE_MOCK_FALLBACK = originalMockFallback;
     }
 
     vi.restoreAllMocks();
@@ -97,5 +104,54 @@ describe('educationMaps client', () => {
 
     expect(headers['X-Tenant-Id']).toBe('22222222-2222-4222-8222-222222222222');
     expect(headers['X-Actor-Id']).toBeUndefined();
+  });
+
+  it('surfaces a structured Falak dark-launch error that can trigger fallback', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({
+        error: {
+          code: 'FALAK_MAPS_DISABLED',
+          message: 'Falak-backed education maps are disabled',
+        },
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    let error: unknown;
+    try {
+      await listEducationMaps();
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(EducationMapApiError);
+    expect((error as EducationMapApiError).code).toBe('FALAK_MAPS_DISABLED');
+    expect(shouldUseEducationMapsFallback(error)).toBe(true);
+  });
+
+  it('treats backend readiness failures as fallback candidates', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({
+        error: {
+          code: 'INTERNAL',
+          message: 'database unavailable',
+        },
+      }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    let error: unknown;
+    try {
+      await getEducationMap('neural-civic-governance');
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(EducationMapApiError);
+    expect(shouldUseEducationMapsFallback(error)).toBe(true);
   });
 });

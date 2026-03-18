@@ -157,6 +157,20 @@ export interface MapResolveResponse {
   jobCreated: boolean;
 }
 
+export class EducationMapApiError extends Error {
+  status: number;
+  code: string | null;
+  payload: unknown;
+
+  constructor(message: string, status: number, code: string | null, payload: unknown) {
+    super(message);
+    this.name = 'EducationMapApiError';
+    this.status = status;
+    this.code = code;
+    this.payload = payload;
+  }
+}
+
 export interface EducationMapNodePatch {
   categoryKey?: string;
   summary?: string;
@@ -189,6 +203,30 @@ function authHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+const FALLBACK_ERROR_CODES = new Set([
+  'FALAK_MAPS_DISABLED',
+  'FALAK_DISABLED',
+  'TENANT_HEADER_REQUIRED',
+  'TENANT_NOT_FOUND',
+  'BETA_DEPENDENCY_MISSING',
+]);
+
+export function shouldUseEducationMapsFallback(error: unknown): boolean {
+  if (process.env.NEXT_PUBLIC_ENABLE_MOCK_FALLBACK === 'false') {
+    return false;
+  }
+
+  if (error instanceof EducationMapApiError) {
+    if (error.code && FALLBACK_ERROR_CODES.has(error.code)) {
+      return true;
+    }
+
+    return error.status >= 500;
+  }
+
+  return error instanceof TypeError;
+}
+
 async function educationMapFetch<T>(path: string, options: RequestInit = {}, actorId: string | null = null): Promise<T> {
   const base = getImpactApiBase();
   const tenantId = getFalakRequestTenantId();
@@ -213,11 +251,17 @@ async function educationMapFetch<T>(path: string, options: RequestInit = {}, act
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
+    const errorCode =
+      typeof payload?.error?.code === 'string'
+        ? payload.error.code
+        : typeof payload?.code === 'string'
+          ? payload.code
+          : null;
     const errorMessage =
       payload?.error?.message ||
       payload?.message ||
       `Education maps request failed with status ${response.status}`;
-    throw new Error(errorMessage);
+    throw new EducationMapApiError(errorMessage, response.status, errorCode, payload);
   }
 
   return payload as T;

@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { getEducationMap, MapResource } from '@/lib/api/educationMaps';
+import { getEducationMap, MapResource, shouldUseEducationMapsFallback } from '@/lib/api/educationMaps';
+import { getFallbackEducationMap } from '@/lib/maps/fallbackMapData';
 import { FalakMapViewer } from './FalakMapViewer';
 
 interface FalakMapDetailPageProps {
@@ -14,15 +15,27 @@ export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
   const [map, setMap] = useState<MapResource | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fallbackActive, setFallbackActive] = useState(false);
 
   const loadMap = () => {
     setLoading(true);
     setError(null);
+    setFallbackActive(false);
     getEducationMap(topicKey)
       .then((response) => {
         setMap(response);
       })
       .catch((err) => {
+        if (shouldUseEducationMapsFallback(err)) {
+          const fallbackMap = getFallbackEducationMap(topicKey);
+          if (fallbackMap) {
+            console.warn('Education map detail unavailable from API, using bundled read-only fallback.');
+            setMap(fallbackMap);
+            setFallbackActive(true);
+            return;
+          }
+        }
+
         setError(err instanceof Error ? err.message : 'Unable to load map.');
       })
       .finally(() => {
@@ -44,15 +57,30 @@ export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
           <ArrowLeft className="h-4 w-4" />
           Back to library
         </Link>
-        <Link
-          href={`/admin/maps?topic=${encodeURIComponent(topicKey)}`}
-          className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
-        >
-          Open admin tools
-        </Link>
+        {!fallbackActive ? (
+          <Link
+            href={`/admin/maps?topic=${encodeURIComponent(topicKey)}`}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
+          >
+            Open admin tools
+          </Link>
+        ) : null}
       </div>
 
-      <FalakMapViewer map={map} loading={loading} error={error} onRetry={loadMap} />
+      {fallbackActive ? (
+        <div className="mb-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
+          Live Falak maps are still dark-launched, so this detail view is using bundled read-only graph data.
+        </div>
+      ) : null}
+
+      <FalakMapViewer
+        map={map}
+        loading={loading}
+        error={error}
+        onRetry={loadMap}
+        eyebrowLabel={fallbackActive ? 'Read-only education map' : undefined}
+        showAdminLink={!fallbackActive}
+      />
     </div>
   );
 }

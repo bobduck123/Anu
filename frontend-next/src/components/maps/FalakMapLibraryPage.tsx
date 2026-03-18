@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { startTransition, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Compass, GitBranch, Layers3, PlusCircle, RefreshCw, Search } from 'lucide-react';
-import { listEducationMaps, MapDefinition, MapStatus } from '@/lib/api/educationMaps';
+import { listEducationMaps, MapDefinition, MapStatus, shouldUseEducationMapsFallback } from '@/lib/api/educationMaps';
+import { listFallbackEducationMaps } from '@/lib/maps/fallbackMapData';
 import { isFalakMapSandbox } from '@/lib/maps/sandbox';
 import { formatPercent, statusBadgeClass } from './presentation';
 
@@ -11,6 +12,7 @@ export function FalakMapLibraryPage() {
   const [maps, setMaps] = useState<MapDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fallbackActive, setFallbackActive] = useState(false);
   const [statusFilter, setStatusFilter] = useState<MapStatus | 'all'>('all');
   const [search, setSearch] = useState('');
   const [compareKeys, setCompareKeys] = useState<string[]>([]);
@@ -20,11 +22,19 @@ export function FalakMapLibraryPage() {
   const loadMaps = () => {
     setLoading(true);
     setError(null);
+    setFallbackActive(false);
     listEducationMaps(statusFilter === 'all' ? {} : { status: statusFilter })
       .then((response) => {
         setMaps(response);
       })
       .catch((err) => {
+        if (shouldUseEducationMapsFallback(err)) {
+          console.warn('Education maps API unavailable, using bundled read-only fallback.');
+          setMaps(listFallbackEducationMaps(statusFilter === 'all' ? {} : { status: statusFilter }));
+          setFallbackActive(true);
+          return;
+        }
+
         setError(err instanceof Error ? err.message : 'Unable to load education maps.');
       })
       .finally(() => {
@@ -68,27 +78,35 @@ export function FalakMapLibraryPage() {
             </p>
           </div>
           <div className="grid gap-3 text-sm text-slate-300">
-            <Link
-              href="/education/maps/new"
-              className="inline-flex items-center gap-2 rounded-full bg-cyan-400 px-4 py-2 font-medium text-slate-950 transition hover:bg-cyan-300"
-            >
-              <PlusCircle className="h-4 w-4" />
-              Request missing map
-            </Link>
-            <Link
-              href="/sandbox/maps"
-              className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 transition hover:border-cyan-400 hover:text-cyan-100"
-            >
-              <Compass className="h-4 w-4" />
-              Sandbox home
-            </Link>
-            <Link
-              href="/admin/maps"
-              className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 transition hover:border-cyan-400 hover:text-cyan-100"
-            >
-              <GitBranch className="h-4 w-4" />
-              Admin tools
-            </Link>
+            {!fallbackActive ? (
+              <>
+                <Link
+                  href="/education/maps/new"
+                  className="inline-flex items-center gap-2 rounded-full bg-cyan-400 px-4 py-2 font-medium text-slate-950 transition hover:bg-cyan-300"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Request missing map
+                </Link>
+                <Link
+                  href="/sandbox/maps"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 transition hover:border-cyan-400 hover:text-cyan-100"
+                >
+                  <Compass className="h-4 w-4" />
+                  Sandbox home
+                </Link>
+                <Link
+                  href="/admin/maps"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 transition hover:border-cyan-400 hover:text-cyan-100"
+                >
+                  <GitBranch className="h-4 w-4" />
+                  Admin tools
+                </Link>
+              </>
+            ) : (
+              <div className="rounded-[1.25rem] border border-amber-400/40 bg-amber-300/10 px-4 py-3 text-xs leading-6 text-amber-100">
+                Live Falak maps are still dark-launched. This page is showing bundled read-only maps until the hosted backend is ready.
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -129,6 +147,11 @@ export function FalakMapLibraryPage() {
         {sandbox ? (
           <p className="mt-3 text-xs text-slate-500">
             Sandbox mode is active. Drafts, reviewed maps, and admin editing flows are safe to exercise locally.
+          </p>
+        ) : null}
+        {fallbackActive ? (
+          <p className="mt-3 text-xs text-amber-700">
+            Login does not change this yet. The live Falak service is returning `FALAK_MAPS_DISABLED`, so the frontend is using bundled read-only graph data.
           </p>
         ) : null}
       </section>

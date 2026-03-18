@@ -39,6 +39,8 @@ interface FalakMapViewerProps {
   headerActions?: ReactNode;
   footerActions?: ReactNode;
   titlePrefix?: string;
+  eyebrowLabel?: string;
+  showAdminLink?: boolean;
 }
 
 function NodeMetricRow({ label, value }: { label: string; value: number }) {
@@ -84,6 +86,8 @@ export function FalakMapViewer({
   headerActions,
   footerActions,
   titlePrefix,
+  eyebrowLabel = 'Education Resource Library',
+  showAdminLink = true,
 }: FalakMapViewerProps) {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -170,7 +174,7 @@ export function FalakMapViewer({
       <header className="rounded-[1.75rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.22),_transparent_42%),linear-gradient(135deg,_rgba(15,23,42,0.98),_rgba(2,6,23,0.98))] p-6 text-slate-50">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-3xl">
-            <p className="text-xs uppercase tracking-[0.32em] text-cyan-300/80">Falak Map Sandbox</p>
+            <p className="text-xs uppercase tracking-[0.32em] text-cyan-300/80">{eyebrowLabel}</p>
             <h1 className="mt-3 text-3xl font-semibold text-white md:text-4xl">
               {titlePrefix ? `${titlePrefix}: ` : ''}
               {map.definition.title}
@@ -254,13 +258,15 @@ export function FalakMapViewer({
                 <h2 className="text-lg font-semibold text-white">Entity index</h2>
                 <p className="text-sm text-slate-400">Search, filter, select, and compare persisted map entities.</p>
               </div>
-              <Link
-                href={`/admin/maps?topic=${encodeURIComponent(map.definition.topicKey)}`}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-3 py-2 text-xs font-medium text-slate-200 transition hover:border-cyan-400 hover:text-cyan-100"
-              >
-                Open admin tools
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+              {showAdminLink ? (
+                <Link
+                  href={`/admin/maps?topic=${encodeURIComponent(map.definition.topicKey)}`}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-3 py-2 text-xs font-medium text-slate-200 transition hover:border-cyan-400 hover:text-cyan-100"
+                >
+                  Open admin tools
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              ) : null}
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {filteredNodes.map((node) => {
@@ -436,7 +442,7 @@ export function FalakMapViewer({
                         <div key={edge.id} className="mt-2 rounded-xl border border-slate-800 p-2">
                           <p className="text-sm text-white">{target?.label || edge.targetId}</p>
                           <p className="text-xs text-slate-400">
-                            {relationLabel(edge.relation)} • weight {formatNumber(edge.weight)} • confidence {formatPercent(edge.confidence)}
+                            {relationLabel(edge.relation)} / weight {formatNumber(edge.weight)} / confidence {formatPercent(edge.confidence)}
                           </p>
                         </div>
                       );
@@ -460,7 +466,7 @@ export function FalakMapViewer({
                     >
                       <p className="text-sm text-white">{snapshot.name}</p>
                       <p className="text-xs text-slate-400">
-                        v{snapshot.version} • {snapshot.nodes.length} nodes • {new Date(snapshot.createdAt).toLocaleString()}
+                        v{snapshot.version} / {snapshot.nodes.length} nodes / {new Date(snapshot.createdAt).toLocaleString()}
                       </p>
                     </div>
                   ))}

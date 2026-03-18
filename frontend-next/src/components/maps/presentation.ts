@@ -63,7 +63,7 @@ export function summarizeMap(map: MapResource | null): string {
     return '';
   }
 
-  return `${map.nodes.length} nodes • ${map.edges.length} edges • ${map.snapshots.length} snapshots`;
+  return `${map.nodes.length} nodes / ${map.edges.length} edges / ${map.snapshots.length} snapshots`;
 }
 
 export function nodeSearchText(node: MapNode): string {
