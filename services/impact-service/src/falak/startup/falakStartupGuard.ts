@@ -90,6 +90,28 @@ export function validateFalakStartup(config: FalakRuntimeConfig): StartupMessage
     );
   }
 
+  if (config.isProduction && !config.requireVerifiedActor && config.mapRouteGuardMode !== 'disabled') {
+    pushMessage(
+      messages,
+      'error',
+      'FALAK_MAP_VERIFIED_ACTOR_REQUIRED',
+      'Production Falak-backed education maps must require verified actors unless map routes are disabled.'
+    );
+  }
+
+  if (
+    config.isProduction &&
+    config.mapRouteGuardMode === 'enabled' &&
+    config.routeGuardMode !== 'enabled'
+  ) {
+    pushMessage(
+      messages,
+      'error',
+      'FALAK_MAP_OVEREXPOSED_VS_CORE',
+      'Falak-backed education maps are fully enabled in production while core Falak routes are not. Align guard modes before enabling maps.'
+    );
+  }
+
   if (config.mapRouteGuardMode === 'tenant_allowlist' && config.allowedTenantSlugs.length === 0) {
     pushMessage(
       messages,

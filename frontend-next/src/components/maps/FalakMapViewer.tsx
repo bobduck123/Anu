@@ -199,7 +199,7 @@ export function FalakMapViewer({
         <div className="space-y-4">
           <section className="rounded-[1.75rem] border border-slate-800 bg-slate-950/80 p-4">
             <div className="mb-4 flex flex-wrap items-center gap-3">
-              <label className="flex min-w-[14rem] flex-1 items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 text-sm text-slate-300">
+              <label className="flex min-w-[14rem] flex-1 items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 text-sm text-slate-300" aria-label="Search map nodes">
                 <Search className="h-4 w-4 text-slate-500" />
                 <input
                   value={search}
@@ -207,6 +207,15 @@ export function FalakMapViewer({
                   placeholder="Search nodes, aliases, tags, summaries..."
                   className="w-full bg-transparent outline-none placeholder:text-slate-500"
                 />
+                {search.trim().length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearch('')}
+                    className="ml-2 text-xs text-slate-400 hover:text-slate-200"
+                  >
+                    Clear
+                  </button>
+                ) : null}
               </label>
               <label className="flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 text-sm text-slate-300">
                 <SlidersHorizontal className="h-4 w-4 text-slate-500" />

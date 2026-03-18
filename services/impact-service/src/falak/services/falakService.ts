@@ -106,7 +106,9 @@ export class FalakService {
           referenceId: node.id,
           metadata: {
             visibility: node.visibility,
-            sensitivityClass: node.sensitivityClass
+            sensitivityClass: node.sensitivityClass,
+            nodeType: node.type,
+            tenantId: node.tenantId
           }
         };
       },
@@ -150,7 +152,9 @@ export class FalakService {
         metadata: {
           visibility: node.visibility,
           sensitivityClass: node.sensitivityClass,
-          version: node.version
+          version: node.version,
+          nodeType: node.type,
+          tenantId: node.tenantId
         }
       }),
       mutation: (repository) => repository.updateNode(context, nodeId, input),
