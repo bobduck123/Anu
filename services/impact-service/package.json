@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "npx prisma migrate deploy && prisma generate && tsc"",
+    "build": "node scripts/falak-staging/deploy.mjs && prisma generate && tsc",
     "typecheck": "tsc --noEmit",
     "start": "node dist/server.js",
     "test": "jest",
@@ -30,6 +30,7 @@
     "falak:prisma:generate:staging": "node scripts/falak-staging/prisma-generate.mjs",
     "falak:migrate:staging": "node scripts/falak-staging/migrate-deploy.mjs",
     "falak:seed:staging": "node scripts/falak-staging/seed.mjs",
+    "falak:deploy:staging": "node scripts/falak-staging/deploy.mjs",
     "falak:target:staging": "node scripts/falak-staging/print-target.mjs",
     "falak:readiness:staging": "node scripts/falak-staging/readiness.mjs",
     "falak:smoke:staging": "node scripts/falak-staging/smoke.mjs",
@@ -43,6 +44,7 @@
     "falak:sandbox:migrate": "node scripts/falak-sandbox/migrate.mjs",
     "falak:sandbox:reset": "node scripts/falak-sandbox/reset.mjs",
     "falak:sandbox:seed": "node scripts/falak-sandbox/seed.mjs",
+    "falak:deploy:sandbox": "node scripts/falak-sandbox/deploy.mjs",
     "falak:sandbox:test:db": "node scripts/falak-sandbox/integration-tests.mjs",
     "falak:sandbox:verify": "node scripts/falak-sandbox/verify.mjs",
     "falak:sandbox:backend": "node scripts/falak-sandbox/run-backend.mjs"
