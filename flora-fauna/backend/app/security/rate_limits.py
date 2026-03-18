@@ -162,7 +162,10 @@ def register_rate_limit_handlers(app):
     @limiter.request_filter
     def exempt_localhost():
         """Exempt health checks from rate limiting."""
-        return request.path == '/health' or request.path.startswith('/health/')
+        return (
+            request.path in {'/health', '/healthz', '/readiness'}
+            or request.path.startswith(('/health/', '/healthz/', '/readiness/'))
+        )
 
 
 # =============================================================================

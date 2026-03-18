@@ -68,6 +68,15 @@ Dark launch checklist:
    - guarded Falak routes return `404` with `FALAK_DISABLED`
    - Falak-backed maps return `404` with `FALAK_MAPS_DISABLED`
 
+If production is reusing the existing core API Postgres instead of provisioning a fresh Falak-only database:
+
+1. point runtime `DATABASE_URL` at the same production Postgres target already used by the core API
+2. set `DIRECT_URL` to the direct Postgres host for Prisma/manual inspection work
+3. keep `BETA_ALLOW_PLACEHOLDER_INFRA=false`
+4. confirm PostGIS can be enabled safely on that target
+5. inspect `_prisma_migrations` before running any hosted `migrate deploy`
+6. do not move beyond dark launch until `GET /v1/falak/readiness` clears `database:error` and `prisma:error`
+
 ## Internal-Only Activation Procedure
 
 Only after hosted staging passes:

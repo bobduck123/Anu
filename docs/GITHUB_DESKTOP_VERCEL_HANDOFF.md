@@ -45,6 +45,7 @@ Required env:
 - `NEXT_PUBLIC_SITE_URL=https://maanara.vercel.app`
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=TODO_SET_WHEN_STRIPE_EXISTS`
 - `NEXT_PUBLIC_ENABLE_MOCK_FALLBACK=true`
+- `NEXT_PUBLIC_FALAK_TENANT_ID=TODO_REQUIRED_FALAK_TENANT_ID` when hosted education maps should use the live Falak API
 
 ### Core API
 
@@ -70,6 +71,7 @@ Required env:
 - Stripe TODO placeholders
 
 After the first successful schema bootstrap, you can set `AUTO_CREATE_ALL=false` again if you want to avoid running `db.create_all()` on future cold starts.
+Use `https://<frontend-project>.vercel.app/_core/healthz` for liveness and `https://<frontend-project>.vercel.app/_core/readiness` for DB-backed readiness.
 
 ### Impact API
 
@@ -79,13 +81,17 @@ After the first successful schema bootstrap, you can set `AUTO_CREATE_ALL=false`
 
 Required env:
 
-- `BETA_ALLOW_PLACEHOLDER_INFRA=true` while DB/Stripe are still TODOs
+- `BETA_ALLOW_PLACEHOLDER_INFRA=false` once the production Postgres target is attached
 - `DATABASE_URL=TODO_REQUIRED_POSTGRES_DATABASE_URL`
+- `DIRECT_URL=TODO_REQUIRED_POSTGRES_DIRECT_URL`
 - `JWT_SECRET_KEY=...`
 - Stripe TODO placeholders
+- `REQUIRE_STRIPE_INFRA=false` unless Stripe-backed impact flows are being launched
 - `CORS_ORIGINS=https://maanara.vercel.app,https://anu-front-end.vercel.app`
 - `CORS_ALLOWED_ORIGIN_SUFFIXES=.vercel.app`
 - `DISABLE_SCHEDULED_JOBS=true`
+- `FALAK_ROUTE_GUARD_MODE=disabled`
+- `FALAK_MAP_ROUTE_GUARD_MODE=disabled`
 
 ## 4. Production checks
 
@@ -93,9 +99,10 @@ After the first deploy, verify:
 
 1. Frontend home page loads.
 2. `https://<frontend-project>.vercel.app/manara` loads.
-3. `https://<frontend-project>.vercel.app/_core/health` works.
-4. `https://<frontend-project>.vercel.app/_impact/health` works.
-5. Dumb Dumb and organizer flows work with production auth/secrets.
+3. `https://<frontend-project>.vercel.app/_core/healthz` works.
+4. `https://<frontend-project>.vercel.app/_core/readiness` reflects DB-backed readiness.
+5. `https://<frontend-project>.vercel.app/_impact/v1/falak/readiness` reflects Falak DB readiness.
+6. Dumb Dumb and organizer flows work with production auth/secrets.
 
 ## 5. Known launch constraint
 
