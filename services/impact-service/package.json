@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "npx prisma migrate deploy && prisma generate && tsc"",
+    "build": "node scripts/falak-staging/deploy.mjs && prisma generate && tsc",
     "typecheck": "tsc --noEmit",
     "start": "node dist/server.js",
     "test": "jest",
