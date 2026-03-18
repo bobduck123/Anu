@@ -232,7 +232,7 @@ export function FalakMapViewer({
                     : 'border border-slate-700 bg-slate-900/80 text-slate-200 hover:border-cyan-400'
                 }`}
               >
-                {flattenTo2d ? '3D enabled' : 'Flatten to 2D'}
+                {flattenTo2d ? 'Switch to 3D' : 'Flatten to 2D'}
               </button>
             </div>
             <FalakMapScene
