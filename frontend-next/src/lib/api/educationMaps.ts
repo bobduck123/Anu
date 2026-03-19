@@ -1,6 +1,7 @@
 import { getImpactApiBase } from '@/lib/runtime';
 import { getFalakRequestTenantId, isFalakMapSandbox } from '@/lib/maps/sandbox';
 import { createClient as createSupabaseClient } from '@/lib/supabase/client';
+import { universePresentationTerms } from '@/components/maps/universe/presentationTerms';
 
 export type MapStatus = 'draft' | 'reviewed' | 'published';
 export type MapCompileMode = 'auto_seed' | 'auto_expand' | 'curated_refine';
@@ -245,35 +246,35 @@ export function shouldUseEducationMapsFallback(error: unknown): boolean {
 
 export function getEducationMapsFallbackMessage(error: unknown): string {
   if (!(error instanceof EducationMapApiError)) {
-    return 'The hosted maps API is unavailable right now, so the frontend is using bundled read-only graph data.';
+    return `The hosted universe API is unavailable right now, so the frontend is using bundled read-only ${universePresentationTerms.universePacket} data.`;
   }
 
   switch (error.code) {
     case 'TENANT_HEADER_REQUIRED':
-      return 'The hosted frontend is not sending `X-Tenant-Id` yet, so the frontend is using bundled read-only graph data.';
+      return `The hosted frontend is not sending \`X-Tenant-Id\` yet, so the frontend is using bundled read-only ${universePresentationTerms.universePacket} data.`;
     case 'FALAK_MAPS_DISABLED':
-      return 'The live Falak maps API is still dark-launched, so the frontend is using bundled read-only graph data.';
+      return `The live Manara universe API is still dark-launched, so the frontend is using bundled read-only ${universePresentationTerms.universePacket} data.`;
     case 'FALAK_DISABLED':
-      return 'The live Falak service is still dark-launched, so the frontend is using bundled read-only graph data.';
+      return `The live Manara universe service is still dark-launched, so the frontend is using bundled read-only ${universePresentationTerms.universePacket} data.`;
     case 'VERIFIED_ACTOR_REQUIRED':
     case 'INVALID_AUTH_TOKEN':
     case 'TOKEN_IDENTITY_MISSING':
     case 'ACTOR_NOT_FOUND':
     case 'ACTOR_NOT_ALLOWED':
-      return 'Your current login is not yet being accepted by the live Falak admin-only service, so the frontend is using bundled read-only graph data.';
+      return `Your current login is not yet being accepted by the live Manara admin-only universe service, so the frontend is using bundled read-only ${universePresentationTerms.universePacket} data.`;
     default:
       break;
   }
 
   if (error.code) {
-    return `The live Falak service returned \`${error.code}\`, so the frontend is using bundled read-only graph data.`;
+    return `The live Manara universe service returned \`${error.code}\`, so the frontend is using bundled read-only ${universePresentationTerms.universePacket} data.`;
   }
 
   if (error.status >= 500) {
-    return 'The live Falak service is currently unavailable, so the frontend is using bundled read-only graph data.';
+    return `The live Manara universe service is currently unavailable, so the frontend is using bundled read-only ${universePresentationTerms.universePacket} data.`;
   }
 
-  return error.message || 'The hosted maps API is unavailable right now, so the frontend is using bundled read-only graph data.';
+  return error.message || `The hosted universe API is unavailable right now, so the frontend is using bundled read-only ${universePresentationTerms.universePacket} data.`;
 }
 
 async function educationMapFetch<T>(path: string, options: RequestInit = {}, actorId: string | null = null): Promise<T> {

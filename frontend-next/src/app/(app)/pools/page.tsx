@@ -17,6 +17,45 @@ const toPoolCards = (summary: TransparencySummary): ImpactPool[] =>
     is_active: true,
   }));
 
+const FALLBACK_TRANSPARENCY_SUMMARY: TransparencySummary = {
+  node: { slug: 'manara-sandbox', name: 'Manara Sandbox Node' },
+  totals: {
+    inflows_30d: 462500,
+    outflows_30d: 289000,
+    admin_ratio_30d: 0.08,
+  },
+  pools: [
+    {
+      slug: 'community-relief',
+      name: 'Community Relief',
+      category: 'relief',
+      target_amount_cents: 650000,
+      balance: 208000,
+      outflows_30d: 87000,
+    },
+    {
+      slug: 'learning-universe',
+      name: 'Learning Universe',
+      category: 'education',
+      target_amount_cents: 520000,
+      balance: 164000,
+      outflows_30d: 54000,
+    },
+    {
+      slug: 'commons-infrastructure',
+      name: 'Commons Infrastructure',
+      category: 'infrastructure',
+      target_amount_cents: 780000,
+      balance: 241000,
+      outflows_30d: 91000,
+    },
+  ],
+  relief_capacity: {
+    monthly_grants_remaining: 11,
+    avg_processing_days: 4,
+  },
+};
+
 export default function PoolsPage() {
   const [pools, setPools] = useState<ImpactPool[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,8 +66,9 @@ export default function PoolsPage() {
       .nodeSummary()
       .then((data) => setPools(toPoolCards(data)))
       .catch((err) => {
-        setError(err.message || 'Failed to load pools');
-        setPools([]);
+        const message = err instanceof Error ? err.message : 'Failed to load pools';
+        setError(`${message} Showing sandbox snapshot data while live reporting reconnects.`);
+        setPools(toPoolCards(FALLBACK_TRANSPARENCY_SUMMARY));
       })
       .finally(() => setLoading(false));
   }, []);

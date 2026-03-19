@@ -230,22 +230,31 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
       setMutationMessage(successMessage);
       loadList();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Falak admin mutation failed.');
+      setError(err instanceof Error ? err.message : 'Admin mutation failed.');
     }
   };
 
   const currentStatus = map?.definition.status ?? 'draft';
+  const categoryOrderValue = toNumber(categoryForm.order);
+  const categoryOrderInvalid = categoryForm.order.trim().length > 0 && categoryOrderValue === undefined;
+  const nodeXValue = toNumber(nodeForm.x);
+  const nodeYValue = toNumber(nodeForm.y);
+  const nodeZValue = toNumber(nodeForm.z);
+  const nodePositionInvalid = [nodeXValue, nodeYValue, nodeZValue].some((value) => value === undefined);
+  const edgeWeightValue = toNumber(edgeForm.weight);
+  const edgeConfidenceValue = toNumber(edgeForm.confidence);
+  const edgeMetricsInvalid = edgeWeightValue === undefined || edgeConfidenceValue === undefined;
 
   return (
     <div className="mx-auto max-w-[98rem] px-4 py-10 sm:px-6 lg:px-8">
       <header className="rounded-[2rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.18),_transparent_40%),linear-gradient(155deg,_rgba(15,23,42,0.98),_rgba(2,6,23,0.98))] p-8 text-white">
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="max-w-3xl">
-            <p className="text-xs uppercase tracking-[0.32em] text-amber-300/80">Falak Admin Sandbox</p>
-            <h1 className="mt-3 text-4xl font-semibold">Map autopilot editor</h1>
+            <p className="text-xs uppercase tracking-[0.32em] text-amber-300/80">Manara Atlas Admin Sandbox</p>
+            <h1 className="mt-3 text-4xl font-semibold">Learning universe editor</h1>
             <p className="mt-4 text-sm leading-7 text-slate-300">
-              Edit taxonomy, nodes, edges, publishing state, and layout snapshots against the real Falak persistence
-              path without touching the hosted environments.
+              Edit taxonomy, stars, relations, publishing state, and layout snapshots against the live persistence
+              path without touching hosted environments.
             </p>
           </div>
           <div className="grid gap-3">
@@ -262,6 +271,9 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                   </option>
                 ))}
               </select>
+              <span className="mt-2 block text-xs leading-5 text-slate-400">
+                This identity drives policy checks, audit logging, and admin-only mutation permissions inside the sandbox.
+              </span>
             </label>
             <Link
               href="/sandbox/maps"
@@ -378,11 +390,15 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                 onChange={(event) => setCategoryForm((current) => ({ ...current, order: event.target.value }))}
                 inputMode="numeric"
                 placeholder="Order"
+                aria-invalid={categoryOrderInvalid}
                 className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
               />
+              {categoryOrderInvalid ? (
+                <p className="text-xs text-rose-600">Order must be numeric before the taxonomy override can be saved.</p>
+              ) : null}
               <button
                 type="button"
-                disabled={!map || !selectedCategory}
+                disabled={!map || !selectedCategory || categoryOrderInvalid}
                 onClick={() =>
                   map && selectedCategory
                     ? applyMutation(
@@ -394,7 +410,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                               label: categoryForm.label,
                               colorToken: categoryForm.colorToken,
                               description: categoryForm.description || null,
-                              order: toNumber(categoryForm.order),
+                              order: categoryOrderValue,
                             },
                             actorId,
                           ),
@@ -410,7 +426,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
           </section>
 
           <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Node editor</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Star editor</h2>
             <select
               value={selectedNodeId}
               onChange={(event) => setSelectedNodeId(event.target.value)}
@@ -462,24 +478,30 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                   value={nodeForm.x}
                   onChange={(event) => setNodeForm((current) => ({ ...current, x: event.target.value }))}
                   placeholder="X"
+                  aria-invalid={nodePositionInvalid}
                   className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
                 />
                 <input
                   value={nodeForm.y}
                   onChange={(event) => setNodeForm((current) => ({ ...current, y: event.target.value }))}
                   placeholder="Y"
+                  aria-invalid={nodePositionInvalid}
                   className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
                 />
                 <input
                   value={nodeForm.z}
                   onChange={(event) => setNodeForm((current) => ({ ...current, z: event.target.value }))}
                   placeholder="Z"
+                  aria-invalid={nodePositionInvalid}
                   className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
                 />
               </div>
+              {nodePositionInvalid ? (
+                <p className="text-xs text-rose-600">X, Y, and Z must all be numeric before the star position can be saved.</p>
+              ) : null}
               <button
                 type="button"
-                disabled={!map || !selectedNode}
+                disabled={!map || !selectedNode || nodePositionInvalid}
                 onClick={() =>
                   map && selectedNode
                     ? applyMutation(
@@ -493,9 +515,9 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                               longDescription: nodeForm.longDescription,
                               pinned: nodeForm.pinned,
                               position: {
-                                x: toNumber(nodeForm.x) ?? 0,
-                                y: toNumber(nodeForm.y) ?? 0,
-                                z: toNumber(nodeForm.z) ?? 0,
+                                x: nodeXValue ?? 0,
+                                y: nodeYValue ?? 0,
+                                z: nodeZValue ?? 0,
                               },
                             },
                             actorId,
@@ -512,7 +534,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
           </section>
 
           <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Relation editor</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Constellation relation editor</h2>
             <select
               value={selectedEdgeId}
               onChange={(event) => setSelectedEdgeId(event.target.value)}
@@ -540,12 +562,14 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                 value={edgeForm.weight}
                 onChange={(event) => setEdgeForm((current) => ({ ...current, weight: event.target.value }))}
                 placeholder="Weight"
+                aria-invalid={edgeMetricsInvalid}
                 className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
               />
               <input
                 value={edgeForm.confidence}
                 onChange={(event) => setEdgeForm((current) => ({ ...current, confidence: event.target.value }))}
                 placeholder="Confidence"
+                aria-invalid={edgeMetricsInvalid}
                 className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
               />
               <textarea
@@ -555,9 +579,12 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                 placeholder="Evidence note"
                 className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
               />
+              {edgeMetricsInvalid ? (
+                <p className="text-xs text-rose-600">Weight and confidence must both be numeric before the relation can be saved.</p>
+              ) : null}
               <button
                 type="button"
-                disabled={!map || !selectedEdge}
+                disabled={!map || !selectedEdge || edgeMetricsInvalid}
                 onClick={() =>
                   map && selectedEdge
                     ? applyMutation(
@@ -567,8 +594,8 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                             selectedEdge.id,
                             {
                               relation: edgeForm.relation,
-                              weight: toNumber(edgeForm.weight),
-                              confidence: toNumber(edgeForm.confidence),
+                              weight: edgeWeightValue,
+                              confidence: edgeConfidenceValue,
                               evidence: edgeForm.evidence,
                             },
                             actorId,
@@ -585,20 +612,22 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
           </section>
 
           <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Layout control</h2>
-            <p className="mt-1 text-sm text-slate-500">Re-run the layout compiler or restore an earlier snapshot.</p>
+            <h2 className="text-lg font-semibold text-slate-900">Universe control</h2>
+            <p className="mt-1 text-sm text-slate-500">Re-run the layout compiler or restore an earlier constellation snapshot.</p>
             <div className="mt-4 grid gap-3">
               <button
                 type="button"
                 disabled={!map}
-                onClick={() =>
-                  map
-                    ? applyMutation(
-                        () => rerunEducationMapLayout(map.definition.topicKey, actorId),
-                        'Layout rerun persisted. Pinned nodes should remain fixed.',
-                      )
-                    : undefined
-                }
+                onClick={() => {
+                  if (!map || !window.confirm('Re-run the universe layout? Pinned stars will stay fixed, but the rest of the constellation may shift.')) {
+                    return;
+                  }
+
+                  void applyMutation(
+                    () => rerunEducationMapLayout(map.definition.topicKey, actorId),
+                    'Layout rerun persisted. Pinned nodes should remain fixed.',
+                  );
+                }}
                 className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
               >
                 Rerun layout
@@ -617,14 +646,20 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
               <button
                 type="button"
                 disabled={!map || !selectedSnapshotId}
-                onClick={() =>
-                  map && selectedSnapshotId
-                    ? applyMutation(
-                        () => restoreEducationMapSnapshot(map.definition.topicKey, selectedSnapshotId, actorId),
-                        'Layout snapshot restored.',
-                      )
-                    : undefined
-                }
+                onClick={() => {
+                  if (
+                    !map ||
+                    !selectedSnapshotId ||
+                    !window.confirm('Restore this saved snapshot? Current star positions will be replaced by the selected constellation layout.')
+                  ) {
+                    return;
+                  }
+
+                  void applyMutation(
+                    () => restoreEducationMapSnapshot(map.definition.topicKey, selectedSnapshotId, actorId),
+                    'Layout snapshot restored.',
+                  );
+                }}
                 className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700 disabled:opacity-60"
               >
                 Restore snapshot
@@ -640,11 +675,11 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
             error={error}
             onRetry={() => (selectedTopic ? loadMap(selectedTopic) : undefined)}
             titlePrefix="Admin"
-            eyebrowLabel="Falak admin sandbox"
+            eyebrowLabel="Manara atlas admin sandbox"
             footerActions={
               <div className="flex flex-wrap items-center gap-3 text-sm text-slate-200">
                 <span>Actor: {actorId || 'public'}</span>
-                <span>Route guard: trusted local sandbox actor headers</span>
+                <span>Route guard: local sandbox actor headers</span>
                 {map ? (
                   <Link
                     href={`/education/maps/${encodeURIComponent(map.definition.topicKey)}`}

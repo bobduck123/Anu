@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { CurriculumProgram, educationStackApi } from "@/lib/api/educationStack";
+import { toActionableSurfaceError } from "@/lib/ui/actionableErrors";
 
 type ProgramCardProps = {
   program: CurriculumProgram;
@@ -48,6 +49,18 @@ export function EduHubDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const authHref = useMemo(() => buildAuthHref("/education"), []);
+  const actionableError = useMemo(
+    () =>
+      error
+        ? toActionableSurfaceError({
+            area: "Education program catalog",
+            rawMessage: error,
+            fallbackHref: "/docs",
+            fallbackLabel: "Open documentation",
+          })
+        : null,
+    [error],
+  );
 
   useEffect(() => {
     let active = true;
@@ -139,7 +152,15 @@ export function EduHubDashboard() {
         </div>
       </header>
 
-      {error && <div className="edu-card border-l-4 border-red-500 bg-red-50 text-red-700">{error}</div>}
+      {actionableError ? (
+        <div className="edu-card border-l-4 border-red-500 bg-red-50 text-red-700">
+          <p className="text-sm font-semibold">{actionableError.headline}</p>
+          <p className="mt-1 text-sm">{actionableError.detail}</p>
+          <Link href={actionableError.fallbackHref} className="mt-2 inline-flex text-sm font-medium underline">
+            {actionableError.fallbackLabel}
+          </Link>
+        </div>
+      ) : null}
 
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-3">

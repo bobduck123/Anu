@@ -37,6 +37,7 @@ const PLATFORM_DOMAINS = [
   'staging.anu.eco',
   'localhost',
   '127.0.0.1',
+  'local',
 ];
 
 function isPlatformDomain(hostname: string): boolean {
@@ -47,6 +48,22 @@ function isPlatformDomain(hostname: string): boolean {
 
 function isVercelPreviewDomain(hostname: string): boolean {
   return hostname.endsWith('.vercel.app') || hostname.endsWith('.vercel.sh');
+}
+
+function isLocalDevelopmentHostname(hostname: string): boolean {
+  if (hostname === 'local' || hostname.endsWith('.local') || hostname.endsWith('.localhost')) {
+    return true;
+  }
+
+  if (hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.startsWith('172.')) {
+    return true;
+  }
+
+  if (hostname === '::1') {
+    return true;
+  }
+
+  return process.env.NODE_ENV !== 'production' && !hostname.includes('.');
 }
 
 async function resolveTenantFromDomain(
@@ -97,13 +114,19 @@ async function resolveTenantFromDomain(
 
     return tenantInfo;
   } catch (error) {
-    console.error(`[middleware] Error resolving domain ${hostname}:`, error);
+    const prefix = `[middleware] Error resolving domain ${hostname}`;
+    if (process.env.NODE_ENV === 'production') {
+      console.error(prefix, error);
+    } else {
+      console.warn(prefix, error instanceof Error ? error.message : error);
+    }
     return null;
   }
 }
 
 export async function middleware(request: NextRequest) {
-  const hostname = request.headers.get('host') || request.nextUrl.hostname;
+  const requestHost = request.headers.get('host') || request.nextUrl.host;
+  const hostname = request.nextUrl.hostname || requestHost.split(':')[0];
   const pathname = request.nextUrl.pathname;
 
   // Skip middleware for static files and API routes
@@ -120,12 +143,15 @@ export async function middleware(request: NextRequest) {
   const { supabaseResponse, user } = await updateSupabaseSession(request);
 
   // Skip tenant resolution for platform domains and Vercel preview deployments
-  if (isPlatformDomain(hostname) || isVercelPreviewDomain(hostname)) {
+  if (isPlatformDomain(hostname) || isVercelPreviewDomain(hostname) || isLocalDevelopmentHostname(hostname)) {
     return supabaseResponse;
   }
 
   // This is a custom domain - resolve tenant
-  const apiBase = process.env.NEXT_PUBLIC_CORE_API_URL || 'https://api.anu.eco';
+  const apiBase =
+    process.env.CORE_API_ORIGIN ||
+    process.env.NEXT_PUBLIC_CORE_API_URL ||
+    'https://api.anu.eco';
   const tenantInfo = await resolveTenantFromDomain(hostname, apiBase);
 
   if (!tenantInfo) {

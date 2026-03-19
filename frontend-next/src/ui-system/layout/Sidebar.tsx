@@ -178,7 +178,11 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
               <span className="font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--font-serif)' }}>
                 {tenant.name}
               </span>
-              <button onClick={onMobileClose} className="p-1 rounded-lg hover:bg-[var(--color-muted)]">
+              <button
+                onClick={onMobileClose}
+                className="p-1 rounded-lg hover:bg-[var(--color-muted)]"
+                aria-label="Close menu"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>

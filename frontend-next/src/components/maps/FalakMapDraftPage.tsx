@@ -33,11 +33,11 @@ export function FalakMapDraftPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <section className="rounded-[2rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),_transparent_40%),linear-gradient(155deg,_rgba(15,23,42,0.98),_rgba(2,6,23,0.98))] p-8 text-white">
-        <p className="text-xs uppercase tracking-[0.32em] text-cyan-300/80">Falak Compiler</p>
-        <h1 className="mt-3 text-4xl font-semibold">Request a missing map</h1>
+        <p className="text-xs uppercase tracking-[0.32em] text-cyan-300/80">Manara Atlas Compiler</p>
+        <h1 className="mt-3 text-4xl font-semibold">Request a missing learning universe</h1>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
-          This route hits the real `POST /v1/education/maps/resolve` compiler endpoint. Missing topics are persisted
-          as draft maps through the same schema and layout pipeline used online.
+          This route hits the live `POST /v1/education/maps/resolve` compiler endpoint. Missing topics are persisted
+          as draft learning universes through the same schema and layout pipeline used online.
         </p>
         <form onSubmit={submit} className="mt-6 grid gap-3 md:grid-cols-[minmax(0,1fr)_14rem_auto]">
           <input
@@ -97,7 +97,7 @@ export function FalakMapDraftPage() {
           error={error}
           loading={loading}
           titlePrefix={jobCreated ? 'Generated draft' : 'Resolved map'}
-          eyebrowLabel="Falak compiler preview"
+          eyebrowLabel="Manara compiler preview"
         />
       </div>
     </div>

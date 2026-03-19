@@ -1,406 +1,355 @@
 'use client';
 
-import { useState, useMemo, useRef, useCallback, useDeferredValue, type RefObject } from 'react';
-import { useFeatureFlag } from '@/lib/featureFlags';
-import { generateMockUniverse, type Star, type StarType } from '@/data/adapters/starfieldAdapter';
-import { QuantumCanvas, type QuantumCanvasHandle } from '@/ui/patterns/starfield/QuantumCanvas';
-import { StarDetailDrawer } from '@/ui/patterns/starfield';
-import { Sparkles } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Compass, RefreshCw, Sparkles } from 'lucide-react';
+import {
+  getEducationMap,
+  getEducationMapsFallbackMessage,
+  listEducationMaps,
+  MapResource,
+  shouldUseEducationMapsFallback,
+} from '@/lib/api/educationMaps';
+import {
+  getFallbackEducationMap,
+  listFallbackEducationMapResources,
+} from '@/lib/maps/fallbackMapData';
+import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
+import { FalakMapViewer } from '@/components/maps/FalakMapViewer';
 
-const TYPE_CHIPS: { type: StarType; label: string; color: string }[] = [
-  { type: 'event', label: 'Events', color: '#667eea' },
-  { type: 'action', label: 'Actions', color: '#48bb78' },
-  { type: 'community', label: 'Community', color: '#ed8936' },
-  { type: 'donor', label: 'Donors', color: '#f6e05e' },
-  { type: 'relief', label: 'Relief', color: '#fc8181' },
-  { type: 'education', label: 'Education', color: '#b794f4' },
-  { type: 'marketplace', label: 'Marketplace', color: '#4fd1c5' },
-];
+function average(values: number[]): number {
+  if (values.length < 1) {
+    return 0;
+  }
 
-const THEME_BUTTONS = [
-  { index: 0, label: 'Purple Nebula', gradient: 'radial-gradient(circle at 30% 30%, #a78bfa, #4c1d95)' },
-  { index: 1, label: 'Sunset Fire', gradient: 'radial-gradient(circle at 30% 30%, #fb7185, #9f1239)' },
-  { index: 2, label: 'Ocean Aurora', gradient: 'radial-gradient(circle at 30% 30%, #38bdf8, #0c4a6e)' },
-];
-
-/* ------------------------------------------------------------------
-   Glass panel styling (matches reference exactly)
-   ------------------------------------------------------------------ */
-const glassPanel: React.CSSProperties = {
-  backdropFilter: 'blur(24px) saturate(120%)',
-  WebkitBackdropFilter: 'blur(24px) saturate(120%)',
-  background: 'linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)',
-  border: '1px solid rgba(255,255,255,0.08)',
-  borderTop: '1px solid rgba(255,255,255,0.2)',
-  borderLeft: '1px solid rgba(255,255,255,0.2)',
-  boxShadow: '0 20px 40px rgba(0,0,0,0.4), inset 0 0 20px rgba(255,255,255,0.02)',
-  borderRadius: 24,
-  transition: 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)',
-  overflow: 'hidden',
-};
-
-function scatterQuantum(ref: RefObject<QuantumCanvasHandle | null>) {
-  ref.current?.scatter();
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-function toggleQuantum(ref: RefObject<QuantumCanvasHandle | null>): boolean {
-  return !!ref.current?.togglePause();
-}
+function buildCanonicalCosmos(resources: MapResource[]): MapResource | null {
+  if (resources.length < 1) {
+    return null;
+  }
 
-function resetQuantum(ref: RefObject<QuantumCanvasHandle | null>) {
-  ref.current?.resetCamera();
+  const mapId = 'anu-cosmos-map';
+  const createdAt = resources
+    .map((resource) => resource.definition.createdAt)
+    .sort()[0] ?? new Date().toISOString();
+  const updatedAt = resources
+    .map((resource) => resource.definition.updatedAt)
+    .sort()
+    .slice(-1)[0] ?? createdAt;
+
+  const categories: MapResource['categories'] = [];
+  const nodes: MapResource['nodes'] = [];
+  const edges: MapResource['edges'] = [];
+  const aliases: MapResource['aliases'] = [];
+  const snapshots: MapResource['snapshots'] = [];
+
+  resources.forEach((resource) => {
+    const scope = resource.definition.topicKey;
+    const scopedCategoryKeys = new Map<string, string>();
+    const scopedNodeIds = new Map<string, string>();
+
+    resource.categories.forEach((category) => {
+      const scopedKey = `${scope}::${category.key}`;
+      scopedCategoryKeys.set(category.key, scopedKey);
+      categories.push({
+        ...category,
+        id: `${scope}::${category.id}`,
+        mapId,
+        key: scopedKey,
+        parentKey: category.parentKey ? `${scope}::${category.parentKey}` : undefined,
+        label: `${resource.definition.title} / ${category.label}`,
+      });
+    });
+
+    resource.nodes.forEach((node) => {
+      const scopedNodeId = `${scope}::${node.id}`;
+      scopedNodeIds.set(node.id, scopedNodeId);
+      nodes.push({
+        ...node,
+        id: scopedNodeId,
+        mapId,
+        categoryKey: node.categoryKey ? scopedCategoryKeys.get(node.categoryKey) : undefined,
+        subcategoryKey: node.subcategoryKey ? scopedCategoryKeys.get(node.subcategoryKey) : undefined,
+        metadata: {
+          ...node.metadata,
+          originMapId: resource.definition.id,
+          originMapTopicKey: resource.definition.topicKey,
+          originMapTitle: resource.definition.title,
+          originNodeId: node.id,
+        },
+      });
+
+      node.aliases.forEach((alias, index) => {
+        aliases.push({
+          id: `${scopedNodeId}::alias-${index + 1}`,
+          mapId,
+          nodeId: scopedNodeId,
+          alias,
+          canonicalLabel: node.label,
+        });
+      });
+    });
+
+    resource.edges.forEach((edge) => {
+      const sourceId = scopedNodeIds.get(edge.sourceId) ?? `${scope}::${edge.sourceId}`;
+      const targetId = scopedNodeIds.get(edge.targetId) ?? `${scope}::${edge.targetId}`;
+      edges.push({
+        ...edge,
+        id: `${scope}::${edge.id}`,
+        mapId,
+        sourceId,
+        targetId,
+      });
+    });
+
+    const preferredSnapshot =
+      resource.snapshots.find((snapshot) => snapshot.id === resource.definition.currentSnapshotId) ??
+      resource.snapshots[0];
+
+    if (preferredSnapshot) {
+      snapshots.push({
+        ...preferredSnapshot,
+        id: `${scope}::${preferredSnapshot.id}`,
+        mapId,
+        name: `${resource.definition.title} / ${preferredSnapshot.name}`,
+        nodes: preferredSnapshot.nodes.map((entry) => ({
+          ...entry,
+          nodeId: scopedNodeIds.get(entry.nodeId) ?? `${scope}::${entry.nodeId}`,
+        })),
+      });
+    }
+  });
+
+  const confidence = {
+    coverage: average(resources.map((resource) => resource.definition.confidence.coverage)),
+    taxonomy: average(resources.map((resource) => resource.definition.confidence.taxonomy)),
+    positions: average(resources.map((resource) => resource.definition.confidence.positions)),
+    dedupe: average(resources.map((resource) => resource.definition.confidence.dedupe)),
+    relationships: average(resources.map((resource) => resource.definition.confidence.relationships)),
+  };
+
+  const canonicalStatus = resources.every((resource) => resource.definition.status === 'published')
+    ? 'published'
+    : resources.some((resource) => resource.definition.status === 'reviewed')
+      ? 'reviewed'
+      : 'draft';
+
+  return {
+    definition: {
+      id: mapId,
+      tenantId: resources[0].definition.tenantId,
+      topicKey: 'anu-cosmos',
+      title: 'Manara Shared Universe',
+      archetype: 'anu-unified-learning-universe',
+      entityType: 'multi-map-cosmos',
+      description:
+        'A shared Manara universe built from all available learning domains. Stars remain source-linked and preserve their native semantic coordinates.',
+      status: canonicalStatus,
+      sizeFormula: resources[0].definition.sizeFormula,
+      version: Math.max(...resources.map((resource) => resource.definition.version)),
+      currentSnapshotId: snapshots[0]?.id ?? null,
+      confidence,
+      createdAt,
+      updatedAt,
+    },
+    categories,
+    axes: resources[0].axes,
+    nodes,
+    edges,
+    aliases,
+    snapshots,
+    jobs: [],
+  };
 }
 
 export default function UniversePage() {
-  const enabled = useFeatureFlag('starfield');
-  const quantumRef = useRef<QuantumCanvasHandle>(null);
+  const [maps, setMaps] = useState<MapResource[]>([]);
+  const [selectedTopicKey, setSelectedTopicKey] = useState<string>('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [fallbackActive, setFallbackActive] = useState(false);
+  const [fallbackMessage, setFallbackMessage] = useState<string | null>(null);
 
-  const [selectedStar, setSelectedStar] = useState<Star | null>(null);
-  const [paletteIndex, setPaletteIndex] = useState(0);
-  const [density, setDensity] = useState(100);
-  const [activeTypes, setActiveTypes] = useState<Set<StarType>>(new Set());
-  const [paused, setPaused] = useState(false);
-  const deferredDensity = useDeferredValue(density);
+  const loadUniverse = async () => {
+    setLoading(true);
+    setError(null);
+    setFallbackActive(false);
+    setFallbackMessage(null);
 
-  const fullData = useMemo(() => generateMockUniverse(500, 7), []);
+    try {
+      const definitions = await listEducationMaps();
+      const preferredDefinitions =
+        definitions.filter((definition) => definition.status === 'published').length > 0
+          ? definitions.filter((definition) => definition.status === 'published')
+          : definitions;
+      const targets = preferredDefinitions.slice(0, 10);
 
-  // Filter data by active types (empty = show all)
-  const filteredData = useMemo(() => {
-    if (activeTypes.size === 0) return fullData;
-    return {
-      ...fullData,
-      stars: fullData.stars.filter(s => activeTypes.has(s.type)),
-    };
-  }, [fullData, activeTypes]);
+      const loadedMaps: MapResource[] = [];
+      const fallbackReasons: string[] = [];
 
-  const handleToggleType = useCallback((type: StarType) => {
-    setActiveTypes(prev => {
-      const next = new Set(prev);
-      if (next.has(type)) next.delete(type);
-      else next.add(type);
-      return next;
-    });
+      for (const definition of targets) {
+        try {
+          const map = await getEducationMap(definition.topicKey);
+          loadedMaps.push(map);
+        } catch (reason) {
+          if (shouldUseEducationMapsFallback(reason)) {
+            const fallback = getFallbackEducationMap(definition.topicKey);
+            if (fallback) {
+              loadedMaps.push(fallback);
+              fallbackReasons.push(getEducationMapsFallbackMessage(reason));
+              continue;
+            }
+          }
+
+          throw reason;
+        }
+      }
+
+      if (loadedMaps.length < 1) {
+        throw new Error('No Manara learning universes are available yet.');
+      }
+
+      setMaps(loadedMaps);
+      if (fallbackReasons.length > 0) {
+        setFallbackActive(true);
+        setFallbackMessage(fallbackReasons[0] ?? null);
+      }
+    } catch (reason) {
+      if (shouldUseEducationMapsFallback(reason)) {
+        const fallbackMaps = listFallbackEducationMapResources({ status: 'published' });
+        setMaps(fallbackMaps.length > 0 ? fallbackMaps : listFallbackEducationMapResources());
+        setFallbackActive(true);
+        setFallbackMessage(getEducationMapsFallbackMessage(reason));
+      } else {
+        const actionableError = toActionableSurfaceError({
+          area: 'Universe view',
+          rawMessage: reason instanceof Error ? reason.message : null,
+          fallbackHref: '/education',
+          fallbackLabel: 'Open education fallback',
+        });
+        setError(`${actionableError.headline}. ${actionableError.detail}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadUniverse();
   }, []);
 
-  const handleScatter = useCallback(() => {
-    scatterQuantum(quantumRef);
-  }, []);
+  useEffect(() => {
+    if (selectedTopicKey === 'all') {
+      return;
+    }
 
-  const handleFreeze = useCallback(() => {
-    setPaused(toggleQuantum(quantumRef));
-  }, []);
-  const handleReset = useCallback(() => resetQuantum(quantumRef), []);
-  const handleStarClick = useCallback((star: Star) => setSelectedStar(star), []);
+    if (!maps.some((resource) => resource.definition.topicKey === selectedTopicKey)) {
+      setSelectedTopicKey('all');
+    }
+  }, [maps, selectedTopicKey]);
 
-  if (!enabled) {
-    return (
-      <div className="p-8 text-center text-[var(--color-muted-foreground)]">
-        <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-40" />
-        <p className="text-lg font-medium">The Universe is disabled</p>
-        <p className="text-sm mt-1">Enable the starfield feature flag to explore.</p>
-      </div>
-    );
-  }
+  const displayMap = useMemo(() => {
+    if (selectedTopicKey === 'all') {
+      return buildCanonicalCosmos(maps);
+    }
+
+    return maps.find((resource) => resource.definition.topicKey === selectedTopicKey) ?? null;
+  }, [maps, selectedTopicKey]);
+
+  const topicOptions = useMemo(
+    () =>
+      maps
+        .map((resource) => resource.definition)
+        .sort((left, right) => left.title.localeCompare(right.title)),
+    [maps],
+  );
 
   return (
-    <div className="fixed inset-0 top-14" style={{ background: '#050508', fontFamily: "'Outfit', sans-serif" }}>
-
-      {/* === 3D Canvas === */}
-      <QuantumCanvas
-        ref={quantumRef}
-        data={filteredData}
-        paletteIndex={paletteIndex}
-        densityFactor={deferredDensity / 100}
-        onStarClick={handleStarClick}
-      />
-
-      {/* === Top-left: Title panel === */}
-      <div
-        className="absolute z-10"
-        style={{ ...glassPanel, top: 32, left: 32, width: 260, padding: 24 }}
-      >
-        <div
-          style={{
-            fontWeight: 500,
-            fontSize: 18,
-            marginBottom: 4,
-            letterSpacing: '-0.02em',
-            background: 'linear-gradient(135deg, #fff 30%, #a5b4fc 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}
-        >
-          Quantum Neural Network
-        </div>
-        <div style={{ fontSize: 13, lineHeight: 1.5, color: 'rgba(255,255,255,0.5)', fontWeight: 300 }}>
-          Drag to explore. Click a node to inspect.
-        </div>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 10 }}>
-          {filteredData.constellations.length} constellations &middot; {filteredData.stars.length} entities
-        </div>
-      </div>
-
-      {/* === Top-right: Controls panel === */}
-      <div
-        className="absolute z-10"
-        style={{ ...glassPanel, top: 32, right: 32, width: 240, padding: 24 }}
-      >
-        {/* Theme selector */}
-        <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.6)', fontWeight: 600, marginBottom: 12 }}>
-          Crystal Theme
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, justifyItems: 'center' }}>
-          {THEME_BUTTONS.map(t => (
-            <button
-              key={t.index}
-              aria-label={t.label}
-              onClick={() => setPaletteIndex(t.index)}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                border: 'none',
-                cursor: 'pointer',
-                background: t.gradient,
-                boxShadow: paletteIndex === t.index
-                  ? '0 0 0 3px rgba(255,255,255,0.9), 0 0 15px rgba(255,255,255,0.3), 0 4px 10px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.4)'
-                  : '0 4px 10px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.2)',
-                transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                transform: paletteIndex === t.index ? 'scale(1.1)' : 'scale(1)',
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Density slider */}
-        <div style={{ marginTop: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: 300 }}>
-            <span>Density</span>
-            <span style={{ color: 'white', fontWeight: 500, textShadow: '0 0 10px rgba(255,255,255,0.3)' }}>{density}%</span>
+    <div className="mx-auto max-w-[98rem] px-4 py-10 sm:px-6 lg:px-8">
+      <header className="rounded-[2rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.22),_transparent_40%),linear-gradient(155deg,_rgba(15,23,42,0.98),_rgba(2,6,23,0.98))] p-8 text-white">
+        <div className="flex flex-wrap items-start justify-between gap-6">
+          <div className="max-w-3xl">
+            <p className="text-xs uppercase tracking-[0.32em] text-indigo-200/80">Manara canonical cosmos</p>
+            <h1 className="mt-3 text-4xl font-semibold">Unified learning universe</h1>
+            <p className="mt-4 text-sm leading-7 text-slate-300">
+              This surface runs through the same live map adapters used by <code className="rounded bg-white/10 px-1.5 py-0.5 text-xs">/education/maps</code>.
+              Use it as the canonical cross-domain cosmos for exploration, inspection, and source-linked reasoning.
+            </p>
           </div>
-          <input
-            type="range"
-            min={30}
-            max={100}
-            value={density}
-            onChange={e => setDensity(Number(e.target.value))}
-            aria-label="Network Density"
-            style={{
-              WebkitAppearance: 'none',
-              width: '100%',
-              height: 6,
-              background: `linear-gradient(90deg, rgba(255,255,255,0.3) ${density}%, rgba(255,255,255,0.05) ${density}%)`,
-              borderRadius: 10,
-              outline: 'none',
-              marginTop: 10,
-              cursor: 'pointer',
-            }}
-          />
-        </div>
 
-        {/* Type filter chips */}
-        <div style={{ marginTop: 20, fontSize: 12, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.6)', fontWeight: 600, marginBottom: 10 }}>
-          Filter Types
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {TYPE_CHIPS.map(chip => {
-            const active = activeTypes.size === 0 || activeTypes.has(chip.type);
-            return (
-              <button
-                key={chip.type}
-                onClick={() => handleToggleType(chip.type)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 5,
-                  padding: '4px 10px',
-                  borderRadius: 50,
-                  border: `1px solid ${active ? chip.color + '80' : 'rgba(255,255,255,0.08)'}`,
-                  background: active ? chip.color + '18' : 'rgba(255,255,255,0.02)',
-                  color: active ? chip.color : 'rgba(255,255,255,0.35)',
-                  fontSize: 11,
-                  fontWeight: 400,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  fontFamily: 'inherit',
-                }}
+          <div className="grid gap-3">
+            <label className="rounded-[1.25rem] border border-white/15 bg-black/30 px-4 py-3 text-sm">
+              <span className="mb-2 block text-xs uppercase tracking-[0.2em] text-slate-400">Universe scope</span>
+              <select
+                value={selectedTopicKey}
+                onChange={(event) => setSelectedTopicKey(event.target.value)}
+                className="w-full bg-transparent text-white outline-none"
               >
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: active ? chip.color : 'rgba(255,255,255,0.2)' }} />
-                {chip.label}
-              </button>
-            );
-          })}
+                <option value="all">All available domains</option>
+                {topicOptions.map((topic) => (
+                  <option key={topic.id} value={topic.topicKey}>
+                    {topic.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <button
+              type="button"
+              onClick={() => void loadUniverse()}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-700 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-indigo-300 hover:text-indigo-100"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh universe
+            </button>
+          </div>
         </div>
+      </header>
+
+      {fallbackActive ? (
+        <div className="mt-5 rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
+          {fallbackMessage ??
+            'The live education universe API is partially unavailable. This view is using bundled read-only constellations where needed.'}
+        </div>
+      ) : null}
+
+      {error ? (
+        <div className="mt-5 rounded-[1.5rem] border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
+          {error}
+        </div>
+      ) : null}
+
+      <div className="mt-6">
+        <FalakMapViewer
+          map={displayMap}
+          loading={loading}
+          error={error}
+          onRetry={() => void loadUniverse()}
+          eyebrowLabel={selectedTopicKey === 'all' ? 'Manara shared universe' : 'Manara domain universe'}
+          titlePrefix={selectedTopicKey === 'all' ? 'Universe' : 'Domain'}
+          showAdminLink={selectedTopicKey !== 'all' && !fallbackActive}
+          headerActions={
+            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1">
+                <Sparkles className="h-3.5 w-3.5 text-indigo-200" />
+                {maps.length} source universes loaded
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1">
+                <Compass className="h-3.5 w-3.5 text-cyan-200" />
+                Scope: {selectedTopicKey === 'all' ? 'cross-domain' : selectedTopicKey}
+              </span>
+            </div>
+          }
+          footerActions={
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
+              <span className="rounded-full border border-slate-700 px-3 py-1">Universe renderer: QuantumCanvas</span>
+              <span className="rounded-full border border-slate-700 px-3 py-1">Detail mode: side inspector</span>
+              <span className="rounded-full border border-slate-700 px-3 py-1">Source-linked stars: enabled</span>
+            </div>
+          }
+        />
       </div>
-
-      {/* === Bottom center: Control buttons === */}
-      <div
-        className="absolute z-20"
-        style={{
-          bottom: 40,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          gap: 16,
-          padding: 8,
-          alignItems: 'center',
-        }}
-      >
-        <button
-          onClick={handleScatter}
-          style={{
-            backdropFilter: 'blur(20px) saturate(140%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(140%)',
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderTop: '1px solid rgba(255,255,255,0.25)',
-            color: 'rgba(255,255,255,0.9)',
-            padding: '12px 24px',
-            borderRadius: 50,
-            cursor: 'pointer',
-            fontSize: 13,
-            fontWeight: 500,
-            fontFamily: 'inherit',
-            letterSpacing: 0.5,
-            textTransform: 'uppercase',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 8px 20px rgba(0,0,0,0.3), inset 0 0 10px rgba(255,255,255,0.02)',
-            minWidth: 100,
-            textAlign: 'center',
-          }}
-          onMouseEnter={e => {
-            const el = e.currentTarget;
-            el.style.background = 'rgba(255,255,255,0.1)';
-            el.style.borderColor = 'rgba(255,255,255,0.4)';
-            el.style.transform = 'translateY(-4px)';
-            el.style.boxShadow = '0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255,255,255,0.1)';
-          }}
-          onMouseLeave={e => {
-            const el = e.currentTarget;
-            el.style.background = 'rgba(255,255,255,0.04)';
-            el.style.borderColor = 'rgba(255,255,255,0.1)';
-            el.style.transform = 'none';
-            el.style.boxShadow = '0 8px 20px rgba(0,0,0,0.3), inset 0 0 10px rgba(255,255,255,0.02)';
-          }}
-        >
-          <span style={{ position: 'relative', zIndex: 2 }}>Scatter</span>
-        </button>
-        <button
-          onClick={handleFreeze}
-          style={{
-            backdropFilter: 'blur(20px) saturate(140%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(140%)',
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderTop: '1px solid rgba(255,255,255,0.25)',
-            color: 'rgba(255,255,255,0.9)',
-            padding: '12px 24px',
-            borderRadius: 50,
-            cursor: 'pointer',
-            fontSize: 13,
-            fontWeight: 500,
-            fontFamily: 'inherit',
-            letterSpacing: 0.5,
-            textTransform: 'uppercase',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 8px 20px rgba(0,0,0,0.3), inset 0 0 10px rgba(255,255,255,0.02)',
-            minWidth: 100,
-            textAlign: 'center',
-          }}
-          onMouseEnter={e => {
-            const el = e.currentTarget;
-            el.style.background = 'rgba(255,255,255,0.1)';
-            el.style.borderColor = 'rgba(255,255,255,0.4)';
-            el.style.transform = 'translateY(-4px)';
-            el.style.boxShadow = '0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255,255,255,0.1)';
-          }}
-          onMouseLeave={e => {
-            const el = e.currentTarget;
-            el.style.background = 'rgba(255,255,255,0.04)';
-            el.style.borderColor = 'rgba(255,255,255,0.1)';
-            el.style.transform = 'none';
-            el.style.boxShadow = '0 8px 20px rgba(0,0,0,0.3), inset 0 0 10px rgba(255,255,255,0.02)';
-          }}
-        >
-          <span style={{ position: 'relative', zIndex: 2 }}>{paused ? 'Play' : 'Freeze'}</span>
-        </button>
-        <button
-          onClick={handleReset}
-          style={{
-            backdropFilter: 'blur(20px) saturate(140%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(140%)',
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderTop: '1px solid rgba(255,255,255,0.25)',
-            color: 'rgba(255,255,255,0.9)',
-            padding: '12px 24px',
-            borderRadius: 50,
-            cursor: 'pointer',
-            fontSize: 13,
-            fontWeight: 500,
-            fontFamily: 'inherit',
-            letterSpacing: 0.5,
-            textTransform: 'uppercase',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 8px 20px rgba(0,0,0,0.3), inset 0 0 10px rgba(255,255,255,0.02)',
-            minWidth: 100,
-            textAlign: 'center',
-          }}
-          onMouseEnter={e => {
-            const el = e.currentTarget;
-            el.style.background = 'rgba(255,255,255,0.1)';
-            el.style.borderColor = 'rgba(255,255,255,0.4)';
-            el.style.transform = 'translateY(-4px)';
-            el.style.boxShadow = '0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255,255,255,0.1)';
-          }}
-          onMouseLeave={e => {
-            const el = e.currentTarget;
-            el.style.background = 'rgba(255,255,255,0.04)';
-            el.style.borderColor = 'rgba(255,255,255,0.1)';
-            el.style.transform = 'none';
-            el.style.boxShadow = '0 8px 20px rgba(0,0,0,0.3), inset 0 0 10px rgba(255,255,255,0.02)';
-          }}
-        >
-          <span style={{ position: 'relative', zIndex: 2 }}>Reset</span>
-        </button>
-      </div>
-
-      {/* === Star detail drawer === */}
-      <StarDetailDrawer star={selectedStar} onClose={() => setSelectedStar(null)} />
-
-      {/* Slider thumb styling */}
-      <style>{`
-        @keyframes slideInRight {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
-        }
-        input[type="range"]::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          background: #fff;
-          cursor: pointer;
-          box-shadow: 0 0 15px rgba(255,255,255,0.8), 0 2px 5px rgba(0,0,0,0.3);
-          transition: all 0.2s ease;
-          margin-top: -6px;
-          position: relative;
-          z-index: 2;
-        }
-        input[type="range"]::-webkit-slider-thumb:hover {
-          transform: scale(1.2);
-          box-shadow: 0 0 20px rgba(255,255,255,1);
-        }
-        input[type="range"]::-moz-range-thumb {
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          background: #fff;
-          cursor: pointer;
-          border: none;
-          box-shadow: 0 0 15px rgba(255,255,255,0.8), 0 2px 5px rgba(0,0,0,0.3);
-        }
-      `}</style>
     </div>
   );
 }

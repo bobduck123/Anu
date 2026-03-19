@@ -10,6 +10,7 @@ import {
   shouldUseEducationMapsFallback,
 } from '@/lib/api/educationMaps';
 import { getFallbackEducationMap } from '@/lib/maps/fallbackMapData';
+import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
 import { FalakMapViewer } from './FalakMapViewer';
 
 interface FalakMapDetailPageProps {
@@ -44,7 +45,13 @@ export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
           }
         }
 
-        setError(err instanceof Error ? err.message : 'Unable to load map.');
+        const actionableError = toActionableSurfaceError({
+          area: 'Education universe',
+          rawMessage: err instanceof Error ? err.message : null,
+          fallbackHref: '/education/maps',
+          fallbackLabel: 'Back to library',
+        });
+        setError(actionableError.detail);
       })
       .finally(() => {
         setLoading(false);
@@ -77,7 +84,7 @@ export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
 
       {fallbackActive ? (
         <div className="mb-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
-          {fallbackMessage ?? 'The hosted frontend is using bundled read-only graph data because the live Falak request did not succeed.'}
+          {fallbackMessage ?? 'The hosted frontend is using bundled read-only universe packet data because the live universe request did not succeed.'}
         </div>
       ) : null}
 
@@ -86,7 +93,7 @@ export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
         loading={loading}
         error={error}
         onRetry={loadMap}
-        eyebrowLabel={fallbackActive ? 'Read-only education map' : undefined}
+        eyebrowLabel={fallbackActive ? 'Read-only learning universe' : undefined}
         showAdminLink={!fallbackActive}
       />
     </div>

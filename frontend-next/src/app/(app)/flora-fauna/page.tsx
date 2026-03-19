@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { startTransition, useEffect, useState } from 'react';
 import { ArrowRight, Coins, Orbit, Share2, Sparkles } from 'lucide-react';
 import EcologySummaryPanel from '@/components/impact/EcologySummaryPanel';
+import { useAuth } from '@/contexts/AuthContext';
 import { brand, manaraPath } from '@/lib/brand';
+import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
 import floraFaunaApi, {
   FloraFaunaChannel,
   FloraFaunaFeedResponse,
@@ -13,10 +15,20 @@ import floraFaunaApi, {
 } from '@/lib/api/floraFaunaApi';
 
 export default function FloraFaunaFeedPage() {
+  const { isAuthenticated } = useAuth();
   const [feed, setFeed] = useState<FloraFaunaFeedResponse['feed']>([]);
   const [channel, setChannel] = useState<FloraFaunaChannel | null>(null);
   const [pool, setPool] = useState<FloraFaunaPool | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const actionableError = error
+    ? toActionableSurfaceError({
+        area: 'Manara feed',
+        rawMessage: error,
+        fallbackHref: '/community',
+        fallbackLabel: 'Open community fallback',
+      })
+    : null;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -72,11 +84,33 @@ export default function FloraFaunaFeedPage() {
       }}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-28 pb-20 space-y-8">
-        {error && (
-          <div className="card-civic">
-            <p className="text-sm text-[var(--color-danger)]">{error}</p>
+        {actionableError ? (
+          <div className="card-civic border-l-4 border-[var(--color-accent)]">
+            <p className="text-sm font-semibold text-[var(--color-earth-dark)]">{actionableError.headline}</p>
+            <p className="mt-2 text-sm text-[var(--color-earth-medium)]">{actionableError.detail}</p>
+            <Link
+              href={actionableError.fallbackHref}
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] px-3 py-1.5 text-xs font-semibold text-[var(--color-institutional)] hover:bg-[var(--color-institutional-light)]"
+            >
+              {actionableError.fallbackLabel}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
-        )}
+        ) : null}
+
+        {!isAuthenticated ? (
+          <div className="card-civic">
+            <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-earth-medium)]">Start here</p>
+            <p className="mt-2 text-sm text-[var(--color-earth-medium)]">
+              New here? Begin with Manara Signals, then review Transparency and Docs before signing in.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+              <Link href="/manara" className="rounded-full border border-[var(--color-border)] px-3 py-1.5 hover:bg-[var(--color-muted)]">Manara feed</Link>
+              <Link href="/transparency" className="rounded-full border border-[var(--color-border)] px-3 py-1.5 hover:bg-[var(--color-muted)]">Transparency</Link>
+              <Link href="/docs" className="rounded-full border border-[var(--color-border)] px-3 py-1.5 hover:bg-[var(--color-muted)]">Docs</Link>
+            </div>
+          </div>
+        ) : null}
 
         <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr] items-start">
           <div className="card-civic overflow-hidden relative">

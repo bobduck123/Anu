@@ -6,6 +6,7 @@ import {
   listEducationMaps,
   shouldUseEducationMapsFallback,
 } from '@/lib/api/educationMaps';
+import { getFalakTenantConfiguration } from '@/lib/maps/sandbox';
 import { getFallbackEducationMap, listFallbackEducationMaps } from '@/lib/maps/fallbackMapData';
 
 const getSessionMock = vi.fn();
@@ -128,6 +129,26 @@ describe('educationMaps client', () => {
 
     expect(headers['X-Tenant-Id']).toBe('22222222-2222-4222-8222-222222222222');
     expect(headers['X-Actor-Id']).toBeUndefined();
+  });
+
+  it('reports tenant configuration as hosted when NEXT_PUBLIC_FALAK_TENANT_ID is present', () => {
+    delete process.env.NEXT_PUBLIC_FALAK_MODE;
+    process.env.NEXT_PUBLIC_FALAK_TENANT_ID = '22222222-2222-4222-8222-222222222222';
+
+    expect(getFalakTenantConfiguration()).toEqual({
+      mode: 'hosted',
+      tenantId: '22222222-2222-4222-8222-222222222222',
+    });
+  });
+
+  it('reports tenant configuration as missing outside sandbox when no hosted tenant id is present', () => {
+    delete process.env.NEXT_PUBLIC_FALAK_MODE;
+    delete process.env.NEXT_PUBLIC_FALAK_TENANT_ID;
+
+    expect(getFalakTenantConfiguration()).toEqual({
+      mode: 'missing',
+      tenantId: null,
+    });
   });
 
   it('falls back to the legacy auth token when no Supabase session is available', async () => {

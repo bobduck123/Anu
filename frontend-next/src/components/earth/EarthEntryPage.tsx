@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { getEarthSummary, getUniversePacket, type EarthSummaryResponse, type UniversePacket } from '@/lib/api/earthHeavenApi';
+import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
 
 type LoadState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -163,21 +164,36 @@ export function EarthEntryPage() {
   }
 
   if (loadState === 'error' || !summary) {
+    const actionableError = toActionableSurfaceError({
+      area: 'Earth',
+      rawMessage: errorMessage,
+      fallbackHref: '/manara',
+      fallbackLabel: 'Open Manara feed',
+    });
+
     return (
       <div className="min-h-screen bg-slate-50 px-6 py-24">
         <div className="mx-auto max-w-xl rounded-2xl border border-rose-200 bg-white p-8 shadow-sm">
-          <h1 className="text-2xl font-semibold text-slate-900">Earth temporarily unavailable</h1>
-          <p className="mt-2 text-slate-600">{errorMessage || 'Unable to load Earth dashboards.'}</p>
-          <button
-            onClick={() => {
-              setLoadState('loading');
-              setErrorMessage(null);
-              setReloadToken((value) => value + 1);
-            }}
-            className="mt-5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-          >
-            Retry
-          </button>
+          <h1 className="text-2xl font-semibold text-slate-900">{actionableError.headline}</h1>
+          <p className="mt-2 text-slate-600">{actionableError.detail}</p>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => {
+                setLoadState('loading');
+                setErrorMessage(null);
+                setReloadToken((value) => value + 1);
+              }}
+              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            >
+              Retry
+            </button>
+            <Link
+              href={actionableError.fallbackHref}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              {actionableError.fallbackLabel}
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -266,7 +282,9 @@ export function EarthEntryPage() {
                 </p>
               )}
               {skyFailed ? (
-                <p className="mt-2 text-xs text-slate-500">Universe packet unavailable. Earth is running in fallback sky mode.</p>
+                <p className="mt-2 text-xs text-slate-500">
+                  Universe data is currently unreachable. Earth continues in calm fallback sky mode.
+                </p>
               ) : null}
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">

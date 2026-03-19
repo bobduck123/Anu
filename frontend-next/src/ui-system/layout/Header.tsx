@@ -109,6 +109,9 @@ export function Header({ onMenuToggle }: HeaderProps) {
             <button
               onClick={() => setProfileOpen((o) => !o)}
               className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--color-muted)] transition-colors"
+              aria-label={isAuthenticated ? 'Open profile menu' : 'Open sign in menu'}
+              aria-expanded={profileOpen}
+              aria-haspopup="menu"
             >
               <div className="w-7 h-7 rounded-full bg-[var(--color-primary)] flex items-center justify-center">
                 <User className="w-4 h-4 text-white" />

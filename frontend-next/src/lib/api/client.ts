@@ -1,4 +1,5 @@
 import { getCoreApiBase } from '@/lib/runtime';
+import { createClient as createSupabaseClient } from '@/lib/supabase/client';
 
 export interface ApiErrorPayload {
   code: string;
@@ -38,9 +39,29 @@ function getDefaultApiErrorPayload(status: number): ApiErrorPayload {
   }
 }
 
-const getAuthHeaders = (): Record<string, string> => {
+const getAuthHeaders = async (): Promise<Record<string, string>> => {
   if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
+
+  try {
+    const supabase = createSupabaseClient();
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+
+    const accessToken = session?.access_token?.trim();
+    if (accessToken) {
+      return { Authorization: `Bearer ${accessToken}` };
+    }
+
+    if (error) {
+      console.warn('Unable to read Supabase session token for API requests. Falling back to local token cache.', error);
+    }
+  } catch (error) {
+    console.warn('Unable to resolve Supabase session token for API requests. Falling back to local token cache.', error);
+  }
+
+  const token = localStorage.getItem('auth_token')?.trim();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -49,7 +70,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...getAuthHeaders(),
+      ...(await getAuthHeaders()),
       ...(options.headers || {}),
     },
   });
@@ -83,7 +104,7 @@ export async function apiFetchWithMeta<T>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...getAuthHeaders(),
+      ...(await getAuthHeaders()),
       ...(options.headers || {}),
     },
   });

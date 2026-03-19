@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 import { getEarthSummary, getUniversePacket, type TimeWindow, type UniverseMode, type UniversePacket } from '@/lib/api/earthHeavenApi';
+import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
 
 type LoadState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -108,11 +109,18 @@ export function HeavenUniversePage() {
   }
 
   if (loadState === 'error' || !packet) {
+    const actionableError = toActionableSurfaceError({
+      area: 'Universe projection',
+      rawMessage: errorMessage,
+      fallbackHref: '/earth',
+      fallbackLabel: 'Open Earth fallback',
+    });
+
     return (
       <div className="min-h-screen bg-slate-950 px-6 py-24 text-slate-100">
         <div className="mx-auto max-w-2xl rounded-2xl border border-rose-800/70 bg-slate-900/70 p-8">
-          <h1 className="text-2xl font-semibold">Universe packet unavailable</h1>
-          <p className="mt-2 text-sm text-slate-300">{errorMessage || 'Rendering packet failed.'}</p>
+          <h1 className="text-2xl font-semibold">{actionableError.headline}</h1>
+          <p className="mt-2 text-sm text-slate-300">{actionableError.detail}</p>
           <div className="mt-5 flex gap-3">
             <button
               onClick={() => {
@@ -124,8 +132,8 @@ export function HeavenUniversePage() {
             >
               Retry
             </button>
-            <Link href="/earth" className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800">
-              Earth Fallback
+            <Link href={actionableError.fallbackHref} className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800">
+              {actionableError.fallbackLabel}
             </Link>
           </div>
         </div>

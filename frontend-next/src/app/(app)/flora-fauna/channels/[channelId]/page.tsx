@@ -7,6 +7,7 @@ import { ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import EcologySummaryPanel from '@/components/impact/EcologySummaryPanel';
 import { brand, manaraPath } from '@/lib/brand';
 import floraFaunaApi, { FloraFaunaChannel, formatFloraFaunaApiError } from '@/lib/api/floraFaunaApi';
+import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
 
 export default function FloraFaunaChannelPage() {
   const params = useParams<{ channelId: string }>();
@@ -45,7 +46,26 @@ export default function FloraFaunaChannelPage() {
   }
 
   if (!channel) {
-    return <div className="min-h-screen pt-28 px-4 md:px-8">{error || 'Channel unavailable.'}</div>;
+    const actionableError = toActionableSurfaceError({
+      area: 'Creator channel',
+      rawMessage: error,
+      fallbackHref: manaraPath(),
+      fallbackLabel: 'Back to Manara feed',
+    });
+
+    return (
+      <div className="min-h-screen pt-28 px-4 md:px-8">
+        <div className="card-civic max-w-2xl mx-auto">
+          <h1 className="text-2xl text-[var(--color-earth-dark)]" style={{ fontFamily: 'var(--font-serif)' }}>
+            {actionableError.headline}
+          </h1>
+          <p className="mt-3 text-sm text-[var(--color-earth-medium)]">{actionableError.detail}</p>
+          <Link href={actionableError.fallbackHref} className="mt-4 inline-flex btn-pill btn-pill-outline text-sm">
+            {actionableError.fallbackLabel}
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (

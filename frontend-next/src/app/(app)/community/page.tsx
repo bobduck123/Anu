@@ -14,6 +14,9 @@ import {
   type CommunityPost,
   type SortMode,
 } from '@/data/adapters/communityAdapter';
+import { UniverseExplainer } from '@/components/maps/universe/UniverseExplainer';
+import { UniverseScene } from '@/components/maps/universe/UniverseScene';
+import { getCommunityDemoUniversePacket } from '@/components/maps/universe/fallbackPackets';
 import { DraggableGallery } from '@/ui/patterns/draggable-gallery';
 import CommunityComposerModal from './CommunityComposerModal';
 
@@ -42,6 +45,44 @@ function CommunityPageFallback() {
             The floating community surface is loading your route state and public feed sources.
           </p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CommunityUniverseFallback({ loadError }: { loadError: string | null }) {
+  const packet = useMemo(() => getCommunityDemoUniversePacket(), []);
+  const [activeStarId, setActiveStarId] = useState<string | null>(packet.stars[0]?.id ?? null);
+  const activeStar = useMemo(
+    () => packet.stars.find((star) => star.id === activeStarId) ?? packet.stars[0] ?? null,
+    [activeStarId, packet],
+  );
+
+  return (
+    <div className="mt-6 rounded-[1.6rem] border border-white/10 bg-white/5 p-4">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="max-w-2xl">
+          <p className="text-xs uppercase tracking-[0.24em] text-cyan-200/75">Deterministic community packet</p>
+          <h2 className="mt-2 text-2xl font-semibold text-white">Alive fallback universe</h2>
+          <p className="mt-2 text-sm leading-6 text-white/70">
+            {loadError
+              ? 'Live community sources are unavailable, so this surface is rendering a deterministic local universe packet through the same scene and explainer path.'
+              : 'No public community posts are published yet. This local packet keeps the community ontology visible while development and seeding continue.'}
+          </p>
+        </div>
+        <div className="rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs text-amber-100">
+          {packet.fallbackState?.label}
+        </div>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_23rem]">
+        <UniverseScene
+          packet={packet}
+          activeStarId={activeStarId}
+          visibleStarIds={packet.stars.map((star) => star.id)}
+          onSelectStarId={setActiveStarId}
+        />
+        <UniverseExplainer star={activeStar} />
       </div>
     </div>
   );
@@ -194,6 +235,7 @@ function CommunityPageContent() {
   }
 
   const hasPosts = posts.length > 0;
+  const showUniverseFallback = !isLoading && !hasPosts && (Boolean(loadError) || process.env.NODE_ENV !== 'production');
 
   return (
     <div className="fixed inset-0 z-40 overflow-hidden bg-black" style={{ isolation: 'isolate' }}>
@@ -266,7 +308,7 @@ function CommunityPageContent() {
 
       {!hasPosts && (
         <div className="absolute inset-0 z-[11] flex items-center justify-center px-4">
-          <div className="w-full max-w-xl rounded-[2rem] border border-white/10 bg-black/65 p-8 text-white shadow-2xl backdrop-blur-xl">
+          <div className={`w-full ${showUniverseFallback ? 'max-w-6xl' : 'max-w-xl'} rounded-[2rem] border border-white/10 bg-black/65 p-8 text-white shadow-2xl backdrop-blur-xl`}>
             {isLoading ? (
               <>
                 <p className="mb-3 text-xs uppercase tracking-[0.24em] text-white/45">Loading</p>
@@ -285,7 +327,7 @@ function CommunityPageContent() {
                 <h1 className="mb-4 text-3xl font-semibold">Community is up, but its live data is not.</h1>
                 <p className="text-sm leading-relaxed text-white/70">
                   Both the articles and stories sources failed to return data. The floating grid is being
-                  held back instead of filling with mock content.
+                  held back, but the ontology stays visible through a deterministic local universe packet below.
                 </p>
               </>
             ) : (
@@ -294,10 +336,12 @@ function CommunityPageContent() {
                 <h1 className="mb-4 text-3xl font-semibold">No public community posts yet</h1>
                 <p className="text-sm leading-relaxed text-white/70">
                   The floating gallery is ready, but there are no published public stories or articles to
-                  display yet. When members publish, they will appear here automatically.
+                  display yet. In local and dev modes, a deterministic universe packet keeps the community surface alive.
                 </p>
               </>
             )}
+
+            {showUniverseFallback ? <CommunityUniverseFallback loadError={loadError} /> : null}
 
             <div className="mt-6 flex flex-wrap gap-3">
               {loadError ? (

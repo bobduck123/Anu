@@ -8,6 +8,7 @@ import OrganizerDashboard from './OrganizerDashboard';
 import MerchantDashboard from './MerchantDashboard';
 import TenantAdminDashboard from './TenantAdminDashboard';
 import SuperAdminDashboard from './SuperAdminDashboard';
+import { StartHereRail } from '@/components/onboarding/StartHereRail';
 
 export default function HomePage() {
   const { user, isLoading } = useAuth();
@@ -16,7 +17,7 @@ export default function HomePage() {
 
   if (!user) {
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
         <div className="card-civic">
           <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-earth-medium)] mb-3">Personal Dashboard</p>
           <h1 className="text-3xl font-semibold text-[var(--color-earth-dark)] mb-4" style={{ fontFamily: 'var(--font-serif)' }}>
@@ -34,6 +35,8 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
+
+        <StartHereRail />
       </div>
     );
   }

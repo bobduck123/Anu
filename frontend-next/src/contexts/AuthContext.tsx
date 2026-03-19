@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+import type { Session as SupabaseSession, User as SupabaseUser } from '@supabase/supabase-js';
 
 interface User {
   id: string;
@@ -55,6 +55,24 @@ function mapSupabaseUser(supabaseUser: SupabaseUser): User {
   };
 }
 
+function syncLegacyAuthToken(session: SupabaseSession | null) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    const accessToken = session?.access_token?.trim();
+    if (accessToken) {
+      localStorage.setItem('auth_token', accessToken);
+      return;
+    }
+
+    localStorage.removeItem('auth_token');
+  } catch (error) {
+    console.warn('Unable to sync legacy auth token cache.', error);
+  }
+}
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
@@ -67,7 +85,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const supabase = createClient();
       const { data: { user: authUser }, error } = await supabase.auth.getUser();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      syncLegacyAuthToken(session ?? null);
+
       if (error || !authUser) {
         setUser(null);
         setSupabaseUser(null);
@@ -78,6 +100,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(mapSupabaseUser(authUser));
     } catch (err) {
       console.error('Auth check failed:', err);
+      syncLegacyAuthToken(null);
       setUser(null);
       setSupabaseUser(null);
     } finally {
@@ -94,7 +117,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
+        syncLegacyAuthToken(session ?? null);
         if (session?.user) {
           setSupabaseUser(session.user);
           setUser(mapSupabaseUser(session.user));
@@ -124,6 +148,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error(error.message);
       }
 
+      syncLegacyAuthToken(data.session ?? null);
       if (data.user) {
         setSupabaseUser(data.user);
         setUser(mapSupabaseUser(data.user));
@@ -155,6 +180,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error(error.message);
       }
 
+      syncLegacyAuthToken(data.session ?? null);
+
       // If email confirmation is disabled, user is immediately logged in
       if (data.user && data.session) {
         setSupabaseUser(data.user);
@@ -169,6 +196,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const supabase = createClient();
       await supabase.auth.signOut();
+      syncLegacyAuthToken(null);
       setUser(null);
       setSupabaseUser(null);
     } catch (error) {

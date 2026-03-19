@@ -29,10 +29,10 @@ export function FalakMapSandboxHome() {
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <header className="rounded-[2rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.16),_transparent_42%),linear-gradient(155deg,_rgba(15,23,42,0.98),_rgba(2,6,23,0.98))] p-8 text-white">
         <p className="text-xs uppercase tracking-[0.32em] text-emerald-300/80">Local-first validation</p>
-        <h1 className="mt-3 text-4xl font-semibold">Falak Map Sandbox</h1>
+        <h1 className="mt-3 text-4xl font-semibold">Manara Learning Universe Sandbox</h1>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300">
-          Local sandbox mode exercises the real Falak map backend, compiler, Prisma schema, and Three.js renderer.
-          Use this surface to validate map generation, editing, reruns, and snapshot restore before touching hosted environments.
+          Local sandbox mode exercises the live map backend, compiler, Prisma schema, and Three.js universe renderer.
+          Use this surface to validate generation, editing, reruns, and snapshot restore before touching hosted environments.
         </p>
       </header>
 

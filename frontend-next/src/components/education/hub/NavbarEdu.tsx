@@ -33,8 +33,8 @@ export function NavbarEdu() {
             <Leaf className="h-5 w-5 text-white" />
           </div>
           <div>
-            <span className="block text-lg font-semibold text-[var(--edu-foreground)]">EduLayer</span>
-            <span className="text-xs text-[var(--edu-foreground)]/70">Systems literacy</span>
+            <span className="block text-lg font-semibold text-[var(--edu-foreground)]">Manara Education</span>
+            <span className="text-xs text-[var(--edu-foreground)]/70">Learning layer</span>
           </div>
         </Link>
         <nav className="hidden md:flex items-center gap-4">
@@ -57,16 +57,28 @@ export function NavbarEdu() {
           })}
         </nav>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
+            aria-label={`Switch theme. Current theme: ${resolvedTheme}`}
+          >
             {resolvedTheme === "light" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setOpen((prev) => !prev)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setOpen((prev) => !prev)}
+            aria-label={open ? "Close education menu" : "Open education menu"}
+            aria-expanded={open}
+            aria-controls="education-mobile-nav"
+          >
             {open ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </Button>
         </div>
       </div>
       {open && (
-        <div className="md:hidden px-4 pb-4">
+        <div id="education-mobile-nav" className="md:hidden px-4 pb-4">
           <div className="space-y-2">
             {navItems.map((link) => (
               <Link

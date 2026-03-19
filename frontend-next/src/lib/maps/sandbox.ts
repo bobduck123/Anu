@@ -2,6 +2,11 @@ const DEFAULT_TENANT_ID = '11111111-1111-4111-8111-111111111111';
 const DEFAULT_ACTOR = 'anu-admin';
 const ACTOR_STORAGE_KEY = 'falak-map-sandbox-actor';
 
+export type FalakTenantConfiguration =
+  | { mode: 'hosted'; tenantId: string }
+  | { mode: 'sandbox'; tenantId: string }
+  | { mode: 'missing'; tenantId: null };
+
 export interface SandboxActorOption {
   id: string;
   label: string;
@@ -31,6 +36,19 @@ export function getFalakRequestTenantId(): string | null {
   }
 
   return isFalakMapSandbox() ? getFalakSandboxTenantId() : null;
+}
+
+export function getFalakTenantConfiguration(): FalakTenantConfiguration {
+  const hostedTenantId = process.env.NEXT_PUBLIC_FALAK_TENANT_ID?.trim();
+  if (hostedTenantId) {
+    return { mode: 'hosted', tenantId: hostedTenantId };
+  }
+
+  if (isFalakMapSandbox()) {
+    return { mode: 'sandbox', tenantId: getFalakSandboxTenantId() };
+  }
+
+  return { mode: 'missing', tenantId: null };
 }
 
 export function getFalakSandboxDefaultActor(): string {

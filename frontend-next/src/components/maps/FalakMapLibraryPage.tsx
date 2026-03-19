@@ -12,6 +12,7 @@ import {
 } from '@/lib/api/educationMaps';
 import { listFallbackEducationMaps } from '@/lib/maps/fallbackMapData';
 import { isFalakMapSandbox } from '@/lib/maps/sandbox';
+import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
 import { formatPercent, statusBadgeClass } from './presentation';
 
 export function FalakMapLibraryPage() {
@@ -44,7 +45,13 @@ export function FalakMapLibraryPage() {
           return;
         }
 
-        setError(err instanceof Error ? err.message : 'Unable to load education maps.');
+        const actionableError = toActionableSurfaceError({
+          area: 'Education universe library',
+          rawMessage: err instanceof Error ? err.message : null,
+          fallbackHref: '/docs',
+          fallbackLabel: 'Open documentation',
+        });
+        setError(`${actionableError.headline}. ${actionableError.detail}`);
       })
       .finally(() => {
         setLoading(false);
@@ -80,10 +87,10 @@ export function FalakMapLibraryPage() {
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="max-w-3xl">
             <p className="text-xs uppercase tracking-[0.32em] text-cyan-300/80">Education Resource Library</p>
-            <h1 className="mt-3 text-4xl font-semibold">Falak Map Library</h1>
+            <h1 className="mt-3 text-4xl font-semibold">Manara Education Universe</h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
-              Open persisted maps, compare seeded topics, and generate new draft maps through the real Falak compiler.
-              The sandbox uses the same Prisma schema, route surface, and renderer path as the hosted system.
+              Open persisted learning universes, compare seeded domains, and generate new draft maps through the live map compiler path.
+              The sandbox exercises the same route surface, schema, and renderer path used by the hosted system.
             </p>
           </div>
           <div className="grid gap-3 text-sm text-slate-300">
@@ -113,7 +120,7 @@ export function FalakMapLibraryPage() {
               </>
             ) : (
               <div className="rounded-[1.25rem] border border-amber-400/40 bg-amber-300/10 px-4 py-3 text-xs leading-6 text-amber-100">
-                Live Falak maps are unavailable from the hosted API right now. This page is showing bundled read-only maps until the frontend can reach the live Falak service correctly.
+                Live learning universes are unavailable from the hosted API right now. This page is showing bundled read-only universe packets until the frontend can reach the live service correctly.
               </div>
             )}
           </div>
@@ -160,7 +167,7 @@ export function FalakMapLibraryPage() {
         ) : null}
         {fallbackActive ? (
           <p className="mt-3 text-xs text-amber-700">
-            {fallbackMessage ?? 'The hosted frontend is using bundled read-only graph data because the live Falak request did not succeed.'}
+            {fallbackMessage ?? 'The hosted frontend is using bundled read-only universe packet data because the live universe request did not succeed.'}
           </p>
         ) : null}
       </section>
@@ -173,13 +180,13 @@ export function FalakMapLibraryPage() {
         <div className="space-y-4">
           {loading ? (
             <div className="rounded-[1.75rem] border border-slate-200 bg-white px-6 py-10 text-center text-sm text-slate-500">
-              Loading map library...
+              Loading universe library...
             </div>
           ) : null}
 
           {!loading && filteredMaps.length < 1 ? (
             <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
-              No maps match the current filters.
+              No universes match the current filters.
             </div>
           ) : null}
 
@@ -206,10 +213,10 @@ export function FalakMapLibraryPage() {
                         </div>
                         <h2 className="mt-3 text-2xl font-semibold text-slate-900">{map.title}</h2>
                         <p className="mt-2 text-sm leading-7 text-slate-600">
-                          {map.description || 'No curated summary has been published for this map yet.'}
+                          {map.description || 'No curated summary has been published for this universe yet.'}
                         </p>
                         <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                          <span>topic key: {map.topicKey}</span>
+                          <span>domain key: {map.topicKey}</span>
                           <span>version {map.version}</span>
                           <span>coverage {formatPercent(map.confidence.coverage)}</span>
                           <span>taxonomy {formatPercent(map.confidence.taxonomy)}</span>
@@ -220,7 +227,7 @@ export function FalakMapLibraryPage() {
                           href={`/education/maps/${encodeURIComponent(map.topicKey)}`}
                           className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 font-medium text-white transition hover:bg-slate-800"
                         >
-                          Open map
+                          Open universe
                         </Link>
                         {!fallbackActive ? (
                           <Link
@@ -259,7 +266,7 @@ export function FalakMapLibraryPage() {
           <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-2">
               <Layers3 className="h-4 w-4 text-cyan-600" />
-              <h2 className="text-lg font-semibold text-slate-900">Compare maps</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Compare universes</h2>
             </div>
             {comparedMaps.length > 0 ? (
               <div className="mt-4 space-y-3">
@@ -298,7 +305,7 @@ export function FalakMapLibraryPage() {
               </div>
             ) : (
               <p className="mt-4 text-sm text-slate-500">
-                Add up to three maps from the library to compare their readiness and publication state.
+                Add up to three universes from the library to compare their readiness and publication state.
               </p>
             )}
           </section>

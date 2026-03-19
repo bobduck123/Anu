@@ -818,6 +818,31 @@ export function listFallbackEducationMaps(filters: { q?: string; status?: MapSta
     });
 }
 
+export function listFallbackEducationMapResources(filters: { q?: string; status?: MapStatus } = {}): MapResource[] {
+  const query = filters.q?.trim().toLowerCase() ?? '';
+
+  return FALLBACK_MAPS.filter((resource) => {
+    if (filters.status && resource.definition.status !== filters.status) {
+      return false;
+    }
+
+    if (!query) {
+      return true;
+    }
+
+    return [
+      resource.definition.title,
+      resource.definition.topicKey,
+      resource.definition.archetype,
+      resource.definition.entityType,
+      resource.definition.description ?? '',
+    ]
+      .join(' ')
+      .toLowerCase()
+      .includes(query);
+  });
+}
+
 export function getFallbackEducationMap(topicKey: string): MapResource | null {
   return FALLBACK_MAPS.find((resource) => resource.definition.topicKey === topicKey || resource.definition.id === topicKey) ?? null;
 }

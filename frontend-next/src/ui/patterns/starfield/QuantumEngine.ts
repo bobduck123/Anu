@@ -685,16 +685,26 @@ export class QuantumEngine {
       }
     }
 
-    // Add constellation proximity connections (3 nearest neighbors per star in each constellation)
+    // Add deterministic constellation connections so packet topology stays stable across rerenders.
     for (const c of this.constellations) {
-      const memberIndices = c.starIds.map(id => starIndex.get(id)).filter((v): v is number => v !== undefined);
-      for (const idx of memberIndices) {
+      const memberIndices = c.starIds
+        .map(id => starIndex.get(id))
+        .filter((v): v is number => v !== undefined)
+        .sort((left, right) => this.stars[left].id.localeCompare(this.stars[right].id));
+
+      if (memberIndices.length < 2) {
+        continue;
+      }
+
+      for (let position = 0; position < memberIndices.length; position += 1) {
+        const idx = memberIndices[position];
         const node = this.nodes[idx];
-        const sorted = memberIndices
-          .filter(j => j !== idx)
-          .sort(() => 0.5 - Math.random()) // random since positions aren't set yet
-          .slice(0, 3);
-        for (const j of sorted) {
+        const deterministicNeighbors = [
+          memberIndices[(position + 1) % memberIndices.length],
+          memberIndices[(position + 2) % memberIndices.length],
+        ].filter((neighborIndex) => neighborIndex !== idx);
+
+        for (const j of deterministicNeighbors) {
           if (!node.connections.some(c => c.nodeIndex === j)) {
             node.connections.push({ nodeIndex: j, strength: 0.5 });
             this.nodes[j].connections.push({ nodeIndex: idx, strength: 0.5 });
@@ -713,6 +723,28 @@ export class QuantumEngine {
       const hashBase = djb2(node.star.label);
       const typeIndex = TYPE_TO_LEVEL[node.star.type] ?? 0;
       const typeAngle = (typeIndex / 7) * Math.PI * 2;
+      const placementMeta = node.star.metadata.placement as { anchorMode?: string } | undefined;
+      const anchorMode = placementMeta?.anchorMode;
+      const shouldUseProvidedCoordinates = node.star.metadata.useProvidedCoordinates === true || Boolean(placementMeta);
+
+      if (shouldUseProvidedCoordinates) {
+        const impactBias = anchorMode === 'authored' ? 0 : (Number(node.star.metadata.impact) || 0) * 0.08;
+        const jitterScale = anchorMode === 'authored' ? 0 : anchorMode === 'hybrid' ? 2.1 : 4.5;
+        const jitter = new THREE.Vector3(
+          (fract(hashBase * 0.00001337) - 0.5) * jitterScale,
+          (fract(hashBase * 0.00001711) - 0.5) * jitterScale + impactBias,
+          (fract(hashBase * 0.00001997) - 0.5) * jitterScale,
+        );
+
+        node.position.set(node.star.x, node.star.y, node.star.z).add(jitter);
+
+        if (node.position.lengthSq() < 1) {
+          node.position.z += 8 + typeIndex * 1.5;
+        }
+
+        node.distanceFromRoot = node.position.length();
+        continue;
+      }
 
       // Date bias: older entities closer to center, newer further out
       const created = node.star.metadata.created;
