@@ -5,7 +5,8 @@ from flask import Blueprint, request, Response
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from .utils import ok, error
-from app.services import calendar_service
+from ..models import Shift, User
+from ..services import calendar_service
 
 calendar_bp = Blueprint("calendar", __name__, url_prefix="/calendar")
 
@@ -14,7 +15,6 @@ calendar_bp = Blueprint("calendar", __name__, url_prefix="/calendar")
 @jwt_required()
 def combined_events():
     """GET /api/calendar/events?start=YYYY-MM-DD&end=YYYY-MM-DD"""
-    from app.models import User
     user = User.query.filter_by(username=get_jwt_identity()).first()
     if not user:
         return error("AUTH", "User not found", 401)
@@ -36,7 +36,6 @@ def combined_events():
 @jwt_required()
 def list_shifts():
     """GET /api/calendar/shifts?start=&end="""
-    from app.models import User, Shift
     user = User.query.filter_by(username=get_jwt_identity()).first()
     if not user:
         return error("AUTH", "User not found", 401)
@@ -56,7 +55,6 @@ def list_shifts():
 @jwt_required()
 def create_shift():
     """POST /api/calendar/shifts — organizer creates a shift."""
-    from app.models import User
     user = User.query.filter_by(username=get_jwt_identity()).first()
     if not user:
         return error("AUTH", "User not found", 401)
@@ -76,7 +74,6 @@ def create_shift():
 @jwt_required()
 def assign_shift(shift_id: int):
     """POST /api/calendar/shifts/:id/assign — volunteer signs up."""
-    from app.models import User
     user = User.query.filter_by(username=get_jwt_identity()).first()
     if not user:
         return error("AUTH", "User not found", 401)
@@ -91,7 +88,6 @@ def assign_shift(shift_id: int):
 @jwt_required()
 def get_availability():
     """GET /api/calendar/availability"""
-    from app.models import User
     user = User.query.filter_by(username=get_jwt_identity()).first()
     if not user:
         return error("AUTH", "User not found", 401)
@@ -103,7 +99,6 @@ def get_availability():
 @jwt_required()
 def set_availability():
     """PUT /api/calendar/availability — replace all availability slots."""
-    from app.models import User
     user = User.query.filter_by(username=get_jwt_identity()).first()
     if not user:
         return error("AUTH", "User not found", 401)
@@ -120,7 +115,6 @@ def set_availability():
 @jwt_required()
 def export_ics():
     """GET /api/calendar/export.ics?start=&end="""
-    from app.models import User
     user = User.query.filter_by(username=get_jwt_identity()).first()
     if not user:
         return error("AUTH", "User not found", 401)

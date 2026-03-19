@@ -12,6 +12,9 @@ export function LayoutShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isFullBleedRoute = pathname?.startsWith('/wishlist/');
   const isImmersiveUniverseRoute = pathname?.startsWith('/universe');
+  const isCommunityRoute = pathname?.startsWith('/community');
+  const hideSupportChrome = isImmersiveUniverseRoute || isCommunityRoute;
+  const desktopSidebarOffsetClass = 'md:ml-[264px]';
 
   if (isFullBleedRoute) {
     return <div className="manara-shell min-h-screen">{children}</div>;
@@ -32,12 +35,12 @@ export function LayoutShell({ children }: { children: ReactNode }) {
 
       <main
         className={`shell-main relative mt-16 flex-1 transition-all duration-500 ${
-          isImmersiveUniverseRoute ? 'overflow-hidden' : 'md:ml-[248px]'
+          isImmersiveUniverseRoute ? 'overflow-hidden' : desktopSidebarOffsetClass
         }`}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(248,208,142,0.15),transparent_34%),radial-gradient(circle_at_86%_8%,rgba(52,98,145,0.16),transparent_38%)]" />
 
-        {!isImmersiveUniverseRoute ? (
+        {!hideSupportChrome ? (
           <div className="relative z-20 px-3 pt-3 md:px-8 md:pt-5">
             <SystemHealthBanner />
           </div>
@@ -48,8 +51,8 @@ export function LayoutShell({ children }: { children: ReactNode }) {
         </div>
       </main>
 
-      {!isImmersiveUniverseRoute ? (
-        <div className="md:ml-[248px]">
+      {!hideSupportChrome ? (
+        <div className={desktopSidebarOffsetClass}>
           <Footer />
         </div>
       ) : null}

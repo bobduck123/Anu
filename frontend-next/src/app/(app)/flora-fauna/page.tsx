@@ -80,17 +80,17 @@ export default function FloraFaunaFeedPage() {
       className="min-h-screen"
       style={{
         background:
-          'radial-gradient(circle at top left, rgba(79,124,95,0.18), transparent 24%), radial-gradient(circle at top right, rgba(30,58,95,0.14), transparent 28%), var(--color-background)',
+          'radial-gradient(circle at 20% 0%, rgba(242,199,134,0.14), transparent 28%), radial-gradient(circle at 86% 8%, rgba(63,110,160,0.18), transparent 34%), linear-gradient(180deg,#0a1322_0%,#08111e_60%,#08101a_100%)',
       }}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-28 pb-20 space-y-8">
         {actionableError ? (
-          <div className="card-civic border-l-4 border-[var(--color-accent)]">
-            <p className="text-sm font-semibold text-[var(--color-earth-dark)]">{actionableError.headline}</p>
-            <p className="mt-2 text-sm text-[var(--color-earth-medium)]">{actionableError.detail}</p>
+          <div className="rounded-2xl border border-amber-300/34 bg-amber-300/12 p-5 text-amber-100">
+            <p className="text-sm font-semibold text-amber-100">{actionableError.headline}</p>
+            <p className="mt-2 text-sm text-amber-100/92">{actionableError.detail}</p>
             <Link
               href={actionableError.fallbackHref}
-              className="mt-3 inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] px-3 py-1.5 text-xs font-semibold text-[var(--color-institutional)] hover:bg-[var(--color-institutional-light)]"
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-amber-100/30 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:bg-amber-200/20"
             >
               {actionableError.fallbackLabel}
               <ArrowRight className="h-3.5 w-3.5" />
@@ -99,15 +99,15 @@ export default function FloraFaunaFeedPage() {
         ) : null}
 
         {!isAuthenticated ? (
-          <div className="card-civic">
-            <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-earth-medium)]">Start here</p>
-            <p className="mt-2 text-sm text-[var(--color-earth-medium)]">
+          <div className="rounded-2xl border border-white/12 bg-[linear-gradient(152deg,rgba(8,16,29,0.9),rgba(7,13,24,0.92))] p-5 text-slate-100">
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Start here</p>
+            <p className="mt-2 text-sm text-slate-300">
               New here? Begin with Manara Signals, then review Transparency and Docs before signing in.
             </p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
-              <Link href="/manara" className="rounded-full border border-[var(--color-border)] px-3 py-1.5 hover:bg-[var(--color-muted)]">Manara feed</Link>
-              <Link href="/transparency" className="rounded-full border border-[var(--color-border)] px-3 py-1.5 hover:bg-[var(--color-muted)]">Transparency</Link>
-              <Link href="/docs" className="rounded-full border border-[var(--color-border)] px-3 py-1.5 hover:bg-[var(--color-muted)]">Docs</Link>
+              <Link href="/manara" className="rounded-full border border-white/14 bg-white/6 px-3 py-1.5 text-slate-100 hover:bg-white/12">Manara feed</Link>
+              <Link href="/transparency" className="rounded-full border border-white/14 bg-white/6 px-3 py-1.5 text-slate-100 hover:bg-white/12">Transparency</Link>
+              <Link href="/docs" className="rounded-full border border-white/14 bg-white/6 px-3 py-1.5 text-slate-100 hover:bg-white/12">Docs</Link>
             </div>
           </div>
         ) : null}
@@ -153,17 +153,17 @@ export default function FloraFaunaFeedPage() {
           <div className="space-y-4">
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-earth-medium)] mb-2">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-2">
                   Meme Feed
                 </p>
-                <h2 className="text-3xl text-[var(--color-earth-dark)]" style={{ fontFamily: 'var(--font-serif)' }}>
+                <h2 className="text-3xl text-white" style={{ fontFamily: 'var(--font-serif)' }}>
                   Shareable spores
                 </h2>
               </div>
               {channel && (
                 <Link
                   href={manaraPath(`/channels/${channel.id}`)}
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-institutional)]"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-[#f3cd92]"
                 >
                   Visit creator channel
                   <ArrowRight className="w-4 h-4" />

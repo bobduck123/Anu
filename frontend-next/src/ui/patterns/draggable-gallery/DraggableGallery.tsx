@@ -143,8 +143,11 @@ const SORT_OPTIONS: { mode: SortMode; label: string }[] = [
 /* -------------------------------------------------------------------------- */
 
 const ITEM_SIZE = 320;
-const ZOOM_LEVELS = [0.3, 0.6, 1.0] as const;
-const ZOOM_LABELS = ['ZOOM OUT', 'NORMAL', 'ZOOM IN', 'FIT'] as const;
+const ZOOM_ACTIONS = [
+  { level: 0.3, label: 'Zoom out', shortLabel: 'Out' },
+  { level: 0.6, label: 'Normal', shortLabel: 'Norm' },
+  { level: 1.0, label: 'Zoom in', shortLabel: 'In' },
+] as const;
 
 function gapForZoom(zoom: number): number {
   if (zoom <= 0.3) return 64;
@@ -184,6 +187,12 @@ function tileEyebrow(post: CommunityPost): string {
   if (post.sourceName) return post.sourceName;
   if (post.tags[0]) return post.tags[0].replace(/-/g, ' ');
   return post.author.role;
+}
+
+function tilePlace(post: CommunityPost): string {
+  if (post.microcosm) return post.microcosm;
+  if (post.sourceName) return 'Trusted source';
+  return 'Shared commons';
 }
 
 function createDetailPreviewNode(post: CommunityPost, image: HTMLImageElement | null): HTMLElement {
@@ -1120,19 +1129,40 @@ export function DraggableGallery({
                     />
                   )}
 
-                  <div className="absolute inset-0 border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),transparent_34%,rgba(0,0,0,0.28))]" />
-                  <div className="absolute inset-x-0 top-0 flex items-start justify-between p-4 text-[10px] uppercase tracking-[0.22em] text-white/76">
-                    <span className="max-w-[70%] truncate">{tileEyebrow(item.post)}</span>
-                    <span>{timeAgo(item.post.createdAt)}</span>
+                  <div className="absolute inset-0 border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.09),transparent_36%,rgba(0,0,0,0.34))]" />
+                  <div className="absolute inset-x-0 top-0 p-4">
+                    <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-[0.2em] text-white/78">
+                      <span className="max-w-[66%] truncate rounded-full border border-white/16 bg-black/36 px-2.5 py-1">{tileEyebrow(item.post)}</span>
+                      <span className="rounded-full border border-white/14 bg-black/34 px-2 py-1">{timeAgo(item.post.createdAt)}</span>
+                    </div>
                   </div>
-                  <div className="absolute inset-x-0 bottom-0 p-5">
-                    <div className="space-y-1">
-                      <p className="text-base font-semibold leading-[1.05] text-white line-clamp-2">
+                  <div className="absolute inset-x-0 bottom-0 p-4">
+                    <div className="rounded-[1.1rem] border border-white/14 bg-[linear-gradient(180deg,rgba(4,8,14,0.72),rgba(3,7,12,0.9))] p-4 shadow-[0_20px_42px_-28px_rgba(0,0,0,0.98)] backdrop-blur-md">
+                      <p className="text-[1.02rem] font-semibold leading-[1.08] text-white line-clamp-2">
                         {item.post.title || item.post.author.pseudonym}
                       </p>
-                      <p className="text-[12px] leading-relaxed text-white/80 line-clamp-3">
+                      <p className="mt-1.5 text-[12px] leading-relaxed text-white/78 line-clamp-2">
                         {item.post.content}
                       </p>
+                      <div className="mt-3 flex items-center justify-between gap-2">
+                        <span className="max-w-[52%] truncate rounded-full border border-white/12 bg-white/7 px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-white/66">
+                          {tilePlace(item.post)}
+                        </span>
+                        <div className="flex items-center gap-2 text-[10px] text-white/70">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/22 px-1.5 py-1 font-mono-data">
+                            <Heart className="h-3 w-3" />
+                            {item.post.likes}
+                          </span>
+                          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/22 px-1.5 py-1 font-mono-data">
+                            <MessageCircle className="h-3 w-3" />
+                            {item.post.comments}
+                          </span>
+                          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/22 px-1.5 py-1 font-mono-data">
+                            <Share2 className="h-3 w-3" />
+                            {item.post.shares}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1153,83 +1183,59 @@ export function DraggableGallery({
         />
       </div>
 
-      {/* Sort bar — top-left */}
-      <div className="fixed top-6 left-6 flex items-center gap-1 z-10">
-        {SORT_OPTIONS.map(({ mode, label }) => (
-          <button
-            key={mode}
-            type="button"
-            onClick={() => onSortChange(mode)}
-            className={`
-              px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded transition-colors
-              ${
-                sortMode === mode
-                  ? 'bg-white/20 text-white'
-                  : 'text-white/40 hover:text-white/60'
-              }
-            `}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Zoom controls — bottom-center */}
-      <div
-        className="fixed bottom-5 left-1/2 -translate-x-1/2 flex items-stretch gap-0 z-10"
-        style={{ opacity: ready ? 1 : 0, transition: 'opacity 0.6s ease' }}
-      >
-        {/* Percentage indicator */}
-        <div
-          className="flex items-center px-5 rounded-l text-sm font-mono"
-          style={{
-            backgroundColor: '#f0f0f0',
-            backgroundImage: 'radial-gradient(rgba(0,0,0,0.015) 1px, transparent 0)',
-            backgroundSize: '0.44em 0.44em',
-            color: '#000',
-          }}
-        >
-          {Math.round(currentZoom * 100)}%
-        </div>
-
-        {/* Zoom buttons */}
-        <div
-          className="flex items-center gap-5 px-5 rounded-r"
-          style={{
-            backgroundColor: '#222',
-            backgroundImage: 'radial-gradient(rgba(255,255,255,0.015) 1px, transparent 0)',
-            backgroundSize: '0.44em 0.44em',
-          }}
-        >
-          {ZOOM_LEVELS.map((level, i) => (
+      {/* Sort bar */}
+      <div className="pointer-events-none fixed left-4 top-[4.85rem] z-10 md:left-[17rem]">
+        <div className="pointer-events-auto inline-flex items-center gap-1 rounded-full border border-white/14 bg-[linear-gradient(140deg,rgba(6,12,22,0.78),rgba(6,14,25,0.74))] px-1.5 py-1.5 backdrop-blur-xl shadow-[0_20px_48px_-28px_rgba(0,0,0,0.95)]">
+          <span className="hidden rounded-full px-2 text-[10px] uppercase tracking-[0.18em] text-white/48 md:inline">Flow</span>
+          {SORT_OPTIONS.map(({ mode, label }) => (
             <button
-              key={level}
+              key={mode}
               type="button"
-              onClick={() => setZoom(level)}
-              className={`
-                relative text-[11px] font-mono uppercase tracking-wider py-2.5 px-2.5
-                transition-colors duration-300 group
-                ${currentZoom === level ? 'text-[#f0f0f0]' : 'text-[#666] hover:text-[#999]'}
-              `}
+              onClick={() => onSortChange(mode)}
+              className={`inline-flex min-h-9 items-center rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors ${
+                sortMode === mode
+                  ? 'border border-white/20 bg-white/14 text-white'
+                  : 'text-white/58 hover:bg-white/10 hover:text-white'
+              }`}
             >
-              <span
-                className="absolute left-[-8px] top-1/2 -translate-y-1/2 w-[5px] h-[5px] rounded-full bg-[#f0f0f0] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              />
-              {ZOOM_LABELS[i]}
+              {label}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Zoom controls */}
+      <div
+        className="fixed bottom-4 left-1/2 z-10 -translate-x-1/2"
+        style={{ opacity: ready ? 1 : 0, transition: 'opacity 0.45s ease' }}
+      >
+        <div className="inline-flex items-center gap-1 rounded-full border border-white/14 bg-[linear-gradient(138deg,rgba(6,11,20,0.86),rgba(9,16,28,0.84))] px-1.5 py-1.5 backdrop-blur-xl shadow-[0_20px_52px_-28px_rgba(0,0,0,0.95)]">
+          <span className="inline-flex min-h-10 items-center rounded-full border border-white/14 bg-white/92 px-3 text-[12px] font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+            {Math.round(currentZoom * 100)}%
+          </span>
+
+          {ZOOM_ACTIONS.map((action) => (
+            <button
+              key={action.level}
+              type="button"
+              onClick={() => setZoom(action.level)}
+              className={`inline-flex min-h-10 items-center rounded-full px-3 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${
+                currentZoom === action.level
+                  ? 'border border-white/16 bg-white/14 text-white'
+                  : 'text-white/60 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <span className="hidden sm:inline">{action.label}</span>
+              <span className="sm:hidden">{action.shortLabel}</span>
+            </button>
+          ))}
+
           <button
             type="button"
             onClick={autoFitZoom}
-            className="
-              relative text-[11px] font-mono uppercase tracking-wider py-2.5 px-2.5
-              text-[#666] hover:text-[#999] transition-colors duration-300 group
-            "
+            className="inline-flex min-h-10 items-center rounded-full px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60 transition-colors hover:bg-white/10 hover:text-white"
           >
-            <span
-              className="absolute left-[-8px] top-1/2 -translate-y-1/2 w-[5px] h-[5px] rounded-full bg-[#f0f0f0] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            />
-            FIT
+            Fit
           </button>
         </div>
       </div>

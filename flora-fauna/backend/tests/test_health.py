@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from unittest.mock import patch
 
 os.environ["FLASK_ENV"] = "testing"
@@ -64,3 +65,15 @@ def test_domain_resolution_route_contract_is_single_prefixed():
 
     assert "/api/domains/resolve" in routes
     assert "/api/api/domains/resolve" not in routes
+
+
+def test_backend_package_does_not_use_vercel_fragile_absolute_app_imports():
+    app_dir = Path(__file__).resolve().parents[1] / "app"
+    violations = []
+
+    for path in app_dir.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        if "from app." in text or "import app." in text:
+            violations.append(path.relative_to(app_dir).as_posix())
+
+    assert violations == []

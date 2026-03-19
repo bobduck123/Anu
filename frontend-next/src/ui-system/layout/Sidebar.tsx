@@ -111,80 +111,88 @@ export function Sidebar({ mobileOpen, onMobileClose, immersive = false }: Sideba
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
-  const renderNav = (isMobile: boolean) => (
-    <nav className="flex h-full flex-col text-slate-100">
-      {!collapsed ? (
-        <div className="px-4 pb-3 pt-4">
-          <p className="text-[10px] uppercase tracking-[0.24em] text-[#d8c9a4]/80">Cultural pathways</p>
-          <p className="mt-1 text-xs leading-relaxed text-slate-300/80">Navigate signals, learning, trust, and community operations.</p>
-        </div>
-      ) : null}
+  const renderNav = (isMobile: boolean) => {
+    const compact = !isMobile && collapsed;
 
-      <div className="flex-1 space-y-6 overflow-y-auto pb-4 pt-1">
-        {navSections.map((section) => {
-          if (section.adminOnly && !isAdmin) return null;
+    return (
+      <nav className="flex h-full flex-col text-slate-100">
+        {!compact ? (
+          <div className="px-4 pb-3 pt-4">
+            <p className="text-[10px] uppercase tracking-[0.24em] text-[#d8c9a4]/82">Cultural pathways</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-300/80">Choose a living route: community, learning, trust, and shared stewardship.</p>
+          </div>
+        ) : null}
 
-          const visibleItems = section.items.filter(
-            (item) => (!item.module || tenant.modules[item.module]) && (!item.authRequired || isAuthenticated)
-          );
-          if (visibleItems.length === 0) return null;
+        <div className="flex-1 space-y-6 overflow-y-auto px-1 pb-4 pt-1">
+          {navSections.map((section) => {
+            if (section.adminOnly && !isAdmin) return null;
 
-          return (
-            <div key={section.title}>
-              {!collapsed ? (
-                <div className="px-4 pb-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400/90">{section.title}</div>
-              ) : null}
+            const visibleItems = section.items.filter(
+              (item) => (!item.module || tenant.modules[item.module]) && (!item.authRequired || isAuthenticated),
+            );
+            if (visibleItems.length === 0) return null;
 
-              <div className="space-y-1">
-                {visibleItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = isActive(item.href);
+            return (
+              <div key={section.title}>
+                {!compact ? (
+                  <div className="px-4 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400/90">
+                    {section.title}
+                  </div>
+                ) : null}
 
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={isMobile ? onMobileClose : undefined}
-                      title={collapsed ? item.label : undefined}
-                      className={`group mx-2 inline-flex min-h-10 w-[calc(100%-1rem)] items-center rounded-xl border px-3 py-2 text-sm transition-colors ${
-                        collapsed ? 'justify-center' : 'gap-3'
-                      } ${
-                        active
-                          ? 'border-[#48668a] bg-[linear-gradient(115deg,rgba(38,74,118,0.95),rgba(25,43,74,0.95))] text-white shadow-[0_14px_28px_-20px_rgba(243,199,123,0.9)]'
-                          : 'border-transparent text-slate-200/90 hover:border-white/10 hover:bg-white/[0.06] hover:text-white'
-                      }`}
-                    >
-                      <Icon className="h-[18px] w-[18px] shrink-0" />
-                      {!collapsed ? <span className="truncate">{item.label}</span> : null}
-                    </Link>
-                  );
-                })}
+                <div className="space-y-1">
+                  {visibleItems.map((item) => {
+                    const Icon = item.icon;
+                    const active = isActive(item.href);
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={isMobile ? onMobileClose : undefined}
+                        title={compact ? item.label : undefined}
+                        className={`group relative mx-2 inline-flex min-h-10 w-[calc(100%-1rem)] items-center rounded-2xl border px-3.5 py-2.5 text-sm transition-colors ${
+                          compact ? 'justify-center' : 'gap-3'
+                        } ${
+                          active
+                            ? 'border-[#50739a]/70 bg-[linear-gradient(125deg,rgba(43,80,125,0.9),rgba(23,44,74,0.95))] text-white shadow-[0_16px_30px_-22px_rgba(242,198,120,0.95)]'
+                            : 'border-transparent text-slate-200/92 hover:border-white/12 hover:bg-white/[0.07] hover:text-white'
+                        }`}
+                      >
+                        <Icon className="h-[18px] w-[18px] shrink-0" />
+                        {!compact ? <span className="truncate">{item.label}</span> : null}
+                        {!compact && active ? <span className="ml-auto h-2 w-2 rounded-full bg-[#f3c77b]/85" /> : null}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {!isMobile ? (
-        <div className="border-t border-white/10 p-3">
-          <button
-            onClick={toggle}
-            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 transition-colors hover:bg-white/[0.08] hover:text-white"
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-          </button>
+            );
+          })}
         </div>
-      ) : null}
-    </nav>
-  );
+
+        {!isMobile ? (
+          <div className="border-t border-white/10 px-3 py-3">
+            <button
+              onClick={toggle}
+              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-white/12 bg-white/[0.04] text-slate-300 transition-colors hover:bg-white/[0.1] hover:text-white"
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+              {!compact ? <span className="text-[11px] uppercase tracking-[0.16em]">Collapse rail</span> : null}
+            </button>
+          </div>
+        ) : null}
+      </nav>
+    );
+  };
 
   return (
     <>
       {!immersive ? (
         <aside
-          className={`fixed bottom-0 left-0 top-16 z-30 hidden border-r border-[#304860]/85 bg-[linear-gradient(180deg,rgba(11,20,33,0.98),rgba(15,29,45,0.97)_48%,rgba(14,23,37,0.98))] shadow-[inset_-1px_0_0_rgba(255,255,255,0.06)] md:flex md:flex-col ${
-            collapsed ? 'w-[72px]' : 'w-[248px]'
+          className={`fixed bottom-3 left-3 top-[4.7rem] z-30 hidden overflow-hidden rounded-[1.6rem] border border-[#355372]/58 bg-[linear-gradient(180deg,rgba(10,21,36,0.95),rgba(12,27,45,0.93)_52%,rgba(11,20,34,0.95))] shadow-[0_26px_62px_-34px_rgba(0,0,0,0.86)] backdrop-blur-xl md:flex md:flex-col ${
+            collapsed ? 'w-[84px]' : 'w-[252px]'
           }`}
         >
           {renderNav(false)}
@@ -193,11 +201,11 @@ export function Sidebar({ mobileOpen, onMobileClose, immersive = false }: Sideba
 
       {mobileOpen ? (
         <div className={`fixed inset-0 z-50 ${immersive ? '' : 'md:hidden'}`}>
-          <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-sm" onClick={onMobileClose} />
+          <div className="absolute inset-0 bg-slate-950/64 backdrop-blur-sm" onClick={onMobileClose} />
           <aside
             id="app-sidebar-drawer"
-            className={`absolute bottom-0 left-0 top-0 flex flex-col border-r border-[#304860]/85 bg-[linear-gradient(180deg,rgba(11,20,33,0.98),rgba(15,29,45,0.97)_48%,rgba(14,23,37,0.98))] shadow-[20px_0_44px_-28px_rgba(0,0,0,0.95)] ${
-              immersive ? 'w-[320px] max-w-[92vw]' : 'w-[292px]'
+            className={`absolute bottom-0 left-0 top-0 flex flex-col border-r border-[#355372]/65 bg-[linear-gradient(180deg,rgba(10,21,36,0.97),rgba(12,27,45,0.96)_52%,rgba(11,20,34,0.97))] shadow-[24px_0_58px_-30px_rgba(0,0,0,0.96)] ${
+              immersive ? 'w-[320px] max-w-[92vw]' : 'w-[304px]'
             }`}
           >
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
@@ -207,7 +215,7 @@ export function Sidebar({ mobileOpen, onMobileClose, immersive = false }: Sideba
               <button
                 onClick={onMobileClose}
                 className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-100 transition-colors hover:bg-white/[0.1]"
-                aria-label="Close menu"
+                aria-label="Close drawer"
               >
                 <X className="h-5 w-5" />
               </button>

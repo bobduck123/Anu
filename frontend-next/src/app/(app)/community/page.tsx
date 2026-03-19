@@ -4,12 +4,13 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { AlertCircle, Loader2, Plus, RefreshCw } from 'lucide-react';
+import { AlertCircle, Loader2, Plus, RefreshCw, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeatureFlag } from '@/lib/featureFlags';
 import { api, type Article, type CommunityNewsFeed, type StoryPost } from '@/lib/api';
 import {
   buildGalleryPosts,
+  generateMockPosts,
   sortPosts,
   type CommunityPost,
   type SortMode,
@@ -59,7 +60,7 @@ function CommunityUniverseFallback({ loadError }: { loadError: string | null }) 
   );
 
   return (
-    <div className="mt-6 rounded-[1.6rem] border border-white/10 bg-white/5 p-4">
+    <div className="rounded-[1.6rem] border border-white/10 bg-white/5 p-4">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div className="max-w-2xl">
           <p className="text-xs uppercase tracking-[0.24em] text-cyan-200/75">Deterministic community packet</p>
@@ -94,18 +95,30 @@ function CommunityPageContent() {
   const searchParams = useSearchParams();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const galleryEnabled = useFeatureFlag('draggableCommunityGallery');
+
   const [sortMode, setSortMode] = useState<SortMode>('new');
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isComposerOpen, setIsComposerOpen] = useState(false);
+  const [showFallbackPacket, setShowFallbackPacket] = useState(false);
   const [trustedNewsMeta, setTrustedNewsMeta] = useState<{ count: number; stale: boolean; sourceNames: string[] }>({
     count: 0,
     stale: false,
     sourceNames: [],
   });
+
   const latestPostsRef = useRef<CommunityPost[]>([]);
+
+  const demoPosts = useMemo(() => generateMockPosts(72, 20260319), []);
+  const hasLivePosts = posts.length > 0;
+  const showingDemoGallery = !hasLivePosts;
+
+  const galleryPosts = useMemo(
+    () => sortPosts(hasLivePosts ? posts : demoPosts, sortMode),
+    [demoPosts, hasLivePosts, posts, sortMode],
+  );
 
   const authHref = useMemo(() => {
     const params = new URLSearchParams();
@@ -113,16 +126,19 @@ function CommunityPageContent() {
     return `/auth?${params.toString()}`;
   }, []);
 
-  const buildHref = useCallback((compose: boolean) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (compose) {
-      params.set('compose', '1');
-    } else {
-      params.delete('compose');
-    }
-    const query = params.toString();
-    return query ? `${pathname}?${query}` : pathname;
-  }, [pathname, searchParams]);
+  const buildHref = useCallback(
+    (compose: boolean) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (compose) {
+        params.set('compose', '1');
+      } else {
+        params.delete('compose');
+      }
+      const query = params.toString();
+      return query ? `${pathname}?${query}` : pathname;
+    },
+    [pathname, searchParams],
+  );
 
   const loadFeed = useCallback(async () => {
     setIsLoading(true);
@@ -167,10 +183,7 @@ function CommunityPageContent() {
     }
 
     const livePosts = buildGalleryPosts({ articles, stories, newsFeed: trustedNews });
-    const preserveCurrentFeed =
-      livePosts.length === 0 &&
-      nextWarnings.length === 3 &&
-      latestPostsRef.current.length > 0;
+    const preserveCurrentFeed = livePosts.length === 0 && nextWarnings.length === 3 && latestPostsRef.current.length > 0;
     const nextPosts = preserveCurrentFeed ? latestPostsRef.current : livePosts;
 
     latestPostsRef.current = nextPosts;
@@ -192,18 +205,11 @@ function CommunityPageContent() {
     void loadFeed();
   }, [loadFeed]);
 
-  useEffect(() => {
-    const wantsComposer = searchParams.get('compose') === '1';
-    if (!wantsComposer) {
-      setIsComposerOpen(false);
-      return;
-    }
-    if (!authLoading && isAuthenticated) {
-      setIsComposerOpen(true);
-    }
-  }, [authLoading, isAuthenticated, searchParams]);
+  const wantsComposer = searchParams.get('compose') === '1';
 
-  const sortedPosts = useMemo(() => sortPosts(posts, sortMode), [posts, sortMode]);
+  const showUniverseFallback =
+    showingDemoGallery && !isLoading && (Boolean(loadError) || process.env.NODE_ENV !== 'production');
+  const fallbackPacketVisible = showFallbackPacket && showUniverseFallback;
 
   const openComposer = useCallback(() => {
     if (!isAuthenticated) {
@@ -219,166 +225,138 @@ function CommunityPageContent() {
     router.replace(buildHref(false), { scroll: false });
   }, [buildHref, router]);
 
-  const handlePublished = useCallback((post: CommunityPost) => {
-    const nextPosts = [post, ...latestPostsRef.current.filter((item) => item.id !== post.id)];
-    latestPostsRef.current = nextPosts;
-    setPosts(nextPosts);
-    setSortMode('new');
-    setWarnings([]);
-    setLoadError(null);
-    closeComposer();
-    void loadFeed();
-  }, [closeComposer, loadFeed]);
+  const handlePublished = useCallback(
+    (post: CommunityPost) => {
+      const nextPosts = [post, ...latestPostsRef.current.filter((item) => item.id !== post.id)];
+      latestPostsRef.current = nextPosts;
+      setPosts(nextPosts);
+      setSortMode('new');
+      setWarnings([]);
+      setLoadError(null);
+      closeComposer();
+      void loadFeed();
+    },
+    [closeComposer, loadFeed],
+  );
 
   if (!galleryEnabled) {
     return <CommunityLegacy />;
   }
 
-  const hasPosts = posts.length > 0;
-  const showUniverseFallback = !isLoading && !hasPosts && (Boolean(loadError) || process.env.NODE_ENV !== 'production');
+  const warningMessage = warnings.length > 0 ? warnings[0] : null;
 
   return (
-    <div className="fixed inset-0 z-40 overflow-hidden bg-black" style={{ isolation: 'isolate' }}>
-      {hasPosts && (
-        <DraggableGallery posts={sortedPosts} sortMode={sortMode} onSortChange={setSortMode} />
-      )}
+    <div className="fixed inset-0 z-30 overflow-hidden bg-[#02050c]" style={{ isolation: 'isolate' }}>
+      <DraggableGallery posts={galleryPosts} sortMode={sortMode} onSortChange={setSortMode} />
 
-      <div className="pointer-events-none fixed inset-x-0 top-4 z-[12] flex justify-center px-4">
-        <div className="pointer-events-auto flex max-w-4xl flex-wrap items-center justify-center gap-3 rounded-full border border-white/10 bg-black/60 px-4 py-2 text-xs text-white/70 backdrop-blur-md">
-          <span className="font-mono uppercase tracking-[0.24em] text-white/60">Community</span>
-          <span className="h-1 w-1 rounded-full bg-white/20" />
-          {isLoading ? (
-            <span className="inline-flex items-center gap-2">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Syncing live feed
-            </span>
-          ) : (
-            <span>{posts.length} live posts</span>
-          )}
-          {!isLoading && trustedNewsMeta.count > 0 && (
-            <>
-              <span className="h-1 w-1 rounded-full bg-white/20" />
-              <span>
-                {trustedNewsMeta.count} trusted news
-                {trustedNewsMeta.sourceNames.length > 0 ? ` from ${Array.from(new Set(trustedNewsMeta.sourceNames)).join(' + ')}` : ''}
+      <div className="pointer-events-none fixed left-3 right-3 top-4 z-[12] flex justify-center md:left-[17rem] md:right-6">
+        <div className="pointer-events-auto w-full max-w-5xl rounded-[1.2rem] border border-white/14 bg-[linear-gradient(128deg,rgba(6,12,22,0.82),rgba(8,18,30,0.72))] p-3 text-white shadow-[0_20px_60px_-36px_rgba(0,0,0,0.95)] backdrop-blur-xl">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex min-w-[260px] flex-1 flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-white/88">
+                <Sparkles className="h-3.5 w-3.5 text-amber-200" />
+                Community atlas
               </span>
-            </>
-          )}
-          {warnings.length > 0 && (
-            <>
-              <span className="h-1 w-1 rounded-full bg-white/20" />
-              <span className="text-amber-200/85">{warnings.join(' ')}</span>
-            </>
-          )}
-          <span className="h-1 w-1 rounded-full bg-white/20" />
-          {authLoading ? (
-            <span className="inline-flex items-center gap-2 text-white/60">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Checking session
-            </span>
-          ) : isAuthenticated ? (
-            <button
-              type="button"
-              onClick={openComposer}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-white transition-colors hover:border-white/20 hover:bg-white/5"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              New post
-            </button>
-          ) : (
-            <Link
-              href={authHref}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-white transition-colors hover:border-white/20 hover:bg-white/5"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Sign in to post
-            </Link>
-          )}
-          <button
-            type="button"
-            onClick={() => void loadFeed()}
-            disabled={isLoading}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-white transition-colors hover:border-white/20 hover:bg-white/5 disabled:cursor-wait disabled:opacity-60"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
-        </div>
-      </div>
 
-      {!hasPosts && (
-        <div className="absolute inset-0 z-[11] flex items-center justify-center px-4">
-          <div className={`w-full ${showUniverseFallback ? 'max-w-6xl' : 'max-w-xl'} rounded-[2rem] border border-white/10 bg-black/65 p-8 text-white shadow-2xl backdrop-blur-xl`}>
-            {isLoading ? (
-              <>
-                <p className="mb-3 text-xs uppercase tracking-[0.24em] text-white/45">Loading</p>
-                <h1 className="mb-4 text-3xl font-semibold">Syncing the floating community feed</h1>
-                <p className="text-sm leading-relaxed text-white/70">
-                  The gallery is pulling live articles and stories now. Once public posts are available,
-                  the grid will populate without switching layouts.
-                </p>
-              </>
-            ) : loadError ? (
-              <>
-                <div className="mb-3 inline-flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-amber-200/80">
-                  <AlertCircle className="h-4 w-4" />
-                  Feed unavailable
-                </div>
-                <h1 className="mb-4 text-3xl font-semibold">Community is up, but its live data is not.</h1>
-                <p className="text-sm leading-relaxed text-white/70">
-                  Both the articles and stories sources failed to return data. The floating grid is being
-                  held back, but the ontology stays visible through a deterministic local universe packet below.
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="mb-3 text-xs uppercase tracking-[0.24em] text-white/45">Live feed</p>
-                <h1 className="mb-4 text-3xl font-semibold">No public community posts yet</h1>
-                <p className="text-sm leading-relaxed text-white/70">
-                  The floating gallery is ready, but there are no published public stories or articles to
-                  display yet. In local and dev modes, a deterministic universe packet keeps the community surface alive.
-                </p>
-              </>
-            )}
+              <span
+                className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${
+                  showingDemoGallery
+                    ? 'border border-amber-300/30 bg-amber-300/14 text-amber-100'
+                    : 'border border-emerald-300/30 bg-emerald-300/14 text-emerald-100'
+                }`}
+              >
+                {showingDemoGallery ? 'Demo gallery active' : 'Live gallery active'}
+              </span>
 
-            {showUniverseFallback ? <CommunityUniverseFallback loadError={loadError} /> : null}
+              {isLoading ? (
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/28 px-3 py-1 text-xs text-white/72">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Syncing feed
+                </span>
+              ) : (
+                <span className="inline-flex rounded-full border border-white/10 bg-black/26 px-3 py-1 text-xs text-white/72">
+                  {posts.length} live posts · {trustedNewsMeta.count} trusted news
+                </span>
+              )}
 
-            <div className="mt-6 flex flex-wrap gap-3">
-              {loadError ? (
+              {warningMessage ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/26 bg-amber-300/10 px-3 py-1 text-xs text-amber-100/90">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  {warningMessage}
+                </span>
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {showUniverseFallback ? (
                 <button
                   type="button"
-                  onClick={() => void loadFeed()}
-                  disabled={isLoading}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-black transition hover:bg-white/90 disabled:cursor-wait disabled:opacity-70"
+                  onClick={() => setShowFallbackPacket((open) => !open)}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/22 hover:bg-white/12"
                 >
-                  <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                  Refresh feed
+                  {showFallbackPacket ? 'Hide map packet' : 'Open map packet'}
                 </button>
+              ) : null}
+
+              {authLoading ? (
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/26 px-3 py-1.5 text-xs text-white/65">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Session
+                </span>
               ) : isAuthenticated ? (
                 <button
                   type="button"
                   onClick={openComposer}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-black transition hover:bg-white/90"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/14 bg-white/8 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/24 hover:bg-white/14"
                 >
-                  <Plus className="h-4 w-4" />
-                  Create the first post
+                  <Plus className="h-3.5 w-3.5" />
+                  New post
                 </button>
               ) : (
                 <Link
                   href={authHref}
-                  className="inline-flex items-center rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-white transition hover:border-white/30 hover:bg-white/5"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/14 bg-white/8 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/24 hover:bg-white/14"
                 >
-                  Sign in to publish
+                  <Plus className="h-3.5 w-3.5" />
+                  Sign in to post
                 </Link>
               )}
+
+              <button
+                type="button"
+                onClick={() => void loadFeed()}
+                disabled={isLoading}
+                className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/22 hover:bg-white/12 disabled:cursor-wait disabled:opacity-60"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      <div className="fixed bottom-5 right-5 z-[12]">
+      {fallbackPacketVisible ? (
+        <div className="pointer-events-none fixed bottom-20 left-4 right-4 z-[13] flex justify-center md:left-[17rem] md:right-6">
+          <div className="pointer-events-auto w-full max-w-6xl rounded-[1.45rem] border border-white/14 bg-[linear-gradient(135deg,rgba(7,12,22,0.95),rgba(7,14,25,0.94))] p-4 shadow-[0_28px_80px_-34px_rgba(0,0,0,0.95)] backdrop-blur-xl">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-white/86">
+              <p className="text-xs uppercase tracking-[0.2em]">Fallback constellation packet</p>
+              <button
+                type="button"
+                onClick={() => setShowFallbackPacket(false)}
+                className="rounded-full border border-white/14 bg-white/7 px-3 py-1 text-xs text-white transition-colors hover:bg-white/14"
+              >
+                Hide
+              </button>
+            </div>
+            <CommunityUniverseFallback loadError={loadError} />
+          </div>
+        </div>
+      ) : null}
+
+      <div className="fixed bottom-5 right-5 z-[12] hidden sm:block">
         {authLoading ? (
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/60 px-4 py-3 text-sm text-white/60 backdrop-blur-md">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/60 px-4 py-3 text-sm text-white/68 backdrop-blur-md">
             <Loader2 className="h-4 w-4 animate-spin" />
             Checking session
           </div>
@@ -386,7 +364,7 @@ function CommunityPageContent() {
           <button
             type="button"
             onClick={openComposer}
-            className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-medium text-black shadow-lg transition hover:scale-[1.02] hover:bg-white/90"
+            className="inline-flex items-center gap-2 rounded-full border border-white/14 bg-white px-4 py-3 text-sm font-medium text-black shadow-lg transition hover:scale-[1.02] hover:bg-white/92"
           >
             <Plus className="h-4 w-4" />
             Create post
@@ -394,7 +372,7 @@ function CommunityPageContent() {
         ) : (
           <Link
             href={authHref}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/60 px-4 py-3 text-sm font-medium text-white shadow-lg backdrop-blur-md transition hover:border-white/25 hover:bg-black/75"
+            className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/60 px-4 py-3 text-sm font-medium text-white shadow-lg backdrop-blur-md transition hover:border-white/25 hover:bg-black/75"
           >
             <Plus className="h-4 w-4" />
             Sign in to post
@@ -403,7 +381,7 @@ function CommunityPageContent() {
       </div>
 
       <CommunityComposerModal
-        open={isComposerOpen && isAuthenticated}
+        open={(isComposerOpen || (wantsComposer && !authLoading)) && isAuthenticated}
         onClose={closeComposer}
         onPublished={handlePublished}
       />

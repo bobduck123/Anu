@@ -1,8 +1,9 @@
 """Calendar service — shifts, availability, combined event views."""
 
 from datetime import date, time, datetime
-from app.extensions import db
-from app.models import Shift, ShiftAssignment, Availability, RecurringEvent, Event
+
+from ..extensions import db
+from ..models import Shift, ShiftAssignment, Availability, RecurringEvent, Event
 
 
 def get_combined_events(node_id: int, start: date, end: date):

@@ -10,7 +10,7 @@ export function EducationLayerShell({ children }: { children: ReactNode }) {
     <ThemeProvider defaultTheme="system" storageKey="edu-theme">
       <div className="edu-layout">
         <NavbarEdu />
-        <div className="pt-20">{children}</div>
+        <div className="pt-5">{children}</div>
       </div>
     </ThemeProvider>
   );

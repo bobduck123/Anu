@@ -13,8 +13,8 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 import json
 
 from .utils import ok, error
-from app.extensions import db
-from app.models import Node, NodeConfig, NodeDomain, User
+from ..extensions import db
+from ..models import Node, NodeConfig, NodeDomain, User
 
 admin_tenants_bp = Blueprint("admin_tenants", __name__, url_prefix="/admin/tenants")
 

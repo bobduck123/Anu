@@ -12,10 +12,10 @@ import os
 import requests
 from flask import Blueprint, jsonify, request
 
-from app.extensions import db
-from app.models import Node, NodeDomain, NodeConfig
-from app.security.alpha import alpha_jwt_required
-from app.security.policy import get_current_user
+from ..extensions import db
+from ..models import Node, NodeDomain, NodeConfig
+from ..security.alpha import alpha_jwt_required
+from ..security.policy import get_current_user
 
 domain_resolution_bp = Blueprint('domain_resolution', __name__)
 
