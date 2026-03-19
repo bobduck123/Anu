@@ -13,25 +13,27 @@ export function LayoutShell({ children }: { children: ReactNode }) {
   const isFullBleedRoute = pathname?.startsWith('/wishlist/');
 
   if (isFullBleedRoute) {
-    return <div className="min-h-screen bg-[var(--color-background)]">{children}</div>;
+    return <div className="manara-shell min-h-screen">{children}</div>;
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--color-background)]">
-      <Header onMenuToggle={() => setMobileOpen((o) => !o)} />
+    <div className="manara-shell min-h-screen flex flex-col">
+      <Header onMenuToggle={() => setMobileOpen((open) => !open)} />
       <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
 
-      {/* Main content — offset for fixed header (h-14) and sidebar (w-[240px] on md+) */}
-      <main className="flex-1 mt-14 md:ml-[240px] transition-all duration-300">
-        <div className="px-4 pt-4 md:px-8">
+      <main className="shell-main relative mt-16 flex-1 transition-all duration-500 md:ml-[248px]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(248,208,142,0.15),transparent_34%),radial-gradient(circle_at_86%_8%,rgba(52,98,145,0.16),transparent_38%)]" />
+
+        <div className="relative z-20 px-3 pt-3 md:px-8 md:pt-5">
           <SystemHealthBanner />
         </div>
-        <div className="content-wrapper">
-          {children}
-        </div>
+
+        <div className="content-wrapper relative z-10 pb-8">{children}</div>
       </main>
 
-      <Footer />
+      <div className="md:ml-[248px]">
+        <Footer />
+      </div>
     </div>
   );
 }

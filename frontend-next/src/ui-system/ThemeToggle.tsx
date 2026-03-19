@@ -15,13 +15,13 @@ export function ThemeToggle() {
   return (
     <button
       onClick={cycle}
-      className="p-2 rounded-lg hover:bg-[var(--color-muted)] transition-colors focus-ring"
+      className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-100 transition-colors hover:bg-white/10 focus-ring"
       aria-label={`Theme: ${theme}. Click to change.`}
       title={`Theme: ${theme}`}
     >
-      {theme === 'light' && <Sun className="w-5 h-5 text-[var(--color-foreground)]" />}
-      {theme === 'dark' && <Moon className="w-5 h-5 text-[var(--color-foreground)]" />}
-      {theme === 'system' && <Monitor className="w-5 h-5 text-[var(--color-foreground)]" />}
+      {theme === 'light' && <Sun className="h-5 w-5 text-slate-100" />}
+      {theme === 'dark' && <Moon className="h-5 w-5 text-slate-100" />}
+      {theme === 'system' && <Monitor className="h-5 w-5 text-slate-100" />}
     </button>
   );
 }

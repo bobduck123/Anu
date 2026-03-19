@@ -86,6 +86,8 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   /* Serif headings - Nanna Lagerman style */
@@ -94,6 +96,12 @@
     font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  p,
+  li {
+    text-wrap: pretty;
   }
 
   /* Monospace data - Asana style */
@@ -116,6 +124,19 @@
 }
 
 @layer components {
+  .manara-shell {
+    position: relative;
+    isolation: isolate;
+    background:
+      radial-gradient(circle at 18% 0%, rgba(243, 199, 123, 0.22), transparent 30%),
+      radial-gradient(circle at 86% 8%, rgba(48, 95, 146, 0.16), transparent 34%),
+      linear-gradient(180deg, #f4ecde 0%, #eee4d4 46%, #e7decd 100%);
+  }
+
+  .shell-main {
+    background: linear-gradient(180deg, rgba(255, 251, 244, 0.38) 0%, rgba(246, 240, 230, 0.18) 100%);
+  }
+
   /* Section spacing - Editorial style */
   .section-editorial {
     padding-top: 8rem;
@@ -177,12 +198,18 @@
     border-radius: 9999px;
     padding: 0.75rem 1.5rem;
     font-weight: 500;
-    transition: all 300ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-property: transform, box-shadow, background-color, color, border-color;
+    transition-duration: 300ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .btn-pill:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-pill:active {
+    transform: scale(0.96);
   }
 
   .btn-pill-primary {

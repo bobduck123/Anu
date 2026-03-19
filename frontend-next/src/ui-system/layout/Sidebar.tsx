@@ -4,9 +4,19 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Home, Users, GraduationCap, BarChart3,
-  Heart, Eye, Shield, ChevronLeft, ChevronRight, X,
-  MapPin, Sparkles, LayoutGrid,
+  Home,
+  Users,
+  GraduationCap,
+  BarChart3,
+  Heart,
+  Eye,
+  Shield,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  MapPin,
+  Sparkles,
+  LayoutGrid,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -85,6 +95,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(SIDEBAR_KEY) === 'true';
   });
+
   const { user } = useAuth();
   const tenant = useTenant();
   const pathname = usePathname();
@@ -97,13 +108,21 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
     localStorage.setItem(SIDEBAR_KEY, String(next));
   };
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   const renderNav = (isMobile: boolean) => (
-    <nav className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto py-4 space-y-6">
+    <nav className="flex h-full flex-col text-slate-100">
+      {!collapsed ? (
+        <div className="px-4 pb-3 pt-4">
+          <p className="text-[10px] uppercase tracking-[0.24em] text-[#d8c9a4]/80">Cultural pathways</p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-300/80">Navigate signals, learning, trust, and community operations.</p>
+        </div>
+      ) : null}
+
+      <div className="flex-1 space-y-6 overflow-y-auto pb-4 pt-1">
         {navSections.map((section) => {
           if (section.adminOnly && !isAdmin) return null;
+
           const visibleItems = section.items.filter(
             (item) => (!item.module || tenant.modules[item.module]) && (!item.authRequired || isAuthenticated)
           );
@@ -111,29 +130,31 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
 
           return (
             <div key={section.title}>
-              {!collapsed && (
-                <div className="px-4 mb-1 text-xs font-medium uppercase tracking-wider text-[var(--color-muted-foreground)]">
-                  {section.title}
-                </div>
-              )}
-              <div className="space-y-0.5">
+              {!collapsed ? (
+                <div className="px-4 pb-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400/90">{section.title}</div>
+              ) : null}
+
+              <div className="space-y-1">
                 {visibleItems.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
+
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       onClick={isMobile ? onMobileClose : undefined}
                       title={collapsed ? item.label : undefined}
-                      className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg mx-2 transition-colors ${
+                      className={`group mx-2 inline-flex min-h-10 w-[calc(100%-1rem)] items-center rounded-xl border px-3 py-2 text-sm transition-colors ${
+                        collapsed ? 'justify-center' : 'gap-3'
+                      } ${
                         active
-                          ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
-                          : 'text-[var(--color-foreground)] hover:bg-[var(--color-muted)]'
+                          ? 'border-[#48668a] bg-[linear-gradient(115deg,rgba(38,74,118,0.95),rgba(25,43,74,0.95))] text-white shadow-[0_14px_28px_-20px_rgba(243,199,123,0.9)]'
+                          : 'border-transparent text-slate-200/90 hover:border-white/10 hover:bg-white/[0.06] hover:text-white'
                       }`}
                     >
-                      <Icon className="w-5 h-5 flex-shrink-0" />
-                      {!collapsed && <span>{item.label}</span>}
+                      <Icon className="h-[18px] w-[18px] shrink-0" />
+                      {!collapsed ? <span className="truncate">{item.label}</span> : null}
                     </Link>
                   );
                 })}
@@ -143,53 +164,50 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         })}
       </div>
 
-      {/* Collapse toggle (desktop only) */}
-      {!isMobile && (
-        <div className="p-3 border-t border-[var(--color-border)]">
+      {!isMobile ? (
+        <div className="border-t border-white/10 p-3">
           <button
             onClick={toggle}
-            className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-[var(--color-muted)] transition-colors text-[var(--color-muted-foreground)]"
+            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 transition-colors hover:bg-white/[0.08] hover:text-white"
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+            {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
           </button>
         </div>
-      )}
+      ) : null}
     </nav>
   );
 
   return (
     <>
-      {/* Desktop sidebar */}
       <aside
-        className={`hidden md:flex flex-col fixed top-14 left-0 bottom-0 z-30 bg-[var(--color-card)] border-r border-[var(--color-border)] transition-all duration-300 ${
-          collapsed ? 'w-[56px]' : 'w-[240px]'
+        className={`fixed bottom-0 left-0 top-16 z-30 hidden border-r border-[#304860]/85 bg-[linear-gradient(180deg,rgba(11,20,33,0.98),rgba(15,29,45,0.97)_48%,rgba(14,23,37,0.98))] shadow-[inset_-1px_0_0_rgba(255,255,255,0.06)] md:flex md:flex-col ${
+          collapsed ? 'w-[72px]' : 'w-[248px]'
         }`}
       >
         {renderNav(false)}
       </aside>
 
-      {/* Mobile drawer */}
-      {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/50" onClick={onMobileClose} />
-          <aside className="absolute top-0 left-0 bottom-0 w-[280px] bg-[var(--color-card)] shadow-xl flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
-              <span className="font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--font-serif)' }}>
+      {mobileOpen ? (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-sm" onClick={onMobileClose} />
+          <aside className="absolute bottom-0 left-0 top-0 flex w-[292px] flex-col border-r border-[#304860]/85 bg-[linear-gradient(180deg,rgba(11,20,33,0.98),rgba(15,29,45,0.97)_48%,rgba(14,23,37,0.98))] shadow-[20px_0_44px_-28px_rgba(0,0,0,0.95)]">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
+              <span className="text-base font-semibold text-white" style={{ fontFamily: 'var(--font-serif)' }}>
                 {tenant.name}
               </span>
               <button
                 onClick={onMobileClose}
-                className="p-1 rounded-lg hover:bg-[var(--color-muted)]"
+                className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-100 transition-colors hover:bg-white/[0.1]"
                 aria-label="Close menu"
               >
-                <X className="w-5 h-5" />
+                <X className="h-5 w-5" />
               </button>
             </div>
             {renderNav(true)}
           </aside>
         </div>
-      )}
+      ) : null}
     </>
   );
 }
