@@ -20,6 +20,21 @@ function resolveServerSiteUrl(): string | null {
   return null;
 }
 
+function getExplicitOrigin(
+  serverValue: string | undefined,
+  explicitValue: string | undefined,
+): string | null {
+  if (serverValue && serverValue.trim()) {
+    return trimTrailingSlash(serverValue.trim());
+  }
+
+  if (explicitValue && explicitValue.trim()) {
+    return trimTrailingSlash(explicitValue.trim());
+  }
+
+  return null;
+}
+
 function resolveBase(
   explicitValue: string | undefined,
   serverValue: string | undefined,
@@ -56,6 +71,13 @@ export function getCoreApiBase(options: BaseOptions = {}): string {
     '/_core',
     'http://localhost:5000',
     options,
+  );
+}
+
+export function getCoreApiOrigin(): string | null {
+  return getExplicitOrigin(
+    process.env.CORE_API_ORIGIN || process.env.BACKEND_ORIGIN,
+    process.env.NEXT_PUBLIC_API_BASE,
   );
 }
 

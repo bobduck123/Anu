@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useDeferredValue, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ArrowRight, Layers3, RefreshCw, Search, SlidersHorizontal, X } from 'lucide-react';
+import { ArrowRight, Layers3, RefreshCw, Search, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 import { MapResource } from '@/lib/api/educationMaps';
 import { EducationMapUniverseExplainer } from './EducationMapUniverseExplainer';
 import { EducationMapUniverseScene } from './EducationMapUniverseScene';
@@ -68,6 +68,8 @@ function EmptyViewerState({
   );
 }
 
+type ImmersivePanel = 'controls' | 'index' | 'inspector';
+
 export function FalakMapViewer({
   map,
   loading = false,
@@ -84,21 +86,24 @@ export function FalakMapViewer({
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
   const [compareNodeIds, setCompareNodeIds] = useState<string[]>([]);
-  const [showControls, setShowControls] = useState(false);
-  const [showIndexPanel, setShowIndexPanel] = useState(false);
-  const [showInspector, setShowInspector] = useState(false);
+  const [activePanel, setActivePanel] = useState<ImmersivePanel | null>(null);
   const deferredSearch = useDeferredValue(search);
 
   useEffect(() => {
     if (!map) {
       setActiveNodeId(null);
       setCompareNodeIds([]);
+      setActivePanel(null);
       return;
     }
 
     const fallbackNodeId = immersive ? null : sortNodesByImportance(map.nodes)[0]?.id ?? null;
     setActiveNodeId((current) => (current && map.nodes.some((node) => node.id === current) ? current : fallbackNodeId));
     setCompareNodeIds((current) => current.filter((nodeId) => map.nodes.some((node) => node.id === nodeId)));
+
+    if (!immersive) {
+      setActivePanel(null);
+    }
   }, [map, immersive]);
 
   const filteredNodes = useMemo(() => {
@@ -124,7 +129,7 @@ export function FalakMapViewer({
   const openInspectorForNode = (nodeId: string) => {
     setActiveNodeId(nodeId);
     if (immersive) {
-      setShowInspector(true);
+      setActivePanel('inspector');
     }
   };
 
@@ -157,6 +162,10 @@ export function FalakMapViewer({
     () => packet?.stars.find((star) => star.id === activeNode?.id) ?? null,
     [activeNode?.id, packet],
   );
+
+  const controlsPanelOpen = activePanel === 'controls';
+  const indexPanelOpen = activePanel === 'index';
+  const inspectorPanelOpen = activePanel === 'inspector' && Boolean(activeStar);
 
   const toggleCompareNode = (nodeId: string) => {
     setCompareNodeIds((current) => {
@@ -194,6 +203,27 @@ export function FalakMapViewer({
     const activeOutgoingEdges = activeNode
       ? map.edges.filter((edge) => edge.sourceId === activeNode.id).slice(0, 6)
       : [];
+    const showSelectionHint = !activeNode && !controlsPanelOpen && !indexPanelOpen;
+    const edgeDockButtonClass =
+      'inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/14 bg-black/45 text-slate-100 shadow-[0_18px_36px_-24px_rgba(0,0,0,0.85)] backdrop-blur-xl transition-colors hover:bg-black/60';
+
+    const togglePanel = (panel: ImmersivePanel) => {
+      setActivePanel((current) => (current === panel ? null : panel));
+    };
+
+    const toggleInspectorPanel = () => {
+      if (!activeNode) {
+        return;
+      }
+
+      if (inspectorPanelOpen) {
+        setActivePanel(null);
+        setActiveNodeId(null);
+        return;
+      }
+
+      setActivePanel('inspector');
+    };
 
     return (
       <section className="relative h-full min-h-[calc(100dvh-4rem)] overflow-hidden border border-slate-900/70 bg-[#02060d] md:rounded-[1.3rem]">
@@ -207,49 +237,92 @@ export function FalakMapViewer({
         />
 
         <div className="pointer-events-none absolute inset-0 z-20">
-          <div className="pointer-events-auto absolute left-3 top-3 flex flex-wrap items-center gap-2">
+          <div className="pointer-events-auto absolute right-3 top-1/2 z-30 hidden -translate-y-1/2 flex-col gap-2 md:flex">
             <button
               type="button"
-              onClick={() => setShowControls((value) => !value)}
-              className="inline-flex min-h-10 items-center rounded-full border border-white/16 bg-black/35 px-4 text-xs font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur-xl transition-colors hover:bg-black/50"
+              onClick={() => togglePanel('controls')}
+              className={edgeDockButtonClass}
+              aria-label={controlsPanelOpen ? 'Hide universe controls' : 'Show universe controls'}
+              title={controlsPanelOpen ? 'Hide universe controls' : 'Show universe controls'}
             >
-              {showControls ? 'Hide controls' : 'Universe controls'}
+              <SlidersHorizontal className="h-4.5 w-4.5" />
             </button>
             <button
               type="button"
-              onClick={() => setShowIndexPanel((value) => !value)}
-              className="inline-flex min-h-10 items-center rounded-full border border-white/16 bg-black/35 px-4 text-xs font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur-xl transition-colors hover:bg-black/50"
+              onClick={() => togglePanel('index')}
+              className={edgeDockButtonClass}
+              aria-label={indexPanelOpen ? 'Hide star index' : 'Show star index'}
+              title={indexPanelOpen ? 'Hide star index' : 'Show star index'}
             >
-              {showIndexPanel ? 'Hide index' : 'Star index'}
+              <Layers3 className="h-4.5 w-4.5" />
             </button>
-            {activeNode ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setShowInspector((value) => !value);
-                  if (showInspector) {
-                    setActiveNodeId(null);
-                  }
-                }}
-                className="inline-flex min-h-10 items-center rounded-full border border-white/16 bg-black/35 px-4 text-xs font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur-xl transition-colors hover:bg-black/50"
-              >
-                {showInspector ? 'Hide explainer' : 'Open explainer'}
-              </button>
-            ) : null}
+            <button
+              type="button"
+              onClick={toggleInspectorPanel}
+              disabled={!activeNode}
+              className={`${edgeDockButtonClass} ${!activeNode ? 'cursor-not-allowed opacity-45' : ''}`}
+              aria-label={inspectorPanelOpen ? 'Hide explainer' : 'Show explainer'}
+              title={activeNode ? (inspectorPanelOpen ? 'Hide explainer' : 'Show explainer') : 'Select a star first'}
+            >
+              <Sparkles className="h-4.5 w-4.5" />
+            </button>
             {onRetry ? (
               <button
                 type="button"
                 onClick={onRetry}
-                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-white/16 bg-black/35 px-4 text-xs font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur-xl transition-colors hover:bg-black/50"
+                className={edgeDockButtonClass}
+                aria-label="Refresh universe"
+                title="Refresh universe"
               >
-                <RefreshCw className="h-3.5 w-3.5" />
-                Refresh
+                <RefreshCw className="h-4.5 w-4.5" />
               </button>
             ) : null}
           </div>
 
-          {showControls ? (
-            <div className="pointer-events-auto absolute left-3 top-16 w-[min(36rem,92vw)] space-y-3 rounded-[1.2rem] border border-white/14 bg-[linear-gradient(160deg,rgba(6,12,24,0.95),rgba(5,10,19,0.92))] p-4 text-slate-100 shadow-[0_28px_70px_-24px_rgba(0,0,0,0.88)] backdrop-blur-xl">
+          <div className="pointer-events-auto absolute inset-x-3 bottom-3 z-30 flex items-center justify-center md:hidden">
+            <div className="inline-flex items-center gap-1 rounded-full border border-white/14 bg-black/45 px-1.5 py-1.5 backdrop-blur-xl shadow-[0_18px_36px_-24px_rgba(0,0,0,0.85)]">
+              <button
+                type="button"
+                onClick={() => togglePanel('controls')}
+                className="inline-flex min-h-10 items-center gap-1 rounded-full border border-white/12 bg-white/5 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-100"
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                Controls
+              </button>
+              <button
+                type="button"
+                onClick={() => togglePanel('index')}
+                className="inline-flex min-h-10 items-center gap-1 rounded-full border border-white/12 bg-white/5 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-100"
+              >
+                <Layers3 className="h-3.5 w-3.5" />
+                Index
+              </button>
+              <button
+                type="button"
+                onClick={toggleInspectorPanel}
+                disabled={!activeNode}
+                className={`inline-flex min-h-10 items-center gap-1 rounded-full border border-white/12 bg-white/5 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-100 ${
+                  !activeNode ? 'opacity-45' : ''
+                }`}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Explainer
+              </button>
+              {onRetry ? (
+                <button
+                  type="button"
+                  onClick={onRetry}
+                  className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-full border border-white/12 bg-white/5 px-2 text-slate-100"
+                  aria-label="Refresh universe"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          {controlsPanelOpen ? (
+            <div className="pointer-events-auto absolute inset-x-3 bottom-16 max-h-[62vh] overflow-y-auto rounded-[1.2rem] border border-white/14 bg-[linear-gradient(160deg,rgba(6,12,24,0.95),rgba(5,10,19,0.92))] p-4 text-slate-100 shadow-[0_28px_70px_-24px_rgba(0,0,0,0.88)] backdrop-blur-xl md:bottom-auto md:left-3 md:right-auto md:top-16 md:max-h-[calc(100%-6rem)] md:w-[min(36rem,56vw)]">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.2em] text-slate-300/80">{eyebrowLabel}</p>
@@ -309,8 +382,8 @@ export function FalakMapViewer({
             </div>
           ) : null}
 
-          {showIndexPanel ? (
-            <aside className="pointer-events-auto absolute bottom-3 left-3 top-[4.5rem] w-[min(30rem,92vw)] overflow-hidden rounded-[1.3rem] border border-white/14 bg-[linear-gradient(180deg,rgba(6,11,22,0.95),rgba(4,8,16,0.94))] shadow-[0_28px_70px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+          {indexPanelOpen ? (
+            <aside className="pointer-events-auto absolute inset-x-3 bottom-16 max-h-[62vh] overflow-hidden rounded-[1.3rem] border border-white/14 bg-[linear-gradient(180deg,rgba(6,11,22,0.95),rgba(4,8,16,0.94))] shadow-[0_28px_70px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl md:bottom-3 md:left-3 md:top-[4.5rem] md:w-[min(30rem,42vw)] md:max-h-none">
               <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Universe index</p>
@@ -318,7 +391,7 @@ export function FalakMapViewer({
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShowIndexPanel(false)}
+                  onClick={() => setActivePanel((current) => (current === 'index' ? null : current))}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/12 bg-white/6 text-slate-300 transition-colors hover:bg-white/12 hover:text-white"
                   aria-label="Close star index"
                 >
@@ -424,13 +497,13 @@ export function FalakMapViewer({
             </aside>
           ) : null}
 
-          {showInspector && activeStar ? (
-            <aside className="pointer-events-auto absolute inset-x-3 bottom-3 max-h-[58vh] overflow-hidden rounded-[1.3rem] border border-white/16 bg-[linear-gradient(180deg,rgba(5,10,20,0.96),rgba(3,8,15,0.94))] shadow-[0_30px_80px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl md:inset-y-3 md:left-auto md:right-3 md:w-[min(32rem,33vw)] md:max-h-none">
+          {inspectorPanelOpen ? (
+            <aside className="pointer-events-auto absolute inset-x-3 bottom-16 max-h-[68vh] overflow-hidden rounded-[1.3rem] border border-white/16 bg-[linear-gradient(180deg,rgba(5,10,20,0.96),rgba(3,8,15,0.94))] shadow-[0_30px_80px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl md:inset-y-3 md:left-auto md:right-3 md:w-[min(32rem,33vw)] md:max-h-none">
               <div className="h-full overflow-y-auto">
                 <EducationMapUniverseExplainer
                   star={activeStar}
                   onClose={() => {
-                    setShowInspector(false);
+                    setActivePanel(null);
                     setActiveNodeId(null);
                   }}
                   className="rounded-none border-0 shadow-none"
@@ -462,8 +535,8 @@ export function FalakMapViewer({
             </aside>
           ) : null}
 
-          {!activeNode ? (
-            <div className="pointer-events-none absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-white/14 bg-black/45 px-4 py-2 text-xs text-slate-200 backdrop-blur-xl">
+          {showSelectionHint ? (
+            <div className="pointer-events-none absolute bottom-20 left-1/2 -translate-x-1/2 rounded-full border border-white/14 bg-black/45 px-4 py-2 text-xs text-slate-200 backdrop-blur-xl md:bottom-5">
               Select a star to open the floating explainer.
             </div>
           ) : null}

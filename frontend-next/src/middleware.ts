@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateSupabaseSession } from '@/lib/supabase/middleware';
+import { getCoreApiOrigin } from '@/lib/runtime';
 
 /**
  * Multi-tenant white-label middleware for domain-based tenant resolution
@@ -148,10 +149,12 @@ export async function middleware(request: NextRequest) {
   }
 
   // This is a custom domain - resolve tenant
-  const apiBase =
-    process.env.CORE_API_ORIGIN ||
-    process.env.NEXT_PUBLIC_CORE_API_URL ||
-    'https://api.anu.eco';
+  const apiBase = getCoreApiOrigin();
+  if (!apiBase) {
+    console.warn('[middleware] CORE_API_ORIGIN is not configured; skipping custom-domain tenant resolution.');
+    return supabaseResponse;
+  }
+
   const tenantInfo = await resolveTenantFromDomain(hostname, apiBase);
 
   if (!tenantInfo) {

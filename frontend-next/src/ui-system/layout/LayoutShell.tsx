@@ -19,12 +19,20 @@ export function LayoutShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="manara-shell min-h-screen flex flex-col">
-      <Header onMenuToggle={() => setMobileOpen((open) => !open)} />
-      <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
+      <Header
+        onMenuToggle={() => setMobileOpen((open) => !open)}
+        menuOpen={mobileOpen}
+        showMenuToggleDesktop={isImmersiveUniverseRoute}
+      />
+      <Sidebar
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+        immersive={isImmersiveUniverseRoute}
+      />
 
       <main
-        className={`shell-main relative mt-16 flex-1 transition-all duration-500 md:ml-[248px] ${
-          isImmersiveUniverseRoute ? 'overflow-hidden' : ''
+        className={`shell-main relative mt-16 flex-1 transition-all duration-500 ${
+          isImmersiveUniverseRoute ? 'overflow-hidden' : 'md:ml-[248px]'
         }`}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(248,208,142,0.15),transparent_34%),radial-gradient(circle_at_86%_8%,rgba(52,98,145,0.16),transparent_38%)]" />

@@ -7,24 +7,49 @@ This module provides endpoints for:
 3. Vercel domain provisioning integration
 """
 
-from flask import Blueprint, request, jsonify, current_app
-from functools import lru_cache
+from functools import wraps
 import os
 import requests
-from datetime import datetime
+from flask import Blueprint, jsonify, request
 
 from app.extensions import db
 from app.models import Node, NodeDomain, NodeConfig
-from app.utils.auth import token_required, admin_required
+from app.security.alpha import alpha_jwt_required
+from app.security.policy import get_current_user
 
 domain_resolution_bp = Blueprint('domain_resolution', __name__)
+
+DOMAIN_ADMIN_ROLES = {'admin', 'node_admin', 'platform_admin'}
+
+
+def _require_authenticated_user():
+    user = get_current_user()
+    if not user:
+        return None, (jsonify({'error': 'Unauthorized'}), 401)
+    return user, None
+
+
+def _require_domain_admin(fn):
+    @wraps(fn)
+    @alpha_jwt_required()
+    def wrapper(*args, **kwargs):
+        user, error_response = _require_authenticated_user()
+        if error_response:
+            return error_response
+
+        if user.role not in DOMAIN_ADMIN_ROLES:
+            return jsonify({'error': 'Forbidden'}), 403
+
+        return fn(user, *args, **kwargs)
+
+    return wrapper
 
 
 # -----------------------------------------------------------------------------
 # Public Domain Resolution (called by middleware)
 # -----------------------------------------------------------------------------
 
-@domain_resolution_bp.route('/api/domains/resolve', methods=['GET'])
+@domain_resolution_bp.route('/domains/resolve', methods=['GET'])
 def resolve_domain():
     """
     Resolve a custom domain to its tenant/node configuration.
@@ -106,11 +131,15 @@ def resolve_domain():
 # Domain Management (Admin)
 # -----------------------------------------------------------------------------
 
-@domain_resolution_bp.route('/api/domains', methods=['GET'])
-@token_required
-def list_domains(current_user):
+@domain_resolution_bp.route('/domains', methods=['GET'])
+@alpha_jwt_required()
+def list_domains():
     """List all domains for the current user's node or all nodes (admin)."""
-    if current_user.role == 'admin':
+    current_user, error_response = _require_authenticated_user()
+    if error_response:
+        return error_response
+
+    if current_user.role in {'admin', 'platform_admin'}:
         domains = NodeDomain.query.all()
     elif current_user.node_id:
         domains = NodeDomain.query.filter_by(node_id=current_user.node_id).all()
@@ -132,9 +161,8 @@ def list_domains(current_user):
     })
 
 
-@domain_resolution_bp.route('/api/domains', methods=['POST'])
-@token_required
-@admin_required
+@domain_resolution_bp.route('/domains', methods=['POST'])
+@_require_domain_admin
 def add_domain(current_user):
     """
     Add a new custom domain for a node.
@@ -155,6 +183,9 @@ def add_domain(current_user):
     
     if not node_id or not domain:
         return jsonify({'error': 'node_id and domain are required'}), 400
+
+    if current_user.role == 'node_admin' and current_user.node_id != node_id:
+        return jsonify({'error': 'Forbidden'}), 403
     
     # Validate node exists
     node = Node.query.get(node_id)
@@ -194,14 +225,16 @@ def add_domain(current_user):
     }), 201
 
 
-@domain_resolution_bp.route('/api/domains/<int:domain_id>', methods=['DELETE'])
-@token_required
-@admin_required
+@domain_resolution_bp.route('/domains/<int:domain_id>', methods=['DELETE'])
+@_require_domain_admin
 def remove_domain(current_user, domain_id):
     """Remove a custom domain mapping."""
     node_domain = NodeDomain.query.get(domain_id)
     if not node_domain:
         return jsonify({'error': 'Domain not found'}), 404
+
+    if current_user.role == 'node_admin' and current_user.node_id != node_domain.node_id:
+        return jsonify({'error': 'Forbidden'}), 403
     
     # Optionally remove from Vercel
     _remove_vercel_domain(node_domain.domain)
@@ -212,14 +245,16 @@ def remove_domain(current_user, domain_id):
     return jsonify({'success': True, 'removed_domain': node_domain.domain})
 
 
-@domain_resolution_bp.route('/api/domains/<int:domain_id>/verify', methods=['POST'])
-@token_required
-@admin_required
+@domain_resolution_bp.route('/domains/<int:domain_id>/verify', methods=['POST'])
+@_require_domain_admin
 def verify_domain(current_user, domain_id):
     """Verify domain DNS configuration and TLS status."""
     node_domain = NodeDomain.query.get(domain_id)
     if not node_domain:
         return jsonify({'error': 'Domain not found'}), 404
+
+    if current_user.role == 'node_admin' and current_user.node_id != node_domain.node_id:
+        return jsonify({'error': 'Forbidden'}), 403
     
     result = _verify_vercel_domain(node_domain.domain)
     

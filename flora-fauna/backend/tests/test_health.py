@@ -57,3 +57,10 @@ def test_readiness_reports_database_failure():
     assert response.get_json()["status"] == "degraded"
     assert response.get_json()["db"] is False
     execute.assert_called_once()
+
+
+def test_domain_resolution_route_contract_is_single_prefixed():
+    routes = {rule.rule for rule in app.url_map.iter_rules()}
+
+    assert "/api/domains/resolve" in routes
+    assert "/api/api/domains/resolve" not in routes
