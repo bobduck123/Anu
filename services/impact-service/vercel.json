@@ -11,18 +11,12 @@
     "api/falak.ts": {
       "maxDuration": 60,
       "memory": 1024
+    },
+    "api/migrations.ts": {
+      "maxDuration": 300,
+      "memory": 1024
     }
   },
-  "builds": [
-    {
-      "src": "api/index.ts",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/falak.ts",
-      "use": "@vercel/node"
-    }
-  ],
   "routes": [
     {
       "src": "/v1/falak/health",
@@ -55,6 +49,10 @@
     {
       "src": "/openapi.json",
       "dest": "api/falak.ts"
+    },
+    {
+      "src": "/api/migrations",
+      "dest": "api/migrations.ts"
     },
     {
       "src": "/(.*)",
