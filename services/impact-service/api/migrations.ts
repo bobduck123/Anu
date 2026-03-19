@@ -1,4 +1,3 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
 import { execSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
@@ -6,7 +5,7 @@ import fs from 'fs';
 /**
  * Migration Management Endpoint
  * 
- * Protected endpoint to manage database migrations on Vercel.
+ * Protected endpoint to manage database migrations.
  * 
  * Usage:
  *   POST /api/migrations
@@ -18,8 +17,8 @@ import fs from 'fs';
  */
 
 interface MigrationRequest {
-  action: 'deploy' | 'status' | 'seed';
-  token?: string;
+  action: 'deploy' | 'status';
+  token: string;
 }
 
 interface MigrationResponse {
@@ -74,19 +73,46 @@ async function runMigration(action: string): Promise<string> {
 }
 
 export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse<MigrationResponse>
-): Promise<void> {
+  req: any,
+  res: any,
+) {
   // Only allow POST requests
   if (req.method !== 'POST') {
-    return res.status(405).json({
-      success: false,
-      action: 'unknown',
-      message: 'Method not allowed',
-      timestamp: new Date().toISOString(),
-      error: `Expected POST, got ${req.method}`,
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { action, token } = req.body as MigrationRequest;
+
+    // Verify authorization token
+    const migrationToken = process.env.MIGRATION_TOKEN;
+    if (!migrationToken || token !== migrationToken) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Verify required environment variables
+    if (!process.env.DATABASE_URL) {
+      return res.status(500).json({
+        error: 'DATABASE_URL environment variable not set',
+      });
+    }
+
+    if (action === 'deploy') {
+      return handleMigrationDeploy(res);
+    } else if (action === 'status') {
+      return handleMigrationStatus(res);
+    } else {
+      return res.status(400).json({ error: 'Invalid action' });
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[migrations] Error:', errorMessage);
+    return res.status(500).json({
+      error: 'Internal server error',
+      message: errorMessage,
     });
   }
+}
 
   try {
     const { action, token } = req.body as MigrationRequest;
