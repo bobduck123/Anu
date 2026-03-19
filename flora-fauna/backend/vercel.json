@@ -2,13 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "fluid": true,
-  "regions": ["syd1", "sin1"],
-  "functions": {
-    "vercel_app.py": {
-      "maxDuration": 30,
-      "memory": 512
-    }
-  },
   "routes": [
     {
       "src": "/(.*)",
