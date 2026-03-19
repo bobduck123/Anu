@@ -1,7 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "fluid": true,
-  "regions": ["syd1", "sin1"],
   "headers": [
     {
       "source": "/_next/static/(.*)",
