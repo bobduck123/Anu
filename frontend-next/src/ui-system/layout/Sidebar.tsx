@@ -88,9 +88,10 @@ const adminRoles = new Set(['node_admin', 'platform_admin', 'board_member', 'tre
 export interface SidebarProps {
   mobileOpen: boolean;
   onMobileClose: () => void;
+  immersive?: boolean;
 }
 
-export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
+export function Sidebar({ mobileOpen, onMobileClose, immersive = false }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(SIDEBAR_KEY) === 'true';
@@ -180,18 +181,25 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
 
   return (
     <>
-      <aside
-        className={`fixed bottom-0 left-0 top-16 z-30 hidden border-r border-[#304860]/85 bg-[linear-gradient(180deg,rgba(11,20,33,0.98),rgba(15,29,45,0.97)_48%,rgba(14,23,37,0.98))] shadow-[inset_-1px_0_0_rgba(255,255,255,0.06)] md:flex md:flex-col ${
-          collapsed ? 'w-[72px]' : 'w-[248px]'
-        }`}
-      >
-        {renderNav(false)}
-      </aside>
+      {!immersive ? (
+        <aside
+          className={`fixed bottom-0 left-0 top-16 z-30 hidden border-r border-[#304860]/85 bg-[linear-gradient(180deg,rgba(11,20,33,0.98),rgba(15,29,45,0.97)_48%,rgba(14,23,37,0.98))] shadow-[inset_-1px_0_0_rgba(255,255,255,0.06)] md:flex md:flex-col ${
+            collapsed ? 'w-[72px]' : 'w-[248px]'
+          }`}
+        >
+          {renderNav(false)}
+        </aside>
+      ) : null}
 
       {mobileOpen ? (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className={`fixed inset-0 z-50 ${immersive ? '' : 'md:hidden'}`}>
           <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-sm" onClick={onMobileClose} />
-          <aside className="absolute bottom-0 left-0 top-0 flex w-[292px] flex-col border-r border-[#304860]/85 bg-[linear-gradient(180deg,rgba(11,20,33,0.98),rgba(15,29,45,0.97)_48%,rgba(14,23,37,0.98))] shadow-[20px_0_44px_-28px_rgba(0,0,0,0.95)]">
+          <aside
+            id="app-sidebar-drawer"
+            className={`absolute bottom-0 left-0 top-0 flex flex-col border-r border-[#304860]/85 bg-[linear-gradient(180deg,rgba(11,20,33,0.98),rgba(15,29,45,0.97)_48%,rgba(14,23,37,0.98))] shadow-[20px_0_44px_-28px_rgba(0,0,0,0.95)] ${
+              immersive ? 'w-[320px] max-w-[92vw]' : 'w-[292px]'
+            }`}
+          >
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
               <span className="text-base font-semibold text-white" style={{ fontFamily: 'var(--font-serif)' }}>
                 {tenant.name}

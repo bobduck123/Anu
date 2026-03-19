@@ -1,5 +1,33 @@
-export function isSupabaseConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
-  return Boolean(env.NEXT_PUBLIC_SUPABASE_URL?.trim() && env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim());
+const PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || '';
+const PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || '';
+
+function getSupabasePublicEnv(env?: NodeJS.ProcessEnv): {
+  url: string;
+  anonKey: string;
+} {
+  if (env) {
+    return {
+      url: env.NEXT_PUBLIC_SUPABASE_URL?.trim() || '',
+      anonKey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || '',
+    };
+  }
+
+  if (typeof window === 'undefined' || process.env.NODE_ENV === 'test') {
+    return {
+      url: process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || '',
+      anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || '',
+    };
+  }
+
+  return {
+    url: PUBLIC_SUPABASE_URL,
+    anonKey: PUBLIC_SUPABASE_ANON_KEY,
+  };
+}
+
+export function isSupabaseConfigured(env?: NodeJS.ProcessEnv): boolean {
+  const { url, anonKey } = getSupabasePublicEnv(env);
+  return Boolean(url && anonKey);
 }
 
 export const SUPABASE_MISSING_MESSAGE = 'Supabase auth is not configured for this environment.';

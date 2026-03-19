@@ -7,6 +7,7 @@ import {
   shouldUseEducationMapsFallback,
 } from '@/lib/api/educationMaps';
 import { getFalakTenantConfiguration } from '@/lib/maps/sandbox';
+import { isSupabaseConfigured } from '@/lib/supabase/config';
 import { getFallbackEducationMap, listFallbackEducationMaps } from '@/lib/maps/fallbackMapData';
 
 const getSessionMock = vi.fn();
@@ -149,6 +150,16 @@ describe('educationMaps client', () => {
       mode: 'missing',
       tenantId: null,
     });
+  });
+
+  it('detects Supabase config from an explicit public env object', () => {
+    expect(
+      isSupabaseConfigured({
+        ...process.env,
+        NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co',
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: 'anon-key',
+      }),
+    ).toBe(true);
   });
 
   it('falls back to the legacy auth token when no Supabase session is available', async () => {

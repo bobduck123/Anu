@@ -23,6 +23,8 @@ import { ThemeToggle } from '../ThemeToggle';
 
 export interface HeaderProps {
   onMenuToggle: () => void;
+  menuOpen?: boolean;
+  showMenuToggleDesktop?: boolean;
 }
 
 type PathwayMarker = {
@@ -30,7 +32,7 @@ type PathwayMarker = {
   icon: LucideIcon;
 };
 
-export function Header({ onMenuToggle }: HeaderProps) {
+export function Header({ onMenuToggle, menuOpen = false, showMenuToggleDesktop = false }: HeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const tenant = useTenant();
   const [profileOpen, setProfileOpen] = useState(false);
@@ -94,8 +96,12 @@ export function Header({ onMenuToggle }: HeaderProps) {
           <div className="flex items-center gap-2 md:gap-3">
             <button
               onClick={onMenuToggle}
-              className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-100 transition-colors hover:bg-white/10 md:hidden"
-              aria-label="Toggle menu"
+              className={`inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-100 transition-colors hover:bg-white/10 ${
+                showMenuToggleDesktop ? '' : 'md:hidden'
+              }`}
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+              aria-controls="app-sidebar-drawer"
             >
               <Menu className="h-5 w-5" />
             </button>
