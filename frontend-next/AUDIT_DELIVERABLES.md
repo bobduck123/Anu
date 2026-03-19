@@ -36,6 +36,7 @@ _Last updated: 2026-03-19_
 ### Shell character reset (header + sidebar first)
 - [x] Replace residual "corporate dashboard" look/feel with a warmer cultural-operating identity.
 - [x] Refine spacing, hierarchy, and copy rhythm in shell chrome to feel editorial/ritual rather than SaaS.
+- [x] Soften light-theme background gradients and reduce capsule-only controls across shared shell surfaces.
 - [x] Keep accessibility and keyboard behavior intact while redesigning chrome surfaces.
 
 ### Community section solidification (using draggable gallery demo as reference)
@@ -45,8 +46,8 @@ _Last updated: 2026-03-19_
 - [x] Keep deterministic fallback universe packet available as contextual support, not a hard blocking replacement.
 
 ### Cross-route consistency
-- [ ] Audit `/home`, `/manara`, `/community`, `/education`, `/universe`, `/transparency`, `/docs`, `/contact` for consistent visual language.
-- [ ] Normalize component density, border language, and contrast cadence across primary surfaces.
+- [x] Audit `/home`, `/manara`, `/community`, `/education`, `/universe`, `/transparency`, `/docs`, `/contact` for consistent visual language.
+- [x] Normalize component density, border language, and contrast cadence across primary surfaces.
 
 ## 4) Animation / opacity / timing (address when relevant)
 - [ ] Tune transitions and opacity behavior only where needed to support overall UI feel.

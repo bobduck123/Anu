@@ -71,7 +71,7 @@ function CommunityUniverseFallback({ loadError }: { loadError: string | null }) 
               : 'No public community posts are published yet. This local packet keeps the community ontology visible while development and seeding continue.'}
           </p>
         </div>
-        <div className="rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs text-amber-100">
+        <div className="rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs text-amber-100">
           {packet.fallbackState?.label}
         </div>
       </div>
@@ -253,13 +253,13 @@ function CommunityPageContent() {
         <div className="pointer-events-auto w-full max-w-5xl rounded-[1.2rem] border border-white/14 bg-[linear-gradient(128deg,rgba(6,12,22,0.82),rgba(8,18,30,0.72))] p-3 text-white shadow-[0_20px_60px_-36px_rgba(0,0,0,0.95)] backdrop-blur-xl">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex min-w-[260px] flex-1 flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-white/88">
+              <span className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-white/6 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-white/88">
                 <Sparkles className="h-3.5 w-3.5 text-amber-200" />
                 Community atlas
               </span>
 
               <span
-                className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${
+                className={`inline-flex rounded-xl px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${
                   showingDemoGallery
                     ? 'border border-amber-300/30 bg-amber-300/14 text-amber-100'
                     : 'border border-emerald-300/30 bg-emerald-300/14 text-emerald-100'
@@ -269,18 +269,18 @@ function CommunityPageContent() {
               </span>
 
               {isLoading ? (
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/28 px-3 py-1 text-xs text-white/72">
+                <span className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-black/28 px-3 py-1 text-xs text-white/72">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   Syncing feed
                 </span>
               ) : (
-                <span className="inline-flex rounded-full border border-white/10 bg-black/26 px-3 py-1 text-xs text-white/72">
+                <span className="inline-flex rounded-xl border border-white/10 bg-black/26 px-3 py-1 text-xs text-white/72">
                   {posts.length} live posts · {trustedNewsMeta.count} trusted news
                 </span>
               )}
 
               {warningMessage ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/26 bg-amber-300/10 px-3 py-1 text-xs text-amber-100/90">
+                <span className="inline-flex items-center gap-1 rounded-xl border border-amber-300/26 bg-amber-300/10 px-3 py-1 text-xs text-amber-100/90">
                   <AlertCircle className="h-3.5 w-3.5" />
                   {warningMessage}
                 </span>
@@ -292,14 +292,14 @@ function CommunityPageContent() {
                 <button
                   type="button"
                   onClick={() => setShowFallbackPacket((open) => !open)}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/22 hover:bg-white/12"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-white/6 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/22 hover:bg-white/12"
                 >
                   {showFallbackPacket ? 'Hide map packet' : 'Open map packet'}
                 </button>
               ) : null}
 
               {authLoading ? (
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/26 px-3 py-1.5 text-xs text-white/65">
+                <span className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-black/26 px-3 py-1.5 text-xs text-white/65">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   Session
                 </span>
@@ -307,7 +307,7 @@ function CommunityPageContent() {
                 <button
                   type="button"
                   onClick={openComposer}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/14 bg-white/8 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/24 hover:bg-white/14"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/14 bg-white/8 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/24 hover:bg-white/14"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   New post
@@ -315,7 +315,7 @@ function CommunityPageContent() {
               ) : (
                 <Link
                   href={authHref}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/14 bg-white/8 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/24 hover:bg-white/14"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/14 bg-white/8 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/24 hover:bg-white/14"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Sign in to post
@@ -326,7 +326,7 @@ function CommunityPageContent() {
                 type="button"
                 onClick={() => void loadFeed()}
                 disabled={isLoading}
-                className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/22 hover:bg-white/12 disabled:cursor-wait disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-white/6 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/22 hover:bg-white/12 disabled:cursor-wait disabled:opacity-60"
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
@@ -344,7 +344,7 @@ function CommunityPageContent() {
               <button
                 type="button"
                 onClick={() => setShowFallbackPacket(false)}
-                className="rounded-full border border-white/14 bg-white/7 px-3 py-1 text-xs text-white transition-colors hover:bg-white/14"
+                className="rounded-xl border border-white/14 bg-white/7 px-3 py-1 text-xs text-white transition-colors hover:bg-white/14"
               >
                 Hide
               </button>
@@ -356,7 +356,7 @@ function CommunityPageContent() {
 
       <div className="fixed bottom-5 right-5 z-[12] hidden sm:block">
         {authLoading ? (
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/60 px-4 py-3 text-sm text-white/68 backdrop-blur-md">
+          <div className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-black/60 px-4 py-3 text-sm text-white/68 backdrop-blur-md">
             <Loader2 className="h-4 w-4 animate-spin" />
             Checking session
           </div>
@@ -364,7 +364,7 @@ function CommunityPageContent() {
           <button
             type="button"
             onClick={openComposer}
-            className="inline-flex items-center gap-2 rounded-full border border-white/14 bg-white px-4 py-3 text-sm font-medium text-black shadow-lg transition hover:scale-[1.02] hover:bg-white/92"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/14 bg-white px-4 py-3 text-sm font-medium text-black shadow-lg transition hover:scale-[1.02] hover:bg-white/92"
           >
             <Plus className="h-4 w-4" />
             Create post
@@ -372,7 +372,7 @@ function CommunityPageContent() {
         ) : (
           <Link
             href={authHref}
-            className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/60 px-4 py-3 text-sm font-medium text-white shadow-lg backdrop-blur-md transition hover:border-white/25 hover:bg-black/75"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-black/60 px-4 py-3 text-sm font-medium text-white shadow-lg backdrop-blur-md transition hover:border-white/25 hover:bg-black/75"
           >
             <Plus className="h-4 w-4" />
             Sign in to post

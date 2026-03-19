@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshCw, Sparkles } from 'lucide-react';
 import {
   getEducationMap,
@@ -15,6 +15,7 @@ import {
 } from '@/lib/maps/fallbackMapData';
 import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
 import { FalakMapViewer } from '@/components/maps/FalakMapViewer';
+import { useAuth } from '@/contexts/AuthContext';
 
 function average(values: number[]): number {
   if (values.length < 1) {
@@ -164,6 +165,7 @@ function buildCanonicalCosmos(resources: MapResource[]): MapResource | null {
 }
 
 export default function UniversePage() {
+  const { isLoading: authLoading, isAuthenticated } = useAuth();
   const [maps, setMaps] = useState<MapResource[]>([]);
   const [selectedTopicKey, setSelectedTopicKey] = useState<string>('all');
   const [loading, setLoading] = useState(true);
@@ -171,7 +173,7 @@ export default function UniversePage() {
   const [fallbackActive, setFallbackActive] = useState(false);
   const [fallbackMessage, setFallbackMessage] = useState<string | null>(null);
 
-  const loadUniverse = async () => {
+  const loadUniverse = useCallback(async () => {
     setLoading(true);
     setError(null);
     setFallbackActive(false);
@@ -233,11 +235,15 @@ export default function UniversePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
     void loadUniverse();
-  }, []);
+  }, [authLoading, isAuthenticated, loadUniverse]);
 
   useEffect(() => {
     if (selectedTopicKey === 'all') {

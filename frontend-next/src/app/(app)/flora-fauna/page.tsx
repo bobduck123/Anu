@@ -85,12 +85,12 @@ export default function FloraFaunaFeedPage() {
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-28 pb-20 space-y-8">
         {actionableError ? (
-          <div className="rounded-2xl border border-amber-300/34 bg-amber-300/12 p-5 text-amber-100">
-            <p className="text-sm font-semibold text-amber-100">{actionableError.headline}</p>
+          <div className="rounded-2xl border border-amber-300/34 bg-[linear-gradient(152deg,rgba(39,29,12,0.92),rgba(24,17,8,0.92))] p-5 text-amber-100">
+            <p className="text-sm font-semibold text-amber-200">{actionableError.headline}</p>
             <p className="mt-2 text-sm text-amber-100/92">{actionableError.detail}</p>
             <Link
               href={actionableError.fallbackHref}
-              className="mt-3 inline-flex items-center gap-2 rounded-full border border-amber-100/30 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:bg-amber-200/20"
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-amber-100/30 bg-amber-200/8 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:bg-amber-200/16"
             >
               {actionableError.fallbackLabel}
               <ArrowRight className="h-3.5 w-3.5" />
@@ -113,34 +113,34 @@ export default function FloraFaunaFeedPage() {
         ) : null}
 
         <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr] items-start">
-          <div className="card-civic overflow-hidden relative">
+          <div className="relative overflow-hidden rounded-[1.7rem] border border-white/12 bg-[linear-gradient(145deg,rgba(10,19,34,0.9),rgba(8,15,28,0.92))] p-6 text-slate-100 shadow-[0_24px_72px_-40px_rgba(0,0,0,0.95)] md:p-8">
             <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#2d5a3d_0%,#1e3a5f_45%,#d97706_100%)]" />
-            <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-forest)] bg-[var(--color-forest-light)] mb-4">
-              <Sparkles className="w-3.5 h-3.5" />
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#8fba9d]/30 bg-[#8fba9d]/16 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#d8f1e3]">
+              <Sparkles className="h-3.5 w-3.5" />
               {brand.memeticsTitle}
             </div>
             <h1
-              className="text-4xl md:text-6xl text-[var(--color-earth-dark)] max-w-4xl"
+              className="max-w-4xl text-4xl text-white md:text-6xl"
               style={{ fontFamily: 'var(--font-serif)' }}
             >
               Memes stay free.
               <br />
               Attention funds the commons.
             </h1>
-            <p className="mt-5 max-w-2xl text-lg text-[var(--color-earth-medium)] leading-relaxed">
+            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-300">
               This subsystem tracks creator channels, remix lineage, nutrient-driven ecology identity,
               and ledger-backed liquidity pools without ever turning the meme itself into merchandise.
             </p>
 
-            <div className="grid sm:grid-cols-3 gap-4 mt-8">
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
               {[
                 ['Share Policy', 'Free + forkable'],
                 ['Revenue Split', 'Creator / Platform / Pool'],
                 ['Audit Trail', 'Domain events on every major action'],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-[1.25rem] border border-[var(--color-border)] bg-white/70 px-4 py-4">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--color-earth-medium)]">{label}</p>
-                  <p className="text-lg font-semibold text-[var(--color-earth-dark)] mt-2">{value}</p>
+                <div key={label} className="rounded-[1.15rem] border border-white/12 bg-white/[0.05] px-4 py-4">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{label}</p>
+                  <p className="mt-2 text-lg font-semibold text-white">{value}</p>
                 </div>
               ))}
             </div>
@@ -173,58 +173,50 @@ export default function FloraFaunaFeedPage() {
 
             <div className="grid gap-5">
               {feed.length === 0 ? (
-                <div className="card-civic">
-                  <p className="text-[var(--color-earth-medium)]">
-                    No memes published yet, or the memetics service is unavailable.
-                  </p>
+                <div className="rounded-2xl border border-white/12 bg-[linear-gradient(152deg,rgba(8,16,29,0.9),rgba(7,13,24,0.92))] p-5 text-slate-100">
+                  <p className="text-slate-300">No memes published yet, or the memetics service is unavailable.</p>
                 </div>
               ) : feed.map((meme) => (
                 <Link
                   key={meme.id}
                   href={manaraPath(`/memes/${meme.id}`)}
-                  className="card-civic group"
-                  style={{
-                    background:
-                      'linear-gradient(135deg, rgba(255,255,255,0.98), rgba(240,244,239,0.92))',
-                  }}
+                  className="group rounded-[1.5rem] border border-white/12 bg-[linear-gradient(152deg,rgba(8,16,29,0.9),rgba(7,13,24,0.92))] p-5 text-slate-100 transition-colors hover:border-white/20"
                 >
-                  <div className="flex flex-wrap items-center gap-2 mb-4">
-                    <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold bg-[var(--color-sage-light)] text-[var(--color-forest)]">
-                      <Share2 className="w-3 h-3" />
+                  <div className="mb-4 flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-[#8fba9d]/30 bg-[#8fba9d]/16 px-3 py-1 text-xs font-semibold text-[#d8f1e3]">
+                      <Share2 className="h-3 w-3" />
                       Free meme
                     </span>
-                    <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold bg-[var(--color-institutional-light)] text-[var(--color-institutional)]">
-                      <Orbit className="w-3 h-3" />
+                    <span className="inline-flex items-center gap-1 rounded-full border border-[#8cb4de]/28 bg-[#8cb4de]/16 px-3 py-1 text-xs font-semibold text-[#d4e7fb]">
+                      <Orbit className="h-3 w-3" />
                       {meme.ecology?.ecologyIdentity || 'Awaiting ecology'}
                     </span>
                   </div>
 
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="max-w-2xl">
-                      <h3 className="text-2xl text-[var(--color-earth-dark)] group-hover:text-[var(--color-institutional)] transition-colors">
+                      <h3 className="text-2xl text-white transition-colors group-hover:text-[#f3cd92]">
                         {meme.title}
                       </h3>
-                      <p className="mt-3 text-[var(--color-earth-medium)] leading-relaxed">
+                      <p className="mt-3 leading-relaxed text-slate-300">
                         {meme.summary || 'Free cultural matter for cooperative propagation.'}
                       </p>
                     </div>
-                    <div className="rounded-[1.25rem] border border-[var(--color-border)] bg-white/80 px-4 py-4 min-w-[180px]">
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--color-earth-medium)]">
-                        Attention score
-                      </p>
-                      <p className="text-3xl font-semibold font-mono-data text-[var(--color-earth-dark)] mt-2">
+                    <div className="min-w-[180px] rounded-[1.15rem] border border-white/12 bg-white/[0.05] px-4 py-4">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Attention score</p>
+                      <p className="mt-2 text-3xl font-semibold font-mono-data text-white">
                         {Math.round(Number(meme.attentionScore || 0) * 100)}
                       </p>
                     </div>
                   </div>
 
-                  <div className="mt-6 pt-4 border-t border-[var(--color-border)] flex flex-wrap items-center justify-between gap-3 text-sm">
-                    <span className="text-[var(--color-earth-medium)]">
-                      Channel: <strong className="text-[var(--color-earth-dark)]">{meme.channel?.title}</strong>
+                  <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4 text-sm">
+                    <span className="text-slate-300">
+                      Channel: <strong className="text-white">{meme.channel?.title}</strong>
                     </span>
-                    <span className="inline-flex items-center gap-2 text-[var(--color-institutional)] font-semibold">
+                    <span className="inline-flex items-center gap-2 font-semibold text-[#f3cd92]">
                       Open meme page
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className="h-4 w-4" />
                     </span>
                   </div>
                 </Link>
@@ -234,55 +226,45 @@ export default function FloraFaunaFeedPage() {
 
           <aside className="space-y-5">
             {channel && (
-              <div className="card-civic">
-                <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-earth-medium)] mb-2">
-                  Creator Channel
-                </p>
-                <h3 className="text-2xl text-[var(--color-earth-dark)]" style={{ fontFamily: 'var(--font-serif)' }}>
+              <div className="rounded-2xl border border-white/12 bg-[linear-gradient(152deg,rgba(8,16,29,0.9),rgba(7,13,24,0.92))] p-5 text-slate-100">
+                <p className="mb-2 text-xs uppercase tracking-[0.18em] text-slate-400">Creator Channel</p>
+                <h3 className="text-2xl text-white" style={{ fontFamily: 'var(--font-serif)' }}>
                   {channel.title}
                 </h3>
-                <p className="text-[var(--color-earth-medium)] mt-3 leading-relaxed">
-                  {channel.description}
-                </p>
+                <p className="mt-3 leading-relaxed text-slate-300">{channel.description}</p>
                 <div className="mt-5 flex items-center justify-between text-sm">
-                  <span className="text-[var(--color-earth-medium)]">Share policy</span>
-                  <strong className="text-[var(--color-forest)]">{channel.sharePolicy}</strong>
+                  <span className="text-slate-400">Share policy</span>
+                  <strong className="text-[#d8f1e3]">{channel.sharePolicy}</strong>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-sm">
-                  <span className="text-[var(--color-earth-medium)]">Open moderation flags</span>
-                  <strong className="text-[var(--color-earth-dark)] font-mono-data">
-                    {channel.moderation.openFlags}
-                  </strong>
+                  <span className="text-slate-400">Open moderation flags</span>
+                  <strong className="font-mono-data text-white">{channel.moderation.openFlags}</strong>
                 </div>
               </div>
             )}
 
             {pool && (
-              <Link href={manaraPath(`/pools/${pool.id}`)} className="card-civic block">
+              <Link href={manaraPath(`/pools/${pool.id}`)} className="block rounded-2xl border border-white/12 bg-[linear-gradient(152deg,rgba(8,16,29,0.9),rgba(7,13,24,0.92))] p-5 text-slate-100 transition-colors hover:border-white/20">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-earth-medium)] mb-2">
-                      Mutual-Aid Liquidity Pool
-                    </p>
-                    <h3 className="text-2xl text-[var(--color-earth-dark)]" style={{ fontFamily: 'var(--font-serif)' }}>
+                    <p className="mb-2 text-xs uppercase tracking-[0.18em] text-slate-400">Mutual-Aid Liquidity Pool</p>
+                    <h3 className="text-2xl text-white" style={{ fontFamily: 'var(--font-serif)' }}>
                       {pool.name}
                     </h3>
                   </div>
-                  <Coins className="w-7 h-7 text-[var(--color-accent)]" />
+                  <Coins className="h-7 w-7 text-[#f3cd92]" />
                 </div>
-                <p className="text-[var(--color-earth-medium)] mt-3">{pool.description}</p>
-                <div className="mt-6 pt-4 border-t border-[var(--color-border)] flex items-end justify-between">
+                <p className="mt-3 text-slate-300">{pool.description}</p>
+                <div className="mt-6 flex items-end justify-between border-t border-white/10 pt-4">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--color-earth-medium)]">
-                      Available balance
-                    </p>
-                    <p className="text-3xl font-semibold font-mono-data text-[var(--color-earth-dark)] mt-2">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Available balance</p>
+                    <p className="mt-2 text-3xl font-semibold font-mono-data text-white">
                       ${(pool.availableBalanceCents / 100).toLocaleString()}
                     </p>
                   </div>
-                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-institutional)]">
+                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#f3cd92]">
                     Inspect ledger
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="h-4 w-4" />
                   </span>
                 </div>
               </Link>

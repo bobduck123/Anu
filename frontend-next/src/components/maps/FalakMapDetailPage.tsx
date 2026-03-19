@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import {
   getEducationMap,
@@ -11,6 +11,7 @@ import {
 } from '@/lib/api/educationMaps';
 import { getFallbackEducationMap } from '@/lib/maps/fallbackMapData';
 import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
+import { useAuth } from '@/contexts/AuthContext';
 import { FalakMapViewer } from './FalakMapViewer';
 
 interface FalakMapDetailPageProps {
@@ -18,13 +19,14 @@ interface FalakMapDetailPageProps {
 }
 
 export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
+  const { isLoading: authLoading, isAuthenticated } = useAuth();
   const [map, setMap] = useState<MapResource | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fallbackActive, setFallbackActive] = useState(false);
   const [fallbackMessage, setFallbackMessage] = useState<string | null>(null);
 
-  const loadMap = () => {
+  const loadMap = useCallback(() => {
     setLoading(true);
     setError(null);
     setFallbackActive(false);
@@ -56,11 +58,15 @@ export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
       .finally(() => {
         setLoading(false);
       });
-  };
+  }, [topicKey]);
 
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
     loadMap();
-  }, [topicKey]);
+  }, [authLoading, isAuthenticated, loadMap]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">

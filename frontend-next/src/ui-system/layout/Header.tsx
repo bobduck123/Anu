@@ -97,7 +97,7 @@ export function Header({ onMenuToggle, menuOpen = false, showMenuToggleDesktop =
           <div className="flex items-center gap-2.5 md:gap-3">
             <button
               onClick={onMenuToggle}
-              className={`inline-flex min-h-10 min-w-10 items-center justify-center rounded-full border border-white/14 bg-white/6 text-slate-100 transition-colors hover:bg-white/12 ${
+              className={`inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-white/14 bg-white/6 text-slate-100 transition-colors hover:bg-white/12 ${
                 showMenuToggleDesktop ? '' : 'md:hidden'
               }`}
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
@@ -107,7 +107,7 @@ export function Header({ onMenuToggle, menuOpen = false, showMenuToggleDesktop =
               <Menu className="h-5 w-5" />
             </button>
 
-            <Link href={homeHref} className="group inline-flex items-center gap-2.5 rounded-full px-1 py-1.5 focus-ring">
+            <Link href={homeHref} className="group inline-flex items-center gap-2.5 rounded-xl px-2 py-1.5 focus-ring">
               {tenant.logo ? (
                 <Image src={tenant.logo} alt={tenant.name} width={32} height={32} unoptimized className="rounded-full object-cover" />
               ) : (
@@ -123,7 +123,7 @@ export function Header({ onMenuToggle, menuOpen = false, showMenuToggleDesktop =
             </Link>
           </div>
 
-          <div className="hidden lg:flex items-center gap-2 rounded-full border border-white/12 bg-[linear-gradient(120deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] px-3.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <div className="hidden lg:flex items-center gap-2 rounded-lg border border-white/12 bg-[linear-gradient(120deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] px-3.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <PathwayIcon className="h-3.5 w-3.5 text-[#f5c57e]" />
             <span className="text-[10px] uppercase tracking-[0.2em] text-slate-300/85">Pathway</span>
             <span className="text-sm font-medium text-white">{pathway.label}</span>
@@ -134,7 +134,7 @@ export function Header({ onMenuToggle, menuOpen = false, showMenuToggleDesktop =
 
             {isAuthenticated ? (
               <button
-                className="hidden min-h-10 min-w-10 items-center justify-center rounded-full border border-white/12 bg-white/5 text-slate-100 transition-colors hover:bg-white/12 md:inline-flex"
+                className="hidden min-h-10 min-w-10 items-center justify-center rounded-lg border border-white/12 bg-white/5 text-slate-100 transition-colors hover:bg-white/12 md:inline-flex"
                 aria-label="Notifications"
               >
                 <Bell className="h-5 w-5" />
@@ -144,7 +144,7 @@ export function Header({ onMenuToggle, menuOpen = false, showMenuToggleDesktop =
             <div className="relative">
               <button
                 onClick={() => setProfileOpen((open) => !open)}
-                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-white/14 bg-white/6 px-2.5 py-1.5 text-slate-100 transition-colors hover:bg-white/12"
+                className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/14 bg-white/6 px-2.5 py-1.5 text-slate-100 transition-colors hover:bg-white/12"
                 aria-label={isAuthenticated ? 'Open profile menu' : 'Open sign in menu'}
                 aria-expanded={profileOpen}
                 aria-haspopup="menu"

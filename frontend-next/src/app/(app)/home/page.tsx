@@ -46,13 +46,13 @@ export default function HomePage() {
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/auth"
-                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#ecc58a]/60 bg-[#f3c77b] px-6 text-sm font-semibold text-[#1e2a3b] shadow-[0_18px_34px_-20px_rgba(243,199,123,0.85)] transition-transform duration-300 hover:-translate-y-0.5"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#ecc58a]/60 bg-[#f3c77b] px-6 text-sm font-semibold text-[#1e2a3b] shadow-[0_18px_34px_-20px_rgba(243,199,123,0.85)] transition-transform duration-300 hover:-translate-y-0.5"
                 >
                   Enter with account
                 </Link>
                 <Link
                   href="/manara"
-                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/20 bg-white/8 px-6 text-sm font-semibold text-white transition-colors hover:bg-white/14"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 bg-white/8 px-6 text-sm font-semibold text-white transition-colors hover:bg-white/14"
                 >
                   Explore Manara signals
                 </Link>

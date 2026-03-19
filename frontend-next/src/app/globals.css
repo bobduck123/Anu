@@ -81,8 +81,10 @@
 
   body {
     background:
-      radial-gradient(circle at top, rgba(243, 199, 123, 0.18), transparent 24%),
-      linear-gradient(180deg, rgba(255, 248, 235, 0.92), rgba(246, 241, 231, 1));
+      repeating-linear-gradient(140deg, rgba(37, 53, 74, 0.02) 0 2px, transparent 2px 10px),
+      radial-gradient(120% 82% at 12% -10%, rgba(243, 199, 123, 0.26), transparent 56%),
+      radial-gradient(96% 64% at 92% -6%, rgba(80, 122, 168, 0.2), transparent 52%),
+      linear-gradient(180deg, #f6efdf 0%, #f1e8d4 48%, #ece2cc 100%);
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -128,13 +130,15 @@
     position: relative;
     isolation: isolate;
     background:
-      radial-gradient(circle at 18% 0%, rgba(243, 199, 123, 0.22), transparent 30%),
-      radial-gradient(circle at 86% 8%, rgba(48, 95, 146, 0.16), transparent 34%),
-      linear-gradient(180deg, #f4ecde 0%, #eee4d4 46%, #e7decd 100%);
+      radial-gradient(circle at 16% -6%, rgba(244, 205, 138, 0.26), transparent 36%),
+      radial-gradient(circle at 88% 6%, rgba(83, 123, 168, 0.2), transparent 38%),
+      linear-gradient(180deg, #f7f1e2 0%, #f1e8d6 52%, #ebe1cd 100%);
   }
 
   .shell-main {
-    background: linear-gradient(180deg, rgba(255, 251, 244, 0.38) 0%, rgba(246, 240, 230, 0.18) 100%);
+    background:
+      radial-gradient(circle at 84% 0%, rgba(90, 133, 175, 0.12), transparent 32%),
+      linear-gradient(180deg, rgba(255, 251, 244, 0.42) 0%, rgba(244, 235, 219, 0.24) 100%);
   }
 
   /* Section spacing - Editorial style */
@@ -190,74 +194,79 @@
     box-shadow: 0 20px 40px -12px rgba(30, 58, 95, 0.3);
   }
 
-  /* Pill buttons - Cubiflow style */
+  /* Action buttons - softened slab style */
   .btn-pill {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 9999px;
-    padding: 0.75rem 1.5rem;
-    font-weight: 500;
+    border-radius: 1rem;
+    padding: 0.68rem 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
     transition-property: transform, box-shadow, background-color, color, border-color;
-    transition-duration: 300ms;
+    transition-duration: 260ms;
     transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .btn-pill:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px -14px rgba(16, 26, 41, 0.42);
   }
 
   .btn-pill:active {
-    transform: scale(0.96);
+    transform: scale(0.98);
   }
 
   .btn-pill-primary {
-    background-color: var(--color-institutional);
-    color: white;
+    background: linear-gradient(132deg, #1f3b5f, #17324d);
+    color: #fff;
+    border: 1px solid rgba(16, 38, 63, 0.36);
   }
 
   .btn-pill-primary:hover {
-    background-color: #152a45;
+    background: linear-gradient(132deg, #244a74, #1a3655);
   }
 
   .btn-pill-accent {
-    background-color: var(--color-accent);
+    background: linear-gradient(130deg, #d18d3a, #b87125);
     color: white;
+    border: 1px solid rgba(164, 99, 32, 0.36);
   }
 
   .btn-pill-accent:hover {
-    background-color: #b45309;
+    background: linear-gradient(130deg, #c88230, #ac6921);
   }
 
   .btn-pill-sage {
-    background-color: var(--color-sage);
+    background: linear-gradient(130deg, #69895a, #4f6d44);
     color: white;
+    border: 1px solid rgba(61, 90, 51, 0.34);
   }
 
   .btn-pill-sage:hover {
-    background-color: var(--color-forest);
+    background: linear-gradient(130deg, #5f8051, #45633b);
   }
 
   .btn-pill-forest {
-    background-color: var(--color-forest);
+    background: linear-gradient(130deg, #365443, #283f32);
     color: white;
+    border: 1px solid rgba(35, 55, 44, 0.34);
   }
 
   .btn-pill-forest:hover {
-    background-color: #1e4a2d;
+    background: linear-gradient(130deg, #314c3d, #23382c);
   }
 
   .btn-pill-outline {
-    background-color: transparent;
-    border: 1.5px solid var(--color-border);
+    background-color: rgba(255, 255, 255, 0.56);
+    border: 1px solid color-mix(in oklab, var(--color-border), #2a3f58 14%);
     color: var(--color-foreground);
   }
 
   .btn-pill-outline:hover {
-    border-color: var(--color-institutional);
+    border-color: color-mix(in oklab, var(--color-institutional), white 24%);
     color: var(--color-institutional);
-    background-color: var(--color-institutional-light);
+    background-color: rgba(240, 245, 250, 0.82);
   }
 
   .btn-pill-ghost {

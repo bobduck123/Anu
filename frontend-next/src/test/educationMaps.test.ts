@@ -241,6 +241,18 @@ describe('educationMaps client', () => {
     expect(getEducationMapsFallbackMessage(error)).toContain('`X-Tenant-Id`');
   });
 
+  it('treats Falak actor allowlist rejections as fallback candidates', () => {
+    const error = new EducationMapApiError(
+      'Actor is not allowed to access Falak routes',
+      403,
+      'ACTOR_NOT_ALLOWED',
+      { error: { code: 'ACTOR_NOT_ALLOWED' } },
+    );
+
+    expect(shouldUseEducationMapsFallback(error)).toBe(true);
+    expect(getEducationMapsFallbackMessage(error)).toContain('admin-only universe service');
+  });
+
   it('ships a Stanford encyclopedia fallback map with live SEP sources', () => {
     const map = getFallbackEducationMap('stanford-encyclopedia-philosophy-atlas');
 

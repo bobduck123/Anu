@@ -27,8 +27,8 @@ export default function EcologySummaryPanel({
 }: EcologySummaryPanelProps) {
   if (!ecology) {
     return (
-      <div className="card-civic">
-        <p className="text-sm text-[var(--color-earth-medium)]">
+      <div className="rounded-2xl border border-white/12 bg-[linear-gradient(152deg,rgba(8,16,29,0.9),rgba(7,13,24,0.92))] p-5 text-slate-100">
+        <p className="text-sm text-slate-300">
           No nutrient snapshots yet. Ecology identity appears after the first recompute.
         </p>
       </div>
@@ -37,47 +37,38 @@ export default function EcologySummaryPanel({
 
   return (
     <section
-      className="card-civic overflow-hidden"
-      style={{
-        background:
-          'radial-gradient(circle at top right, rgba(79,124,95,0.12), transparent 42%), linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,244,240,0.95))',
-      }}
+      className="overflow-hidden rounded-[1.7rem] border border-white/12 bg-[linear-gradient(152deg,rgba(8,16,29,0.9),rgba(7,13,24,0.92))] p-5 text-slate-100 shadow-[0_24px_72px_-40px_rgba(0,0,0,0.95)]"
     >
       <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-forest)] bg-[var(--color-forest-light)] mb-3">
-            <Leaf className="w-3.5 h-3.5" />
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#8fba9d]/30 bg-[#8fba9d]/16 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#d8f1e3]">
+            <Leaf className="h-3.5 w-3.5" />
             Computed Ecology
           </div>
-          <h3
-            className="text-2xl text-[var(--color-earth-dark)]"
-            style={{ fontFamily: 'var(--font-serif)' }}
-          >
+          <h3 className="text-2xl text-white" style={{ fontFamily: 'var(--font-serif)' }}>
             {ecology.ecologyIdentity}
           </h3>
-          <p className="text-sm text-[var(--color-earth-medium)] mt-2 max-w-xl">
+          <p className="mt-2 max-w-xl text-sm text-slate-300">
             Identity is inferred from nutrient snapshots, not fixed badges.
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3 min-w-[220px]">
-          <div className="rounded-2xl bg-white/75 border border-[var(--color-border)] px-4 py-3">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-[var(--color-earth-medium)]">
-              <Orbit className="w-3.5 h-3.5" />
+          <div className="rounded-2xl border border-white/12 bg-white/[0.05] px-4 py-3">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-slate-400">
+              <Orbit className="h-3.5 w-3.5" />
               Confidence
             </div>
-            <p className="mt-2 text-2xl font-semibold font-mono-data text-[var(--color-earth-dark)]">
+            <p className="mt-2 text-2xl font-semibold font-mono-data text-white">
               {Math.round(ecology.identityConfidence * 100)}%
             </p>
           </div>
-          <div className="rounded-2xl bg-white/75 border border-[var(--color-border)] px-4 py-3">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-[var(--color-earth-medium)]">
-              <Layers3 className="w-3.5 h-3.5" />
+          <div className="rounded-2xl border border-white/12 bg-white/[0.05] px-4 py-3">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-slate-400">
+              <Layers3 className="h-3.5 w-3.5" />
               Geology
             </div>
-            <p className="mt-2 text-lg font-semibold text-[var(--color-earth-dark)]">
-              {ecology.geology.formKey}
-            </p>
+            <p className="mt-2 text-lg font-semibold text-white">{ecology.geology.formKey}</p>
           </div>
         </div>
       </div>
@@ -88,13 +79,11 @@ export default function EcologySummaryPanel({
             const value = ecology.nutrientVector[item.key];
             return (
               <div key={item.key}>
-                <div className="flex items-center justify-between text-sm mb-1.5">
-                  <span className="text-[var(--color-earth-dark)] font-medium">{item.label}</span>
-                  <span className="font-mono-data text-[var(--color-earth-medium)]">
-                    {Math.round(value * 100)}%
-                  </span>
+                <div className="flex items-center justify-between mb-1.5 text-sm">
+                  <span className="font-medium text-slate-200">{item.label}</span>
+                  <span className="font-mono-data text-slate-400">{Math.round(value * 100)}%</span>
                 </div>
-                <div className="h-2 rounded-full bg-[var(--color-muted)] overflow-hidden">
+                <div className="h-2 overflow-hidden rounded-full bg-white/12">
                   <div
                     className="h-full rounded-full"
                     style={{
@@ -108,28 +97,22 @@ export default function EcologySummaryPanel({
           })}
         </div>
 
-        <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-white/70 p-5">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--color-earth-medium)]">
-            <Waves className="w-3.5 h-3.5" />
+        <div className="rounded-[1.5rem] border border-white/12 bg-white/[0.05] p-5">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-slate-400">
+            <Waves className="h-3.5 w-3.5" />
             Geological Form
           </div>
-          <p className="mt-3 text-[var(--color-earth-dark)] leading-relaxed">
-            {ecology.geology.strataSummary}
-          </p>
+          <p className="mt-3 leading-relaxed text-slate-200">{ecology.geology.strataSummary}</p>
 
-          <div className="grid grid-cols-3 gap-3 mt-5">
+          <div className="mt-5 grid grid-cols-3 gap-3">
             {[
               ['Permeability', ecology.geology.permeabilityIndex],
               ['Volatility', ecology.geology.volatilityIndex],
               ['Stability', ecology.geology.stabilityIndex],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-2xl bg-[var(--color-muted)] px-3 py-3 text-center">
-                <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--color-earth-medium)]">
-                  {label}
-                </p>
-                <p className="text-lg font-semibold font-mono-data text-[var(--color-earth-dark)] mt-1">
-                  {Math.round(Number(value) * 100)}%
-                </p>
+              <div key={label} className="rounded-2xl border border-white/10 bg-black/26 px-3 py-3 text-center">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-slate-400">{label}</p>
+                <p className="mt-1 text-lg font-semibold font-mono-data text-white">{Math.round(Number(value) * 100)}%</p>
               </div>
             ))}
           </div>
@@ -138,9 +121,9 @@ export default function EcologySummaryPanel({
             {ecology.dominantNutrients.map((nutrient) => (
               <span
                 key={nutrient}
-                className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold bg-[var(--color-institutional-light)] text-[var(--color-institutional)]"
+                className="inline-flex items-center gap-1 rounded-full border border-[#8cb4de]/28 bg-[#8cb4de]/16 px-3 py-1 text-xs font-semibold text-[#d4e7fb]"
               >
-                <Sprout className="w-3 h-3" />
+                <Sprout className="h-3 w-3" />
                 {nutrient}
               </span>
             ))}

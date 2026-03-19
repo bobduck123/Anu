@@ -198,6 +198,10 @@ export function SystemHealthBanner() {
       ? 'Checking core, impact, auth, and tenant readiness.'
       : 'Core, impact, auth, and tenant routing are healthy.';
 
+  if (!hasIssues) {
+    return null;
+  }
+
   const cta = tenantIndicator.state === 'degraded'
     ? {
         href: '/education/maps',
@@ -225,7 +229,7 @@ export function SystemHealthBanner() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <span
-            className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${
+            className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border ${
               hasIssues
                 ? 'border-amber-300/80 bg-amber-100/80 text-amber-700'
                 : 'border-emerald-300/80 bg-emerald-100/80 text-emerald-700'
@@ -243,7 +247,7 @@ export function SystemHealthBanner() {
           <button
             type="button"
             onClick={() => void checkServices()}
-            className="inline-flex min-h-10 items-center gap-1 rounded-full border border-current/30 bg-white/45 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/70"
+            className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-current/30 bg-white/45 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/70"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Retry
@@ -251,7 +255,7 @@ export function SystemHealthBanner() {
 
           <Link
             href={cta.href}
-            className="inline-flex min-h-10 items-center rounded-full border border-current/30 bg-white/45 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/70"
+            className="inline-flex min-h-10 items-center rounded-lg border border-current/30 bg-white/45 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/70"
           >
             {cta.label}
           </Link>
@@ -259,7 +263,7 @@ export function SystemHealthBanner() {
           <button
             type="button"
             onClick={() => setDetailsOpen((open) => !open)}
-            className="inline-flex min-h-10 items-center gap-1 rounded-full border border-current/30 bg-white/45 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/70"
+            className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-current/30 bg-white/45 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/70"
             aria-expanded={detailsOpen}
             aria-controls="system-health-details"
           >
@@ -275,7 +279,7 @@ export function SystemHealthBanner() {
             {indicators.map((indicator) => (
               <span
                 key={indicator.label}
-                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${chipClasses(indicator.state)}`}
+                className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1 text-xs font-medium ${chipClasses(indicator.state)}`}
               >
                 <span className="font-semibold">{indicator.label}</span>
                 <span>{indicator.detail}</span>

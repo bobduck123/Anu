@@ -226,6 +226,11 @@ const FALLBACK_ERROR_CODES = new Set([
   'TENANT_HEADER_REQUIRED',
   'TENANT_NOT_FOUND',
   'BETA_DEPENDENCY_MISSING',
+  'VERIFIED_ACTOR_REQUIRED',
+  'INVALID_AUTH_TOKEN',
+  'TOKEN_IDENTITY_MISSING',
+  'ACTOR_NOT_FOUND',
+  'ACTOR_NOT_ALLOWED',
 ]);
 
 export function shouldUseEducationMapsFallback(error: unknown): boolean {

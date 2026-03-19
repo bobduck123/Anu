@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { startTransition, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Compass, GitBranch, Layers3, PlusCircle, RefreshCw, Search } from 'lucide-react';
 import {
   getEducationMapsFallbackMessage,
@@ -13,9 +13,11 @@ import {
 import { listFallbackEducationMaps } from '@/lib/maps/fallbackMapData';
 import { isFalakMapSandbox } from '@/lib/maps/sandbox';
 import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
+import { useAuth } from '@/contexts/AuthContext';
 import { formatPercent, statusBadgeClass } from './presentation';
 
 export function FalakMapLibraryPage() {
+  const { isLoading: authLoading, isAuthenticated } = useAuth();
   const [maps, setMaps] = useState<MapDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +29,7 @@ export function FalakMapLibraryPage() {
   const deferredSearch = useDeferredValue(search);
   const sandbox = isFalakMapSandbox();
 
-  const loadMaps = () => {
+  const loadMaps = useCallback(() => {
     setLoading(true);
     setError(null);
     setFallbackActive(false);
@@ -56,11 +58,15 @@ export function FalakMapLibraryPage() {
       .finally(() => {
         setLoading(false);
       });
-  };
+  }, [statusFilter]);
 
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
     loadMaps();
-  }, [statusFilter]);
+  }, [authLoading, isAuthenticated, loadMaps]);
 
   const filteredMaps = useMemo(() => {
     const needle = deferredSearch.trim().toLowerCase();
