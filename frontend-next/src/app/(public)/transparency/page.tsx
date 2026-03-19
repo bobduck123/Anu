@@ -39,11 +39,11 @@ export default function TransparencyPage() {
               Reporting infrastructure is being stabilised for hosted deployment. Cultural routes remain available.
             </p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              <Link href="/docs" className="inline-flex items-center gap-1 rounded-full border border-amber-100/30 px-3 py-1.5 hover:bg-amber-200/20">
+              <Link href="/docs" className="inline-flex items-center gap-1 rounded-xl border border-amber-100/30 px-3 py-1.5 hover:bg-amber-200/20">
                 Open docs
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
-              <Link href="/governance" className="inline-flex items-center gap-1 rounded-full border border-amber-100/30 px-3 py-1.5 hover:bg-amber-200/20">
+              <Link href="/governance" className="inline-flex items-center gap-1 rounded-xl border border-amber-100/30 px-3 py-1.5 hover:bg-amber-200/20">
                 Governance center
               </Link>
             </div>

@@ -15,6 +15,7 @@ import {
 } from '@/lib/maps/fallbackMapData';
 import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
 import { FalakMapViewer } from '@/components/maps/FalakMapViewer';
+import { universePresentationTerms } from '@/components/maps/universe/presentationTerms';
 import { useAuth } from '@/contexts/AuthContext';
 
 function average(values: number[]): number {
@@ -304,20 +305,20 @@ export default function UniversePage() {
               <button
                 type="button"
                 onClick={() => void loadUniverse()}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/20 bg-white/6 px-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-100 transition-colors hover:bg-white/12"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/6 px-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-100 transition-colors hover:bg-white/12"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
-                Refresh universe
+                {`Refresh ${universePresentationTerms.universe.toLowerCase()}`}
               </button>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1">
+              <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-1">
                 <Sparkles className="h-3.5 w-3.5 text-indigo-200" />
-                {maps.length} source universes loaded
+                {maps.length} source {universePresentationTerms.domain.toLowerCase()}s loaded
               </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1">
-                Scope: {selectedTopicKey === 'all' ? 'cross-domain' : selectedTopicKey}
+              <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-1">
+                {`${universePresentationTerms.universe} scope: ${selectedTopicKey === 'all' ? 'cross-domain' : selectedTopicKey}`}
               </span>
             </div>
 
@@ -331,9 +332,9 @@ export default function UniversePage() {
         }
         footerActions={
           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
-            <span className="rounded-full border border-slate-700 px-3 py-1">Universe renderer: QuantumCanvas</span>
-            <span className="rounded-full border border-slate-700 px-3 py-1">Explainer: floating inspector</span>
-            <span className="rounded-full border border-slate-700 px-3 py-1">Source-linked stars: enabled</span>
+            <span className="rounded-xl border border-slate-700 px-3 py-1">{`${universePresentationTerms.universe} renderer: QuantumCanvas`}</span>
+            <span className="rounded-xl border border-slate-700 px-3 py-1">{`${universePresentationTerms.explainer}: floating inspector`}</span>
+            <span className="rounded-xl border border-slate-700 px-3 py-1">{`Source-linked ${universePresentationTerms.stars.toLowerCase()}: enabled`}</span>
           </div>
         }
       />

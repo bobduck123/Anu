@@ -18,6 +18,7 @@ import {
 import { UniverseExplainer } from '@/components/maps/universe/UniverseExplainer';
 import { UniverseScene } from '@/components/maps/universe/UniverseScene';
 import { getCommunityDemoUniversePacket } from '@/components/maps/universe/fallbackPackets';
+import { universePresentationTerms } from '@/components/maps/universe/presentationTerms';
 import { DraggableGallery } from '@/ui/patterns/draggable-gallery';
 import CommunityComposerModal from './CommunityComposerModal';
 
@@ -64,10 +65,10 @@ function CommunityUniverseFallback({ loadError }: { loadError: string | null }) 
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div className="max-w-2xl">
           <p className="text-xs uppercase tracking-[0.24em] text-cyan-200/75">Deterministic community packet</p>
-          <h2 className="mt-2 text-2xl font-semibold text-white">Alive fallback universe</h2>
+          <h2 className="mt-2 text-2xl font-semibold text-white">{`Alive fallback ${universePresentationTerms.universe.toLowerCase()}`}</h2>
           <p className="mt-2 text-sm leading-6 text-white/70">
             {loadError
-              ? 'Live community sources are unavailable, so this surface is rendering a deterministic local universe packet through the same scene and explainer path.'
+              ? `Live community sources are unavailable, so this surface is rendering a deterministic local ${universePresentationTerms.universePacket} through the same scene and ${universePresentationTerms.explainer.toLowerCase()} path.`
               : 'No public community posts are published yet. This local packet keeps the community ontology visible while development and seeding continue.'}
           </p>
         </div>
@@ -340,7 +341,7 @@ function CommunityPageContent() {
         <div className="pointer-events-none fixed bottom-20 left-4 right-4 z-[13] flex justify-center md:left-[17rem] md:right-6">
           <div className="pointer-events-auto w-full max-w-6xl rounded-[1.45rem] border border-white/14 bg-[linear-gradient(135deg,rgba(7,12,22,0.95),rgba(7,14,25,0.94))] p-4 shadow-[0_28px_80px_-34px_rgba(0,0,0,0.95)] backdrop-blur-xl">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-white/86">
-              <p className="text-xs uppercase tracking-[0.2em]">Fallback constellation packet</p>
+              <p className="text-xs uppercase tracking-[0.2em]">{`Fallback ${universePresentationTerms.readOnlyPacket}`}</p>
               <button
                 type="button"
                 onClick={() => setShowFallbackPacket(false)}

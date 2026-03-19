@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { ExternalLink, Layers3, Sparkles, X } from 'lucide-react';
 import { formatPercent } from '../presentation';
-import { universePresentationTerms } from './presentationTerms';
+import { labelUniverseAnchorMode, universePresentationTerms } from './presentationTerms';
 import type { UniverseStar } from './types';
 
 interface UniverseExplainerProps {
@@ -50,7 +50,7 @@ export function UniverseExplainer({ star, onClose, className }: UniverseExplaine
               {explainer.starTypeLabel}
             </span>
             <span className="rounded-full border border-white/10 bg-white/6 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/45">
-              {placement.anchorMode}
+              {labelUniverseAnchorMode(placement.anchorMode)}
             </span>
           </div>
           <h3 className="mt-3 text-xl font-semibold text-white">{explainer.title}</h3>

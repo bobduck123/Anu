@@ -34,7 +34,7 @@ function ProgramCard({ program }: ProgramCardProps) {
         <span>Depth pathway {program.depth_tier_unlocked ?? 1}</span>
         <Link
           href="/education/curriculum"
-          className="inline-flex items-center justify-center rounded-full border border-[var(--edu-border)] bg-black/22 px-3 py-1.5 text-xs font-medium text-[var(--edu-foreground)] transition hover:border-[var(--edu-accent)]/45 hover:bg-[var(--edu-accent-light)] hover:text-[var(--edu-accent)]"
+          className="inline-flex items-center justify-center rounded-lg border border-[var(--edu-border)] bg-black/22 px-3 py-1.5 text-xs font-medium text-[var(--edu-foreground)] transition hover:border-[var(--edu-accent)]/45 hover:bg-[var(--edu-accent-light)] hover:text-[var(--edu-accent)]"
         >
           Explore
         </Link>
@@ -172,7 +172,7 @@ export function EduHubDashboard() {
           </div>
           <Link
             href="/education/curriculum"
-            className="inline-flex items-center justify-center rounded-full border border-[var(--edu-border)] bg-black/22 px-4 py-2 text-sm font-medium text-[var(--edu-foreground)] transition hover:border-[var(--edu-accent)]/45 hover:bg-[var(--edu-accent-light)] hover:text-[var(--edu-accent)]"
+            className="inline-flex items-center justify-center rounded-lg border border-[var(--edu-border)] bg-black/22 px-4 py-2 text-sm font-medium text-[var(--edu-foreground)] transition hover:border-[var(--edu-accent)]/45 hover:bg-[var(--edu-accent-light)] hover:text-[var(--edu-accent)]"
           >
             Open curriculum
           </Link>

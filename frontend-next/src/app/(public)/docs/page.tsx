@@ -59,7 +59,7 @@ export default function DocsPage() {
                       <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                     </p>
                   </div>
-                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/14 bg-white/6 text-[#f3cd92]">
+                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/14 bg-white/6 text-[#f3cd92]">
                     <Icon className="h-4.5 w-4.5" />
                   </span>
                 </div>

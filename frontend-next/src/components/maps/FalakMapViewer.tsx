@@ -7,7 +7,13 @@ import { MapResource } from '@/lib/api/educationMaps';
 import { EducationMapUniverseExplainer } from './EducationMapUniverseExplainer';
 import { EducationMapUniverseScene } from './EducationMapUniverseScene';
 import { mapResourceToUniversePacket } from './educationMapUniverseAdapter';
-import { universePresentationTerms } from './universe/presentationTerms';
+import {
+  countLabel,
+  searchStarsLabel,
+  starIndexLabel,
+  universeIndexLabel,
+  universePresentationTerms,
+} from './universe/presentationTerms';
 import {
   categoryColor,
   categoryLabel,
@@ -59,7 +65,7 @@ function EmptyViewerState({
         <button
           type="button"
           onClick={onRetry}
-          className="mt-5 inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-cyan-400 hover:text-cyan-100"
+          className="mt-5 inline-flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-cyan-400 hover:text-cyan-100"
         >
           Retry
         </button>
@@ -205,7 +211,7 @@ export function FalakMapViewer({
       : [];
     const showSelectionHint = !activeNode && !controlsPanelOpen && !indexPanelOpen;
     const edgeDockButtonClass =
-      'inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/14 bg-black/45 text-slate-100 shadow-[0_18px_36px_-24px_rgba(0,0,0,0.85)] backdrop-blur-xl transition-colors hover:bg-black/60';
+      'inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/14 bg-black/45 text-slate-100 shadow-[0_18px_36px_-24px_rgba(0,0,0,0.85)] backdrop-blur-xl transition-colors hover:bg-black/60';
 
     const togglePanel = (panel: ImmersivePanel) => {
       setActivePanel((current) => (current === panel ? null : panel));
@@ -261,8 +267,12 @@ export function FalakMapViewer({
               onClick={toggleInspectorPanel}
               disabled={!activeNode}
               className={`${edgeDockButtonClass} ${!activeNode ? 'cursor-not-allowed opacity-45' : ''}`}
-              aria-label={inspectorPanelOpen ? 'Hide explainer' : 'Show explainer'}
-              title={activeNode ? (inspectorPanelOpen ? 'Hide explainer' : 'Show explainer') : 'Select a star first'}
+              aria-label={`${inspectorPanelOpen ? 'Hide' : 'Show'} ${universePresentationTerms.explainer.toLowerCase()}`}
+              title={
+                activeNode
+                  ? `${inspectorPanelOpen ? 'Hide' : 'Show'} ${universePresentationTerms.explainer.toLowerCase()}`
+                  : `Select a ${universePresentationTerms.star.toLowerCase()} first`
+              }
             >
               <Sparkles className="h-4.5 w-4.5" />
             </button>
@@ -271,8 +281,8 @@ export function FalakMapViewer({
                 type="button"
                 onClick={onRetry}
                 className={edgeDockButtonClass}
-                aria-label="Refresh universe"
-                title="Refresh universe"
+                aria-label={`Refresh ${universePresentationTerms.universe.toLowerCase()}`}
+                title={`Refresh ${universePresentationTerms.universe.toLowerCase()}`}
               >
                 <RefreshCw className="h-4.5 w-4.5" />
               </button>
@@ -280,11 +290,11 @@ export function FalakMapViewer({
           </div>
 
           <div className="pointer-events-auto absolute inset-x-3 bottom-3 z-30 flex items-center justify-center md:hidden">
-            <div className="inline-flex items-center gap-1 rounded-full border border-white/14 bg-black/45 px-1.5 py-1.5 backdrop-blur-xl shadow-[0_18px_36px_-24px_rgba(0,0,0,0.85)]">
+            <div className="inline-flex items-center gap-1 rounded-xl border border-white/14 bg-black/45 px-1.5 py-1.5 backdrop-blur-xl shadow-[0_18px_36px_-24px_rgba(0,0,0,0.85)]">
               <button
                 type="button"
                 onClick={() => togglePanel('controls')}
-                className="inline-flex min-h-10 items-center gap-1 rounded-full border border-white/12 bg-white/5 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-100"
+                className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-white/12 bg-white/5 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-100"
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Controls
@@ -292,7 +302,7 @@ export function FalakMapViewer({
               <button
                 type="button"
                 onClick={() => togglePanel('index')}
-                className="inline-flex min-h-10 items-center gap-1 rounded-full border border-white/12 bg-white/5 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-100"
+                className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-white/12 bg-white/5 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-100"
               >
                 <Layers3 className="h-3.5 w-3.5" />
                 Index
@@ -301,19 +311,19 @@ export function FalakMapViewer({
                 type="button"
                 onClick={toggleInspectorPanel}
                 disabled={!activeNode}
-                className={`inline-flex min-h-10 items-center gap-1 rounded-full border border-white/12 bg-white/5 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-100 ${
+                className={`inline-flex min-h-10 items-center gap-1 rounded-lg border border-white/12 bg-white/5 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-100 ${
                   !activeNode ? 'opacity-45' : ''
                 }`}
               >
                 <Sparkles className="h-3.5 w-3.5" />
-                Explainer
+                {universePresentationTerms.explainer}
               </button>
               {onRetry ? (
                 <button
                   type="button"
                   onClick={onRetry}
-                  className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-full border border-white/12 bg-white/5 px-2 text-slate-100"
-                  aria-label="Refresh universe"
+                  className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-white/12 bg-white/5 px-2 text-slate-100"
+                  aria-label={`Refresh ${universePresentationTerms.universe.toLowerCase()}`}
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
                 </button>
@@ -331,18 +341,21 @@ export function FalakMapViewer({
                     {map.definition.title}
                   </p>
                 </div>
-                <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusBadgeClass(map.definition.status)}`}>
+                <span className={`inline-flex items-center rounded-lg px-3 py-1 text-xs font-semibold ${statusBadgeClass(map.definition.status)}`}>
                   {map.definition.status}
                 </span>
               </div>
 
               <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-                <label className="flex min-h-10 items-center gap-2 rounded-full border border-white/12 bg-black/35 px-3 text-sm text-slate-200" aria-label="Search map stars">
+                <label
+                  className="flex min-h-10 items-center gap-2 rounded-lg border border-white/12 bg-black/35 px-3 text-sm text-slate-200"
+                  aria-label={searchStarsLabel()}
+                >
                   <Search className="h-4 w-4 text-slate-400" />
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search stars, aliases, tags..."
+                    placeholder={searchStarsLabel()}
                     className="w-full bg-transparent text-sm outline-none placeholder:text-slate-500"
                   />
                   {search.trim().length > 0 ? (
@@ -355,7 +368,7 @@ export function FalakMapViewer({
                     </button>
                   ) : null}
                 </label>
-                <label className="flex min-h-10 items-center gap-2 rounded-full border border-white/12 bg-black/35 px-3 text-sm text-slate-200">
+                <label className="flex min-h-10 items-center gap-2 rounded-lg border border-white/12 bg-black/35 px-3 text-sm text-slate-200">
                   <SlidersHorizontal className="h-4 w-4 text-slate-400" />
                   <select
                     value={categoryFilter}
@@ -373,9 +386,13 @@ export function FalakMapViewer({
               </div>
 
               <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
-                <span className="rounded-full border border-white/12 bg-white/6 px-3 py-1">{filteredNodes.length} / {map.nodes.length} stars visible</span>
-                <span className="rounded-full border border-white/12 bg-white/6 px-3 py-1">{compareNodeIds.length} comparison anchors</span>
-                <span className="rounded-full border border-white/12 bg-white/6 px-3 py-1">Coverage {formatPercent(map.definition.confidence.coverage)}</span>
+                <span className="rounded-lg border border-white/12 bg-white/6 px-3 py-1">
+                  {countLabel(filteredNodes.length, universePresentationTerms.star, universePresentationTerms.stars)} / {countLabel(map.nodes.length, universePresentationTerms.star, universePresentationTerms.stars)} visible
+                </span>
+                <span className="rounded-lg border border-white/12 bg-white/6 px-3 py-1">
+                  {countLabel(compareNodeIds.length, 'comparison anchor')}
+                </span>
+                <span className="rounded-lg border border-white/12 bg-white/6 px-3 py-1">Coverage {formatPercent(map.definition.confidence.coverage)}</span>
               </div>
 
               {headerActions ? <div className="rounded-xl border border-white/12 bg-white/[0.04] p-3">{headerActions}</div> : null}
@@ -386,14 +403,14 @@ export function FalakMapViewer({
             <aside className="pointer-events-auto absolute inset-x-3 bottom-16 max-h-[62vh] overflow-hidden rounded-[1.3rem] border border-white/14 bg-[linear-gradient(180deg,rgba(6,11,22,0.95),rgba(4,8,16,0.94))] shadow-[0_28px_70px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl md:bottom-3 md:left-3 md:top-[4.5rem] md:w-[min(30rem,42vw)] md:max-h-none">
               <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Universe index</p>
-                  <h2 className="text-sm font-semibold text-white">Star index</h2>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">{universeIndexLabel()}</p>
+                  <h2 className="text-sm font-semibold text-white">{starIndexLabel()}</h2>
                 </div>
                 <button
                   type="button"
                   onClick={() => setActivePanel((current) => (current === 'index' ? null : current))}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/12 bg-white/6 text-slate-300 transition-colors hover:bg-white/12 hover:text-white"
-                  aria-label="Close star index"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/12 bg-white/6 text-slate-300 transition-colors hover:bg-white/12 hover:text-white"
+                  aria-label={`Close ${starIndexLabel().toLowerCase()}`}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -425,7 +442,7 @@ export function FalakMapViewer({
                         <button
                           type="button"
                           onClick={() => openInspectorForNode(node.id)}
-                          className="rounded-full border border-white/16 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-100 transition-colors hover:border-cyan-300 hover:text-cyan-100"
+                          className="rounded-lg border border-white/16 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-100 transition-colors hover:border-cyan-300 hover:text-cyan-100"
                         >
                           {isActive ? 'Selected' : 'Inspect'}
                         </button>
@@ -433,7 +450,7 @@ export function FalakMapViewer({
                           type="button"
                           aria-pressed={isCompared}
                           onClick={() => toggleCompareNode(node.id)}
-                          className={`rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                          className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors ${
                             isCompared
                               ? 'bg-amber-300 text-slate-950'
                               : 'border border-white/16 text-slate-100 hover:border-amber-300 hover:text-amber-100'
@@ -536,8 +553,8 @@ export function FalakMapViewer({
           ) : null}
 
           {showSelectionHint ? (
-            <div className="pointer-events-none absolute bottom-20 left-1/2 -translate-x-1/2 rounded-full border border-white/14 bg-black/45 px-4 py-2 text-xs text-slate-200 backdrop-blur-xl md:bottom-5">
-              Select a star to open the floating explainer.
+            <div className="pointer-events-none absolute bottom-20 left-1/2 -translate-x-1/2 rounded-xl border border-white/14 bg-black/45 px-4 py-2 text-xs text-slate-200 backdrop-blur-xl md:bottom-5">
+              {`Select a ${universePresentationTerms.star.toLowerCase()} to open the floating ${universePresentationTerms.explainer.toLowerCase()}.`}
             </div>
           ) : null}
         </div>
@@ -556,11 +573,11 @@ export function FalakMapViewer({
               {map.definition.title}
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
-              {map.definition.description || 'A source-linked universe generated from semantic relationships, evidence, and curation signals.'}
+              {map.definition.description || `A source-linked ${universePresentationTerms.universe.toLowerCase()} generated from semantic relationships, evidence, and curation signals.`}
             </p>
           </div>
           <div className="flex flex-col items-start gap-2 text-xs text-slate-300">
-            <span className={`inline-flex items-center rounded-full px-3 py-1 font-semibold ${statusBadgeClass(map.definition.status)}`}>
+            <span className={`inline-flex items-center rounded-lg px-3 py-1 font-semibold ${statusBadgeClass(map.definition.status)}`}>
               {map.definition.status}
             </span>
             <span>{summarizeMap(map)}</span>
@@ -571,16 +588,16 @@ export function FalakMapViewer({
         {headerActions ? <div className="mt-5">{headerActions}</div> : null}
         <div className="mt-5 grid gap-3 md:grid-cols-3">
           <div className="rounded-[1.15rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">1. Read the universe</p>
-            <p className="mt-2 leading-6 text-slate-300">Each star is anchored by source recency, evidence, source density, and semantic placement.</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">{`1. Read the ${universePresentationTerms.universe.toLowerCase()}`}</p>
+            <p className="mt-2 leading-6 text-slate-300">{`Each ${universePresentationTerms.star.toLowerCase()} is anchored by source recency, evidence, source density, and semantic placement.`}</p>
           </div>
           <div className="rounded-[1.15rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">2. Open the explainer</p>
-            <p className="mt-2 leading-6 text-slate-300">Selection syncs the scene, the star index, and the side explainer without opening a popup.</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">{`2. Open the ${universePresentationTerms.explainer.toLowerCase()}`}</p>
+            <p className="mt-2 leading-6 text-slate-300">{`Selection syncs the scene, the ${starIndexLabel().toLowerCase()}, and the side ${universePresentationTerms.explainer.toLowerCase()} without opening a popup.`}</p>
           </div>
           <div className="rounded-[1.15rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">3. Compare constellations</p>
-            <p className="mt-2 leading-6 text-slate-300">Use filters and comparison to see how themes cluster across the wider Manara learning universe.</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">{`3. Compare ${universePresentationTerms.constellations.toLowerCase()}`}</p>
+            <p className="mt-2 leading-6 text-slate-300">{`Use filters and comparison to see how themes cluster across the wider ${universePresentationTerms.platformName} ${universePresentationTerms.universe.toLowerCase()}.`}</p>
           </div>
         </div>
       </header>
@@ -589,12 +606,15 @@ export function FalakMapViewer({
         <div className="space-y-4">
           <section className="rounded-[1.75rem] border border-slate-800 bg-slate-950/80 p-4">
             <div className="mb-4 flex flex-wrap items-center gap-3">
-              <label className="flex min-w-[14rem] flex-1 items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 text-sm text-slate-300" aria-label="Search map stars">
+              <label
+                className="flex min-w-[14rem] flex-1 items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/80 px-4 py-2 text-sm text-slate-300"
+                aria-label={searchStarsLabel('aliases, tags, summaries...')}
+              >
                 <Search className="h-4 w-4 text-slate-500" />
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search stars, aliases, tags, summaries..."
+                  placeholder={searchStarsLabel('aliases, tags, summaries...')}
                   className="w-full bg-transparent outline-none placeholder:text-slate-500"
                 />
                 {search.trim().length > 0 ? (
@@ -607,7 +627,7 @@ export function FalakMapViewer({
                   </button>
                 ) : null}
               </label>
-              <label className="flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 text-sm text-slate-300">
+              <label className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/80 px-4 py-2 text-sm text-slate-300">
                 <SlidersHorizontal className="h-4 w-4 text-slate-500" />
                 <select
                   value={categoryFilter}
@@ -631,7 +651,7 @@ export function FalakMapViewer({
               onSelectNodeId={setActiveNodeId}
             />
             <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-400">
-              <span>{filteredNodes.length} of {map.nodes.length} stars visible</span>
+              <span>{countLabel(filteredNodes.length, universePresentationTerms.star, universePresentationTerms.stars)} of {countLabel(map.nodes.length, universePresentationTerms.star, universePresentationTerms.stars)} visible</span>
               <span>{compareNodeIds.length} marked for comparison</span>
             </div>
           </section>
@@ -639,13 +659,13 @@ export function FalakMapViewer({
           <section className="rounded-[1.75rem] border border-slate-800 bg-slate-950/70 p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-white">Star index</h2>
-                <p className="text-sm text-slate-400">Search, filter, select, and compare persisted universe entities.</p>
+                <h2 className="text-lg font-semibold text-white">{starIndexLabel()}</h2>
+                <p className="text-sm text-slate-400">{`Search, filter, select, and compare persisted ${universePresentationTerms.universe.toLowerCase()} entities.`}</p>
               </div>
               {showAdminLink ? (
                 <Link
                   href={`/admin/maps?topic=${encodeURIComponent(map.definition.topicKey)}`}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-3 py-2 text-xs font-medium text-slate-200 transition hover:border-cyan-400 hover:text-cyan-100"
+                  className="inline-flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-xs font-medium text-slate-200 transition hover:border-cyan-400 hover:text-cyan-100"
                 >
                   Open admin tools
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -678,7 +698,7 @@ export function FalakMapViewer({
                     <p className="mt-3 text-sm text-slate-300">{node.summary || 'Summary pending.'}</p>
                     <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
                       {node.tags.slice(0, 4).map((tag) => (
-                        <span key={tag} className="rounded-full bg-slate-800 px-2 py-1 text-slate-300">
+                        <span key={tag} className="rounded-md bg-slate-800 px-2 py-1 text-slate-300">
                           {tag}
                         </span>
                       ))}
@@ -689,7 +709,7 @@ export function FalakMapViewer({
                         <button
                           type="button"
                           onClick={() => setActiveNodeId(node.id)}
-                          className="rounded-full border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-cyan-300 hover:text-cyan-100"
+                          className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-cyan-300 hover:text-cyan-100"
                         >
                           {isActive ? 'Selected' : 'Inspect'}
                         </button>
@@ -697,7 +717,7 @@ export function FalakMapViewer({
                           type="button"
                           aria-pressed={isCompared}
                           onClick={() => toggleCompareNode(node.id)}
-                          className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                          className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                             isCompared
                               ? 'bg-amber-300 text-slate-950'
                               : 'border border-slate-700 text-slate-200 hover:border-amber-300 hover:text-amber-200'
@@ -712,7 +732,7 @@ export function FalakMapViewer({
               })}
               {filteredNodes.length < 1 ? (
                 <div className="rounded-[1.25rem] border border-dashed border-slate-700 p-6 text-sm text-slate-400">
-                  No stars match the current filters.
+                  {`No ${universePresentationTerms.stars.toLowerCase()} match the current filters.`}
                 </div>
               ) : null}
             </div>
@@ -730,7 +750,7 @@ export function FalakMapViewer({
                 <EducationMapUniverseExplainer star={activeStar} />
               </div>
             ) : (
-              <p className="mt-4 text-sm text-slate-400">Select a star in the universe or star index.</p>
+              <p className="mt-4 text-sm text-slate-400">{`Select a ${universePresentationTerms.star.toLowerCase()} in the ${universePresentationTerms.universe.toLowerCase()} or ${starIndexLabel().toLowerCase()}.`}</p>
             )}
           </section>
 
@@ -787,7 +807,7 @@ export function FalakMapViewer({
                       );
                     })
                 ) : (
-                  <p className="mt-2 text-sm text-slate-400">Select a star to inspect its semantic links.</p>
+                  <p className="mt-2 text-sm text-slate-400">{`Select a ${universePresentationTerms.star.toLowerCase()} to inspect its semantic links.`}</p>
                 )}
               </div>
 

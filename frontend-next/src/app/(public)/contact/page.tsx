@@ -48,7 +48,7 @@ export default function ContactPage() {
               <Link
                 key={route.href}
                 href={route.href}
-                className="inline-flex items-center gap-2 rounded-full border border-white/14 bg-white/6 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-100 transition-colors hover:border-white/24 hover:bg-white/12"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/14 bg-white/6 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-100 transition-colors hover:border-white/24 hover:bg-white/12"
               >
                 {route.label}
                 <ArrowRight className="h-3.5 w-3.5" />

@@ -1,5 +1,6 @@
 import { MapResource, type MapNode } from '@/lib/api/educationMaps';
 import { categoryColor, categoryLabel } from './presentation';
+import { labelUniverseStarType } from './universe/presentationTerms';
 import {
   deriveUniversePlacement,
   hasMeaningfulCoordinates,
@@ -152,7 +153,7 @@ export function mapResourceToUniversePacket(
         summary: node.summary || 'Curator summary pending.',
         longDescription: node.longDescription,
         categoryLabel: categoryLabel(map.categories, node.categoryKey),
-        starTypeLabel: starType,
+        starTypeLabel: labelUniverseStarType(starType),
         domainLabel: options.title ?? map.definition.title,
         scopeLabel: options.scopeLabel ?? map.definition.topicKey,
         metrics: {

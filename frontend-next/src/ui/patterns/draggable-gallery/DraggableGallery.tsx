@@ -1132,8 +1132,8 @@ export function DraggableGallery({
                   <div className="absolute inset-0 border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.09),transparent_36%,rgba(0,0,0,0.34))]" />
                   <div className="absolute inset-x-0 top-0 p-4">
                     <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-[0.2em] text-white/78">
-                      <span className="max-w-[66%] truncate rounded-full border border-white/16 bg-black/36 px-2.5 py-1">{tileEyebrow(item.post)}</span>
-                      <span className="rounded-full border border-white/14 bg-black/34 px-2 py-1">{timeAgo(item.post.createdAt)}</span>
+                      <span className="max-w-[66%] truncate rounded-lg border border-white/16 bg-black/36 px-2.5 py-1">{tileEyebrow(item.post)}</span>
+                      <span className="rounded-lg border border-white/14 bg-black/34 px-2 py-1">{timeAgo(item.post.createdAt)}</span>
                     </div>
                   </div>
                   <div className="absolute inset-x-0 bottom-0 p-4">
@@ -1145,19 +1145,19 @@ export function DraggableGallery({
                         {item.post.content}
                       </p>
                       <div className="mt-3 flex items-center justify-between gap-2">
-                        <span className="max-w-[52%] truncate rounded-full border border-white/12 bg-white/7 px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-white/66">
+                        <span className="max-w-[52%] truncate rounded-lg border border-white/12 bg-white/7 px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-white/66">
                           {tilePlace(item.post)}
                         </span>
                         <div className="flex items-center gap-2 text-[10px] text-white/70">
-                          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/22 px-1.5 py-1 font-mono-data">
+                          <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/22 px-1.5 py-1 font-mono-data">
                             <Heart className="h-3 w-3" />
                             {item.post.likes}
                           </span>
-                          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/22 px-1.5 py-1 font-mono-data">
+                          <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/22 px-1.5 py-1 font-mono-data">
                             <MessageCircle className="h-3 w-3" />
                             {item.post.comments}
                           </span>
-                          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/22 px-1.5 py-1 font-mono-data">
+                          <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/22 px-1.5 py-1 font-mono-data">
                             <Share2 className="h-3 w-3" />
                             {item.post.shares}
                           </span>
@@ -1185,14 +1185,14 @@ export function DraggableGallery({
 
       {/* Sort bar */}
       <div className="pointer-events-none fixed left-4 top-[4.85rem] z-10 md:left-[17rem]">
-        <div className="pointer-events-auto inline-flex items-center gap-1 rounded-full border border-white/14 bg-[linear-gradient(140deg,rgba(6,12,22,0.78),rgba(6,14,25,0.74))] px-1.5 py-1.5 backdrop-blur-xl shadow-[0_20px_48px_-28px_rgba(0,0,0,0.95)]">
-          <span className="hidden rounded-full px-2 text-[10px] uppercase tracking-[0.18em] text-white/48 md:inline">Flow</span>
+        <div className="pointer-events-auto inline-flex items-center gap-1 rounded-xl border border-white/14 bg-[linear-gradient(140deg,rgba(6,12,22,0.78),rgba(6,14,25,0.74))] px-1.5 py-1.5 backdrop-blur-xl shadow-[0_20px_48px_-28px_rgba(0,0,0,0.95)]">
+          <span className="hidden rounded-md px-2 text-[10px] uppercase tracking-[0.18em] text-white/48 md:inline">Flow</span>
           {SORT_OPTIONS.map(({ mode, label }) => (
             <button
               key={mode}
               type="button"
               onClick={() => onSortChange(mode)}
-              className={`inline-flex min-h-9 items-center rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors ${
+              className={`inline-flex min-h-9 items-center rounded-lg px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors ${
                 sortMode === mode
                   ? 'border border-white/20 bg-white/14 text-white'
                   : 'text-white/58 hover:bg-white/10 hover:text-white'
@@ -1209,8 +1209,8 @@ export function DraggableGallery({
         className="fixed bottom-4 left-1/2 z-10 -translate-x-1/2"
         style={{ opacity: ready ? 1 : 0, transition: 'opacity 0.45s ease' }}
       >
-        <div className="inline-flex items-center gap-1 rounded-full border border-white/14 bg-[linear-gradient(138deg,rgba(6,11,20,0.86),rgba(9,16,28,0.84))] px-1.5 py-1.5 backdrop-blur-xl shadow-[0_20px_52px_-28px_rgba(0,0,0,0.95)]">
-          <span className="inline-flex min-h-10 items-center rounded-full border border-white/14 bg-white/92 px-3 text-[12px] font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+        <div className="inline-flex items-center gap-1 rounded-xl border border-white/14 bg-[linear-gradient(138deg,rgba(6,11,20,0.86),rgba(9,16,28,0.84))] px-1.5 py-1.5 backdrop-blur-xl shadow-[0_20px_52px_-28px_rgba(0,0,0,0.95)]">
+          <span className="inline-flex min-h-10 items-center rounded-lg border border-white/14 bg-white/92 px-3 text-[12px] font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
             {Math.round(currentZoom * 100)}%
           </span>
 
@@ -1219,7 +1219,7 @@ export function DraggableGallery({
               key={action.level}
               type="button"
               onClick={() => setZoom(action.level)}
-              className={`inline-flex min-h-10 items-center rounded-full px-3 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${
+              className={`inline-flex min-h-10 items-center rounded-lg px-3 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${
                 currentZoom === action.level
                   ? 'border border-white/16 bg-white/14 text-white'
                   : 'text-white/60 hover:bg-white/10 hover:text-white'
@@ -1233,7 +1233,7 @@ export function DraggableGallery({
           <button
             type="button"
             onClick={autoFitZoom}
-            className="inline-flex min-h-10 items-center rounded-full px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+            className="inline-flex min-h-10 items-center rounded-lg px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60 transition-colors hover:bg-white/10 hover:text-white"
           >
             Fit
           </button>
@@ -1245,7 +1245,7 @@ export function DraggableGallery({
         <button
           type="button"
           onClick={() => setShowCreate(true)}
-          className="fixed bottom-5 right-5 z-10 w-12 h-12 rounded-full bg-white text-black flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+          className="fixed bottom-5 right-5 z-10 flex h-12 w-12 items-center justify-center rounded-2xl border border-black/10 bg-white text-black shadow-lg transition-transform hover:scale-110"
           aria-label="Create post"
         >
           <Plus className="w-6 h-6" />
@@ -1339,7 +1339,7 @@ export function DraggableGallery({
                       {selectedPost.tags.map((tag) => (
                         <span
                           key={tag}
-                          className={`rounded-full px-3 py-1 text-[10px] font-mono uppercase ${tagClass(tag)}`}
+                          className={`rounded-lg px-3 py-1 text-[10px] font-mono uppercase ${tagClass(tag)}`}
                         >
                           #{tag}
                         </span>
@@ -1384,7 +1384,7 @@ export function DraggableGallery({
                         href={selectedPost.sourceUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex w-fit items-center rounded-full border border-white/16 bg-white/6 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-white/86 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
+                        className="inline-flex w-fit items-center rounded-xl border border-white/16 bg-white/6 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-white/86 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
                       >
                         Read Original Story
                       </a>

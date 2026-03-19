@@ -1,4 +1,5 @@
 import { deriveUniversePlacement } from './placement';
+import { labelUniverseStarType } from './presentationTerms';
 import type {
   UniverseConstellation,
   UniverseDomainContext,
@@ -67,7 +68,7 @@ function buildDemoStar(config: DemoStarConfig, constellationIds: string[]): Univ
       title: config.label,
       summary: config.summary,
       categoryLabel: config.categoryLabel,
-      starTypeLabel: config.type,
+      starTypeLabel: labelUniverseStarType(config.type),
       domainLabel: 'Manara',
       scopeLabel: config.categoryLabel,
       metrics: {

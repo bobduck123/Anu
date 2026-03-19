@@ -90,7 +90,7 @@ export default function FloraFaunaFeedPage() {
             <p className="mt-2 text-sm text-amber-100/92">{actionableError.detail}</p>
             <Link
               href={actionableError.fallbackHref}
-              className="mt-3 inline-flex items-center gap-2 rounded-full border border-amber-100/30 bg-amber-200/8 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:bg-amber-200/16"
+              className="mt-3 inline-flex items-center gap-2 rounded-xl border border-amber-100/30 bg-amber-200/8 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:bg-amber-200/16"
             >
               {actionableError.fallbackLabel}
               <ArrowRight className="h-3.5 w-3.5" />
@@ -105,9 +105,9 @@ export default function FloraFaunaFeedPage() {
               New here? Begin with Manara Signals, then review Transparency and Docs before signing in.
             </p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
-              <Link href="/manara" className="rounded-full border border-white/14 bg-white/6 px-3 py-1.5 text-slate-100 hover:bg-white/12">Manara feed</Link>
-              <Link href="/transparency" className="rounded-full border border-white/14 bg-white/6 px-3 py-1.5 text-slate-100 hover:bg-white/12">Transparency</Link>
-              <Link href="/docs" className="rounded-full border border-white/14 bg-white/6 px-3 py-1.5 text-slate-100 hover:bg-white/12">Docs</Link>
+              <Link href="/manara" className="rounded-xl border border-white/14 bg-white/6 px-3 py-1.5 text-slate-100 hover:bg-white/12">Manara feed</Link>
+              <Link href="/transparency" className="rounded-xl border border-white/14 bg-white/6 px-3 py-1.5 text-slate-100 hover:bg-white/12">Transparency</Link>
+              <Link href="/docs" className="rounded-xl border border-white/14 bg-white/6 px-3 py-1.5 text-slate-100 hover:bg-white/12">Docs</Link>
             </div>
           </div>
         ) : null}
@@ -115,7 +115,7 @@ export default function FloraFaunaFeedPage() {
         <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr] items-start">
           <div className="relative overflow-hidden rounded-[1.7rem] border border-white/12 bg-[linear-gradient(145deg,rgba(10,19,34,0.9),rgba(8,15,28,0.92))] p-6 text-slate-100 shadow-[0_24px_72px_-40px_rgba(0,0,0,0.95)] md:p-8">
             <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#2d5a3d_0%,#1e3a5f_45%,#d97706_100%)]" />
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#8fba9d]/30 bg-[#8fba9d]/16 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#d8f1e3]">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-xl border border-[#8fba9d]/30 bg-[#8fba9d]/16 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#d8f1e3]">
               <Sparkles className="h-3.5 w-3.5" />
               {brand.memeticsTitle}
             </div>
@@ -183,11 +183,11 @@ export default function FloraFaunaFeedPage() {
                   className="group rounded-[1.5rem] border border-white/12 bg-[linear-gradient(152deg,rgba(8,16,29,0.9),rgba(7,13,24,0.92))] p-5 text-slate-100 transition-colors hover:border-white/20"
                 >
                   <div className="mb-4 flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-[#8fba9d]/30 bg-[#8fba9d]/16 px-3 py-1 text-xs font-semibold text-[#d8f1e3]">
+                    <span className="inline-flex items-center gap-1 rounded-xl border border-[#8fba9d]/30 bg-[#8fba9d]/16 px-3 py-1 text-xs font-semibold text-[#d8f1e3]">
                       <Share2 className="h-3 w-3" />
                       Free meme
                     </span>
-                    <span className="inline-flex items-center gap-1 rounded-full border border-[#8cb4de]/28 bg-[#8cb4de]/16 px-3 py-1 text-xs font-semibold text-[#d4e7fb]">
+                    <span className="inline-flex items-center gap-1 rounded-xl border border-[#8cb4de]/28 bg-[#8cb4de]/16 px-3 py-1 text-xs font-semibold text-[#d4e7fb]">
                       <Orbit className="h-3 w-3" />
                       {meme.ecology?.ecologyIdentity || 'Awaiting ecology'}
                     </span>
