@@ -59,7 +59,14 @@ In full form, this becomes:
 - a real-world coordination engine
 - a governance machine
 - a mutual-aid and value-routing layer
-- a cultural memory system
+- a cultural memory and lineage system
+- a metabolic conversion layer for participation, trust, liquidity, and collaboration
+- an outcomes and gratitude layer that makes consequence visible
+- a threshold and role-becoming layer
+- a repair and restorative layer
+- a place-and-territory coordination layer
+- a temporal and civic-rhythm layer
+- an institutional legibility and proof layer
 - a multi-tenant world-builder
 
 ## The Architectural Meaning Of That Vision
@@ -83,6 +90,162 @@ The current codebase still shows fragmentation:
 - hard splits between symbolic surfaces and operational surfaces
 - auth/admin meaning drifting between frontend and backend
 - backend service boundaries not yet coherent under failure
+
+## Expanded Cosmos And Module Map
+
+The module ring needs to be understood as a layered civic-cultural cosmos rather than a loose naming scheme.
+
+Core stack:
+
+- ANU:
+  - public cultural coordination system
+- Falak Engine:
+  - hidden planetary engine beneath all surfaces
+
+Existing ring, clarified:
+
+- Seshat:
+  - data architecture and schemas
+- Nabu:
+  - knowledge ledger and memory spine
+- Manara:
+  - signals, alerts, and activity beacons
+- Najm:
+  - pattern analysis and clustering
+- Shamash:
+  - insight and interpretive illumination
+- Diwan:
+  - governance, review, policy, and stewardship
+- Lamassu:
+  - security, permissions, and protection
+- Riwaq:
+  - public gateway and access surface
+- Qart:
+  - federation and inter-tenant coordination
+- Yarning:
+  - dialogue, deliberation, and exchange
+- Abzu:
+  - resource ledger and reserves
+- Bunya:
+  - mutual aid and relief operations
+- Majma:
+  - community fabric and belonging
+- Songline:
+  - place, routes, and land-aware mapping
+
+New or expanded modules:
+
+- Armillary:
+  - privileged cosmological coordination, curation, and world-model calibration
+- Nahr:
+  - system metabolism and flow conversion
+- Athar:
+  - outcomes, traces, gratitude, and the afterlife of aid
+- Bab:
+  - thresholds, initiation, role progression, and access becoming
+- Gumaraa:
+  - repair, cleansing, restorative pathways, and legitimacy rebuilding
+- Wadi:
+  - locality, regional corridors, and place logic
+- Cycles:
+  - time intelligence, rhythms, urgency, ripening, and decay
+- Dalil:
+  - legibility, explainability, proof, and rationale
+
+These modules are not optional ornamentation. They close the missing problem-space between activity, care, governance, memory, place, time, and explanation.
+
+## Layered Architecture Of The Cosmos
+
+### Layer A: Public Visible Universe
+
+Ordinary users should primarily experience:
+
+- learning stars
+- creators
+- campaigns
+- community initiatives
+- events
+- local place nodes
+- news and signals
+- visible outcomes
+- gratitude traces
+- participation flows
+
+Most visible modules:
+
+- Manara
+- Nabu
+- Majma
+- Songline
+- Bunya
+- Athar
+- Wadi
+- Yarning
+
+### Layer B: Guided Civic Layer
+
+Still visible, but more structured:
+
+- campaign health
+- trust signals
+- entry pathways
+- stewards
+- public evidence summaries
+- compact score breakdowns
+
+Modules:
+
+- Bab
+- Dalil
+- Shamash
+- Najm
+- Riwaq
+- selected Diwan outputs
+
+### Layer C: Privileged Coordination Layer
+
+Privileged but not purely infrastructural:
+
+- policy logic
+- moderation trails
+- reserve state
+- allocations
+- actor privileges
+- full explainability
+- world-model correction
+- audit review
+
+Modules:
+
+- Armillary
+- Diwan
+- Lamassu
+- Abzu
+- full Nahr
+- full Dalil
+- Gumaraa
+- Seshat
+
+### Layer D: Hidden Engine Layer
+
+Pure infrastructure beneath the visible world:
+
+- event buses
+- ledgers
+- topology
+- search and indexing
+- placement engine
+- score normalization
+- audit streams
+- tenant isolation
+- auth, session, and headers
+- simulation and fallback packets
+
+Modules:
+
+- Falak
+- Seshat
+- system internals beneath all above layers
 
 ## Strategic Gap Map
 
@@ -528,29 +691,296 @@ Requirement:
 
 - create a publishable layer that can translate the operational world into intelligible external artifacts without losing provenance
 
+### 16. Metabolism Layer Gap
+
+Desired state:
+
+- public cultural activity becomes legible as ecosystem metabolism
+- signals, participation, trust, liquidity, and collaboration convert into visible health
+- social energy can be traced into care capacity, legitimacy, and resilience
+
+Core metabolic primitives:
+
+- nitrogen:
+  - activity spark
+  - creation
+  - spread
+- potassium:
+  - reliability
+  - follow-through
+  - verified delivery
+- phosphorus:
+  - sustained participation
+  - recurring civic life
+  - long-lived loops
+- humus:
+  - accumulated trust substrate
+  - historical credibility
+  - long-tail community memory
+- moisture:
+  - money movement
+  - liquidity
+  - reserves
+  - disbursement activity
+- mycelium:
+  - cross-community connective tissue
+  - collaboration across domains, places, and tenants
+
+Current gap:
+
+- the repo has ledgers, nutrient-adjacent thinking, and impact flows
+- but it does not yet operationalize a true metabolism layer that explains how activity becomes consequence
+
+Requirement:
+
+- introduce Nahr as the metabolic conversion layer
+- define:
+  - flow events
+  - nutrient deltas
+  - conversion rules
+  - participation pulses
+  - trust currents
+  - liquidity currents
+  - metabolic snapshots
+- make metabolism observable in public and privileged forms
+
+### 17. Outcomes Layer Gap
+
+Desired state:
+
+- users can see what changed in the world
+- public impact reporting feels like consequence, not donation dashboard language
+- campaigns have afterlives
+- trust grows through delivery, not promises
+
+Current gap:
+
+- the system can discuss transparency, pools, and reporting
+- but it does not yet have a distinct outcomes field that renders visible traces of care, delivery, and benefit
+
+Requirement:
+
+- introduce Athar as the outcomes and trace layer
+- support:
+  - outcome traces
+  - community benefit summaries
+  - campaign afterlives
+  - gratitude artifacts
+  - privacy-aware recipient voice
+  - public and privileged impact views
+
+### 18. Threshold Layer Gap
+
+Desired state:
+
+- entry, initiation, progression, and permissioning are legible
+- users understand how they move from viewer to participant to steward
+- privileged access is earned, inspectable, and revocable
+
+Current gap:
+
+- auth exists
+- some admin-only routing exists
+- but the system does not yet explain institutional becoming
+
+Requirement:
+
+- introduce Bab as the threshold and role-progression layer
+- model:
+  - witness
+  - participant
+  - contributor
+  - steward
+  - reviewer
+  - custodian
+- make thresholds depend on:
+  - activity history
+  - trust
+  - training
+  - endorsement
+  - place legitimacy
+  - repair state
+
+### 19. Repair Layer Gap
+
+Desired state:
+
+- the platform can do more than moderation
+- it can support restorative pathways, harm correction, legitimacy rebuilding, and community protection
+
+Current gap:
+
+- the repo has moderation, governance, and audit-adjacent surfaces
+- but it does not yet have a first-class restorative layer
+
+Requirement:
+
+- introduce Gumaraa as the repair layer
+- support:
+  - harm intake
+  - context bundles
+  - safety-first intervention
+  - restorative flows
+  - staged reintegration
+  - memorialization when repair is not possible
+
+### 20. Memory and Lineage Gap
+
+Desired state:
+
+- the system preserves why something mattered, how it evolved, who carried it, and what was learned
+- institutional, cultural, campaign, and place memory survive beyond operational state
+
+Current gap:
+
+- Nabu exists conceptually
+- but cultural memory, lineage, narrative evolution, and recall are not yet fully modeled as first-class system layers
+
+Requirement:
+
+- expand Nabu into:
+  - chronicle
+  - lineage
+  - archive
+  - recall
+- preserve:
+  - campaign memory
+  - event memory
+  - conflict memory
+  - local memory
+  - institutional memory
+  - mythic and educational memory
+
+### 21. Place and Territory Gap
+
+Desired state:
+
+- place is more than coordinates
+- the system understands neighborhoods, corridors, stewardship zones, catchments, and regionally bounded campaigns
+- local trust and local legitimacy can differ from global status
+
+Current gap:
+
+- Songline covers mapping direction
+- but civic-territorial meaning, corridor logic, and locality-specific trust are not yet explicit layers
+
+Requirement:
+
+- introduce Wadi beneath or alongside Songline
+- model:
+  - place nodes
+  - corridors
+  - regions
+  - catchments
+  - local cells
+  - steward zones
+  - place memory
+  - need patterns
+  - local resources
+
+### 22. Temporal Intelligence Gap
+
+Desired state:
+
+- the system knows what is emerging, ripening, decaying, urgent, dormant, or ready to resurface
+- campaigns, communities, risks, and opportunities operate within a legible civilizational calendar
+
+Current gap:
+
+- freshness exists in pockets
+- signals exist in pockets
+- but there is no strong time architecture across the system
+
+Requirement:
+
+- introduce Cycles as the temporal layer
+- model:
+  - temporal signals
+  - rhythms
+  - urgency bands
+  - seasons
+  - lifecycle stages
+  - review intervals
+  - decay rules
+  - resurface rules
+
+### 23. Trust-Legibility Gap
+
+Desired state:
+
+- the system can explain why it is doing what it is doing
+- not only with scores, but with institutional reasoning
+
+Current gap:
+
+- there is a desire for compact public scores and deeper admin breakdowns
+- but explainability is not yet its own first-class architectural layer
+
+Requirement:
+
+- introduce Dalil as the legibility and proof layer
+- expose:
+  - why a star is prominent
+  - why a campaign is surfaced
+  - why an actor has stewardship privileges
+  - why a pool is constrained
+  - why moderation happened
+  - why a place is underserved
+  - why an outcome appears in public view
+
+### 24. Cosmological Coordination Gap
+
+Desired state:
+
+- the world model can be calibrated without collapsing into spreadsheet administration
+- privileged actors can inspect, merge, correct, and rebalance the cosmos itself
+
+Current gap:
+
+- there are admin and atlas-like surfaces
+- but there is not yet a coherent cosmological coordination chamber for packet inspection, placement override, or cross-domain correction
+
+Requirement:
+
+- introduce Armillary as the privileged coordination apparatus
+- support:
+  - universe packet inspection
+  - placement studio
+  - domain visibility control
+  - cross-domain topology editing
+  - regional corridor planning
+  - signal-flow monitoring
+
 ## What “Done” Actually Looks Like
 
 A user should be able to:
 
 1. Enter through a universe interface that feels alive and truthful.
-2. Follow a learning thread as stars.
-3. Inspect a star and see:
+2. Cross a threshold that makes orientation, participation, and role progression legible rather than hidden.
+3. Follow a learning thread as stars.
+4. Inspect a star and see:
    - sources
    - freshness
    - evidence
    - disagreements
-4. Follow that star into:
+   - placement rationale
+   - why it is being surfaced now
+5. Follow that star into:
    - a place
    - a campaign
    - a community
    - an event
    - an institution
    - a task
-5. See the bureaucratic blockers clearly.
-6. Understand why some actions require approval.
-7. Route help, money, labour, trust, or participation into the system.
-8. Accumulate contribution history and capability over time.
-9. Be assisted by agents that remain constitutionally bounded.
+6. See the bureaucratic blockers clearly.
+7. Understand why some actions require approval.
+8. Route help, money, labour, trust, or participation into the system.
+9. See visible outcome traces, community benefit, and privacy-safe gratitude without finance-product framing.
+10. Accumulate contribution history, trust substrate, and capability over time.
+11. Understand why the system is surfacing a campaign, actor, place, or warning.
+12. Encounter repair and reconciliation pathways when harm or failure occurs.
+13. See local place, regional corridor, and timing context rather than abstract network only.
+14. Be assisted by agents that remain constitutionally bounded.
 
 If that chain is not possible, the system is not yet in the intended state.
 
@@ -566,6 +996,7 @@ If that chain is not possible, the system is not yet in the intended state.
 ### Tier 2: Make Heaven Connect To Earth
 
 - connect ideas to places, events, people, institutions, and actions
+- connect ideas into outcomes, local territory, and time
 - build resilient fallbacks so the world never feels dead
 - integrate microcosms
 
@@ -573,6 +1004,8 @@ If that chain is not possible, the system is not yet in the intended state.
 
 - governance engine
 - bureaucracy routing
+- threshold logic
+- repair pathways
 - constitutional governor
 - auditable approvals and policy flows
 
@@ -581,6 +1014,8 @@ If that chain is not possible, the system is not yet in the intended state.
 - mutual aid
 - donor routing
 - contribution economies
+- metabolism and nutrient conversion
+- public outcomes and gratitude traces
 - transparent trust-aware ledgers
 
 ### Tier 5: Finish Sovereignty
@@ -588,12 +1023,15 @@ If that chain is not possible, the system is not yet in the intended state.
 - hard public/private separation
 - control plane isolation
 - auditable agents
+- institutional legibility
+- place and tenant trust boundaries
 - operational resilience
 
 ### Tier 6: Mature the Mythic UX
 
 - initiation-first onboarding
 - world skins
+- role becoming
 - portals, monoliths, nutrients, gravity semantics
 - full spatial interaction language
 
@@ -617,7 +1055,8 @@ Near-term work should satisfy both the systems audit and this target-state docum
 2. Unify origin/env/proxy contracts so frontend and backend are talking about the same world.
 3. Finish hosted Falak tenant and auth wiring so heaven-plane maps are not fallback illusions.
 4. Consolidate the ontology so education, action, governance, and logistics can render through one grammar.
-5. Keep building the universe renderer, but only as part of the whole operating system model rather than as a standalone visual layer.
+5. Expand the target ontology to explicitly include metabolism, outcomes, thresholds, repair, memory, locality, time, and legibility.
+6. Keep building the universe renderer, but only as part of the whole operating system model rather than as a standalone visual layer.
 
 ## Short Honest Diagnosis
 

@@ -18,6 +18,9 @@ It is not a sprint plan. It is a program map for turning the current repo from a
 - one operational coordination engine
 - one governance and bureaucracy machine
 - one value-routing layer
+- one metabolism and outcomes layer
+- one threshold, repair, and role-becoming architecture
+- one place, time, and legibility architecture
 - one sovereign multi-tenant platform
 
 ## Program Rules
@@ -210,6 +213,57 @@ Primary repo touchpoints:
 - `services/impact-service/src/manaraFeed.ts`
 - `services/impact-service/src/routes/manara.ts`
 
+### I. Metabolism, Outcomes, and Legibility
+
+Goal:
+
+- turn activity into inspectable social metabolism, visible outcomes, and institutional explanation
+
+Primary repo touchpoints:
+
+- `services/impact-service/src/services/flora-fauna/NutrientEngine.ts`
+- `services/impact-service/src/services/flora-fauna/PoolLedgerService.ts`
+- `services/impact-service/src/services/ledger.service.ts`
+- `services/impact-service/src/controllers/pools.controller.ts`
+- `services/impact-service/src/routes/pools.ts`
+- `services/impact-service/src/routes/memberships.ts`
+- `flora-fauna/backend/app/api/transparency.py`
+- `flora-fauna/backend/app/api/impact.py`
+- `frontend-next/src/components/impact/*`
+- `frontend-next/src/app/(app)/pools/*`
+- `frontend-next/src/app/(public)/transparency/page.tsx`
+- future `services/impact-service/src/nahr/*`
+- future `services/impact-service/src/athar/*`
+- future `services/impact-service/src/dalil/*`
+
+### J. Thresholds, Repair, Territory, and Time
+
+Goal:
+
+- make entry, progression, restorative pathways, locality, and civic timing first-class operating layers
+
+Primary repo touchpoints:
+
+- `frontend-next/src/contexts/AuthContext.tsx`
+- `frontend-next/src/app/(app)/community/page.tsx`
+- `frontend-next/src/app/(app)/calendar/page.tsx`
+- `frontend-next/src/app/(app)/governance/*`
+- `frontend-next/src/lib/maps/sandbox.ts`
+- `flora-fauna/backend/app/auth.py`
+- `flora-fauna/backend/app/security/middleware.py`
+- `flora-fauna/backend/app/api/calendar.py`
+- `flora-fauna/backend/app/api/governance.py`
+- `flora-fauna/backend/app/api/public.py`
+- `services/impact-service/src/falak/auth/actorIdentity.ts`
+- `services/impact-service/src/falak/security/routeGuard.ts`
+- `services/impact-service/src/falak/services/workflowSupport.ts`
+- future `services/impact-service/src/bab/*`
+- future `services/impact-service/src/gumaraa/*`
+- future `services/impact-service/src/wadi/*`
+- future `services/impact-service/src/cycles/*`
+- future `frontend-next/src/app/(app)/local/*`
+- future `frontend-next/src/app/(app)/outcomes/*`
+
 ## Phase 0: Recover System Coherence
 
 Goal:
@@ -231,6 +285,7 @@ Required deliverables:
 - frontend middleware uses the same origin contract as the rest of the app
 - hosted Falak frontend sends tenant header correctly
 - production auth fallback behavior is explicit, not silently degraded
+- live service health is legible in the shell without hiding degradation
 
 Repo touchpoints:
 
@@ -243,6 +298,8 @@ Repo touchpoints:
 - `frontend-next/src/lib/supabase/*`
 - `frontend-next/src/lib/maps/sandbox.ts`
 - `frontend-next/src/lib/api/educationMaps.ts`
+- `frontend-next/src/components/systemic/SystemHealthBanner.tsx`
+- `frontend-next/src/lib/ui/actionableErrors.ts`
 
 Exit criteria:
 
@@ -250,6 +307,7 @@ Exit criteria:
 - live `_core/public/transparency/node-summary` returns JSON
 - live hosted admin-only Falak requests no longer fail with `TENANT_HEADER_REQUIRED`
 - local backend bootstrap smoke test passes
+- the hosted shell can distinguish core, impact, auth, and tenant degradation honestly
 
 ## Phase 1: Define the Shared World Substrate
 
@@ -274,6 +332,15 @@ Required deliverables:
 - trust metadata model
 - temporal validity model
 - public/private visibility model
+- module boundaries for:
+  - Nahr
+  - Athar
+  - Bab
+  - Gumaraa
+  - Wadi
+  - Cycles
+  - Dalil
+  - Armillary
 
 Repo touchpoints:
 
@@ -290,6 +357,7 @@ Exit criteria:
   - operational objects
   - governance objects
   - value-flow objects
+- metabolism, outcomes, thresholds, repair, locality, time, and legibility all have canonical hooks in the shared model
 - new product features stop creating isolated local models when a shared model should exist
 
 ## Phase 2: Make Universe the Master Interface
@@ -356,6 +424,10 @@ Required deliverables:
   - institutions
 - microcosms become semi-autonomous sub-worlds
 - believable local fallback ecology so the system never feels dead during partial outages
+- locality and corridor logic via Wadi
+- public outcome traces via Athar
+- community pulse and nutrient climate from Nahr
+- timing and urgency context from Cycles
 
 Repo touchpoints:
 
@@ -369,11 +441,13 @@ Repo touchpoints:
 - `flora-fauna/backend/app/api/pools.py`
 - `flora-fauna/backend/app/api/impact.py`
 - `flora-fauna/backend/app/api/constellations.py`
+- future locality and outcomes surfaces across frontend and impact service
 
 Exit criteria:
 
 - a user can move from a knowledge object to a live action surface without changing conceptual system
 - community and action surfaces remain credible when one upstream service is impaired
+- place, outcome, and timing context are visible in that journey
 
 ## Phase 4: Automate Hell
 
@@ -397,6 +471,10 @@ Required deliverables:
 - compliance and blocker chains
 - simulation before rule activation
 - separation of recommendation, execution, and approval
+- threshold and role-progression logic through Bab
+- repair and restorative workflows through Gumaraa
+- privileged coordination surfaces through Armillary
+- institutional explanation surfaces through Dalil
 
 Repo touchpoints:
 
@@ -410,11 +488,16 @@ Repo touchpoints:
 - `services/impact-service/src/falak/services/workflowSupport.ts`
 - `services/impact-service/src/falak/services/eventWorkflowService.ts`
 - `services/impact-service/src/falak/security/routeGuard.ts`
+- future `services/impact-service/src/bab/*`
+- future `services/impact-service/src/gumaraa/*`
+- future `services/impact-service/src/dalil/*`
+- future `frontend-next/src/app/(app)/armillary/*`
 
 Exit criteria:
 
 - critical workflows expose blockers and approval requirements clearly
 - high-impact actions are auditable, explainable, and bounded by machine-readable policy
+- pathways for becoming, repair, and privileged correction are explicit rather than hidden
 
 ## Phase 5: Install Value Flows
 
@@ -437,6 +520,9 @@ Required deliverables:
 - contributor trust and reputation model
 - public and internal reporting surfaces
 - governance-aware incentives
+- Nahr metabolic conversion rules and observability
+- Athar outcome traces and gratitude pathways
+- public impact reporting without investment framing
 
 Repo touchpoints:
 
@@ -450,11 +536,14 @@ Repo touchpoints:
 - `flora-fauna/backend/app/api/transparency.py`
 - `frontend-next/src/app/(app)/pools/*`
 - `frontend-next/src/app/(public)/transparency/page.tsx`
+- future `services/impact-service/src/nahr/*`
+- future `services/impact-service/src/athar/*`
 
 Exit criteria:
 
 - value can be routed through the system with provenance
 - public trust pages and internal operational finance views are both coherent
+- participation can be converted into inspectable ecosystem health and outcome traces
 
 ## Phase 6: Tenant-Native Cosmologies
 
@@ -475,6 +564,7 @@ Required deliverables:
 - tenant-specific metrics
 - tenant-specific onboarding
 - tenant-specific semantics without engine fork
+- tenant-specific threshold, locality, and outcome framing without substrate fork
 
 Repo touchpoints:
 
@@ -549,6 +639,9 @@ Required deliverables:
 - outward-facing trust reports
 - historical and civilizational knowledge layers
 - scenario simulation and foresight tooling
+- Nabu chronicle, lineage, archive, and recall patterns
+- Cycles-driven resurfacing, decay, and review windows
+- Wadi-aware place memory and corridor history
 
 Repo touchpoints:
 
@@ -557,10 +650,14 @@ Repo touchpoints:
 - `flora-fauna/backend/app/services/governance_simulation_service.py`
 - `services/impact-service/src/manaraFeed.ts`
 - `frontend-next/src/app/(public)/transparency/page.tsx`
+- future `services/impact-service/src/cycles/*`
+- future `services/impact-service/src/wadi/*`
+- future `services/impact-service/src/nabu/*`
 
 Exit criteria:
 
 - the system can publish intelligible outward narratives without severing them from provenance or operations
+- the system can remember, resurface, and contextualize what mattered across time and place
 
 ## Delivery Constraints
 
@@ -584,6 +681,7 @@ This program is progressing correctly when:
 
 - fewer features depend on isolated app-specific models
 - more user journeys move from meaning to action in one chain
+- more activity can be explained as metabolism, outcome, place, timing, or repair state rather than opaque state change
 - governance becomes more visible and less soul-killing
 - value flows become more transparent and less extractive
 - tenant variation becomes easier without engine fragmentation
