@@ -3,7 +3,12 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { getEducationMap, MapResource, shouldUseEducationMapsFallback } from '@/lib/api/educationMaps';
+import {
+  getEducationMap,
+  getEducationMapsFallbackMessage,
+  MapResource,
+  shouldUseEducationMapsFallback,
+} from '@/lib/api/educationMaps';
 import { getFallbackEducationMap } from '@/lib/maps/fallbackMapData';
 import { FalakMapViewer } from './FalakMapViewer';
 
@@ -16,11 +21,13 @@ export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fallbackActive, setFallbackActive] = useState(false);
+  const [fallbackMessage, setFallbackMessage] = useState<string | null>(null);
 
   const loadMap = () => {
     setLoading(true);
     setError(null);
     setFallbackActive(false);
+    setFallbackMessage(null);
     getEducationMap(topicKey)
       .then((response) => {
         setMap(response);
@@ -32,6 +39,7 @@ export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
             console.warn('Education map detail unavailable from API, using bundled read-only fallback.');
             setMap(fallbackMap);
             setFallbackActive(true);
+            setFallbackMessage(getEducationMapsFallbackMessage(err));
             return;
           }
         }
@@ -69,7 +77,7 @@ export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
 
       {fallbackActive ? (
         <div className="mb-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
-          Live Falak maps are still dark-launched, so this detail view is using bundled read-only graph data.
+          {fallbackMessage ?? 'The hosted frontend is using bundled read-only graph data because the live Falak request did not succeed.'}
         </div>
       ) : null}
 

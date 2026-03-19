@@ -3,7 +3,13 @@
 import Link from 'next/link';
 import { startTransition, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Compass, GitBranch, Layers3, PlusCircle, RefreshCw, Search } from 'lucide-react';
-import { listEducationMaps, MapDefinition, MapStatus, shouldUseEducationMapsFallback } from '@/lib/api/educationMaps';
+import {
+  getEducationMapsFallbackMessage,
+  listEducationMaps,
+  MapDefinition,
+  MapStatus,
+  shouldUseEducationMapsFallback,
+} from '@/lib/api/educationMaps';
 import { listFallbackEducationMaps } from '@/lib/maps/fallbackMapData';
 import { isFalakMapSandbox } from '@/lib/maps/sandbox';
 import { formatPercent, statusBadgeClass } from './presentation';
@@ -13,6 +19,7 @@ export function FalakMapLibraryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fallbackActive, setFallbackActive] = useState(false);
+  const [fallbackMessage, setFallbackMessage] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<MapStatus | 'all'>('all');
   const [search, setSearch] = useState('');
   const [compareKeys, setCompareKeys] = useState<string[]>([]);
@@ -23,6 +30,7 @@ export function FalakMapLibraryPage() {
     setLoading(true);
     setError(null);
     setFallbackActive(false);
+    setFallbackMessage(null);
     listEducationMaps(statusFilter === 'all' ? {} : { status: statusFilter })
       .then((response) => {
         setMaps(response);
@@ -32,6 +40,7 @@ export function FalakMapLibraryPage() {
           console.warn('Education maps API unavailable, using bundled read-only fallback.');
           setMaps(listFallbackEducationMaps(statusFilter === 'all' ? {} : { status: statusFilter }));
           setFallbackActive(true);
+          setFallbackMessage(getEducationMapsFallbackMessage(err));
           return;
         }
 
@@ -104,7 +113,7 @@ export function FalakMapLibraryPage() {
               </>
             ) : (
               <div className="rounded-[1.25rem] border border-amber-400/40 bg-amber-300/10 px-4 py-3 text-xs leading-6 text-amber-100">
-                Live Falak maps are still dark-launched. This page is showing bundled read-only maps until the hosted backend is ready.
+                Live Falak maps are unavailable from the hosted API right now. This page is showing bundled read-only maps until the frontend can reach the live Falak service correctly.
               </div>
             )}
           </div>
@@ -151,7 +160,7 @@ export function FalakMapLibraryPage() {
         ) : null}
         {fallbackActive ? (
           <p className="mt-3 text-xs text-amber-700">
-            Login does not change this yet. The live Falak service is returning `FALAK_MAPS_DISABLED`, so the frontend is using bundled read-only graph data.
+            {fallbackMessage ?? 'The hosted frontend is using bundled read-only graph data because the live Falak request did not succeed.'}
           </p>
         ) : null}
       </section>

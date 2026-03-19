@@ -1,6 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { EducationMapApiError, getEducationMap, listEducationMaps, shouldUseEducationMapsFallback } from '@/lib/api/educationMaps';
+import {
+  EducationMapApiError,
+  getEducationMap,
+  getEducationMapsFallbackMessage,
+  listEducationMaps,
+  shouldUseEducationMapsFallback,
+} from '@/lib/api/educationMaps';
 import { getFallbackEducationMap, listFallbackEducationMaps } from '@/lib/maps/fallbackMapData';
+
+const getSessionMock = vi.fn();
+
+vi.mock('@/lib/supabase/client', () => ({
+  createClient: () => ({
+    auth: {
+      getSession: getSessionMock,
+    },
+  }),
+}));
 
 describe('educationMaps client', () => {
   const fetchMock = vi.fn();
@@ -11,6 +27,8 @@ describe('educationMaps client', () => {
 
   beforeEach(() => {
     fetchMock.mockReset();
+    getSessionMock.mockReset();
+    getSessionMock.mockResolvedValue({ data: { session: null }, error: null });
     vi.stubGlobal('fetch', fetchMock);
     localStorage.clear();
   });
@@ -46,6 +64,10 @@ describe('educationMaps client', () => {
   it('sends sandbox tenant and actor headers in map sandbox mode', async () => {
     process.env.NEXT_PUBLIC_FALAK_MODE = 'map_sandbox';
     delete process.env.NEXT_PUBLIC_FALAK_SANDBOX_TENANT_ID;
+    getSessionMock.mockResolvedValueOnce({
+      data: { session: { access_token: 'supabase-token' } },
+      error: null,
+    });
 
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify([]), {
@@ -60,6 +82,7 @@ describe('educationMaps client', () => {
       'http://localhost:5003/v1/education/maps',
       expect.objectContaining({
         headers: expect.objectContaining({
+          Authorization: 'Bearer supabase-token',
           'X-Tenant-Id': '11111111-1111-4111-8111-111111111111',
           'X-Actor-Id': 'anu-admin',
         }),
@@ -105,6 +128,25 @@ describe('educationMaps client', () => {
 
     expect(headers['X-Tenant-Id']).toBe('22222222-2222-4222-8222-222222222222');
     expect(headers['X-Actor-Id']).toBeUndefined();
+  });
+
+  it('falls back to the legacy auth token when no Supabase session is available', async () => {
+    delete process.env.NEXT_PUBLIC_FALAK_MODE;
+    localStorage.setItem('auth_token', 'legacy-token');
+
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await listEducationMaps();
+
+    const [, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const headers = options.headers as Record<string, string>;
+
+    expect(headers.Authorization).toBe('Bearer legacy-token');
   });
 
   it('surfaces a structured Falak dark-launch error that can trigger fallback', async () => {
@@ -154,6 +196,17 @@ describe('educationMaps client', () => {
 
     expect(error).toBeInstanceOf(EducationMapApiError);
     expect(shouldUseEducationMapsFallback(error)).toBe(true);
+  });
+
+  it('describes tenant header failures accurately in the fallback notice', () => {
+    const error = new EducationMapApiError(
+      'Missing X-Tenant-Id header',
+      400,
+      'TENANT_HEADER_REQUIRED',
+      { error: { code: 'TENANT_HEADER_REQUIRED' } },
+    );
+
+    expect(getEducationMapsFallbackMessage(error)).toContain('`X-Tenant-Id`');
   });
 
   it('ships a Stanford encyclopedia fallback map with live SEP sources', () => {

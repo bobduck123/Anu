@@ -1,5 +1,6 @@
 import { getImpactApiBase } from '@/lib/runtime';
 import { getFalakRequestTenantId, isFalakMapSandbox } from '@/lib/maps/sandbox';
+import { createClient as createSupabaseClient } from '@/lib/supabase/client';
 
 export type MapStatus = 'draft' | 'reviewed' | 'published';
 export type MapCompileMode = 'auto_seed' | 'auto_expand' | 'curated_refine';
@@ -194,13 +195,28 @@ export interface EducationMapEdgePatch {
   evidence?: string;
 }
 
-function authHeaders(): Record<string, string> {
+async function authHeaders(): Promise<Record<string, string>> {
   if (typeof window === 'undefined') {
     return {};
   }
 
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  try {
+    const supabase = createSupabaseClient();
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      throw error;
+    }
+
+    const accessToken = data.session?.access_token?.trim();
+    if (accessToken) {
+      return { Authorization: `Bearer ${accessToken}` };
+    }
+  } catch (error) {
+    console.warn('Unable to read Supabase session for education maps auth, falling back to legacy auth token.', error);
+  }
+
+  const legacyToken = localStorage.getItem('auth_token')?.trim();
+  return legacyToken ? { Authorization: `Bearer ${legacyToken}` } : {};
 }
 
 const FALLBACK_ERROR_CODES = new Set([
@@ -227,12 +243,45 @@ export function shouldUseEducationMapsFallback(error: unknown): boolean {
   return error instanceof TypeError;
 }
 
+export function getEducationMapsFallbackMessage(error: unknown): string {
+  if (!(error instanceof EducationMapApiError)) {
+    return 'The hosted maps API is unavailable right now, so the frontend is using bundled read-only graph data.';
+  }
+
+  switch (error.code) {
+    case 'TENANT_HEADER_REQUIRED':
+      return 'The hosted frontend is not sending `X-Tenant-Id` yet, so the frontend is using bundled read-only graph data.';
+    case 'FALAK_MAPS_DISABLED':
+      return 'The live Falak maps API is still dark-launched, so the frontend is using bundled read-only graph data.';
+    case 'FALAK_DISABLED':
+      return 'The live Falak service is still dark-launched, so the frontend is using bundled read-only graph data.';
+    case 'VERIFIED_ACTOR_REQUIRED':
+    case 'INVALID_AUTH_TOKEN':
+    case 'TOKEN_IDENTITY_MISSING':
+    case 'ACTOR_NOT_FOUND':
+    case 'ACTOR_NOT_ALLOWED':
+      return 'Your current login is not yet being accepted by the live Falak admin-only service, so the frontend is using bundled read-only graph data.';
+    default:
+      break;
+  }
+
+  if (error.code) {
+    return `The live Falak service returned \`${error.code}\`, so the frontend is using bundled read-only graph data.`;
+  }
+
+  if (error.status >= 500) {
+    return 'The live Falak service is currently unavailable, so the frontend is using bundled read-only graph data.';
+  }
+
+  return error.message || 'The hosted maps API is unavailable right now, so the frontend is using bundled read-only graph data.';
+}
+
 async function educationMapFetch<T>(path: string, options: RequestInit = {}, actorId: string | null = null): Promise<T> {
   const base = getImpactApiBase();
   const tenantId = getFalakRequestTenantId();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...authHeaders(),
+    ...(await authHeaders()),
     ...(options.headers as Record<string, string> | undefined),
   };
 
