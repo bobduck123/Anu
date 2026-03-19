@@ -8,6 +8,7 @@ interface EducationMapUniverseSceneProps {
   activeNodeId: string | null;
   compareNodeIds: string[];
   visibleNodeIds: string[];
+  immersive?: boolean;
   onSelectNodeId: (nodeId: string) => void;
 }
 
@@ -16,6 +17,7 @@ export function EducationMapUniverseScene({
   activeNodeId,
   compareNodeIds,
   visibleNodeIds,
+  immersive = false,
   onSelectNodeId,
 }: EducationMapUniverseSceneProps) {
   return (
@@ -24,6 +26,7 @@ export function EducationMapUniverseScene({
       activeStarId={activeNodeId}
       compareStarIds={compareNodeIds}
       visibleStarIds={visibleNodeIds}
+      immersive={immersive}
       onSelectStarId={onSelectNodeId}
     />
   );
