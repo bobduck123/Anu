@@ -1,15 +1,14 @@
 import { execSync } from 'child_process';
 import path from 'path';
-import fs from 'fs';
 
 /**
  * Migration Management Endpoint
  * 
- * Protected endpoint to manage database migrations.
+ * Protected endpoint to manage database migrations on Vercel.
  * 
  * Usage:
  *   POST /api/migrations
- *   Body: { action: 'deploy' | 'status', token: process.env.MIGRATION_TOKEN }
+ *   Body: { action: 'deploy' | 'status' | 'seed', token: process.env.MIGRATION_TOKEN }
  * 
  * Environment Variables Required:
  *   - MIGRATION_TOKEN: Secret token for authorization
@@ -17,7 +16,7 @@ import fs from 'fs';
  */
 
 interface MigrationRequest {
-  action: 'deploy' | 'status';
+  action: 'deploy' | 'status' | 'seed';
   token: string;
 }
 
@@ -42,7 +41,7 @@ async function runMigration(action: string): Promise<string> {
 
     switch (action) {
       case 'deploy':
-        command = `node ${path.join(scriptPath, 'deploy.mjs')}`;
+        command = `node ${path.join(scriptPath, 'migrate-deploy.mjs')}`;
         break;
       case 'seed':
         command = `node ${path.join(scriptPath, 'seed.mjs')}`;
@@ -75,7 +74,7 @@ async function runMigration(action: string): Promise<string> {
 export default async function handler(
   req: any,
   res: any,
-) {
+): Promise<any> {
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -87,39 +86,6 @@ export default async function handler(
     // Verify authorization token
     const migrationToken = process.env.MIGRATION_TOKEN;
     if (!migrationToken || token !== migrationToken) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    // Verify required environment variables
-    if (!process.env.DATABASE_URL) {
-      return res.status(500).json({
-        error: 'DATABASE_URL environment variable not set',
-      });
-    }
-
-    if (action === 'deploy') {
-      return handleMigrationDeploy(res);
-    } else if (action === 'status') {
-      return handleMigrationStatus(res);
-    } else {
-      return res.status(400).json({ error: 'Invalid action' });
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[migrations] Error:', errorMessage);
-    return res.status(500).json({
-      error: 'Internal server error',
-      message: errorMessage,
-    });
-  }
-}
-
-  try {
-    const { action, token } = req.body as MigrationRequest;
-
-    // Validate token
-    const expectedToken = process.env.MIGRATION_TOKEN;
-    if (!expectedToken || token !== expectedToken) {
       console.warn('[v0] Unauthorized migration attempt');
       return res.status(401).json({
         success: false,
@@ -141,6 +107,13 @@ export default async function handler(
       });
     }
 
+    // Verify required environment variables
+    if (!process.env.DATABASE_URL) {
+      return res.status(500).json({
+        error: 'DATABASE_URL environment variable not set',
+      });
+    }
+
     console.log(`[v0] Processing migration action: ${action}`);
 
     const output = await runMigration(action);
@@ -153,7 +126,7 @@ export default async function handler(
       details: {
         output: output.slice(0, 500), // First 500 chars
       },
-    });
+    } as MigrationResponse);
   } catch (error: any) {
     console.error('[v0] Migration endpoint error:', error);
 
@@ -166,6 +139,6 @@ export default async function handler(
       details: {
         stderr: error?.stderr?.toString().slice(0, 200),
       },
-    });
+    } as MigrationResponse);
   }
 }
