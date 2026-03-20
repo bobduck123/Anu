@@ -71,7 +71,7 @@ const CONTENT_TEMPLATES = [
   'New to the platform? Feel free to reach out. The community here is wonderfully supportive.',
   'Just completed my certification in civic governance. The education track is really well designed.',
   'Sharing our success story: from food insecurity to running our own community kitchen in 6 months.',
-  'The constellation synergy score for our network increased by 15% this month!',
+  'Our shared support score for the network increased by 15% this month!',
   'Shoutout to the volunteers who helped with the emergency flood relief last week. Heroes.',
 ];
 

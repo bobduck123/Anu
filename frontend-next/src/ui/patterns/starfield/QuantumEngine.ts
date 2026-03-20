@@ -395,6 +395,31 @@ function fract(x: number): number {
   return v < 0 ? v + 1 : v;
 }
 
+function stableCentered(key: string, salt: string, amplitude: number): number {
+  return (fract(djb2(`${key}:${salt}`) * 0.00001337) - 0.5) * 2 * amplitude;
+}
+
+function tintedPaletteColor(baseColor: THREE.Color, key: string): THREE.Color {
+  const color = baseColor.clone();
+  color.offsetHSL(
+    stableCentered(key, 'h', 0.03),
+    stableCentered(key, 's', 0.08),
+    stableCentered(key, 'l', 0.08),
+  );
+  return color;
+}
+
+function nodePaletteColor(node: InternalNode, palette: THREE.Color[]): THREE.Color {
+  const colorIndex = node.level % palette.length;
+  return tintedPaletteColor(palette[colorIndex], `node:${node.star.id}:${node.level}`);
+}
+
+function connectionPaletteColor(left: InternalNode, right: InternalNode, palette: THREE.Color[]): THREE.Color {
+  const avgLevel = Math.floor((left.level + right.level) / 2) % palette.length;
+  const orderedIds = [left.star.id, right.star.id].sort().join('|');
+  return tintedPaletteColor(palette[avgLevel], `connection:${orderedIds}:${avgLevel}`);
+}
+
 // ---------------------------------------------------------------------------
 // Engine
 // ---------------------------------------------------------------------------
@@ -724,24 +749,11 @@ export class QuantumEngine {
       const typeIndex = TYPE_TO_LEVEL[node.star.type] ?? 0;
       const typeAngle = (typeIndex / 7) * Math.PI * 2;
       const placementMeta = node.star.metadata.placement as { anchorMode?: string } | undefined;
-      const anchorMode = placementMeta?.anchorMode;
       const shouldUseProvidedCoordinates = node.star.metadata.useProvidedCoordinates === true || Boolean(placementMeta);
 
       if (shouldUseProvidedCoordinates) {
-        const impactBias = anchorMode === 'authored' ? 0 : (Number(node.star.metadata.impact) || 0) * 0.08;
-        const jitterScale = anchorMode === 'authored' ? 0 : anchorMode === 'hybrid' ? 2.1 : 4.5;
-        const jitter = new THREE.Vector3(
-          (fract(hashBase * 0.00001337) - 0.5) * jitterScale,
-          (fract(hashBase * 0.00001711) - 0.5) * jitterScale + impactBias,
-          (fract(hashBase * 0.00001997) - 0.5) * jitterScale,
-        );
-
-        node.position.set(node.star.x, node.star.y, node.star.z).add(jitter);
-
-        if (node.position.lengthSq() < 1) {
-          node.position.z += 8 + typeIndex * 1.5;
-        }
-
+        // Packet coordinates are already normalized and should remain authoritative.
+        node.position.set(node.star.x, node.star.y, node.star.z);
         node.distanceFromRoot = node.position.length();
         continue;
       }
@@ -993,13 +1005,7 @@ export class QuantumEngine {
       nodeSizes.push(node.size);
       distancesFromRoot.push(node.distanceFromRoot);
 
-      const colorIndex = node.level % palette.length;
-      const baseColor = palette[colorIndex].clone();
-      baseColor.offsetHSL(
-        THREE.MathUtils.randFloatSpread(0.03),
-        THREE.MathUtils.randFloatSpread(0.08),
-        THREE.MathUtils.randFloatSpread(0.08),
-      );
+      const baseColor = nodePaletteColor(node, palette);
       nodeColors.push(baseColor.r, baseColor.g, baseColor.b);
     }
 
@@ -1054,13 +1060,7 @@ export class QuantumEngine {
           pathIndices.push(pathIdx);
           connStrengths.push(conn.strength);
 
-          const avgLevel = Math.floor((node.level + target.level) / 2) % palette.length;
-          const baseColor = palette[avgLevel].clone();
-          baseColor.offsetHSL(
-            THREE.MathUtils.randFloatSpread(0.03),
-            THREE.MathUtils.randFloatSpread(0.08),
-            THREE.MathUtils.randFloatSpread(0.08),
-          );
+          const baseColor = connectionPaletteColor(node, target, palette);
           connColors.push(baseColor.r, baseColor.g, baseColor.b);
         }
         pathIdx++;
@@ -1124,19 +1124,15 @@ export class QuantumEngine {
     }
 
     const palette = COLOR_PALETTES[this.paletteIndex];
+    const visibleNodes = this.getVisibleNodes();
+    const visibleSet = new Set(visibleNodes);
 
     // Update node colors
     const nodeColorsAttr = this.nodesMesh.geometry.attributes.nodeColor as THREE.BufferAttribute;
     for (let i = 0; i < nodeColorsAttr.count; i++) {
-      const node = this.nodes[i];
+      const node = visibleNodes[i];
       if (!node) continue;
-      const colorIndex = node.level % palette.length;
-      const baseColor = palette[colorIndex].clone();
-      baseColor.offsetHSL(
-        THREE.MathUtils.randFloatSpread(0.03),
-        THREE.MathUtils.randFloatSpread(0.08),
-        THREE.MathUtils.randFloatSpread(0.08),
-      );
+      const baseColor = nodePaletteColor(node, palette);
       nodeColorsAttr.setXYZ(i, baseColor.r, baseColor.g, baseColor.b);
     }
     nodeColorsAttr.needsUpdate = true;
@@ -1145,22 +1141,20 @@ export class QuantumEngine {
     const connColors: number[] = [];
     const processed = new Set<string>();
     const NUM_SEGMENTS = 28;
+    const visibleNodeToIndex = new Map<InternalNode, number>();
+    visibleNodes.forEach((node, index) => visibleNodeToIndex.set(node, index));
 
-    for (let ni = 0; ni < this.nodes.length; ni++) {
-      const node = this.nodes[ni];
+    for (const node of visibleNodes) {
       for (const conn of node.connections) {
-        const ti = conn.nodeIndex;
+        const target = this.nodes[conn.nodeIndex];
+        if (!visibleSet.has(target)) continue;
+        const ni = visibleNodeToIndex.get(node)!;
+        const ti = visibleNodeToIndex.get(target)!;
         const key = `${Math.min(ni, ti)}-${Math.max(ni, ti)}`;
         if (processed.has(key)) continue;
         processed.add(key);
         for (let s = 0; s < NUM_SEGMENTS; s++) {
-          const avgLevel = Math.floor((node.level + this.nodes[ti].level) / 2) % palette.length;
-          const baseColor = palette[avgLevel].clone();
-          baseColor.offsetHSL(
-            THREE.MathUtils.randFloatSpread(0.03),
-            THREE.MathUtils.randFloatSpread(0.08),
-            THREE.MathUtils.randFloatSpread(0.08),
-          );
+          const baseColor = connectionPaletteColor(node, target, palette);
           connColors.push(baseColor.r, baseColor.g, baseColor.b);
         }
       }

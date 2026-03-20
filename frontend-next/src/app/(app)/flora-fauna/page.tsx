@@ -77,7 +77,7 @@ export default function FloraFaunaFeedPage() {
 
   return (
     <div
-      className="min-h-screen"
+      className="manara-grid-hero min-h-screen"
       style={{
         background:
           'radial-gradient(circle at 20% 0%, rgba(242,199,134,0.14), transparent 28%), radial-gradient(circle at 86% 8%, rgba(63,110,160,0.18), transparent 34%), linear-gradient(180deg,#0a1322_0%,#08111e_60%,#08101a_100%)',
@@ -90,7 +90,7 @@ export default function FloraFaunaFeedPage() {
             <p className="mt-2 text-sm text-amber-100/92">{actionableError.detail}</p>
             <Link
               href={actionableError.fallbackHref}
-              className="mt-3 inline-flex items-center gap-2 rounded-xl border border-amber-100/30 bg-amber-200/8 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:bg-amber-200/16"
+              className="manara-glass-chip mt-3 inline-flex items-center gap-2 border border-amber-100/30 bg-amber-200/8 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:bg-amber-200/16"
             >
               {actionableError.fallbackLabel}
               <ArrowRight className="h-3.5 w-3.5" />
@@ -105,9 +105,9 @@ export default function FloraFaunaFeedPage() {
               New here? Begin with Manara Signals, then review Transparency and Docs before signing in.
             </p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
-              <Link href="/manara" className="rounded-xl border border-white/14 bg-white/6 px-3 py-1.5 text-slate-100 hover:bg-white/12">Manara feed</Link>
-              <Link href="/transparency" className="rounded-xl border border-white/14 bg-white/6 px-3 py-1.5 text-slate-100 hover:bg-white/12">Transparency</Link>
-              <Link href="/docs" className="rounded-xl border border-white/14 bg-white/6 px-3 py-1.5 text-slate-100 hover:bg-white/12">Docs</Link>
+              <Link href="/manara" className="manara-glass-chip border border-white/14 bg-white/6 px-3 py-1.5 text-slate-100 hover:bg-white/12">Manara feed</Link>
+              <Link href="/transparency" className="manara-glass-chip border border-white/14 bg-white/6 px-3 py-1.5 text-slate-100 hover:bg-white/12">Transparency</Link>
+              <Link href="/docs" className="manara-glass-chip border border-white/14 bg-white/6 px-3 py-1.5 text-slate-100 hover:bg-white/12">Docs</Link>
             </div>
           </div>
         ) : null}

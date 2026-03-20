@@ -7,7 +7,7 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-[#30445f]/70 bg-[linear-gradient(90deg,rgba(12,22,36,0.96),rgba(15,28,45,0.94))] px-4 py-4 text-slate-200">
+    <footer className="manara-grid-hero border-t border-[#30445f]/55 bg-[linear-gradient(90deg,rgba(11,21,35,0.88),rgba(14,27,44,0.86))] px-4 py-4 text-slate-200 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-2 text-xs sm:flex-row sm:items-center">
         <span className="tracking-[0.02em] text-slate-200/90">
           © {year} {tenant.name}. Cultural operating commons.

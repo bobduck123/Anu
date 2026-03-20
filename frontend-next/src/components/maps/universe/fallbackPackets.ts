@@ -127,6 +127,30 @@ function buildPacket(
     },
     stars,
     constellations,
+    relations: stars.flatMap((star) =>
+      star.connections.map((targetId, index) => ({
+        id: `${star.id}::relation-${index + 1}`,
+        sourceId: star.id,
+        targetId,
+        relation: 'linked',
+      })),
+    ),
+    snapshots: [
+      {
+        id: `${id}::snapshot-1`,
+        name: 'Demo packet',
+        version: 1,
+        starCount: stars.length,
+        current: true,
+      },
+    ],
+    packetMeta: {
+      status: 'demo',
+      version: 1,
+      coverage: 1,
+      sourceSummary: `${stars.length} stars / ${constellations.length} constellations / local demo packet`,
+      adminTopicKey: null,
+    },
     filters: ['education', 'community', 'event', 'action', 'donor', 'relief', 'marketplace'],
     fallbackState: {
       active: true,

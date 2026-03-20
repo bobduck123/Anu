@@ -25,6 +25,7 @@ export interface HeaderProps {
   onMenuToggle: () => void;
   menuOpen?: boolean;
   showMenuToggleDesktop?: boolean;
+  desktopOffset?: boolean;
 }
 
 type PathwayMarker = {
@@ -32,7 +33,12 @@ type PathwayMarker = {
   icon: LucideIcon;
 };
 
-export function Header({ onMenuToggle, menuOpen = false, showMenuToggleDesktop = false }: HeaderProps) {
+export function Header({
+  onMenuToggle,
+  menuOpen = false,
+  showMenuToggleDesktop = false,
+  desktopOffset = true,
+}: HeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const tenant = useTenant();
   const [profileOpen, setProfileOpen] = useState(false);
@@ -88,7 +94,11 @@ export function Header({ onMenuToggle, menuOpen = false, showMenuToggleDesktop =
   const PathwayIcon = pathway.icon;
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-40 h-16 border-b border-[#2f435f]/50 bg-[linear-gradient(102deg,rgba(10,22,36,0.95)_0%,rgba(13,31,52,0.92)_48%,rgba(10,23,39,0.95)_100%)] text-slate-100 shadow-[0_18px_42px_-30px_rgba(4,8,14,0.9)] backdrop-blur-2xl">
+    <header
+      className={`manara-grid-hero fixed right-0 top-0 z-40 h-16 border-b border-white/10 bg-[linear-gradient(102deg,rgba(9,22,38,0.92)_0%,rgba(11,29,50,0.9)_52%,rgba(9,22,39,0.94)_100%)] text-slate-100 shadow-[0_18px_42px_-30px_rgba(4,8,14,0.9)] backdrop-blur-2xl ${
+        desktopOffset ? 'left-0 md:left-[88px]' : 'left-0'
+      }`}
+    >
       <div className="relative h-full px-3 md:px-4 lg:px-6">
         <span className="pointer-events-none absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-[#f1c57a]/75 to-transparent" />
         <span className="pointer-events-none absolute inset-x-1/3 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
@@ -97,7 +107,7 @@ export function Header({ onMenuToggle, menuOpen = false, showMenuToggleDesktop =
           <div className="flex items-center gap-2.5 md:gap-3">
             <button
               onClick={onMenuToggle}
-              className={`inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-white/14 bg-white/6 text-slate-100 transition-colors hover:bg-white/12 ${
+              className={`manara-glass-chip inline-flex min-h-10 min-w-10 items-center justify-center border border-white/14 bg-white/6 text-slate-100 transition-colors hover:bg-white/12 ${
                 showMenuToggleDesktop ? '' : 'md:hidden'
               }`}
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
@@ -123,7 +133,7 @@ export function Header({ onMenuToggle, menuOpen = false, showMenuToggleDesktop =
             </Link>
           </div>
 
-          <div className="hidden lg:flex items-center gap-2 rounded-lg border border-white/12 bg-[linear-gradient(120deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] px-3.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <div className="manara-glass-chip hidden lg:flex items-center gap-2 border border-white/12 bg-[linear-gradient(120deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] px-3.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <PathwayIcon className="h-3.5 w-3.5 text-[#f5c57e]" />
             <span className="text-[10px] uppercase tracking-[0.2em] text-slate-300/85">Pathway</span>
             <span className="text-sm font-medium text-white">{pathway.label}</span>
@@ -134,7 +144,7 @@ export function Header({ onMenuToggle, menuOpen = false, showMenuToggleDesktop =
 
             {isAuthenticated ? (
               <button
-                className="hidden min-h-10 min-w-10 items-center justify-center rounded-lg border border-white/12 bg-white/5 text-slate-100 transition-colors hover:bg-white/12 md:inline-flex"
+                className="manara-glass-chip hidden min-h-10 min-w-10 items-center justify-center border border-white/12 bg-white/5 text-slate-100 transition-colors hover:bg-white/12 md:inline-flex"
                 aria-label="Notifications"
               >
                 <Bell className="h-5 w-5" />
@@ -144,7 +154,7 @@ export function Header({ onMenuToggle, menuOpen = false, showMenuToggleDesktop =
             <div className="relative">
               <button
                 onClick={() => setProfileOpen((open) => !open)}
-                className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/14 bg-white/6 px-2.5 py-1.5 text-slate-100 transition-colors hover:bg-white/12"
+                className="manara-glass-chip inline-flex min-h-10 items-center gap-2 border border-white/14 bg-white/6 px-2.5 py-1.5 text-slate-100 transition-colors hover:bg-white/12"
                 aria-label={isAuthenticated ? 'Open profile menu' : 'Open sign in menu'}
                 aria-expanded={profileOpen}
                 aria-haspopup="menu"

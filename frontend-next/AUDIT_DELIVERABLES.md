@@ -37,6 +37,7 @@ _Last updated: 2026-03-19_
 - [x] Replace residual "corporate dashboard" look/feel with a warmer cultural-operating identity.
 - [x] Refine spacing, hierarchy, and copy rhythm in shell chrome to feel editorial/ritual rather than SaaS.
 - [x] Soften light-theme background gradients and reduce capsule-only controls across shared shell surfaces.
+- [x] Introduce a glass-grid style language (beacon blur, atmospheric grid overlays, frosted control chips) inspired by cinematic landing-page aesthetics while keeping existing Manara colors.
 - [x] Keep accessibility and keyboard behavior intact while redesigning chrome surfaces.
 
 ### Community section solidification (using draggable gallery demo as reference)

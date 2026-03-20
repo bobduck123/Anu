@@ -24,7 +24,7 @@ export function FalakMapDraftPage() {
       setCreatedMap(response.map);
       setJobCreated(response.jobCreated);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to resolve education map.');
+      setError(err instanceof Error ? err.message : 'Failed to resolve education universe.');
     } finally {
       setLoading(false);
     }
@@ -71,13 +71,13 @@ export function FalakMapDraftPage() {
         {createdMap ? (
           <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-slate-200">
             <span className="rounded-full bg-slate-900/80 px-4 py-2">
-              {jobCreated ? 'Draft created and persisted' : 'Existing map returned'}
+              {jobCreated ? 'Draft created and persisted' : 'Existing universe returned'}
             </span>
             <Link
               href={`/education/maps/${encodeURIComponent(createdMap.definition.topicKey)}`}
               className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 transition hover:border-cyan-400 hover:text-cyan-100"
             >
-              Open detail page
+              Open universe detail
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
@@ -96,7 +96,7 @@ export function FalakMapDraftPage() {
           map={createdMap}
           error={error}
           loading={loading}
-          titlePrefix={jobCreated ? 'Generated draft' : 'Resolved map'}
+          titlePrefix={jobCreated ? 'Generated draft' : 'Resolved universe'}
           eyebrowLabel="Manara compiler preview"
         />
       </div>

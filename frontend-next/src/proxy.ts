@@ -125,7 +125,7 @@ async function resolveTenantFromDomain(
   }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const requestHost = request.headers.get('host') || request.nextUrl.host;
   const hostname = request.nextUrl.hostname || requestHost.split(':')[0];
   const pathname = request.nextUrl.pathname;
@@ -141,7 +141,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Update Supabase session first (refreshes auth tokens)
-  const { supabaseResponse, user } = await updateSupabaseSession(request);
+  const { supabaseResponse } = await updateSupabaseSession(request);
 
   // Skip tenant resolution for platform domains and Vercel preview deployments
   if (isPlatformDomain(hostname) || isVercelPreviewDomain(hostname) || isLocalDevelopmentHostname(hostname)) {

@@ -94,7 +94,7 @@ export const MOCK_COURSES: CourseData[] = [
       {
         id: 're-4', order: 3,
         title: 'Impact Measurement',
-        content: 'Regenerative economics measures success differently:\n\n- Social capital (community connections, trust)\n- Natural capital (ecosystem health, biodiversity)\n- Human capital (skills, wellbeing, education)\n- Financial capital (only one of many metrics)\n\nManara tracks these through the impact ledger and constellation synergy scores.',
+        content: 'Regenerative economics measures success differently:\n\n- Social capital (community connections, trust)\n- Natural capital (ecosystem health, biodiversity)\n- Human capital (skills, wellbeing, education)\n- Financial capital (only one of many metrics)\n\nManara tracks these through the impact ledger and shared support scores.',
       },
     ],
   },

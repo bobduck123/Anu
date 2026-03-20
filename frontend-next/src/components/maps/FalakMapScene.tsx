@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -489,15 +489,30 @@ export function FalakMapScene({
   const clockRef = useRef(new THREE.Clock());
   const frameRef = useRef(0);
   const onSelectNodeIdRef = useRef(onSelectNodeId);
+  const activeNodeIdRef = useRef(activeNodeId);
+  const compareNodeIdsRef = useRef(compareNodeIds);
   const visibleNodeIdsRef = useRef(new Set(visibleNodeIds));
   const flattenTo2dRef = useRef(flattenTo2d);
 
-  const compareKey = useMemo(() => compareNodeIds.join('|'), [compareNodeIds]);
-  const visibleKey = useMemo(() => visibleNodeIds.join('|'), [visibleNodeIds]);
+  useEffect(() => {
+    onSelectNodeIdRef.current = onSelectNodeId;
+  }, [onSelectNodeId]);
 
-  onSelectNodeIdRef.current = onSelectNodeId;
-  visibleNodeIdsRef.current = new Set(visibleNodeIds);
-  flattenTo2dRef.current = flattenTo2d;
+  useEffect(() => {
+    activeNodeIdRef.current = activeNodeId;
+  }, [activeNodeId]);
+
+  useEffect(() => {
+    compareNodeIdsRef.current = compareNodeIds;
+  }, [compareNodeIds]);
+
+  useEffect(() => {
+    visibleNodeIdsRef.current = new Set(visibleNodeIds);
+  }, [visibleNodeIds]);
+
+  useEffect(() => {
+    flattenTo2dRef.current = flattenTo2d;
+  }, [flattenTo2d]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -530,7 +545,7 @@ export function FalakMapScene({
     controls.rotateSpeed = 0.6;
     controlsRef.current = controls;
 
-    configureViewMode(camera, controls, flattenTo2d);
+    configureViewMode(camera, controls, flattenTo2dRef.current);
 
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
@@ -780,7 +795,12 @@ export function FalakMapScene({
     };
 
     graphRef.current = graph;
-    syncGraphStyles(graph, activeNodeId, compareNodeIds, visibleNodeIds);
+    syncGraphStyles(
+      graph,
+      activeNodeIdRef.current,
+      compareNodeIdsRef.current,
+      Array.from(visibleNodeIdsRef.current),
+    );
 
     return () => {
       if (graphRef.current === graph) {
@@ -792,7 +812,7 @@ export function FalakMapScene({
 
   useEffect(() => {
     syncGraphStyles(graphRef.current, activeNodeId, compareNodeIds, visibleNodeIds);
-  }, [activeNodeId, compareKey, visibleKey, compareNodeIds, visibleNodeIds]);
+  }, [activeNodeId, compareNodeIds, visibleNodeIds]);
 
   return (
     <div className="h-[28rem] w-full overflow-hidden rounded-[1.5rem] border border-slate-800 bg-[#05070b] md:h-[36rem]">

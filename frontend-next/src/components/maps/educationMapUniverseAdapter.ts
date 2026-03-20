@@ -12,6 +12,7 @@ import type {
   UniverseDomainContext,
   UniverseFallbackState,
   UniversePacket,
+  UniverseRelation,
   UniverseStar,
   UniverseStarType,
 } from './universe/types';
@@ -84,6 +85,10 @@ function buildDomainContext(map: MapResource, options: EducationUniversePacketOp
 
 function uniqueFilters(stars: UniverseStar[]): UniverseStarType[] {
   return Array.from(new Set(stars.map((star) => star.type)));
+}
+
+function buildPacketSummary(map: MapResource): string {
+  return `${map.nodes.length} stars / ${map.edges.length} relations / ${map.snapshots.length} snapshots`;
 }
 
 export function mapResourceToUniversePacket(
@@ -204,6 +209,16 @@ export function mapResourceToUniversePacket(
     })
     .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
 
+  const relations: UniverseRelation[] = map.edges.map((edge) => ({
+    id: edge.id,
+    sourceId: edge.sourceId,
+    targetId: edge.targetId,
+    relation: edge.relation,
+    weight: edge.weight,
+    confidence: edge.confidence,
+    evidence: edge.evidence,
+  }));
+
   return {
     id: map.definition.id,
     title: options.title ?? map.definition.title,
@@ -211,6 +226,22 @@ export function mapResourceToUniversePacket(
     domain: buildDomainContext(map, options),
     stars,
     constellations,
+    relations,
+    snapshots: map.snapshots.map((snapshot) => ({
+      id: snapshot.id,
+      name: snapshot.name,
+      version: snapshot.version,
+      starCount: snapshot.nodes.length,
+      createdAt: snapshot.createdAt,
+      current: snapshot.id === map.definition.currentSnapshotId,
+    })),
+    packetMeta: {
+      status: map.definition.status,
+      version: map.definition.version,
+      coverage: map.definition.confidence.coverage,
+      sourceSummary: buildPacketSummary(map),
+      adminTopicKey: map.definition.topicKey,
+    },
     filters: uniqueFilters(stars),
     fallbackState: options.fallbackState ?? null,
     updatedAt: map.definition.updatedAt,

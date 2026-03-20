@@ -31,7 +31,7 @@ export function FalakMapSandboxHome() {
         <p className="text-xs uppercase tracking-[0.32em] text-emerald-300/80">Local-first validation</p>
         <h1 className="mt-3 text-4xl font-semibold">Manara Learning Universe Sandbox</h1>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300">
-          Local sandbox mode exercises the live map backend, compiler, Prisma schema, and Three.js universe renderer.
+          Local sandbox mode exercises the live universe backend, compiler, Prisma schema, and Three.js universe renderer.
           Use this surface to validate generation, editing, reruns, and snapshot restore before touching hosted environments.
         </p>
       </header>
@@ -49,21 +49,21 @@ export function FalakMapSandboxHome() {
                 className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4 transition hover:border-cyan-300 hover:bg-cyan-50"
               >
                 <p className="font-semibold text-slate-900">/education/maps</p>
-                <p className="mt-1 text-sm text-slate-600">Map library index, search, compare, and map launcher.</p>
+                <p className="mt-1 text-sm text-slate-600">Universe library index, search, compare, and route launcher.</p>
               </Link>
               <Link
                 href="/education/maps/new"
                 className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4 transition hover:border-cyan-300 hover:bg-cyan-50"
               >
                 <p className="font-semibold text-slate-900">/education/maps/new</p>
-                <p className="mt-1 text-sm text-slate-600">Request a missing topic and persist a real draft map.</p>
+                <p className="mt-1 text-sm text-slate-600">Request a missing topic and persist a real draft universe.</p>
               </Link>
               <Link
                 href="/admin/maps"
                 className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4 transition hover:border-cyan-300 hover:bg-cyan-50"
               >
                 <p className="font-semibold text-slate-900">/admin/maps</p>
-                <p className="mt-1 text-sm text-slate-600">Admin editor for taxonomy, nodes, relations, and layout snapshots.</p>
+                <p className="mt-1 text-sm text-slate-600">Admin editor for taxonomy, stars, relations, and layout snapshots.</p>
               </Link>
               <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4">
                 <p className="font-semibold text-slate-900">Seeded detail pages</p>
@@ -75,7 +75,7 @@ export function FalakMapSandboxHome() {
           <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center gap-2 text-slate-900">
               <Orbit className="h-5 w-5 text-cyan-600" />
-              <h2 className="text-xl font-semibold">Seeded sandbox maps</h2>
+              <h2 className="text-xl font-semibold">Seeded sandbox universes</h2>
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {SANDBOX_MAPS.map((map) => (
@@ -133,9 +133,9 @@ export function FalakMapSandboxHome() {
               <h2 className="text-xl font-semibold">Verification path</h2>
             </div>
             <ul className="mt-4 space-y-3 text-sm text-slate-600">
-              <li className="rounded-[1rem] bg-slate-50 px-4 py-3">1. Open a seeded map and inspect the 3D scene.</li>
+              <li className="rounded-[1rem] bg-slate-50 px-4 py-3">1. Open a seeded universe and inspect the 3D scene.</li>
               <li className="rounded-[1rem] bg-slate-50 px-4 py-3">2. Generate a missing draft via `/education/maps/new`.</li>
-              <li className="rounded-[1rem] bg-slate-50 px-4 py-3">3. Edit category, node, and relation data in `/admin/maps`.</li>
+              <li className="rounded-[1rem] bg-slate-50 px-4 py-3">3. Edit category, star, and relation data in `/admin/maps`.</li>
               <li className="rounded-[1rem] bg-slate-50 px-4 py-3">4. Rerun layout and restore a prior snapshot.</li>
             </ul>
             <Link
@@ -143,7 +143,7 @@ export function FalakMapSandboxHome() {
               className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
             >
               <Compass className="h-4 w-4" />
-              Open map library
+              Open universe library
             </Link>
           </article>
         </aside>

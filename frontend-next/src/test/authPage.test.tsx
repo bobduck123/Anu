@@ -35,11 +35,11 @@ describe('AuthPage', () => {
 
     render(<AuthPage />);
 
-    fireEvent.change(screen.getByPlaceholderText('Username'), { target: { value: 'alpha_public' } });
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'alpha@example.com' } });
     fireEvent.change(screen.getByPlaceholderText('Password'), { target: { value: 'alpha_public' } });
     fireEvent.click(screen.getByRole('button', { name: 'Login' }));
 
-    await waitFor(() => expect(loginMock).toHaveBeenCalledWith('alpha_public', 'alpha_public'));
+    await waitFor(() => expect(loginMock).toHaveBeenCalledWith('alpha@example.com', 'alpha_public'));
     expect(pushMock).toHaveBeenCalledWith('/community?compose=1');
     expect(screen.getByText(/continue where you left off/i)).toBeInTheDocument();
   });
@@ -49,11 +49,11 @@ describe('AuthPage', () => {
 
     render(<AuthPage />);
 
-    fireEvent.change(screen.getByPlaceholderText('Username'), { target: { value: 'member' } });
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'member@example.com' } });
     fireEvent.change(screen.getByPlaceholderText('Password'), { target: { value: 'secret' } });
     fireEvent.click(screen.getByRole('button', { name: 'Login' }));
 
-    await waitFor(() => expect(loginMock).toHaveBeenCalledWith('member', 'secret'));
+    await waitFor(() => expect(loginMock).toHaveBeenCalledWith('member@example.com', 'secret'));
     expect(pushMock).toHaveBeenCalledWith('/profile');
   });
 });

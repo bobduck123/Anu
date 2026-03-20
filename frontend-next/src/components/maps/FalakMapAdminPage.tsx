@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   getEducationMap,
@@ -52,6 +52,60 @@ function toNumber(value: string): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+const EMPTY_CATEGORY_FORM: CategoryFormState = {
+  label: '',
+  colorToken: '',
+  description: '',
+  order: '0',
+};
+
+const EMPTY_NODE_FORM: NodeFormState = {
+  categoryKey: '',
+  summary: '',
+  longDescription: '',
+  pinned: false,
+  x: '0',
+  y: '0',
+  z: '0',
+};
+
+const EMPTY_EDGE_FORM: EdgeFormState = {
+  relation: 'influences',
+  weight: '0.6',
+  confidence: '0.6',
+  evidence: '',
+};
+
+function buildCategoryFormState(category: MapResource['categories'][number]): CategoryFormState {
+  return {
+    label: category.label,
+    colorToken: category.colorToken,
+    description: category.description ?? '',
+    order: String(category.order),
+  };
+}
+
+function buildNodeFormState(node: MapResource['nodes'][number]): NodeFormState {
+  return {
+    categoryKey: node.categoryKey ?? '',
+    summary: node.summary ?? '',
+    longDescription: node.longDescription ?? '',
+    pinned: node.pinned,
+    x: String(node.position.x),
+    y: String(node.position.y),
+    z: String(node.position.z),
+  };
+}
+
+function buildEdgeFormState(edge: MapResource['edges'][number]): EdgeFormState {
+  return {
+    relation: edge.relation,
+    weight: String(edge.weight),
+    confidence: String(edge.confidence),
+    evidence: edge.evidence ?? '',
+  };
+}
+
 interface FalakMapAdminPageProps {
   initialTopicKey?: string;
 }
@@ -70,165 +124,200 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
   const [selectedNodeId, setSelectedNodeId] = useState('');
   const [selectedEdgeId, setSelectedEdgeId] = useState('');
   const [selectedSnapshotId, setSelectedSnapshotId] = useState('');
-  const [categoryForm, setCategoryForm] = useState<CategoryFormState>({
-    label: '',
-    colorToken: '',
-    description: '',
-    order: '0',
-  });
-  const [nodeForm, setNodeForm] = useState<NodeFormState>({
-    categoryKey: '',
-    summary: '',
-    longDescription: '',
-    pinned: false,
-    x: '0',
-    y: '0',
-    z: '0',
-  });
-  const [edgeForm, setEdgeForm] = useState<EdgeFormState>({
-    relation: 'influences',
-    weight: '0.6',
-    confidence: '0.6',
-    evidence: '',
-  });
+  const [categoryDrafts, setCategoryDrafts] = useState<Record<string, CategoryFormState>>({});
+  const [nodeDrafts, setNodeDrafts] = useState<Record<string, NodeFormState>>({});
+  const [edgeDrafts, setEdgeDrafts] = useState<Record<string, EdgeFormState>>({});
 
-  const loadList = () => {
+  const applyLoadedMap = useCallback((nextMap: MapResource) => {
+    setMap(nextMap);
+    setCategoryDrafts({});
+    setNodeDrafts({});
+    setEdgeDrafts({});
+    setSelectedSnapshotId((current) =>
+      current && nextMap.snapshots.some((snapshot) => snapshot.id === current)
+        ? current
+        : nextMap.definition.currentSnapshotId ?? nextMap.snapshots[0]?.id ?? '',
+    );
+  }, []);
+
+  const loadList = useCallback(async () => {
     setLoadingList(true);
-    listEducationMaps({}, actorId || null)
-      .then((response) => {
-        setMaps(response);
-        if (!selectedTopic && response[0]) {
-          setSelectedTopic(response[0].topicKey);
-        }
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : 'Unable to load editable maps.');
-      })
-      .finally(() => {
-        setLoadingList(false);
-      });
-  };
-
-  const loadMap = (topicKey: string) => {
-    if (!topicKey) {
-      setMap(null);
-      return;
-    }
-
-    setLoadingMap(true);
     setError(null);
-    getEducationMap(topicKey, actorId || null)
-      .then((response) => {
-        setMap(response);
-        setSelectedCategoryKey(response.categories[0]?.key ?? '');
-        setSelectedNodeId(response.nodes[0]?.id ?? '');
-        setSelectedEdgeId(response.edges[0]?.id ?? '');
-        setSelectedSnapshotId(response.definition.currentSnapshotId ?? response.snapshots[0]?.id ?? '');
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : 'Unable to load editable map.');
-      })
-      .finally(() => {
-        setLoadingMap(false);
+    try {
+      const response = await listEducationMaps({}, actorId || null);
+      setMaps(response);
+      if (response.length < 1) {
+        setMap(null);
+        setCategoryDrafts({});
+        setNodeDrafts({});
+        setEdgeDrafts({});
+        setSelectedSnapshotId('');
+      }
+      setSelectedTopic((current) => {
+        if (current && response.some((entry) => entry.topicKey === current)) {
+          return current;
+        }
+        if (initialTopicKey && response.some((entry) => entry.topicKey === initialTopicKey)) {
+          return initialTopicKey;
+        }
+        return response[0]?.topicKey ?? '';
       });
-  };
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to load editable maps.');
+    } finally {
+      setLoadingList(false);
+    }
+  }, [actorId, initialTopicKey]);
+
+  const loadMap = useCallback(
+    async (topicKey: string) => {
+      if (!topicKey) {
+        setMap(null);
+        setCategoryDrafts({});
+        setNodeDrafts({});
+        setEdgeDrafts({});
+        setSelectedSnapshotId('');
+        return;
+      }
+
+      setLoadingMap(true);
+      setError(null);
+      try {
+        const response = await getEducationMap(topicKey, actorId || null);
+        applyLoadedMap(response);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unable to load editable map.');
+      } finally {
+        setLoadingMap(false);
+      }
+    },
+    [actorId, applyLoadedMap],
+  );
 
   useEffect(() => {
-    loadList();
-  }, [actorId]);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) {
+        void loadList();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadList]);
 
   useEffect(() => {
     if (!selectedTopic) {
       return;
     }
 
-    loadMap(selectedTopic);
-  }, [actorId, selectedTopic]);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) {
+        void loadMap(selectedTopic);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadMap, selectedTopic]);
 
   useEffect(() => {
     setFalakSandboxActorIdentity(actorId);
   }, [actorId]);
 
-  useEffect(() => {
-    if (initialTopicKey && initialTopicKey !== selectedTopic) {
-      setSelectedTopic(initialTopicKey);
-    }
-  }, [initialTopicKey, selectedTopic]);
-
   const selectedCategory = useMemo(
-    () => map?.categories.find((entry) => entry.key === selectedCategoryKey) ?? null,
+    () => map?.categories.find((entry) => entry.key === selectedCategoryKey) ?? map?.categories[0] ?? null,
     [map, selectedCategoryKey],
   );
   const selectedNode = useMemo(
-    () => map?.nodes.find((entry) => entry.id === selectedNodeId) ?? null,
+    () => map?.nodes.find((entry) => entry.id === selectedNodeId) ?? map?.nodes[0] ?? null,
     [map, selectedNodeId],
   );
   const selectedEdge = useMemo(
-    () => map?.edges.find((entry) => entry.id === selectedEdgeId) ?? null,
+    () => map?.edges.find((entry) => entry.id === selectedEdgeId) ?? map?.edges[0] ?? null,
     [map, selectedEdgeId],
   );
 
-  useEffect(() => {
+  const categoryForm = useMemo(
+    () =>
+      selectedCategory
+        ? categoryDrafts[selectedCategory.key] ?? buildCategoryFormState(selectedCategory)
+        : EMPTY_CATEGORY_FORM,
+    [categoryDrafts, selectedCategory],
+  );
+  const nodeForm = useMemo(
+    () => (selectedNode ? nodeDrafts[selectedNode.id] ?? buildNodeFormState(selectedNode) : EMPTY_NODE_FORM),
+    [nodeDrafts, selectedNode],
+  );
+  const edgeForm = useMemo(
+    () => (selectedEdge ? edgeDrafts[selectedEdge.id] ?? buildEdgeFormState(selectedEdge) : EMPTY_EDGE_FORM),
+    [edgeDrafts, selectedEdge],
+  );
+  const activeSnapshotId = useMemo(() => {
+    if (!map) {
+      return '';
+    }
+
+    if (selectedSnapshotId && map.snapshots.some((snapshot) => snapshot.id === selectedSnapshotId)) {
+      return selectedSnapshotId;
+    }
+
+    return map.definition.currentSnapshotId ?? map.snapshots[0]?.id ?? '';
+  }, [map, selectedSnapshotId]);
+
+  const updateCategoryForm = (patch: Partial<CategoryFormState>) => {
     if (!selectedCategory) {
       return;
     }
 
-    setCategoryForm({
-      label: selectedCategory.label,
-      colorToken: selectedCategory.colorToken,
-      description: selectedCategory.description ?? '',
-      order: String(selectedCategory.order),
-    });
-  }, [selectedCategory]);
+    setCategoryDrafts((current) => ({
+      ...current,
+      [selectedCategory.key]: {
+        ...(current[selectedCategory.key] ?? buildCategoryFormState(selectedCategory)),
+        ...patch,
+      },
+    }));
+  };
 
-  useEffect(() => {
+  const updateNodeForm = (patch: Partial<NodeFormState>) => {
     if (!selectedNode) {
       return;
     }
 
-    setNodeForm({
-      categoryKey: selectedNode.categoryKey ?? '',
-      summary: selectedNode.summary ?? '',
-      longDescription: selectedNode.longDescription ?? '',
-      pinned: selectedNode.pinned,
-      x: String(selectedNode.position.x),
-      y: String(selectedNode.position.y),
-      z: String(selectedNode.position.z),
-    });
-  }, [selectedNode]);
+    setNodeDrafts((current) => ({
+      ...current,
+      [selectedNode.id]: {
+        ...(current[selectedNode.id] ?? buildNodeFormState(selectedNode)),
+        ...patch,
+      },
+    }));
+  };
 
-  useEffect(() => {
+  const updateEdgeForm = (patch: Partial<EdgeFormState>) => {
     if (!selectedEdge) {
       return;
     }
 
-    setEdgeForm({
-      relation: selectedEdge.relation,
-      weight: String(selectedEdge.weight),
-      confidence: String(selectedEdge.confidence),
-      evidence: selectedEdge.evidence ?? '',
-    });
-  }, [selectedEdge]);
-
-  useEffect(() => {
-    if (!map) {
-      return;
-    }
-
-    const preferredSnapshotId = map.definition.currentSnapshotId ?? map.snapshots[0]?.id ?? '';
-    if (!selectedSnapshotId || !map.snapshots.some((snapshot) => snapshot.id === selectedSnapshotId) || preferredSnapshotId !== selectedSnapshotId) {
-      setSelectedSnapshotId(preferredSnapshotId);
-    }
-  }, [map, selectedSnapshotId]);
+    setEdgeDrafts((current) => ({
+      ...current,
+      [selectedEdge.id]: {
+        ...(current[selectedEdge.id] ?? buildEdgeFormState(selectedEdge)),
+        ...patch,
+      },
+    }));
+  };
 
   const applyMutation = async (work: () => Promise<MapResource>, successMessage: string) => {
     setMutationMessage(null);
     setError(null);
     try {
       const next = await work();
-      setMap(next);
+      applyLoadedMap(next);
       setMutationMessage(successMessage);
-      loadList();
+      void loadList();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Admin mutation failed.');
     }
@@ -355,7 +444,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
           <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="text-lg font-semibold text-slate-900">Taxonomy</h2>
             <select
-              value={selectedCategoryKey}
+              value={selectedCategory?.key ?? ''}
               onChange={(event) => setSelectedCategoryKey(event.target.value)}
               className="mt-4 w-full rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
             >
@@ -368,26 +457,26 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
             <div className="mt-4 grid gap-3">
               <input
                 value={categoryForm.label}
-                onChange={(event) => setCategoryForm((current) => ({ ...current, label: event.target.value }))}
+                onChange={(event) => updateCategoryForm({ label: event.target.value })}
                 placeholder="Category label"
                 className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
               />
               <input
                 value={categoryForm.colorToken}
-                onChange={(event) => setCategoryForm((current) => ({ ...current, colorToken: event.target.value }))}
+                onChange={(event) => updateCategoryForm({ colorToken: event.target.value })}
                 placeholder="Color token"
                 className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
               />
               <textarea
                 value={categoryForm.description}
-                onChange={(event) => setCategoryForm((current) => ({ ...current, description: event.target.value }))}
+                onChange={(event) => updateCategoryForm({ description: event.target.value })}
                 rows={3}
                 placeholder="Category description"
                 className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
               />
               <input
                 value={categoryForm.order}
-                onChange={(event) => setCategoryForm((current) => ({ ...current, order: event.target.value }))}
+                onChange={(event) => updateCategoryForm({ order: event.target.value })}
                 inputMode="numeric"
                 placeholder="Order"
                 aria-invalid={categoryOrderInvalid}
@@ -428,7 +517,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
           <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="text-lg font-semibold text-slate-900">Star editor</h2>
             <select
-              value={selectedNodeId}
+              value={selectedNode?.id ?? ''}
               onChange={(event) => setSelectedNodeId(event.target.value)}
               className="mt-4 w-full rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
             >
@@ -441,7 +530,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
             <div className="mt-4 grid gap-3">
               <select
                 value={nodeForm.categoryKey}
-                onChange={(event) => setNodeForm((current) => ({ ...current, categoryKey: event.target.value }))}
+                onChange={(event) => updateNodeForm({ categoryKey: event.target.value })}
                 className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
               >
                 <option value="">Uncategorized</option>
@@ -453,14 +542,14 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
               </select>
               <textarea
                 value={nodeForm.summary}
-                onChange={(event) => setNodeForm((current) => ({ ...current, summary: event.target.value }))}
+                onChange={(event) => updateNodeForm({ summary: event.target.value })}
                 rows={3}
                 placeholder="Summary"
                 className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
               />
               <textarea
                 value={nodeForm.longDescription}
-                onChange={(event) => setNodeForm((current) => ({ ...current, longDescription: event.target.value }))}
+                onChange={(event) => updateNodeForm({ longDescription: event.target.value })}
                 rows={4}
                 placeholder="Long description"
                 className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
@@ -469,28 +558,28 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                 <input
                   type="checkbox"
                   checked={nodeForm.pinned}
-                  onChange={(event) => setNodeForm((current) => ({ ...current, pinned: event.target.checked }))}
+                  onChange={(event) => updateNodeForm({ pinned: event.target.checked })}
                 />
-                Pinned node
+                Pinned star
               </label>
               <div className="grid gap-3 md:grid-cols-3">
                 <input
                   value={nodeForm.x}
-                  onChange={(event) => setNodeForm((current) => ({ ...current, x: event.target.value }))}
+                  onChange={(event) => updateNodeForm({ x: event.target.value })}
                   placeholder="X"
                   aria-invalid={nodePositionInvalid}
                   className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
                 />
                 <input
                   value={nodeForm.y}
-                  onChange={(event) => setNodeForm((current) => ({ ...current, y: event.target.value }))}
+                  onChange={(event) => updateNodeForm({ y: event.target.value })}
                   placeholder="Y"
                   aria-invalid={nodePositionInvalid}
                   className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
                 />
                 <input
                   value={nodeForm.z}
-                  onChange={(event) => setNodeForm((current) => ({ ...current, z: event.target.value }))}
+                  onChange={(event) => updateNodeForm({ z: event.target.value })}
                   placeholder="Z"
                   aria-invalid={nodePositionInvalid}
                   className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
@@ -522,13 +611,13 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                             },
                             actorId,
                           ),
-                        'Node override persisted.',
+                        'Star override persisted.',
                       )
                     : undefined
                 }
                 className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
               >
-                Save node
+                Save star
               </button>
             </div>
           </section>
@@ -536,7 +625,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
           <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="text-lg font-semibold text-slate-900">Constellation relation editor</h2>
             <select
-              value={selectedEdgeId}
+              value={selectedEdge?.id ?? ''}
               onChange={(event) => setSelectedEdgeId(event.target.value)}
               className="mt-4 w-full rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
             >
@@ -549,7 +638,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
             <div className="mt-4 grid gap-3">
               <select
                 value={edgeForm.relation}
-                onChange={(event) => setEdgeForm((current) => ({ ...current, relation: event.target.value as MapRelation }))}
+                onChange={(event) => updateEdgeForm({ relation: event.target.value as MapRelation })}
                 className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
               >
                 {MAP_RELATION_OPTIONS.map((relation) => (
@@ -560,21 +649,21 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
               </select>
               <input
                 value={edgeForm.weight}
-                onChange={(event) => setEdgeForm((current) => ({ ...current, weight: event.target.value }))}
+                onChange={(event) => updateEdgeForm({ weight: event.target.value })}
                 placeholder="Weight"
                 aria-invalid={edgeMetricsInvalid}
                 className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
               />
               <input
                 value={edgeForm.confidence}
-                onChange={(event) => setEdgeForm((current) => ({ ...current, confidence: event.target.value }))}
+                onChange={(event) => updateEdgeForm({ confidence: event.target.value })}
                 placeholder="Confidence"
                 aria-invalid={edgeMetricsInvalid}
                 className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
               />
               <textarea
                 value={edgeForm.evidence}
-                onChange={(event) => setEdgeForm((current) => ({ ...current, evidence: event.target.value }))}
+                onChange={(event) => updateEdgeForm({ evidence: event.target.value })}
                 rows={3}
                 placeholder="Evidence note"
                 className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
@@ -625,7 +714,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
 
                   void applyMutation(
                     () => rerunEducationMapLayout(map.definition.topicKey, actorId),
-                    'Layout rerun persisted. Pinned nodes should remain fixed.',
+                    'Layout rerun persisted. Pinned stars should remain fixed.',
                   );
                 }}
                 className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
@@ -633,7 +722,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                 Rerun layout
               </button>
               <select
-                value={selectedSnapshotId}
+                value={activeSnapshotId}
                 onChange={(event) => setSelectedSnapshotId(event.target.value)}
                 className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
               >
@@ -645,18 +734,18 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
               </select>
               <button
                 type="button"
-                disabled={!map || !selectedSnapshotId}
+                disabled={!map || !activeSnapshotId}
                 onClick={() => {
                   if (
                     !map ||
-                    !selectedSnapshotId ||
+                    !activeSnapshotId ||
                     !window.confirm('Restore this saved snapshot? Current star positions will be replaced by the selected constellation layout.')
                   ) {
                     return;
                   }
 
                   void applyMutation(
-                    () => restoreEducationMapSnapshot(map.definition.topicKey, selectedSnapshotId, actorId),
+                    () => restoreEducationMapSnapshot(map.definition.topicKey, activeSnapshotId, actorId),
                     'Layout snapshot restored.',
                   );
                 }}

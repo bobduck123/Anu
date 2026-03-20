@@ -16,7 +16,7 @@ interface UniverseSceneProps {
   onSelectStarId: (starId: string) => void;
 }
 
-function packetToQuantumData(packet: UniversePacket, visibleStarIds?: string[]): UniverseData {
+export function packetToQuantumData(packet: UniversePacket, visibleStarIds?: string[]): UniverseData {
   const visibleSet = visibleStarIds ? new Set(visibleStarIds) : null;
 
   return {

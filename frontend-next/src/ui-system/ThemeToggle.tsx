@@ -15,7 +15,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={cycle}
-      className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-100 transition-colors hover:bg-white/10 focus-ring"
+      className="manara-glass-chip inline-flex min-h-10 min-w-10 items-center justify-center border border-white/10 bg-white/5 text-slate-100 transition-colors hover:bg-white/10 focus-ring"
       aria-label={`Theme: ${theme}. Click to change.`}
       title={`Theme: ${theme}`}
     >

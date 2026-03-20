@@ -65,7 +65,16 @@ export function FalakMapLibraryPage() {
       return;
     }
 
-    loadMaps();
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) {
+        loadMaps();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, isAuthenticated, loadMaps]);
 
   const filteredMaps = useMemo(() => {
@@ -95,7 +104,7 @@ export function FalakMapLibraryPage() {
             <p className="text-xs uppercase tracking-[0.32em] text-cyan-300/80">Education Resource Library</p>
             <h1 className="mt-3 text-4xl font-semibold">Manara Education Universe</h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
-              Open persisted learning universes, compare seeded domains, and generate new draft maps through the live map compiler path.
+              Open persisted learning universes, compare seeded domains, and generate new draft universes through the live compiler path.
               The sandbox exercises the same route surface, schema, and renderer path used by the hosted system.
             </p>
           </div>
@@ -107,7 +116,7 @@ export function FalakMapLibraryPage() {
                   className="inline-flex items-center gap-2 rounded-full bg-cyan-400 px-4 py-2 font-medium text-slate-950 transition hover:bg-cyan-300"
                 >
                   <PlusCircle className="h-4 w-4" />
-                  Request missing map
+                  Request missing universe
                 </Link>
                 <Link
                   href="/sandbox/maps"
@@ -168,7 +177,7 @@ export function FalakMapLibraryPage() {
         </div>
         {sandbox ? (
           <p className="mt-3 text-xs text-slate-500">
-            Sandbox mode is active. Drafts, reviewed maps, and admin editing flows are safe to exercise locally.
+            Sandbox mode is active. Drafts, reviewed universes, and admin editing flows are safe to exercise locally.
           </p>
         ) : null}
         {fallbackActive ? (

@@ -21,9 +21,9 @@ export default function TransparencyPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(242,199,134,0.14),transparent_28%),radial-gradient(circle_at_86%_8%,rgba(63,110,160,0.18),transparent_34%),linear-gradient(180deg,#0a1322_0%,#08111e_60%,#08101a_100%)]">
+    <div className="manara-grid-hero min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(242,199,134,0.14),transparent_28%),radial-gradient(circle_at_86%_8%,rgba(63,110,160,0.18),transparent_34%),linear-gradient(180deg,#0a1322_0%,#08111e_60%,#08101a_100%)]">
       <div className="mx-auto max-w-6xl px-4 pb-16 pt-24 md:px-8">
-        <header className="rounded-[1.6rem] border border-white/14 bg-[linear-gradient(140deg,rgba(11,20,36,0.84),rgba(8,16,29,0.82))] p-6 text-slate-100 shadow-[0_24px_70px_-38px_rgba(0,0,0,0.92)] backdrop-blur-xl md:p-8">
+        <header className="manara-glass-panel rounded-[1.6rem] border border-white/14 p-6 text-slate-100 md:p-8">
           <p className="text-xs uppercase tracking-[0.24em] text-[#f3cd92]/88">Public Transparency</p>
           <h1 className="mt-2 text-3xl font-semibold text-white md:text-4xl">Node Summary Ledger</h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
@@ -33,17 +33,17 @@ export default function TransparencyPage() {
         </header>
 
         {error ? (
-          <div className="mt-5 rounded-2xl border border-amber-300/34 bg-amber-300/12 p-5 text-amber-100">
+          <div className="manara-glass-panel-muted mt-5 rounded-2xl border border-amber-300/28 p-5 text-amber-100">
             <p className="text-sm font-semibold">Public transparency is temporarily unavailable.</p>
             <p className="mt-1 text-sm text-amber-100/92">
               Reporting infrastructure is being stabilised for hosted deployment. Cultural routes remain available.
             </p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              <Link href="/docs" className="inline-flex items-center gap-1 rounded-xl border border-amber-100/30 px-3 py-1.5 hover:bg-amber-200/20">
+              <Link href="/docs" className="manara-glass-chip inline-flex items-center gap-1 border border-amber-100/30 px-3 py-1.5 hover:bg-amber-200/20">
                 Open docs
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
-              <Link href="/governance" className="inline-flex items-center gap-1 rounded-xl border border-amber-100/30 px-3 py-1.5 hover:bg-amber-200/20">
+              <Link href="/governance" className="manara-glass-chip inline-flex items-center gap-1 border border-amber-100/30 px-3 py-1.5 hover:bg-amber-200/20">
                 Governance center
               </Link>
             </div>

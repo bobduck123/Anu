@@ -3,9 +3,9 @@ import { ArrowRight, LifeBuoy, MessageSquareText } from "lucide-react";
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(242,199,134,0.14),transparent_28%),radial-gradient(circle_at_86%_8%,rgba(63,110,160,0.18),transparent_34%),linear-gradient(180deg,#0a1322_0%,#08111e_60%,#08101a_100%)]">
+    <div className="manara-grid-hero min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(242,199,134,0.14),transparent_28%),radial-gradient(circle_at_86%_8%,rgba(63,110,160,0.18),transparent_34%),linear-gradient(180deg,#0a1322_0%,#08111e_60%,#08101a_100%)]">
       <div className="mx-auto max-w-5xl space-y-6 px-4 pb-16 pt-24 md:px-8">
-        <header className="rounded-[1.6rem] border border-white/14 bg-[linear-gradient(140deg,rgba(11,20,36,0.84),rgba(8,16,29,0.82))] p-6 text-slate-100 shadow-[0_24px_70px_-38px_rgba(0,0,0,0.92)] backdrop-blur-xl md:p-8">
+        <header className="manara-glass-panel rounded-[1.6rem] border border-white/14 p-6 text-slate-100 md:p-8">
           <p className="text-xs uppercase tracking-[0.24em] text-[#f3cd92]/88">Contact</p>
           <h1 className="mt-2 text-3xl font-semibold text-white md:text-4xl">Community support routes</h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
@@ -48,7 +48,7 @@ export default function ContactPage() {
               <Link
                 key={route.href}
                 href={route.href}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/14 bg-white/6 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-100 transition-colors hover:border-white/24 hover:bg-white/12"
+                className="manara-glass-chip inline-flex items-center gap-2 border border-white/14 bg-white/6 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-100 transition-colors hover:border-white/24 hover:bg-white/12"
               >
                 {route.label}
                 <ArrowRight className="h-3.5 w-3.5" />

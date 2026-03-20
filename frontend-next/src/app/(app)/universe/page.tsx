@@ -9,176 +9,51 @@ import {
   MapResource,
   shouldUseEducationMapsFallback,
 } from '@/lib/api/educationMaps';
+import { generateMockPosts } from '@/data/adapters/communityAdapter';
 import {
   getFallbackEducationMap,
   listFallbackEducationMapResources,
 } from '@/lib/maps/fallbackMapData';
 import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
 import { FalakMapViewer } from '@/components/maps/FalakMapViewer';
+import { buildCommunityUniversePacket } from '@/components/maps/communityUniverseAdapter';
+import { mapResourceToUniversePacket } from '@/components/maps/educationMapUniverseAdapter';
+import { buildCanonicalUniversePacket } from '@/components/maps/universe/packetBuilders';
+import { getGlobalUniverseDemoPacket } from '@/components/maps/universe/fallbackPackets';
 import { universePresentationTerms } from '@/components/maps/universe/presentationTerms';
+import type { UniversePacket } from '@/components/maps/universe/types';
+import { loadCommunityUniverseData } from '@/lib/community/loadCommunityUniverse';
 import { useAuth } from '@/contexts/AuthContext';
 
-function average(values: number[]): number {
-  if (values.length < 1) {
-    return 0;
-  }
-
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
-function buildCanonicalCosmos(resources: MapResource[]): MapResource | null {
-  if (resources.length < 1) {
-    return null;
-  }
-
-  const mapId = 'anu-cosmos-map';
-  const createdAt = resources
-    .map((resource) => resource.definition.createdAt)
-    .sort()[0] ?? new Date().toISOString();
-  const updatedAt = resources
-    .map((resource) => resource.definition.updatedAt)
-    .sort()
-    .slice(-1)[0] ?? createdAt;
-
-  const categories: MapResource['categories'] = [];
-  const nodes: MapResource['nodes'] = [];
-  const edges: MapResource['edges'] = [];
-  const aliases: MapResource['aliases'] = [];
-  const snapshots: MapResource['snapshots'] = [];
-
-  resources.forEach((resource) => {
-    const scope = resource.definition.topicKey;
-    const scopedCategoryKeys = new Map<string, string>();
-    const scopedNodeIds = new Map<string, string>();
-
-    resource.categories.forEach((category) => {
-      const scopedKey = `${scope}::${category.key}`;
-      scopedCategoryKeys.set(category.key, scopedKey);
-      categories.push({
-        ...category,
-        id: `${scope}::${category.id}`,
-        mapId,
-        key: scopedKey,
-        parentKey: category.parentKey ? `${scope}::${category.parentKey}` : undefined,
-        label: `${resource.definition.title} / ${category.label}`,
-      });
-    });
-
-    resource.nodes.forEach((node) => {
-      const scopedNodeId = `${scope}::${node.id}`;
-      scopedNodeIds.set(node.id, scopedNodeId);
-      nodes.push({
-        ...node,
-        id: scopedNodeId,
-        mapId,
-        categoryKey: node.categoryKey ? scopedCategoryKeys.get(node.categoryKey) : undefined,
-        subcategoryKey: node.subcategoryKey ? scopedCategoryKeys.get(node.subcategoryKey) : undefined,
-        metadata: {
-          ...node.metadata,
-          originMapId: resource.definition.id,
-          originMapTopicKey: resource.definition.topicKey,
-          originMapTitle: resource.definition.title,
-          originNodeId: node.id,
-        },
-      });
-
-      node.aliases.forEach((alias, index) => {
-        aliases.push({
-          id: `${scopedNodeId}::alias-${index + 1}`,
-          mapId,
-          nodeId: scopedNodeId,
-          alias,
-          canonicalLabel: node.label,
-        });
-      });
-    });
-
-    resource.edges.forEach((edge) => {
-      const sourceId = scopedNodeIds.get(edge.sourceId) ?? `${scope}::${edge.sourceId}`;
-      const targetId = scopedNodeIds.get(edge.targetId) ?? `${scope}::${edge.targetId}`;
-      edges.push({
-        ...edge,
-        id: `${scope}::${edge.id}`,
-        mapId,
-        sourceId,
-        targetId,
-      });
-    });
-
-    const preferredSnapshot =
-      resource.snapshots.find((snapshot) => snapshot.id === resource.definition.currentSnapshotId) ??
-      resource.snapshots[0];
-
-    if (preferredSnapshot) {
-      snapshots.push({
-        ...preferredSnapshot,
-        id: `${scope}::${preferredSnapshot.id}`,
-        mapId,
-        name: `${resource.definition.title} / ${preferredSnapshot.name}`,
-        nodes: preferredSnapshot.nodes.map((entry) => ({
-          ...entry,
-          nodeId: scopedNodeIds.get(entry.nodeId) ?? `${scope}::${entry.nodeId}`,
-        })),
-      });
-    }
-  });
-
-  const confidence = {
-    coverage: average(resources.map((resource) => resource.definition.confidence.coverage)),
-    taxonomy: average(resources.map((resource) => resource.definition.confidence.taxonomy)),
-    positions: average(resources.map((resource) => resource.definition.confidence.positions)),
-    dedupe: average(resources.map((resource) => resource.definition.confidence.dedupe)),
-    relationships: average(resources.map((resource) => resource.definition.confidence.relationships)),
-  };
-
-  const canonicalStatus = resources.every((resource) => resource.definition.status === 'published')
-    ? 'published'
-    : resources.some((resource) => resource.definition.status === 'reviewed')
-      ? 'reviewed'
-      : 'draft';
-
-  return {
-    definition: {
-      id: mapId,
-      tenantId: resources[0].definition.tenantId,
-      topicKey: 'anu-cosmos',
-      title: 'Manara Shared Universe',
-      archetype: 'anu-unified-learning-universe',
-      entityType: 'multi-map-cosmos',
-      description:
-        'A shared Manara universe built from all available learning domains. Stars remain source-linked and preserve their native semantic coordinates.',
-      status: canonicalStatus,
-      sizeFormula: resources[0].definition.sizeFormula,
-      version: Math.max(...resources.map((resource) => resource.definition.version)),
-      currentSnapshotId: snapshots[0]?.id ?? null,
-      confidence,
-      createdAt,
-      updatedAt,
-    },
-    categories,
-    axes: resources[0].axes,
-    nodes,
-    edges,
-    aliases,
-    snapshots,
-    jobs: [],
-  };
-}
+const INITIAL_COMMUNITY_PACKET = buildCommunityUniversePacket(generateMockPosts(18, 20260319), {
+  mode: 'demo',
+  sourceSummary: 'Deterministic local packet / 18 demo community traces',
+  fallbackMessage: 'Using bundled read-only community traces while live services initialise.',
+});
 
 export default function UniversePage() {
   const { isLoading: authLoading, isAuthenticated } = useAuth();
-  const [maps, setMaps] = useState<MapResource[]>([]);
+  const initialFallbackMaps = listFallbackEducationMapResources({ status: 'published' });
+  const seededMaps = initialFallbackMaps.length > 0 ? initialFallbackMaps : listFallbackEducationMapResources();
+
+  const [maps, setMaps] = useState<MapResource[]>(seededMaps);
+  const [communityPacket, setCommunityPacket] = useState<UniversePacket | null>(INITIAL_COMMUNITY_PACKET);
   const [selectedTopicKey, setSelectedTopicKey] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [fallbackActive, setFallbackActive] = useState(false);
-  const [fallbackMessage, setFallbackMessage] = useState<string | null>(null);
+  const [fallbackActive, setFallbackActive] = useState<boolean>(seededMaps.length > 0 || Boolean(INITIAL_COMMUNITY_PACKET.fallbackState?.active));
+  const [fallbackMessage, setFallbackMessage] = useState<string | null>(
+    seededMaps.length > 0 || INITIAL_COMMUNITY_PACKET.fallbackState?.active
+      ? 'Using bundled read-only universe packets while live services initialise.'
+      : null,
+  );
 
   const loadUniverse = useCallback(async () => {
     setLoading(true);
     setError(null);
     setFallbackActive(false);
     setFallbackMessage(null);
+    const communityLoad = loadCommunityUniverseData();
 
     try {
       const definitions = await listEducationMaps();
@@ -188,42 +63,103 @@ export default function UniversePage() {
           : definitions;
       const targets = preferredDefinitions.slice(0, 10);
 
+      const loadedResults = await Promise.allSettled(
+        targets.map(async (definition) => {
+          try {
+            return {
+              map: await getEducationMap(definition.topicKey),
+              fallbackMessage: null,
+            };
+          } catch (reason) {
+            if (shouldUseEducationMapsFallback(reason)) {
+              const fallback = getFallbackEducationMap(definition.topicKey);
+              if (fallback) {
+                return {
+                  map: fallback,
+                  fallbackMessage: getEducationMapsFallbackMessage(reason),
+                };
+              }
+            }
+
+            throw reason;
+          }
+        }),
+      );
+
       const loadedMaps: MapResource[] = [];
       const fallbackReasons: string[] = [];
+      const hardFailures: unknown[] = [];
 
-      for (const definition of targets) {
-        try {
-          const map = await getEducationMap(definition.topicKey);
-          loadedMaps.push(map);
-        } catch (reason) {
-          if (shouldUseEducationMapsFallback(reason)) {
-            const fallback = getFallbackEducationMap(definition.topicKey);
-            if (fallback) {
-              loadedMaps.push(fallback);
-              fallbackReasons.push(getEducationMapsFallbackMessage(reason));
-              continue;
-            }
+      loadedResults.forEach((result) => {
+        if (result.status === 'fulfilled') {
+          loadedMaps.push(result.value.map);
+          if (result.value.fallbackMessage) {
+            fallbackReasons.push(result.value.fallbackMessage);
           }
-
-          throw reason;
+          return;
         }
-      }
+
+        hardFailures.push(result.reason);
+      });
 
       if (loadedMaps.length < 1) {
-        throw new Error('No Manara learning universes are available yet.');
+        throw hardFailures[0] ?? new Error('No Manara learning universes are available yet.');
       }
 
       setMaps(loadedMaps);
-      if (fallbackReasons.length > 0) {
+
+      const communityData = await communityLoad;
+      const nextCommunityPacket =
+        communityData.posts.length > 0
+          ? buildCommunityUniversePacket(communityData.posts, {
+              mode: 'live',
+              sourceSummary: `${communityData.posts.length} live community traces / ${communityData.trustedNewsMeta.count} trusted news / shared packet`,
+            })
+          : buildCommunityUniversePacket(generateMockPosts(18, 20260319), {
+              mode: communityData.loadError ? 'read_only' : 'demo',
+              sourceSummary: 'Deterministic local packet / 18 demo community traces',
+              fallbackMessage:
+                communityData.loadError ??
+                'No public community traces are available yet. Using a deterministic local packet to keep the shared universe inspectable.',
+            });
+
+      setCommunityPacket(nextCommunityPacket);
+
+      const nextFallbackMessage =
+        fallbackReasons[0] ??
+        communityData.loadError ??
+        (hardFailures.length > 0 ? 'Some universe slices could not be loaded and were omitted.' : null);
+      const nextFallbackActive =
+        fallbackReasons.length > 0 ||
+        hardFailures.length > 0 ||
+        Boolean(nextCommunityPacket.fallbackState?.active);
+
+      if (nextFallbackActive) {
         setFallbackActive(true);
-        setFallbackMessage(fallbackReasons[0] ?? null);
+        setFallbackMessage(nextFallbackMessage);
       }
     } catch (reason) {
-      if (shouldUseEducationMapsFallback(reason)) {
-        const fallbackMaps = listFallbackEducationMapResources({ status: 'published' });
-        setMaps(fallbackMaps.length > 0 ? fallbackMaps : listFallbackEducationMapResources());
+      const fallbackMaps = listFallbackEducationMapResources({ status: 'published' });
+      const hasFallbackMaps = fallbackMaps.length > 0;
+      const communityData = await communityLoad.catch(() => null);
+
+      if (shouldUseEducationMapsFallback(reason) || hasFallbackMaps) {
+        const recoveryMaps = hasFallbackMaps ? fallbackMaps : listFallbackEducationMapResources();
+        setMaps(recoveryMaps);
+        setCommunityPacket(
+          communityData && communityData.posts.length > 0
+            ? buildCommunityUniversePacket(communityData.posts, {
+                mode: 'live',
+                sourceSummary: `${communityData.posts.length} live community traces / ${communityData.trustedNewsMeta.count} trusted news / shared packet`,
+              })
+            : INITIAL_COMMUNITY_PACKET,
+        );
         setFallbackActive(true);
-        setFallbackMessage(getEducationMapsFallbackMessage(reason));
+        setFallbackMessage(
+          shouldUseEducationMapsFallback(reason)
+            ? getEducationMapsFallbackMessage(reason)
+            : communityData?.loadError ?? 'Live universe services are unavailable. Using bundled read-only universe packets.',
+        );
       } else {
         const actionableError = toActionableSurfaceError({
           area: 'Universe view',
@@ -251,42 +187,103 @@ export default function UniversePage() {
       return;
     }
 
-    if (!maps.some((resource) => resource.definition.topicKey === selectedTopicKey)) {
+    if (
+      selectedTopicKey !== communityPacket?.domain.key &&
+      !maps.some((resource) => resource.definition.topicKey === selectedTopicKey)
+    ) {
       setSelectedTopicKey('all');
     }
-  }, [maps, selectedTopicKey]);
+  }, [communityPacket?.domain.key, maps, selectedTopicKey]);
+
+  const packetsByTopicKey = useMemo(
+    () => {
+      const packets = maps.map((resource) => [
+        resource.definition.topicKey,
+        mapResourceToUniversePacket(resource, {
+          surface: selectedTopicKey === 'all' ? 'universe' : 'education',
+        }),
+      ] as const);
+
+      if (communityPacket) {
+        packets.push([communityPacket.domain.key, communityPacket] as const);
+      }
+
+      return new Map(packets);
+    },
+    [communityPacket, maps, selectedTopicKey],
+  );
 
   const displayMap = useMemo(() => {
-    if (selectedTopicKey === 'all') {
-      return buildCanonicalCosmos(maps);
+    if (selectedTopicKey === 'all' || selectedTopicKey === communityPacket?.domain.key) {
+      return null;
     }
 
     return maps.find((resource) => resource.definition.topicKey === selectedTopicKey) ?? null;
-  }, [maps, selectedTopicKey]);
+  }, [communityPacket?.domain.key, maps, selectedTopicKey]);
+  const displayPacket = useMemo(() => {
+    if (selectedTopicKey === 'all') {
+      if (fallbackActive && packetsByTopicKey.size < 1) {
+        return getGlobalUniverseDemoPacket();
+      }
+
+      const mergedPacket = buildCanonicalUniversePacket(Array.from(packetsByTopicKey.values()));
+      return mergedPacket ?? getGlobalUniverseDemoPacket();
+    }
+
+    return packetsByTopicKey.get(selectedTopicKey) ?? null;
+  }, [fallbackActive, packetsByTopicKey, selectedTopicKey]);
 
   const topicOptions = useMemo(
-    () =>
-      maps
+    () => {
+      const educationTopics = maps
         .map((resource) => resource.definition)
-        .sort((left, right) => left.title.localeCompare(right.title)),
-    [maps],
+        .sort((left, right) => left.title.localeCompare(right.title));
+
+      if (!communityPacket) {
+        return educationTopics;
+      }
+
+      return [
+        ...educationTopics,
+        {
+          id: communityPacket.id,
+          title: communityPacket.title,
+          topicKey: communityPacket.domain.key,
+        },
+      ];
+    },
+    [communityPacket, maps],
   );
+  const communityTopicKey = communityPacket?.domain.key ?? null;
+  const viewerEyebrowLabel =
+    selectedTopicKey === 'all'
+      ? 'Manara shared universe'
+      : selectedTopicKey === communityTopicKey
+        ? universePresentationTerms.communityUniverse
+        : 'Manara domain universe';
+  const viewerTitlePrefix =
+    selectedTopicKey === 'all'
+      ? 'Universe'
+      : selectedTopicKey === communityTopicKey
+        ? 'Community'
+        : 'Domain';
 
   return (
     <div className="h-full">
       <FalakMapViewer
         immersive
         map={displayMap}
+        packet={displayPacket}
         loading={loading}
         error={error}
         onRetry={() => void loadUniverse()}
-        eyebrowLabel={selectedTopicKey === 'all' ? 'Manara shared universe' : 'Manara domain universe'}
-        titlePrefix={selectedTopicKey === 'all' ? 'Universe' : 'Domain'}
-        showAdminLink={selectedTopicKey !== 'all' && !fallbackActive}
+        eyebrowLabel={viewerEyebrowLabel}
+        titlePrefix={viewerTitlePrefix}
+        showAdminLink={selectedTopicKey !== 'all' && !fallbackActive && Boolean(displayPacket?.packetMeta?.adminTopicKey)}
         headerActions={
           <div className="space-y-3 text-xs text-slate-200">
             <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-              <label className="rounded-[1rem] border border-white/15 bg-black/30 px-3 py-2 text-sm text-slate-100">
+              <label className="manara-glass-chip rounded-[1rem] border border-white/15 bg-black/30 px-3 py-2 text-sm text-slate-100">
                 <span className="mb-1 block text-[10px] uppercase tracking-[0.2em] text-slate-400">Universe scope</span>
                 <select
                   value={selectedTopicKey}
@@ -305,7 +302,7 @@ export default function UniversePage() {
               <button
                 type="button"
                 onClick={() => void loadUniverse()}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/6 px-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-100 transition-colors hover:bg-white/12"
+                className="manara-glass-chip inline-flex min-h-10 items-center justify-center gap-2 border border-white/20 bg-white/6 px-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-100 transition-colors hover:bg-white/12"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 {`Refresh ${universePresentationTerms.universe.toLowerCase()}`}
@@ -313,11 +310,11 @@ export default function UniversePage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-1">
+              <span className="manara-glass-chip inline-flex items-center gap-2 border border-white/15 bg-white/5 px-3 py-1">
                 <Sparkles className="h-3.5 w-3.5 text-indigo-200" />
-                {maps.length} source {universePresentationTerms.domain.toLowerCase()}s loaded
+                {packetsByTopicKey.size} source {universePresentationTerms.domain.toLowerCase()}s loaded
               </span>
-              <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-1">
+              <span className="manara-glass-chip inline-flex items-center gap-2 border border-white/15 bg-white/5 px-3 py-1">
                 {`${universePresentationTerms.universe} scope: ${selectedTopicKey === 'all' ? 'cross-domain' : selectedTopicKey}`}
               </span>
             </div>
@@ -325,7 +322,7 @@ export default function UniversePage() {
             {fallbackActive ? (
               <p className="rounded-lg border border-amber-300/35 bg-amber-300/12 px-3 py-2 text-[11px] leading-5 text-amber-100">
                 {fallbackMessage ??
-                  'Live universe APIs are partially unavailable. This view is using bundled read-only constellations where needed.'}
+                  'Live universe APIs are partially unavailable. This view is using bundled read-only universe packets where needed.'}
               </p>
             ) : null}
           </div>

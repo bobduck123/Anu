@@ -30,7 +30,7 @@ export function NavbarEdu() {
       <div className="edu-glass relative mx-auto max-w-6xl overflow-hidden border">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#f2c786]/75 to-transparent" />
         <div className="flex items-center justify-between gap-3 px-4 py-3">
-          <Link href="/education" className="flex items-center gap-3 rounded-xl px-1 py-1">
+          <Link href="/education" className="manara-glass-chip flex items-center gap-3 border border-white/10 bg-white/[0.03] px-2 py-1">
             <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/18 bg-[radial-gradient(circle_at_35%_30%,#f5d39f,transparent_40%),linear-gradient(160deg,#1f3a58,#12253d)] shadow-[0_8px_18px_-10px_rgba(0,0,0,0.9)]">
               <Leaf className="h-4.5 w-4.5 text-[#f5d8ab]" />
             </div>
@@ -49,7 +49,7 @@ export function NavbarEdu() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors ${
+                  className={`manara-glass-chip inline-flex min-h-9 items-center gap-1.5 border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors ${
                     isActive(link.href)
                       ? "border-[#f2c786]/35 bg-[rgba(242,199,134,0.14)] text-[#f5d39f]"
                       : "border-transparent text-[var(--edu-foreground)]/74 hover:border-white/14 hover:bg-white/8 hover:text-[var(--edu-foreground)]"
@@ -93,7 +93,7 @@ export function NavbarEdu() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-[0.1em] ${
+                  className={`manara-glass-chip border px-3 py-2 text-xs font-semibold uppercase tracking-[0.1em] ${
                     isActive(link.href)
                       ? "border-[#f2c786]/32 bg-[rgba(242,199,134,0.12)] text-[#f5d39f]"
                       : "border-white/10 bg-black/20 text-[var(--edu-foreground)]/82"

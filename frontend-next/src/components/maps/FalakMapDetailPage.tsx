@@ -65,7 +65,16 @@ export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
       return;
     }
 
-    loadMap();
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) {
+        loadMap();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, isAuthenticated, loadMap]);
 
   return (

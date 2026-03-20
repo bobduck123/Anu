@@ -103,6 +103,33 @@ export interface UniverseConstellation {
   starIds: string[];
 }
 
+export interface UniverseRelation {
+  id: string;
+  sourceId: string;
+  targetId: string;
+  relation: string;
+  weight?: number;
+  confidence?: number;
+  evidence?: string;
+}
+
+export interface UniverseSnapshot {
+  id: string;
+  name: string;
+  version?: number | null;
+  starCount?: number;
+  createdAt?: string;
+  current?: boolean;
+}
+
+export interface UniversePacketMeta {
+  status?: string;
+  version?: number | null;
+  coverage?: number | null;
+  sourceSummary?: string;
+  adminTopicKey?: string | null;
+}
+
 export interface UniverseDomainContext {
   key: string;
   title: string;
@@ -134,6 +161,9 @@ export interface UniversePacket {
   domain: UniverseDomainContext;
   stars: UniverseStar[];
   constellations: UniverseConstellation[];
+  relations?: UniverseRelation[];
+  snapshots?: UniverseSnapshot[];
+  packetMeta?: UniversePacketMeta;
   filters: UniverseStarType[];
   fallbackState?: UniverseFallbackState | null;
   updatedAt?: string;
