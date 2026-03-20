@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthGateCard from '@/components/auth/AuthGateCard';
 import { wcleApi, WCLERun } from '@/lib/api/wcleApi';
 import { OnboardingWidget } from '@/components/wcle/OnboardingWidget';
+import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
 
 function cents(v: number | null | undefined): string {
   if (v == null) return '$0.00';
@@ -12,35 +15,44 @@ function cents(v: number | null | undefined): string {
 
 function supplierBadge(type: string) {
   const colors: Record<string, string> = {
-    FLEMINGTON: 'bg-green-100 text-green-800',
-    COSTCO: 'bg-blue-100 text-blue-800',
-    BUTCHER: 'bg-red-100 text-red-800',
-    ALDI: 'bg-orange-100 text-orange-800',
-    CUSTOM: 'bg-gray-100 text-gray-700',
+    FLEMINGTON: 'bg-emerald-300/20 text-emerald-100',
+    COSTCO: 'bg-sky-300/20 text-sky-100',
+    BUTCHER: 'bg-rose-300/20 text-rose-100',
+    ALDI: 'bg-amber-300/20 text-amber-100',
+    CUSTOM: 'bg-white/15 text-white/85',
   };
   return colors[type] || colors.CUSTOM;
 }
 
 function statusBadge(status: string) {
   const colors: Record<string, string> = {
-    DRAFT: 'bg-gray-100 text-gray-600',
-    OPEN: 'bg-green-100 text-green-700',
-    CLOSED: 'bg-yellow-100 text-yellow-700',
-    EXECUTED: 'bg-blue-100 text-blue-700',
-    COMPLETED: 'bg-emerald-100 text-emerald-800',
-    CANCELLED: 'bg-red-100 text-red-600',
+    DRAFT: 'bg-white/15 text-white/70',
+    OPEN: 'bg-emerald-300/20 text-emerald-100',
+    CLOSED: 'bg-amber-300/20 text-amber-100',
+    EXECUTED: 'bg-sky-300/20 text-sky-100',
+    COMPLETED: 'bg-emerald-300/25 text-emerald-50',
+    CANCELLED: 'bg-rose-300/20 text-rose-100',
   };
-  return colors[status] || 'bg-gray-100 text-gray-600';
+  return colors[status] || 'bg-white/15 text-white/70';
 }
 
 export default function CostLoweringPage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [runs, setRuns] = useState<WCLERun[]>([]);
   const [loading, setLoading] = useState(true);
   const [postcode, setPostcode] = useState('');
   const [supplierFilter, setSupplierFilter] = useState('');
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const authHref = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set('returnTo', '/cost-lowering');
+    return `/auth?${params.toString()}`;
+  }, []);
 
   const loadRuns = useCallback(async (filters: { postcode?: string; supplierFilter?: string } = {}) => {
     setLoading(true);
+    setNotice(null);
     try {
       const params: Record<string, string> = {};
       if (filters.postcode) params.postcode = filters.postcode;
@@ -49,6 +61,13 @@ export default function CostLoweringPage() {
       setRuns(res.runs || []);
     } catch (err) {
       console.error('Failed to load runs:', err);
+      const actionable = toActionableSurfaceError({
+        area: 'Weekly Cost-Lowering Engine',
+        rawMessage: err instanceof Error ? err.message : null,
+        fallbackHref: '/docs',
+        fallbackLabel: 'Open docs',
+      });
+      setNotice(`${actionable.headline}. ${actionable.detail}`);
       setRuns([]);
     } finally {
       setLoading(false);
@@ -56,49 +75,78 @@ export default function CostLoweringPage() {
   }, []);
 
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setLoading(false);
+      setRuns([]);
+      return;
+    }
+
     void loadRuns();
-  }, [loadRuns]);
+  }, [authLoading, isAuthenticated, loadRuns]);
 
   function handleSearch() {
     void loadRuns({ postcode, supplierFilter });
   }
 
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <AuthGateCard
+        eyebrow="Cost-Lowering Engine"
+        title="Sign in to join weekly runs"
+        description="Run listings, pledges, and household savings are tied to authenticated participants. Sign in to access live run operations."
+        primaryHref={authHref}
+        primaryLabel="Sign in to continue"
+        secondaryHref="/docs"
+        secondaryLabel="Open docs"
+      />
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      {/* Hero */}
-      <section className="mb-10">
-        <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-serif)' }}>
+      <section className="card-civic mb-8">
+        <p className="text-xs uppercase tracking-[0.18em] text-white/65">Weekly Cost-Lowering Engine</p>
+        <h1 className="text-3xl font-bold mt-2 mb-2 text-white" style={{ fontFamily: 'var(--font-serif)' }}>
           Weekly Cost-Lowering Engine
         </h1>
-        <p className="text-lg text-gray-600 max-w-2xl">
-          Join bulk-buying runs in your area. Save 30-50% on fresh produce by buying
-          together with your neighbours.
+        <p className="text-sm text-white/75 max-w-2xl">
+          Join bulk-buying runs in your area. Save 30-50% on fresh produce by buying together with your neighbours.
         </p>
       </section>
 
-      {/* Onboarding Widget */}
       <section className="mb-8">
         <OnboardingWidget />
       </section>
 
-      {/* Filters */}
-      <section className="flex flex-wrap gap-3 mb-8 items-end">
+      <section className="card-civic flex flex-wrap gap-3 mb-8 items-end">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Postcode</label>
+          <label className="block text-xs uppercase tracking-[0.14em] text-white/65 mb-1">Postcode</label>
           <input
             type="text"
             value={postcode}
-            onChange={(e) => setPostcode(e.target.value)}
+            onChange={(event) => setPostcode(event.target.value)}
             placeholder="e.g. 2042"
-            className="border border-gray-300 rounded-lg px-3 py-2 w-32 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            className="input-civic w-32"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Supplier</label>
+          <label className="block text-xs uppercase tracking-[0.14em] text-white/65 mb-1">Supplier</label>
           <select
             value={supplierFilter}
-            onChange={(e) => setSupplierFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            onChange={(event) => setSupplierFilter(event.target.value)}
+            className="input-civic"
           >
             <option value="">All suppliers</option>
             <option value="FLEMINGTON">Flemington Markets</option>
@@ -108,21 +156,19 @@ export default function CostLoweringPage() {
             <option value="CUSTOM">Custom</option>
           </select>
         </div>
-        <button
-          onClick={handleSearch}
-          className="bg-green-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-        >
+        <button onClick={handleSearch} className="btn-pill btn-pill-primary text-sm">
           Search
         </button>
       </section>
 
-      {/* Runs list */}
+      {notice ? <div className="card-civic mb-6 text-sm text-amber-100">{notice}</div> : null}
+
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400" />
         </div>
       ) : runs.length === 0 ? (
-        <div className="text-center py-20 text-gray-500">
+        <div className="card-civic text-center py-16 text-white/70">
           <p className="text-lg mb-2">No runs found</p>
           <p className="text-sm">Try adjusting your filters or check back later.</p>
         </div>
@@ -131,11 +177,7 @@ export default function CostLoweringPage() {
           {runs.map((run) => {
             const savingsEst = (run.retail_equivalent_total_cents || 0) - (run.bulk_estimate_total_cents || 0);
             return (
-              <Link
-                key={run.id}
-                href={`/runs/${run.id}`}
-                className="block bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow"
-              >
+              <Link key={run.id} href={`/runs/${run.id}`} className="card-civic block hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -146,33 +188,34 @@ export default function CostLoweringPage() {
                         {run.status}
                       </span>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900">{run.title}</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {run.location_name || run.address || 'Location TBD'} &middot; {run.suburb || ''} {run.postcode || ''}
+                    <h3 className="text-lg font-semibold text-white">{run.title}</h3>
+                    <p className="text-sm text-white/70 mt-1">
+                      {run.location_name || run.address || 'Location TBD'} · {run.suburb || ''} {run.postcode || ''}
                     </p>
-                    <p className="text-sm text-gray-400 mt-1">
+                    <p className="text-xs text-white/60 mt-1">
                       {new Date(run.run_date).toLocaleDateString('en-AU', {
-                        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
                       })}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
                     {run.status === 'COMPLETED' && run.retail_equivalent_total_cents ? (
                       <>
-                        <p className="text-xs text-gray-400">Community saved</p>
-                        <p className="text-lg font-bold text-green-600">
+                        <p className="text-xs text-white/60">Community saved</p>
+                        <p className="text-lg font-bold text-emerald-200">
                           {cents((run.retail_equivalent_total_cents || 0) - (run.bulk_actual_total_cents || 0))}
                         </p>
                       </>
                     ) : savingsEst > 0 ? (
                       <>
-                        <p className="text-xs text-gray-400">Est. savings</p>
-                        <p className="text-lg font-bold text-green-600">{cents(savingsEst)}</p>
+                        <p className="text-xs text-white/60">Est. savings</p>
+                        <p className="text-lg font-bold text-emerald-200">{cents(savingsEst)}</p>
                       </>
                     ) : null}
-                    <p className="text-xs text-gray-400 mt-1">
-                      Fee: {cents(run.coordination_fee_per_household_cents)}/household
-                    </p>
+                    <p className="text-xs text-white/60 mt-1">Fee: {cents(run.coordination_fee_per_household_cents)}/household</p>
                   </div>
                 </div>
               </Link>

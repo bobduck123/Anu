@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import {
-  wcleApi,
-  OrganizerPanelData,
-} from '@/lib/api/wcleApi';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthGateCard from '@/components/auth/AuthGateCard';
+import { wcleApi, OrganizerPanelData } from '@/lib/api/wcleApi';
+import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
 
 function cents(v: number | null | undefined): string {
   if (v == null) return '$0.00';
@@ -16,6 +16,7 @@ function cents(v: number | null | undefined): string {
 export default function OrganizerRunPage() {
   const params = useParams();
   const runId = Number(params.id);
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   const [data, setData] = useState<OrganizerPanelData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,21 +24,50 @@ export default function OrganizerRunPage() {
   const [actionLoading, setActionLoading] = useState('');
   const [receiptAmount, setReceiptAmount] = useState('');
 
+  const authHref = useMemo(() => {
+    const query = new URLSearchParams();
+    query.set('returnTo', `/organizer/runs/${runId}`);
+    return `/auth?${query.toString()}`;
+  }, [runId]);
+
   const loadData = useCallback(async () => {
+    if (!runId) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
     try {
       const panel = await wcleApi.getOrganizerPanel(runId);
       setData(panel);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Failed to load';
-      setError(msg);
+      const actionable = toActionableSurfaceError({
+        area: 'Organizer run panel',
+        rawMessage: e instanceof Error ? e.message : null,
+        fallbackHref: '/cost-lowering',
+        fallbackLabel: 'Back to run list',
+      });
+      setError(`${actionable.headline}. ${actionable.detail}`);
+      setData(null);
     } finally {
       setLoading(false);
     }
   }, [runId]);
 
   useEffect(() => {
-    if (runId) void loadData();
-  }, [runId, loadData]);
+    if (authLoading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
+    void loadData();
+  }, [authLoading, isAuthenticated, loadData]);
 
   async function doAction(action: string) {
     setActionLoading(action);
@@ -94,55 +124,57 @@ export default function OrganizerRunPage() {
     }
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400" />
       </div>
     );
   }
 
-  if (!data) {
+  if (!isAuthenticated) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-10 text-center text-red-500">{error || 'Not found'}</div>
+      <AuthGateCard
+        eyebrow="Organizer panel"
+        title="Sign in to manage this run"
+        description="Organizer controls, pledge reconciliation, and completion actions require an authenticated organizer session."
+        primaryHref={authHref}
+        secondaryHref="/cost-lowering"
+        secondaryLabel="Back to runs"
+      />
     );
   }
 
+  if (!data) {
+    return <div className="max-w-4xl mx-auto px-4 py-10 text-center text-rose-200">{error || 'Not found'}</div>;
+  }
+
   const { run, pledges, aggregated_quantities } = data;
-  const confirmed = pledges.filter((p) => p.status === 'CONFIRMED');
-  const fulfilled = pledges.filter((p) => p.status === 'FULFILLED');
-  const noShow = pledges.filter((p) => p.status === 'NO_SHOW');
+  const confirmed = pledges.filter((pledge) => pledge.status === 'CONFIRMED');
+  const fulfilled = pledges.filter((pledge) => pledge.status === 'FULFILLED');
+  const noShow = pledges.filter((pledge) => pledge.status === 'NO_SHOW');
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      <Link href="/cost-lowering" className="text-sm text-green-600 hover:underline mb-4 inline-block">
+      <Link href="/cost-lowering" className="text-sm text-white/80 hover:underline mb-4 inline-block">
         &larr; Back to runs
       </Link>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">Organizer Panel</h1>
-      <h2 className="text-lg text-gray-500 mb-6">{run.title}</h2>
+      <h1 className="text-2xl font-bold text-white mb-1">Organizer Panel</h1>
+      <h2 className="text-lg text-white/70 mb-6">{run.title}</h2>
 
-      {error && (
-        <div className="bg-red-50 text-red-700 text-sm rounded-lg px-4 py-2 mb-4">{error}</div>
-      )}
+      {error && <div className="card-civic text-sm text-rose-200 mb-4">{error}</div>}
 
-      {/* Status + Actions */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+      <div className="card-civic mb-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <span className="text-sm text-gray-400">Status:</span>{' '}
-            <span className="font-semibold text-gray-900">{run.status}</span>
+            <span className="text-sm text-white/65">Status:</span>{' '}
+            <span className="font-semibold text-white">{run.status}</span>
           </div>
           <div className="flex gap-2 flex-wrap">
-            {run.status === 'DRAFT' && (
-              <ActionBtn label="Open Run" action="open" loading={actionLoading} onClick={doAction} color="green" />
-            )}
-            {run.status === 'OPEN' && (
-              <ActionBtn label="Close Run" action="close" loading={actionLoading} onClick={doAction} color="yellow" />
-            )}
-            {run.status === 'CLOSED' && (
-              <ActionBtn label="Mark Executed" action="execute" loading={actionLoading} onClick={doAction} color="blue" />
-            )}
+            {run.status === 'DRAFT' && <ActionBtn label="Open Run" action="open" loading={actionLoading} onClick={doAction} color="green" />}
+            {run.status === 'OPEN' && <ActionBtn label="Close Run" action="close" loading={actionLoading} onClick={doAction} color="yellow" />}
+            {run.status === 'CLOSED' && <ActionBtn label="Mark Executed" action="execute" loading={actionLoading} onClick={doAction} color="blue" />}
             {['CLOSED', 'EXECUTED'].includes(run.status) && (
               <ActionBtn label="Complete Run" action="complete" loading={actionLoading} onClick={doAction} color="emerald" />
             )}
@@ -153,53 +185,48 @@ export default function OrganizerRunPage() {
         </div>
       </div>
 
-      {/* Receipt Entry */}
       {['CLOSED', 'EXECUTED'].includes(run.status) && (
-        <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
-          <h3 className="font-semibold text-gray-900 mb-3">Receipt Entry</h3>
+        <div className="card-civic mb-6">
+          <h3 className="font-semibold text-white mb-3">Receipt Entry</h3>
           <div className="flex gap-3 items-end">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Actual bulk total ($)</label>
+              <label className="block text-sm text-white/70 mb-1">Actual bulk total ($)</label>
               <input
                 type="number"
                 step="0.01"
                 value={receiptAmount}
-                onChange={(e) => setReceiptAmount(e.target.value)}
+                onChange={(event) => setReceiptAmount(event.target.value)}
                 placeholder="e.g. 245.00"
-                className="border border-gray-300 rounded-lg px-3 py-2 w-40 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="input-civic w-40"
               />
             </div>
-            <button
-              onClick={handleAddReceipt}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
-            >
+            <button onClick={handleAddReceipt} className="btn-pill btn-pill-primary text-sm">
               Add Receipt
             </button>
           </div>
         </div>
       )}
 
-      {/* Aggregated Quantities */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
-        <h3 className="font-semibold text-gray-900 mb-3">Aggregated Quantities</h3>
+      <div className="card-civic mb-6">
+        <h3 className="font-semibold text-white mb-3">Aggregated Quantities</h3>
         {aggregated_quantities.length === 0 ? (
-          <p className="text-gray-400 text-sm">No confirmed pledges yet.</p>
+          <p className="text-white/65 text-sm">No confirmed pledges yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200 text-left text-gray-500">
+                <tr className="border-b border-white/15 text-left text-white/65">
                   <th className="py-2 pr-4">Item</th>
                   <th className="py-2 pr-4">Unit</th>
                   <th className="py-2">Total Qty</th>
                 </tr>
               </thead>
               <tbody>
-                {aggregated_quantities.map((item, i) => (
-                  <tr key={i} className="border-b border-gray-100">
-                    <td className="py-2 pr-4 text-gray-800">{item.name}</td>
-                    <td className="py-2 pr-4 text-gray-500">{item.unit}</td>
-                    <td className="py-2 font-semibold text-gray-900">{item.total_qty}</td>
+                {aggregated_quantities.map((item, index) => (
+                  <tr key={`${item.name}-${index}`} className="border-b border-white/10">
+                    <td className="py-2 pr-4 text-white">{item.name}</td>
+                    <td className="py-2 pr-4 text-white/70">{item.unit}</td>
+                    <td className="py-2 font-semibold text-white">{item.total_qty}</td>
                   </tr>
                 ))}
               </tbody>
@@ -208,51 +235,49 @@ export default function OrganizerRunPage() {
         )}
       </div>
 
-      {/* Pledge List + Pickup Check-in */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
-        <h3 className="font-semibold text-gray-900 mb-3">
+      <div className="card-civic mb-6">
+        <h3 className="font-semibold text-white mb-3">
           Pledges ({pledges.length})
-          <span className="text-gray-400 text-sm font-normal ml-2">
+          <span className="text-white/60 text-sm font-normal ml-2">
             {confirmed.length} confirmed, {fulfilled.length} fulfilled, {noShow.length} no-show
           </span>
         </h3>
         {pledges.length === 0 ? (
-          <p className="text-gray-400 text-sm">No pledges yet.</p>
+          <p className="text-white/65 text-sm">No pledges yet.</p>
         ) : (
           <div className="space-y-2">
             {pledges.map((pledge) => (
-              <div key={pledge.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+              <div key={pledge.id} className="flex items-center justify-between py-2 border-b border-white/10 last:border-0">
                 <div>
-                  <span className="text-gray-800 text-sm">User #{pledge.user_id}</span>
-                  <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
-                    pledge.status === 'FULFILLED' ? 'bg-emerald-100 text-emerald-700' :
-                    pledge.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-700' :
-                    pledge.status === 'NO_SHOW' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-gray-100 text-gray-600'
-                  }`}>{pledge.status}</span>
+                  <span className="text-white text-sm">User #{pledge.user_id}</span>
+                  <span
+                    className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
+                      pledge.status === 'FULFILLED'
+                        ? 'bg-emerald-300/20 text-emerald-100'
+                        : pledge.status === 'CONFIRMED'
+                          ? 'bg-sky-300/20 text-sky-100'
+                          : pledge.status === 'NO_SHOW'
+                            ? 'bg-amber-300/20 text-amber-100'
+                            : 'bg-white/15 text-white/70'
+                    }`}
+                  >
+                    {pledge.status}
+                  </span>
                 </div>
                 <div className="flex gap-2 items-center">
-                  <span className="text-sm text-gray-500">{cents(pledge.estimated_retail_cents)}</span>
+                  <span className="text-sm text-white/70">{cents(pledge.estimated_retail_cents)}</span>
                   {pledge.status === 'CONFIRMED' && ['EXECUTED', 'CLOSED'].includes(run.status) && (
                     <>
-                      <button
-                        onClick={() => handleFulfil(pledge.id)}
-                        className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200"
-                      >
+                      <button onClick={() => handleFulfil(pledge.id)} className="text-xs bg-emerald-300/20 text-emerald-100 px-2 py-1 rounded hover:bg-emerald-300/30">
                         Picked Up
                       </button>
-                      <button
-                        onClick={() => handleNoShow(pledge.id)}
-                        className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded hover:bg-yellow-200"
-                      >
+                      <button onClick={() => handleNoShow(pledge.id)} className="text-xs bg-amber-300/20 text-amber-100 px-2 py-1 rounded hover:bg-amber-300/30">
                         No Show
                       </button>
                     </>
                   )}
                   {pledge.status === 'FULFILLED' && pledge.savings_cents != null && (
-                    <span className="text-sm font-semibold text-green-600">
-                      Saved {cents(pledge.savings_cents)}
-                    </span>
+                    <span className="text-sm font-semibold text-emerald-200">Saved {cents(pledge.savings_cents)}</span>
                   )}
                 </div>
               </div>
@@ -261,22 +286,21 @@ export default function OrganizerRunPage() {
         )}
       </div>
 
-      {/* Run summary for completed */}
       {run.status === 'COMPLETED' && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5">
-          <h3 className="font-semibold text-emerald-900 mb-3">Run Summary</h3>
+        <div className="card-civic">
+          <h3 className="font-semibold text-emerald-100 mb-3">Run Summary</h3>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-xs text-emerald-600 uppercase">Retail Equivalent</p>
-              <p className="text-xl font-bold">{cents(run.retail_equivalent_total_cents)}</p>
+              <p className="text-xs text-white/60 uppercase">Retail Equivalent</p>
+              <p className="text-xl font-bold text-white">{cents(run.retail_equivalent_total_cents)}</p>
             </div>
             <div>
-              <p className="text-xs text-emerald-600 uppercase">Actual Bulk Cost</p>
-              <p className="text-xl font-bold">{cents(run.bulk_actual_total_cents)}</p>
+              <p className="text-xs text-white/60 uppercase">Actual Bulk Cost</p>
+              <p className="text-xl font-bold text-white">{cents(run.bulk_actual_total_cents)}</p>
             </div>
             <div>
-              <p className="text-xs text-emerald-600 uppercase">Total Saved</p>
-              <p className="text-xl font-bold text-green-600">
+              <p className="text-xs text-white/60 uppercase">Total Saved</p>
+              <p className="text-xl font-bold text-emerald-200">
                 {cents((run.retail_equivalent_total_cents || 0) - (run.bulk_actual_total_cents || 0))}
               </p>
             </div>
@@ -287,7 +311,13 @@ export default function OrganizerRunPage() {
   );
 }
 
-function ActionBtn({ label, action, loading, onClick, color }: {
+function ActionBtn({
+  label,
+  action,
+  loading,
+  onClick,
+  color,
+}: {
   label: string;
   action: string;
   loading: string;
@@ -296,11 +326,11 @@ function ActionBtn({ label, action, loading, onClick, color }: {
 }) {
   const isLoading = loading === action;
   const colorMap: Record<string, string> = {
-    green: 'bg-green-600 hover:bg-green-700 text-white',
-    yellow: 'bg-yellow-500 hover:bg-yellow-600 text-white',
-    blue: 'bg-blue-600 hover:bg-blue-700 text-white',
-    emerald: 'bg-emerald-600 hover:bg-emerald-700 text-white',
-    red: 'bg-red-100 hover:bg-red-200 text-red-700',
+    green: 'bg-emerald-500 hover:bg-emerald-600 text-white',
+    yellow: 'bg-amber-500 hover:bg-amber-600 text-white',
+    blue: 'bg-sky-500 hover:bg-sky-600 text-white',
+    emerald: 'bg-teal-500 hover:bg-teal-600 text-white',
+    red: 'bg-rose-300/20 hover:bg-rose-300/30 text-rose-100',
   };
   return (
     <button
