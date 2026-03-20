@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle, Loader2, Plus, RefreshCw, Sparkles } from 'lucide-react';
@@ -24,9 +24,9 @@ import {
 import { DraggableGallery } from '@/ui/patterns/draggable-gallery';
 import CommunityComposerModal from './CommunityComposerModal';
 
-export const forceDynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 
-const CommunityLegacy = dynamic(() => import('./CommunityLegacy'), { ssr: false });
+const CommunityLegacy = dynamicImport(() => import('./CommunityLegacy'), { ssr: false });
 
 function CommunityPageFallback() {
   return (

@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Calendar as CalIcon, Download, Clock } from 'lucide-react';
 import { apiFetch } from '@/lib/api/client';
-import { Button } from '@/ui-system/primitives/Button';
 import { Card, CardTitle } from '@/ui-system/primitives/Card';
 import { LoadingState } from '@/ui-system/states/LoadingState';
 import { EmptyState } from '@/ui-system/states/EmptyState';
@@ -13,6 +12,7 @@ import { ShiftCard, type ShiftData } from '@/components/calendar/ShiftCard';
 import { AvailabilityEditor, type AvailabilitySlot } from '@/components/calendar/AvailabilityEditor';
 import { downloadICS } from '@/lib/calendar/icsExport';
 import { useTenant } from '@/ui-system/layout/TenantBrandWrapper';
+import styles from './CalendarFloating.module.css';
 
 interface CalendarEvent {
   id: number;
@@ -32,6 +32,8 @@ interface CalendarEvent {
 
 type Tab = 'events' | 'shifts' | 'availability';
 
+const TAB_ORDER: Tab[] = ['events', 'shifts', 'availability'];
+
 export default function CalendarPage() {
   const [items, setItems] = useState<CalendarEvent[]>([]);
   const [shifts, setShifts] = useState<ShiftData[]>([]);
@@ -39,9 +41,13 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('events');
+  const [activeIndex, setActiveIndex] = useState(0);
   const [signingUp, setSigningUp] = useState<number | null>(null);
   const [savingAvail, setSavingAvail] = useState(false);
   const tenant = useTenant();
+
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const sectionRefs = useRef<Array<HTMLElement | null>>([]);
 
   const now = new Date();
   const startStr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
@@ -66,7 +72,9 @@ export default function CalendarPage() {
     }
   }, [startStr, endStr]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   const handleSignUp = async (shiftId: number) => {
     setSigningUp(shiftId);
@@ -96,109 +104,204 @@ export default function CalendarPage() {
     }
   };
 
+  const snapToTab = useCallback((nextTab: Tab) => {
+    setTab(nextTab);
+    const index = TAB_ORDER.indexOf(nextTab);
+    if (index < 0) return;
+
+    setActiveIndex(index);
+
+    const viewport = viewportRef.current;
+    const section = sectionRefs.current[index];
+    if (!viewport || !section) return;
+
+    viewport.scrollTo({ top: section.offsetTop, behavior: 'smooth' });
+  }, []);
+
+  const handleViewportScroll = useCallback(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const focusY = viewport.scrollTop + viewport.clientHeight / 2;
+    let nearest = 0;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    sectionRefs.current.forEach((section, index) => {
+      if (!section) return;
+      const sectionCenter = section.offsetTop + section.clientHeight / 2;
+      const distance = Math.abs(sectionCenter - focusY);
+
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearest = index;
+      }
+    });
+
+    if (nearest !== activeIndex) {
+      setActiveIndex(nearest);
+      setTab(TAB_ORDER[nearest] ?? 'events');
+    }
+  }, [activeIndex]);
+
   if (loading) return <LoadingState fullPage message="Loading calendar..." />;
   if (error) return <ErrorState message={error} onRetry={loadData} />;
 
   const events = items.filter((i) => i._type === 'event');
+  const openShiftSlots = shifts.reduce((sum, shift) => {
+    const max = shift.max_volunteers ?? 0;
+    const assigned = shift.assigned_count ?? 0;
+    return sum + Math.max(max - assigned, 0);
+  }, 0);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold" style={{ fontFamily: 'var(--font-serif)' }}>Calendar</h1>
-          <p className="text-[var(--color-muted-foreground)] mt-1">
-            {tenant.calendarMode === 'shifts' && 'View and sign up for volunteer shifts.'}
-            {tenant.calendarMode === 'booking' && 'Book time slots and manage appointments.'}
-            {(!tenant.calendarMode || tenant.calendarMode === 'events') && 'Events, shifts, and your availability.'}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" icon={Download} onClick={() => downloadICS(startStr, endStr)}>
-            Export ICS
-          </Button>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 border-b border-[var(--color-border)]">
-        {(['events', 'shifts', 'availability'] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
-              tab === t
-                ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
-                : 'border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
-            }`}
-          >
-            {t.charAt(0).toUpperCase() + t.slice(1)}
-          </button>
-        ))}
-      </div>
-
-      {tab === 'events' && (
-        <div>
-          {events.length === 0 ? (
-            <EmptyState icon={CalIcon} title="No upcoming events" description="Check back later for new events." />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {events.map((event) => (
-                <Card key={`event-${event.id}`} padding="md" hover>
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-semibold">{event.title}</h4>
-                    <StatusBadge status="active" dot>Event</StatusBadge>
-                  </div>
-                  <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-2 mb-3">{event.description}</p>
-                  <div className="flex flex-wrap gap-3 text-xs text-[var(--color-muted-foreground)]">
-                    <span className="flex items-center gap-1">
-                      <CalIcon className="w-3.5 h-3.5" /> {event.date}
-                    </span>
-                    {event.time && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" /> {event.time}
-                      </span>
-                    )}
-                    {event.attendees != null && (
-                      <span className="font-mono-data">{event.attendees}/{event.goal || '?'} attending</span>
-                    )}
-                  </div>
-                </Card>
-              ))}
+    <div className={styles.pageRoot}>
+      <section className={styles.surface} aria-label="Calendar coordination surface">
+        <header className={styles.header}>
+          <div>
+            <h1 className={styles.heading}>Calendar</h1>
+            <p className={styles.subhead}>
+              {tenant.calendarMode === 'shifts' && 'Track and claim volunteer shifts through one shared tile.'}
+              {tenant.calendarMode === 'booking' && 'Manage appointment windows and handoff availability in one place.'}
+              {(!tenant.calendarMode || tenant.calendarMode === 'events') &&
+                'Events, shifts, and availability now live in a floating snap surface for faster coordination.'}
+            </p>
+            <div className={styles.metrics}>
+              <span>{events.length} events</span>
+              <span>{shifts.length} shifts</span>
+              <span>{openShiftSlots} open slots</span>
+              <span>{availability.length} saved windows</span>
             </div>
-          )}
-        </div>
-      )}
+          </div>
 
-      {tab === 'shifts' && (
-        <div>
-          {shifts.length === 0 ? (
-            <EmptyState icon={Clock} title="No shifts available" description="No volunteer shifts scheduled for this period." />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {shifts.map((shift) => (
-                <ShiftCard
-                  key={shift.id}
-                  shift={shift}
-                  onSignUp={handleSignUp}
-                  loading={signingUp === shift.id}
+          <button type="button" className={styles.exportButton} onClick={() => downloadICS(startStr, endStr)}>
+            <Download className="h-4 w-4" /> Export ICS
+          </button>
+        </header>
+
+        <div className={styles.shell}>
+          <nav className={styles.tabRail} aria-label="Calendar sections">
+            {TAB_ORDER.map((nextTab) => {
+              const isActive = tab === nextTab;
+              return (
+                <button
+                  key={nextTab}
+                  type="button"
+                  onClick={() => snapToTab(nextTab)}
+                  className={`${styles.tabButton} ${isActive ? styles.tabButtonActive : ''}`}
+                >
+                  {nextTab}
+                </button>
+              );
+            })}
+
+            <div className={styles.indicatorRow} aria-hidden="true">
+              {TAB_ORDER.map((name, index) => (
+                <span
+                  key={name}
+                  className={`${styles.indicatorDot} ${index === activeIndex ? styles.indicatorActive : ''}`}
                 />
               ))}
             </div>
-          )}
-        </div>
-      )}
+          </nav>
 
-      {tab === 'availability' && (
-        <Card padding="md">
-          <CardTitle>Your Weekly Availability</CardTitle>
-          <p className="text-sm text-[var(--color-muted-foreground)] mb-6">Set when you&apos;re available for shifts.</p>
-          <AvailabilityEditor
-            slots={availability}
-            onSave={handleSaveAvailability}
-            saving={savingAvail}
-          />
-        </Card>
-      )}
+          <div ref={viewportRef} className={styles.snapViewport} onScroll={handleViewportScroll}>
+            <section
+              ref={(node) => {
+                sectionRefs.current[0] = node;
+              }}
+              className={styles.snapSection}
+              aria-label="Events"
+            >
+              <div className={styles.sectionPanel}>
+                <p className={styles.sectionHeading}>Events</p>
+                {events.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <EmptyState icon={CalIcon} title="No upcoming events" description="Check back later for new events." />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {events.map((event) => (
+                      <Card key={`event-${event.id}`} padding="md" hover className="bg-[rgba(11,24,52,0.72)] border-white/12">
+                        <div className="mb-2 flex items-start justify-between">
+                          <h4 className="font-semibold text-white">{event.title}</h4>
+                          <StatusBadge status="active" dot>
+                            Event
+                          </StatusBadge>
+                        </div>
+                        <p className="mb-3 line-clamp-2 text-sm text-white/76">{event.description}</p>
+                        <div className="flex flex-wrap gap-3 text-xs text-white/70">
+                          <span className="flex items-center gap-1">
+                            <CalIcon className="h-3.5 w-3.5" /> {event.date}
+                          </span>
+                          {event.time && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3.5 w-3.5" /> {event.time}
+                            </span>
+                          )}
+                          {event.attendees != null && (
+                            <span className="font-mono-data">
+                              {event.attendees}/{event.goal || '?'} attending
+                            </span>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <section
+              ref={(node) => {
+                sectionRefs.current[1] = node;
+              }}
+              className={styles.snapSection}
+              aria-label="Shifts"
+            >
+              <div className={styles.sectionPanel}>
+                <p className={styles.sectionHeading}>Shifts</p>
+                {shifts.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <EmptyState
+                      icon={Clock}
+                      title="No shifts available"
+                      description="No volunteer shifts scheduled for this period."
+                    />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {shifts.map((shift) => (
+                      <ShiftCard
+                        key={shift.id}
+                        shift={shift}
+                        onSignUp={handleSignUp}
+                        loading={signingUp === shift.id}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <section
+              ref={(node) => {
+                sectionRefs.current[2] = node;
+              }}
+              className={styles.snapSection}
+              aria-label="Availability"
+            >
+              <div className={styles.sectionPanel}>
+                <p className={styles.sectionHeading}>Availability</p>
+                <Card padding="md" className="bg-[rgba(9,20,44,0.66)] border-white/12">
+                  <CardTitle className="text-white">Your Weekly Availability</CardTitle>
+                  <p className="mb-6 text-sm text-white/72">Set when you&apos;re available for shifts.</p>
+                  <AvailabilityEditor slots={availability} onSave={handleSaveAvailability} saving={savingAvail} />
+                </Card>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

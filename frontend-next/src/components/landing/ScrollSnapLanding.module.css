@@ -112,11 +112,97 @@
 .heroWrapItem {
   position: absolute;
   inset: 0;
+  z-index: 5;
+  padding: clamp(1rem, 2.4vw, 2rem);
+}
+
+.snapShell {
+  position: relative;
+  height: 100%;
+}
+
+.snapHint {
+  position: absolute;
+  right: 4.2rem;
+  top: 0.35rem;
+  z-index: 7;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(237, 226, 206, 0.88);
+  background: rgba(8, 15, 27, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+  padding: 0.4rem 0.66rem;
+}
+
+.snapIndicator {
+  position: absolute;
+  right: 0.45rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 8;
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.48rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(160deg, rgba(8, 17, 30, 0.72), rgba(8, 14, 25, 0.65));
+  backdrop-filter: blur(12px);
+}
+
+.snapIndicator button {
+  width: 0.56rem;
+  height: 0.56rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: transform 220ms ease, background-color 220ms ease, border-color 220ms ease;
+}
+
+.snapIndicator button:hover {
+  transform: scale(1.2);
+  background: rgba(243, 199, 123, 0.75);
+}
+
+.snapIndicator button.activeDot {
+  border-color: rgba(243, 199, 123, 0.9);
+  background: rgba(243, 199, 123, 0.95);
+}
+
+.snapViewport {
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-snap-stop: always;
+  scrollbar-gutter: stable;
+  scroll-behavior: smooth;
+  timeline-scope: --panel-slide;
+  padding-right: 2.75rem;
+}
+
+.snapViewport::-webkit-scrollbar {
+  width: 8px;
+}
+
+.snapViewport::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 9999px;
+}
+
+.snapSection {
+  height: 100%;
+  min-height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  view-timeline-name: --panel-slide;
+  view-timeline-axis: block;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(1.3rem, 2.5vw, 2.4rem);
-  z-index: 5;
+  padding: clamp(1rem, 2.2vw, 2rem) clamp(0.6rem, 1.4vw, 1.2rem);
 }
 
 .heroCard {
@@ -129,6 +215,27 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(12px);
   padding: clamp(1.1rem, 2.4vw, 2rem);
+
+  --contrast: 1.2;
+  --blur: 0.36rem;
+  animation: tileSnapReveal ease-in-out both;
+  animation-timeline: --panel-slide;
+  animation-range: entry 0% exit 100%;
+}
+
+@keyframes tileSnapReveal {
+  0%,
+  100% {
+    filter: blur(var(--blur)) contrast(var(--contrast));
+    opacity: 0.08;
+    transform: translateY(34px) scale(0.98);
+  }
+
+  50% {
+    filter: blur(0) contrast(1);
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .kicker {
@@ -142,7 +249,7 @@
   margin-top: 0.4rem;
   color: #fff;
   text-shadow: 1px 2px 8px rgba(0, 0, 0, 0.64);
-  font-size: clamp(2.2rem, 5.3vw, 5rem);
+  font-size: clamp(2.2rem, 5.3vw, 4.35rem);
   line-height: 0.95;
   letter-spacing: -0.035em;
   transform-style: preserve-3d;
@@ -275,6 +382,15 @@
   }
 }
 
+@supports not (animation-timeline: --panel-slide) {
+  .heroCard {
+    animation: none;
+    filter: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (max-width: 940px) {
   .landingRoot,
   .section,
@@ -286,8 +402,12 @@
     inset: 0.9rem;
   }
 
+  .snapViewport {
+    padding-right: 2.4rem;
+  }
+
   .boardName {
-    font-size: clamp(2rem, 10.4vw, 3.45rem);
+    font-size: clamp(2rem, 10.4vw, 3.4rem);
     line-height: 1;
   }
 
@@ -317,7 +437,8 @@
 }
 
 @media (max-width: 640px) {
-  .sectionLabel {
+  .sectionLabel,
+  .snapHint {
     display: none;
   }
 
@@ -328,6 +449,10 @@
 
   .actionRow a {
     width: 100%;
+  }
+
+  .snapIndicator {
+    right: 0.2rem;
   }
 
   .heroCorner,
@@ -342,11 +467,16 @@
 @media (prefers-reduced-motion: reduce) {
   .mmParallax,
   .movingCloudsWrap,
-  .actionRow a {
+  .actionRow a,
+  .snapIndicator button {
     transition: none;
   }
 
   .movingClouds {
+    animation: none;
+  }
+
+  .heroCard {
     animation: none;
   }
 }
