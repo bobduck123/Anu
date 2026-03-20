@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshCw, Sparkles } from 'lucide-react';
 import {
+  getEducationMapsBlockingMessage,
   getEducationMap,
   getEducationMapsFallbackMessage,
+  isEducationMapsBlockingAuthError,
   listEducationMaps,
   MapResource,
   shouldUseEducationMapsFallback,
@@ -71,7 +73,7 @@ export default function UniversePage() {
               fallbackMessage: null,
             };
           } catch (reason) {
-            if (shouldUseEducationMapsFallback(reason)) {
+            if (shouldUseEducationMapsFallback(reason, { authenticated: isAuthenticated })) {
               const fallback = getFallbackEducationMap(definition.topicKey);
               if (fallback) {
                 return {
@@ -143,7 +145,9 @@ export default function UniversePage() {
       const hasFallbackMaps = fallbackMaps.length > 0;
       const communityData = await communityLoad.catch(() => null);
 
-      if (shouldUseEducationMapsFallback(reason) || hasFallbackMaps) {
+      if (isEducationMapsBlockingAuthError(reason, { authenticated: isAuthenticated })) {
+        setError(getEducationMapsBlockingMessage(reason));
+      } else if (shouldUseEducationMapsFallback(reason, { authenticated: isAuthenticated }) || hasFallbackMaps) {
         const recoveryMaps = hasFallbackMaps ? fallbackMaps : listFallbackEducationMapResources();
         setMaps(recoveryMaps);
         setCommunityPacket(
@@ -156,7 +160,7 @@ export default function UniversePage() {
         );
         setFallbackActive(true);
         setFallbackMessage(
-          shouldUseEducationMapsFallback(reason)
+          shouldUseEducationMapsFallback(reason, { authenticated: isAuthenticated })
             ? getEducationMapsFallbackMessage(reason)
             : communityData?.loadError ?? 'Live universe services are unavailable. Using bundled read-only universe packets.',
         );

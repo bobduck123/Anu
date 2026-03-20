@@ -255,6 +255,37 @@ export const falakOperationalHealthSchema = z.object({
   })
 });
 
+export const falakSessionStatusSchema = z.object({
+  status: z.enum(['guest', 'verified', 'blocked']),
+  tenant: z.object({
+    id: uuidSchema,
+    slug: z.string().nullable()
+  }),
+  actor: z.object({
+    id: uuidSchema,
+    external_auth_id: z.string().nullable(),
+    email: z.string().nullable(),
+    display_name: z.string().nullable(),
+    roles: z.array(z.object({
+      id: uuidSchema,
+      role_name: z.string(),
+      region_node_id: uuidSchema.nullable()
+    }))
+  }).nullable(),
+  actor_resolution: z.object({
+    source: z.enum(['none', 'verified_auth', 'trusted_header_override']),
+    verified: z.boolean(),
+    authenticated_identity: z.string().nullable(),
+    requested_actor_id: z.string().nullable()
+  }),
+  map_access: z.object({
+    mode: z.enum(['disabled', 'admin_only', 'tenant_allowlist', 'enabled']),
+    allowed: z.boolean(),
+    code: z.string().nullable(),
+    message: z.string().nullable()
+  })
+});
+
 export const createNodeBodySchema = z.object({
   type: z.string().min(1),
   visibility: visibilitySchema.default('tenant'),

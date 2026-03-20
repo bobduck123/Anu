@@ -1,11 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   EducationMapApiError,
+  getEducationMapsBlockingMessage,
   getEducationMap,
   getEducationMapsFallbackMessage,
+  getFalakSessionStatus,
+  isEducationMapsBlockingAuthError,
   listEducationMaps,
   shouldUseEducationMapsFallback,
 } from '@/lib/api/educationMaps';
+import { SupabaseConfigurationError } from '@/lib/supabase/config';
 import { getFalakTenantConfiguration } from '@/lib/maps/sandbox';
 import { isSupabaseConfigured } from '@/lib/supabase/config';
 import { getFallbackEducationMap, listFallbackEducationMaps } from '@/lib/maps/fallbackMapData';
@@ -251,6 +255,72 @@ describe('educationMaps client', () => {
 
     expect(shouldUseEducationMapsFallback(error)).toBe(true);
     expect(getEducationMapsFallbackMessage(error)).toContain('admin-only universe service');
+  });
+
+  it('does not silently fall back for signed-in actor authorization failures', () => {
+    const error = new EducationMapApiError(
+      'Actor is not allowed to access Falak routes',
+      403,
+      'ACTOR_NOT_ALLOWED',
+      { error: { code: 'ACTOR_NOT_ALLOWED' } },
+    );
+
+    expect(isEducationMapsBlockingAuthError(error, { authenticated: true })).toBe(true);
+    expect(shouldUseEducationMapsFallback(error, { authenticated: true })).toBe(false);
+    expect(getEducationMapsBlockingMessage(error)).toContain('allowlisted');
+  });
+
+  it('treats hosted Supabase config failures as blocking errors, not fallback candidates', () => {
+    const error = new SupabaseConfigurationError('browser_client');
+
+    expect(isEducationMapsBlockingAuthError(error, { authenticated: false })).toBe(true);
+    expect(shouldUseEducationMapsFallback(error)).toBe(false);
+    expect(getEducationMapsBlockingMessage(error)).toContain('Hosted Supabase auth is not configured');
+  });
+
+  it('can query the live Falak session diagnostic with hosted tenant headers', async () => {
+    process.env.NEXT_PUBLIC_FALAK_TENANT_ID = '22222222-2222-4222-8222-222222222222';
+    getSessionMock.mockResolvedValueOnce({
+      data: { session: { access_token: 'supabase-token' } },
+      error: null,
+    });
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({
+        status: 'verified',
+        tenant: {
+          id: '22222222-2222-4222-8222-222222222222',
+          slug: 'anu-beta',
+        },
+        actor: null,
+        actor_resolution: {
+          source: 'verified_auth',
+          verified: true,
+          authenticated_identity: 'anu-admin',
+          requested_actor_id: null,
+        },
+        map_access: {
+          mode: 'admin_only',
+          allowed: true,
+          code: null,
+          message: null,
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await getFalakSessionStatus();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:5003/v1/falak/session',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer supabase-token',
+          'X-Tenant-Id': '22222222-2222-4222-8222-222222222222',
+        }),
+      }),
+    );
   });
 
   it('ships a Stanford encyclopedia fallback map with live SEP sources', () => {

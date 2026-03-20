@@ -47,6 +47,7 @@ def test_readiness_reports_database_success():
     assert response.status_code == 200
     assert response.get_json()["status"] == "ok"
     assert response.get_json()["db"] is True
+    assert response.get_json()["warnings"] == []
     execute.assert_called_once()
 
 
@@ -58,6 +59,26 @@ def test_readiness_reports_database_failure():
     assert response.get_json()["status"] == "degraded"
     assert response.get_json()["db"] is False
     execute.assert_called_once()
+
+
+def test_readiness_stays_green_when_only_stripe_is_placeholder():
+    stripe_placeholder_app = create_app(
+        {
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            "AUTO_CREATE_ALL": False,
+            "BETA_PLACEHOLDER_DATABASE": False,
+            "BETA_PLACEHOLDER_STRIPE": True,
+        }
+    )
+    stripe_placeholder_client = stripe_placeholder_app.test_client()
+
+    with patch("manara_backend_app.health.db.session.execute", return_value=None):
+        response = stripe_placeholder_client.get("/readiness")
+
+    assert response.status_code == 200
+    assert response.get_json()["status"] == "ok"
+    assert response.get_json()["warnings"] == ["stripe_placeholder"]
 
 
 def test_domain_resolution_route_contract_is_single_prefixed():

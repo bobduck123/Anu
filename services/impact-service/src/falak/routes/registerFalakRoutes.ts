@@ -20,6 +20,7 @@ import {
   eventSchema,
   eventWorkflowResponseSchema,
   falakOperationalHealthSchema,
+  falakSessionStatusSchema,
   federationLinkBodySchema,
   graphQuerySchema,
   graphSchema,
@@ -40,11 +41,20 @@ import {
   contributionSchema,
   updateNodeBodySchema
 } from '../domain/schemas';
-import { GeometryValue, JsonObject, JsonValue, PolicyEvaluationResult } from '../domain/types';
+import {
+  ActorResolutionContext,
+  GeometryValue,
+  JsonObject,
+  JsonValue,
+  PolicyEvaluationResult,
+  ResolvedActor,
+} from '../domain/types';
 import { FalakRuntimeConfig } from '../config/falakRuntimeConfig';
 import { FalakHealthService } from '../health/falakHealthService';
 import { buildRequestContextHook, requireFalakContext } from '../plugins/requestContext';
 import { FalakRepository } from '../domain/types';
+import { resolveActorIdentity } from '../auth/actorIdentity';
+import { evaluateFalakRouteAccess } from '../security/routeGuard';
 import { FalakService } from '../services/falakService';
 import { AllocationWorkflowService } from '../services/allocationWorkflowService';
 import { ContributionWorkflowService } from '../services/contributionWorkflowService';
@@ -66,6 +76,7 @@ import {
   presentPoolBalance,
   presentPolicyDecision
 } from '../utils/presenters';
+import { AppError } from '../../utils/errors';
 
 const blockedMutationSchema = errorResponseSchema.extend({
   decision: policyDecisionResponseSchema
@@ -282,6 +293,129 @@ export async function registerFalakRoutes(
         postgis_version: report.details.postgisVersion
       }
     });
+  });
+
+  typed.get('/v1/falak/session', {
+    schema: {
+      tags: ['Health'],
+      summary: 'Falak actor and tenant session status',
+      response: {
+        200: falakSessionStatusSchema,
+        400: errorResponseSchema,
+        404: errorResponseSchema
+      }
+    }
+  }, async (request, reply) => {
+    const tenantHeader = request.headers['x-tenant-id'];
+    const tenantId = typeof tenantHeader === 'string' ? tenantHeader : Array.isArray(tenantHeader) ? tenantHeader[0] : null;
+
+    if (!tenantId) {
+      return reply.status(400).send({
+        error: {
+          code: 'TENANT_HEADER_REQUIRED',
+          message: 'Missing X-Tenant-Id header',
+        }
+      });
+    }
+
+    const tenant = await repository.findTenantById(tenantId);
+    if (!tenant) {
+      return reply.status(404).send({
+        error: {
+          code: 'TENANT_NOT_FOUND',
+          message: 'Tenant not found',
+        }
+      });
+    }
+
+    let actor: ResolvedActor | null = null;
+    let actorResolution: ActorResolutionContext = {
+      source: 'none' as const,
+      isVerified: false,
+      authenticatedIdentity: null,
+      requestedActorId: typeof request.headers['x-actor-id'] === 'string'
+        ? request.headers['x-actor-id']
+        : Array.isArray(request.headers['x-actor-id'])
+          ? request.headers['x-actor-id'][0] ?? null
+          : null,
+    };
+    let accessDecision = {
+      allowed: false,
+      code: null as string | null,
+      message: null as string | null,
+    };
+
+    try {
+      const resolved = await resolveActorIdentity(request, repository, runtime.runtimeConfig, tenantId);
+      actor = resolved.actor;
+      actorResolution = resolved.actorResolution;
+      const decision = evaluateFalakRouteAccess(
+        runtime.runtimeConfig,
+        {
+          access: 'public',
+          tenantSlug: tenant.slug,
+          actor,
+          actorResolution: {
+            source: actorResolution.source,
+            isVerified: actorResolution.isVerified,
+          }
+        },
+        runtime.runtimeConfig.mapRouteGuardMode,
+      );
+      accessDecision = {
+        allowed: decision.allowed,
+        code: decision.code ?? null,
+        message: decision.message ?? null,
+      };
+    } catch (error) {
+      if (!(error instanceof AppError)) {
+        throw error;
+      }
+
+      accessDecision = {
+        allowed: false,
+        code: error.code ?? 'FALAK_ERROR',
+        message: error.message,
+      };
+    }
+
+    const status: 'guest' | 'verified' | 'blocked' =
+      actor === null
+        ? (accessDecision.code ? 'blocked' : 'guest')
+        : accessDecision.allowed
+          ? 'verified'
+          : 'blocked';
+
+    return {
+      status,
+      tenant: {
+        id: tenant.id,
+        slug: tenant.slug,
+      },
+      actor: actor ? {
+        id: actor.id,
+        external_auth_id: actor.externalAuthId,
+        email: actor.email,
+        display_name: actor.displayName,
+        roles: actor.roles.map((role) => ({
+          id: role.id,
+          role_name: role.roleName,
+          region_node_id: role.regionNodeId,
+        })),
+      } : null,
+      actor_resolution: {
+        source: actorResolution.source,
+        verified: actorResolution.isVerified,
+        authenticated_identity: actorResolution.authenticatedIdentity,
+        requested_actor_id: actorResolution.requestedActorId,
+      },
+      map_access: {
+        mode: runtime.runtimeConfig.mapRouteGuardMode,
+        allowed: accessDecision.allowed,
+        code: accessDecision.code,
+        message: accessDecision.message,
+      }
+    };
   });
 
   await typed.register(async (publicInstance) => {

@@ -110,29 +110,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Listen for auth state changes
   useEffect(() => {
-    const supabase = createClient();
-    
-    // Check initial session
     checkAuth();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        syncLegacyAuthToken(session ?? null);
-        if (session?.user) {
-          setSupabaseUser(session.user);
-          setUser(mapSupabaseUser(session.user));
-        } else {
-          setSupabaseUser(null);
-          setUser(null);
-        }
-        setIsLoading(false);
-      }
-    );
+    try {
+      const supabase = createClient();
 
-    return () => {
-      subscription.unsubscribe();
-    };
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (_event, session) => {
+          syncLegacyAuthToken(session ?? null);
+          if (session?.user) {
+            setSupabaseUser(session.user);
+            setUser(mapSupabaseUser(session.user));
+          } else {
+            setSupabaseUser(null);
+            setUser(null);
+          }
+          setIsLoading(false);
+        }
+      );
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    } catch (error) {
+      console.error('Unable to initialize Supabase auth subscription:', error);
+      syncLegacyAuthToken(null);
+      setSupabaseUser(null);
+      setUser(null);
+      setIsLoading(false);
+      return undefined;
+    }
   }, [checkAuth]);
 
   const login = useCallback(async (email: string, password: string) => {

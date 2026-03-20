@@ -42,6 +42,19 @@ def _database_ready() -> bool:
     return True
 
 
+def _database_placeholder() -> bool:
+    return bool(current_app.config.get("BETA_PLACEHOLDER_DATABASE"))
+
+
+def _readiness_warnings() -> list[str]:
+    warnings: list[str] = []
+    if current_app.config.get("BETA_PLACEHOLDER_DATABASE"):
+        warnings.append("database_placeholder")
+    if current_app.config.get("BETA_PLACEHOLDER_STRIPE"):
+        warnings.append("stripe_placeholder")
+    return warnings
+
+
 @health_bp.route("/", methods=["GET"])
 def root_status():
     placeholder_infra = _placeholder_infra()
@@ -78,12 +91,13 @@ def healthz():
 @health_bp.route("/readiness", methods=["GET"])
 def readiness():
     db_ok = _database_ready()
-    placeholder_infra = _placeholder_infra()
-    ready = db_ok and not placeholder_infra
+    warnings = _readiness_warnings()
+    ready = db_ok and not _database_placeholder()
     return jsonify({
         "status": "ok" if ready else "degraded",
         "db": db_ok,
         "database_mode": _database_mode(),
         "stripe_mode": _stripe_mode(),
+        "warnings": warnings,
         "timestamp": _timestamp(),
     }), 200 if ready else 503

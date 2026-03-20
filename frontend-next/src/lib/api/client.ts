@@ -1,5 +1,6 @@
 import { getCoreApiBase } from '@/lib/runtime';
 import { createClient as createSupabaseClient } from '@/lib/supabase/client';
+import { isSupabaseConfigurationError } from '@/lib/supabase/config';
 
 export interface ApiErrorPayload {
   code: string;
@@ -58,6 +59,9 @@ const getAuthHeaders = async (): Promise<Record<string, string>> => {
       console.warn('Unable to read Supabase session token for API requests. Falling back to local token cache.', error);
     }
   } catch (error) {
+    if (isSupabaseConfigurationError(error)) {
+      throw error;
+    }
     console.warn('Unable to resolve Supabase session token for API requests. Falling back to local token cache.', error);
   }
 

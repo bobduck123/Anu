@@ -4,7 +4,11 @@ import Link from 'next/link';
 import { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Compass, GitBranch, Layers3, PlusCircle, RefreshCw, Search } from 'lucide-react';
 import {
+  FalakSessionStatus,
+  getEducationMapsBlockingMessage,
   getEducationMapsFallbackMessage,
+  getFalakSessionStatus,
+  isEducationMapsBlockingAuthError,
   listEducationMaps,
   MapDefinition,
   MapStatus,
@@ -26,6 +30,8 @@ export function FalakMapLibraryPage() {
   const [statusFilter, setStatusFilter] = useState<MapStatus | 'all'>('all');
   const [search, setSearch] = useState('');
   const [compareKeys, setCompareKeys] = useState<string[]>([]);
+  const [sessionStatus, setSessionStatus] = useState<FalakSessionStatus | null>(null);
+  const [sessionStatusError, setSessionStatusError] = useState<string | null>(null);
   const deferredSearch = useDeferredValue(search);
   const sandbox = isFalakMapSandbox();
 
@@ -39,7 +45,12 @@ export function FalakMapLibraryPage() {
         setMaps(response);
       })
       .catch((err) => {
-        if (shouldUseEducationMapsFallback(err)) {
+        if (isEducationMapsBlockingAuthError(err, { authenticated: isAuthenticated })) {
+          setError(getEducationMapsBlockingMessage(err));
+          return;
+        }
+
+        if (shouldUseEducationMapsFallback(err, { authenticated: isAuthenticated })) {
           console.warn('Education maps API unavailable, using bundled read-only fallback.');
           setMaps(listFallbackEducationMaps(statusFilter === 'all' ? {} : { status: statusFilter }));
           setFallbackActive(true);
@@ -58,7 +69,7 @@ export function FalakMapLibraryPage() {
       .finally(() => {
         setLoading(false);
       });
-  }, [statusFilter]);
+  }, [isAuthenticated, statusFilter]);
 
   useEffect(() => {
     if (authLoading) {
@@ -76,6 +87,34 @@ export function FalakMapLibraryPage() {
       cancelled = true;
     };
   }, [authLoading, isAuthenticated, loadMaps]);
+
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) {
+      setSessionStatus(null);
+      setSessionStatusError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setSessionStatusError(null);
+
+    getFalakSessionStatus()
+      .then((status) => {
+        if (!cancelled) {
+          setSessionStatus(status);
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setSessionStatus(null);
+          setSessionStatusError(error instanceof Error ? error.message : 'Unable to verify hosted Falak actor status.');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, isAuthenticated]);
 
   const filteredMaps = useMemo(() => {
     const needle = deferredSearch.trim().toLowerCase();
@@ -178,6 +217,21 @@ export function FalakMapLibraryPage() {
         {sandbox ? (
           <p className="mt-3 text-xs text-slate-500">
             Sandbox mode is active. Drafts, reviewed universes, and admin editing flows are safe to exercise locally.
+          </p>
+        ) : null}
+        {isAuthenticated && sessionStatus?.status === 'verified' ? (
+          <p className="mt-3 text-xs text-emerald-700">
+            Live Falak actor verified for tenant {sessionStatus.tenant.slug ?? sessionStatus.tenant.id}. Hosted admin-only universe routes are available to this session.
+          </p>
+        ) : null}
+        {isAuthenticated && sessionStatus?.status === 'blocked' ? (
+          <p className="mt-3 text-xs text-rose-700">
+            Live Falak actor check failed: {sessionStatus.map_access.message ?? 'This signed-in session is not currently accepted by the hosted admin-only universe routes.'}
+          </p>
+        ) : null}
+        {isAuthenticated && sessionStatusError ? (
+          <p className="mt-3 text-xs text-rose-700">
+            Hosted Falak actor verification could not be completed: {sessionStatusError}
           </p>
         ) : null}
         {fallbackActive ? (

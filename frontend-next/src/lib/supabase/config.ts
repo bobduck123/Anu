@@ -32,6 +32,55 @@ export function isSupabaseConfigured(env?: NodeJS.ProcessEnv): boolean {
 
 export const SUPABASE_MISSING_MESSAGE = 'Supabase auth is not configured for this environment.';
 
+export class SupabaseConfigurationError extends Error {
+  context: string;
+
+  constructor(context: string) {
+    super(SUPABASE_MISSING_MESSAGE);
+    this.name = 'SupabaseConfigurationError';
+    this.context = context;
+  }
+}
+
+function isHostedBrowserRuntime(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const host = window.location.hostname.trim().toLowerCase();
+  return !(
+    host === 'localhost'
+    || host === '127.0.0.1'
+    || host === '0.0.0.0'
+    || host.endsWith('.local')
+  );
+}
+
+export function requiresStrictSupabaseConfig(env: NodeJS.ProcessEnv = process.env): boolean {
+  if (env.NODE_ENV === 'test') {
+    return false;
+  }
+
+  if (env.VERCEL === '1') {
+    return true;
+  }
+
+  const vercelEnv = env.VERCEL_ENV?.trim().toLowerCase();
+  if (vercelEnv === 'production' || vercelEnv === 'preview') {
+    return true;
+  }
+
+  return isHostedBrowserRuntime();
+}
+
+export function allowSupabaseAnonymousFallback(env: NodeJS.ProcessEnv = process.env): boolean {
+  return !requiresStrictSupabaseConfig(env);
+}
+
+export function isSupabaseConfigurationError(error: unknown): error is SupabaseConfigurationError {
+  return error instanceof SupabaseConfigurationError;
+}
+
 const warnedSupabaseContexts = new Set<string>();
 
 export function warnMissingSupabaseConfig(context: string, env: NodeJS.ProcessEnv = process.env): void {
@@ -42,8 +91,8 @@ export function warnMissingSupabaseConfig(context: string, env: NodeJS.ProcessEn
 
   warnedSupabaseContexts.add(key);
 
-  if (env.NODE_ENV === 'production') {
-    console.error(`[supabase] ${SUPABASE_MISSING_MESSAGE} Context: ${context}. Hosted auth will degrade until env vars are restored.`);
+  if (requiresStrictSupabaseConfig(env)) {
+    console.error(`[supabase] ${SUPABASE_MISSING_MESSAGE} Context: ${context}. Hosted auth is blocked until env vars are restored.`);
     return;
   }
 

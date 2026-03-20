@@ -1,6 +1,6 @@
 import { createServerClient, type SetAllCookies } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { isSupabaseConfigured, warnMissingSupabaseConfig } from './config';
+import { allowSupabaseAnonymousFallback, isSupabaseConfigured, warnMissingSupabaseConfig } from './config';
 
 /**
  * Updates the Supabase session by refreshing tokens.
@@ -15,6 +15,9 @@ export async function updateSupabaseSession(request: NextRequest) {
 
   if (!isSupabaseConfigured()) {
     warnMissingSupabaseConfig('middleware');
+    if (!allowSupabaseAnonymousFallback()) {
+      supabaseResponse.headers.set('x-manara-auth-config', 'missing');
+    }
     return { supabaseResponse, user: null };
   }
 

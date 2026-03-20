@@ -4,8 +4,10 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import {
+  getEducationMapsBlockingMessage,
   getEducationMap,
   getEducationMapsFallbackMessage,
+  isEducationMapsBlockingAuthError,
   MapResource,
   shouldUseEducationMapsFallback,
 } from '@/lib/api/educationMaps';
@@ -36,7 +38,12 @@ export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
         setMap(response);
       })
       .catch((err) => {
-        if (shouldUseEducationMapsFallback(err)) {
+        if (isEducationMapsBlockingAuthError(err, { authenticated: isAuthenticated })) {
+          setError(getEducationMapsBlockingMessage(err));
+          return;
+        }
+
+        if (shouldUseEducationMapsFallback(err, { authenticated: isAuthenticated })) {
           const fallbackMap = getFallbackEducationMap(topicKey);
           if (fallbackMap) {
             console.warn('Education map detail unavailable from API, using bundled read-only fallback.');

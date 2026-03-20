@@ -1,6 +1,12 @@
 import { createBrowserClient } from '@supabase/ssr';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { isSupabaseConfigured, SUPABASE_MISSING_MESSAGE, warnMissingSupabaseConfig } from './config';
+import {
+  allowSupabaseAnonymousFallback,
+  isSupabaseConfigured,
+  SupabaseConfigurationError,
+  SUPABASE_MISSING_MESSAGE,
+  warnMissingSupabaseConfig,
+} from './config';
 
 type BrowserSupabaseClient = ReturnType<typeof createBrowserClient>;
 type AuthSubscription = { unsubscribe: () => void };
@@ -79,6 +85,11 @@ function createNoopBrowserClient(): NoopBrowserSupabaseClient {
 
 export function createClient(): BrowserSupabaseClient | NoopBrowserSupabaseClient {
   if (!isSupabaseConfigured()) {
+    warnMissingSupabaseConfig('browser_client');
+    if (!allowSupabaseAnonymousFallback()) {
+      throw new SupabaseConfigurationError('browser_client');
+    }
+
     return createNoopBrowserClient();
   }
 

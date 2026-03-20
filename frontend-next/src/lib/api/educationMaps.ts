@@ -1,6 +1,7 @@
 import { getImpactApiBase } from '@/lib/runtime';
 import { getFalakRequestTenantId, isFalakMapSandbox } from '@/lib/maps/sandbox';
 import { createClient as createSupabaseClient } from '@/lib/supabase/client';
+import { isSupabaseConfigurationError } from '@/lib/supabase/config';
 import { universePresentationTerms } from '@/components/maps/universe/presentationTerms';
 
 export type MapStatus = 'draft' | 'reviewed' | 'published';
@@ -159,6 +160,37 @@ export interface MapResolveResponse {
   jobCreated: boolean;
 }
 
+export interface FalakSessionStatus {
+  status: 'guest' | 'verified' | 'blocked';
+  tenant: {
+    id: string;
+    slug: string | null;
+  };
+  actor: {
+    id: string;
+    external_auth_id: string | null;
+    email: string | null;
+    display_name: string | null;
+    roles: Array<{
+      id: string;
+      role_name: string;
+      region_node_id: string | null;
+    }>;
+  } | null;
+  actor_resolution: {
+    source: 'none' | 'verified_auth' | 'trusted_header_override';
+    verified: boolean;
+    authenticated_identity: string | null;
+    requested_actor_id: string | null;
+  };
+  map_access: {
+    mode: 'disabled' | 'admin_only' | 'tenant_allowlist' | 'enabled';
+    allowed: boolean;
+    code: string | null;
+    message: string | null;
+  };
+}
+
 export class EducationMapApiError extends Error {
   status: number;
   code: string | null;
@@ -213,6 +245,9 @@ async function authHeaders(): Promise<Record<string, string>> {
       return { Authorization: `Bearer ${accessToken}` };
     }
   } catch (error) {
+    if (isSupabaseConfigurationError(error)) {
+      throw error;
+    }
     console.warn('Unable to read Supabase session for education maps auth, falling back to legacy auth token.', error);
   }
 
@@ -233,8 +268,38 @@ const FALLBACK_ERROR_CODES = new Set([
   'ACTOR_NOT_ALLOWED',
 ]);
 
-export function shouldUseEducationMapsFallback(error: unknown): boolean {
+const AUTH_GUARD_ERROR_CODES = new Set([
+  'VERIFIED_ACTOR_REQUIRED',
+  'INVALID_AUTH_TOKEN',
+  'TOKEN_IDENTITY_MISSING',
+  'ACTOR_NOT_FOUND',
+  'ACTOR_NOT_ALLOWED',
+]);
+
+export function isEducationMapsBlockingAuthError(
+  error: unknown,
+  options: { authenticated?: boolean } = {},
+): boolean {
+  if (isSupabaseConfigurationError(error)) {
+    return true;
+  }
+
+  if (!(error instanceof EducationMapApiError) || !options.authenticated) {
+    return false;
+  }
+
+  return Boolean(error.code && AUTH_GUARD_ERROR_CODES.has(error.code));
+}
+
+export function shouldUseEducationMapsFallback(
+  error: unknown,
+  options: { authenticated?: boolean } = {},
+): boolean {
   if (process.env.NEXT_PUBLIC_ENABLE_MOCK_FALLBACK === 'false') {
+    return false;
+  }
+
+  if (isEducationMapsBlockingAuthError(error, options)) {
     return false;
   }
 
@@ -247,6 +312,29 @@ export function shouldUseEducationMapsFallback(error: unknown): boolean {
   }
 
   return error instanceof TypeError;
+}
+
+export function getEducationMapsBlockingMessage(error: unknown): string {
+  if (isSupabaseConfigurationError(error)) {
+    return 'Hosted Supabase auth is not configured. Live universe routes are blocked until the public auth environment is restored.';
+  }
+
+  if (!(error instanceof EducationMapApiError)) {
+    return 'The live universe route is blocked and cannot safely fall back for this signed-in session.';
+  }
+
+  switch (error.code) {
+    case 'VERIFIED_ACTOR_REQUIRED':
+    case 'INVALID_AUTH_TOKEN':
+    case 'TOKEN_IDENTITY_MISSING':
+      return 'Your current sign-in session is not being verified by the live Falak service yet, so privileged universe routes remain blocked.';
+    case 'ACTOR_NOT_FOUND':
+      return 'Your sign-in session is valid, but it is not mapped to a Falak actor in the active tenant yet.';
+    case 'ACTOR_NOT_ALLOWED':
+      return 'Your sign-in session resolves to a Falak actor, but that actor is not allowlisted for the live admin-only universe routes.';
+    default:
+      return error.message || 'The live universe route is blocked and cannot safely fall back for this signed-in session.';
+  }
 }
 
 export function getEducationMapsFallbackMessage(error: unknown): string {
@@ -337,6 +425,10 @@ export function listEducationMaps(filters: { q?: string; status?: MapStatus } = 
 
 export function getEducationMap(topicKey: string, actorId: string | null = null) {
   return educationMapFetch<MapResource>(`/v1/education/maps/${encodeURIComponent(topicKey)}`, {}, actorId);
+}
+
+export function getFalakSessionStatus(actorId: string | null = null) {
+  return educationMapFetch<FalakSessionStatus>('/v1/falak/session', {}, actorId);
 }
 
 export function resolveEducationMap(

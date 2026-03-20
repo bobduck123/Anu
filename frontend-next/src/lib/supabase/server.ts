@@ -1,7 +1,12 @@
 import { createServerClient, type SetAllCookies } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { isSupabaseConfigured, warnMissingSupabaseConfig } from './config';
+import {
+  allowSupabaseAnonymousFallback,
+  isSupabaseConfigured,
+  SupabaseConfigurationError,
+  warnMissingSupabaseConfig,
+} from './config';
 
 type NoopServerSupabaseClient = {
   auth: {
@@ -21,6 +26,10 @@ export async function createClient() {
 
   if (!isSupabaseConfigured()) {
     warnMissingSupabaseConfig('server_client');
+
+    if (!allowSupabaseAnonymousFallback()) {
+      throw new SupabaseConfigurationError('server_client');
+    }
 
     const noopClient: NoopServerSupabaseClient = {
       auth: {
