@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -104,21 +104,45 @@ const universeOptions = [
 const adminRoles = new Set(['node_admin', 'platform_admin', 'board_member', 'treasury_guardian']);
 
 export interface SidebarProps {
-  panelOpen: boolean;
-  onPanelToggle: () => void;
-  onPanelClose: () => void;
+  panelOpen?: boolean;
+  onPanelToggle?: () => void;
+  onPanelClose?: () => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
   immersive?: boolean;
 }
 
-export function Sidebar({ panelOpen, onPanelToggle, onPanelClose, immersive = false }: SidebarProps) {
+export function Sidebar({
+  panelOpen,
+  onPanelToggle,
+  onPanelClose,
+  mobileOpen,
+  onMobileClose,
+  immersive = false,
+}: SidebarProps) {
   const pathname = usePathname();
   const { user, isAuthenticated } = useAuth();
   const tenant = useTenant();
   const [universeGridOpen, setUniverseGridOpen] = useState(false);
 
-  useEffect(() => {
+  const resolvedPanelOpen = panelOpen ?? mobileOpen ?? false;
+
+  const closePanel = () => {
     setUniverseGridOpen(false);
-  }, [pathname, panelOpen, immersive]);
+    onPanelClose?.();
+    onMobileClose?.();
+  };
+
+  const togglePanel = () => {
+    if (onPanelToggle) {
+      onPanelToggle();
+      return;
+    }
+
+    if (resolvedPanelOpen) {
+      onMobileClose?.();
+    }
+  };
 
   const isAdmin = user ? adminRoles.has(user.role) : false;
   const homeHref = isAuthenticated ? '/home' : '/';
@@ -141,15 +165,21 @@ export function Sidebar({ panelOpen, onPanelToggle, onPanelClose, immersive = fa
 
   const handlePanelToggle = () => {
     setUniverseGridOpen(false);
-    onPanelToggle();
+    togglePanel();
   };
 
   const handleUniverseToggle = () => {
-    if (panelOpen) {
-      onPanelClose();
+    if (resolvedPanelOpen && universeGridOpen) {
+      setUniverseGridOpen(false);
+      closePanel();
+      return;
     }
 
-    setUniverseGridOpen((open) => !open);
+    setUniverseGridOpen(true);
+
+    if (!resolvedPanelOpen) {
+      togglePanel();
+    }
   };
 
   const renderNavLinks = () => (
@@ -168,7 +198,7 @@ export function Sidebar({ panelOpen, onPanelToggle, onPanelClose, immersive = fa
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={onPanelClose}
+                  onClick={closePanel}
                   className={`group relative flex min-h-10 items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all duration-300 ${
                     active
                       ? 'border-[#6b90b8]/62 bg-[linear-gradient(128deg,rgba(35,70,112,0.86),rgba(20,41,68,0.9))] text-white shadow-[0_16px_30px_-22px_rgba(243,199,123,0.8)]'
@@ -187,10 +217,53 @@ export function Sidebar({ panelOpen, onPanelToggle, onPanelClose, immersive = fa
     </div>
   );
 
+  const renderUniverseArray = () => (
+    <div className="space-y-3 px-3 pb-4 pt-3">
+      <div className="px-1">
+        <p className="text-[10px] uppercase tracking-[0.24em] text-[#d8c9a4]/85">Universe array</p>
+        <p className="mt-1 text-xs leading-relaxed text-slate-300/86">
+          Jump between constellation intelligence, maps, and trust surfaces.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {universeOptions.map((option) => {
+          const Icon = option.icon;
+          const active = isActive(option.href);
+
+          return (
+            <Link
+              key={option.href}
+              href={option.href}
+              onClick={closePanel}
+              className={`inline-flex min-h-12 items-center gap-2 rounded-xl border px-2.5 py-2 text-xs font-medium transition-colors ${
+                active
+                  ? 'border-[#7ca7dd]/62 bg-[#153a6a]/72 text-white'
+                  : 'border-white/12 bg-white/[0.04] text-slate-100/88 hover:border-white/25 hover:bg-white/[0.1]'
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="leading-tight">{option.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const renderPathwaysHeader = () => (
+    <div className="border-b border-white/10 px-4 pb-3 pt-4">
+      <p className="text-[10px] uppercase tracking-[0.24em] text-[#d8c9a4]/82">Cultural pathways</p>
+      <p className="mt-1 text-xs leading-relaxed text-slate-300/86">
+        Choose a living route: community, learning, trust, and shared stewardship.
+      </p>
+    </div>
+  );
+
   const renderPanelHeader = (showCloseButton: boolean) => (
     <div className="border-b border-white/10 px-4 pb-3 pt-4">
       <div className="flex items-center justify-between gap-2">
-        <Link href={homeHref} onClick={onPanelClose} className="inline-flex items-center gap-2.5 rounded-lg px-1 py-1 text-white">
+        <Link href={homeHref} onClick={closePanel} className="inline-flex items-center gap-2.5 rounded-lg px-1 py-1 text-white">
           {tenant.logo ? (
             <Image src={tenant.logo} alt={tenant.name} width={28} height={28} unoptimized className="rounded-full object-cover" />
           ) : (
@@ -203,7 +276,7 @@ export function Sidebar({ panelOpen, onPanelToggle, onPanelClose, immersive = fa
 
         {showCloseButton ? (
           <button
-            onClick={onPanelClose}
+            onClick={closePanel}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-slate-200 transition-colors hover:bg-white/10"
             aria-label="Close navigation panel"
           >
@@ -216,7 +289,7 @@ export function Sidebar({ panelOpen, onPanelToggle, onPanelClose, immersive = fa
         <ThemeToggle />
         <Link
           href={profileHref}
-          onClick={onPanelClose}
+          onClick={closePanel}
           className="inline-flex min-h-10 flex-1 items-center gap-2 rounded-lg border border-white/12 bg-white/6 px-3 text-sm font-medium text-slate-100 transition-colors hover:bg-white/12"
         >
           <User className="h-4 w-4" />
@@ -228,14 +301,14 @@ export function Sidebar({ panelOpen, onPanelToggle, onPanelClose, immersive = fa
 
   return (
     <>
-      {!panelOpen ? (
+      {!resolvedPanelOpen ? (
         <button
           onClick={handlePanelToggle}
           className={`fixed left-3 top-3 z-[45] inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/14 bg-[linear-gradient(180deg,rgba(10,21,36,0.92),rgba(10,19,32,0.88))] text-slate-100 shadow-[0_14px_32px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl transition-colors hover:bg-white/10 ${
             immersive ? '' : 'md:hidden'
           }`}
-          aria-label={panelOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={panelOpen}
+          aria-label={resolvedPanelOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={resolvedPanelOpen}
           aria-controls="app-sidebar-drawer"
         >
           <Menu className="h-5 w-5" />
@@ -243,11 +316,11 @@ export function Sidebar({ panelOpen, onPanelToggle, onPanelClose, immersive = fa
       ) : null}
 
       {!immersive ? (
-        <aside className="manara-grid-hero fixed inset-y-0 left-0 z-40 hidden w-[88px] border-r border-white/10 bg-[linear-gradient(180deg,#121212_0%,#252525_46%,#181818_100%)] shadow-[14px_0_44px_-26px_rgba(0,0,0,0.95)] md:flex md:flex-col">
+        <aside className="manara-grid-hero fixed inset-y-0 left-0 z-40 hidden w-[88px] border-r border-white/12 bg-[linear-gradient(180deg,#071a42_0%,#0a2458_52%,#041431_100%)] shadow-[14px_0_44px_-26px_rgba(0,0,0,0.95)] md:flex md:flex-col">
           <div className="flex h-full flex-col items-center py-4">
             <Link
               href={homeHref}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-black/25 shadow-[0_0_0_1px_rgba(255,255,255,0.06)]"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-[#071b46]/70 shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
               aria-label={`${tenant.name} home`}
             >
               {tenant.logo ? (
@@ -260,8 +333,8 @@ export function Sidebar({ panelOpen, onPanelToggle, onPanelClose, immersive = fa
             <button
               onClick={handlePanelToggle}
               className="group mt-16 inline-flex h-14 w-11 flex-col items-center justify-center gap-1 rounded-md border border-transparent text-[#f2a464] transition-all hover:border-white/12 hover:bg-white/6"
-              aria-label={panelOpen ? 'Close menu panel' : 'Open menu panel'}
-              aria-expanded={panelOpen}
+              aria-label={resolvedPanelOpen ? 'Close menu panel' : 'Open menu panel'}
+              aria-expanded={resolvedPanelOpen}
               aria-controls="app-sidebar-panel"
             >
               <span className="h-[2px] w-5 rounded-full bg-current transition-all group-hover:w-6" />
@@ -270,7 +343,7 @@ export function Sidebar({ panelOpen, onPanelToggle, onPanelClose, immersive = fa
               <span className="pt-1 text-[9px] uppercase tracking-[0.2em] text-slate-300/82">Menu</span>
             </button>
 
-            <div className="mt-auto flex w-full flex-col items-center border-t border-white/10 bg-white/[0.03] px-0 py-3">
+            <div className="mt-auto flex w-full flex-col items-center border-t border-white/12 bg-[#072153]/36 px-0 py-3">
               <span className="mb-3 h-1.5 w-9 rounded-full bg-[#f68338]" />
               <ul className="space-y-1.5">
                 {railNavLinks.map((item) => {
@@ -281,7 +354,7 @@ export function Sidebar({ panelOpen, onPanelToggle, onPanelClose, immersive = fa
                     <li key={item.label}>
                       <Link
                         href={item.href}
-                        onClick={onPanelClose}
+                        onClick={closePanel}
                         aria-label={item.label}
                         className={`inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors ${
                           active
@@ -297,13 +370,13 @@ export function Sidebar({ panelOpen, onPanelToggle, onPanelClose, immersive = fa
               </ul>
             </div>
 
-            <div className="mt-auto flex w-full items-center justify-center border-t border-white/10 bg-[#2f2f2f] py-4">
+            <div className="mt-auto flex w-full items-center justify-center border-t border-white/12 bg-[#071b46]/82 py-4">
               <button
                 onClick={handleUniverseToggle}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-md text-[#f68338] transition-colors hover:bg-white/8"
-                aria-label={universeGridOpen ? 'Close universe array' : 'Open universe array'}
-                aria-controls="universe-array-panel"
-                aria-expanded={universeGridOpen}
+                aria-label={resolvedPanelOpen && universeGridOpen ? 'Close universe array' : 'Open universe array'}
+                aria-controls="app-sidebar-panel"
+                aria-expanded={resolvedPanelOpen && universeGridOpen}
               >
                 <Grid3X3 className="h-[18px] w-[18px]" />
               </button>
@@ -312,52 +385,12 @@ export function Sidebar({ panelOpen, onPanelToggle, onPanelClose, immersive = fa
         </aside>
       ) : null}
 
-      {!immersive && universeGridOpen ? (
-        <>
-          <button
-            type="button"
-            className="fixed inset-0 z-40 hidden bg-transparent md:block"
-            onClick={() => setUniverseGridOpen(false)}
-            aria-label="Close universe array"
-          />
-
-          <aside
-            id="universe-array-panel"
-            className="manara-grid-hero fixed bottom-24 left-[100px] z-50 hidden w-[286px] rounded-2xl border border-[#5c84bb]/40 bg-[linear-gradient(180deg,rgba(10,29,68,0.97),rgba(8,20,49,0.95)_52%,rgba(7,16,41,0.95))] p-3 shadow-[0_28px_54px_-32px_rgba(0,0,0,0.95)] md:block"
-          >
-            <p className="px-1 text-[10px] uppercase tracking-[0.24em] text-[#d8c9a4]/85">Universe array</p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {universeOptions.map((option) => {
-                const Icon = option.icon;
-                const active = isActive(option.href);
-
-                return (
-                  <Link
-                    key={option.href}
-                    href={option.href}
-                    onClick={() => setUniverseGridOpen(false)}
-                    className={`inline-flex min-h-12 items-center gap-2 rounded-xl border px-2.5 py-2 text-xs font-medium transition-colors ${
-                      active
-                        ? 'border-[#7ca7dd]/62 bg-[#153a6a]/72 text-white'
-                        : 'border-white/12 bg-white/[0.04] text-slate-100/88 hover:border-white/25 hover:bg-white/[0.1]'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <span className="leading-tight">{option.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </aside>
-        </>
-      ) : null}
-
-      {!immersive && panelOpen ? (
+      {!immersive && resolvedPanelOpen ? (
         <>
           <button
             type="button"
             className="fixed inset-0 z-40 hidden bg-slate-950/46 backdrop-blur-[1px] md:block"
-            onClick={onPanelClose}
+            onClick={closePanel}
             aria-label="Close menu panel"
           />
 
@@ -367,24 +400,24 @@ export function Sidebar({ panelOpen, onPanelToggle, onPanelClose, immersive = fa
           >
             {renderPanelHeader(true)}
 
-            <div className="border-b border-white/10 px-4 pb-3 pt-4">
-              <p className="text-[10px] uppercase tracking-[0.24em] text-[#d8c9a4]/82">Cultural pathways</p>
-              <p className="mt-1 text-xs leading-relaxed text-slate-300/86">
-                Choose a living route: community, learning, trust, and shared stewardship.
-              </p>
-            </div>
-
-            <div className="flex-1 overflow-y-auto">{renderNavLinks()}</div>
+            {universeGridOpen ? (
+              renderUniverseArray()
+            ) : (
+              <>
+                {renderPathwaysHeader()}
+                <div className="flex-1 overflow-y-auto">{renderNavLinks()}</div>
+              </>
+            )}
           </aside>
         </>
       ) : null}
 
-      {panelOpen ? (
+      {resolvedPanelOpen ? (
         <div className={`fixed inset-0 z-50 ${immersive ? '' : 'md:hidden'}`}>
           <button
             type="button"
             className="absolute inset-0 bg-slate-950/68 backdrop-blur-sm"
-            onClick={onPanelClose}
+            onClick={closePanel}
             aria-label="Close navigation drawer"
           />
 
@@ -396,39 +429,41 @@ export function Sidebar({ panelOpen, onPanelToggle, onPanelClose, immersive = fa
           >
             {renderPanelHeader(true)}
 
-            <div className="border-b border-white/10 px-4 pb-3 pt-4">
-              <p className="text-[10px] uppercase tracking-[0.24em] text-[#d8c9a4]/82">Cultural pathways</p>
-              <p className="mt-1 text-xs leading-relaxed text-slate-300/86">
-                Choose a living route: community, learning, trust, and shared stewardship.
-              </p>
-            </div>
+            {universeGridOpen ? (
+              renderUniverseArray()
+            ) : (
+              <>
+                {renderPathwaysHeader()}
+                <div className="flex-1 overflow-y-auto">{renderNavLinks()}</div>
+              </>
+            )}
 
-            <div className="flex-1 overflow-y-auto">{renderNavLinks()}</div>
+            {!universeGridOpen ? (
+              <div className="border-t border-white/10 px-4 py-4">
+                <div className="grid grid-cols-4 gap-2">
+                  {railNavLinks.map((item) => {
+                    const Icon = item.icon;
+                    const active = isActive(item.href);
 
-            <div className="border-t border-white/10 px-4 py-4">
-              <div className="grid grid-cols-4 gap-2">
-                {railNavLinks.map((item) => {
-                  const Icon = item.icon;
-                  const active = isActive(item.href);
-
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      onClick={onPanelClose}
-                      aria-label={item.label}
-                      className={`inline-flex h-9 w-full items-center justify-center rounded-md border transition-colors ${
-                        active
-                          ? 'border-[#f6b165]/62 bg-white/12 text-[#f6b165]'
-                          : 'border-white/10 text-slate-300/80 hover:border-white/24 hover:text-[#f6b165]'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                    </Link>
-                  );
-                })}
+                    return (
+                      <Link
+                        key={item.label}
+                        href={item.href}
+                        onClick={closePanel}
+                        aria-label={item.label}
+                        className={`inline-flex h-9 w-full items-center justify-center rounded-md border transition-colors ${
+                          active
+                            ? 'border-[#f6b165]/62 bg-white/12 text-[#f6b165]'
+                            : 'border-white/10 text-slate-300/80 hover:border-white/24 hover:text-[#f6b165]'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            ) : null}
           </aside>
         </div>
       ) : null}

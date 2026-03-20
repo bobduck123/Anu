@@ -78,14 +78,14 @@ async function probeImpactHealth(): Promise<Indicator> {
 function chipClasses(state: IndicatorState): string {
   switch (state) {
     case 'online':
-      return 'border-emerald-300/70 bg-emerald-100/70 text-emerald-950';
+      return 'border-emerald-300/45 bg-emerald-300/16 text-emerald-100';
     case 'degraded':
-      return 'border-amber-300/80 bg-amber-100/75 text-amber-950';
+      return 'border-amber-300/45 bg-amber-300/16 text-amber-100';
     case 'offline':
-      return 'border-rose-300/80 bg-rose-100/75 text-rose-950';
+      return 'border-rose-300/45 bg-rose-300/16 text-rose-100';
     case 'checking':
     default:
-      return 'border-slate-300/80 bg-white/70 text-slate-700';
+      return 'border-white/20 bg-white/10 text-slate-100';
   }
 }
 
@@ -182,47 +182,39 @@ export function SystemHealthBanner() {
 
   const indicators: Indicator[] = [coreIndicator, impactIndicator, authIndicator, tenantIndicator];
 
-  const issueCount = indicators.filter((indicator) => indicator.state === 'offline' || indicator.state === 'degraded').length;
-  const isChecking = indicators.some((indicator) => indicator.state === 'checking');
-  const hasIssues = issueCount > 0;
+  const criticalIndicators = indicators.filter(
+    (indicator) =>
+      (indicator.label === 'Core API' || indicator.label === 'Impact API') &&
+      (indicator.state === 'offline' || indicator.state === 'degraded'),
+  );
 
-  const statusHeading = hasIssues
-    ? 'Fallback mode active'
-    : isChecking
-      ? 'Verifying live systems'
-      : 'Live systems stable';
+  const issueCount = criticalIndicators.length;
+  const hasErrors = issueCount > 0;
 
-  const statusDetail = hasIssues
-    ? `${issueCount} service signal${issueCount > 1 ? 's' : ''} need attention. Cultural routes remain available.`
-    : isChecking
-      ? 'Checking core, impact, auth, and tenant readiness.'
-      : 'Core, impact, auth, and tenant routing are healthy.';
+  const statusHeading = 'Fallback mode active';
 
-  if (!hasIssues) {
+  const statusDetail = `${issueCount} service signal${issueCount > 1 ? 's' : ''} need attention. Cultural routes remain available.`;
+
+  if (!hasErrors) {
     return null;
   }
 
-  const cta = tenantIndicator.state === 'degraded'
+  const cta = impactIndicator.state !== 'online'
     ? {
         href: '/education/maps',
         label: 'Open maps fallback',
       }
-    : hasIssues
-      ? {
-          href: '/docs',
-          label: 'Open continuity routes',
-        }
-      : {
-          href: '/transparency',
-          label: 'View trust signals',
-        };
+    : {
+        href: '/docs',
+        label: 'Open continuity routes',
+      };
 
   return (
     <section
-      className={`rounded-2xl border px-3 py-3 text-sm shadow-[0_14px_34px_-24px_rgba(18,30,46,0.85)] backdrop-blur-xl md:px-4 ${
-        hasIssues
-          ? 'border-amber-200/85 bg-gradient-to-r from-[#fff7e6]/96 via-[#f7efd9]/94 to-[#fff8ec]/92 text-[#2f271a]'
-          : 'border-emerald-200/80 bg-gradient-to-r from-[#e8faf0]/92 via-[#f2fff7]/90 to-[#effaf5]/92 text-[#173022]'
+      className={`manara-grid-hero rounded-2xl border px-3 py-3 text-sm shadow-[0_16px_36px_-24px_rgba(18,30,46,0.88)] backdrop-blur-xl md:px-4 ${
+        hasErrors
+          ? 'border-amber-200/46 bg-[linear-gradient(118deg,rgba(52,42,19,0.74),rgba(36,28,15,0.68))] text-amber-50'
+          : 'border-emerald-200/44 bg-[linear-gradient(118deg,rgba(16,50,33,0.7),rgba(14,40,29,0.64))] text-emerald-50'
       }`}
       aria-live="polite"
     >
@@ -230,12 +222,12 @@ export function SystemHealthBanner() {
         <div className="flex min-w-0 items-center gap-3">
           <span
             className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border ${
-              hasIssues
-                ? 'border-amber-300/80 bg-amber-100/80 text-amber-700'
-                : 'border-emerald-300/80 bg-emerald-100/80 text-emerald-700'
+              hasErrors
+                ? 'border-amber-300/55 bg-amber-300/20 text-amber-100'
+                : 'border-emerald-300/55 bg-emerald-300/20 text-emerald-100'
             }`}
           >
-            {hasIssues ? <AlertTriangle className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+            {hasErrors ? <AlertTriangle className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
           </span>
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] opacity-80">{statusHeading}</p>
@@ -247,7 +239,7 @@ export function SystemHealthBanner() {
           <button
             type="button"
             onClick={() => void checkServices()}
-            className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-current/30 bg-white/45 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/70"
+            className="manara-glass-chip inline-flex min-h-10 items-center gap-1 border border-current/25 bg-white/10 px-3 py-1.5 text-xs font-medium text-current hover:bg-white/18"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Retry
@@ -255,7 +247,7 @@ export function SystemHealthBanner() {
 
           <Link
             href={cta.href}
-            className="inline-flex min-h-10 items-center rounded-lg border border-current/30 bg-white/45 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/70"
+            className="manara-glass-chip inline-flex min-h-10 items-center border border-current/25 bg-white/10 px-3 py-1.5 text-xs font-medium text-current hover:bg-white/18"
           >
             {cta.label}
           </Link>
@@ -263,7 +255,7 @@ export function SystemHealthBanner() {
           <button
             type="button"
             onClick={() => setDetailsOpen((open) => !open)}
-            className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-current/30 bg-white/45 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/70"
+            className="manara-glass-chip inline-flex min-h-10 items-center gap-1 border border-current/25 bg-white/10 px-3 py-1.5 text-xs font-medium text-current hover:bg-white/18"
             aria-expanded={detailsOpen}
             aria-controls="system-health-details"
           >

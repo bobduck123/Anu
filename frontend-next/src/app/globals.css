@@ -7,37 +7,37 @@
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
   --font-source-serif: Georgia, "Times New Roman", serif;
 
-  /* Colors - Manara beacon palette with grounded earth tones */
-  --color-earth-dark: #21180f;
-  --color-earth-medium: #725b44;
-  --color-earth-light: #dcc8b2;
-  --color-sage: #758e62;
-  --color-sage-light: #e7eee1;
-  --color-forest: #365443;
-  --color-forest-light: #dde8e0;
-  --color-institutional: #17324a;
-  --color-institutional-light: #dde7ef;
-  --color-accent: #d18632;
-  --color-accent-light: #fbefdf;
-  --color-beacon: #f3c77b;
-  --color-beacon-light: #fff4de;
+  /* Colors - Night sky / deep ocean palette */
+  --color-earth-dark: #071533;
+  --color-earth-medium: #123b7a;
+  --color-earth-light: #4f78be;
+  --color-sage: #2f5ea8;
+  --color-sage-light: #dbe8ff;
+  --color-forest: #0c2a59;
+  --color-forest-light: #d7e5ff;
+  --color-institutional: #0a2553;
+  --color-institutional-light: #dce8ff;
+  --color-accent: #4f7ff0;
+  --color-accent-light: #dce8ff;
+  --color-beacon: #8fb5ff;
+  --color-beacon-light: #e9f2ff;
   --color-danger: #dc2626;
   --color-danger-light: #fde8e8;
 
   /* Semantic colors */
-  --color-background: #f6f1e7;
-  --color-foreground: #21180f;
-  --color-card: #ffffff;
-  --color-card-foreground: #2c241b;
-  --color-primary: #1e3a5f;
+  --color-background: #061737;
+  --color-foreground: #eaf2ff;
+  --color-card: #0d2452;
+  --color-card-foreground: #edf3ff;
+  --color-primary: #2a5eb0;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #d4c4b7;
-  --color-secondary-foreground: #2c241b;
-  --color-muted: #f5f4f2;
-  --color-muted-foreground: #78736c;
-  --color-border: #e7e5e4;
-  --color-input: #e7e5e4;
-  --color-ring: #1e3a5f;
+  --color-secondary: #183c7d;
+  --color-secondary-foreground: #eaf2ff;
+  --color-muted: #102a59;
+  --color-muted-foreground: #a8c0ea;
+  --color-border: #234884;
+  --color-input: #234884;
+  --color-ring: #5f90f6;
   --color-radius: 0.5rem;
 
   /* Spacing */
@@ -81,10 +81,9 @@
 
   body {
     background:
-      repeating-linear-gradient(140deg, rgba(37, 53, 74, 0.02) 0 2px, transparent 2px 10px),
-      radial-gradient(120% 82% at 12% -10%, rgba(243, 199, 123, 0.26), transparent 56%),
-      radial-gradient(96% 64% at 92% -6%, rgba(80, 122, 168, 0.2), transparent 52%),
-      linear-gradient(180deg, #f6efdf 0%, #f1e8d4 48%, #ece2cc 100%);
+      radial-gradient(120% 86% at 12% -10%, rgba(118, 156, 255, 0.22), transparent 56%),
+      radial-gradient(96% 66% at 92% -6%, rgba(54, 95, 199, 0.3), transparent 52%),
+      linear-gradient(180deg, #071a42 0%, #0a2458 46%, #041431 100%);
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -130,15 +129,107 @@
     position: relative;
     isolation: isolate;
     background:
-      radial-gradient(circle at 16% -6%, rgba(244, 205, 138, 0.26), transparent 36%),
-      radial-gradient(circle at 88% 6%, rgba(83, 123, 168, 0.2), transparent 38%),
-      linear-gradient(180deg, #f7f1e2 0%, #f1e8d6 52%, #ebe1cd 100%);
+      radial-gradient(circle at 16% -6%, rgba(120, 154, 255, 0.2), transparent 36%),
+      radial-gradient(circle at 88% 6%, rgba(55, 95, 201, 0.24), transparent 38%),
+      linear-gradient(180deg, #071a42 0%, #0a2458 52%, #041431 100%);
   }
 
   .shell-main {
     background:
-      radial-gradient(circle at 84% 0%, rgba(90, 133, 175, 0.12), transparent 32%),
-      linear-gradient(180deg, rgba(255, 251, 244, 0.42) 0%, rgba(244, 235, 219, 0.24) 100%);
+      radial-gradient(circle at 84% 0%, rgba(99, 134, 232, 0.16), transparent 32%),
+      linear-gradient(180deg, rgba(10, 35, 84, 0.6) 0%, rgba(8, 28, 68, 0.5) 100%);
+  }
+
+  .manara-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      radial-gradient(66% 54% at 50% 16%, rgba(121, 160, 255, 0.18), transparent 72%);
+    background-size: 122px 122px, 122px 122px, auto;
+    opacity: 0.22;
+    mask-image: radial-gradient(circle at center, black 34%, transparent 86%);
+    mix-blend-mode: soft-light;
+  }
+
+  .manara-shell::after {
+    content: "";
+    position: fixed;
+    left: 50%;
+    top: 20%;
+    height: 15rem;
+    width: 15rem;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 9999px;
+    background:
+      radial-gradient(circle, rgba(121, 160, 255, 0.3) 0%, rgba(121, 160, 255, 0.1) 38%, transparent 75%);
+    filter: blur(38px);
+    transform: translate(-50%, -50%);
+  }
+
+  .manara-glass-panel {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background:
+      linear-gradient(148deg, rgba(10, 21, 36, 0.86), rgba(8, 16, 29, 0.82));
+    box-shadow:
+      0 26px 68px -38px rgba(0, 0, 0, 0.95),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+  }
+
+  .manara-glass-panel-muted {
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    background:
+      linear-gradient(150deg, rgba(10, 20, 34, 0.7), rgba(8, 16, 27, 0.64));
+    box-shadow:
+      0 22px 48px -34px rgba(0, 0, 0, 0.9),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px);
+  }
+
+  .manara-glass-chip {
+    border-radius: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+    transition: background-color 220ms ease, border-color 220ms ease, transform 220ms ease;
+  }
+
+  .manara-glass-chip:hover {
+    border-color: rgba(255, 255, 255, 0.26);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.07));
+    transform: translateY(-1px);
+  }
+
+  .manara-grid-hero {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .manara-grid-hero::before {
+    content: "";
+    position: absolute;
+    inset: -35% -20%;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 86px 86px;
+    opacity: 0.22;
+    transform: perspective(480px) rotateX(62deg);
+    transform-origin: top center;
+    mask-image: radial-gradient(circle at 50% 0%, black 22%, transparent 76%);
+  }
+
+  .manara-grid-hero > * {
+    position: relative;
+    z-index: 1;
   }
 
   /* Section spacing - Editorial style */
