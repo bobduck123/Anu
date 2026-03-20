@@ -1,0 +1,343 @@
+.landingRoot {
+  position: relative;
+  min-height: calc(100dvh - 1.5rem);
+  color: #f8f4eb;
+}
+
+.section {
+  position: relative;
+  min-height: calc(100dvh - 1.5rem);
+  display: flex;
+}
+
+.sectionContent {
+  position: relative;
+  min-height: calc(100dvh - 1.5rem);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 2vw, 2rem);
+}
+
+.impulseWrap {
+  position: relative;
+  width: min(100%, 1220px);
+  height: clamp(520px, 84vh, 780px);
+  border-radius: 1.25rem;
+}
+
+.mmParallax {
+  position: absolute;
+  inset: clamp(1.1rem, 2.6vw, 2.2rem);
+  border-radius: 1.35rem;
+  overflow: hidden;
+  box-shadow: 0 24px 42px -16px rgba(0, 0, 0, 0.76);
+  transform-style: preserve-3d;
+  transition: transform 220ms ease-out;
+}
+
+.panelBg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: saturate(1.15) contrast(1.12);
+  transform: scale(1.05);
+  z-index: 1;
+}
+
+.movingCloudsWrap {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  transition: transform 260ms ease;
+}
+
+.movingClouds {
+  position: absolute;
+  left: 0;
+  bottom: -6%;
+  width: 250.625em;
+  height: 43.75em;
+  opacity: 0.27;
+  background-position: left bottom;
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  animation: cloudLoop 86s linear infinite;
+}
+
+.panelOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.05), transparent 42%),
+    linear-gradient(180deg, rgba(7, 8, 18, 0.34), rgba(4, 6, 15, 0.66));
+}
+
+.fogLow {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  margin-left: -34%;
+  margin-bottom: -52px;
+  width: 115%;
+  opacity: 0.31;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.fogLow img {
+  width: 100%;
+}
+
+.fogLow.right {
+  margin-left: 28%;
+  opacity: 0.24;
+  transform: scaleX(-1);
+}
+
+.heroWrapItem {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.3rem, 2.5vw, 2.4rem);
+  z-index: 5;
+}
+
+.heroCard {
+  width: min(100%, 52rem);
+  border-radius: 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(152deg, rgba(6, 11, 22, 0.8), rgba(7, 14, 26, 0.74));
+  box-shadow:
+    0 24px 60px -40px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  padding: clamp(1.1rem, 2.4vw, 2rem);
+}
+
+.kicker {
+  font-size: 0.66rem;
+  letter-spacing: 0.23em;
+  text-transform: uppercase;
+  color: rgba(242, 210, 157, 0.9);
+}
+
+.boardName {
+  margin-top: 0.4rem;
+  color: #fff;
+  text-shadow: 1px 2px 8px rgba(0, 0, 0, 0.64);
+  font-size: clamp(2.2rem, 5.3vw, 5rem);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  transform-style: preserve-3d;
+  transform: translateZ(62px);
+  font-family: var(--font-serif);
+}
+
+.lead {
+  margin-top: 1rem;
+  color: rgba(236, 231, 221, 0.92);
+  line-height: 1.6;
+  font-size: clamp(0.92rem, 1.45vw, 1.08rem);
+  max-width: 56ch;
+}
+
+.signalRow {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.signalRow span {
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.05));
+  padding: 0.44rem 0.72rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: rgba(255, 247, 228, 0.95);
+}
+
+.actionRow {
+  margin-top: 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.actionRow a {
+  text-decoration: none;
+  border-radius: 0.78rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 0.65rem 0.95rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: rgba(255, 245, 228, 0.96);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.05));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: transform 220ms ease, border-color 220ms ease, background-color 220ms ease;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionRow a:hover {
+  transform: translateY(-1px);
+  border-color: rgba(243, 199, 123, 0.72);
+}
+
+.actionRow a:active {
+  transform: scale(0.96);
+}
+
+.heroCorner,
+.heroCorner2,
+.heroCorner3,
+.heroCorner4 {
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  z-index: 6;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.heroCorner {
+  top: 16px;
+  right: 16px;
+  border-top: 1px solid;
+  border-right: 1px solid;
+}
+
+.heroCorner2 {
+  top: 16px;
+  left: 16px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+
+.heroCorner3 {
+  right: 16px;
+  bottom: 16px;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+}
+
+.heroCorner4 {
+  left: 16px;
+  bottom: 16px;
+  border-left: 1px solid;
+  border-bottom: 1px solid;
+}
+
+.sectionLabel {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  z-index: 10;
+  padding: 0.45rem 0.72rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(8, 15, 27, 0.48);
+  font-size: 0.64rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(241, 234, 217, 0.84);
+}
+
+@keyframes cloudLoop {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@media (max-width: 940px) {
+  .landingRoot,
+  .section,
+  .sectionContent {
+    min-height: calc(100dvh - 1.2rem);
+  }
+
+  .mmParallax {
+    inset: 0.9rem;
+  }
+
+  .boardName {
+    font-size: clamp(2rem, 10.4vw, 3.45rem);
+    line-height: 1;
+  }
+
+  .lead {
+    font-size: 0.94rem;
+    max-width: 34ch;
+  }
+
+  .signalRow {
+    gap: 0.35rem;
+  }
+
+  .signalRow span {
+    font-size: 0.61rem;
+    letter-spacing: 0.1em;
+  }
+
+  .movingClouds {
+    bottom: -3%;
+    height: 31em;
+    opacity: 0.24;
+  }
+
+  .fogLow {
+    margin-bottom: -35px;
+  }
+}
+
+@media (max-width: 640px) {
+  .sectionLabel {
+    display: none;
+  }
+
+  .heroCard {
+    border-radius: 1rem;
+    padding: 1rem;
+  }
+
+  .actionRow a {
+    width: 100%;
+  }
+
+  .heroCorner,
+  .heroCorner2,
+  .heroCorner3,
+  .heroCorner4 {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mmParallax,
+  .movingCloudsWrap,
+  .actionRow a {
+    transition: none;
+  }
+
+  .movingClouds {
+    animation: none;
+  }
+}
