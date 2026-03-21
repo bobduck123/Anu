@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Footer } from './Footer';
 import { SystemHealthBanner } from '@/components/systemic/SystemHealthBanner';
+import { PathwayGuideBar } from './PathwayGuideBar';
 
 export function LayoutShell({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -40,6 +41,7 @@ export function LayoutShell({ children }: { children: ReactNode }) {
         {!hideSupportChrome ? (
           <div className="relative z-20 px-3 pt-3 md:px-8 md:pt-5">
             <SystemHealthBanner />
+            <PathwayGuideBar />
           </div>
         ) : null}
 

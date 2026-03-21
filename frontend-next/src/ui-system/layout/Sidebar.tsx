@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -18,12 +18,17 @@ import {
   X,
   Menu,
   User,
+  Compass,
+  Target,
+  Leaf,
+  ChevronRight,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import ManaraMark from '@/components/branding/ManaraMark';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from './TenantBrandWrapper';
 import { ThemeToggle } from '../ThemeToggle';
+import { buildPathwayGuide, deriveNavigationMode, type NavigationMode } from './pathwayGuidance';
 
 interface NavItem {
   href: string;
@@ -35,33 +40,49 @@ interface NavItem {
 
 interface NavSection {
   title: string;
+  mode: 'explore' | 'task' | 'trust' | 'admin';
   items: NavItem[];
   adminOnly?: boolean;
 }
 
 const navSections: NavSection[] = [
   {
-    title: 'Core',
+    title: 'Explore',
+    mode: 'explore',
     items: [
-      { href: '/home', label: 'Home', icon: Sparkles, authRequired: true },
       { href: '/manara', label: 'Manara', icon: Sparkles, module: 'impact' },
       { href: '/community', label: 'Community', icon: Users, module: 'community' },
       { href: '/education', label: 'Education', icon: GraduationCap },
-      { href: '/universe', label: 'Universe', icon: Sparkles },
-      { href: '/impact', label: 'Impact', icon: BarChart3, module: 'impact', authRequired: true },
+      { href: '/universe', label: 'Universe', icon: Compass },
+      { href: '/discover', label: 'Discover', icon: Eye },
+    ],
+  },
+  {
+    title: 'Action',
+    mode: 'task',
+    items: [
+      { href: '/actions', label: 'Actions', icon: Target },
+      { href: '/events', label: 'Events', icon: MapPin },
+      { href: '/cost-lowering', label: 'Cost-Lowering', icon: Leaf },
+      { href: '/runs', label: 'Runs', icon: BarChart3 },
+      { href: '/pledges', label: 'Pledges', icon: Heart, authRequired: true },
+      { href: '/dashboard/savings', label: 'Savings', icon: BarChart3, authRequired: true },
+      { href: '/organizer', label: 'Organizer', icon: Shield, authRequired: true },
     ],
   },
   {
     title: 'Trust',
+    mode: 'trust',
     items: [
-      { href: '/memberships', label: 'Memberships', icon: Heart },
       { href: '/transparency', label: 'Transparency', icon: Eye },
+      { href: '/memberships', label: 'Memberships', icon: Heart },
       { href: '/docs', label: 'Docs', icon: LayoutGrid },
       { href: '/contact', label: 'Contact', icon: MapPin },
     ],
   },
   {
     title: 'Admin',
+    mode: 'admin',
     adminOnly: true,
     items: [
       { href: '/admin/tenants', label: 'Tenants', icon: Shield },
@@ -124,6 +145,7 @@ export function Sidebar({
   const { user, isAuthenticated } = useAuth();
   const tenant = useTenant();
   const [universeGridOpen, setUniverseGridOpen] = useState(false);
+  const [navigationMode, setNavigationMode] = useState<NavigationMode>(() => deriveNavigationMode(pathname));
 
   const resolvedPanelOpen = panelOpen ?? mobileOpen ?? false;
 
@@ -149,9 +171,30 @@ export function Sidebar({
   const profileHref = isAuthenticated ? '/profile' : '/auth';
   const profileLabel = isAuthenticated ? (user?.pseudonym || user?.username || 'Profile') : 'Sign in';
 
+  useEffect(() => {
+    setNavigationMode(deriveNavigationMode(pathname));
+  }, [pathname]);
+
+  const pathwayGuide = useMemo(() => buildPathwayGuide(pathname), [pathname]);
+
   const visibleSections = useMemo(() => {
-    return navSections
-      .filter((section) => !(section.adminOnly && !isAdmin))
+    const modeFilteredSections = navSections.filter((section) => {
+      if (section.mode === 'admin') {
+        return isAdmin;
+      }
+
+      if (navigationMode === 'all') {
+        return true;
+      }
+
+      if (navigationMode === 'explore') {
+        return section.mode === 'explore' || section.mode === 'trust';
+      }
+
+      return section.mode === 'task' || section.mode === 'trust';
+    });
+
+    return modeFilteredSections
       .map((section) => ({
         ...section,
         items: section.items.filter(
@@ -159,7 +202,7 @@ export function Sidebar({
         ),
       }))
       .filter((section) => section.items.length > 0);
-  }, [isAdmin, isAuthenticated, tenant.modules]);
+  }, [isAdmin, isAuthenticated, navigationMode, tenant.modules]);
 
   const isActive = (href: string) => pathname === href || pathname?.startsWith(`${href}/`);
 
@@ -252,11 +295,70 @@ export function Sidebar({
   );
 
   const renderPathwaysHeader = () => (
-    <div className="border-b border-white/10 px-4 pb-3 pt-4">
-      <p className="text-[10px] uppercase tracking-[0.24em] text-[#d8c9a4]/82">Cultural pathways</p>
-      <p className="mt-1 text-xs leading-relaxed text-slate-300/86">
-        Choose a living route: community, learning, trust, and shared stewardship.
-      </p>
+    <div className="border-b border-white/10 px-4 pb-3 pt-4 space-y-3">
+      <div>
+        <p className="text-[10px] uppercase tracking-[0.24em] text-[#d8c9a4]/82">Explore-first navigation</p>
+        <p className="mt-1 text-xs leading-relaxed text-slate-300/86">
+          Start with exploration, then move naturally into execution.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-1.5">
+        <button
+          type="button"
+          onClick={() => setNavigationMode('explore')}
+          className={`rounded-lg border px-2 py-1.5 text-[11px] font-medium transition-colors ${
+            navigationMode === 'explore'
+              ? 'border-[#7ca7dd]/55 bg-[#153a6a]/70 text-white'
+              : 'border-white/12 bg-white/[0.04] text-slate-200/85 hover:bg-white/[0.1]'
+          }`}
+        >
+          Explore
+        </button>
+        <button
+          type="button"
+          onClick={() => setNavigationMode('tasks')}
+          className={`rounded-lg border px-2 py-1.5 text-[11px] font-medium transition-colors ${
+            navigationMode === 'tasks'
+              ? 'border-[#7ca7dd]/55 bg-[#153a6a]/70 text-white'
+              : 'border-white/12 bg-white/[0.04] text-slate-200/85 hover:bg-white/[0.1]'
+          }`}
+        >
+          Tasks
+        </button>
+        <button
+          type="button"
+          onClick={() => setNavigationMode('all')}
+          className={`rounded-lg border px-2 py-1.5 text-[11px] font-medium transition-colors ${
+            navigationMode === 'all'
+              ? 'border-[#7ca7dd]/55 bg-[#153a6a]/70 text-white'
+              : 'border-white/12 bg-white/[0.04] text-slate-200/85 hover:bg-white/[0.1]'
+          }`}
+        >
+          Full
+        </button>
+      </div>
+
+      <div className="rounded-xl border border-white/12 bg-white/[0.04] p-2.5">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-100/86">{pathwayGuide.title}</p>
+        <p className="mt-1 text-xs text-slate-300/82">{pathwayGuide.summary}</p>
+        <div className="mt-2 space-y-1.5">
+          {pathwayGuide.steps
+            .filter((step) => !step.authRequired || isAuthenticated)
+            .slice(0, 3)
+            .map((step) => (
+              <Link
+                key={step.href}
+                href={step.href}
+                onClick={closePanel}
+                className="inline-flex w-full items-center justify-between rounded-lg border border-white/10 bg-black/20 px-2.5 py-1.5 text-xs text-slate-100/88 transition-colors hover:border-white/24 hover:bg-white/10"
+              >
+                <span>{step.label}</span>
+                <ChevronRight className="h-3.5 w-3.5 text-slate-300/86" />
+              </Link>
+            ))}
+        </div>
+      </div>
     </div>
   );
 

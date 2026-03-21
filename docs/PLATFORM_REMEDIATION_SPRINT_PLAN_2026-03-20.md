@@ -38,6 +38,9 @@ Primary backlog coverage:
 Expected outcomes:
 - Fewer control collisions, clearer route intent, stronger next-action salience.
 
+Status:
+- **Implemented locally in this sprint execution** (see Sprint 2 implementation record below).
+
 ---
 
 ## Sprint 3 — Mobile-First Interaction Foundation
@@ -155,6 +158,58 @@ Test files:
 - Added: `frontend-next/src/test/authReturnTo.test.ts`
 
 ### Sprint 1 completion status
+
+- **Local implementation:** Complete
+- **Local validation:** Complete
+- **Deployment/push:** follow explicit operator instruction only
+
+---
+
+## Sprint 2 Implementation Record (Executed)
+
+### Implemented changes
+
+1. Introduced shared explore-first guidance model
+- Added: `frontend-next/src/ui-system/layout/pathwayGuidance.ts`
+- Provides:
+  - navigation mode derivation (`explore` / `tasks` / `all`)
+  - route-aware next-step guidance bundles
+
+2. Restructured sidebar IA around exploration-to-task flow
+- Updated: `frontend-next/src/ui-system/layout/Sidebar.tsx`
+- Improvements:
+  - nav architecture changed to explicit sections: `Explore`, `Action`, `Trust`, `Admin`
+  - explore-first segmented control (`Explore`, `Tasks`, `Full`) in panel header
+  - route-aware contextual “next flow” action links within panel
+  - preserved universe array and admin visibility constraints
+
+3. Added persistent contextual next-step bar in app shell
+- Added: `frontend-next/src/ui-system/layout/PathwayGuideBar.tsx`
+- Updated: `frontend-next/src/ui-system/layout/LayoutShell.tsx`
+- Improvements:
+  - always-visible, low-density “Next flow” guidance beneath system health surface
+  - route-aware quick links to reduce wayfinding ambiguity
+
+4. Added sprint-level guidance tests
+- Added: `frontend-next/src/test/pathwayGuidance.test.ts`
+- Coverage:
+  - route-to-mode mapping
+  - education flow guidance mapping
+  - cost-lowering flow guidance mapping
+
+### Verification artifacts
+
+- Type validation: `npm run typecheck`
+- Build validation: `npm run build`
+- Focused test validation:
+  - `src/test/pathwayGuidance.test.ts`
+  - `src/test/authPage.test.tsx`
+  - `src/test/authReturnTo.test.ts`
+- Browser verification:
+  - route-aware `Next flow` bar visibility on education / cost-lowering / events
+  - sidebar mode controls and task filtering behavior
+
+### Sprint 2 completion status
 
 - **Local implementation:** Complete
 - **Local validation:** Complete
