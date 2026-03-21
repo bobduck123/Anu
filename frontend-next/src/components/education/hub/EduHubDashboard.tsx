@@ -5,16 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { CurriculumProgram, educationStackApi } from "@/lib/api/educationStack";
 import { toActionableSurfaceError } from "@/lib/ui/actionableErrors";
+import { buildAuthHref } from "@/lib/auth/returnTo";
 
 type ProgramCardProps = {
   program: CurriculumProgram;
 };
-
-function buildAuthHref(returnTo: string): string {
-  const params = new URLSearchParams();
-  params.set("returnTo", returnTo);
-  return `/auth?${params.toString()}`;
-}
 
 function ProgramCard({ program }: ProgramCardProps) {
   return (

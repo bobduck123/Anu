@@ -21,6 +21,7 @@ import {
   loadCommunityUniverseData,
   type CommunityTrustedNewsMeta,
 } from '@/lib/community/loadCommunityUniverse';
+import { buildAuthHref } from '@/lib/auth/returnTo';
 import { DraggableGallery } from '@/ui/patterns/draggable-gallery';
 import CommunityComposerModal from './CommunityComposerModal';
 
@@ -122,11 +123,7 @@ function CommunityPageContent() {
     [demoPosts, hasLivePosts, posts, sortMode],
   );
 
-  const authHref = useMemo(() => {
-    const params = new URLSearchParams();
-    params.set('returnTo', '/community?compose=1');
-    return `/auth?${params.toString()}`;
-  }, []);
+  const authHref = useMemo(() => buildAuthHref('/community?compose=1'), []);
 
   const buildHref = useCallback(
     (compose: boolean) => {

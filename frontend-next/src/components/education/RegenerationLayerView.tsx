@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { RegenerationLog, RegenerationUnlock, educationStackApi } from "@/lib/api/educationStack";
+import { buildAuthHref } from "@/lib/auth/returnTo";
 
 const VERIFIER_ROLES = new Set([
   "verifier",
@@ -20,11 +21,7 @@ const VERIFIER_ROLES = new Set([
 export function RegenerationLayerView() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const canVerify = useMemo(() => VERIFIER_ROLES.has(user?.role || ""), [user?.role]);
-  const authHref = useMemo(() => {
-    const params = new URLSearchParams();
-    params.set("returnTo", "/education/regeneration");
-    return `/auth?${params.toString()}`;
-  }, []);
+  const authHref = useMemo(() => buildAuthHref("/education/regeneration"), []);
   const [unlocks, setUnlocks] = useState<RegenerationUnlock[]>([]);
   const [logs, setLogs] = useState<RegenerationLog[]>([]);
   const [processingLinkId, setProcessingLinkId] = useState<number | null>(null);

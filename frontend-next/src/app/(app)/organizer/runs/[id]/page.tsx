@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import AuthGateCard from '@/components/auth/AuthGateCard';
 import { wcleApi, OrganizerPanelData } from '@/lib/api/wcleApi';
 import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
+import { buildAuthHref } from '@/lib/auth/returnTo';
 
 function cents(v: number | null | undefined): string {
   if (v == null) return '$0.00';
@@ -24,11 +25,7 @@ export default function OrganizerRunPage() {
   const [actionLoading, setActionLoading] = useState('');
   const [receiptAmount, setReceiptAmount] = useState('');
 
-  const authHref = useMemo(() => {
-    const query = new URLSearchParams();
-    query.set('returnTo', `/organizer/runs/${runId}`);
-    return `/auth?${query.toString()}`;
-  }, [runId]);
+  const authHref = useMemo(() => buildAuthHref(`/organizer/runs/${runId}`), [runId]);
 
   const loadData = useCallback(async () => {
     if (!runId) {

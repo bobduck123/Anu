@@ -4,12 +4,15 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import AuthPage from '@/app/auth/page';
 
 const pushMock = vi.fn();
+const replaceMock = vi.fn();
 const loginMock = vi.fn();
 const registerMock = vi.fn();
 let currentSearchParams = new URLSearchParams();
+let authLoading = false;
+let authenticated = false;
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: pushMock }),
+  useRouter: () => ({ push: pushMock, replace: replaceMock }),
   useSearchParams: () => currentSearchParams,
 }));
 
@@ -17,16 +20,21 @@ vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     login: loginMock,
     register: registerMock,
-    isLoading: false,
+    isLoading: authLoading,
+    isAuthenticated: authenticated,
   }),
 }));
 
 describe('AuthPage', () => {
   beforeEach(() => {
     pushMock.mockReset();
+    replaceMock.mockReset();
     loginMock.mockReset();
     registerMock.mockReset();
     currentSearchParams = new URLSearchParams();
+    authLoading = false;
+    authenticated = false;
+    window.sessionStorage.clear();
   });
 
   it('returns to the requested route after login', async () => {
@@ -55,5 +63,16 @@ describe('AuthPage', () => {
 
     await waitFor(() => expect(loginMock).toHaveBeenCalledWith('member@example.com', 'secret'));
     expect(pushMock).toHaveBeenCalledWith('/profile');
+  });
+
+  it('redirects authenticated users away from auth page using the return path', async () => {
+    currentSearchParams = new URLSearchParams('returnTo=%2Fruns%2F17');
+    authenticated = true;
+
+    render(<AuthPage />);
+
+    await waitFor(() => {
+      expect(replaceMock).toHaveBeenCalledWith('/runs/17');
+    });
   });
 });

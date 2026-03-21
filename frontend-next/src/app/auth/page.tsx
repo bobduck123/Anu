@@ -1,9 +1,15 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  clearPendingReturnTo,
+  resolvePostAuthReturnTo,
+  sanitizeReturnTo,
+  savePendingReturnTo,
+} from '@/lib/auth/returnTo';
 
 function AuthPageFallback() {
   return (
@@ -23,7 +29,8 @@ function AuthPageFallback() {
 function AuthPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, register, isLoading } = useAuth();
+  const { login, register, isLoading, isAuthenticated } = useAuth();
+
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [pseudonym, setPseudonym] = useState('');
@@ -32,9 +39,24 @@ function AuthPageContent() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const returnTo = searchParams.get('returnTo');
-  const nextHref = returnTo && returnTo.startsWith('/') ? returnTo : '/profile';
-  const backHref = returnTo && returnTo.startsWith('/') ? returnTo : '/';
+
+  const rawReturnTo = searchParams.get('returnTo');
+  const hasExplicitReturnTo = Boolean(rawReturnTo);
+  const nextHref = useMemo(() => resolvePostAuthReturnTo(rawReturnTo, '/profile'), [rawReturnTo]);
+  const backHref = useMemo(() => (hasExplicitReturnTo ? sanitizeReturnTo(rawReturnTo, '/') : '/'), [hasExplicitReturnTo, rawReturnTo]);
+
+  useEffect(() => {
+    if (hasExplicitReturnTo) {
+      savePendingReturnTo(nextHref);
+    }
+  }, [hasExplicitReturnTo, nextHref]);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      clearPendingReturnTo();
+      router.replace(nextHref);
+    }
+  }, [isAuthenticated, isLoading, nextHref, router]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -49,6 +71,7 @@ function AuthPageContent() {
     try {
       if (isLogin) {
         await login(email, password);
+        clearPendingReturnTo();
         router.push(nextHref);
       } else {
         await register(username || email.split('@')[0], email, password, pseudonym || username);
@@ -70,26 +93,32 @@ function AuthPageContent() {
             </h1>
             <p className="text-sm text-[var(--color-muted-foreground)]">
               {isLogin
-                ? (returnTo ? 'Log in to continue where you left off.' : 'Log in to continue.')
-                : (returnTo ? 'Sign up to continue where you left off.' : 'Sign up to join the commons.')}
+                ? (hasExplicitReturnTo ? 'Log in to continue where you left off.' : 'Log in to continue.')
+                : (hasExplicitReturnTo ? 'Sign up to continue where you left off.' : 'Sign up to join the commons.')}
             </p>
           </div>
           <Link href={backHref} className="text-sm text-[var(--color-institutional)] hover:underline">
-            {returnTo ? 'Back' : 'Back home'}
+            {hasExplicitReturnTo ? 'Back' : 'Back home'}
           </Link>
         </div>
 
         <div className="flex gap-2 mb-6">
           <button
             type="button"
-            onClick={() => { setIsLogin(true); setError(''); }}
+            onClick={() => {
+              setIsLogin(true);
+              setError('');
+            }}
             className={`btn-pill text-sm ${isLogin ? 'btn-pill-primary' : 'btn-pill-outline'}`}
           >
             Log in
           </button>
           <button
             type="button"
-            onClick={() => { setIsLogin(false); setError(''); }}
+            onClick={() => {
+              setIsLogin(false);
+              setError('');
+            }}
             className={`btn-pill text-sm ${!isLogin ? 'btn-pill-primary' : 'btn-pill-outline'}`}
           >
             Sign up
@@ -109,7 +138,7 @@ function AuthPageContent() {
               autoComplete="email"
             />
           </div>
-          {!isLogin && (
+          {!isLogin ? (
             <>
               <div>
                 <label className="block text-sm font-medium mb-2">Username</label>
@@ -133,7 +162,7 @@ function AuthPageContent() {
                 />
               </div>
             </>
-          )}
+          ) : null}
           <div>
             <label className="block text-sm font-medium mb-2">Password</label>
             <input
@@ -143,11 +172,11 @@ function AuthPageContent() {
               placeholder="Password"
               type="password"
               required
-              autoComplete={isLogin ? "current-password" : "new-password"}
+              autoComplete={isLogin ? 'current-password' : 'new-password'}
               minLength={6}
             />
           </div>
-          {!isLogin && (
+          {!isLogin ? (
             <div>
               <label className="block text-sm font-medium mb-2">Confirm Password</label>
               <input
@@ -161,13 +190,9 @@ function AuthPageContent() {
                 minLength={6}
               />
             </div>
-          )}
-          {error && (
-            <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
-          )}
-          {success && (
-            <div className="text-sm text-green-600 dark:text-green-400">{success}</div>
-          )}
+          ) : null}
+          {error ? <div className="text-sm text-red-600 dark:text-red-400">{error}</div> : null}
+          {success ? <div className="text-sm text-green-600 dark:text-green-400">{success}</div> : null}
           <button
             type="submit"
             disabled={isLoading}
@@ -192,4 +217,3 @@ export default function AuthPage() {
     </Suspense>
   );
 }
-

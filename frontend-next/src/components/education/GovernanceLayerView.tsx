@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { PlantKnowledgeEntry, SensitivityLevel, educationStackApi } from "@/lib/api/educationStack";
+import { buildAuthHref } from "@/lib/auth/returnTo";
 
 const VERIFIER_ROLES = new Set([
   "verifier",
@@ -32,11 +33,7 @@ const INITIAL_FORM = {
 export function GovernanceLayerView() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const canVerify = useMemo(() => VERIFIER_ROLES.has(user?.role || ""), [user?.role]);
-  const authHref = useMemo(() => {
-    const params = new URLSearchParams();
-    params.set("returnTo", "/education/governance");
-    return `/auth?${params.toString()}`;
-  }, []);
+  const authHref = useMemo(() => buildAuthHref("/education/governance"), []);
   const [entries, setEntries] = useState<PlantKnowledgeEntry[]>([]);
   const [pendingEntries, setPendingEntries] = useState<PlantKnowledgeEntry[]>([]);
   const [statusFilter, setStatusFilter] = useState("approved");

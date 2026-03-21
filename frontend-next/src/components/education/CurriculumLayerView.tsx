@@ -10,14 +10,9 @@ import {
   ReflectionRecord,
   educationStackApi,
 } from "@/lib/api/educationStack";
+import { buildAuthHref } from "@/lib/auth/returnTo";
 
 type TopicStatusMap = Record<number, ProgressRecord>;
-
-function buildAuthHref(returnTo: string): string {
-  const params = new URLSearchParams();
-  params.set("returnTo", returnTo);
-  return `/auth?${params.toString()}`;
-}
 
 export function CurriculumLayerView() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();

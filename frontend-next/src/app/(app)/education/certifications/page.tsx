@@ -6,12 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { api, CertificationRecord, CompetencyProfile } from '@/lib/api';
 import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
 import { EducationLayerShell } from '@/components/education/ui/EducationLayerShell';
-
-function buildAuthHref(returnTo: string): string {
-  const params = new URLSearchParams();
-  params.set('returnTo', returnTo);
-  return `/auth?${params.toString()}`;
-}
+import { buildAuthHref } from '@/lib/auth/returnTo';
 
 export default function CertificationsPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();

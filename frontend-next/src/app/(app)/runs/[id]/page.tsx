@@ -4,9 +4,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import AuthGateCard from '@/components/auth/AuthGateCard';
 import { wcleApi, WCLERun, WCLEPack } from '@/lib/api/wcleApi';
 import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
+import { buildAuthHref } from '@/lib/auth/returnTo';
 
 function cents(v: number | null | undefined): string {
   if (v == null) return '$0.00';
@@ -36,20 +36,10 @@ export default function RunDetailPage() {
   const [selectedPackId, setSelectedPackId] = useState<number | null>(null);
   const [error, setError] = useState('');
 
-  const authHref = useMemo(() => {
-    const query = new URLSearchParams();
-    query.set('returnTo', `/runs/${runId}`);
-    return `/auth?${query.toString()}`;
-  }, [runId]);
+  const authHref = useMemo(() => buildAuthHref(`/runs/${runId}`), [runId]);
 
   useEffect(() => {
     if (!runId || authLoading) {
-      return;
-    }
-
-    if (!isAuthenticated) {
-      setLoading(false);
-      setRun(null);
       return;
     }
 
@@ -69,13 +59,19 @@ export default function RunDetailPage() {
         setError(`${actionable.headline}. ${actionable.detail}`);
       })
       .finally(() => setLoading(false));
-  }, [runId, authLoading, isAuthenticated]);
+  }, [runId, authLoading]);
 
   async function handlePledge() {
+    if (!isAuthenticated) {
+      router.push(authHref);
+      return;
+    }
+
     if (!selectedPackId) {
       setError('Please select a pack');
       return;
     }
+
     setPledging(true);
     setError('');
     try {
@@ -98,19 +94,6 @@ export default function RunDetailPage() {
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <AuthGateCard
-        eyebrow="Run detail"
-        title="Sign in to pledge to this run"
-        description="Pack selection and pledge confirmation require an authenticated session."
-        primaryHref={authHref}
-        secondaryHref="/cost-lowering"
-        secondaryLabel="Back to runs"
-      />
-    );
-  }
-
   if (!run) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-10 text-center">
@@ -130,6 +113,15 @@ export default function RunDetailPage() {
       <Link href="/cost-lowering" className="text-sm text-white/80 hover:text-white mb-4 inline-block">
         &larr; Back to runs
       </Link>
+
+      {!isAuthenticated ? (
+        <div className="card-civic mb-4 flex flex-wrap items-center justify-between gap-2 text-sm text-white/75">
+          <span>Preview mode active. Sign in when you are ready to pledge and track delivery.</span>
+          <Link href={authHref} className="btn-pill btn-pill-primary text-xs">
+            Sign in to pledge
+          </Link>
+        </div>
+      ) : null}
 
       <div className="card-civic mb-6">
         <div className="flex items-center gap-2 mb-2">
@@ -231,7 +223,7 @@ export default function RunDetailPage() {
         </div>
       )}
 
-      {isOpen && (
+      {isOpen ? (
         <div className="card-civic">
           {error && <div className="bg-rose-500/15 text-rose-200 text-sm rounded-lg px-4 py-2 mb-4">{error}</div>}
           <div className="flex items-center justify-between">
@@ -246,13 +238,13 @@ export default function RunDetailPage() {
               disabled={pledging || !selectedPackId}
               className="btn-pill btn-pill-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {pledging ? 'Pledging...' : 'Pledge Now'}
+              {isAuthenticated ? (pledging ? 'Pledging...' : 'Pledge Now') : 'Sign in to pledge'}
             </button>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {run.status === 'COMPLETED' && (
+      {run.status === 'COMPLETED' ? (
         <div className="card-civic mt-6">
           <h3 className="font-semibold text-emerald-100 mb-3">Run Complete</h3>
           <div className="grid grid-cols-3 gap-4 text-center">
@@ -272,7 +264,7 @@ export default function RunDetailPage() {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

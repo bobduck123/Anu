@@ -3,10 +3,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import AuthGateCard from '@/components/auth/AuthGateCard';
 import { wcleApi, WCLERun } from '@/lib/api/wcleApi';
 import { OnboardingWidget } from '@/components/wcle/OnboardingWidget';
 import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
+import { buildAuthHref } from '@/lib/auth/returnTo';
 
 function cents(v: number | null | undefined): string {
   if (v == null) return '$0.00';
@@ -44,11 +44,7 @@ export default function CostLoweringPage() {
   const [supplierFilter, setSupplierFilter] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
 
-  const authHref = useMemo(() => {
-    const params = new URLSearchParams();
-    params.set('returnTo', '/cost-lowering');
-    return `/auth?${params.toString()}`;
-  }, []);
+  const authHref = useMemo(() => buildAuthHref('/cost-lowering'), []);
 
   const loadRuns = useCallback(async (filters: { postcode?: string; supplierFilter?: string } = {}) => {
     setLoading(true);
@@ -79,14 +75,8 @@ export default function CostLoweringPage() {
       return;
     }
 
-    if (!isAuthenticated) {
-      setLoading(false);
-      setRuns([]);
-      return;
-    }
-
     void loadRuns();
-  }, [authLoading, isAuthenticated, loadRuns]);
+  }, [authLoading, loadRuns]);
 
   function handleSearch() {
     void loadRuns({ postcode, supplierFilter });
@@ -100,20 +90,6 @@ export default function CostLoweringPage() {
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <AuthGateCard
-        eyebrow="Cost-Lowering Engine"
-        title="Sign in to join weekly runs"
-        description="Run listings, pledges, and household savings are tied to authenticated participants. Sign in to access live run operations."
-        primaryHref={authHref}
-        primaryLabel="Sign in to continue"
-        secondaryHref="/docs"
-        secondaryLabel="Open docs"
-      />
-    );
-  }
-
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <section className="card-civic mb-8">
@@ -122,8 +98,16 @@ export default function CostLoweringPage() {
           Weekly Cost-Lowering Engine
         </h1>
         <p className="text-sm text-white/75 max-w-2xl">
-          Join bulk-buying runs in your area. Save 30-50% on fresh produce by buying together with your neighbours.
+          Explore active runs, compare suppliers, and see indicative savings. Sign in when you are ready to pledge and track household outcomes.
         </p>
+        {!isAuthenticated ? (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs text-white/65">Preview mode active</span>
+            <Link href={authHref} className="btn-pill btn-pill-primary text-xs">
+              Sign in to pledge
+            </Link>
+          </div>
+        ) : null}
       </section>
 
       <section className="mb-8">
