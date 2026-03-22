@@ -54,6 +54,9 @@ Primary backlog coverage:
 Expected outcomes:
 - Better touch ergonomics, hierarchy stability, and mobile transition smoothness.
 
+Status:
+- **Implemented locally in this sprint execution** (see Sprint 3 implementation record below).
+
 ---
 
 ## Sprint 4 — Education Progression and Trust Signals
@@ -210,6 +213,64 @@ Test files:
   - sidebar mode controls and task filtering behavior
 
 ### Sprint 2 completion status
+
+- **Local implementation:** Complete
+- **Local validation:** Complete
+- **Deployment/push:** follow explicit operator instruction only
+
+---
+
+## Sprint 3 Implementation Record (Executed)
+
+### Implemented changes
+
+1. Introduced mobile quick-navigation dock
+- Added: `frontend-next/src/ui-system/layout/MobileDock.tsx`
+- Improvements:
+  - fixed bottom mobile dock with high-salience routes (`Explore`, `Learn`, `Tasks`, `Profile/Sign in`)
+  - route-aware active state
+  - auth-aware destination for account entry
+
+2. Integrated mobile dock into app shell
+- Updated: `frontend-next/src/ui-system/layout/LayoutShell.tsx`
+- Improvements:
+  - dock rendered on support-chrome routes
+  - mobile-safe bottom spacing (`pb-24 md:pb-8`) to prevent content occlusion
+
+3. Increased mobile interaction ergonomics and responsiveness foundations
+- Updated: `frontend-next/src/ui-system/layout/Sidebar.tsx`
+- Improvements:
+  - larger mobile touch targets in drawer navigation
+  - preserved explore-first routing controls from Sprint 2 with mobile usability tuning
+
+4. Added mobile-first base input styling and mobile performance reductions
+- Updated: `frontend-next/src/app/globals.css`
+- Improvements:
+  - new reusable `.input-civic` control style
+  - stronger mobile touch ergonomics on controls
+  - reduced mobile hover-lift overhead and lighter glass/grid effects for smoother low-end runtime
+
+5. Added mobile dock tests
+- Added: `frontend-next/src/test/mobileDock.test.tsx`
+- Coverage:
+  - unauthenticated dock destination behavior
+  - authenticated dock destination behavior
+
+### Verification artifacts
+
+- Type validation: `npm run typecheck`
+- Build validation: `npm run build`
+- Focused test validation:
+  - `src/test/mobileDock.test.tsx`
+  - `src/test/pathwayGuidance.test.ts`
+  - `src/test/authPage.test.tsx`
+  - `src/test/authReturnTo.test.ts`
+- Browser verification (mobile viewport):
+  - dock labels visible and route-aware
+  - `Next flow` bar visibility on key routes
+  - mobile sidebar opening + mode/filter controls
+
+### Sprint 3 completion status
 
 - **Local implementation:** Complete
 - **Local validation:** Complete

@@ -1,12 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { api, CertificationRecord, CompetencyProfile } from '@/lib/api';
 import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
 import { EducationLayerShell } from '@/components/education/ui/EducationLayerShell';
 import { buildAuthHref } from '@/lib/auth/returnTo';
+
+interface VerificationResult {
+  certificate_uid: string;
+  module_id: number;
+  issued_at?: string;
+  expires_at?: string | null;
+  status: string;
+}
 
 export default function CertificationsPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -14,6 +22,10 @@ export default function CertificationsPage() {
   const [publicRegistry, setPublicRegistry] = useState<CertificationRecord[]>([]);
   const [profile, setProfile] = useState<CompetencyProfile | null>(null);
   const [registryError, setRegistryError] = useState<string | null>(null);
+  const [verificationUid, setVerificationUid] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
   const authHref = useMemo(() => buildAuthHref('/education/certifications'), []);
 
   useEffect(() => {
@@ -44,17 +56,53 @@ export default function CertificationsPage() {
     api.education.getCompetencyProfile().then(setProfile).catch(() => setProfile(null));
   }, [authLoading, isAuthenticated]);
 
+  const verifyCertificate = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const uid = verificationUid.trim();
+    if (!uid) {
+      setVerificationError('Enter a certificate UID to verify.');
+      return;
+    }
+
+    setVerifying(true);
+    setVerificationError(null);
+    setVerificationResult(null);
+    try {
+      const result = await api.education.verifyCertificate(uid);
+      setVerificationResult(result);
+    } catch (error) {
+      setVerificationError(error instanceof Error ? error.message : 'Certificate verification failed.');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   return (
     <EducationLayerShell>
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-12 space-y-8">
-        <div className="text-center">
+        <section className="edu-card edu-card-highlight p-6 md:p-8">
           <h1 className="text-4xl font-bold mb-2 text-white" style={{ fontFamily: 'var(--font-serif)' }}>
             Certifications
           </h1>
           <p className="text-white/75">
             Public registry access stays open. Personal competency and issued credentials stay tied to your session.
           </p>
-        </div>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <article className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/75">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-white/60">1. Learn</p>
+              <p className="mt-2">Complete modules and assessments inside the curriculum flow.</p>
+            </article>
+            <article className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/75">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-white/60">2. Credential</p>
+              <p className="mt-2">Issue certificates for completed modules through your learner session.</p>
+            </article>
+            <article className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/75">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-white/60">3. Verify</p>
+              <p className="mt-2">Use public UID verification to confirm trust and credential state.</p>
+            </article>
+          </div>
+        </section>
 
         <section className="edu-card p-6">
           <h2 className="text-lg font-semibold mb-3 text-white">Competency Profile</h2>
@@ -84,6 +132,41 @@ export default function CertificationsPage() {
         </section>
 
         <section className="edu-card p-6">
+          <h2 className="text-lg font-semibold mb-4 text-white">Certificate Verifier</h2>
+          <form onSubmit={verifyCertificate} className="space-y-3">
+            <label className="block text-xs uppercase tracking-[0.12em] text-white/60" htmlFor="certificate-uid-input">
+              Public certificate UID
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <input
+                id="certificate-uid-input"
+                value={verificationUid}
+                onChange={(event) => setVerificationUid(event.target.value)}
+                placeholder="e.g. bba4f4f2-..."
+                className="input-civic min-w-[18rem] flex-1"
+              />
+              <button type="submit" disabled={verifying} className="btn-pill btn-pill-primary text-sm disabled:opacity-60">
+                {verifying ? 'Verifying…' : 'Verify'}
+              </button>
+            </div>
+          </form>
+
+          {verificationError ? <p className="mt-3 text-sm text-rose-200">{verificationError}</p> : null}
+          {verificationResult ? (
+            <div className="mt-4 rounded-lg border border-white/15 bg-white/[0.03] p-4 text-sm text-white/75">
+              <p className="font-semibold text-white">Certificate verified</p>
+              <p className="mt-2">UID: {verificationResult.certificate_uid}</p>
+              <p>Module: {verificationResult.module_id}</p>
+              <p>Status: {verificationResult.status}</p>
+              <p>
+                Issued:{' '}
+                {verificationResult.issued_at ? new Date(verificationResult.issued_at).toLocaleDateString() : 'Unknown'}
+              </p>
+            </div>
+          ) : null}
+        </section>
+
+        <section className="edu-card p-6">
           <h2 className="text-lg font-semibold mb-4 text-white">Your Issued Certificates</h2>
           {!isAuthenticated ? (
             <p className="text-sm text-white/70">Sign in to see your personal certificate history.</p>
@@ -101,9 +184,7 @@ export default function CertificationsPage() {
                   </div>
                   <span
                     className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                      cert.status === 'active'
-                        ? 'bg-emerald-400/20 text-emerald-100'
-                        : 'bg-white/15 text-white/75'
+                      cert.status === 'active' ? 'bg-emerald-400/20 text-emerald-100' : 'bg-white/15 text-white/75'
                     }`}
                   >
                     {cert.status}
@@ -117,7 +198,13 @@ export default function CertificationsPage() {
         <section className="edu-card p-6">
           <h2 className="text-lg font-semibold mb-4 text-white">Public Credential Registry</h2>
           {registryError ? (
-            <p className="text-sm text-rose-200">{registryError}</p>
+            <div className="space-y-3">
+              <p className="text-sm text-rose-200">{registryError}</p>
+              <p className="text-xs text-white/60">
+                Registry refresh is unavailable right now. You can keep navigating curriculum, assessments, and
+                regeneration flows without losing session continuity.
+              </p>
+            </div>
           ) : publicRegistry.length === 0 ? (
             <p className="text-sm text-white/70">No public certificates are listed yet.</p>
           ) : (
@@ -132,9 +219,7 @@ export default function CertificationsPage() {
                   </div>
                   <span
                     className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                      cert.status === 'active'
-                        ? 'bg-emerald-400/20 text-emerald-100'
-                        : 'bg-white/15 text-white/75'
+                      cert.status === 'active' ? 'bg-emerald-400/20 text-emerald-100' : 'bg-white/15 text-white/75'
                     }`}
                   >
                     {cert.status}
