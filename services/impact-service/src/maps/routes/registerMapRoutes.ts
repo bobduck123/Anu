@@ -20,8 +20,14 @@ import {
   mapSnapshotRestoreBodySchema,
   mapStatusBodySchema,
   mapDefinitionSchema,
+  mapImportPreviewBodySchema,
+  mapImportPreviewSchema,
+  mapImportPersistBodySchema,
+  mapImportPersistSchema,
+  mapImportActivitySchema,
 } from '../domain/schemas';
 import { FalakMapService } from '../services/falakMapService';
+import type { SeedCorpus } from '../domain/types';
 
 function sendNotFound(traceId?: string) {
   return {
@@ -166,6 +172,70 @@ export async function registerMapRoutes(
   await typed.register(async (privilegedInstance) => {
     const privilegedApi = privilegedInstance.withTypeProvider<ZodTypeProvider>();
     privilegedApi.addHook('preHandler', privilegedContext);
+
+    privilegedApi.post('/education/maps/import/preview', {
+      schema: {
+        tags: ['Education Maps'],
+        summary: 'Preview compilation for a caller-supplied seed corpus (Phase C start)',
+        security: [{ bearerAuth: [] }],
+        body: mapImportPreviewBodySchema,
+        response: {
+          200: z.object({
+            preview: mapImportPreviewSchema,
+          }),
+          400: errorResponseSchema,
+          422: errorResponseSchema,
+        },
+      },
+    }, async (request) => {
+      return {
+        preview: service.previewSeedImport(request.body.seed as SeedCorpus, request.body.mode),
+      };
+    });
+
+    privilegedApi.post('/education/maps/import/persist', {
+      schema: {
+        tags: ['Education Maps'],
+        summary: 'Persist a caller-supplied seed corpus as a managed map (Phase C)',
+        security: [{ bearerAuth: [] }],
+        body: mapImportPersistBodySchema,
+        response: {
+          200: mapImportPersistSchema,
+          400: errorResponseSchema,
+          422: errorResponseSchema,
+        },
+      },
+    }, async (request) => {
+      const context = requireFalakContext(request);
+      return service.importSeedAndPersist(context.tenantId, request.body.seed as SeedCorpus, {
+        mode: request.body.mode,
+        status: request.body.status,
+        force: request.body.force,
+        importNote: request.body.importNote,
+        importedByActorId: context.actor?.id ?? undefined,
+        importedByExternalAuthId: context.actor?.externalAuthId ?? undefined,
+      });
+    });
+
+    privilegedApi.get('/education/maps/:topicKey/import-activity', {
+      schema: {
+        tags: ['Education Maps'],
+        summary: 'List recent seed import activity for a map topic',
+        security: [{ bearerAuth: [] }],
+        params: mapPathParamsSchema,
+        response: {
+          200: z.array(mapImportActivitySchema),
+          404: errorResponseSchema,
+        },
+      },
+    }, async (request, reply) => {
+      const context = requireFalakContext(request);
+      const activity = await service.listImportActivity(context.tenantId, request.params.topicKey);
+      if (!activity) {
+        return reply.status(404).send(sendNotFound(context.traceId));
+      }
+      return activity;
+    });
 
     privilegedApi.patch('/education/maps/:topicKey/status', {
       schema: {

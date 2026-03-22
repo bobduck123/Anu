@@ -1,6 +1,7 @@
-import { compileMapDraft } from '../../src/maps/compiler/autopilot';
+import { compileMapDraft, compileMapDraftFromSeed } from '../../src/maps/compiler/autopilot';
+import { LEFT_THOUGHT_GRAPH_SEED } from '../../src/maps/compiler/leftThoughtSeed';
 import { layoutInputsFromNodes } from '../../src/maps/compiler/layoutCompiler';
-import { stableId } from '../../src/maps/compiler/utils';
+import { normalizeTopicKey, stableId } from '../../src/maps/compiler/utils';
 import type {
   MapCompileRequest,
   MapDefinition,
@@ -11,9 +12,11 @@ import type {
   MapOverride,
   MapResource,
   MapStatus,
+  SeedCorpus,
 } from '../../src/maps/domain/types';
 import { PrismaFalakMapRepository } from '../../src/maps/repositories/prismaFalakMapRepository';
 import { FalakMapService } from '../../src/maps/services/falakMapService';
+import { AppError } from '../../src/utils/errors';
 
 const TENANT_ID = 'tenant-test';
 
@@ -28,7 +31,9 @@ function resourceKey(tenantId: string, topicKey: string): string {
 class InMemoryFalakMapRepository {
   readonly overrides: MapOverride[] = [];
   readonly jobs: MapJob[] = [];
+  readonly jobLogs: Array<{ jobId: string; step: string; status: string; message: string; payload?: Record<string, unknown> | null }> = [];
   private readonly maps = new Map<string, MapResource>();
+  private readonly importChecksums = new Map<string, string>();
 
   async listMaps(tenantId: string, filters: { status?: MapStatus; query?: string } = {}): Promise<MapDefinition[]> {
     return Array.from(this.maps.values())
@@ -61,12 +66,40 @@ class InMemoryFalakMapRepository {
     });
   }
 
+  async listImportActivity(tenantId: string, topicKey: string) {
+    const resource = this.maps.get(resourceKey(tenantId, topicKey));
+    if (!resource) {
+      return null;
+    }
+
+    return this.overrides
+      .filter((override) => override.mapId === resource.definition.id && override.targetType === 'map')
+      .map((override) => ({
+        id: override.id,
+        tenantId,
+        topicKey,
+        mapId: resource.definition.id,
+        importType: String((override.patch as { importType?: unknown }).importType ?? 'seed_corpus'),
+        importSource: String((override.patch as { importSource?: unknown }).importSource ?? 'unknown'),
+        importMode: String((override.patch as { importMode?: unknown }).importMode ?? 'curated_refine'),
+        importChecksum: String((override.patch as { importChecksum?: unknown }).importChecksum ?? ''),
+        nodeCount: Number((override.patch as { nodeCount?: unknown }).nodeCount ?? 0),
+        edgeCount: Number((override.patch as { edgeCount?: unknown }).edgeCount ?? 0),
+        sepLinkedNodeCount: Number((override.patch as { sepLinkedNodeCount?: unknown }).sepLinkedNodeCount ?? 0),
+        importNote: (override.patch as { importNote?: string }).importNote,
+        importedByActorId: (override.patch as { importedByActorId?: string }).importedByActorId,
+        importedByExternalAuthId: (override.patch as { importedByExternalAuthId?: string }).importedByExternalAuthId,
+        recordedAt: override.createdAt,
+      }))
+      .filter((entry) => Boolean(entry.importChecksum));
+  }
+
   async createJob(tenantId: string, request: MapCompileRequest): Promise<MapJob> {
     const now = new Date().toISOString();
     const job: MapJob = {
       id: stableId('job', tenantId, request.topic, `${this.jobs.length}`),
       tenantId,
-      topicKey: request.topic.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+      topicKey: normalizeTopicKey(request.topic),
       requestedTopic: request.topic,
       mode: request.mode,
       status: 'queued',
@@ -81,8 +114,79 @@ class InMemoryFalakMapRepository {
     return clone(job);
   }
 
+  async appendJobLogs(
+    _tenantId: string,
+    jobId: string,
+    logs: Array<{ step: string; status: 'info' | 'warning' | 'error'; message: string; payload?: Record<string, unknown> | null }>,
+  ): Promise<void> {
+    for (const log of logs) {
+      this.jobLogs.push({
+        jobId,
+        step: log.step,
+        status: log.status,
+        message: log.message,
+        payload: log.payload ?? null,
+      });
+    }
+  }
+
   async compileAndPersist(tenantId: string, request: MapCompileRequest, jobId: string): Promise<MapResource> {
     const compiled = compileMapDraft(request);
+    const existing = this.maps.get(resourceKey(tenantId, compiled.definition.topicKey));
+    const now = new Date().toISOString();
+    const mapId = existing?.definition.id ?? stableId('maprec', tenantId, compiled.definition.topicKey);
+    const version = (existing?.definition.version ?? 0) + 1;
+    const snapshotId = stableId('snapshot', mapId, String(version), compiled.snapshot.name);
+
+    const resource: MapResource = {
+      definition: {
+        ...compiled.definition,
+        id: mapId,
+        tenantId,
+        version,
+        currentSnapshotId: snapshotId,
+        createdAt: existing?.definition.createdAt ?? now,
+        updatedAt: now,
+      },
+      categories: compiled.categories.map((category) => ({ ...category, mapId })),
+      axes: compiled.axes.map((axis) => ({ ...axis, mapId })),
+      nodes: compiled.nodes.map((node) => ({ ...node, mapId })),
+      edges: compiled.edges.map((edge) => ({
+        ...edge,
+        id: stableId('edge', mapId, edge.sourceId, edge.targetId, edge.relation),
+        mapId,
+      })),
+      aliases: compiled.aliases.map((alias) => ({ ...alias, mapId })),
+      snapshots: [
+        {
+          ...compiled.snapshot,
+          id: snapshotId,
+          mapId,
+          version,
+          createdAt: now,
+        },
+        ...(existing?.snapshots ?? []),
+      ],
+      jobs: [],
+    };
+
+    this.maps.set(resourceKey(tenantId, compiled.definition.topicKey), resource);
+    this.updateJobState(jobId, {
+      status: 'completed',
+      mapId,
+      startedAt: this.findJob(jobId)?.startedAt ?? now,
+      completedAt: now,
+      updatedAt: now,
+    });
+
+    return clone({
+      ...resource,
+      jobs: this.jobs.filter((job) => job.mapId === mapId || job.topicKey === resource.definition.topicKey),
+    });
+  }
+
+  async compileAndPersistFromSeed(tenantId: string, request: MapCompileRequest, seed: SeedCorpus, jobId: string): Promise<MapResource> {
+    const compiled = compileMapDraftFromSeed(seed, request.mode);
     const existing = this.maps.get(resourceKey(tenantId, compiled.definition.topicKey));
     const now = new Date().toISOString();
     const mapId = existing?.definition.id ?? stableId('maprec', tenantId, compiled.definition.topicKey);
@@ -142,6 +246,55 @@ class InMemoryFalakMapRepository {
       errorMessage,
       completedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+    });
+  }
+
+  async latestImportChecksum(tenantId: string, topicKey: string): Promise<string | null> {
+    return this.importChecksums.get(resourceKey(tenantId, topicKey)) ?? null;
+  }
+
+  async recordImportMetadata(
+    tenantId: string,
+    topicKey: string,
+    metadata: {
+      importChecksum: string;
+      mode: MapCompileRequest['mode'];
+      source: string;
+      nodeCount: number;
+      edgeCount: number;
+      sepLinkedNodeCount: number;
+      importNote?: string;
+      importedByActorId?: string;
+      importedByExternalAuthId?: string;
+    },
+  ): Promise<void> {
+    this.importChecksums.set(resourceKey(tenantId, topicKey), metadata.importChecksum);
+
+    const map = this.maps.get(resourceKey(tenantId, topicKey));
+    if (!map) {
+      return;
+    }
+
+    this.overrides.push({
+      id: stableId('override', map.definition.id, 'seed-import', `${this.overrides.length}`),
+      mapId: map.definition.id,
+      targetType: 'map',
+      targetId: map.definition.id,
+      patch: {
+        importType: 'seed_corpus',
+        importChecksum: metadata.importChecksum,
+        importMode: metadata.mode,
+        importSource: metadata.source,
+        importedByActorId: metadata.importedByActorId ?? null,
+        importedByExternalAuthId: metadata.importedByExternalAuthId ?? null,
+        importNote: metadata.importNote ?? null,
+        nodeCount: metadata.nodeCount,
+        edgeCount: metadata.edgeCount,
+        sepLinkedNodeCount: metadata.sepLinkedNodeCount,
+      },
+      createdAt: new Date().toISOString(),
+      createdBy: null,
+      note: undefined,
     });
   }
 
@@ -433,6 +586,192 @@ describe('FalakMapService integration', () => {
     expect(result.map.nodes.length).toBeGreaterThan(0);
     expect(result.map.snapshots).toHaveLength(1);
     expect(repository.jobs[0]?.status).toBe('completed');
+  });
+
+  it('compiles and persists the left-thought graph atlas as a first-class Falak map resource', async () => {
+    const { repository, service } = createServiceWithRepository();
+
+    const result = await service.resolveOrCompile(TENANT_ID, {
+      topic: 'left-thought-graph-atlas',
+      mode: 'curated_refine',
+    });
+
+    expect(result.jobCreated).toBe(true);
+    expect(result.map.definition.topicKey).toBe('left-thought-graph-atlas');
+    expect(result.map.nodes).toHaveLength(79);
+    expect(result.map.edges).toHaveLength(126);
+
+    const marx = result.map.nodes.find((node) => node.label === 'Karl Marx');
+    expect(marx?.sources.some((source) => source.domain === 'plato.stanford.edu')).toBe(true);
+
+    const authoredByEdge = result.map.edges.find((edge) => edge.evidence?.includes('authored by'));
+    expect(authoredByEdge?.relation).toBe('derived_from');
+
+    const persisted = await service.getMap(TENANT_ID, 'left-thought-graph-atlas');
+    expect(persisted?.definition.id).toBe(result.map.definition.id);
+  });
+
+  it('previews caller-supplied seed corpora for Phase C import flow without persisting map state', async () => {
+    const { repository, service } = createServiceWithRepository();
+
+    const preview = service.previewSeedImport(LEFT_THOUGHT_GRAPH_SEED, 'curated_refine');
+
+    expect(preview.topicKey).toBe('left-thought-graph-atlas');
+    expect(preview.nodeCount).toBe(79);
+    expect(preview.edgeCount).toBe(126);
+    expect(preview.sepLinkedNodeCount).toBe(79);
+    expect(preview.relationBreakdown.derived_from).toBeGreaterThan(0);
+
+    const persisted = await service.getMap(TENANT_ID, 'left-thought-graph-atlas');
+    expect(persisted).toBeNull();
+    expect(repository.jobs).toHaveLength(0);
+  });
+
+  it('persists caller-supplied seed imports with checksum metadata and idempotent reuse on repeat payloads', async () => {
+    const { repository, service } = createServiceWithRepository();
+
+    const first = await service.importSeedAndPersist(TENANT_ID, LEFT_THOUGHT_GRAPH_SEED, {
+      mode: 'curated_refine',
+      status: 'reviewed',
+      importNote: 'Initial curated import',
+      importedByActorId: 'actor-admin',
+      importedByExternalAuthId: 'anu-admin',
+    });
+
+    expect(first.jobCreated).toBe(true);
+    expect(first.idempotentReuse).toBe(false);
+    expect(first.map.definition.topicKey).toBe('left-thought-graph-atlas');
+    expect(first.map.definition.status).toBe('reviewed');
+    expect(first.preview.nodeCount).toBe(79);
+    expect(first.preview.edgeCount).toBe(126);
+
+    const second = await service.importSeedAndPersist(TENANT_ID, LEFT_THOUGHT_GRAPH_SEED, {
+      mode: 'curated_refine',
+      status: 'published',
+    });
+
+    expect(second.jobCreated).toBe(false);
+    expect(second.idempotentReuse).toBe(true);
+    expect(second.checksum).toBe(first.checksum);
+    expect(second.map.definition.status).toBe('published');
+    expect(repository.jobs).toHaveLength(1);
+
+    const importOverride = repository.overrides.find((override) => {
+      const checksum = (override.patch as { importChecksum?: string }).importChecksum;
+      return override.targetType === 'map' && checksum === first.checksum;
+    });
+    expect(importOverride).toBeDefined();
+    expect((importOverride?.patch as { importNote?: string }).importNote).toBe('Initial curated import');
+    expect((importOverride?.patch as { importedByActorId?: string }).importedByActorId).toBe('actor-admin');
+
+    const metadataLog = repository.jobLogs.find((log) => log.step === 'seed_import_metadata');
+    expect(metadataLog).toBeDefined();
+    expect(metadataLog?.payload).toMatchObject({
+      importChecksum: first.checksum,
+      importNote: 'Initial curated import',
+      importedByActorId: 'actor-admin',
+      importedByExternalAuthId: 'anu-admin',
+    });
+  });
+
+  it('lists import activity records for persisted seed imports', async () => {
+    const { service } = createServiceWithRepository();
+
+    await service.importSeedAndPersist(TENANT_ID, LEFT_THOUGHT_GRAPH_SEED, {
+      mode: 'curated_refine',
+      importNote: 'activity check',
+      importedByActorId: 'actor-admin',
+      importedByExternalAuthId: 'anu-admin',
+    });
+
+    const activity = await service.listImportActivity(TENANT_ID, 'left-thought-graph-atlas');
+
+    expect(activity).not.toBeNull();
+    expect(activity?.length).toBeGreaterThan(0);
+    expect(activity?.[0]).toMatchObject({
+      topicKey: 'left-thought-graph-atlas',
+      importType: 'seed_corpus',
+      importMode: 'curated_refine',
+      importNote: 'activity check',
+      importedByActorId: 'actor-admin',
+    });
+  });
+
+  it('supports forcing re-import even when checksum matches', async () => {
+    const { repository, service } = createServiceWithRepository();
+
+    const first = await service.importSeedAndPersist(TENANT_ID, LEFT_THOUGHT_GRAPH_SEED, {
+      mode: 'curated_refine',
+    });
+    const second = await service.importSeedAndPersist(TENANT_ID, LEFT_THOUGHT_GRAPH_SEED, {
+      mode: 'curated_refine',
+      force: true,
+    });
+
+    expect(first.jobCreated).toBe(true);
+    expect(second.jobCreated).toBe(true);
+    expect(second.idempotentReuse).toBe(false);
+    expect(second.checksum).toBe(first.checksum);
+    expect(repository.jobs).toHaveLength(2);
+  });
+
+  it('rejects imports missing required topic identity metadata with typed bad-request errors', async () => {
+    const { repository, service } = createServiceWithRepository();
+
+    const invalidSeed: SeedCorpus = {
+      ...LEFT_THOUGHT_GRAPH_SEED,
+      topicKey: '   ',
+      title: '   ',
+    };
+
+    let thrown: unknown;
+    try {
+      await service.importSeedAndPersist(TENANT_ID, invalidSeed, {
+        mode: 'curated_refine',
+      });
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(AppError);
+    expect((thrown as AppError).code).toBe('MAP_IMPORT_INVALID_PAYLOAD');
+    expect((thrown as AppError).details).toEqual({
+      required: ['topicKey', 'title'],
+    });
+    expect(repository.jobs).toHaveLength(0);
+  });
+
+  it('rejects imports that exceed service safety limits before creating jobs', async () => {
+    const { repository, service } = createServiceWithRepository();
+
+    const oversizedSeed: SeedCorpus = {
+      ...LEFT_THOUGHT_GRAPH_SEED,
+      topicKey: 'left-thought-graph-atlas-oversized',
+      entities: Array.from({ length: 501 }, (_, index) => ({
+        ...LEFT_THOUGHT_GRAPH_SEED.entities[index % LEFT_THOUGHT_GRAPH_SEED.entities.length],
+        label: `Oversized Entity ${index + 1}`,
+      })),
+    };
+
+    let thrown: unknown;
+    try {
+      await service.importSeedAndPersist(TENANT_ID, oversizedSeed, {
+        mode: 'curated_refine',
+      });
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(AppError);
+    expect((thrown as AppError).code).toBe('MAP_IMPORT_LIMIT_EXCEEDED');
+    expect((thrown as AppError).message).toContain('nodes exceed limit');
+    expect((thrown as AppError).details).toMatchObject({
+      resource: 'nodes',
+      limit: 500,
+    });
+    expect(((thrown as AppError).details as { actual?: number }).actual).toBeGreaterThan(500);
+
+    expect(repository.jobs).toHaveLength(0);
   });
 
   it('saves admin overrides for node and edge updates', async () => {

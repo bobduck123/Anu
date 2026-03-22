@@ -1,4 +1,5 @@
 import { MapDefinition, MapRelation, MapResource, MapStatus } from '@/lib/api/educationMaps';
+import { LEFT_THOUGHT_GRAPH_FALLBACK_SEED } from './leftThoughtFallbackSeed';
 
 type AxisSeed = {
   key: 'x' | 'y' | 'z';
@@ -628,6 +629,7 @@ const FALLBACK_MAP_SEEDS: FallbackMapSeed[] = [
       { source: 'feminist-philosophy', target: 'artificial-intelligence', relation: 'influences', weight: 0.46, confidence: 0.61, evidence: 'Critical work on power, embodiment, and social categories is directly relevant when philosophical questions about AI move into public systems.' },
     ],
   },
+  LEFT_THOUGHT_GRAPH_FALLBACK_SEED,
 ];
 
 function roundMetric(value: number): number {

@@ -201,6 +201,58 @@ async function assertMapGuardBehavior(prisma, fixture, runId) {
   }
 }
 
+function buildTinyImportSeed(runId) {
+  return {
+    topicKey: `phase-c-import-${runId}`,
+    title: `Phase C Import ${runId}`,
+    archetype: 'theory',
+    description: 'Tiny privileged import payload used for smoke verification.',
+    seedQueries: ['phase c import smoke'],
+    suppliedUrls: ['https://plato.stanford.edu/contents.html'],
+    documents: [
+      {
+        id: `seed-doc-${runId}`,
+        url: 'https://example.org/phase-c-import',
+        title: 'Phase C Import Source',
+        type: 'source_pack',
+        sections: [
+          {
+            heading: 'Summary',
+            kind: 'summary',
+            lines: ['Tiny import smoke payload.']
+          }
+        ]
+      }
+    ],
+    entities: [
+      {
+        label: 'Phase C Smoke Entity',
+        entityType: 'topic',
+        categoryKey: 'smoke',
+        tags: ['phase-c', 'smoke'],
+        summary: 'Seed entity for privileged import smoke checks.',
+        axisScores: {
+          x: 0,
+          y: 0,
+          z: 0
+        },
+        metrics: {
+          importance: 0.5,
+          evidence: 0.5,
+          popularity: 0.4
+        },
+        sources: [
+          {
+            url: 'https://plato.stanford.edu/contents.html',
+            title: 'SEP contents',
+            domain: 'plato.stanford.edu'
+          }
+        ]
+      }
+    ]
+  };
+}
+
 async function exerciseMapSurface(fixture, runId) {
   const mode = resolveMapGuardMode();
   const publicHeaders = mapPublicHeaders(mode, fixture);
@@ -223,6 +275,25 @@ async function exerciseMapSurface(fixture, runId) {
   });
   assert(detail.json?.definition?.topicKey === topicKey, 'Map detail endpoint did not return the resolved map.');
 
+  const leftThought = await requestJson('POST', '/v1/education/maps/resolve', {
+    headers: publicHeaders,
+    body: {
+      topic: 'left-thought-graph-atlas',
+      mode: 'curated_refine'
+    },
+    expectedStatus: 200
+  });
+  const leftThoughtMap = leftThought.json?.map;
+  const leftThoughtTopicKey = leftThoughtMap?.definition?.topicKey;
+  assert(leftThoughtTopicKey === 'left-thought-graph-atlas', 'Left-thought resolve did not return the expected topic key.');
+  assert(leftThoughtMap?.nodes?.length === 79, 'Left-thought map node count drifted from expected parity baseline (79).');
+  assert(leftThoughtMap?.edges?.length === 126, 'Left-thought map edge count drifted from expected parity baseline (126).');
+  const sepLinkedNodes = (leftThoughtMap?.nodes ?? []).filter((node) =>
+    (node.sources ?? []).some((source) => source.domain === 'plato.stanford.edu')
+  ).length;
+  assert(sepLinkedNodes === 79, 'Left-thought map SEP-linked node coverage drifted from expected baseline (79).');
+  stagePass('Stage B.6b', 'Left-thought atlas resolves with parity-preserving counts and SEP coverage');
+
   const unauthenticatedAdmin = await requestJson('PATCH', `/v1/education/maps/${topicKey}/status`, {
     headers: tenantHeaders(fixture.tenant.id),
     body: {
@@ -244,6 +315,53 @@ async function exerciseMapSurface(fixture, runId) {
   });
   assert(updated.json?.definition?.status === 'reviewed', `Map status update failed for smoke run ${runId}.`);
   stagePass('Stage B.7', 'Falak-backed education map admin mutation requires verified actor and succeeds when verified');
+
+  const importHeaders = verifiedActorHeaders(fixture.tenant.id, fixture.admin.externalAuthId);
+  const importSeed = buildTinyImportSeed(runId);
+
+  const importPreview = await requestJson('POST', '/v1/education/maps/import/preview', {
+    headers: importHeaders,
+    body: {
+      mode: 'curated_refine',
+      seed: importSeed
+    },
+    expectedStatus: 200
+  });
+  assert(importPreview.json?.preview?.nodeCount === 1, 'Phase C import preview did not report the expected node count.');
+
+  const importPersist = await requestJson('POST', '/v1/education/maps/import/persist', {
+    headers: importHeaders,
+    body: {
+      mode: 'curated_refine',
+      status: 'reviewed',
+      force: false,
+      importNote: 'staging smoke import',
+      seed: importSeed
+    },
+    expectedStatus: 200
+  });
+  assert(importPersist.json?.map?.definition?.topicKey === importSeed.topicKey, 'Phase C import persist did not return the expected topic key.');
+  assert(importPersist.json?.preview?.nodeCount === 1, 'Phase C import persist did not include preview metrics.');
+
+  const importPersistRepeat = await requestJson('POST', '/v1/education/maps/import/persist', {
+    headers: importHeaders,
+    body: {
+      mode: 'curated_refine',
+      status: 'reviewed',
+      force: false,
+      importNote: 'staging smoke import repeat',
+      seed: importSeed
+    },
+    expectedStatus: 200
+  });
+  assert(importPersistRepeat.json?.idempotentReuse === true, 'Phase C repeat import did not report idempotentReuse=true.');
+  assert(importPersistRepeat.json?.jobCreated === false, 'Phase C repeat import unexpectedly created a compile job.');
+  assert(
+    importPersistRepeat.json?.checksum === importPersist.json?.checksum,
+    'Phase C repeat import checksum drifted from initial import payload.',
+  );
+
+  stagePass('Stage B.8', 'Phase C privileged import preview/persist endpoints are operational with idempotent reuse');
 }
 
 loadFalakStagingEnv();

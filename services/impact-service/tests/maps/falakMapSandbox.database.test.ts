@@ -26,6 +26,20 @@ describeIfSandbox('Falak map sandbox live database', () => {
     expect(map?.snapshots.length).toBeGreaterThan(0);
   });
 
+  test('includes the left-thought atlas in sandbox seed with SEP coverage parity', async () => {
+    const map = await service.getMap(TENANT_ID, 'left-thought-graph-atlas');
+
+    expect(map).not.toBeNull();
+    expect(map?.definition.status).toBe('published');
+    expect(map?.nodes).toHaveLength(79);
+    expect(map?.edges).toHaveLength(126);
+
+    const sepLinkedNodes = map?.nodes.filter((node) =>
+      node.sources.some((source) => source.domain === 'plato.stanford.edu'),
+    );
+    expect(sepLinkedNodes).toHaveLength(79);
+  });
+
   test('resolves a missing topic into a persisted draft map through the real compiler', async () => {
     const topic = `river memory protocols ${Date.now()}`;
     const result = await service.resolveOrCompile(TENANT_ID, {

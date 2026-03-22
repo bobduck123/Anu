@@ -121,6 +121,7 @@ export async function buildFalakApp(prisma: PrismaClient) {
         error: {
           code: error.code ?? 'FALAK_ERROR',
           message: error.message,
+          details: error.details,
           trace_id: request.falakContext?.traceId
         }
       });

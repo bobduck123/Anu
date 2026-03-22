@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from '@prisma/client';
-import { compileMapDraft } from '../compiler/autopilot';
+import { compileMapDraft, compileMapDraftFromSeed } from '../compiler/autopilot';
 import { layoutInputsFromNodes } from '../compiler/layoutCompiler';
 import {
   CategoryDef,
@@ -8,6 +8,7 @@ import {
   MapDefinition,
   MapEdge,
   MapEntityIndexEntry,
+  MapImportActivityEntry,
   MapJob,
   MapLayoutSnapshot,
   MapListFilters,
@@ -15,8 +16,9 @@ import {
   MapResource,
   MapStatus,
   NodeSource,
+  SeedCorpus,
 } from '../domain/types';
-import { stableId } from '../compiler/utils';
+import { normalizeTopicKey, stableId } from '../compiler/utils';
 
 type PrismaExecutor = PrismaClient | Prisma.TransactionClient;
 
@@ -152,6 +154,36 @@ function mapJobRecord(row: any): MapJob {
   };
 }
 
+function mapImportActivityRecord(row: any, tenantId: string, topicKey: string): MapImportActivityEntry | null {
+  const patch = (row.patch ?? {}) as Record<string, unknown>;
+  const importChecksum = asString(patch.importChecksum);
+  const importMode = asString(patch.importMode);
+  const importSource = asString(patch.importSource);
+  const importType = asString(patch.importType) ?? 'seed_corpus';
+
+  if (!importChecksum || !importMode || !importSource) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    tenantId,
+    topicKey,
+    mapId: row.mapId,
+    importType,
+    importSource,
+    importMode: importMode as MapImportActivityEntry['importMode'],
+    importChecksum,
+    nodeCount: asNumber(patch.nodeCount),
+    edgeCount: asNumber(patch.edgeCount),
+    sepLinkedNodeCount: asNumber(patch.sepLinkedNodeCount),
+    importNote: asString(patch.importNote),
+    importedByActorId: asString(patch.importedByActorId),
+    importedByExternalAuthId: asString(patch.importedByExternalAuthId),
+    recordedAt: row.createdAt.toISOString(),
+  };
+}
+
 export class PrismaFalakMapRepository {
   constructor(private readonly prisma: PrismaExecutor) {}
 
@@ -272,13 +304,38 @@ export class PrismaFalakMapRepository {
     return this.withTenantSession(tenantId, async (db) => this.getMapResourceWithDb(db, tenantId, topicKey));
   }
 
+  async listImportActivity(tenantId: string, topicKey: string): Promise<MapImportActivityEntry[] | null> {
+    return this.withTenantSession(tenantId, async (db) => {
+      const definition = await (db as any).falakMapDefinition.findFirst({
+        where: { tenantId, topicKey },
+        select: { id: true },
+      });
+      if (!definition) {
+        return null;
+      }
+
+      const overrides = await (db as any).falakMapOverride.findMany({
+        where: {
+          mapId: definition.id,
+          targetType: 'map',
+        },
+        orderBy: [{ createdAt: 'desc' }],
+        take: 50,
+      });
+
+      return overrides
+        .map((row: any) => mapImportActivityRecord(row, tenantId, topicKey))
+        .filter((entry: MapImportActivityEntry | null): entry is MapImportActivityEntry => entry != null);
+    });
+  }
+
   async createJob(tenantId: string, request: MapCompileRequest): Promise<MapJob> {
     return this.withTenantSession(tenantId, async (db) => {
       const row = await (db as any).falakMapJob.create({
         data: {
           id: stableId('job', tenantId, request.topic, new Date().toISOString()),
           tenantId,
-          topicKey: request.topic.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+          topicKey: normalizeTopicKey(request.topic),
           requestedTopic: request.topic,
           mode: request.mode,
           status: 'queued',
@@ -493,6 +550,121 @@ export class PrismaFalakMapRepository {
     await this.appendJobLogs(tenantId, jobId, compiled.logs);
 
     return this.withTenantSession(tenantId, async (db) => this.replaceCurrentMapState(db, tenantId, compiled, jobId));
+  }
+
+  async compileAndPersistFromSeed(
+    tenantId: string,
+    request: MapCompileRequest,
+    seed: SeedCorpus,
+    jobId: string,
+  ): Promise<MapResource> {
+    await this.updateJob(tenantId, jobId, {
+      status: 'running',
+      startedAt: new Date(),
+      errorMessage: null,
+    });
+
+    const compiled = compileMapDraftFromSeed(seed, request.mode);
+    await this.appendJobLogs(tenantId, jobId, compiled.logs);
+
+    return this.withTenantSession(tenantId, async (db) => this.replaceCurrentMapState(db, tenantId, compiled, jobId));
+  }
+
+  async latestImportChecksum(tenantId: string, topicKey: string): Promise<string | null> {
+    return this.withTenantSession(tenantId, async (db) => {
+      const definition = await (db as any).falakMapDefinition.findFirst({
+        where: { tenantId, topicKey },
+        select: { id: true },
+      });
+      if (!definition) {
+        return null;
+      }
+
+      const overrides = await (db as any).falakMapOverride.findMany({
+        where: {
+          mapId: definition.id,
+          targetType: 'map',
+        },
+        orderBy: [{ createdAt: 'desc' }],
+        take: 20,
+      });
+
+      for (const override of overrides) {
+        const checksum = asString((override.patch as { importChecksum?: unknown } | null)?.importChecksum);
+        if (checksum) {
+          return checksum;
+        }
+      }
+
+      return null;
+    });
+  }
+
+  async recordImportMetadata(
+    tenantId: string,
+    topicKey: string,
+    metadata: {
+      importChecksum: string;
+      mode: MapCompileRequest['mode'];
+      source: string;
+      nodeCount: number;
+      edgeCount: number;
+      sepLinkedNodeCount: number;
+      importNote?: string;
+      importedByActorId?: string;
+      importedByExternalAuthId?: string;
+    },
+  ): Promise<void> {
+    await this.withTenantSession(tenantId, async (db) => {
+      const definition = await (db as any).falakMapDefinition.findFirst({
+        where: { tenantId, topicKey },
+        select: { id: true },
+      });
+      if (!definition) {
+        return;
+      }
+
+      const importedAt = new Date().toISOString();
+      const patch = {
+        importType: 'seed_corpus',
+        importChecksum: metadata.importChecksum,
+        importMode: metadata.mode,
+        importSource: metadata.source,
+        importedAt,
+        importedByActorId: metadata.importedByActorId ?? null,
+        importedByExternalAuthId: metadata.importedByExternalAuthId ?? null,
+        importNote: metadata.importNote ?? null,
+        nodeCount: metadata.nodeCount,
+        edgeCount: metadata.edgeCount,
+        sepLinkedNodeCount: metadata.sepLinkedNodeCount,
+      };
+
+      await (db as any).falakMapOverride.create({
+        data: {
+          id: stableId('override', definition.id, 'seed-import', metadata.importChecksum, importedAt),
+          mapId: definition.id,
+          targetType: 'map',
+          targetId: definition.id,
+          patch,
+        },
+      });
+
+      await (db as any).domainEvent.create({
+        data: {
+          aggregateType: 'falak_map',
+          aggregateId: definition.id,
+          eventType: 'falak.map.seed_imported',
+          payload: {
+            tenantId,
+            topicKey,
+            ...patch,
+          },
+          actorId: metadata.importedByActorId ?? null,
+          correlationId: null,
+        },
+      });
+      await this.touchMapDefinition(db, definition.id);
+    });
   }
 
   async markJobFailed(tenantId: string, jobId: string, errorMessage: string): Promise<void> {

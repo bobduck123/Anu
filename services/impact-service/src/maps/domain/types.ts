@@ -367,3 +367,43 @@ export interface MapEntityIndexEntry {
   evidence: number;
   confidence: number;
 }
+
+export interface MapSeedImportPreview {
+  topicKey: string;
+  title: string;
+  archetype: MapArchetype;
+  nodeCount: number;
+  edgeCount: number;
+  categoryCount: number;
+  axisCount: number;
+  aliasCount: number;
+  sepLinkedNodeCount: number;
+  relationBreakdown: Record<MapRelation, number>;
+  warnings: string[];
+}
+
+export interface MapSeedImportPersistResult {
+  map: MapResource;
+  jobCreated: boolean;
+  idempotentReuse: boolean;
+  checksum: string;
+  preview: MapSeedImportPreview;
+}
+
+export interface MapImportActivityEntry {
+  id: string;
+  tenantId: string;
+  topicKey: string;
+  mapId: string;
+  importType: string;
+  importSource: string;
+  importMode: MapCompileMode;
+  importChecksum: string;
+  nodeCount: number;
+  edgeCount: number;
+  sepLinkedNodeCount: number;
+  importNote?: string;
+  importedByActorId?: string;
+  importedByExternalAuthId?: string;
+  recordedAt: string;
+}

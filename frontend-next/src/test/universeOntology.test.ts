@@ -32,6 +32,18 @@ describe('shared universe ontology', () => {
     }
   });
 
+  it('adapts the left-thought fallback atlas into a source-linked universe packet', () => {
+    const map = getFallbackEducationMap('left-thought-graph-atlas');
+    expect(map).toBeTruthy();
+
+    const packet = mapResourceToUniversePacket(map!);
+    expect(packet.stars).toHaveLength(79);
+    expect(packet.constellations.length).toBeGreaterThanOrEqual(3);
+
+    const marxStar = packet.stars.find((star) => star.label === 'Karl Marx');
+    expect(marxStar?.explainer.sources.some((source) => source.domain === 'plato.stanford.edu')).toBe(true);
+  });
+
   it('uses canonical star type labels in fallback demo packets', () => {
     const packet = getCommunityDemoUniversePacket();
 

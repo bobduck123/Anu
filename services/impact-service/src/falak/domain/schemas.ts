@@ -211,6 +211,7 @@ export const errorResponseSchema = z.object({
   error: z.object({
     code: z.string(),
     message: z.string(),
+    details: jsonObjectSchema.optional(),
     trace_id: uuidSchema.optional()
   })
 });

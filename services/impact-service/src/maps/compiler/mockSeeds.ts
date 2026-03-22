@@ -1,6 +1,8 @@
 import { SeedCorpus } from '../domain/types';
+import { LEFT_THOUGHT_GRAPH_SEED } from './leftThoughtSeed';
 
 export const MAP_MOCK_SEEDS: SeedCorpus[] = [
+  LEFT_THOUGHT_GRAPH_SEED,
   {
     topicKey: 'consciousness-theories',
     title: 'Consciousness Theories',

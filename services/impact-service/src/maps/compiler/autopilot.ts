@@ -18,10 +18,18 @@ function buildFallbackSeed(profileTopicKey: string): SeedCorpus | undefined {
   return findMockSeed(profileTopicKey);
 }
 
-export function compileMapDraft(request: MapCompileRequest): CompileResult {
+interface CompileMapDraftOptions {
+  seedOverride?: SeedCorpus;
+}
+
+export function compileMapDraft(request: MapCompileRequest, options: CompileMapDraftOptions = {}): CompileResult {
   const logs: CompileResult['logs'] = [];
   const inferredTopicKey = request.topic.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  const seed = buildFallbackSeed(inferredTopicKey);
+  const seed = options.seedOverride ?? buildFallbackSeed(inferredTopicKey);
+
+  if (options.seedOverride) {
+    pushLog(logs, 'seed_override', `Using caller-supplied seed corpus for topic "${options.seedOverride.topicKey}".`);
+  }
 
   pushLog(logs, 'topic_profiler', `Profiling topic "${request.topic}".`);
   const profile = profileTopic(request.topic, seed);
@@ -207,4 +215,16 @@ export function compileMapDraft(request: MapCompileRequest): CompileResult {
     sourcePlan,
     logs,
   };
+}
+
+export function compileMapDraftFromSeed(seed: SeedCorpus, mode: MapCompileRequest['mode'] = 'curated_refine'): CompileResult {
+  return compileMapDraft(
+    {
+      topic: seed.topicKey,
+      mode,
+    },
+    {
+      seedOverride: seed,
+    },
+  );
 }

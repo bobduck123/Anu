@@ -181,6 +181,144 @@ export const mapResourceSchema = z.object({
   jobs: z.array(mapJobSchema).optional(),
 });
 
+const seedScalarSchema = z.union([z.string(), z.number(), z.boolean()]);
+
+export const mapSeedDocumentSectionSchema = z.object({
+  heading: z.string().min(1),
+  kind: z.enum(['list', 'summary', 'detail', 'metadata']),
+  lines: z.array(z.string()),
+});
+
+export const mapSeedDocumentSchema = z.object({
+  id: z.string().min(1),
+  url: z.string().url(),
+  title: z.string().min(1),
+  type: z.enum(['list_page', 'entity_page', 'reference', 'source_pack']),
+  summary: z.string().optional(),
+  breadcrumbs: z.array(z.string()).optional(),
+  metadata: z.record(z.string(), seedScalarSchema).optional(),
+  sections: z.array(mapSeedDocumentSectionSchema),
+});
+
+export const mapSeedEntitySourceSchema = z.object({
+  url: z.string().url(),
+  title: z.string().optional(),
+  domain: z.string().optional(),
+  snippet: z.string().optional(),
+  extractedAt: z.string().optional(),
+});
+
+export const mapSeedEntityRelationSchema = z.object({
+  target: z.string().min(1),
+  relation: mapRelationSchema,
+  weight: z.number().min(0).max(1).optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  evidence: z.string().optional(),
+});
+
+export const mapSeedEntitySchema = z.object({
+  label: z.string().min(1),
+  aliases: z.array(z.string()).optional(),
+  entityType: z.string().optional(),
+  categoryKey: z.string().optional(),
+  subcategoryKey: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  summary: z.string().optional(),
+  longDescription: z.string().optional(),
+  axisScores: z
+    .object({
+      x: z.number().min(-1).max(1).optional(),
+      y: z.number().min(-1).max(1).optional(),
+      z: z.number().min(-1).max(1).optional(),
+    })
+    .optional(),
+  axisExplanations: z
+    .object({
+      x: z.string().optional(),
+      y: z.string().optional(),
+      z: z.string().optional(),
+    })
+    .optional(),
+  metrics: z
+    .object({
+      importance: z.number().min(0).max(1).optional(),
+      popularity: z.number().min(0).max(1).optional(),
+      evidence: z.number().min(0).max(1).optional(),
+      centrality: z.number().min(0).max(1).optional(),
+      complexity: z.number().min(0).max(1).optional(),
+      controversy: z.number().min(0).max(1).optional(),
+      freshness: z.number().min(0).max(1).optional(),
+    })
+    .optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+  sources: z.array(mapSeedEntitySourceSchema).optional(),
+  relations: z.array(mapSeedEntityRelationSchema).optional(),
+});
+
+export const mapSeedCorpusSchema = z.object({
+  topicKey: z.string().min(2),
+  title: z.string().min(2),
+  archetype: mapArchetypeSchema.optional(),
+  description: z.string().optional(),
+  seedQueries: z.array(z.string()).optional(),
+  suppliedUrls: z.array(z.string().url()).optional(),
+  documents: z.array(mapSeedDocumentSchema),
+  entities: z.array(mapSeedEntitySchema).min(1),
+});
+
+export const mapImportPreviewBodySchema = z.object({
+  mode: mapCompileModeSchema.default('curated_refine'),
+  seed: mapSeedCorpusSchema,
+});
+
+export const mapImportPersistBodySchema = z.object({
+  mode: mapCompileModeSchema.default('curated_refine'),
+  status: mapStatusSchema.default('draft'),
+  force: z.boolean().default(false),
+  importNote: z.string().min(1).max(500).optional(),
+  seed: mapSeedCorpusSchema,
+});
+
+export const mapImportPreviewSchema = z.object({
+  topicKey: z.string(),
+  title: z.string(),
+  archetype: mapArchetypeSchema,
+  nodeCount: z.number().int().min(0),
+  edgeCount: z.number().int().min(0),
+  categoryCount: z.number().int().min(0),
+  axisCount: z.number().int().min(0),
+  aliasCount: z.number().int().min(0),
+  sepLinkedNodeCount: z.number().int().min(0),
+  relationBreakdown: z.record(z.string(), z.number().int().min(0)),
+  warnings: z.array(z.string()),
+});
+
+export const mapImportPersistSchema = z.object({
+  map: mapResourceSchema,
+  jobCreated: z.boolean(),
+  idempotentReuse: z.boolean(),
+  checksum: z.string(),
+  preview: mapImportPreviewSchema,
+});
+
+export const mapImportActivitySchema = z.object({
+  id: z.string(),
+  tenantId: z.string(),
+  topicKey: z.string(),
+  mapId: z.string(),
+  importType: z.string(),
+  importSource: z.string(),
+  importMode: mapCompileModeSchema,
+  importChecksum: z.string(),
+  nodeCount: z.number().int().min(0),
+  edgeCount: z.number().int().min(0),
+  sepLinkedNodeCount: z.number().int().min(0),
+  importNote: z.string().optional(),
+  importedByActorId: z.string().optional(),
+  importedByExternalAuthId: z.string().optional(),
+  recordedAt: z.string(),
+});
+
 export const mapListQuerySchema = z.object({
   q: z.string().optional(),
   status: mapStatusSchema.optional(),

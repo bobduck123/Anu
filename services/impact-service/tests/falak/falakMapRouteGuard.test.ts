@@ -6,6 +6,7 @@ import { readFalakRuntimeConfig } from '../../src/falak/config/falakRuntimeConfi
 import { registerMapRoutes } from '../../src/maps/routes/registerMapRoutes';
 import { AppError } from '../../src/utils/errors';
 import { FalakMapService } from '../../src/maps/services/falakMapService';
+import { LEFT_THOUGHT_GRAPH_SEED } from '../../src/maps/compiler/leftThoughtSeed';
 
 const guardEnvKeys = [
   'FALAK_ROUTE_GUARD_MODE',
@@ -85,6 +86,7 @@ async function buildMapHttpFixture() {
         error: {
           code: error.code ?? 'FALAK_ERROR',
           message: error.message,
+          details: error.details,
           trace_id: request.falakContext?.traceId
         }
       });
@@ -135,7 +137,100 @@ async function buildMapHttpFixture() {
       },
       jobCreated: true
     }),
+    previewSeedImport: () => ({
+      topicKey: 'tiny-import',
+      title: 'Tiny Import',
+      archetype: 'theory',
+      nodeCount: 1,
+      edgeCount: 0,
+      categoryCount: 1,
+      axisCount: 3,
+      aliasCount: 0,
+      sepLinkedNodeCount: 1,
+      relationBreakdown: {
+        influences: 0,
+        contradicts: 0,
+        extends: 0,
+        belongs_to: 0,
+        derived_from: 0,
+        similar_to: 0,
+        co_occurs_with: 0
+      },
+      warnings: []
+    }),
+    importSeedAndPersist: async (tenantId: string, seed: { topicKey?: string }) => {
+      if (seed.topicKey === 'oversized-import') {
+        throw new AppError(
+          422,
+          'Seed import rejected: nodes exceed limit (501 > 500).',
+          'MAP_IMPORT_LIMIT_EXCEEDED',
+          {
+            resource: 'nodes',
+            actual: 501,
+            limit: 500,
+          },
+        );
+      }
+
+      return {
+        map: {
+          definition: {
+            id: 'map-import-1',
+            tenantId,
+            topicKey: 'left-thought-graph-atlas',
+            title: 'Left Thought Graph Atlas',
+            archetype: 'theory',
+            entityType: 'topic',
+            status: 'reviewed',
+            sizeFormula: 'default',
+            version: 1,
+            currentSnapshotId: null,
+            confidence: {
+              coverage: 0.7,
+              taxonomy: 0.7,
+              positions: 0.7,
+              dedupe: 0.7,
+              relationships: 0.7
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          },
+          categories: [],
+          axes: [],
+          nodes: [],
+          edges: [],
+          aliases: [],
+          snapshots: [],
+          jobs: []
+        },
+        jobCreated: true,
+        idempotentReuse: false,
+        checksum: 'abc123',
+        preview: {
+          topicKey: 'left-thought-graph-atlas',
+          title: 'Left Thought Graph Atlas',
+          archetype: 'theory',
+          nodeCount: LEFT_THOUGHT_GRAPH_SEED.entities.length,
+          edgeCount: 126,
+          categoryCount: 1,
+          axisCount: 3,
+          aliasCount: 0,
+          sepLinkedNodeCount: LEFT_THOUGHT_GRAPH_SEED.entities.length,
+          relationBreakdown: {
+            influences: 1,
+            contradicts: 0,
+            extends: 0,
+            belongs_to: 0,
+            derived_from: 0,
+            similar_to: 0,
+            co_occurs_with: 0
+          },
+          warnings: []
+        }
+      };
+    },
     getMap: async () => null,
+    listImportActivity: async () => [],
     updateMapStatus: async () => null,
     updateNode: async () => null,
     updateEdge: async () => null,
@@ -234,6 +329,208 @@ describe('Falak-backed education map route guard', () => {
           code: 'TENANT_NOT_ALLOWED'
         }
       });
+    });
+  });
+
+  test('import persist endpoint requires verified actor because it is privileged', async () => {
+    await withMapHttpFixture({
+      FALAK_ROUTE_GUARD_MODE: 'disabled',
+      FALAK_MAP_ROUTE_GUARD_MODE: 'enabled'
+    }, async ({ app, adminContext }) => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/education/maps/import/persist',
+        headers: {
+          'x-tenant-id': adminContext.tenantId
+        },
+        payload: {
+          mode: 'curated_refine',
+          status: 'draft',
+          force: false,
+          seed: {
+            topicKey: 'tiny-import',
+            title: 'Tiny Import',
+            documents: [
+              {
+                id: 'doc-1',
+                url: 'https://example.org/doc-1',
+                title: 'Doc 1',
+                type: 'reference',
+                sections: [
+                  {
+                    heading: 'Summary',
+                    kind: 'summary',
+                    lines: ['Tiny document']
+                  }
+                ]
+              }
+            ],
+            entities: [
+              {
+                label: 'Entity 1'
+              }
+            ]
+          }
+        }
+      });
+
+      expect(response.statusCode).toBe(401);
+      expect(response.json()).toMatchObject({
+        error: {
+          code: 'VERIFIED_ACTOR_REQUIRED'
+        }
+      });
+    });
+  });
+
+  test('import persist endpoint succeeds with a verified actor and returns checksum metadata', async () => {
+    await withMapHttpFixture({
+      FALAK_ROUTE_GUARD_MODE: 'disabled',
+      FALAK_MAP_ROUTE_GUARD_MODE: 'enabled'
+    }, async ({ app, adminContext }) => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/education/maps/import/persist',
+        headers: bearerHeaders(adminContext.tenantId, 'anu-admin'),
+        payload: {
+          mode: 'curated_refine',
+          status: 'reviewed',
+          force: false,
+          importNote: 'Route guard success-path test',
+          seed: {
+            topicKey: 'tiny-import',
+            title: 'Tiny Import',
+            documents: [
+              {
+                id: 'doc-1',
+                url: 'https://example.org/doc-1',
+                title: 'Doc 1',
+                type: 'reference',
+                sections: [
+                  {
+                    heading: 'Summary',
+                    kind: 'summary',
+                    lines: ['Tiny document']
+                  }
+                ]
+              }
+            ],
+            entities: [
+              {
+                label: 'Entity 1'
+              }
+            ]
+          }
+        }
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toMatchObject({
+        checksum: 'abc123',
+        jobCreated: true,
+        idempotentReuse: false,
+        map: {
+          definition: {
+            topicKey: 'left-thought-graph-atlas',
+            status: 'reviewed',
+          }
+        },
+        preview: {
+          topicKey: 'left-thought-graph-atlas',
+        }
+      });
+    });
+  });
+
+  test('import persist endpoint surfaces typed limit errors with structured details', async () => {
+    await withMapHttpFixture({
+      FALAK_ROUTE_GUARD_MODE: 'disabled',
+      FALAK_MAP_ROUTE_GUARD_MODE: 'enabled'
+    }, async ({ app, adminContext }) => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/education/maps/import/persist',
+        headers: bearerHeaders(adminContext.tenantId, 'anu-admin'),
+        payload: {
+          mode: 'curated_refine',
+          status: 'draft',
+          force: false,
+          seed: {
+            topicKey: 'oversized-import',
+            title: 'Oversized import',
+            documents: [
+              {
+                id: 'doc-1',
+                url: 'https://example.org/doc-1',
+                title: 'Doc 1',
+                type: 'reference',
+                sections: [
+                  {
+                    heading: 'Summary',
+                    kind: 'summary',
+                    lines: ['Tiny document']
+                  }
+                ]
+              }
+            ],
+            entities: [
+              {
+                label: 'Entity 1'
+              }
+            ]
+          }
+        }
+      });
+
+      expect(response.statusCode).toBe(422);
+      expect(response.json()).toMatchObject({
+        error: {
+          code: 'MAP_IMPORT_LIMIT_EXCEEDED',
+          details: {
+            resource: 'nodes',
+            actual: 501,
+            limit: 500,
+          },
+        },
+      });
+    });
+  });
+
+  test('import activity endpoint requires verified actor because it is privileged', async () => {
+    await withMapHttpFixture({
+      FALAK_ROUTE_GUARD_MODE: 'disabled',
+      FALAK_MAP_ROUTE_GUARD_MODE: 'enabled'
+    }, async ({ app, adminContext }) => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/v1/education/maps/left-thought-graph-atlas/import-activity',
+        headers: {
+          'x-tenant-id': adminContext.tenantId
+        }
+      });
+
+      expect(response.statusCode).toBe(401);
+      expect(response.json()).toMatchObject({
+        error: {
+          code: 'VERIFIED_ACTOR_REQUIRED'
+        }
+      });
+    });
+  });
+
+  test('import activity endpoint returns data for verified actors', async () => {
+    await withMapHttpFixture({
+      FALAK_ROUTE_GUARD_MODE: 'disabled',
+      FALAK_MAP_ROUTE_GUARD_MODE: 'enabled'
+    }, async ({ app, adminContext }) => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/v1/education/maps/left-thought-graph-atlas/import-activity',
+        headers: bearerHeaders(adminContext.tenantId, 'anu-admin')
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual([]);
     });
   });
 

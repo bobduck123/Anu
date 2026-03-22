@@ -6,7 +6,10 @@ import {
   getEducationMapsFallbackMessage,
   getFalakSessionStatus,
   isEducationMapsBlockingAuthError,
+  listEducationMapImportActivity,
   listEducationMaps,
+  persistEducationMapSeedImport,
+  previewEducationMapSeedImport,
   shouldUseEducationMapsFallback,
 } from '@/lib/api/educationMaps';
 import { SupabaseConfigurationError } from '@/lib/supabase/config';
@@ -210,6 +213,40 @@ describe('educationMaps client', () => {
     expect(shouldUseEducationMapsFallback(error)).toBe(true);
   });
 
+  it('captures structured error details from import-limit responses', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({
+        error: {
+          code: 'MAP_IMPORT_LIMIT_EXCEEDED',
+          message: 'Seed import rejected: nodes exceed limit (501 > 500).',
+          details: {
+            resource: 'nodes',
+            actual: 501,
+            limit: 500,
+          },
+        },
+      }), {
+        status: 422,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    let error: unknown;
+    try {
+      await listEducationMaps();
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(EducationMapApiError);
+    expect((error as EducationMapApiError).code).toBe('MAP_IMPORT_LIMIT_EXCEEDED');
+    expect((error as EducationMapApiError).details).toEqual({
+      resource: 'nodes',
+      actual: 501,
+      limit: 500,
+    });
+  });
+
   it('treats backend readiness failures as fallback candidates', async () => {
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({
@@ -239,6 +276,7 @@ describe('educationMaps client', () => {
       'Missing X-Tenant-Id header',
       400,
       'TENANT_HEADER_REQUIRED',
+      null,
       { error: { code: 'TENANT_HEADER_REQUIRED' } },
     );
 
@@ -250,6 +288,7 @@ describe('educationMaps client', () => {
       'Actor is not allowed to access Falak routes',
       403,
       'ACTOR_NOT_ALLOWED',
+      null,
       { error: { code: 'ACTOR_NOT_ALLOWED' } },
     );
 
@@ -262,6 +301,7 @@ describe('educationMaps client', () => {
       'Actor is not allowed to access Falak routes',
       403,
       'ACTOR_NOT_ALLOWED',
+      null,
       { error: { code: 'ACTOR_NOT_ALLOWED' } },
     );
 
@@ -323,6 +363,142 @@ describe('educationMaps client', () => {
     );
   });
 
+  it('calls the privileged import preview endpoint with actor headers', async () => {
+    process.env.NEXT_PUBLIC_FALAK_MODE = 'map_sandbox';
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({
+        preview: {
+          topicKey: 'tiny-import',
+          title: 'Tiny Import',
+          archetype: 'theory',
+          nodeCount: 1,
+          edgeCount: 0,
+          categoryCount: 1,
+          axisCount: 3,
+          aliasCount: 0,
+          sepLinkedNodeCount: 1,
+          relationBreakdown: {},
+          warnings: [],
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await previewEducationMapSeedImport({
+      mode: 'curated_refine',
+      seed: {
+        topicKey: 'tiny-import',
+        title: 'Tiny Import',
+        documents: [{ id: 'doc-1' }],
+        entities: [{ label: 'Entity 1' }],
+      },
+    }, 'anu-admin');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:5003/v1/education/maps/import/preview',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          'X-Tenant-Id': '11111111-1111-4111-8111-111111111111',
+          'X-Actor-Id': 'anu-admin',
+        }),
+      }),
+    );
+  });
+
+  it('calls the privileged import persist endpoint and forwards import governance fields', async () => {
+    process.env.NEXT_PUBLIC_FALAK_MODE = 'map_sandbox';
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({
+        map: {
+          definition: {
+            id: 'map-1',
+            tenantId: '11111111-1111-4111-8111-111111111111',
+            topicKey: 'tiny-import',
+            title: 'Tiny Import',
+            archetype: 'theory',
+            entityType: 'topic',
+            status: 'reviewed',
+            sizeFormula: 'default',
+            version: 1,
+            currentSnapshotId: null,
+            confidence: { coverage: 0.5, taxonomy: 0.5, positions: 0.5, dedupe: 0.5, relationships: 0.5 },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          categories: [],
+          axes: [],
+          nodes: [],
+          edges: [],
+          aliases: [],
+          snapshots: [],
+          jobs: [],
+        },
+        jobCreated: true,
+        idempotentReuse: false,
+        checksum: 'abc123',
+        preview: {
+          topicKey: 'tiny-import',
+          title: 'Tiny Import',
+          archetype: 'theory',
+          nodeCount: 1,
+          edgeCount: 0,
+          categoryCount: 1,
+          axisCount: 3,
+          aliasCount: 0,
+          sepLinkedNodeCount: 1,
+          relationBreakdown: {},
+          warnings: [],
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await persistEducationMapSeedImport({
+      mode: 'curated_refine',
+      status: 'reviewed',
+      force: true,
+      importNote: 'test import note',
+      seed: {
+        topicKey: 'tiny-import',
+        title: 'Tiny Import',
+        documents: [{ id: 'doc-1' }],
+        entities: [{ label: 'Entity 1' }],
+      },
+    }, 'anu-admin');
+
+    const [, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(options.method).toBe('POST');
+    expect(String(options.body)).toContain('"importNote":"test import note"');
+    expect(String(options.body)).toContain('"force":true');
+  });
+
+  it('calls the privileged import activity endpoint for a topic key', async () => {
+    process.env.NEXT_PUBLIC_FALAK_MODE = 'map_sandbox';
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await listEducationMapImportActivity('left-thought-graph-atlas', 'anu-admin');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:5003/v1/education/maps/left-thought-graph-atlas/import-activity',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'X-Tenant-Id': '11111111-1111-4111-8111-111111111111',
+          'X-Actor-Id': 'anu-admin',
+        }),
+      }),
+    );
+  });
+
   it('ships a Stanford encyclopedia fallback map with live SEP sources', () => {
     const map = getFallbackEducationMap('stanford-encyclopedia-philosophy-atlas');
 
@@ -333,5 +509,22 @@ describe('educationMaps client', () => {
 
     expect(aiNode?.sources[0]?.url).toBe('https://plato.stanford.edu/entries/artificial-intelligence/');
     expect(aiNode?.sources[0]?.domain).toBe('plato.stanford.edu');
+  });
+
+  it('ships a left-thought fallback atlas with preserved graph scale and relation mapping', () => {
+    const map = getFallbackEducationMap('left-thought-graph-atlas');
+
+    expect(map?.definition.title).toBe('Left Thought Graph Atlas');
+    expect(map?.nodes).toHaveLength(79);
+    expect(map?.edges).toHaveLength(126);
+
+    const marxNode = map?.nodes.find((node) => node.label === 'Karl Marx');
+    expect(marxNode?.sources.some((source) => source.domain === 'plato.stanford.edu')).toBe(true);
+
+    const sepLinkedNodeCount = map?.nodes.filter((node) => node.sources.some((source) => source.domain === 'plato.stanford.edu')).length;
+    expect(sepLinkedNodeCount).toBe(79);
+
+    const authoredByEdge = map?.edges.find((edge) => edge.evidence?.includes('authored by'));
+    expect(authoredByEdge?.relation).toBe('derived_from');
   });
 });

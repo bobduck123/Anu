@@ -98,4 +98,32 @@ describe('UniversePage', () => {
 
     await waitFor(() => expect(screen.getByTestId('universe-viewer')).toHaveTextContent('Manara Community Universe'));
   });
+
+  it('shows a dedicated Left Thought fallback badge when the left-thought domain is selected', async () => {
+    const leftThoughtMap = getFallbackEducationMap('left-thought-graph-atlas');
+    expect(leftThoughtMap).toBeTruthy();
+
+    listEducationMapsMock.mockResolvedValue([leftThoughtMap!.definition]);
+    getEducationMapMock.mockResolvedValue(leftThoughtMap);
+    loadCommunityUniverseDataMock.mockResolvedValue({
+      posts: [],
+      warnings: [],
+      loadError: null,
+      degraded: false,
+      trustedNewsMeta: {
+        count: 0,
+        stale: true,
+        sourceNames: [],
+      },
+    });
+
+    render(<UniversePage />);
+
+    await waitFor(() => expect(listEducationMapsMock).toHaveBeenCalled());
+    expect(screen.getByRole('option', { name: 'Left Thought Graph Atlas' })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'left-thought-graph-atlas' } });
+
+    expect(await screen.findByText(/Left Thought Phase A\+ fallback/i)).toBeInTheDocument();
+  });
 });

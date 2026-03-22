@@ -160,6 +160,57 @@ export interface MapResolveResponse {
   jobCreated: boolean;
 }
 
+export interface MapSeedImportSeedCorpus {
+  topicKey: string;
+  title: string;
+  archetype?: string;
+  description?: string;
+  seedQueries?: string[];
+  suppliedUrls?: string[];
+  documents: Array<Record<string, unknown>>;
+  entities: Array<Record<string, unknown>>;
+}
+
+export interface MapSeedImportPreview {
+  topicKey: string;
+  title: string;
+  archetype: string;
+  nodeCount: number;
+  edgeCount: number;
+  categoryCount: number;
+  axisCount: number;
+  aliasCount: number;
+  sepLinkedNodeCount: number;
+  relationBreakdown: Record<string, number>;
+  warnings: string[];
+}
+
+export interface MapSeedImportPersistResponse {
+  map: MapResource;
+  jobCreated: boolean;
+  idempotentReuse: boolean;
+  checksum: string;
+  preview: MapSeedImportPreview;
+}
+
+export interface MapImportActivityEntry {
+  id: string;
+  tenantId: string;
+  topicKey: string;
+  mapId: string;
+  importType: string;
+  importSource: string;
+  importMode: MapCompileMode;
+  importChecksum: string;
+  nodeCount: number;
+  edgeCount: number;
+  sepLinkedNodeCount: number;
+  importNote?: string;
+  importedByActorId?: string;
+  importedByExternalAuthId?: string;
+  recordedAt: string;
+}
+
 export interface FalakSessionStatus {
   status: 'guest' | 'verified' | 'blocked';
   tenant: {
@@ -194,13 +245,15 @@ export interface FalakSessionStatus {
 export class EducationMapApiError extends Error {
   status: number;
   code: string | null;
+  details: unknown;
   payload: unknown;
 
-  constructor(message: string, status: number, code: string | null, payload: unknown) {
+  constructor(message: string, status: number, code: string | null, details: unknown, payload: unknown) {
     super(message);
     this.name = 'EducationMapApiError';
     this.status = status;
     this.code = code;
+    this.details = details;
     this.payload = payload;
   }
 }
@@ -404,7 +457,11 @@ async function educationMapFetch<T>(path: string, options: RequestInit = {}, act
       payload?.error?.message ||
       payload?.message ||
       `Education maps request failed with status ${response.status}`;
-    throw new EducationMapApiError(errorMessage, response.status, errorCode, payload);
+    const errorDetails =
+      payload?.error?.details ??
+      payload?.details ??
+      null;
+    throw new EducationMapApiError(errorMessage, response.status, errorCode, errorDetails, payload);
   }
 
   return payload as T;
@@ -442,6 +499,49 @@ export function resolveEducationMap(
       mode: body.mode ?? 'auto_seed',
     }),
   }, actorId);
+}
+
+export function previewEducationMapSeedImport(
+  body: { mode?: MapCompileMode; seed: MapSeedImportSeedCorpus },
+  actorId: string,
+) {
+  return educationMapFetch<{ preview: MapSeedImportPreview }>('/v1/education/maps/import/preview', {
+    method: 'POST',
+    body: JSON.stringify({
+      mode: body.mode ?? 'curated_refine',
+      seed: body.seed,
+    }),
+  }, actorId);
+}
+
+export function persistEducationMapSeedImport(
+  body: {
+    mode?: MapCompileMode;
+    status?: MapStatus;
+    force?: boolean;
+    importNote?: string;
+    seed: MapSeedImportSeedCorpus;
+  },
+  actorId: string,
+) {
+  return educationMapFetch<MapSeedImportPersistResponse>('/v1/education/maps/import/persist', {
+    method: 'POST',
+    body: JSON.stringify({
+      mode: body.mode ?? 'curated_refine',
+      status: body.status ?? 'draft',
+      force: body.force ?? false,
+      importNote: body.importNote,
+      seed: body.seed,
+    }),
+  }, actorId);
+}
+
+export function listEducationMapImportActivity(topicKey: string, actorId: string) {
+  return educationMapFetch<MapImportActivityEntry[]>(
+    `/v1/education/maps/${encodeURIComponent(topicKey)}/import-activity`,
+    {},
+    actorId,
+  );
 }
 
 export function updateEducationMapStatus(topicKey: string, status: MapStatus, actorId: string) {

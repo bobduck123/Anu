@@ -27,6 +27,8 @@ import type { UniversePacket } from '@/components/maps/universe/types';
 import { loadCommunityUniverseData } from '@/lib/community/loadCommunityUniverse';
 import { useAuth } from '@/contexts/AuthContext';
 
+const LEFT_THOUGHT_TOPIC_KEY = 'left-thought-graph-atlas';
+
 const INITIAL_COMMUNITY_PACKET = buildCommunityUniversePacket(generateMockPosts(18, 20260319), {
   mode: 'demo',
   sourceSummary: 'Deterministic local packet / 18 demo community traces',
@@ -176,7 +178,7 @@ export default function UniversePage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (authLoading) {
@@ -259,18 +261,39 @@ export default function UniversePage() {
     [communityPacket, maps],
   );
   const communityTopicKey = communityPacket?.domain.key ?? null;
+  const isLeftThoughtScope = selectedTopicKey === LEFT_THOUGHT_TOPIC_KEY;
+  const leftThoughtSourceCoverage = useMemo(() => {
+    if (!isLeftThoughtScope || !displayPacket) {
+      return null;
+    }
+
+    const sepLinkedStars = displayPacket.stars.filter((star) =>
+      star.explainer.sources.some((source) => source.domain === 'plato.stanford.edu'),
+    ).length;
+
+    return {
+      totalStars: displayPacket.stars.length,
+      sepLinkedStars,
+      relations: displayPacket.relations?.length ?? 0,
+    };
+  }, [displayPacket, isLeftThoughtScope]);
+
   const viewerEyebrowLabel =
     selectedTopicKey === 'all'
       ? 'Manara shared universe'
       : selectedTopicKey === communityTopicKey
         ? universePresentationTerms.communityUniverse
-        : 'Manara domain universe';
+        : isLeftThoughtScope
+          ? 'ANU left-thought universe'
+          : 'Manara domain universe';
   const viewerTitlePrefix =
     selectedTopicKey === 'all'
       ? 'Universe'
       : selectedTopicKey === communityTopicKey
         ? 'Community'
-        : 'Domain';
+        : isLeftThoughtScope
+          ? 'Left Thought'
+          : 'Domain';
 
   return (
     <div className="h-full">
@@ -321,6 +344,11 @@ export default function UniversePage() {
               <span className="manara-glass-chip inline-flex items-center gap-2 border border-white/15 bg-white/5 px-3 py-1">
                 {`${universePresentationTerms.universe} scope: ${selectedTopicKey === 'all' ? 'cross-domain' : selectedTopicKey}`}
               </span>
+              {isLeftThoughtScope && leftThoughtSourceCoverage ? (
+                <span className="manara-glass-chip inline-flex items-center gap-2 border border-cyan-300/35 bg-cyan-300/10 px-3 py-1 text-cyan-100">
+                  Left Thought Phase A+ fallback · {leftThoughtSourceCoverage.totalStars} stars · {leftThoughtSourceCoverage.relations} relations · SEP linked {leftThoughtSourceCoverage.sepLinkedStars}/{leftThoughtSourceCoverage.totalStars}
+                </span>
+              ) : null}
             </div>
 
             {fallbackActive ? (

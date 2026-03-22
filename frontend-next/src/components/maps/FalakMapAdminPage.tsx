@@ -5,9 +5,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   getEducationMap,
+  listEducationMapImportActivity,
   listEducationMaps,
+  MapImportActivityEntry,
   MapRelation,
   MapResource,
+  MapSeedImportPreview,
+  MapSeedImportSeedCorpus,
+  persistEducationMapSeedImport,
+  previewEducationMapSeedImport,
   rerunEducationMapLayout,
   restoreEducationMapSnapshot,
   updateEducationMapCategory,
@@ -47,6 +53,14 @@ interface EdgeFormState {
   evidence: string;
 }
 
+interface ImportFormState {
+  mode: 'curated_refine' | 'auto_seed' | 'auto_expand';
+  status: 'draft' | 'reviewed' | 'published';
+  force: boolean;
+  importNote: string;
+  seedJson: string;
+}
+
 function toNumber(value: string): number | undefined {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
@@ -74,6 +88,117 @@ const EMPTY_EDGE_FORM: EdgeFormState = {
   weight: '0.6',
   confidence: '0.6',
   evidence: '',
+};
+
+const LEFT_THOUGHT_IMPORT_SEED_JSON = JSON.stringify(
+  {
+    topicKey: 'left-thought-graph-atlas',
+    title: 'Left Thought Graph Atlas',
+    archetype: 'theory',
+    description:
+      'Starter template for left-thought import workflows. Replace/extend with the full left-thought corpus JSON before persisting.',
+    seedQueries: ['left thought graph atlas', 'left political philosophy lineage'],
+    suppliedUrls: ['https://plato.stanford.edu/contents.html'],
+    documents: [
+      {
+        id: 'left-thought-template-doc',
+        url: 'https://example.org/left-thought-template',
+        title: 'Left thought import template source',
+        type: 'source_pack',
+        sections: [
+          {
+            heading: 'Summary',
+            kind: 'summary',
+            lines: ['Starter left-thought import template with SEP-linked entities and mapped relations.'],
+          },
+        ],
+      },
+    ],
+    entities: [
+      {
+        label: 'Karl Marx',
+        aliases: ['Marx'],
+        entityType: 'thinker',
+        categoryKey: 'classical-marxism',
+        tags: ['left-thought', 'thinker', 'classical-marxism'],
+        summary: 'Foundational theorist of historical materialism and critique of political economy.',
+        sources: [
+          {
+            url: 'https://plato.stanford.edu/entries/marx/',
+            title: 'Karl Marx (SEP)',
+            domain: 'plato.stanford.edu',
+          },
+        ],
+        relations: [
+          {
+            target: 'Capital',
+            relation: 'derived_from',
+            confidence: 0.92,
+            evidence: 'Template relation: authored-by semantics mapped to derived_from.',
+          },
+        ],
+      },
+      {
+        label: 'Capital',
+        entityType: 'work',
+        categoryKey: 'works',
+        tags: ['left-thought', 'work'],
+        summary: 'Major work of critique of political economy.',
+      },
+      {
+        label: 'Historical Materialism',
+        entityType: 'topic',
+        categoryKey: 'topics',
+        tags: ['left-thought', 'topic'],
+        summary: 'Methodological framework centered on material conditions and class dynamics.',
+      },
+    ],
+  },
+  null,
+  2,
+);
+
+const GENERIC_IMPORT_SEED_JSON = JSON.stringify(
+  {
+    topicKey: 'new-map-topic-key',
+    title: 'New Map Title',
+    archetype: 'theory',
+    description: 'Generic seed import template. Replace all placeholder fields before preview/persist.',
+    documents: [
+      {
+        id: 'doc-1',
+        url: 'https://example.org/source',
+        title: 'Primary source',
+        type: 'source_pack',
+        sections: [
+          {
+            heading: 'Summary',
+            kind: 'summary',
+            lines: ['Describe the source context here.'],
+          },
+        ],
+      },
+    ],
+    entities: [
+      {
+        label: 'Entity Name',
+        entityType: 'topic',
+        categoryKey: 'topics',
+        tags: ['tag-1'],
+        summary: 'Entity summary.',
+      },
+    ],
+  },
+  null,
+  2,
+);
+
+const DEFAULT_IMPORT_FORM: ImportFormState = {
+  mode: 'curated_refine',
+  status: 'draft',
+  force: false,
+  importNote: '',
+  seedJson: LEFT_THOUGHT_IMPORT_SEED_JSON,
 };
 
 function buildCategoryFormState(category: MapResource['categories'][number]): CategoryFormState {
@@ -127,6 +252,11 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
   const [categoryDrafts, setCategoryDrafts] = useState<Record<string, CategoryFormState>>({});
   const [nodeDrafts, setNodeDrafts] = useState<Record<string, NodeFormState>>({});
   const [edgeDrafts, setEdgeDrafts] = useState<Record<string, EdgeFormState>>({});
+  const [importForm, setImportForm] = useState<ImportFormState>(DEFAULT_IMPORT_FORM);
+  const [importPreview, setImportPreview] = useState<MapSeedImportPreview | null>(null);
+  const [importChecksum, setImportChecksum] = useState<string | null>(null);
+  const [importActivity, setImportActivity] = useState<MapImportActivityEntry[]>([]);
+  const [loadingImportActivity, setLoadingImportActivity] = useState(false);
 
   const applyLoadedMap = useCallback((nextMap: MapResource) => {
     setMap(nextMap);
@@ -169,6 +299,26 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
     }
   }, [actorId, initialTopicKey]);
 
+  const loadImportActivity = useCallback(
+    async (topicKey: string) => {
+      if (!topicKey) {
+        setImportActivity([]);
+        return;
+      }
+
+      setLoadingImportActivity(true);
+      try {
+        const entries = await listEducationMapImportActivity(topicKey, actorId);
+        setImportActivity(entries);
+      } catch {
+        setImportActivity([]);
+      } finally {
+        setLoadingImportActivity(false);
+      }
+    },
+    [actorId],
+  );
+
   const loadMap = useCallback(
     async (topicKey: string) => {
       if (!topicKey) {
@@ -177,6 +327,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
         setNodeDrafts({});
         setEdgeDrafts({});
         setSelectedSnapshotId('');
+        setImportActivity([]);
         return;
       }
 
@@ -185,13 +336,14 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
       try {
         const response = await getEducationMap(topicKey, actorId || null);
         applyLoadedMap(response);
+        await loadImportActivity(topicKey);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unable to load editable map.');
       } finally {
         setLoadingMap(false);
       }
     },
-    [actorId, applyLoadedMap],
+    [actorId, applyLoadedMap, loadImportActivity],
   );
 
   useEffect(() => {
@@ -310,6 +462,38 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
     }));
   };
 
+  const updateImportForm = (patch: Partial<ImportFormState>) => {
+    setImportForm((current) => ({
+      ...current,
+      ...patch,
+    }));
+  };
+
+  const parseImportSeed = (): MapSeedImportSeedCorpus => {
+    try {
+      const parsed = JSON.parse(importForm.seedJson) as {
+        topicKey?: string;
+        title?: string;
+        documents?: unknown[];
+        entities?: unknown[];
+      };
+
+      if (!parsed || typeof parsed !== 'object') {
+        throw new Error('Import seed JSON must decode to an object payload.');
+      }
+      if (!parsed.topicKey || !parsed.title) {
+        throw new Error('Import seed JSON must include topicKey and title.');
+      }
+      if (!Array.isArray(parsed.documents) || !Array.isArray(parsed.entities) || parsed.entities.length < 1) {
+        throw new Error('Import seed JSON must include documents[] and a non-empty entities[] array.');
+      }
+
+      return parsed as MapSeedImportSeedCorpus;
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Unable to parse import seed JSON.');
+    }
+  };
+
   const applyMutation = async (work: () => Promise<MapResource>, successMessage: string) => {
     setMutationMessage(null);
     setError(null);
@@ -320,6 +504,59 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
       void loadList();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Admin mutation failed.');
+    }
+  };
+
+  const runImportPreview = async () => {
+    setError(null);
+    setMutationMessage(null);
+    try {
+      const seed = parseImportSeed();
+      const response = await previewEducationMapSeedImport(
+        {
+          mode: importForm.mode,
+          seed,
+        },
+        actorId,
+      );
+      setImportPreview(response.preview);
+      setMutationMessage(
+        `Import preview ready for ${response.preview.topicKey}: ${response.preview.nodeCount} nodes / ${response.preview.edgeCount} edges.`,
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Import preview failed.');
+    }
+  };
+
+  const runImportPersist = async () => {
+    setError(null);
+    setMutationMessage(null);
+    try {
+      const seed = parseImportSeed();
+      const response = await persistEducationMapSeedImport(
+        {
+          mode: importForm.mode,
+          status: importForm.status,
+          force: importForm.force,
+          importNote: importForm.importNote || undefined,
+          seed,
+        },
+        actorId,
+      );
+
+      applyLoadedMap(response.map);
+      setImportPreview(response.preview);
+      setImportChecksum(response.checksum);
+      setSelectedTopic(response.map.definition.topicKey);
+      await loadImportActivity(response.map.definition.topicKey);
+      setMutationMessage(
+        response.idempotentReuse
+          ? `Import reused checksum ${response.checksum.slice(0, 12)} without recompiling.`
+          : `Import persisted ${response.map.definition.topicKey} (checksum ${response.checksum.slice(0, 12)}).`,
+      );
+      void loadList();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Import persist failed.');
     }
   };
 
@@ -438,6 +675,161 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                   {status}
                 </button>
               ))}
+            </div>
+          </section>
+
+          <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-900">Phase C seed import</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Starts with the left-thought template. Use Create new for a generic blank template, then preview/persist via privileged import routes.
+            </p>
+            <div className="mt-4 grid gap-3">
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                  Mode
+                  <select
+                    value={importForm.mode}
+                    onChange={(event) => updateImportForm({ mode: event.target.value as ImportFormState['mode'] })}
+                    className="mt-2 w-full rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-normal normal-case tracking-normal text-slate-700 outline-none"
+                  >
+                    <option value="curated_refine">curated_refine</option>
+                    <option value="auto_expand">auto_expand</option>
+                    <option value="auto_seed">auto_seed</option>
+                  </select>
+                </label>
+                <label className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                  Status
+                  <select
+                    value={importForm.status}
+                    onChange={(event) => updateImportForm({ status: event.target.value as ImportFormState['status'] })}
+                    className="mt-2 w-full rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-normal normal-case tracking-normal text-slate-700 outline-none"
+                  >
+                    <option value="draft">draft</option>
+                    <option value="reviewed">reviewed</option>
+                    <option value="published">published</option>
+                  </select>
+                </label>
+              </div>
+              <label className="flex items-center gap-2 rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={importForm.force}
+                  onChange={(event) => updateImportForm({ force: event.target.checked })}
+                />
+                Force re-import even when checksum matches
+              </label>
+              <input
+                value={importForm.importNote}
+                onChange={(event) => updateImportForm({ importNote: event.target.value })}
+                placeholder="Optional governance note"
+                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+              />
+              <textarea
+                value={importForm.seedJson}
+                onChange={(event) => updateImportForm({ seedJson: event.target.value })}
+                rows={10}
+                spellCheck={false}
+                placeholder="Paste seed corpus JSON"
+                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-xs text-slate-700 outline-none"
+              />
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void runImportPreview();
+                  }}
+                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
+                >
+                  Preview import
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void runImportPersist();
+                  }}
+                  className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+                >
+                  Persist import
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImportForm((current) => ({
+                      ...current,
+                      seedJson: LEFT_THOUGHT_IMPORT_SEED_JSON,
+                    }));
+                    setImportPreview(null);
+                    setImportChecksum(null);
+                  }}
+                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300"
+                >
+                  Use left-thought template
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImportForm((current) => ({
+                      ...current,
+                      seedJson: GENERIC_IMPORT_SEED_JSON,
+                    }));
+                    setImportPreview(null);
+                    setImportChecksum(null);
+                  }}
+                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300"
+                >
+                  Create new
+                </button>
+              </div>
+              {importPreview ? (
+                <div className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+                  <p className="font-semibold text-slate-700">Preview · {importPreview.topicKey}</p>
+                  <p className="mt-1">
+                    {importPreview.nodeCount} nodes · {importPreview.edgeCount} edges · {importPreview.sepLinkedNodeCount} SEP-linked nodes
+                  </p>
+                  {importChecksum ? <p className="mt-1">Checksum: {importChecksum}</p> : null}
+                  {importPreview.warnings.length > 0 ? (
+                    <ul className="mt-2 list-disc space-y-1 pl-4 text-amber-700">
+                      {importPreview.warnings.map((warning) => (
+                        <li key={warning}>{warning}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <div className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-semibold text-slate-700">Recent import activity</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void loadImportActivity(selectedTopic || map?.definition.topicKey || '');
+                    }}
+                    className="rounded-full border border-slate-200 px-3 py-1 text-[11px] font-medium text-slate-600 transition hover:border-cyan-300 hover:text-cyan-700"
+                  >
+                    Refresh
+                  </button>
+                </div>
+                {loadingImportActivity ? <p className="mt-2 text-slate-500">Loading activity…</p> : null}
+                {!loadingImportActivity && importActivity.length < 1 ? (
+                  <p className="mt-2 text-slate-500">No recorded imports for this topic yet.</p>
+                ) : null}
+                {!loadingImportActivity && importActivity.length > 0 ? (
+                  <ul className="mt-2 space-y-2">
+                    {importActivity.slice(0, 5).map((entry) => (
+                      <li key={entry.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px]">
+                        <p className="font-semibold text-slate-700">
+                          {entry.importSource} · {entry.importMode} · {entry.importChecksum.slice(0, 12)}
+                        </p>
+                        <p className="mt-1 text-slate-500">
+                          {entry.nodeCount} nodes · {entry.edgeCount} edges · {entry.sepLinkedNodeCount} SEP
+                        </p>
+                        {entry.importNote ? <p className="mt-1 text-slate-600">Note: {entry.importNote}</p> : null}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
             </div>
           </section>
 

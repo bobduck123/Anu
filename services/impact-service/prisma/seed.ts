@@ -24,6 +24,7 @@ const SANDBOX_MAP_TOPICS = [
   'ancient levantine deities',
   'software architecture patterns',
   'toy commons loop',
+  'left-thought-graph-atlas',
 ] as const;
 
 function isMapSandboxMode(): boolean {

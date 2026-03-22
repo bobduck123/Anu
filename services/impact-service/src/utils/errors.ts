@@ -5,7 +5,8 @@ export class AppError extends Error {
   constructor(
     public statusCode: number,
     public message: string,
-    public code?: string
+    public code?: string,
+    public details?: Record<string, unknown>
   ) {
     super(message);
     Object.setPrototypeOf(this, AppError.prototype);
@@ -14,13 +15,13 @@ export class AppError extends Error {
 
 // Convenience constructors
 export const errors = {
-  badRequest: (message: string, code?: string) => new AppError(400, message, code),
-  unauthorized: (message: string = 'Unauthorized', code?: string) => new AppError(401, message, code),
-  forbidden: (message: string = 'Forbidden', code?: string) => new AppError(403, message, code),
-  notFound: (message: string = 'Not found', code?: string) => new AppError(404, message, code),
-  conflict: (message: string, code?: string) => new AppError(409, message, code),
-  unprocessable: (message: string, code?: string) => new AppError(422, message, code),
-  internal: (message: string = 'Internal server error', code?: string) => new AppError(500, message, code)
+  badRequest: (message: string, code?: string, details?: Record<string, unknown>) => new AppError(400, message, code, details),
+  unauthorized: (message: string = 'Unauthorized', code?: string, details?: Record<string, unknown>) => new AppError(401, message, code, details),
+  forbidden: (message: string = 'Forbidden', code?: string, details?: Record<string, unknown>) => new AppError(403, message, code, details),
+  notFound: (message: string = 'Not found', code?: string, details?: Record<string, unknown>) => new AppError(404, message, code, details),
+  conflict: (message: string, code?: string, details?: Record<string, unknown>) => new AppError(409, message, code, details),
+  unprocessable: (message: string, code?: string, details?: Record<string, unknown>) => new AppError(422, message, code, details),
+  internal: (message: string = 'Internal server error', code?: string, details?: Record<string, unknown>) => new AppError(500, message, code, details)
 };
 
 // Global error handler middleware
@@ -31,6 +32,7 @@ export const errorHandler = (err: unknown, req: Request, res: Response, next: Ne
         statusCode: err.statusCode,
         code: err.code,
         message: err.message,
+        details: err.details,
         path: req.path,
         method: req.method
       },
@@ -39,7 +41,8 @@ export const errorHandler = (err: unknown, req: Request, res: Response, next: Ne
     res.status(err.statusCode).json({
       error: {
         message: err.message,
-        code: err.code || 'INTERNAL_ERROR'
+        code: err.code || 'INTERNAL_ERROR',
+        details: err.details
       }
     });
     return;
