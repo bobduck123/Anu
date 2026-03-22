@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { X, Heart, MessageCircle, Share2, Clock, User } from 'lucide-react';
+import { Clock, Heart, MapPin, MessageCircle, Share2, Sparkles, User, X } from 'lucide-react';
 import type { CommunityPost } from '@/data/adapters/communityAdapter';
 
 interface PostDetailModalProps {
@@ -25,8 +25,8 @@ export function PostDetailModal({ post, onClose }: PostDetailModalProps) {
 
   useEffect(() => {
     if (!post) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
     };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
@@ -42,118 +42,126 @@ export function PostDetailModal({ post, onClose }: PostDetailModalProps) {
     <div
       ref={backdropRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={(e) => {
-        if (e.target === backdropRef.current) onClose();
+      onClick={(event) => {
+        if (event.target === backdropRef.current) onClose();
       }}
       role="dialog"
       aria-modal="true"
       aria-label={`Post by ${post.author.pseudonym}`}
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-[rgba(2,6,14,0.78)] backdrop-blur-md" />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl bg-[var(--color-card)] border border-[var(--color-border)] shadow-2xl">
-        {/* Close button */}
+      <div className="relative w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/10 bg-[rgba(5,9,18,0.94)] text-white shadow-[0_35px_120px_rgba(0,0,0,0.55)]">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-[var(--color-muted)] hover:bg-[var(--color-border)] transition-colors"
+          className="absolute right-4 top-4 z-10 rounded-full border border-white/10 bg-white/[0.05] p-2 text-white/72 transition hover:border-white/25 hover:text-white"
           aria-label="Close"
         >
-          <X className="w-4 h-4 text-[var(--color-foreground)]" />
+          <X className="h-4 w-4" />
         </button>
 
-        {/* Image */}
-        {post.image && (
-          <div className="relative w-full aspect-video overflow-hidden rounded-t-2xl">
-            <Image
-              src={post.image}
-              alt=""
-              fill
-              unoptimized
-              sizes="(max-width: 768px) 100vw, 512px"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
-
-        <div className="p-5 space-y-4">
-          {/* Author */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white font-semibold text-sm">
-              {post.author.pseudonym.charAt(0)}
-            </div>
-            <div>
-              <div className="font-semibold text-sm text-[var(--color-foreground)]">
-                {post.author.pseudonym}
-              </div>
-              <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
-                <span className="capitalize">{post.author.role}</span>
-                <span>·</span>
-                <span className="flex items-center gap-0.5">
-                  <Clock className="w-3 h-3" />
-                  {timeAgo(post.createdAt)}
-                </span>
-              </div>
-            </div>
+        <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="relative min-h-[18rem] bg-[rgba(4,10,20,0.9)]">
+            {post.image || post.coverImage ? (
+              <Image
+                src={post.image || post.coverImage}
+                alt={post.title || post.author.pseudonym}
+                fill
+                unoptimized
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
+              />
+            ) : null}
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(2,6,14,0.18)_36%,rgba(2,6,14,0.74)_100%)]" />
           </div>
 
-          {/* Microcosm badge */}
-          {post.microcosm && (
-            <div className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
-              <User className="w-3 h-3" />
-              {post.microcosm}
-            </div>
-          )}
+          <div className="p-6 lg:p-8">
+            <div className="space-y-6">
+              <div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1 rounded-lg border border-white/12 bg-white/[0.05] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/72">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    {post.sourceName ? 'Trusted signal' : 'Community trace'}
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-lg border border-white/12 bg-white/[0.05] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/72">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {post.microcosm || 'Shared commons'}
+                  </span>
+                </div>
 
-          {/* Content */}
-          <p className="text-sm text-[var(--color-foreground)] leading-relaxed whitespace-pre-wrap">
-            {post.content}
-          </p>
-
-          {/* Tags */}
-          {post.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {post.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="px-2 py-0.5 text-xs rounded-full bg-[var(--color-muted)] text-[var(--color-muted-foreground)]"
+                <h2
+                  className="mt-4 text-3xl leading-[1.02] text-white"
+                  style={{ fontFamily: 'var(--anu-type-display)' }}
                 >
-                  #{tag}
-                </span>
-              ))}
+                  {post.title || post.author.pseudonym}
+                </h2>
+
+                <div className="mt-4 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/12 bg-white/[0.08] text-sm font-semibold text-white">
+                    {post.author.pseudonym.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-white">{post.author.pseudonym}</p>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-white/52">
+                      <span className="inline-flex items-center gap-1">
+                        <User className="h-3.5 w-3.5" />
+                        {post.author.role}
+                      </span>
+                      <span>/</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        {timeAgo(post.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-sm leading-7 text-slate-200/86 whitespace-pre-wrap">
+                {post.content}
+              </p>
+
+              {post.tags.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {post.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-lg border border-white/12 bg-white/[0.05] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/72"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/42">Likes</p>
+                  <div className="mt-2 flex items-center gap-2 text-sm text-white">
+                    <Heart className={`h-4 w-4 ${post.liked ? 'fill-red-500 text-red-500' : ''}`} />
+                    <span>{post.likes}</span>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/42">Comments</p>
+                  <div className="mt-2 flex items-center gap-2 text-sm text-white">
+                    <MessageCircle className="h-4 w-4" />
+                    <span>{post.comments}</span>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/42">Shares</p>
+                  <div className="mt-2 flex items-center gap-2 text-sm text-white">
+                    <Share2 className="h-4 w-4" />
+                    <span>{post.shares}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 text-sm text-slate-300/82">
+                Comments and threaded replies should inherit the same chamber grammar: accountable attribution first, novelty last.
+              </div>
             </div>
-          )}
-
-          {/* Divider */}
-          <div className="border-t border-[var(--color-border)]" />
-
-          {/* Actions */}
-          <div className="flex items-center gap-4">
-            <button
-              className={`flex items-center gap-1.5 text-sm transition-colors ${
-                post.liked
-                  ? 'text-red-500'
-                  : 'text-[var(--color-muted-foreground)] hover:text-red-500'
-              }`}
-            >
-              <Heart className="w-4 h-4" fill={post.liked ? 'currentColor' : 'none'} />
-              <span>{post.likes}</span>
-            </button>
-            <button className="flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] transition-colors">
-              <MessageCircle className="w-4 h-4" />
-              <span>{post.comments}</span>
-            </button>
-            <button className="flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors">
-              <Share2 className="w-4 h-4" />
-              <span>{post.shares}</span>
-            </button>
-          </div>
-
-          {/* Comments placeholder */}
-          <div className="p-4 rounded-lg bg-[var(--color-muted)] text-center">
-            <MessageCircle className="w-6 h-6 mx-auto mb-2 text-[var(--color-muted-foreground)] opacity-50" />
-            <p className="text-sm text-[var(--color-muted-foreground)]">Comments coming soon</p>
           </div>
         </div>
       </div>

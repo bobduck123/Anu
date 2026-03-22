@@ -117,6 +117,7 @@ export interface DraggableGalleryProps {
   onSortChange: (mode: SortMode) => void;
   className?: string;
   showComposer?: boolean;
+  showSortBar?: boolean;
 }
 
 interface GridItem {
@@ -193,6 +194,13 @@ function tilePlace(post: CommunityPost): string {
   if (post.microcosm) return post.microcosm;
   if (post.sourceName) return 'Trusted source';
   return 'Shared commons';
+}
+
+function tileSignalLine(post: CommunityPost): string {
+  if (post.sourceName) {
+    return `${post.sourceName} / ${tilePlace(post)}`;
+  }
+  return `${post.author.pseudonym} / ${tilePlace(post)}`;
 }
 
 function createDetailPreviewNode(post: CommunityPost, image: HTMLImageElement | null): HTMLElement {
@@ -451,6 +459,7 @@ export function DraggableGallery({
   onSortChange,
   className = '',
   showComposer = false,
+  showSortBar = true,
 }: DraggableGalleryProps) {
   /* ---- Refs ---- */
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -1091,7 +1100,17 @@ export function DraggableGallery({
                     const el = itemRefs.current.get(item.post.id);
                     if (el) handleTileClick(item.post, el);
                   }}
-                  className="absolute cursor-pointer overflow-hidden rounded-[1.6rem] border border-white/18 bg-[#05070c] shadow-[0_26px_80px_rgba(0,0,0,0.42)]"
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      const el = itemRefs.current.get(item.post.id);
+                      if (el) handleTileClick(item.post, el);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Open ${item.post.title || item.post.author.pseudonym}`}
+                  className="absolute cursor-pointer overflow-hidden rounded-[1.6rem] border border-white/18 bg-[#05070c] shadow-[0_26px_80px_rgba(0,0,0,0.42)] outline-none focus-visible:ring-2 focus-visible:ring-[#f1d3a1] focus-visible:ring-offset-2 focus-visible:ring-offset-[#02050c]"
                   style={{
                     width: ITEM_SIZE,
                     height: ITEM_SIZE,
@@ -1138,10 +1157,13 @@ export function DraggableGallery({
                   </div>
                   <div className="absolute inset-x-0 bottom-0 p-4">
                     <div className="rounded-[1.1rem] border border-white/14 bg-[linear-gradient(180deg,rgba(4,8,14,0.72),rgba(3,7,12,0.9))] p-4 shadow-[0_20px_42px_-28px_rgba(0,0,0,0.98)] backdrop-blur-md">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-white/52 line-clamp-1">
+                        {tileSignalLine(item.post)}
+                      </p>
                       <p className="text-[1.02rem] font-semibold leading-[1.08] text-white line-clamp-2">
                         {item.post.title || item.post.author.pseudonym}
                       </p>
-                      <p className="mt-1.5 text-[12px] leading-relaxed text-white/78 line-clamp-2">
+                      <p className="mt-1.5 text-[12px] leading-relaxed text-white/78 line-clamp-3">
                         {item.post.content}
                       </p>
                       <div className="mt-3 flex items-center justify-between gap-2">
@@ -1184,25 +1206,27 @@ export function DraggableGallery({
       </div>
 
       {/* Sort bar */}
-      <div className="pointer-events-none fixed left-4 top-[4.85rem] z-10 md:left-[17rem]">
-        <div className="pointer-events-auto inline-flex items-center gap-1 rounded-xl border border-white/14 bg-[linear-gradient(140deg,rgba(6,12,22,0.78),rgba(6,14,25,0.74))] px-1.5 py-1.5 backdrop-blur-xl shadow-[0_20px_48px_-28px_rgba(0,0,0,0.95)]">
-          <span className="hidden rounded-md px-2 text-[10px] uppercase tracking-[0.18em] text-white/48 md:inline">Flow</span>
-          {SORT_OPTIONS.map(({ mode, label }) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => onSortChange(mode)}
-              className={`inline-flex min-h-9 items-center rounded-lg px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors ${
-                sortMode === mode
-                  ? 'border border-white/20 bg-white/14 text-white'
-                  : 'text-white/58 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+      {showSortBar ? (
+        <div className="pointer-events-none fixed left-4 top-[4.85rem] z-10 md:left-[17rem]">
+          <div className="pointer-events-auto inline-flex items-center gap-1 rounded-xl border border-white/14 bg-[linear-gradient(140deg,rgba(6,12,22,0.78),rgba(6,14,25,0.74))] px-1.5 py-1.5 backdrop-blur-xl shadow-[0_20px_48px_-28px_rgba(0,0,0,0.95)]">
+            <span className="hidden rounded-md px-2 text-[10px] uppercase tracking-[0.18em] text-white/48 md:inline">Flow</span>
+            {SORT_OPTIONS.map(({ mode, label }) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => onSortChange(mode)}
+                className={`inline-flex min-h-9 items-center rounded-lg px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors ${
+                  sortMode === mode
+                    ? 'border border-white/20 bg-white/14 text-white'
+                    : 'text-white/58 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {/* Zoom controls */}
       <div
@@ -1333,6 +1357,18 @@ export function DraggableGallery({
                   <p data-detail-text className="text-base leading-relaxed text-white/78 whitespace-pre-wrap lg:text-[1.02rem]">
                     {selectedPost.content}
                   </p>
+
+                  <div data-detail-text className="flex flex-wrap gap-2">
+                    <span className="rounded-lg border border-white/12 bg-white/[0.05] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/72">
+                      {selectedPost.sourceName ? 'Trusted signal' : 'Community trace'}
+                    </span>
+                    <span className="rounded-lg border border-white/12 bg-white/[0.05] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/72">
+                      {selectedPost.microcosm || 'Shared commons'}
+                    </span>
+                    <span className="rounded-lg border border-white/12 bg-white/[0.05] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/72">
+                      {selectedPost.sourceName || selectedPost.author.pseudonym}
+                    </span>
+                  </div>
 
                   {selectedPost.tags.length > 0 && (
                     <div data-detail-text className="flex flex-wrap gap-2">

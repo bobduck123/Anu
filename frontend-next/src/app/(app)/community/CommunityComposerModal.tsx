@@ -8,6 +8,12 @@ import {
   buildGalleryPostFromStory,
   type CommunityPost,
 } from '@/data/adapters/communityAdapter';
+import {
+  AnuChamberCard,
+  AnuChip,
+  AnuControlButton,
+  AnuSurfacePanel,
+} from '@/ui-system/anu/surfacePrimitives';
 
 type ComposerMode = 'story' | 'article';
 type ArticleCategory = 'news' | 'opinion' | 'creative';
@@ -31,6 +37,9 @@ const initialDraft = {
   mediaUrl: '',
   category: 'news' as ArticleCategory,
 };
+
+const chamberInputClass =
+  'w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-white/24';
 
 export default function CommunityComposerModal({
   open,
@@ -122,142 +131,181 @@ export default function CommunityComposerModal({
         type="button"
         aria-label="Close composer"
         onClick={handleClose}
-        className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+        className="absolute inset-0 bg-[rgba(2,6,14,0.78)] backdrop-blur-sm"
       />
 
-      <div className="relative w-full max-w-2xl rounded-[2rem] border border-white/10 bg-[#101010] text-white shadow-2xl">
-        <div className="flex items-start justify-between gap-4 border-b border-white/10 px-6 py-5">
-          <div>
-            <p className="mb-2 text-xs uppercase tracking-[0.22em] text-white/45">Community composer</p>
-            <h2 className="text-2xl font-semibold">
-              {mode === 'story' ? 'Publish a story tile' : 'Publish an article tile'}
-            </h2>
-            <p className="mt-2 text-sm text-white/65">
-              {mode === 'story'
-                ? 'Stories land in the floating feed with optional media and public reactions.'
-                : 'Articles appear as editorial tiles in the same floating feed.'}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={isSubmitting}
-            className="rounded-full border border-white/10 p-2 text-white/70 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+      <div className="relative w-full max-w-6xl rounded-[2rem] border border-white/10 bg-[rgba(5,9,18,0.95)] text-white shadow-[0_35px_120px_rgba(0,0,0,0.55)]">
+        <button
+          type="button"
+          onClick={handleClose}
+          disabled={isSubmitting}
+          className="absolute right-4 top-4 z-10 rounded-full border border-white/10 bg-white/[0.05] p-2 text-white/72 transition hover:border-white/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <X className="h-5 w-5" />
+        </button>
 
-        <form onSubmit={handleSubmit} className="space-y-6 px-6 py-6">
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setMode('story')}
-              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm transition ${
-                mode === 'story' ? 'bg-white text-black' : 'border border-white/10 text-white/70 hover:border-white/25 hover:text-white'
-              }`}
-            >
-              <Sparkles className="h-4 w-4" />
-              Story
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('article')}
-              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm transition ${
-                mode === 'article' ? 'bg-white text-black' : 'border border-white/10 text-white/70 hover:border-white/25 hover:text-white'
-              }`}
-            >
-              <FileText className="h-4 w-4" />
-              Article
-            </button>
-          </div>
-
-          {error && (
-            <div className="flex items-start gap-3 rounded-2xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+        <div className="grid gap-6 p-6 lg:grid-cols-[1.15fr_0.85fr] lg:p-8">
+          <div className="space-y-5">
             <div>
-              <label className="mb-2 block text-sm font-medium text-white/80">Title</label>
-              <input
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                maxLength={200}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
-                placeholder={mode === 'story' ? 'What happened in your node?' : 'Headline for the public feed'}
-                type="text"
-              />
+              <p className="anu-lab-kicker">Community composer</p>
+              <h2
+                className="mt-3 text-4xl leading-[1.02] text-white"
+                style={{ fontFamily: 'var(--anu-type-display)' }}
+              >
+                {mode === 'story' ? 'Publish a commons story' : 'Publish a commons article'}
+              </h2>
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-200/84">
+                Publishing here creates a public trace in the community commons. The composer should feel accountable, local, and clear about what enters the shared surface.
+              </p>
             </div>
-            {mode === 'article' ? (
-              <div>
-                <label className="mb-2 block text-sm font-medium text-white/80">Category</label>
-                <select
-                  value={category}
-                  onChange={(event) => setCategory(event.target.value as ArticleCategory)}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
-                >
-                  <option value="news" className="bg-[#101010]">News</option>
-                  <option value="opinion" className="bg-[#101010]">Opinion</option>
-                  <option value="creative" className="bg-[#101010]">Creative</option>
-                </select>
+
+            <div className="flex flex-wrap gap-2">
+              <AnuControlButton
+                onClick={() => setMode('story')}
+                tone={mode === 'story' ? 'active' : 'default'}
+                iconLeft={Sparkles}
+              >
+                Story
+              </AnuControlButton>
+              <AnuControlButton
+                onClick={() => setMode('article')}
+                tone={mode === 'article' ? 'active' : 'default'}
+                iconLeft={FileText}
+              >
+                Article
+              </AnuControlButton>
+              <AnuChip tone="signal">Public commons</AnuChip>
+              <AnuChip tone="muted">Authenticated publication</AnuChip>
+            </div>
+
+            {error ? (
+              <div className="rounded-2xl border border-[rgba(216,169,95,0.22)] bg-[rgba(216,169,95,0.08)] px-4 py-3 text-sm text-[#f4dbc2]">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
               </div>
-            ) : (
+            ) : null}
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_240px]">
+                <div>
+                  <label htmlFor="community-composer-title" className="mb-2 block text-sm font-medium text-white/80">Title</label>
+                  <input
+                    id="community-composer-title"
+                    value={title}
+                    onChange={(event) => setTitle(event.target.value)}
+                    maxLength={200}
+                    className={chamberInputClass}
+                    placeholder={mode === 'story' ? 'What happened in your node?' : 'Headline for the public commons'}
+                    type="text"
+                  />
+                </div>
+
+                {mode === 'article' ? (
+                  <div>
+                    <label htmlFor="community-composer-category" className="mb-2 block text-sm font-medium text-white/80">Category</label>
+                    <select
+                      id="community-composer-category"
+                      value={category}
+                      onChange={(event) => setCategory(event.target.value as ArticleCategory)}
+                      className={chamberInputClass}
+                    >
+                      <option value="news" className="bg-[#101625]">News</option>
+                      <option value="opinion" className="bg-[#101625]">Opinion</option>
+                      <option value="creative" className="bg-[#101625]">Creative</option>
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label htmlFor="community-composer-media-url" className="mb-2 block text-sm font-medium text-white/80">Media URL</label>
+                    <input
+                      id="community-composer-media-url"
+                      value={mediaUrl}
+                      onChange={(event) => setMediaUrl(event.target.value)}
+                      className={chamberInputClass}
+                      placeholder="Optional image or media link"
+                      type="url"
+                    />
+                  </div>
+                )}
+              </div>
+
               <div>
-                <label className="mb-2 block text-sm font-medium text-white/80">Media URL</label>
-                <input
-                  value={mediaUrl}
-                  onChange={(event) => setMediaUrl(event.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-white/25"
-                  placeholder="Optional image or media link"
-                  type="url"
+                <label htmlFor="community-composer-content" className="mb-2 block text-sm font-medium text-white/80">Content</label>
+                <textarea
+                  id="community-composer-content"
+                  value={content}
+                  onChange={(event) => setContent(event.target.value)}
+                  rows={10}
+                  className={`${chamberInputClass} resize-none`}
+                  placeholder={
+                    mode === 'story'
+                      ? 'Share the moment, update, or field note that should enter the commons.'
+                      : 'Write the article body that should open in the public detail view.'
+                  }
                 />
               </div>
-            )}
+
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
+                <p className="text-xs leading-5 text-white/50">
+                  Published posts are public on the community route and should avoid destructive language.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <AnuControlButton onClick={handleClose} disabled={isSubmitting}>
+                    Cancel
+                  </AnuControlButton>
+                  <AnuControlButton type="submit" tone="active" disabled={isSubmitting}>
+                    {isSubmitting
+                      ? mode === 'story'
+                        ? 'Publishing story...'
+                        : 'Publishing article...'
+                      : mode === 'story'
+                        ? 'Publish story'
+                        : 'Publish article'}
+                  </AnuControlButton>
+                </div>
+              </div>
+            </form>
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-white/80">Content</label>
-            <textarea
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              rows={8}
-              className="w-full rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-3 text-sm leading-relaxed text-white outline-none transition focus:border-white/25"
-              placeholder={
-                mode === 'story'
-                  ? 'Share the moment, update, or field note you want the public feed to show.'
-                  : 'Write the article body that should open in the detail pane.'
-              }
-            />
-          </div>
+          <div className="space-y-4">
+            <AnuSurfacePanel tone="quiet">
+              <div className="flex flex-wrap gap-2">
+                <AnuChip tone="signal">{mode === 'story' ? 'Story trace' : 'Editorial trace'}</AnuChip>
+                <AnuChip tone="muted">{mode === 'story' ? 'Reaction-led tile' : 'Inspectable detail view'}</AnuChip>
+              </div>
+              <p className="mt-4 text-sm leading-6 text-slate-300/84">
+                {mode === 'story'
+                  ? 'Stories should feel local and immediate. They enter the commons as public social traces.'
+                  : 'Articles should feel more formal and inspectable. They share the same commons surface but carry stronger editorial weight.'}
+              </p>
+            </AnuSurfacePanel>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
-            <p className="text-xs text-white/45">
-              Published posts are public on the community route and should avoid destructive language.
-            </p>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={handleClose}
-                disabled={isSubmitting}
-                className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/75 transition hover:border-white/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="rounded-full bg-white px-5 py-2 text-sm font-medium text-black transition hover:bg-white/90 disabled:cursor-wait disabled:opacity-70"
-              >
-                {isSubmitting
-                  ? (mode === 'story' ? 'Publishing story...' : 'Publishing article...')
-                  : (mode === 'story' ? 'Publish story' : 'Publish article')}
-              </button>
-            </div>
+            <AnuChamberCard
+              eyebrow="Before publishing"
+              title="Commons doctrine"
+              description="Every public trace should clarify place, meaning, and accountability before style."
+            >
+              <div className="space-y-3 text-sm leading-6 text-slate-300/82">
+                <p>Use clear titles that help others understand the signal without opening the detail pane.</p>
+                <p>Keep destructive or threatening language out of public publication.</p>
+                <p>Stories can be immediate; articles should carry a stronger editorial frame.</p>
+              </div>
+            </AnuChamberCard>
+
+            <AnuChamberCard
+              eyebrow="Publication result"
+              title="What happens next"
+              description="Once published, the new trace is inserted into the commons feed and re-synced against live sources."
+            >
+              <div className="space-y-3 text-sm leading-6 text-slate-300/82">
+                <p>The gallery updates immediately so the contribution is visible in the current browse session.</p>
+                <p>Trusted signals stay secondary; your post enters the same shared commons layer as other community traces.</p>
+              </div>
+            </AnuChamberCard>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

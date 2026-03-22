@@ -86,11 +86,15 @@ describe('CommunityPage', () => {
     render(<CommunityPage />);
 
     await waitFor(() => expect(loadCommunityUniverseDataMock).toHaveBeenCalled());
-    const toggle = await screen.findByRole('button', { name: 'Open community universe' });
+    expect((await screen.findAllByText('Live commons')).length).toBeGreaterThan(0);
+    expect(screen.getByText('1 public traces visible')).toBeInTheDocument();
+    expect(screen.getByText('1 trusted signals')).toBeInTheDocument();
+
+    const toggle = await screen.findByRole('button', { name: 'Open universe panel' });
 
     fireEvent.click(toggle);
 
     expect(await screen.findByTestId('community-viewer')).toHaveTextContent('Manara Community Universe');
-    expect(screen.getByRole('button', { name: 'Hide community universe' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Hide universe panel' })).toBeInTheDocument();
   });
 });

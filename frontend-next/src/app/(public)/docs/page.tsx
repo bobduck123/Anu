@@ -1,72 +1,290 @@
-import Link from "next/link";
-import { ArrowRight, BookOpenText, ShieldCheck, Sparkles } from "lucide-react";
+import Link from 'next/link';
+import {
+  ArrowRight,
+  BookOpenText,
+  Compass,
+  FileSearch,
+  LibraryBig,
+  ScrollText,
+  ShieldCheck,
+} from 'lucide-react';
+import {
+  AnuActionLink,
+  AnuChamberCard,
+  AnuChip,
+  AnuHeroMetric,
+  AnuInstrumentationCard,
+  AnuPageHero,
+  AnuSectionHeading,
+  AnuSurfacePanel,
+} from '@/ui-system/anu/surfacePrimitives';
 
-const docsLinks = [
+const libraryCollections = [
   {
-    href: "/transparency",
-    label: "Transparency Dashboard",
-    detail: "Public totals, relief capacity, and node-level ledger summaries.",
-    icon: ShieldCheck,
+    eyebrow: 'Public truth',
+    title: 'Trust routes',
+    description:
+      'Public-facing surfaces that explain the institution before someone needs to escalate, subscribe, or intervene.',
+    links: [
+      {
+        href: '/transparency',
+        label: 'Transparency ledger',
+        detail: 'Inspect pool balances, relief capacity, receipts, and privacy-preserving totals.',
+      },
+      {
+        href: '/contact',
+        label: 'Routing surface',
+        detail: 'Choose the right escalation path and attach the right evidence bundle.',
+      },
+      {
+        href: '/memberships',
+        label: 'Commons memberships',
+        detail: 'Evaluate contribution covenants through a trust-first, non-marketing route.',
+      },
+    ],
   },
   {
-    href: "/governance",
-    label: "Governance Center",
-    detail: "Institutional formulas, simulations, and stewardship controls.",
-    icon: BookOpenText,
+    eyebrow: 'Operator doctrine',
+    title: 'Governance and system instruments',
+    description:
+      'Read the operating logic, the model registry, and the review surfaces that govern how the institution moves.',
+    links: [
+      {
+        href: '/governance',
+        label: 'Governance observatory',
+        detail: 'Enter the main governance index for state, registry, federation, and simulation routes.',
+      },
+      {
+        href: '/governance/systemic',
+        label: 'Systemic mode',
+        detail: 'Inspect system state, thresholds, and institutional health modeling.',
+      },
+      {
+        href: '/governance/model-registry',
+        label: 'Model registry',
+        detail: 'Review formalized models, references, and simulation scaffolds.',
+      },
+    ],
   },
   {
-    href: "/education/templates",
-    label: "Education Templates",
-    detail: "Learning presentation systems, layered pathways, and archetypes.",
-    icon: Sparkles,
+    eyebrow: 'Templates and engines',
+    title: 'Applied libraries',
+    description:
+      'Reference templates, applied engines, and subsystem-specific pattern libraries that shape delivery.',
+    links: [
+      {
+        href: '/education/templates',
+        label: 'Education templates',
+        detail: 'Learning presentation systems, layered pathways, and reusable curriculum frames.',
+      },
+      {
+        href: '/cost-lowering',
+        label: 'Cost-lowering engine',
+        detail: 'Weekly optimization routines and resilience pathways.',
+      },
+      {
+        href: '/flora-fauna',
+        label: 'Flora & Fauna subsystem',
+        detail: 'Memetics, creator channels, and pool-backed circulation with its own operational logic.',
+      },
+    ],
+  },
+];
+
+const readingProtocol = [
+  {
+    title: 'Start with the public truth surface',
+    detail: 'Read transparency before governance when you need to understand present state rather than internal theory.',
   },
   {
-    href: "/cost-lowering",
-    label: "Cost-Lowering Engine",
-    detail: "Weekly optimization routines and resilience pathways.",
-    icon: ArrowRight,
+    title: 'Move from explanation to instrumentation',
+    detail: 'Use docs to understand route relationships, then enter governance or admin surfaces only when action is required.',
+  },
+  {
+    title: 'Carry route context forward',
+    detail: 'When escalating, link the exact trust, governance, or subsystem surface that already contains the relevant evidence.',
   },
 ];
 
 export default function DocsPage() {
   return (
-    <div className="manara-grid-hero min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(242,199,134,0.14),transparent_28%),radial-gradient(circle_at_86%_8%,rgba(63,110,160,0.18),transparent_34%),linear-gradient(180deg,#0a1322_0%,#08111e_60%,#08101a_100%)]">
-      <div className="mx-auto max-w-6xl space-y-6 px-4 pb-16 pt-24 md:px-8">
-        <header className="manara-glass-panel rounded-[1.6rem] border border-white/14 p-6 text-slate-100 md:p-8">
-          <p className="text-xs uppercase tracking-[0.24em] text-[#f3cd92]/88">Documentation</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white md:text-4xl">Manara Operations Library</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
-            Navigate governance, transparency, and education references for cultural operations.
-            Start here before entering deeper administrative and simulation pathways.
-          </p>
-        </header>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
+      <div className="mx-auto max-w-6xl px-4 pb-20 pt-28 md:px-8">
+        <AnuPageHero
+          eyebrow="Operations library"
+          title="Read the institution before you operate it."
+          description="This library is the connective tissue between public trust, operator doctrine, and applied systems. Use it to understand how routes relate before you move into governance, memberships, education, or subsystem work."
+          actions={
+            <>
+              <AnuActionLink href="/transparency" tone="primary" iconLeft={ShieldCheck} iconRight={ArrowRight}>
+                Open transparency
+              </AnuActionLink>
+              <AnuActionLink href="/governance" tone="secondary" iconLeft={Compass} iconRight={ArrowRight}>
+                Enter governance observatory
+              </AnuActionLink>
+            </>
+          }
+          aside={
+            <AnuSurfacePanel tone="quiet" className="h-full p-5">
+              <div className="flex flex-wrap gap-2">
+                <AnuChip tone="signal" icon={LibraryBig}>
+                  Inspectable first
+                </AnuChip>
+                <AnuChip tone="muted" icon={BookOpenText}>
+                  Route-aware
+                </AnuChip>
+                <AnuChip tone="accent" icon={FileSearch}>
+                  Evidence before escalation
+                </AnuChip>
+              </div>
+              <p className="mt-4 text-sm leading-6 text-slate-300/84">
+                The library should not feel like a link dump. It explains which surfaces are public truth,
+                which are operator doctrine, and which are applied subsystem entry points.
+              </p>
+            </AnuSurfacePanel>
+          }
+        >
+          <div className="grid gap-4 md:grid-cols-3">
+            <AnuHeroMetric
+              label="Collections"
+              value="3 route families"
+              detail="Trust, governance, and applied systems are separated so operators do not confuse explanation with execution."
+            />
+            <AnuHeroMetric
+              label="Posture"
+              value="Editorial + inspectable"
+              detail="This surface should read like a curated operating library rather than a product landing page."
+            />
+            <AnuHeroMetric
+              label="Protocol"
+              value="Truth before escalation"
+              detail="Transparency and route context should come before internal intervention, tickets, or governance review."
+            />
+          </div>
+        </AnuPageHero>
 
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {docsLinks.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="manara-grid-hero group rounded-2xl border border-white/12 bg-[linear-gradient(152deg,rgba(8,16,29,0.9),rgba(7,13,24,0.92))] p-5 text-slate-100 transition-colors hover:border-white/20 hover:bg-[linear-gradient(152deg,rgba(11,20,36,0.92),rgba(8,15,28,0.94))]"
+        <section className="mt-10 grid gap-4 md:grid-cols-3">
+          <AnuInstrumentationCard
+            label="Public trust routes"
+            value="3"
+            detail="Surfaces that explain the institution openly before anyone commits money, sends reports, or enters operator spaces."
+            icon={ShieldCheck}
+            tone="signal"
+          />
+          <AnuInstrumentationCard
+            label="Observatory anchors"
+            value="Governance"
+            detail="Operator doctrine, registries, and simulations belong to a calmer observatory grammar instead of public marketing language."
+            icon={Compass}
+          />
+          <AnuInstrumentationCard
+            label="Applied systems"
+            value="Education + Flora & Fauna"
+            detail="Subsystem libraries should inherit ANU structure while keeping their own operational identities."
+            icon={ScrollText}
+          />
+        </section>
+
+        <section className="mt-12">
+          <AnuSectionHeading
+            eyebrow="Library collections"
+            title="Move by route family"
+            description="Each collection groups routes by institutional role so the library teaches navigation, not just destination names."
+          />
+
+          <div className="mt-8 grid gap-5 xl:grid-cols-3">
+            {libraryCollections.map((collection) => (
+              <AnuChamberCard
+                key={collection.title}
+                eyebrow={collection.eyebrow}
+                title={collection.title}
+                description={collection.description}
+                tone="default"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-white">{item.label}</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-300">{item.detail}</p>
-                    <p className="mt-3 inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[#f3cd92]/88">
-                      Open route
-                      <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                    </p>
-                  </div>
-                  <span className="manara-glass-chip inline-flex h-9 w-9 shrink-0 items-center justify-center border border-white/14 bg-white/6 text-[#f3cd92]">
-                    <Icon className="h-4.5 w-4.5" />
-                  </span>
+                <div className="space-y-3">
+                  {collection.links.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="block rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 transition-colors hover:border-white/18 hover:bg-white/[0.05]"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-white">{link.label}</p>
+                          <p className="mt-2 text-sm leading-6 text-slate-300/82">{link.detail}</p>
+                          <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-slate-400">{link.href}</p>
+                        </div>
+                        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[#f3cd92]" />
+                      </div>
+                    </Link>
+                  ))}
                 </div>
-                <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-slate-400">{item.href}</p>
-              </Link>
-            );
-          })}
+              </AnuChamberCard>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-12 grid gap-5 lg:grid-cols-[0.92fr_1.08fr]">
+          <AnuSurfacePanel tone="soft" className="p-5">
+            <AnuSectionHeading
+              eyebrow="Reading protocol"
+              title="How to use this library"
+              description="The library is an orientation surface. Its job is to reduce wrong-route escalation."
+            />
+            <div className="mt-5 space-y-4">
+              {readingProtocol.map((item, index) => (
+                <div
+                  key={item.title}
+                  className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4"
+                >
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Step {index + 1}</p>
+                  <p className="mt-2 text-sm font-semibold text-white">{item.title}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-300/82">{item.detail}</p>
+                </div>
+              ))}
+            </div>
+          </AnuSurfacePanel>
+
+          <AnuSurfacePanel tone="quiet" className="p-5">
+            <AnuSectionHeading
+              eyebrow="Common first moves"
+              title="Start with the right surface"
+              description="These are the default entry points when someone is unsure where to go."
+            />
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {[
+                {
+                  href: '/transparency',
+                  label: 'Check live institutional totals',
+                  detail: 'Use transparency for public truth, receipts, and relief capacity.',
+                },
+                {
+                  href: '/contact',
+                  label: 'Route a question or incident',
+                  detail: 'Use contact when you need the correct escalation lane and evidence checklist.',
+                },
+                {
+                  href: '/governance',
+                  label: 'Open the governance observatory',
+                  detail: 'Use governance for policy, model, federation, and registry surfaces.',
+                },
+                {
+                  href: '/memberships',
+                  label: 'Evaluate a contribution covenant',
+                  detail: 'Use memberships when the question is trust, sustainability, and secure recurring support.',
+                },
+              ].map((route) => (
+                <Link
+                  key={route.href}
+                  href={route.href}
+                  className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 transition-colors hover:border-white/18 hover:bg-white/[0.05]"
+                >
+                  <p className="text-sm font-semibold text-white">{route.label}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-300/82">{route.detail}</p>
+                </Link>
+              ))}
+            </div>
+          </AnuSurfacePanel>
         </section>
       </div>
     </div>

@@ -13,6 +13,7 @@ import {
   AnuControlLink,
   AnuFilterBar,
   AnuFilterGroup,
+  AnuSectionHeading,
   AnuSurfacePanel,
 } from '@/ui-system/anu/surfacePrimitives';
 import {
@@ -36,6 +37,12 @@ import CommunityComposerModal from './CommunityComposerModal';
 export const dynamic = 'force-dynamic';
 
 const CommunityLegacy = dynamicImport(() => import('./CommunityLegacy'), { ssr: false });
+
+const COMMUNITY_SORT_OPTIONS: Array<{ mode: SortMode; label: string }> = [
+  { mode: 'new', label: 'Newest' },
+  { mode: 'trending', label: 'Trending' },
+  { mode: 'near-me', label: 'Near me' },
+];
 
 function CommunityPageFallback() {
   return (
@@ -93,7 +100,9 @@ function CommunityUniversePanel({
               ? 'Community fallback: deterministic demo packet'
               : packet.packetMeta?.sourceSummary ?? 'Live community packet'}
           </span>
-          <span className="rounded-xl border border-slate-700 px-3 py-1">Shared scene and explainer path: enabled</span>
+          <span className="rounded-xl border border-slate-700 px-3 py-1">
+            Shared scene and explainer path: enabled
+          </span>
         </div>
       }
     />
@@ -162,7 +171,11 @@ function CommunityPageContent() {
       if (!preserveCurrentFeed) {
         setTrustedNewsMeta(nextData.trustedNewsMeta);
       }
-      setWarnings(preserveCurrentFeed ? ['Refresh failed. Showing the last successful community feed.'] : nextData.warnings);
+      setWarnings(
+        preserveCurrentFeed
+          ? ['Refresh failed. Showing the last successful community feed.']
+          : nextData.warnings,
+      );
       setLoadError(nextPosts.length < 1 ? nextData.loadError : null);
     } catch (err) {
       setWarnings(['Community feed refresh failed.']);
@@ -236,55 +249,158 @@ function CommunityPageContent() {
   }
 
   const warningMessage = warnings.length > 0 ? warnings[0] : null;
+  const feedStateLabel = isLoading
+    ? 'Syncing live commons'
+    : hasLivePosts
+      ? warningMessage
+        ? 'Cached live commons'
+        : 'Live commons'
+      : loadError
+        ? 'Local fallback commons'
+        : 'Seeded demo commons';
+  const feedStateTone = hasLivePosts && !warningMessage ? 'signal' : 'accent';
+  const publicationStateLabel = hasLivePosts
+    ? `${posts.length} public traces visible`
+    : loadError
+      ? 'Live publication unavailable'
+      : 'Awaiting published traces';
+  const trustedSignalsLabel = trustedNewsMeta.count > 0
+    ? `${trustedNewsMeta.count} trusted signals${trustedNewsMeta.stale ? ' / stale' : ''}`
+    : 'No trusted signals yet';
+  const modeGuidance = hasLivePosts
+    ? 'Browsing current public community traces with trusted signals layered into the commons.'
+    : loadError
+      ? 'Live community sources are unavailable, so the commons is presenting a deterministic local fallback.'
+      : 'No public traces are published yet, so the commons remains inspectable through the seeded demo gallery.';
 
   return (
     <div className="fixed inset-0 z-30 overflow-hidden bg-[#02050c]" style={{ isolation: 'isolate' }}>
-      <DraggableGallery posts={galleryPosts} sortMode={sortMode} onSortChange={setSortMode} />
+      <DraggableGallery
+        posts={galleryPosts}
+        sortMode={sortMode}
+        onSortChange={setSortMode}
+        showSortBar={false}
+      />
 
       <div className="pointer-events-none fixed left-3 right-3 top-4 z-[12] flex justify-center md:left-[17rem] md:right-6">
-        <AnuSurfacePanel tone="quiet" className="pointer-events-auto w-full max-w-5xl p-3 text-white">
-          <AnuFilterBar>
-            <AnuFilterGroup className="min-w-[260px]">
-              <AnuChip tone="accent" icon={Sparkles}>Community atlas</AnuChip>
-              <AnuChip tone={showingDemoGallery ? 'accent' : 'signal'}>
-                {showingDemoGallery ? 'Demo gallery active' : 'Live gallery active'}
-              </AnuChip>
+        <AnuSurfacePanel tone="quiet" className="pointer-events-auto w-full max-w-6xl p-4 text-white">
+          <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
+            <div className="min-w-0">
+              <AnuSectionHeading
+                eyebrow="Community commons"
+                title="Signal-rich public browsing"
+                description="Browse local stories, trusted signals, and published commons traces without confusing live, cached, and fallback states."
+              />
 
-              {isLoading ? (
-                <AnuChip tone="muted" icon={Loader2}>Syncing feed</AnuChip>
-              ) : (
-                <AnuChip tone="muted">{posts.length} live posts · {trustedNewsMeta.count} trusted news</AnuChip>
-              )}
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <AnuSurfacePanel tone="soft">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Feed mode</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <AnuChip tone={feedStateTone} icon={Sparkles}>{feedStateLabel}</AnuChip>
+                    {isLoading ? <AnuChip tone="muted" icon={Loader2}>Refresh in progress</AnuChip> : null}
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-slate-300/82">{modeGuidance}</p>
+                </AnuSurfacePanel>
 
-              {warningMessage ? (
-                <AnuChip tone="accent" icon={AlertCircle}>{warningMessage}</AnuChip>
-              ) : null}
-            </AnuFilterGroup>
+                <AnuSurfacePanel tone="soft">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Publication state</p>
+                  <p className="mt-3 text-lg font-semibold text-white">{publicationStateLabel}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-300/82">
+                    {hasLivePosts
+                      ? 'Published posts are leading the gallery.'
+                      : 'The public gallery is staying inspectable while publication catches up.'}
+                  </p>
+                </AnuSurfacePanel>
 
-            <AnuFilterGroup className="justify-end">
-              {canToggleCommunityUniverse ? (
-                <AnuControlButton onClick={() => setShowCommunityUniverse((open) => !open)} tone={showCommunityUniverse ? 'active' : 'default'}>
-                  {showCommunityUniverse ? 'Hide community universe' : 'Open community universe'}
-                </AnuControlButton>
-              ) : null}
+                <AnuSurfacePanel tone="soft">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Trusted signal layer</p>
+                  <p className="mt-3 text-lg font-semibold text-white">{trustedSignalsLabel}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-300/82">
+                    {trustedNewsMeta.count > 0
+                      ? 'Trusted news remains secondary to the commons feed and is clearly labeled as such.'
+                      : 'Trusted signal sources have not been pulled into this refresh yet.'}
+                  </p>
+                </AnuSurfacePanel>
+              </div>
+            </div>
 
-              {authLoading ? (
-                <AnuControlButton disabled iconLeft={Loader2}>Session</AnuControlButton>
-              ) : isAuthenticated ? (
-                <AnuControlButton onClick={openComposer} iconLeft={Plus}>
-                  New post
-                </AnuControlButton>
-              ) : (
-                <AnuControlLink href={authHref} iconLeft={Plus}>
-                  Sign in to post
-                </AnuControlLink>
-              )}
+            <div className="min-w-0">
+              <AnuSurfacePanel tone="soft" className="h-full">
+                <div className="flex flex-wrap gap-2">
+                  <AnuChip tone={feedStateTone}>{feedStateLabel}</AnuChip>
+                  <AnuChip tone="muted">Drag to explore</AnuChip>
+                  <AnuChip tone="muted">Select a tile to inspect</AnuChip>
+                </div>
 
-              <AnuControlButton onClick={() => void loadFeed()} disabled={isLoading} iconLeft={RefreshCw}>
-                Refresh
-              </AnuControlButton>
-            </AnuFilterGroup>
-          </AnuFilterBar>
+                <AnuFilterBar className="mt-4">
+                  <AnuFilterGroup>
+                    {COMMUNITY_SORT_OPTIONS.map((option) => (
+                      <AnuControlButton
+                        key={option.mode}
+                        onClick={() => setSortMode(option.mode)}
+                        tone={sortMode === option.mode ? 'active' : 'default'}
+                      >
+                        {option.label}
+                      </AnuControlButton>
+                    ))}
+                  </AnuFilterGroup>
+
+                  <AnuFilterGroup className="justify-end">
+                    {canToggleCommunityUniverse ? (
+                      <AnuControlButton
+                        onClick={() => setShowCommunityUniverse((open) => !open)}
+                        tone={showCommunityUniverse ? 'active' : 'default'}
+                      >
+                        {showCommunityUniverse ? 'Hide universe panel' : 'Open universe panel'}
+                      </AnuControlButton>
+                    ) : null}
+
+                    {authLoading ? (
+                      <AnuControlButton disabled iconLeft={Loader2}>Session</AnuControlButton>
+                    ) : isAuthenticated ? (
+                      <AnuControlButton onClick={openComposer} iconLeft={Plus} tone="active">
+                        Open composer
+                      </AnuControlButton>
+                    ) : (
+                      <AnuControlLink href={authHref} iconLeft={Plus}>
+                        Sign in to publish
+                      </AnuControlLink>
+                    )}
+
+                    <AnuControlButton onClick={() => void loadFeed()} disabled={isLoading} iconLeft={RefreshCw}>
+                      Refresh
+                    </AnuControlButton>
+                  </AnuFilterGroup>
+                </AnuFilterBar>
+
+                {warningMessage || loadError || trustedNewsMeta.stale ? (
+                  <div className="mt-4 space-y-3">
+                    {warningMessage ? (
+                      <div className="rounded-2xl border border-[rgba(216,169,95,0.22)] bg-[rgba(216,169,95,0.08)] px-4 py-3 text-sm text-[#f4dbc2]">
+                        <div className="flex items-start gap-3">
+                          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                          <span>{warningMessage}</span>
+                        </div>
+                      </div>
+                    ) : null}
+                    {loadError && !warningMessage ? (
+                      <div className="rounded-2xl border border-[rgba(216,169,95,0.22)] bg-[rgba(216,169,95,0.08)] px-4 py-3 text-sm text-[#f4dbc2]">
+                        <div className="flex items-start gap-3">
+                          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                          <span>{loadError}</span>
+                        </div>
+                      </div>
+                    ) : null}
+                    {trustedNewsMeta.stale ? (
+                      <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-slate-200/84">
+                        Trusted signal sources are stale. Community publication remains primary until they refresh.
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </AnuSurfacePanel>
+            </div>
+          </div>
         </AnuSurfacePanel>
       </div>
 
@@ -306,7 +422,7 @@ function CommunityPageContent() {
         </div>
       ) : null}
 
-      <div className="fixed bottom-5 right-5 z-[12] hidden sm:block">
+      <div className="fixed bottom-5 right-5 z-[12] sm:hidden">
         {authLoading ? (
           <div className="manara-glass-chip inline-flex items-center gap-2 border border-white/12 bg-black/60 px-4 py-3 text-sm text-white/68 backdrop-blur-md">
             <Loader2 className="h-4 w-4 animate-spin" />
