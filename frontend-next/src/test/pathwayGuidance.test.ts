@@ -23,4 +23,14 @@ describe('pathway guidance model', () => {
     expect(guide.title).toBe('Cost-lowering flow');
     expect(guide.steps.map((step) => step.href)).toContain('/cost-lowering');
   });
+
+  it('builds sandbox guidance for internal lab routes', () => {
+    const guide = buildPathwayGuide('/sandbox/ui-lab');
+    expect(guide.title).toBe('Sandbox review');
+    expect(guide.steps.map((step) => step.href)).toContain('/sandbox/maps');
+  });
+
+  it('treats governance routes as operational mode', () => {
+    expect(deriveNavigationMode('/governance/formulas')).toBe('tasks');
+  });
 });

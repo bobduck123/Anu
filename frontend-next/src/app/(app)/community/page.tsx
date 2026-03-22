@@ -8,6 +8,14 @@ import { AlertCircle, Loader2, Plus, RefreshCw, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeatureFlag } from '@/lib/featureFlags';
 import {
+  AnuChip,
+  AnuControlButton,
+  AnuControlLink,
+  AnuFilterBar,
+  AnuFilterGroup,
+  AnuSurfacePanel,
+} from '@/ui-system/anu/surfacePrimitives';
+import {
   generateMockPosts,
   sortPosts,
   type CommunityPost,
@@ -234,111 +242,67 @@ function CommunityPageContent() {
       <DraggableGallery posts={galleryPosts} sortMode={sortMode} onSortChange={setSortMode} />
 
       <div className="pointer-events-none fixed left-3 right-3 top-4 z-[12] flex justify-center md:left-[17rem] md:right-6">
-        <div className="manara-grid-hero manara-glass-panel-muted pointer-events-auto w-full max-w-5xl rounded-[1.2rem] border border-white/14 bg-[linear-gradient(128deg,rgba(6,12,22,0.82),rgba(8,18,30,0.72))] p-3 text-white shadow-[0_20px_60px_-36px_rgba(0,0,0,0.95)]">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-[260px] flex-1 flex-wrap items-center gap-2">
-              <span className="manara-glass-chip inline-flex items-center gap-2 border border-white/12 bg-white/6 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-white/88">
-                <Sparkles className="h-3.5 w-3.5 text-amber-200" />
-                Community atlas
-              </span>
-
-              <span
-                className={`manara-glass-chip inline-flex px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${
-                  showingDemoGallery
-                    ? 'border border-amber-300/30 bg-amber-300/14 text-amber-100'
-                    : 'border border-emerald-300/30 bg-emerald-300/14 text-emerald-100'
-                }`}
-              >
+        <AnuSurfacePanel tone="quiet" className="pointer-events-auto w-full max-w-5xl p-3 text-white">
+          <AnuFilterBar>
+            <AnuFilterGroup className="min-w-[260px]">
+              <AnuChip tone="accent" icon={Sparkles}>Community atlas</AnuChip>
+              <AnuChip tone={showingDemoGallery ? 'accent' : 'signal'}>
                 {showingDemoGallery ? 'Demo gallery active' : 'Live gallery active'}
-              </span>
+              </AnuChip>
 
               {isLoading ? (
-                <span className="manara-glass-chip inline-flex items-center gap-2 border border-white/10 bg-black/28 px-3 py-1 text-xs text-white/72">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Syncing feed
-                </span>
+                <AnuChip tone="muted" icon={Loader2}>Syncing feed</AnuChip>
               ) : (
-                <span className="manara-glass-chip inline-flex border border-white/10 bg-black/26 px-3 py-1 text-xs text-white/72">
-                  {posts.length} live posts &middot; {trustedNewsMeta.count} trusted news
-                </span>
+                <AnuChip tone="muted">{posts.length} live posts · {trustedNewsMeta.count} trusted news</AnuChip>
               )}
 
               {warningMessage ? (
-                <span className="manara-glass-chip inline-flex items-center gap-1 border border-amber-300/26 bg-amber-300/10 px-3 py-1 text-xs text-amber-100/90">
-                  <AlertCircle className="h-3.5 w-3.5" />
-                  {warningMessage}
-                </span>
+                <AnuChip tone="accent" icon={AlertCircle}>{warningMessage}</AnuChip>
               ) : null}
-            </div>
+            </AnuFilterGroup>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <AnuFilterGroup className="justify-end">
               {canToggleCommunityUniverse ? (
-                <button
-                  type="button"
-                  onClick={() => setShowCommunityUniverse((open) => !open)}
-                  className="manara-glass-chip inline-flex items-center gap-2 border border-white/12 bg-white/6 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/22 hover:bg-white/12"
-                >
+                <AnuControlButton onClick={() => setShowCommunityUniverse((open) => !open)} tone={showCommunityUniverse ? 'active' : 'default'}>
                   {showCommunityUniverse ? 'Hide community universe' : 'Open community universe'}
-                </button>
+                </AnuControlButton>
               ) : null}
 
               {authLoading ? (
-                <span className="manara-glass-chip inline-flex items-center gap-2 border border-white/10 bg-black/26 px-3 py-1.5 text-xs text-white/65">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Session
-                </span>
+                <AnuControlButton disabled iconLeft={Loader2}>Session</AnuControlButton>
               ) : isAuthenticated ? (
-                <button
-                  type="button"
-                  onClick={openComposer}
-                  className="manara-glass-chip inline-flex items-center gap-2 border border-white/14 bg-white/8 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/24 hover:bg-white/14"
-                >
-                  <Plus className="h-3.5 w-3.5" />
+                <AnuControlButton onClick={openComposer} iconLeft={Plus}>
                   New post
-                </button>
+                </AnuControlButton>
               ) : (
-                <Link
-                  href={authHref}
-                  className="manara-glass-chip inline-flex items-center gap-2 border border-white/14 bg-white/8 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/24 hover:bg-white/14"
-                >
-                  <Plus className="h-3.5 w-3.5" />
+                <AnuControlLink href={authHref} iconLeft={Plus}>
                   Sign in to post
-                </Link>
+                </AnuControlLink>
               )}
 
-              <button
-                type="button"
-                onClick={() => void loadFeed()}
-                disabled={isLoading}
-                className="manara-glass-chip inline-flex items-center gap-2 border border-white/12 bg-white/6 px-3 py-1.5 text-xs text-white transition-colors hover:border-white/22 hover:bg-white/12 disabled:cursor-wait disabled:opacity-60"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+              <AnuControlButton onClick={() => void loadFeed()} disabled={isLoading} iconLeft={RefreshCw}>
                 Refresh
-              </button>
-            </div>
-          </div>
-        </div>
+              </AnuControlButton>
+            </AnuFilterGroup>
+          </AnuFilterBar>
+        </AnuSurfacePanel>
       </div>
 
       {communityUniverseVisible && communityPacket ? (
         <div className="pointer-events-none fixed bottom-20 left-4 right-4 z-[13] flex justify-center md:left-[17rem] md:right-6">
-          <div className="manara-grid-hero manara-glass-panel pointer-events-auto w-full max-w-6xl rounded-[1.45rem] border border-white/14 bg-[linear-gradient(135deg,rgba(7,12,22,0.95),rgba(7,14,25,0.94))] p-4 shadow-[0_28px_80px_-34px_rgba(0,0,0,0.95)]">
+          <AnuSurfacePanel tone="soft" className="pointer-events-auto w-full max-w-6xl p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-white/86">
               <p className="text-xs uppercase tracking-[0.2em]">
                 {communityPacket.fallbackState?.active
                   ? `Fallback ${universePresentationTerms.readOnlyPacket}`
                   : universePresentationTerms.communityUniverse}
               </p>
-              <button
-                type="button"
-                onClick={() => setShowCommunityUniverse(false)}
-                className="manara-glass-chip border border-white/14 bg-white/7 px-3 py-1 text-xs text-white transition-colors hover:bg-white/14"
-              >
+              <AnuControlButton onClick={() => setShowCommunityUniverse(false)}>
                 Hide
-              </button>
+              </AnuControlButton>
             </div>
             <CommunityUniversePanel packet={communityPacket} loadError={loadError} />
-          </div>
+          </AnuSurfacePanel>
         </div>
       ) : null}
 

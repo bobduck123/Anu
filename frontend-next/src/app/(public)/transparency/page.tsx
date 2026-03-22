@@ -1,9 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Activity, ArrowRight, ShieldCheck } from "lucide-react";
 import { transparencyApi, TransparencySummary } from "@/lib/api/endpoints";
+import {
+  AnuActionLink,
+  AnuHeroMetric,
+  AnuInstrumentationCard,
+  AnuPageHero,
+  AnuSectionHeading,
+  AnuSurfacePanel,
+} from "@/ui-system/anu/surfacePrimitives";
 
 function money(cents: number): string {
   return `$${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -23,60 +30,73 @@ export default function TransparencyPage() {
   return (
     <div className="manara-grid-hero min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(242,199,134,0.14),transparent_28%),radial-gradient(circle_at_86%_8%,rgba(63,110,160,0.18),transparent_34%),linear-gradient(180deg,#0a1322_0%,#08111e_60%,#08101a_100%)]">
       <div className="mx-auto max-w-6xl px-4 pb-16 pt-24 md:px-8">
-        <header className="manara-glass-panel rounded-[1.6rem] border border-white/14 p-6 text-slate-100 md:p-8">
-          <p className="text-xs uppercase tracking-[0.24em] text-[#f3cd92]/88">Public Transparency</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white md:text-4xl">Node Summary Ledger</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
-            Cultural operations remain inspectable through privacy-preserving totals. Review inflows,
-            outflows, relief capacity, and pool balance without exposing member-level financial traces.
-          </p>
-        </header>
+        <AnuPageHero
+          eyebrow="Public transparency"
+          title="Node Summary Ledger"
+          description="Cultural operations remain inspectable through privacy-preserving totals. Review inflows, outflows, relief capacity, and pool balance without exposing member-level financial traces."
+        >
+          <div className="grid gap-3 md:grid-cols-3">
+            <AnuHeroMetric
+              label="Visibility"
+              value="Privacy-preserving"
+              detail="Public totals stay inspectable without exposing member-level financial traces."
+            />
+            <AnuHeroMetric
+              label="Route"
+              value="Trust surface"
+              detail="Transparency remains close to governance, docs, and wider institutional legitimacy."
+            />
+            <AnuHeroMetric
+              label="Contract"
+              value={error ? "Degraded" : data ? "Live" : "Syncing"}
+              detail="Reporting infrastructure may degrade honestly, but the public trust path remains explicit."
+            />
+          </div>
+        </AnuPageHero>
 
         {error ? (
-          <div className="manara-glass-panel-muted mt-5 rounded-2xl border border-amber-300/28 p-5 text-amber-100">
+          <AnuSurfacePanel tone="quiet" className="mt-5 border-amber-300/28 p-5 text-amber-100">
             <p className="text-sm font-semibold">Public transparency is temporarily unavailable.</p>
             <p className="mt-1 text-sm text-amber-100/92">
               Reporting infrastructure is being stabilised for hosted deployment. Cultural routes remain available.
             </p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              <Link href="/docs" className="manara-glass-chip inline-flex items-center gap-1 border border-amber-100/30 px-3 py-1.5 hover:bg-amber-200/20">
+              <AnuActionLink href="/docs" tone="ghost" iconRight={ArrowRight}>
                 Open docs
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-              <Link href="/governance" className="manara-glass-chip inline-flex items-center gap-1 border border-amber-100/30 px-3 py-1.5 hover:bg-amber-200/20">
+              </AnuActionLink>
+              <AnuActionLink href="/governance" tone="ghost">
                 Governance center
-              </Link>
+              </AnuActionLink>
             </div>
-          </div>
+          </AnuSurfacePanel>
         ) : null}
 
         {!data && !error ? (
-          <div className="mt-5 rounded-2xl border border-white/12 bg-black/26 p-5 text-sm text-slate-300">Loading transparency ledger…</div>
+          <AnuSurfacePanel tone="quiet" className="mt-5 p-5 text-sm text-slate-300">
+            Loading transparency ledger…
+          </AnuSurfacePanel>
         ) : null}
 
         {data ? (
           <div className="mt-5 space-y-5">
             <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <article className="rounded-2xl border border-white/12 bg-[linear-gradient(150deg,rgba(8,16,29,0.9),rgba(7,13,24,0.92))] p-5 text-slate-100">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">Inflows (30d)</p>
-                <p className="mt-3 text-3xl font-semibold text-white">{money(data.totals.inflows_30d)}</p>
-              </article>
-              <article className="rounded-2xl border border-white/12 bg-[linear-gradient(150deg,rgba(8,16,29,0.9),rgba(7,13,24,0.92))] p-5 text-slate-100">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">Outflows (30d)</p>
-                <p className="mt-3 text-3xl font-semibold text-white">{money(data.totals.outflows_30d)}</p>
-              </article>
-              <article className="rounded-2xl border border-white/12 bg-[linear-gradient(150deg,rgba(8,16,29,0.9),rgba(7,13,24,0.92))] p-5 text-slate-100">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">Admin Ratio</p>
-                <p className="mt-3 text-3xl font-semibold text-white">{(data.totals.admin_ratio_30d * 100).toFixed(1)}%</p>
-              </article>
+              <AnuInstrumentationCard label="Inflows (30d)" value={money(data.totals.inflows_30d)} tone="signal" />
+              <AnuInstrumentationCard label="Outflows (30d)" value={money(data.totals.outflows_30d)} />
+              <AnuInstrumentationCard
+                label="Admin ratio"
+                value={`${(data.totals.admin_ratio_30d * 100).toFixed(1)}%`}
+                detail="Share of 30-day throughput allocated to administrative load."
+              />
             </section>
 
             <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-              <article className="rounded-2xl border border-white/12 bg-[linear-gradient(152deg,rgba(8,16,29,0.9),rgba(7,13,24,0.92))] p-5 text-slate-100">
-                <h2 className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-slate-300">
-                  <ShieldCheck className="h-4 w-4 text-[#f3cd92]" />
-                  Pool balances
-                </h2>
+              <AnuSurfacePanel tone="soft" className="p-5 text-slate-100">
+                <AnuSectionHeading
+                  eyebrow="Pool balances"
+                  title="Commons-backed liquidity"
+                  description="Inspect public pool totals without exposing member-level transactions."
+                  action={<ShieldCheck className="h-4 w-4 text-[#f3cd92]" />}
+                />
                 <div className="mt-4 space-y-2">
                   {data.pools.map((pool) => (
                     <div key={pool.slug} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm">
@@ -85,13 +105,15 @@ export default function TransparencyPage() {
                     </div>
                   ))}
                 </div>
-              </article>
+              </AnuSurfacePanel>
 
-              <article className="rounded-2xl border border-white/12 bg-[linear-gradient(152deg,rgba(8,16,29,0.9),rgba(7,13,24,0.92))] p-5 text-slate-100">
-                <h2 className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-slate-300">
-                  <Activity className="h-4 w-4 text-[#8dd9b2]" />
-                  Relief capacity
-                </h2>
+              <AnuSurfacePanel tone="quiet" className="p-5 text-slate-100">
+                <AnuSectionHeading
+                  eyebrow="Relief capacity"
+                  title="Current response room"
+                  description="Public relief capacity remains legible even when internal member-level queues are private."
+                  action={<Activity className="h-4 w-4 text-[#8dd9b2]" />}
+                />
                 <div className="mt-4 space-y-3 text-sm text-slate-300">
                   <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
                     Monthly grants remaining: <strong className="text-white">{data.relief_capacity.monthly_grants_remaining}</strong>
@@ -110,7 +132,7 @@ export default function TransparencyPage() {
                     </>
                   ) : null}
                 </div>
-              </article>
+              </AnuSurfacePanel>
             </section>
           </div>
         ) : null}

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   BarChart3,
+  FlaskConical,
   GraduationCap,
   Grid3X3,
   Heart,
@@ -29,6 +30,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from './TenantBrandWrapper';
 import { ThemeToggle } from '../ThemeToggle';
 import { buildPathwayGuide, deriveNavigationMode, type NavigationMode } from './pathwayGuidance';
+import { hasSandboxAccessRole } from '@/ui-system/anu/SandboxAccessBoundary';
 
 interface NavItem {
   href: string;
@@ -47,7 +49,7 @@ interface NavSection {
 
 const navSections: NavSection[] = [
   {
-    title: 'Explore',
+    title: 'Commons',
     mode: 'explore',
     items: [
       { href: '/manara', label: 'Manara', icon: Sparkles, module: 'impact' },
@@ -58,7 +60,7 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    title: 'Action',
+    title: 'Fieldwork',
     mode: 'task',
     items: [
       { href: '/actions', label: 'Actions', icon: Target },
@@ -81,7 +83,7 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    title: 'Admin',
+    title: 'Stewardship',
     mode: 'admin',
     adminOnly: true,
     items: [
@@ -131,6 +133,7 @@ export interface SidebarProps {
   mobileOpen?: boolean;
   onMobileClose?: () => void;
   immersive?: boolean;
+  showFloatingToggle?: boolean;
 }
 
 export function Sidebar({
@@ -140,6 +143,7 @@ export function Sidebar({
   mobileOpen,
   onMobileClose,
   immersive = false,
+  showFloatingToggle = true,
 }: SidebarProps) {
   const pathname = usePathname();
   const { user, isAuthenticated } = useAuth();
@@ -167,6 +171,7 @@ export function Sidebar({
   };
 
   const isAdmin = user ? adminRoles.has(user.role) : false;
+  const isSteward = user ? hasSandboxAccessRole(user.role) : false;
   const homeHref = isAuthenticated ? '/home' : '/';
   const profileHref = isAuthenticated ? '/profile' : '/auth';
   const profileLabel = isAuthenticated ? (user?.pseudonym || user?.username || 'Profile') : 'Sign in';
@@ -229,7 +234,7 @@ export function Sidebar({
     <div className="space-y-5 px-3 pb-6 pt-3">
       {visibleSections.map((section) => (
         <section key={section.title}>
-          <h2 className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400/90">
+          <h2 className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#d8c9a4]/82">
             {section.title}
           </h2>
           <div className="space-y-1.5">
@@ -242,7 +247,7 @@ export function Sidebar({
                   key={item.href}
                   href={item.href}
                   onClick={closePanel}
-                  className={`group relative flex min-h-10 items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all duration-300 ${
+                  className={`group relative flex min-h-11 items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all duration-300 ${
                     active
                       ? 'border-[#6b90b8]/62 bg-[linear-gradient(128deg,rgba(35,70,112,0.86),rgba(20,41,68,0.9))] text-white shadow-[0_16px_30px_-22px_rgba(243,199,123,0.8)]'
                       : 'border-transparent text-slate-200/92 hover:border-white/12 hover:bg-white/[0.08] hover:text-white'
@@ -359,6 +364,24 @@ export function Sidebar({
             ))}
         </div>
       </div>
+
+      {isSteward ? (
+        <div className="rounded-xl border border-[#d8c9a4]/18 bg-[linear-gradient(145deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-2.5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#f1d3a1]/84">Internal lab</p>
+          <p className="mt-1 text-xs text-slate-300/82">Pattern-bank review and sandbox validation for steward roles.</p>
+          <Link
+            href="/sandbox/ui-lab"
+            onClick={closePanel}
+            className="mt-2 inline-flex w-full items-center justify-between rounded-lg border border-white/10 bg-black/20 px-2.5 py-2 text-xs text-slate-100/88 transition-colors hover:border-white/24 hover:bg-white/10"
+          >
+            <span className="inline-flex items-center gap-2">
+              <FlaskConical className="h-3.5 w-3.5 text-[#f1d3a1]" />
+              <span>Open UI lab</span>
+            </span>
+            <ChevronRight className="h-3.5 w-3.5 text-slate-300/86" />
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 
@@ -403,7 +426,7 @@ export function Sidebar({
 
   return (
     <>
-      {!resolvedPanelOpen ? (
+      {showFloatingToggle && !resolvedPanelOpen ? (
         <button
           onClick={handlePanelToggle}
           className={`fixed left-3 top-3 z-[45] inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/14 bg-[linear-gradient(180deg,rgba(10,21,36,0.92),rgba(10,19,32,0.88))] text-slate-100 shadow-[0_14px_32px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl transition-colors hover:bg-white/10 ${
@@ -553,7 +576,7 @@ export function Sidebar({
                         href={item.href}
                         onClick={closePanel}
                         aria-label={item.label}
-                        className={`inline-flex h-9 w-full items-center justify-center rounded-md border transition-colors ${
+                        className={`inline-flex min-h-11 w-full items-center justify-center rounded-md border transition-colors ${
                           active
                             ? 'border-[#f6b165]/62 bg-white/12 text-[#f6b165]'
                             : 'border-white/10 text-slate-300/80 hover:border-white/24 hover:text-[#f6b165]'

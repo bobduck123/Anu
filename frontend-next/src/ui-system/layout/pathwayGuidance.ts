@@ -25,6 +25,8 @@ export function deriveNavigationMode(pathname: string | null): NavigationMode {
     || pathname.startsWith('/pledges')
     || pathname.startsWith('/dashboard/savings')
     || pathname.startsWith('/organizer')
+    || pathname.startsWith('/admin')
+    || pathname.startsWith('/governance')
   ) {
     return 'tasks';
   }
@@ -69,6 +71,18 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
     };
   }
 
+  if (pathname.startsWith('/sandbox')) {
+    return {
+      title: 'Sandbox review',
+      summary: 'Inspect adapted patterns first, then validate route behavior and map surfaces.',
+      steps: [
+        { href: '/sandbox/ui-lab', label: 'Review UI lab', authRequired: true },
+        { href: '/sandbox/maps', label: 'Check maps sandbox', authRequired: true },
+        { href: '/home', label: 'Return to steward home', authRequired: true },
+      ],
+    };
+  }
+
   if (pathname.startsWith('/cost-lowering') || pathname.startsWith('/runs') || pathname.startsWith('/pledges')) {
     return {
       title: 'Cost-lowering flow',
@@ -89,6 +103,18 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
         { href: '/actions', label: 'Open action board' },
         { href: '/events', label: 'Check event network' },
         { href: '/organizer', label: 'Open organizer cockpit', authRequired: true },
+      ],
+    };
+  }
+
+  if (pathname.startsWith('/admin') || pathname.startsWith('/governance') || pathname.startsWith('/profile')) {
+    return {
+      title: 'Steward systems',
+      summary: 'Review institutional surfaces, then branch into operational or private work.',
+      steps: [
+        { href: '/profile', label: 'Open profile' },
+        { href: '/organizer', label: 'Open organizer cockpit', authRequired: true },
+        { href: '/sandbox/ui-lab', label: 'Review UI lab', authRequired: true },
       ],
     };
   }

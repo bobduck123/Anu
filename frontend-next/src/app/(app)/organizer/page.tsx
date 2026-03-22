@@ -3,6 +3,16 @@
 import { useEffect, useState } from 'react';
 import { api, Article, StoryPost, Action, Event } from '@/lib/api';
 import { Star, Trash2 } from 'lucide-react';
+import {
+  AnuControlButton,
+  AnuFilterBar,
+  AnuFilterGroup,
+  AnuFilterInput,
+  AnuHeroMetric,
+  AnuInstrumentationCard,
+  AnuPageHero,
+  AnuSurfacePanel,
+} from '@/ui-system/anu/surfacePrimitives';
 
 type Tab = 'posts' | 'activities';
 
@@ -85,39 +95,56 @@ export default function OrganizerConsole() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-4xl font-bold mb-6" style={{ fontFamily: 'var(--font-serif)' }}>
-          Organizer Console
-        </h1>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
+        <AnuPageHero
+          eyebrow="Operational observatory"
+          title="Organizer Console"
+          description="Curate posts, stories, actions, and events from a single operational route without dropping the shared ANU shell language."
+        >
+          <div className="grid gap-3 md:grid-cols-4">
+            <AnuHeroMetric label="Articles" value={String(articles.length)} detail="Current community article records." />
+            <AnuHeroMetric label="Stories" value={String(stories.length)} detail="Storytelling entries ready for stewardship review." />
+            <AnuHeroMetric label="Actions" value={String(actions.length)} detail="Active civic actions in the current console scope." />
+            <AnuHeroMetric label="Events" value={String(events.length)} detail="Scheduled events surfaced to organizer workflows." />
+          </div>
+        </AnuPageHero>
 
-        <div className="card-civic mb-6 flex flex-col md:flex-row items-center gap-3">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search titles..."
-            className="w-full md:w-64 px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm"
-          />
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={showFeaturedOnly} onChange={(e) => setShowFeaturedOnly(e.target.checked)} />
-            Featured only
-          </label>
-        </div>
+        <section className="grid gap-4 md:grid-cols-3">
+          <AnuInstrumentationCard label="Scope" value={tab === 'posts' ? 'Posts & Stories' : 'Actions & Events'} detail="Switch between publishing stewardship and field activity management." tone="signal" />
+          <AnuInstrumentationCard label="Search" value={search ? 'Filtered' : 'All titles'} detail={search ? `Current query: ${search}` : 'No search query is currently narrowing the console.'} />
+          <AnuInstrumentationCard label="Featured only" value={showFeaturedOnly ? 'On' : 'Off'} detail="Restrict list results to featured community outputs when needed." />
+        </section>
 
-        <div className="flex gap-2 mb-8">
-          <button onClick={() => setTab('posts')}
-            className={`btn-pill text-sm ${tab === 'posts' ? 'btn-pill-primary' : 'btn-pill-outline'}`}>
-            Posts & Stories
-          </button>
-          <button onClick={() => setTab('activities')}
-            className={`btn-pill text-sm ${tab === 'activities' ? 'btn-pill-primary' : 'btn-pill-outline'}`}>
-            Actions & Events
-          </button>
-        </div>
+        <AnuFilterBar>
+          <AnuFilterGroup className="md:flex-[1.1]">
+            <AnuFilterInput
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search titles..."
+              className="w-full md:max-w-xs"
+            />
+            <AnuControlButton
+              tone={showFeaturedOnly ? 'active' : 'default'}
+              onClick={() => setShowFeaturedOnly((current) => !current)}
+              iconLeft={Star}
+            >
+              Featured only
+            </AnuControlButton>
+          </AnuFilterGroup>
+
+          <AnuFilterGroup className="justify-end md:flex-[0.9]">
+            <AnuControlButton tone={tab === 'posts' ? 'active' : 'default'} onClick={() => setTab('posts')}>
+              Posts & Stories
+            </AnuControlButton>
+            <AnuControlButton tone={tab === 'activities' ? 'active' : 'default'} onClick={() => setTab('activities')}>
+              Actions & Events
+            </AnuControlButton>
+          </AnuFilterGroup>
+        </AnuFilterBar>
 
         {tab === 'posts' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="card-civic">
+            <AnuSurfacePanel tone="soft" className="p-6">
               <h2 className="text-xl font-semibold mb-4">Articles</h2>
               <div className="space-y-3">
                 {articles
@@ -142,9 +169,9 @@ export default function OrganizerConsole() {
                 ))}
                 {articles.length === 0 && <p className="text-sm text-[var(--color-muted-foreground)]">No articles.</p>}
               </div>
-            </div>
+            </AnuSurfacePanel>
 
-            <div className="card-civic">
+            <AnuSurfacePanel tone="quiet" className="p-6">
               <h2 className="text-xl font-semibold mb-4">Stories</h2>
               <div className="space-y-3">
                 {stories
@@ -169,13 +196,13 @@ export default function OrganizerConsole() {
                 ))}
                 {stories.length === 0 && <p className="text-sm text-[var(--color-muted-foreground)]">No stories.</p>}
               </div>
-            </div>
+            </AnuSurfacePanel>
           </div>
         )}
 
         {tab === 'activities' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="card-civic">
+            <AnuSurfacePanel tone="soft" className="p-6">
               <h2 className="text-xl font-semibold mb-4">Actions</h2>
               <div className="space-y-3">
                 {actions
@@ -193,9 +220,9 @@ export default function OrganizerConsole() {
                 ))}
                 {actions.length === 0 && <p className="text-sm text-[var(--color-muted-foreground)]">No actions.</p>}
               </div>
-            </div>
+            </AnuSurfacePanel>
 
-            <div className="card-civic">
+            <AnuSurfacePanel tone="quiet" className="p-6">
               <h2 className="text-xl font-semibold mb-4">Events</h2>
               <div className="space-y-3">
                 {events
@@ -213,7 +240,7 @@ export default function OrganizerConsole() {
                 ))}
                 {events.length === 0 && <p className="text-sm text-[var(--color-muted-foreground)]">No events.</p>}
               </div>
-            </div>
+            </AnuSurfacePanel>
           </div>
         )}
       </div>

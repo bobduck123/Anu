@@ -48,6 +48,41 @@
   --duration-fast: 200ms;
   --duration-slow: 800ms;
   --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Phase 0 ANU token staging */
+  --anu-type-display: var(--font-serif);
+  --anu-type-body: var(--font-sans);
+  --anu-type-data: var(--font-mono);
+  --anu-color-night-950: #08152f;
+  --anu-color-night-900: #0d1e44;
+  --anu-color-night-850: #13294f;
+  --anu-color-parchment-200: #e8dcc4;
+  --anu-color-gold-400: #d8a95f;
+  --anu-color-gold-300: #ebc88a;
+  --anu-color-celestial-400: #7ba1ff;
+  --anu-color-violet-400: #8d74dd;
+  --anu-color-ember-400: #bc645c;
+  --anu-border-soft: rgba(255, 255, 255, 0.12);
+  --anu-border-strong: rgba(216, 169, 95, 0.34);
+  --anu-border-signal: rgba(123, 161, 255, 0.32);
+  --anu-radius-panel: 1.6rem;
+  --anu-radius-card: 1.2rem;
+  --anu-radius-chip: 999px;
+  --anu-shadow-panel: 0 30px 70px -42px rgba(0, 0, 0, 0.92);
+  --anu-shadow-elevated: 0 36px 88px -48px rgba(7, 12, 24, 0.96);
+  --anu-material-shell:
+    radial-gradient(110% 90% at 14% -16%, rgba(123, 161, 255, 0.16), transparent 48%),
+    radial-gradient(84% 74% at 96% 4%, rgba(216, 169, 95, 0.14), transparent 44%),
+    linear-gradient(180deg, rgba(10, 19, 39, 0.98), rgba(8, 15, 29, 0.96));
+  --anu-material-panel:
+    linear-gradient(148deg, rgba(15, 24, 43, 0.9), rgba(10, 18, 31, 0.84));
+  --anu-material-chamber:
+    linear-gradient(150deg, rgba(19, 24, 42, 0.94), rgba(11, 16, 27, 0.88));
+  --anu-motion-quick: 180ms;
+  --anu-motion-base: 280ms;
+  --anu-motion-slow: 520ms;
+  --anu-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --anu-ease-ceremonial: cubic-bezier(0.18, 0.95, 0.28, 1);
 }
 
 @layer base {
@@ -369,6 +404,29 @@
     background-color: var(--color-muted);
   }
 
+  .input-civic {
+    min-height: 2.75rem;
+    border-radius: 0.78rem;
+    border: 1px solid color-mix(in oklab, var(--color-border), #335c9b 12%);
+    background: rgba(8, 18, 34, 0.65);
+    color: var(--color-foreground);
+    padding: 0.62rem 0.82rem;
+    font-size: 0.92rem;
+    line-height: 1.2;
+    transition: border-color 220ms ease, box-shadow 220ms ease, background-color 220ms ease;
+  }
+
+  .input-civic::placeholder {
+    color: color-mix(in oklab, var(--color-muted-foreground), white 8%);
+  }
+
+  .input-civic:focus-visible {
+    outline: none;
+    border-color: color-mix(in oklab, var(--color-ring), white 14%);
+    box-shadow: 0 0 0 3px rgba(95, 144, 246, 0.22);
+    background: rgba(9, 21, 40, 0.78);
+  }
+
   /* Marquee - Annemarie Sauerbier style */
   .marquee-container {
     overflow: hidden;
@@ -424,6 +482,31 @@
     .grid-asymmetric,
     .grid-asymmetric-reverse {
       grid-template-columns: 1fr;
+    }
+
+    .btn-pill {
+      min-height: 2.75rem;
+      padding-inline: 1rem;
+    }
+
+    .card-civic:hover {
+      transform: none;
+      box-shadow: 0 10px 30px -18px rgba(33, 24, 15, 0.22);
+    }
+
+    .manara-glass-panel,
+    .manara-glass-panel-muted,
+    .manara-glass-chip {
+      backdrop-filter: blur(12px);
+    }
+
+    .manara-grid-hero::before {
+      opacity: 0.14;
+      background-size: 68px 68px;
+    }
+
+    .content-wrapper {
+      transition-duration: 420ms;
     }
   }
 
@@ -481,6 +564,394 @@
   .focus-ring:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-institutional);
+  }
+
+  .anu-lab-shell {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--anu-border-soft);
+    background: var(--anu-material-shell);
+    box-shadow: var(--anu-shadow-elevated);
+    isolation: isolate;
+  }
+
+  .anu-lab-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 96px 96px;
+    opacity: 0.16;
+    mask-image: radial-gradient(circle at center, black 30%, transparent 82%);
+  }
+
+  .anu-lab-panel {
+    border: 1px solid var(--anu-border-soft);
+    border-radius: var(--anu-radius-panel);
+    background: var(--anu-material-panel);
+    box-shadow: var(--anu-shadow-panel);
+    backdrop-filter: blur(18px);
+  }
+
+  .anu-lab-kicker {
+    font-size: 0.7rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(235, 200, 138, 0.84);
+  }
+
+  .anu-lab-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 2rem;
+    border-radius: var(--anu-radius-chip);
+    border: 1px solid var(--anu-border-soft);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+    padding: 0.35rem 0.8rem;
+    font-size: 0.75rem;
+    line-height: 1;
+    color: rgba(244, 247, 255, 0.9);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .anu-lab-button {
+    border-radius: 999px;
+    padding-inline: 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition:
+      transform var(--anu-motion-base) var(--anu-ease-standard),
+      border-color var(--anu-motion-base) var(--anu-ease-standard),
+      background-color var(--anu-motion-base) var(--anu-ease-standard);
+  }
+
+  .anu-lab-button:hover {
+    transform: translateY(-1px);
+  }
+
+  .anu-lab-button-primary {
+    border: 1px solid rgba(235, 200, 138, 0.45);
+    background: linear-gradient(135deg, rgba(216, 169, 95, 0.95), rgba(198, 133, 69, 0.84));
+    color: #171820;
+    box-shadow: 0 18px 34px -24px rgba(216, 169, 95, 0.72);
+  }
+
+  .anu-lab-button-secondary {
+    border: 1px solid var(--anu-border-signal);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03));
+    color: rgba(245, 248, 255, 0.94);
+  }
+
+  .anu-lab-preview {
+    display: grid;
+    gap: 0.9rem;
+    border-radius: calc(var(--anu-radius-panel) - 0.15rem);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background:
+      radial-gradient(circle at top left, rgba(123, 161, 255, 0.12), transparent 34%),
+      radial-gradient(circle at bottom right, rgba(216, 169, 95, 0.1), transparent 30%),
+      rgba(9, 15, 27, 0.7);
+    padding: 1rem;
+  }
+
+  .anu-route-hero {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid var(--anu-border-soft);
+    border-radius: calc(var(--anu-radius-panel) + 0.4rem);
+    background:
+      radial-gradient(circle at 16% -8%, rgba(123, 161, 255, 0.18), transparent 40%),
+      radial-gradient(circle at 86% 8%, rgba(216, 169, 95, 0.14), transparent 34%),
+      linear-gradient(148deg, rgba(11, 22, 41, 0.96), rgba(8, 15, 29, 0.94));
+    box-shadow: var(--anu-shadow-elevated);
+    padding: 1.5rem;
+  }
+
+  .anu-route-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 108px 108px;
+    opacity: 0.18;
+    mask-image: radial-gradient(circle at center, black 26%, transparent 82%);
+  }
+
+  .anu-route-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    height: 2px;
+    width: min(32rem, 58%);
+    background: linear-gradient(90deg, rgba(235, 200, 138, 0.84), rgba(123, 161, 255, 0.24), transparent);
+    opacity: 0.9;
+  }
+
+  @media (min-width: 768px) {
+    .anu-route-hero {
+      padding: 2rem;
+    }
+  }
+
+  .anu-surface-panel {
+    position: relative;
+    border: 1px solid var(--anu-border-soft);
+    border-radius: var(--anu-radius-panel);
+    background: var(--anu-material-panel);
+    box-shadow: var(--anu-shadow-panel);
+    backdrop-filter: blur(18px);
+  }
+
+  .anu-surface-panel-soft {
+    border-color: rgba(216, 169, 95, 0.2);
+    background:
+      radial-gradient(circle at 84% 0%, rgba(123, 161, 255, 0.12), transparent 32%),
+      linear-gradient(152deg, rgba(12, 22, 40, 0.9), rgba(9, 16, 28, 0.86));
+  }
+
+  .anu-surface-panel-quiet {
+    border-color: rgba(255, 255, 255, 0.1);
+    background:
+      linear-gradient(150deg, rgba(13, 22, 38, 0.74), rgba(9, 15, 27, 0.68));
+    box-shadow: 0 20px 54px -38px rgba(0, 0, 0, 0.88);
+  }
+
+  .anu-surface-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2rem;
+    border-radius: var(--anu-radius-chip);
+    border: 1px solid var(--anu-border-signal);
+    background: linear-gradient(145deg, rgba(123, 161, 255, 0.16), rgba(255, 255, 255, 0.05));
+    padding: 0.35rem 0.82rem;
+    font-size: 0.76rem;
+    font-weight: 600;
+    line-height: 1;
+    color: rgba(245, 248, 255, 0.94);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .anu-surface-chip-muted {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    color: rgba(229, 235, 247, 0.88);
+  }
+
+  .anu-surface-chip-accent {
+    border-color: var(--anu-border-strong);
+    background: linear-gradient(145deg, rgba(216, 169, 95, 0.22), rgba(255, 255, 255, 0.05));
+    color: rgba(246, 220, 174, 0.98);
+  }
+
+  .anu-action-link {
+    display: inline-flex;
+    min-height: 2.85rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    padding: 0.68rem 1.08rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1;
+    transition:
+      transform var(--anu-motion-base) var(--anu-ease-standard),
+      border-color var(--anu-motion-base) var(--anu-ease-standard),
+      background-color var(--anu-motion-base) var(--anu-ease-standard),
+      box-shadow var(--anu-motion-base) var(--anu-ease-standard);
+  }
+
+  .anu-action-link:hover {
+    transform: translateY(-1px);
+  }
+
+  .anu-action-link-primary {
+    border-color: rgba(235, 200, 138, 0.48);
+    background: linear-gradient(135deg, rgba(216, 169, 95, 0.98), rgba(191, 123, 67, 0.88));
+    color: #161922;
+    box-shadow: 0 18px 34px -24px rgba(216, 169, 95, 0.72);
+  }
+
+  .anu-action-link-secondary {
+    border-color: var(--anu-border-signal);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+    color: rgba(245, 248, 255, 0.96);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .anu-action-link-ghost {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(232, 238, 249, 0.92);
+  }
+
+  .anu-surface-metric {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: calc(var(--anu-radius-card) + 0.15rem);
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    padding: 1rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .anu-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: calc(var(--anu-radius-card) + 0.15rem);
+    background:
+      linear-gradient(140deg, rgba(10, 18, 31, 0.82), rgba(8, 14, 24, 0.76));
+    padding: 0.9rem;
+    box-shadow:
+      0 18px 40px -30px rgba(0, 0, 0, 0.85),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+  }
+
+  .anu-filter-group {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .anu-filter-input {
+    min-height: 2.6rem;
+    min-width: min(100%, 14rem);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 0.65rem 0.95rem;
+    color: rgba(245, 248, 255, 0.95);
+    font-size: 0.86rem;
+    line-height: 1.1;
+    transition:
+      border-color var(--anu-motion-base) var(--anu-ease-standard),
+      background-color var(--anu-motion-base) var(--anu-ease-standard),
+      box-shadow var(--anu-motion-base) var(--anu-ease-standard);
+  }
+
+  .anu-filter-input::placeholder {
+    color: rgba(226, 233, 245, 0.52);
+  }
+
+  .anu-filter-input:focus {
+    outline: none;
+    border-color: rgba(123, 161, 255, 0.44);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 0 1px rgba(123, 161, 255, 0.22);
+  }
+
+  .anu-filter-button {
+    display: inline-flex;
+    min-height: 2.4rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    padding: 0.52rem 0.88rem;
+    color: rgba(236, 241, 249, 0.92);
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1;
+    transition:
+      transform var(--anu-motion-base) var(--anu-ease-standard),
+      border-color var(--anu-motion-base) var(--anu-ease-standard),
+      background-color var(--anu-motion-base) var(--anu-ease-standard),
+      color var(--anu-motion-base) var(--anu-ease-standard);
+  }
+
+  .anu-filter-button:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.22);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+  }
+
+  .anu-filter-button:disabled {
+    cursor: wait;
+    opacity: 0.62;
+    transform: none;
+  }
+
+  .anu-filter-button-active {
+    border-color: rgba(123, 161, 255, 0.4);
+    background: linear-gradient(145deg, rgba(32, 70, 118, 0.94), rgba(16, 38, 67, 0.96));
+    color: #fff;
+    box-shadow: 0 14px 28px -22px rgba(123, 161, 255, 0.56);
+  }
+
+  .anu-filter-button-warning {
+    border-color: rgba(235, 200, 138, 0.3);
+    background: linear-gradient(145deg, rgba(73, 46, 15, 0.7), rgba(40, 26, 8, 0.8));
+    color: rgba(250, 224, 177, 0.98);
+  }
+
+  .anu-instrument-card {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--anu-radius-card);
+    background:
+      linear-gradient(148deg, rgba(12, 20, 35, 0.88), rgba(9, 15, 26, 0.82));
+    padding: 1rem;
+    box-shadow:
+      0 20px 50px -34px rgba(0, 0, 0, 0.9),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .anu-instrument-card-signal {
+    border-color: rgba(123, 161, 255, 0.26);
+    background:
+      radial-gradient(circle at 86% 0%, rgba(123, 161, 255, 0.14), transparent 30%),
+      linear-gradient(148deg, rgba(12, 20, 35, 0.88), rgba(9, 15, 26, 0.82));
+  }
+
+  .anu-instrument-card-warning {
+    border-color: rgba(235, 200, 138, 0.24);
+    background:
+      radial-gradient(circle at 86% 0%, rgba(216, 169, 95, 0.12), transparent 28%),
+      linear-gradient(148deg, rgba(23, 18, 12, 0.92), rgba(16, 12, 9, 0.84));
+  }
+
+  .anu-chamber-card {
+    border: 1px solid rgba(141, 116, 221, 0.22);
+    border-radius: var(--anu-radius-panel);
+    background:
+      radial-gradient(circle at 92% 8%, rgba(141, 116, 221, 0.12), transparent 30%),
+      linear-gradient(150deg, rgba(18, 23, 40, 0.96), rgba(10, 15, 26, 0.9));
+    padding: 1.25rem;
+    box-shadow:
+      0 26px 64px -42px rgba(0, 0, 0, 0.9),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .anu-chamber-card-affirmed {
+    border-color: rgba(95, 171, 122, 0.24);
+    background:
+      radial-gradient(circle at 92% 8%, rgba(95, 171, 122, 0.12), transparent 30%),
+      linear-gradient(150deg, rgba(17, 30, 27, 0.94), rgba(11, 18, 17, 0.9));
+  }
+
+  .anu-chamber-card-alert {
+    border-color: rgba(216, 169, 95, 0.24);
+    background:
+      radial-gradient(circle at 92% 8%, rgba(216, 169, 95, 0.14), transparent 30%),
+      linear-gradient(150deg, rgba(32, 23, 15, 0.96), rgba(18, 13, 11, 0.92));
   }
 }
 

@@ -1,12 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, Users } from 'lucide-react';
 import { apiFetch } from '@/lib/api/client';
-import { Card } from '@/ui-system/primitives/Card';
-import { Button } from '@/ui-system/primitives/Button';
 import { LoadingState } from '@/ui-system/states/LoadingState';
+import {
+  AnuChamberCard,
+  AnuChip,
+  AnuControlButton,
+  AnuPageHero,
+  AnuSurfacePanel,
+} from '@/ui-system/anu/surfacePrimitives';
 
 interface MicrocosmOption {
   id: number;
@@ -24,98 +29,138 @@ export default function JoinMicrocosmPage() {
   const [selected, setSelected] = useState<MicrocosmOption | null>(null);
   const [step, setStep] = useState<Step>('browse');
   const [joining, setJoining] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await apiFetch<{ microcosms: MicrocosmOption[] }>('/api/hell/microcosms');
         setMicrocosms(res.microcosms || []);
-      } catch { /* ignore */ }
-      finally { setLoading(false); }
+      } catch {
+        setErrorMessage('Microcosms could not be loaded right now.');
+      } finally {
+        setLoading(false);
+      }
     };
-    load();
+    void load();
   }, []);
 
   const handleJoin = async () => {
     if (!selected) return;
     setJoining(true);
+    setErrorMessage(null);
     try {
       await apiFetch(`/api/hell/microcosms/${selected.id}/join`, { method: 'POST' });
       router.push(`/community/microcosms/${selected.id}`);
     } catch {
-      alert('Failed to join microcosm.');
+      setErrorMessage('Failed to join microcosm.');
     } finally {
       setJoining(false);
     }
   };
 
-  if (loading) return <LoadingState fullPage message="Loading microcosms..." />;
+  if (loading) {
+    return <LoadingState fullPage message="Loading microcosms..." />;
+  }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-serif)' }}>Join a Microcosm</h1>
-      <p className="text-[var(--color-muted-foreground)] mb-8">Find a community group that matches your interests.</p>
-
-      {/* Progress */}
-      <div className="flex items-center gap-4 mb-8">
-        {(['browse', 'confirm'] as Step[]).map((s, i) => (
-          <div key={s} className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              step === s ? 'bg-[var(--color-primary)] text-white' : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)]'
-            }`}>
-              {i + 1}
+    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+      <AnuPageHero
+        eyebrow="Microcosm entry"
+        title="Join a microcosm"
+        description="Microcosms are local chambers inside the commons. The join flow should feel intentional and place-aware, not like a generic group picker."
+        aside={
+          <AnuSurfacePanel tone="quiet" className="h-full">
+            <div className="flex flex-wrap gap-2">
+              <AnuChip tone={step === 'browse' ? 'signal' : 'muted'}>1. Choose</AnuChip>
+              <AnuChip tone={step === 'confirm' ? 'accent' : 'muted'}>2. Confirm</AnuChip>
             </div>
-            <span className={`text-sm ${step === s ? 'font-medium' : 'text-[var(--color-muted-foreground)]'}`}>
-              {s === 'browse' ? 'Choose' : 'Confirm'}
-            </span>
-            {i < 1 && <ArrowRight className="w-4 h-4 text-[var(--color-muted-foreground)]" />}
-          </div>
-        ))}
-      </div>
+            <p className="mt-4 text-sm leading-6 text-slate-300/84">
+              Select the local chamber first, then confirm membership once the place feels right.
+            </p>
+          </AnuSurfacePanel>
+        }
+      />
 
-      {step === 'browse' && (
-        <div className="space-y-3">
-          {microcosms.map((m) => (
-            <Card
-              key={m.id}
-              padding="md"
-              hover
-              className={`cursor-pointer ${selected?.id === m.id ? 'ring-2 ring-[var(--color-primary)]' : ''}`}
-              onClick={() => setSelected(m)}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold">{m.name}</h3>
-                  {m.description && <p className="text-sm text-[var(--color-muted-foreground)]">{m.description}</p>}
-                </div>
-                {selected?.id === m.id && <CheckCircle className="w-5 h-5 text-[var(--color-primary)]" />}
-              </div>
-            </Card>
-          ))}
-          <Button
-            variant="primary"
-            disabled={!selected}
-            onClick={() => setStep('confirm')}
-            iconRight={ArrowRight}
-          >
-            Continue
-          </Button>
+      {errorMessage ? (
+        <div className="mt-6 rounded-2xl border border-[rgba(216,169,95,0.22)] bg-[rgba(216,169,95,0.08)] px-4 py-3 text-sm text-[#f4dbc2]">
+          {errorMessage}
         </div>
-      )}
+      ) : null}
 
-      {step === 'confirm' && selected && (
-        <Card padding="lg">
-          <h2 className="text-xl font-bold mb-4" style={{ fontFamily: 'var(--font-serif)' }}>Confirm Membership</h2>
-          <p className="mb-2">You&apos;re about to join <strong>{selected.name}</strong>.</p>
-          {selected.description && (
-            <p className="text-sm text-[var(--color-muted-foreground)] mb-6">{selected.description}</p>
+      {step === 'browse' ? (
+        <div className="mt-8 grid gap-4">
+          {microcosms.length ? (
+            microcosms.map((microcosm) => (
+              <AnuChamberCard
+                key={microcosm.id}
+                eyebrow="Microcosm"
+                title={microcosm.name}
+                description={microcosm.description || 'No description yet.'}
+                tone={selected?.id === microcosm.id ? 'affirmed' : 'default'}
+                action={
+                  microcosm.member_count ? (
+                    <AnuChip tone="muted">{microcosm.member_count} members</AnuChip>
+                  ) : null
+                }
+              >
+                <div className="mt-1 flex justify-end">
+                  <AnuControlButton
+                    onClick={() => setSelected(microcosm)}
+                    tone={selected?.id === microcosm.id ? 'active' : 'default'}
+                  >
+                    {selected?.id === microcosm.id ? 'Selected' : 'Select'}
+                  </AnuControlButton>
+                </div>
+              </AnuChamberCard>
+            ))
+          ) : (
+            <AnuChamberCard
+              eyebrow="No chambers"
+              title="No microcosms available yet"
+              description="Local chambers have not been opened yet. Return to the commons and try again later."
+            >
+              <div className="mt-1 flex justify-end">
+                <AnuControlButton onClick={() => router.push('/community')} tone="default">
+                  Return to community
+                </AnuControlButton>
+              </div>
+            </AnuChamberCard>
           )}
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setStep('browse')} icon={ArrowLeft}>Back</Button>
-            <Button variant="primary" loading={joining} onClick={handleJoin} icon={Users}>Join Microcosm</Button>
+
+          <div className="flex justify-end">
+            <AnuControlButton
+              onClick={() => setStep('confirm')}
+              disabled={!selected}
+              tone="active"
+              iconRight={ArrowRight}
+            >
+              Continue
+            </AnuControlButton>
           </div>
-        </Card>
-      )}
+        </div>
+      ) : null}
+
+      {step === 'confirm' && selected ? (
+        <div className="mt-8">
+          <AnuChamberCard
+            eyebrow="Confirmation"
+            title={`Join ${selected.name}`}
+            description={selected.description || 'Confirm this chamber before joining.'}
+            tone="affirmed"
+            action={<AnuChip tone="signal" icon={CheckCircle}>Ready</AnuChip>}
+          >
+            <div className="flex flex-wrap gap-3">
+              <AnuControlButton onClick={() => setStep('browse')} tone="default" iconLeft={ArrowLeft}>
+                Back
+              </AnuControlButton>
+              <AnuControlButton onClick={() => void handleJoin()} tone="active" iconLeft={Users} disabled={joining}>
+                {joining ? 'Joining...' : 'Join microcosm'}
+              </AnuControlButton>
+            </div>
+          </AnuChamberCard>
+        </div>
+      ) : null}
     </div>
   );
 }

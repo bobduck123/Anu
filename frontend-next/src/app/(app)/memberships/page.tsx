@@ -1,10 +1,29 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { membershipsApi, MembershipPlan, SubscriptionStatus } from '@/lib/api/endpoints';
-import { CreditCard, Check, Flame, Loader2, Star, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import {
+  AnuChip,
+  AnuControlButton,
+  AnuControlLink,
+  AnuHeroMetric,
+  AnuInstrumentationCard,
+  AnuPageHero,
+  AnuSectionHeading,
+  AnuSurfacePanel,
+} from '@/ui-system/anu/surfacePrimitives';
+import {
+  ArrowRight,
+  Check,
+  CreditCard,
+  Flame,
+  Leaf,
+  Loader2,
+  ShieldCheck,
+  Sparkles,
+  Star,
+} from 'lucide-react';
 
 const tierMeta: Record<string, { accent: string; badge: string }> = {
   Seed: { accent: 'var(--color-sage)', badge: 'Starter' },
@@ -44,7 +63,46 @@ const FALLBACK_STATUS: SubscriptionStatus = {
   subscription: null,
 };
 
-const BLOCKED_SUBSCRIPTION_STATUSES = new Set(['pending', 'active', 'trialing', 'past_due', 'unpaid', 'incomplete']);
+const BLOCKED_SUBSCRIPTION_STATUSES = new Set([
+  'pending',
+  'active',
+  'trialing',
+  'past_due',
+  'unpaid',
+  'incomplete',
+]);
+
+function formatSubscriptionLabel(status: string | null): string {
+  if (!status) {
+    return 'No active plan';
+  }
+
+  return status
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function MembershipNotice({
+  label,
+  children,
+  tone = 'muted',
+}: {
+  label: string;
+  children: string;
+  tone?: 'muted' | 'accent' | 'signal';
+}) {
+  return (
+    <AnuSurfacePanel tone="soft" className="mt-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <AnuChip tone={tone}>{label}</AnuChip>
+          <p className="mt-3 text-sm leading-6 text-slate-300/84">{children}</p>
+        </div>
+      </div>
+    </AnuSurfacePanel>
+  );
+}
 
 export default function MembershipsPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -55,8 +113,11 @@ export default function MembershipsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [subscribing, setSubscribing] = useState<number | null>(null);
+
   const subscriptionStatus = status?.subscription?.status || null;
-  const hasGuardedSubscription = subscriptionStatus ? BLOCKED_SUBSCRIPTION_STATUSES.has(subscriptionStatus) : false;
+  const hasGuardedSubscription = subscriptionStatus
+    ? BLOCKED_SUBSCRIPTION_STATUSES.has(subscriptionStatus)
+    : false;
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -130,262 +191,273 @@ export default function MembershipsPage() {
     }
   };
 
+  const activePlan = useMemo(
+    () => plans.find((plan) => plan.id === status?.subscription?.plan_id) || null,
+    [plans, status?.subscription?.plan_id],
+  );
+
+  const membershipStateValue = !isAuthenticated
+    ? 'Public browse'
+    : status?.is_subscribed
+      ? activePlan?.name || 'Active'
+      : formatSubscriptionLabel(subscriptionStatus);
+
+  const streakValue = status?.subscription?.streak_months || 0;
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
-      <div className="max-w-6xl mx-auto px-4 md:px-8 pt-28 pb-20">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <span className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-institutional)] mb-3">
-            <CreditCard className="w-4 h-4" />
-            Memberships
-          </span>
-          <h1
-            className="text-3xl md:text-5xl font-semibold text-[var(--color-earth-dark)] mb-4"
-            style={{ fontFamily: 'var(--font-serif)' }}
-          >
-            Sustain the Commons
-          </h1>
-          <p className="text-lg text-[var(--color-earth-medium)] max-w-2xl mx-auto">
-            Choose a plan that funds community-led relief, learning, and care.
-            Every dollar is transparent.
-          </p>
-        </div>
-
-        {/* Active Subscription Banner */}
-        {status?.is_subscribed && (
-          <div
-            className="rounded-xl p-6 mb-10 border"
-            style={{
-              backgroundColor: 'var(--color-sage-light)',
-              borderColor: 'var(--color-sage)',
-            }}
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: 'var(--color-sage)' }}
-                >
-                  <Check className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="font-semibold text-[var(--color-earth-dark)]">
-                    Active Subscription
-                  </p>
-                  <p className="text-sm text-[var(--color-earth-medium)]">
-                    Status: {status.subscription?.status}
-                    {' · '}
-                    <Flame className="w-3.5 h-3.5 inline text-[var(--color-accent)]" />
-                    {' '}{status.subscription?.streak_months || 0} month streak
-                  </p>
-                </div>
+      <div className="mx-auto max-w-6xl px-4 pb-20 pt-28 md:px-8">
+        <AnuPageHero
+          eyebrow="Commons memberships"
+          title="Sustain the Commons"
+          description="Choose a membership that funds community-led relief, learning, and care. The route stays public, the ledger stays legible, and checkout stays securely off-platform until Stripe hands control back."
+          actions={
+            <>
+              {isAuthenticated ? (
+                <AnuControlLink href="/impact" tone="active" iconRight={ArrowRight}>
+                  View impact ledger
+                </AnuControlLink>
+              ) : (
+                <AnuControlLink href={authHref} tone="active" iconRight={ArrowRight}>
+                  Sign in to begin
+                </AnuControlLink>
+              )}
+              <AnuControlLink href="/transparency" tone="default" iconRight={ArrowRight}>
+                Open transparency
+              </AnuControlLink>
+            </>
+          }
+          aside={
+            <AnuSurfacePanel tone="quiet" className="h-full">
+              <div className="flex flex-wrap gap-2">
+                <AnuChip tone="signal" icon={ShieldCheck}>
+                  Secure checkout
+                </AnuChip>
+                <AnuChip tone="muted" icon={Sparkles}>
+                  Transparent contribution trail
+                </AnuChip>
               </div>
-              <Link
-                href="/impact"
-                className="btn-pill btn-pill-outline text-sm"
-              >
-                View Impact
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-            </div>
+              <p className="mt-4 text-sm leading-6 text-slate-300/84">
+                Memberships are public to evaluate, but checkout and account state stay guarded.
+                This route should explain the covenant clearly before anyone commits.
+              </p>
+            </AnuSurfacePanel>
+          }
+        >
+          <div className="grid gap-4 md:grid-cols-3">
+            <AnuHeroMetric
+              label="Plans live"
+              value={loading ? 'Loading' : String(plans.length)}
+              detail="Three tiers fund different levels of recurring commons support."
+            />
+            <AnuHeroMetric
+              label="Membership state"
+              value={membershipStateValue}
+              detail={
+                isAuthenticated
+                  ? 'Signed-in members can start checkout or manage an existing covenant.'
+                  : 'Browse first, then sign in when you are ready to start secure checkout.'
+              }
+            />
+            <AnuHeroMetric
+              label="Checkout path"
+              value={isAuthenticated ? 'Ready' : 'Sign-in gated'}
+              detail="Stripe handles payment collection. ANU only receives the resulting subscription state."
+            />
           </div>
-        )}
+        </AnuPageHero>
 
-        {error && (
-          <div className="p-4 rounded-xl bg-[var(--color-accent-light)] border border-[var(--color-accent)] mb-8">
-            <p className="text-sm text-[var(--color-accent)]">{error}</p>
-          </div>
-        )}
+        {status?.is_subscribed ? (
+          <MembershipNotice label="Active membership" tone="signal">
+            {`Current plan ${activePlan?.name || 'membership'} with ${formatSubscriptionLabel(subscriptionStatus)} status and ${streakValue} month streak.`}
+          </MembershipNotice>
+        ) : null}
 
-        {checkoutNotice === 'success' && (
-          <div className="p-4 rounded-xl border mb-8" style={{ backgroundColor: 'var(--color-sage-light)', borderColor: 'var(--color-sage)' }}>
-            <p className="text-sm text-[var(--color-earth-dark)]">
-              Checkout received. Your membership will appear here as soon as payment confirmation finishes syncing.
-            </p>
-          </div>
-        )}
+        {error ? (
+          <MembershipNotice label="Membership surface degraded" tone="accent">
+            {error}
+          </MembershipNotice>
+        ) : null}
 
-        {checkoutNotice === 'canceled' && (
-          <div className="p-4 rounded-xl border mb-8" style={{ backgroundColor: 'var(--color-muted)', borderColor: 'var(--color-border)' }}>
-            <p className="text-sm text-[var(--color-earth-medium)]">
-              Checkout was canceled. No charge was made, and you can choose a plan whenever you&apos;re ready.
-            </p>
-          </div>
-        )}
+        {checkoutNotice === 'success' ? (
+          <MembershipNotice label="Checkout syncing" tone="signal">
+            Checkout returned successfully. Your membership will appear here as soon as payment confirmation finishes syncing.
+          </MembershipNotice>
+        ) : null}
 
-        {subscriptionStatus === 'pending' && checkoutNotice !== 'success' && (
-          <div className="p-4 rounded-xl border mb-8" style={{ backgroundColor: 'var(--color-sage-light)', borderColor: 'var(--color-sage)' }}>
-            <p className="text-sm text-[var(--color-earth-dark)]">
-              Your membership checkout is still processing. We&apos;ll unlock the active subscription view after payment confirmation lands.
-            </p>
-          </div>
-        )}
+        {checkoutNotice === 'canceled' ? (
+          <MembershipNotice label="Checkout canceled">
+            Checkout was canceled. No charge was made, and you can choose a plan whenever you are ready.
+          </MembershipNotice>
+        ) : null}
 
-        {(subscriptionStatus === 'past_due' || subscriptionStatus === 'unpaid') && (
-          <div className="p-4 rounded-xl border mb-8" style={{ backgroundColor: 'var(--color-accent-light)', borderColor: 'var(--color-accent)' }}>
-            <p className="text-sm text-[var(--color-accent)]">
-              Your current membership needs payment attention before you can start another plan.
-            </p>
-          </div>
-        )}
+        {subscriptionStatus === 'pending' && checkoutNotice !== 'success' ? (
+          <MembershipNotice label="Processing membership" tone="signal">
+            Your membership checkout is still processing. The active view will unlock after payment confirmation lands.
+          </MembershipNotice>
+        ) : null}
 
-        {!isAuthenticated && !authLoading && (
-          <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] mb-8">
-            <p className="text-sm text-[var(--color-earth-medium)]">
-              Plans are public. Sign in when you&rsquo;re ready to start secure checkout and track your membership.
-            </p>
-          </div>
-        )}
+        {(subscriptionStatus === 'past_due' || subscriptionStatus === 'unpaid') ? (
+          <MembershipNotice label="Payment attention required" tone="accent">
+            Your current membership needs payment attention before you can start another plan.
+          </MembershipNotice>
+        ) : null}
 
-        {/* Plan Cards */}
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-6 h-6 animate-spin text-[var(--color-institutional)]" />
-          </div>
-        ) : plans.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {plans.map((plan, index) => {
-              const meta = tierMeta[plan.name] || {
-                accent: 'var(--color-sage)',
-                badge: 'Plan',
-              };
-              const price = (plan.amount_cents / 100).toFixed(2);
-              const isPopular = index === 1;
+        {!isAuthenticated && !authLoading ? (
+          <MembershipNotice label="Public preview">
+            Plans are public. Sign in when you are ready to start secure checkout and track your membership.
+          </MembershipNotice>
+        ) : null}
 
-              return (
-                <div
-                  key={plan.id}
-                  className={`card-civic relative flex flex-col ${
-                    isPopular ? 'ring-2' : ''
-                  }`}
-                  style={isPopular ? { borderColor: meta.accent, boxShadow: `0 0 0 2px ${meta.accent}` } : undefined}
-                >
-                  {isPopular && (
-                    <div
-                      className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-semibold text-white px-3 py-1 rounded-full"
-                      style={{ backgroundColor: meta.accent }}
-                    >
-                      <Star className="w-3 h-3 inline mr-1" />
-                      Most Popular
-                    </div>
-                  )}
-
-                  {/* Tier badge */}
-                  <span
-                    className="text-xs font-medium uppercase tracking-wider px-2.5 py-1 rounded-full w-fit mb-4"
-                    style={{
-                      backgroundColor: meta.accent + '15',
-                      color: meta.accent,
-                    }}
-                  >
-                    {meta.badge}
-                  </span>
-
-                  <h2
-                    className="text-2xl font-semibold text-[var(--color-earth-dark)] mb-2"
-                    style={{ fontFamily: 'var(--font-serif)' }}
-                  >
-                    {plan.name}
-                  </h2>
-
-                  {/* Price */}
-                  <div className="flex items-baseline gap-1 mb-4">
-                    <span className="text-3xl font-semibold text-[var(--color-earth-dark)] font-mono-data">
-                      ${price}
-                    </span>
-                    <span className="text-sm text-[var(--color-earth-medium)]">/month</span>
-                  </div>
-
-                  {/* Features */}
-                  <div className="space-y-3 mb-6 flex-1">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Check className="w-4 h-4 flex-shrink-0" style={{ color: meta.accent }} />
-                      <span className="text-[var(--color-earth-dark)]">
-                        {plan.credit_grant_monthly} impact credits/month
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Check className="w-4 h-4 flex-shrink-0" style={{ color: meta.accent }} />
-                      <span className="text-[var(--color-earth-dark)]">
-                        Pool allocation included
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Check className="w-4 h-4 flex-shrink-0" style={{ color: meta.accent }} />
-                      <span className="text-[var(--color-earth-dark)]">
-                        Streak bonus multiplier
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Check className="w-4 h-4 flex-shrink-0" style={{ color: meta.accent }} />
-                      <span className="text-[var(--color-earth-dark)]">
-                        Transparent ledger access
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Subscribe button */}
-                  {isAuthenticated ? (
-                    hasGuardedSubscription ? (
-                      status?.is_subscribed ? (
-                        <Link
-                          href="/impact"
-                          className="btn-pill w-full justify-center text-center text-white"
-                          style={{ backgroundColor: meta.accent }}
-                        >
-                          View impact
-                        </Link>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled
-                          className="btn-pill w-full justify-center text-white opacity-80 cursor-not-allowed"
-                          style={{ backgroundColor: meta.accent }}
-                        >
-                          {subscriptionStatus === 'pending' || subscriptionStatus === 'incomplete' ? 'Checkout pending' : 'Resolve current plan'}
-                        </button>
-                      )
-                    ) : (
-                      <button
-                        onClick={() => subscribe(plan.id)}
-                        disabled={subscribing !== null}
-                        className="btn-pill w-full justify-center text-white"
-                        style={{ backgroundColor: meta.accent }}
-                      >
-                        {subscribing === plan.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        ) : null}
-                        {subscribing === plan.id ? 'Redirecting...' : 'Subscribe'}
-                      </button>
-                    )
-                  ) : (
-                    <Link
-                      href={authHref}
-                      className="btn-pill w-full justify-center text-center text-white"
-                      style={{ backgroundColor: meta.accent }}
-                    >
-                      Sign in to subscribe
-                    </Link>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="card-civic text-center py-10">
-            <p className="text-[var(--color-earth-medium)]">
-              No plans configured yet. Check back soon.
-            </p>
-          </div>
-        )}
-
-        {/* Privacy footer */}
-        <div className="mt-10 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)]">
-          <p className="text-sm text-[var(--color-earth-medium)] text-center">
-            <strong>Secure checkout</strong> powered by Stripe. Your payment information
-            is never stored on our servers.
-          </p>
+        <div className="mt-10 grid gap-4 lg:grid-cols-3">
+          <AnuInstrumentationCard
+            label="Transparent impact"
+            value={status?.is_subscribed ? 'Live' : 'Open'}
+            detail="Every plan points members back toward impact and transparency surfaces instead of hiding the public ledger."
+            icon={Flame}
+            tone="signal"
+          />
+          <AnuInstrumentationCard
+            label="Contribution cadence"
+            value={plans.length ? `${plans[0]?.credit_grant_monthly || 0}-${plans[plans.length - 1]?.credit_grant_monthly || 0}` : '0'}
+            detail="Monthly impact credits scale from the first tier upward without changing the route language."
+            icon={Leaf}
+          />
+          <AnuInstrumentationCard
+            label="Accountability mode"
+            value={status?.is_subscribed ? `${streakValue} month streak` : 'Ready to begin'}
+            detail="Members keep a visible streak and status state once checkout has been confirmed."
+            icon={CreditCard}
+            tone={status?.is_subscribed ? 'signal' : 'steady'}
+          />
         </div>
+
+        <section className="mt-12">
+          <AnuSectionHeading
+            eyebrow="Contribution tiers"
+            title="Choose a covenant"
+            description="The plan cards now share the same ANU panel language as the rest of the shell, while keeping the membership decision clear and operational."
+          />
+
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-6 w-6 animate-spin text-[var(--color-institutional)]" />
+            </div>
+          ) : plans.length > 0 ? (
+            <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {plans.map((plan, index) => {
+                const meta = tierMeta[plan.name] || {
+                  accent: 'var(--color-sage)',
+                  badge: 'Plan',
+                };
+                const price = (plan.amount_cents / 100).toFixed(2);
+                const isPopular = index === 1;
+
+                return (
+                  <AnuSurfacePanel
+                    key={plan.id}
+                    tone={isPopular ? 'shell' : 'soft'}
+                    className="relative flex h-full flex-col overflow-hidden"
+                  >
+                    <div
+                      className="absolute inset-x-8 top-0 h-px"
+                      style={{ background: `linear-gradient(90deg, transparent, ${meta.accent}, transparent)` }}
+                    />
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex flex-wrap gap-2">
+                        <AnuChip tone={isPopular ? 'accent' : 'muted'} icon={isPopular ? Star : Leaf}>
+                          {isPopular ? 'Most chosen' : meta.badge}
+                        </AnuChip>
+                        <span
+                          className="inline-flex items-center rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.16em]"
+                          style={{ borderColor: `${meta.accent}55`, color: meta.accent }}
+                        >
+                          {plan.pool_allocation_pct || 'Pooled'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <h2
+                      className="mt-6 text-3xl text-white"
+                      style={{ fontFamily: 'var(--anu-type-display)' }}
+                    >
+                      {plan.name}
+                    </h2>
+
+                    <div className="mt-4 flex items-baseline gap-2">
+                      <span className="text-4xl font-semibold text-white font-mono-data">${price}</span>
+                      <span className="text-sm text-slate-400">per month</span>
+                    </div>
+
+                    <div className="mt-6 space-y-3 text-sm text-slate-200/84">
+                      <div className="flex items-center gap-2">
+                        <Check className="h-4 w-4 flex-shrink-0" style={{ color: meta.accent }} />
+                        <span>{plan.credit_grant_monthly} impact credits each month</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="h-4 w-4 flex-shrink-0" style={{ color: meta.accent }} />
+                        <span>Pool allocation included in the plan covenant</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="h-4 w-4 flex-shrink-0" style={{ color: meta.accent }} />
+                        <span>Streak bonuses reward steady support over time</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="h-4 w-4 flex-shrink-0" style={{ color: meta.accent }} />
+                        <span>Transparency and impact routes stay visible after signup</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-8 pt-2">
+                      {isAuthenticated ? (
+                        hasGuardedSubscription ? (
+                          status?.is_subscribed ? (
+                            <AnuControlLink href="/impact" tone="active" iconRight={ArrowRight} className="w-full justify-center">
+                              View impact
+                            </AnuControlLink>
+                          ) : (
+                            <AnuControlButton tone="warning" disabled className="w-full justify-center">
+                              {subscriptionStatus === 'pending' || subscriptionStatus === 'incomplete'
+                                ? 'Checkout pending'
+                                : 'Resolve current plan'}
+                            </AnuControlButton>
+                          )
+                        ) : (
+                          <AnuControlButton
+                            onClick={() => void subscribe(plan.id)}
+                            disabled={subscribing !== null}
+                            tone={isPopular ? 'active' : 'default'}
+                            className="w-full justify-center"
+                          >
+                            {subscribing === plan.id ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            {subscribing === plan.id ? 'Redirecting...' : 'Subscribe'}
+                          </AnuControlButton>
+                        )
+                      ) : (
+                        <AnuControlLink href={authHref} tone={isPopular ? 'active' : 'default'} iconRight={ArrowRight} className="w-full justify-center">
+                          Sign in to subscribe
+                        </AnuControlLink>
+                      )}
+                    </div>
+                  </AnuSurfacePanel>
+                );
+              })}
+            </div>
+          ) : (
+            <AnuSurfacePanel tone="soft" className="mt-8 text-center">
+              <p className="text-sm text-slate-300/82">No plans are configured yet. Check back soon.</p>
+            </AnuSurfacePanel>
+          )}
+        </section>
+
+        <AnuSurfacePanel tone="quiet" className="mt-10 text-center">
+          <p className="text-sm text-slate-300/82">
+            <strong className="text-white">Secure checkout.</strong> Stripe collects payment details off-platform,
+            and ANU stores only the resulting subscription state needed to operate the commons.
+          </p>
+        </AnuSurfacePanel>
       </div>
     </div>
   );
