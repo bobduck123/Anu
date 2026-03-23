@@ -2,6 +2,7 @@ export const MANARA_BASE_PATH = '/manara';
 export const LEGACY_MANARA_BASE_PATH = '/flora-fauna';
 
 export const brand = {
+  semanticKey: 'manara',
   name: 'Manara',
   legacyName: 'Flora Fauna',
   longName: 'Manara Civic Commons',
@@ -28,6 +29,10 @@ export const brand = {
   wishlistHostLabel: 'Hosted by Manara',
   privacyLine:
     'Manara is built for high-trust civic coordination, with minimal public profile exposure.',
+  civicFrame:
+    'A beacon commons for mutual aid, stewardship, contribution, and local sovereignty.',
+  thresholdLine:
+    'Witnesses read public truth, participants enter the commons, contributors sustain it, and stewards hold institutional responsibility.',
   dumbDumbSupportLine:
     'Creator tools use your existing Manara account and node pools.',
 };

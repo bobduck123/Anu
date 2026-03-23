@@ -14,6 +14,12 @@ describe('mobile dock model', () => {
     expect(links.map((link) => link.href)).toEqual(['/home', '/transparency', '/docs', '/auth']);
   });
 
+  it('returns celestial links for constellation routes', () => {
+    const links = getMobileDockLinks('/constellations', true, false);
+
+    expect(links.map((link) => link.href)).toEqual(['/community', '/constellations', '/impact', '/profile']);
+  });
+
   it('returns default commons links for general routes', () => {
     const links = getMobileDockLinks('/home', true, false);
 

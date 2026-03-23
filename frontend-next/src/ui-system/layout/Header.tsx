@@ -18,6 +18,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from './TenantBrandWrapper';
 import { ThemeToggle } from '../ThemeToggle';
 import { getShellSignal } from './shellSignals';
+import { getTenantSemantics, getThresholdState } from '@/lib/tenantSemantics';
+import { getRealmSurface } from '@/ui-system/realms/realmRegistry';
 
 export interface HeaderProps {
   onMenuToggle: () => void;
@@ -25,8 +27,6 @@ export interface HeaderProps {
   showMenuToggleDesktop?: boolean;
   desktopOffset?: boolean;
 }
-
-const stewardRoles = new Set(['organizer', 'node_admin', 'platform_admin', 'board_member', 'treasury_guardian']);
 
 export function Header({
   onMenuToggle,
@@ -41,7 +41,13 @@ export function Header({
   const homeHref = isAuthenticated ? '/home' : '/';
 
   const shellSignal = useMemo(() => getShellSignal(pathname), [pathname]);
-  const isSteward = user ? stewardRoles.has(user.role) : false;
+  const realmSurface = useMemo(() => getRealmSurface(pathname), [pathname]);
+  const tenantSemantics = useMemo(() => getTenantSemantics(tenant), [tenant]);
+  const thresholdState = useMemo(
+    () => getThresholdState(user?.role, isAuthenticated, tenant),
+    [isAuthenticated, tenant, user?.role],
+  );
+  const isSteward = thresholdState.current.key === 'steward';
   const isSandboxRoute = pathname?.startsWith('/sandbox');
 
   const profileLinks = [
@@ -61,13 +67,15 @@ export function Header({
   ];
 
   const SignalIcon = shellSignal.icon;
-  const doorwayLabel = isAuthenticated ? (isSteward ? 'Private doorway' : 'Member doorway') : 'Entry doorway';
+  const doorwayLabel = `${thresholdState.current.label} threshold`;
 
   return (
     <header
       className={`manara-grid-hero fixed right-0 top-0 z-40 h-16 border-b border-white/10 bg-[linear-gradient(102deg,rgba(9,22,38,0.92)_0%,rgba(11,29,50,0.9)_52%,rgba(9,22,39,0.94)_100%)] text-slate-100 shadow-[0_18px_42px_-30px_rgba(4,8,14,0.9)] backdrop-blur-2xl ${
         desktopOffset ? 'left-0 md:left-[88px]' : 'left-0'
       }`}
+      data-realm={realmSurface.realm}
+      data-realm-strength={realmSurface.strength}
     >
       <div className="relative h-full px-3 md:px-4 lg:px-6">
         <span className="pointer-events-none absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-[#f1c57a]/75 to-transparent" />
@@ -97,7 +105,9 @@ export function Header({
                 <span className="block text-[1.16rem] font-semibold tracking-tight text-white" style={{ fontFamily: 'var(--font-serif)' }}>
                   {tenant.name}
                 </span>
-                <span className="hidden xl:block text-[10px] uppercase tracking-[0.26em] text-[#ead1ad]/85">Institution beacon</span>
+                <span className="hidden xl:block text-[10px] uppercase tracking-[0.26em] text-[#ead1ad]/85">
+                  {tenantSemantics.shellDescriptor}
+                </span>
               </div>
             </Link>
           </div>
@@ -111,6 +121,12 @@ export function Header({
                 <p className="text-[10px] uppercase tracking-[0.2em] text-slate-300/82">{shellSignal.eyebrow}</p>
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="truncate text-sm font-semibold text-white">{shellSignal.label}</span>
+                  <span className="rounded-full border border-[#f1c57a]/18 bg-[#f1c57a]/8 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-[#f4d2a0]">
+                    {realmSurface.environmentTitle}
+                  </span>
+                  <span className="rounded-full border border-white/12 bg-white/7 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-slate-200/84">
+                    {thresholdState.current.label}
+                  </span>
                   {isSandboxRoute ? (
                     <span className="rounded-full border border-[#f1c57a]/28 bg-[#f1c57a]/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-[#f1d3a1]">
                       Internal
@@ -170,6 +186,7 @@ export function Header({
                             <p className="text-[10px] uppercase tracking-[0.18em] text-[#ead1ad]/78">{doorwayLabel}</p>
                             <p className="mt-1 text-sm font-medium text-slate-50">{user?.pseudonym || user?.username}</p>
                             <p className="text-xs capitalize text-slate-300/85">{user?.role}</p>
+                            <p className="mt-1 text-xs text-slate-400">{thresholdState.current.summary}</p>
                           </div>
                           {profileLinks.map((link) => (
                             <Link

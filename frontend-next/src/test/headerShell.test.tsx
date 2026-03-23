@@ -35,9 +35,13 @@ vi.mock('@/ui-system/ThemeToggle', () => ({
 
 describe('Header shell signaling', () => {
   it('shows sandbox route identity and steward lab access in the doorway menu', () => {
+    currentPathname = '/sandbox/ui-lab';
+
     render(<Header onMenuToggle={vi.fn()} />);
 
     expect(screen.getByText('Sandbox and lab')).toBeInTheDocument();
+    expect(screen.getByText('Internal lab')).toBeInTheDocument();
+    expect(screen.getAllByText('Steward threshold').length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole('button', { name: /Open profile menu/i }));
     expect(screen.getByRole('link', { name: 'UI Lab' })).toHaveAttribute('href', '/sandbox/ui-lab');
   });
@@ -48,5 +52,15 @@ describe('Header shell signaling', () => {
     render(<Header onMenuToggle={vi.fn()} />);
 
     expect(screen.getByText('Community mesh')).toBeInTheDocument();
+    expect(screen.getByText('Celestial weave')).toBeInTheDocument();
+  });
+
+  it('shows archive route identity for model registry routes', () => {
+    currentPathname = '/governance/model-registry';
+
+    render(<Header onMenuToggle={vi.fn()} />);
+
+    expect(screen.getByText('Model archive')).toBeInTheDocument();
+    expect(screen.getByText('Archive passage')).toBeInTheDocument();
   });
 });

@@ -8,9 +8,10 @@ describe('DocsPage', () => {
     render(<DocsPage />);
 
     expect(screen.getByText('Read the institution before you operate it.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /open transparency/i })).toHaveAttribute('href', '/transparency');
+    expect(screen.getAllByRole('link', { name: /open transparency/i })[0]).toHaveAttribute('href', '/transparency');
+    expect(screen.getByText('How to read this library')).toBeInTheDocument();
     expect(screen.getByText('Trust routes')).toBeInTheDocument();
     expect(screen.getByText('Governance and system instruments')).toBeInTheDocument();
-    expect(screen.getByText('Truth before escalation')).toBeInTheDocument();
+    expect(screen.getAllByText('Truth before escalation').length).toBeGreaterThan(0);
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import Image from 'next/image';
 import { Clock, Heart, MapPin, MessageCircle, Share2, Sparkles, User, X } from 'lucide-react';
 import type { CommunityPost } from '@/data/adapters/communityAdapter';
@@ -8,6 +8,7 @@ import type { CommunityPost } from '@/data/adapters/communityAdapter';
 interface PostDetailModalProps {
   post: CommunityPost | null;
   onClose: () => void;
+  footerActions?: ReactNode;
 }
 
 function timeAgo(dateStr: string): string {
@@ -20,7 +21,7 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
-export function PostDetailModal({ post, onClose }: PostDetailModalProps) {
+export function PostDetailModal({ post, onClose, footerActions }: PostDetailModalProps) {
   const backdropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -161,6 +162,12 @@ export function PostDetailModal({ post, onClose }: PostDetailModalProps) {
               <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 text-sm text-slate-300/82">
                 Comments and threaded replies should inherit the same chamber grammar: accountable attribution first, novelty last.
               </div>
+
+              {footerActions ? (
+                <div className="flex flex-wrap gap-3 border-t border-white/10 pt-4">
+                  {footerActions}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

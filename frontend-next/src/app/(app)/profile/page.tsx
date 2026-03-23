@@ -6,6 +6,7 @@ import AuthGateCard from '@/components/auth/AuthGateCard';
 import { api, TodoResponse, NotificationResponse, Challenge, Article } from '@/lib/api';
 import { burnoutApi, timebankApi, type TimeEntry } from '@/lib/api/endpoints';
 import { useFeatureFlag } from '@/lib/featureFlags';
+import { getThresholdState } from '@/lib/tenantSemantics';
 import { DesktopCanvas } from '@/ui/patterns/profile-desktop';
 import {
   Award,
@@ -26,6 +27,8 @@ import {
   AnuPageHero,
   AnuSurfacePanel,
 } from '@/ui-system/anu/surfacePrimitives';
+import { AnuThresholdPathPanel } from '@/ui-system/anu/tenantSemanticsPrimitives';
+import { useTenant } from '@/ui-system/layout/TenantBrandWrapper';
 
 interface UserProfile {
   id: number;
@@ -80,6 +83,7 @@ function ProfileField({ label, value }: { label: string; value: string | number 
 
 export default function ProfilePage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const tenant = useTenant();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [todos, setTodos] = useState<TodoResponse[]>([]);
   const [notifications, setNotifications] = useState<NotificationResponse[]>([]);
@@ -263,6 +267,10 @@ export default function ProfilePage() {
   const progressPct = profile ? Math.min(100, (profile.points / profile.points_to_level_up) * 100) : 0;
   const totalTimeHours = timeEntries.reduce((sum, entry) => sum + entry.hours, 0);
   const publicName = profile?.pseudonym || profile?.username || '?';
+  const thresholdState = useMemo(
+    () => getThresholdState(profile?.role || user?.role, isAuthenticated, tenant),
+    [isAuthenticated, profile?.role, tenant, user?.role],
+  );
 
   const tabs = [
     { id: 'overview' as ChamberTab, label: 'Overview' },
@@ -285,7 +293,7 @@ export default function ProfilePage() {
       <AuthGateCard
         eyebrow="Profile Cockpit"
         title="Sign in to open your profile cockpit"
-        description="Your profile, organizer status, civic todos, notifications, and member progress are private to your account."
+        description="Your participant, contributor, or steward cockpit stays private to your account."
         secondaryHref="/manara"
         secondaryLabel="Open Manara"
       />
@@ -343,11 +351,12 @@ export default function ProfilePage() {
           aside={
             <AnuSurfacePanel tone="quiet" className="h-full">
               <div className="flex flex-wrap gap-2">
-                <AnuChip tone="signal">Private chamber</AnuChip>
+                <AnuChip tone="signal">{thresholdState.current.label} threshold</AnuChip>
+                {thresholdState.next ? <AnuChip tone="accent">Next: {thresholdState.next.label}</AnuChip> : null}
                 {onboardingComplete ? <AnuChip tone="muted" icon={Sparkles}>Journey complete</AnuChip> : null}
               </div>
               <p className="mt-4 text-sm leading-6 text-slate-300/84">
-                Tasks, organizer status, and inbox surfaces should be faster to scan than the older fragmented tab stack.
+                {thresholdState.current.summary} Tasks, organizer status, and inbox surfaces should be faster to scan than the older fragmented tab stack.
               </p>
             </AnuSurfacePanel>
           }
@@ -359,6 +368,16 @@ export default function ProfilePage() {
             <AnuHeroMetric label="Unread inbox" value={String(unreadNotifications.length)} detail={`${notifications.length} total notifications in your chamber.`} />
           </div>
         </AnuPageHero>
+
+        <AnuThresholdPathPanel
+          eyebrow="Threshold doctrine"
+          title="Where this member stands in the commons"
+          description="Profile is the private threshold surface. It should show the member's current level of access and what the next responsibility band would mean."
+          thresholds={thresholdState.manifest.thresholds}
+          currentKey={thresholdState.current.key}
+          nextKey={thresholdState.next?.key ?? null}
+          className="mt-8"
+        />
 
         <div className="mt-8 flex flex-wrap gap-2">
           {tabs.map((tab) => (
@@ -488,7 +507,9 @@ export default function ProfilePage() {
             ) : (
               <div className="grid gap-6 lg:grid-cols-[0.84fr_1.16fr]">
                 <AnuChamberCard eyebrow="Organizer pathway" title="Become an organizer">
-                  <p className="text-sm leading-6 text-slate-300/82">Use this chamber to establish intent, experience, and cause focus before moderation review.</p>
+                  <p className="text-sm leading-6 text-slate-300/82">
+                    Steward access is a threshold, not a toggle. Use this chamber to establish intent, experience, and cause focus before moderation review.
+                  </p>
                 </AnuChamberCard>
                 <AnuChamberCard eyebrow="Application" title="Organizer application">
                   <form

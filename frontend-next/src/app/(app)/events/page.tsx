@@ -1,14 +1,38 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { api, Event, Venue } from '@/lib/api';
-import { Plus, MapPin, Building2 } from 'lucide-react';
-import Link from 'next/link';
-import ViewToggle, { ViewMode } from '@/components/shared/ViewToggle';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import dynamicImport from 'next/dynamic';
-import { BentoGrid, BentoHero, BentoStat, BentoStyles } from '@/ui/patterns/chromatic-bento';
-import styles from './EventsFloating.module.css';
+import {
+  AlertCircle,
+  Compass,
+  List,
+  Map,
+  MapPin,
+  Plus,
+  RefreshCw,
+  Store,
+  TentTree,
+  Users,
+  Waypoints,
+} from 'lucide-react';
+import Link from 'next/link';
+import { api, Event, Venue } from '@/lib/api';
+import {
+  AnuActionLink,
+  AnuChip,
+  AnuControlButton,
+  AnuFilterBar,
+  AnuFilterGroup,
+  AnuFilterInput,
+  AnuHeroMetric,
+  AnuInstrumentationCard,
+  AnuSurfacePanel,
+} from '@/ui-system/anu/surfacePrimitives';
+import { AnuProcessPanel, AnuRouteBridgePanel } from '@/ui-system/anu/coordinationPrimitives';
+import { EarthFieldShell } from '@/ui-system/realms/earth/EarthFieldShell';
+import { EarthNavPill } from '@/ui-system/realms/earth/EarthNavPill';
+import { EarthObjectMarker } from '@/ui-system/realms/earth/EarthObjectMarker';
+import { EarthRisingPanel } from '@/ui-system/realms/earth/EarthRisingPanel';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,32 +40,59 @@ const MapView = dynamicImport(() => import('@/components/shared/MapView'), { ssr
 const CreateEventModal = dynamicImport(() => import('@/components/shared/CreateEventModal'), { ssr: false });
 const CreateVenueModal = dynamicImport(() => import('@/components/shared/CreateVenueModal'), { ssr: false });
 
+type EventViewMode = 'field' | 'list' | 'map';
 type TabMode = 'events' | 'venues';
+
+const EVENT_FIELD_POSITIONS = [
+  { top: '18%', left: '18%' },
+  { top: '24%', left: '49%' },
+  { top: '26%', left: '80%' },
+  { top: '52%', left: '24%' },
+  { top: '60%', left: '58%' },
+  { top: '72%', left: '82%' },
+  { top: '76%', left: '16%' },
+] as const;
+
+const VENUE_FIELD_POSITIONS = [
+  { top: '22%', left: '24%' },
+  { top: '18%', left: '70%' },
+  { top: '46%', left: '48%' },
+  { top: '68%', left: '22%' },
+  { top: '72%', left: '76%' },
+] as const;
+
+function getBadge(event: Event) {
+  if (event.trendLabel) return event.trendLabel;
+
+  const dateValue = event.date ? new Date(event.date) : null;
+  if (dateValue) {
+    const daysLeft = Math.ceil((dateValue.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    if (daysLeft <= 3) return 'Closing soon';
+    if (daysLeft <= 7) return 'New';
+  }
+
+  return 'Trending';
+}
+
+function eventMeta(event: Event) {
+  const date = new Date(event.date);
+  return `${date.toLocaleDateString()} / ${event.time}`;
+}
 
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [city, setCity] = useState('');
   const [date, setDate] = useState('');
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [viewMode, setViewMode] = useState<EventViewMode>('field');
   const [tabMode, setTabMode] = useState<TabMode>('events');
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showCreateVenue, setShowCreateVenue] = useState(false);
   const [isOrganizer, setIsOrganizer] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-
-  const getBadge = (event: Event) => {
-    if (event.trendLabel) return event.trendLabel;
-    const dateValue = event.date ? new Date(event.date) : null;
-    if (dateValue) {
-      const daysLeft = Math.ceil((dateValue.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-      if (daysLeft <= 3) return 'Closing Soon';
-      if (daysLeft <= 7) return 'New';
-    }
-    return 'Trending';
-  };
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -58,15 +109,14 @@ export default function EventsPage() {
       const params: { city?: string; date?: string } = {};
       if (city) params.city = city;
       if (date) params.date = date;
+
       const [eventsData, venuesData] = await Promise.all([api.events.getAll(params), api.venues.getAll()]);
       setEvents(eventsData);
-      setFilteredEvents(eventsData);
       setVenues(venuesData);
     } catch (error) {
-      console.error('Failed to load data:', error);
-      setNotice('Could not load events and venues from live services.');
+      console.error('Failed to load events and venues:', error);
+      setNotice('Could not load live events and venues. Operational backups remain available.');
       setEvents([]);
-      setFilteredEvents([]);
       setVenues([]);
     } finally {
       setLoading(false);
@@ -77,19 +127,52 @@ export default function EventsPage() {
     void loadData();
   }, [loadData]);
 
-  const handleAttend = async (eventId: string) => {
+  useEffect(() => {
+    if (tabMode === 'events') {
+      if (events.length === 0) {
+        setSelectedEventId(null);
+        return;
+      }
+
+      const stillVisible = events.some((event) => event.id === selectedEventId);
+      if (!stillVisible) {
+        setSelectedEventId(events[0]?.id ?? null);
+      }
+      return;
+    }
+
+    if (venues.length === 0) {
+      setSelectedVenueId(null);
+      return;
+    }
+
+    const stillVisible = venues.some((venue) => String(venue.id) === selectedVenueId);
+    if (!stillVisible) {
+      setSelectedVenueId(String(venues[0]?.id ?? ''));
+    }
+  }, [events, venues, selectedEventId, selectedVenueId, tabMode]);
+
+  const selectedEvent = useMemo(
+    () => events.find((event) => event.id === selectedEventId) ?? null,
+    [events, selectedEventId],
+  );
+  const selectedVenue = useMemo(
+    () => venues.find((venue) => String(venue.id) === selectedVenueId) ?? null,
+    [venues, selectedVenueId],
+  );
+
+  const handleAttend = useCallback(async (eventId: string) => {
     try {
       const updated = await api.events.attend(eventId);
       setEvents((current) => current.map((event) => (event.id === eventId ? updated : event)));
-      setFilteredEvents((current) => current.map((event) => (event.id === eventId ? updated : event)));
       setNotice('Attendance registered.');
     } catch (error) {
       console.error('Failed to attend event:', error);
       setNotice('Could not register attendance right now.');
     }
-  };
+  }, []);
 
-  const handleCreateEvent = async (data: Record<string, unknown>) => {
+  const handleCreateEvent = useCallback(async (data: Record<string, unknown>) => {
     try {
       await api.events.create(data as Parameters<typeof api.events.create>[0]);
       await loadData();
@@ -98,9 +181,9 @@ export default function EventsPage() {
       console.error('Failed to create event:', error);
       setNotice('Could not create event right now.');
     }
-  };
+  }, [loadData]);
 
-  const handleCreateVenue = async (data: Record<string, unknown>) => {
+  const handleCreateVenue = useCallback(async (data: Record<string, unknown>) => {
     try {
       await api.venues.create(data as Parameters<typeof api.venues.create>[0]);
       await loadData();
@@ -109,10 +192,13 @@ export default function EventsPage() {
       console.error('Failed to create venue:', error);
       setNotice('Could not create venue right now.');
     }
-  };
+  }, [loadData]);
 
-  const handleDeleteVenue = async (id: string) => {
-    if (!confirm('Delete this venue?')) return;
+  const handleDeleteVenue = useCallback(async (id: string) => {
+    if (!window.confirm('Delete this venue?')) {
+      return;
+    }
+
     try {
       await api.venues.delete(id);
       setVenues((current) => current.filter((venue) => String(venue.id) !== id));
@@ -121,259 +207,485 @@ export default function EventsPage() {
       console.error('Failed to delete venue:', error);
       setNotice('Could not delete venue right now.');
     }
-  };
+  }, []);
 
-  const eventMarkers = filteredEvents
-    .filter((event) => event.latitude && event.longitude)
-    .map((event) => ({
-      id: event.id,
-      lat: event.latitude!,
-      lng: event.longitude!,
-      title: event.title,
-      popup: `<strong>${event.title}</strong><br/>${new Date(event.date).toLocaleDateString()}<br/>${event.attendees}/${event.goal} attendees`,
-      color: 'institutional' as const,
-    }));
+  const totalAttendance = useMemo(
+    () => events.reduce((sum, event) => sum + (event.attendees || 0), 0),
+    [events],
+  );
 
-  const venueMarkers = venues
-    .filter((venue) => venue.latitude && venue.longitude)
-    .map((venue) => ({
-      id: String(venue.id),
-      lat: venue.latitude,
-      lng: venue.longitude,
-      title: venue.name,
-      popup: `<strong>${venue.name}</strong><br/>${venue.address}`,
-      color: 'accent' as const,
-    }));
+  const eventMarkers = useMemo(
+    () =>
+      events
+        .filter((event) => event.latitude && event.longitude)
+        .map((event) => ({
+          id: event.id,
+          lat: event.latitude!,
+          lng: event.longitude!,
+          title: event.title,
+          popup: `<strong>${event.title}</strong><br/>${new Date(event.date).toLocaleDateString()}<br/>${event.attendees}/${event.goal} attendees`,
+          color: 'institutional' as const,
+        })),
+    [events],
+  );
+
+  const venueMarkers = useMemo(
+    () =>
+      venues
+        .filter((venue) => venue.latitude && venue.longitude)
+        .map((venue) => ({
+          id: String(venue.id),
+          lat: venue.latitude,
+          lng: venue.longitude,
+          title: venue.name,
+          popup: `<strong>${venue.name}</strong><br/>${venue.address}`,
+          color: 'accent' as const,
+        })),
+    [venues],
+  );
+
+  const fieldMarkers = (
+    <div className="relative h-full w-full">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center pt-5">
+        <div className="rounded-full border border-white/10 bg-black/16 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#e5d2aa]/84 backdrop-blur-md">
+          {tabMode === 'events'
+            ? 'Gatherings cluster across the field as moments of commons activity.'
+            : 'Markets hold the venue network that gatherings depend on.'}
+        </div>
+      </div>
+
+      {tabMode === 'events' ? (
+        events.length > 0 ? (
+          events.slice(0, EVENT_FIELD_POSITIONS.length).map((event, index) => (
+            <EarthObjectMarker
+              key={event.id}
+              kind="gathering"
+              title={event.title}
+              summary={event.description}
+              meta={eventMeta(event)}
+              badges={[
+                `${event.attendees}/${event.goal} attending`,
+                getBadge(event),
+                event.isOnline ? 'online' : event.isGlobal ? 'global' : 'local',
+              ]}
+              active={selectedEventId === event.id}
+              style={EVENT_FIELD_POSITIONS[index]}
+              onSelect={() => {
+                setSelectedEventId(event.id);
+                setViewMode('field');
+              }}
+            />
+          ))
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
+            <div className="max-w-xl rounded-[2rem] border border-white/10 bg-black/20 px-6 py-8 backdrop-blur-md">
+              <p className="text-lg text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                No gatherings match the current route pass.
+              </p>
+              <p className="mt-3 text-sm leading-6 text-slate-300/78">
+                Adjust the city or date filters to surface a different gathering on the field.
+              </p>
+            </div>
+          </div>
+        )
+      ) : venues.length > 0 ? (
+        venues.slice(0, VENUE_FIELD_POSITIONS.length).map((venue, index) => (
+          <EarthObjectMarker
+            key={venue.id}
+            kind="market"
+            title={venue.name}
+            summary={venue.address}
+            meta={`${venue.city}, ${venue.country}`}
+            badges={['Venue network', venue.is_online ? 'online' : 'grounded']}
+            active={selectedVenueId === String(venue.id)}
+            style={VENUE_FIELD_POSITIONS[index]}
+            onSelect={() => {
+              setSelectedVenueId(String(venue.id));
+              setViewMode('field');
+            }}
+          />
+        ))
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
+          <div className="max-w-xl rounded-[2rem] border border-white/10 bg-black/20 px-6 py-8 backdrop-blur-md">
+            <p className="text-lg text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              No markets are indexed yet.
+            </p>
+            <p className="mt-3 text-sm leading-6 text-slate-300/78">
+              Venue creation remains available as an operational backup.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const fieldAside = (
+    <>
+      <AnuProcessPanel
+        eyebrow="Earth coordination"
+        title="How gatherings stay grounded"
+        description="Events should feel like civic terrain, with visible paths into scheduling, venues, organizer workflows, and consequence."
+        steps={[
+          {
+            title: 'Surface gatherings on the field',
+            detail: 'Events should appear as grounded gatherings rather than generic event cards floating free of the system.',
+          },
+          {
+            title: 'Treat venues as market infrastructure',
+            detail: 'Venue records are the supporting market layer beneath public gatherings and attendance.',
+          },
+          {
+            title: 'Route participation into consequence',
+            detail: 'Attendance and hosting need clear continuity into organizer work and impact reporting.',
+          },
+        ]}
+      />
+
+      <AnuRouteBridgePanel
+        eyebrow="Earth route links"
+        title="Events should connect to the wider field"
+        description="Calendar, community context, organizer operations, and impact should remain visibly reachable from gatherings and markets."
+        links={[
+          {
+            href: '/calendar',
+            label: 'Calendar',
+            detail: 'Move from discovery into shifts, timing, and schedule coordination.',
+            icon: MapPin,
+            tone: 'signal',
+          },
+          {
+            href: '/community',
+            label: 'Community',
+            detail: 'Return to the commons when a gathering needs social context or publication.',
+            icon: Users,
+          },
+          {
+            href: '/impact',
+            label: 'Impact',
+            detail: 'Attendance, volunteering, and local presence should remain visible in impact.',
+            icon: Waypoints,
+            tone: 'accent',
+          },
+        ]}
+      />
+    </>
+  );
+
+  const selectedDetailPanel = tabMode === 'events' && selectedEvent ? (
+    <EarthRisingPanel
+      eyebrow="Grounded gathering"
+      title={selectedEvent.title}
+      summary={<p>{selectedEvent.description}</p>}
+      badges={
+        <>
+          <AnuChip tone="accent" icon={Users}>
+            {selectedEvent.attendees}/{selectedEvent.goal} attending
+          </AnuChip>
+          <AnuChip tone="muted" icon={MapPin}>
+            {selectedEvent.city ? `${selectedEvent.city}, ${selectedEvent.country}` : 'Location pending'}
+          </AnuChip>
+        </>
+      }
+      primary={
+        <div className="grid gap-4 md:grid-cols-2">
+          <AnuInstrumentationCard
+            label="Gathering window"
+            value={eventMeta(selectedEvent)}
+            detail={selectedEvent.address || 'Address not published yet.'}
+            tone="signal"
+          />
+          <AnuInstrumentationCard
+            label="Attendance"
+            value={`${selectedEvent.attendees}/${selectedEvent.goal}`}
+            detail={selectedEvent.isOnline ? 'Online gathering' : selectedEvent.isGlobal ? 'Global gathering' : 'Local gathering'}
+            tone={selectedEvent.attendees >= selectedEvent.goal ? 'warning' : 'steady'}
+          />
+        </div>
+      }
+      secondary={
+        <AnuSurfacePanel tone="quiet" className="px-5 py-5">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Field notes</p>
+          <div className="mt-4 space-y-3 text-sm leading-6 text-slate-200/82">
+            <p>Badge: {getBadge(selectedEvent)}</p>
+            <p>Venue id: {selectedEvent.venueId}</p>
+            <p>Points assigned: {selectedEvent.pointsAssigned}</p>
+          </div>
+        </AnuSurfacePanel>
+      }
+      footer={
+        <div className="flex flex-wrap gap-3">
+          <AnuActionLink href={`/events/${selectedEvent.id}`} tone="secondary">
+            Open full event record
+          </AnuActionLink>
+          <AnuControlButton
+            tone={selectedEvent.attendees >= selectedEvent.goal ? 'warning' : 'active'}
+            onClick={() => void handleAttend(selectedEvent.id)}
+            disabled={selectedEvent.attendees >= selectedEvent.goal}
+          >
+            {selectedEvent.attendees >= selectedEvent.goal ? 'Event full' : 'Attend'}
+          </AnuControlButton>
+        </div>
+      }
+    />
+  ) : tabMode === 'venues' && selectedVenue ? (
+    <EarthRisingPanel
+      eyebrow="Grounded market"
+      title={selectedVenue.name}
+      summary={<p>{selectedVenue.address}</p>}
+      badges={
+        <>
+          <AnuChip tone="accent" icon={Store}>
+            {selectedVenue.city}
+          </AnuChip>
+          <AnuChip tone="muted" icon={MapPin}>
+            {selectedVenue.country}
+          </AnuChip>
+        </>
+      }
+      primary={
+        <AnuInstrumentationCard
+          label="Venue locality"
+          value={`${selectedVenue.city}, ${selectedVenue.country}`}
+          detail={selectedVenue.is_global ? 'Global venue' : selectedVenue.is_online ? 'Online venue' : 'Grounded venue'}
+          tone="signal"
+        />
+      }
+      secondary={
+        <AnuSurfacePanel tone="quiet" className="px-5 py-5">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Field notes</p>
+          <div className="mt-4 space-y-3 text-sm leading-6 text-slate-200/82">
+            <p>Address: {selectedVenue.address}</p>
+            <p>Coordinates: {selectedVenue.latitude}, {selectedVenue.longitude}</p>
+          </div>
+        </AnuSurfacePanel>
+      }
+      footer={
+        isOrganizer ? (
+          <div className="flex flex-wrap gap-3">
+            <AnuControlButton tone="warning" iconLeft={TentTree} onClick={() => void handleDeleteVenue(String(selectedVenue.id))}>
+              Delete venue
+            </AnuControlButton>
+          </div>
+        ) : null
+      }
+    />
+  ) : null;
+
+  const utilityView =
+    viewMode === 'map' ? (
+      <AnuSurfacePanel tone="soft" className="px-5 py-5">
+        <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Map backup</p>
+        <p className="mt-3 text-sm leading-6 text-slate-300/82">
+          Geographic backup remains available when the field is not the best operational surface.
+        </p>
+        <div className="mt-5">
+          <MapView markers={tabMode === 'events' ? eventMarkers : venueMarkers} height="500px" />
+        </div>
+      </AnuSurfacePanel>
+    ) : viewMode === 'list' ? (
+      <AnuSurfacePanel tone="soft" className="px-5 py-5">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">List backup</p>
+            <p className="mt-3 text-sm leading-6 text-slate-300/82">
+              Utility list mode remains available for direct scanning and straightforward operations.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <AnuChip tone="muted">{events.length} events</AnuChip>
+            <AnuChip tone="muted">{venues.length} venues</AnuChip>
+          </div>
+        </div>
+
+        {tabMode === 'events' ? (
+          <div className="mt-5 grid gap-4 xl:grid-cols-2">
+            {events.length > 0 ? (
+              events.map((event) => (
+                <AnuSurfacePanel key={event.id} tone="quiet" className="px-4 py-4">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.16em] text-slate-400">gathering</p>
+                        <h3 className="mt-2 text-2xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                          {event.title}
+                        </h3>
+                      </div>
+                      <AnuChip tone="accent">{getBadge(event)}</AnuChip>
+                    </div>
+                    <p className="text-sm leading-6 text-slate-300/82">{event.description}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <AnuChip tone="muted">{eventMeta(event)}</AnuChip>
+                      <AnuChip tone="muted">{event.attendees}/{event.goal} attending</AnuChip>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      <AnuActionLink href={`/events/${event.id}`} tone="secondary">
+                        View details
+                      </AnuActionLink>
+                      <AnuControlButton
+                        tone={event.attendees >= event.goal ? 'warning' : 'active'}
+                        onClick={() => void handleAttend(event.id)}
+                        disabled={event.attendees >= event.goal}
+                      >
+                        {event.attendees >= event.goal ? 'Full' : 'Attend'}
+                      </AnuControlButton>
+                    </div>
+                  </div>
+                </AnuSurfacePanel>
+              ))
+            ) : (
+              <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] px-5 py-6 text-sm text-slate-300/78 xl:col-span-2">
+                No events match the current filters.
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="mt-5 grid gap-4 xl:grid-cols-2">
+            {venues.length > 0 ? (
+              venues.map((venue) => (
+                <AnuSurfacePanel key={venue.id} tone="quiet" className="px-4 py-4">
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-slate-400">market</p>
+                      <h3 className="mt-2 text-2xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                        {venue.name}
+                      </h3>
+                    </div>
+                    <p className="text-sm leading-6 text-slate-300/82">{venue.address}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <AnuChip tone="muted">{venue.city}, {venue.country}</AnuChip>
+                    </div>
+                    {isOrganizer ? (
+                      <div className="flex flex-wrap gap-3">
+                        <AnuControlButton tone="warning" onClick={() => void handleDeleteVenue(String(venue.id))}>
+                          Delete venue
+                        </AnuControlButton>
+                      </div>
+                    ) : null}
+                  </div>
+                </AnuSurfacePanel>
+              ))
+            ) : (
+              <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] px-5 py-6 text-sm text-slate-300/78 xl:col-span-2">
+                No venues are indexed yet.
+              </div>
+            )}
+          </div>
+        )}
+      </AnuSurfacePanel>
+    ) : null;
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-institutional)]" />
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-[var(--color-institutional)]" />
       </div>
     );
   }
 
   return (
-    <div className={styles.pageRoot}>
-      <BentoStyles />
-      <div className={styles.surface}>
-        <header className={styles.header}>
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-white/70">Events + Venues System</p>
-            <h1 className={styles.heading}>Community Events</h1>
-            <p className={styles.subhead}>Discover events, monitor venues, and coordinate operations from a unified ANU surface.</p>
-            <div className={styles.metrics}>
-              <span>{filteredEvents.length} events active</span>
-              <span>{venues.length} venues indexed</span>
+    <div className="min-h-screen px-4 pb-20 pt-24 md:px-8">
+      <div className="mx-auto max-w-7xl">
+        <EarthFieldShell
+          eyebrow="Earth proof / events"
+          title="Ground gatherings and markets on one field."
+          description="Events should read as grounded gatherings, with venue infrastructure held in the same Earth system as markets. Detail rises from the field while map and list views remain available as operational backups."
+          actions={
+            <>
+              <AnuActionLink href="/actions" tone="secondary" iconLeft={TentTree}>
+                Move to actions
+              </AnuActionLink>
+              <AnuActionLink href="/impact" tone="ghost" iconLeft={Waypoints}>
+                Trace attendance into impact
+              </AnuActionLink>
+            </>
+          }
+          metrics={
+            <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+              <AnuHeroMetric label="Visible gatherings" value={String(events.length)} detail="Filtered by date and locality." />
+              <AnuHeroMetric label="Venue markets" value={String(venues.length)} detail="Supporting venue infrastructure." />
+              <AnuHeroMetric label="Recorded attendance" value={totalAttendance.toLocaleString()} detail="Participation already counted." />
             </div>
-            {notice ? <div className={styles.notice}>{notice}</div> : null}
-          </div>
-        </header>
-
-        <div className="px-4 pb-5 pt-4 sm:px-6">
-          <BentoGrid columns={12} rowHeight={80} gap={12} className="mb-8">
-            <BentoHero
-              title="Events + Venues"
-              subtitle="Discover and attend local environmental events"
-              metric={`${filteredEvents.length}`}
-              metricLabel="events"
-              colSpan={7}
-              rowSpan={2}
-            />
-            <BentoStat label="Events" value={filteredEvents.length} colSpan={5} rowSpan={1} stagger={1} />
-            <BentoStat label="Venues" value={venues.length} colSpan={5} rowSpan={1} stagger={2} />
-          </BentoGrid>
-
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-            <div className="flex gap-2">
-              <button
-                onClick={() => setTabMode('events')}
-                className={`btn-pill text-sm flex items-center gap-1.5 ${tabMode === 'events' ? 'btn-pill-primary' : 'btn-pill-outline'}`}
-              >
-                <MapPin className="w-4 h-4" /> Events
-              </button>
-              <button
-                onClick={() => setTabMode('venues')}
-                className={`btn-pill text-sm flex items-center gap-1.5 ${tabMode === 'venues' ? 'btn-pill-primary' : 'btn-pill-outline'}`}
-              >
-                <Building2 className="w-4 h-4" /> Venues
-              </button>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <ViewToggle current={viewMode} onChange={setViewMode} modes={['list', 'map']} />
-              {isOrganizer ? (
-                <div className="flex gap-2">
-                  <button onClick={() => setShowCreateEvent(true)} className="btn-pill btn-pill-primary text-sm flex items-center gap-2">
-                    <Plus className="w-4 h-4" /> Event
-                  </button>
-                  <button onClick={() => setShowCreateVenue(true)} className="btn-pill btn-pill-accent text-sm flex items-center gap-2">
-                    <Plus className="w-4 h-4" /> Venue
-                  </button>
-                </div>
+          }
+          controls={
+            <div className="space-y-4">
+              {notice ? (
+                <AnuSurfacePanel tone="quiet" className="px-4 py-3">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="mt-0.5 h-4 w-4 text-[#f3c489]" />
+                    <p className="text-sm leading-6 text-slate-200/82">{notice}</p>
+                  </div>
+                </AnuSurfacePanel>
               ) : null}
-            </div>
-          </div>
 
-          {tabMode === 'events' ? (
-            <div className="card-civic mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">City</label>
-                  <input
-                    type="text"
+              <AnuFilterBar>
+                <AnuFilterGroup>
+                  <AnuFilterInput
                     value={city}
                     onChange={(event) => setCity(event.target.value)}
-                    placeholder="Enter city name"
-                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-institutional)]"
+                    placeholder="Filter by city"
+                    aria-label="Filter events by city"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Date</label>
-                  <input
+                  <AnuFilterInput
                     type="date"
                     value={date}
                     onChange={(event) => setDate(event.target.value)}
-                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-institutional)]"
+                    aria-label="Filter events by date"
                   />
-                </div>
-                <div className="flex items-end">
-                  <button
-                    onClick={() => {
-                      setCity('');
-                      setDate('');
-                    }}
-                    className="w-full btn-pill btn-pill-outline"
-                  >
-                    Clear Filters
-                  </button>
-                </div>
-              </div>
+                  <AnuControlButton tone="default" iconLeft={RefreshCw} onClick={() => void loadData()}>
+                    Refresh field
+                  </AnuControlButton>
+                </AnuFilterGroup>
+
+                <AnuFilterGroup className="justify-end">
+                  <AnuControlButton tone={tabMode === 'events' ? 'active' : 'default'} iconLeft={Users} onClick={() => setTabMode('events')}>
+                    Gatherings
+                  </AnuControlButton>
+                  <AnuControlButton tone={tabMode === 'venues' ? 'active' : 'default'} iconLeft={Store} onClick={() => setTabMode('venues')}>
+                    Markets
+                  </AnuControlButton>
+                </AnuFilterGroup>
+
+                <AnuFilterGroup className="justify-end">
+                  <AnuControlButton tone={viewMode === 'field' ? 'active' : 'default'} iconLeft={Compass} onClick={() => setViewMode('field')}>
+                    Field
+                  </AnuControlButton>
+                  <AnuControlButton tone={viewMode === 'list' ? 'active' : 'default'} iconLeft={List} onClick={() => setViewMode('list')}>
+                    List
+                  </AnuControlButton>
+                  <AnuControlButton tone={viewMode === 'map' ? 'active' : 'default'} iconLeft={Map} onClick={() => setViewMode('map')}>
+                    Map
+                  </AnuControlButton>
+                </AnuFilterGroup>
+
+                {isOrganizer ? (
+                  <AnuFilterGroup className="justify-end">
+                    <AnuControlButton tone="active" iconLeft={Plus} onClick={() => setShowCreateEvent(true)}>
+                      Create event
+                    </AnuControlButton>
+                    <AnuControlButton tone="default" iconLeft={Plus} onClick={() => setShowCreateVenue(true)}>
+                      Create venue
+                    </AnuControlButton>
+                  </AnuFilterGroup>
+                ) : null}
+              </AnuFilterBar>
             </div>
-          ) : null}
-
-          {viewMode === 'map' ? (
-            <div className="mb-8">
-              <MapView markers={tabMode === 'events' ? eventMarkers : [...eventMarkers, ...venueMarkers]} height="500px" />
-            </div>
-          ) : null}
-
-          {viewMode === 'list' && tabMode === 'events' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredEvents.map((event, index) => (
-                <motion.div
-                  key={event.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.05 }}
-                  className="card-civic"
-                >
-                  <h3 className="text-lg font-semibold mb-2" style={{ fontFamily: 'var(--font-serif)' }}>
-                    {event.title}
-                  </h3>
-                  <p className="text-[var(--color-muted-foreground)] mb-4 line-clamp-3 text-sm">{event.description}</p>
-
-                  <div className="space-y-1.5 mb-4 text-sm text-[var(--color-muted-foreground)]">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[var(--color-institutional)]">Date:</span>
-                      <span>{new Date(event.date).toLocaleDateString()}</span>
-                      <span className="ml-2">{event.time}</span>
-                    </div>
-                    {event.city ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-[var(--color-institutional)]">Location:</span>
-                        <span>
-                          {event.city}, {event.country}
-                        </span>
-                      </div>
-                    ) : null}
-                    <div className="flex items-center gap-2">
-                      <span className="text-[var(--color-institutional)]">Attendees:</span>
-                      <span className="font-mono-data">
-                        {event.attendees}/{event.goal}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-1">
-                      {event.isOnline ? (
-                        <span className="px-2 py-0.5 bg-[var(--color-institutional-light)] text-[var(--color-institutional)] rounded-full text-xs">
-                          Online
-                        </span>
-                      ) : null}
-                      {event.isGlobal ? (
-                        <span className="px-2 py-0.5 bg-[var(--color-sage-light)] text-[var(--color-forest)] rounded-full text-xs">
-                          Global
-                        </span>
-                      ) : null}
-                      <span className="px-2 py-0.5 bg-[var(--color-accent-light)] text-[var(--color-accent)] rounded-full text-xs">
-                        {getBadge(event)}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => handleAttend(event.id)}
-                      disabled={event.attendees >= event.goal}
-                      className={`btn-pill text-sm ${
-                        event.attendees >= event.goal
-                          ? 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)] cursor-not-allowed'
-                          : 'btn-pill-primary'
-                      }`}
-                    >
-                      {event.attendees >= event.goal ? 'Full' : 'Attend'}
-                    </button>
-                  </div>
-                  <div className="mt-3">
-                    <Link href={`/events/${event.id}`} className="btn-pill btn-pill-outline text-sm inline-block">
-                      View Details
-                    </Link>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          ) : null}
-
-          {viewMode === 'list' && tabMode === 'venues' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {venues.map((venue, index) => (
-                <motion.div
-                  key={venue.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.05 }}
-                  className="card-civic"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-serif)' }}>
-                      {venue.name}
-                    </h3>
-                    <Building2 className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0" />
-                  </div>
-                  <p className="text-sm text-[var(--color-muted-foreground)] mb-2">{venue.address}</p>
-                  <p className="text-sm text-[var(--color-institutional)]">
-                    {venue.city}, {venue.country}
-                  </p>
-                  {isOrganizer ? (
-                    <button onClick={() => handleDeleteVenue(String(venue.id))} className="mt-3 text-xs text-[var(--color-danger)] hover:underline">
-                      Delete Venue
-                    </button>
-                  ) : null}
-                </motion.div>
-              ))}
-              {venues.length === 0 ? (
-                <div className="col-span-full text-center py-12">
-                  <p className="text-[var(--color-muted-foreground)]">No venues yet.</p>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          {filteredEvents.length === 0 && tabMode === 'events' && viewMode === 'list' ? (
-            <div className="text-center py-12">
-              <p className="text-[var(--color-muted-foreground)] text-lg">No events found</p>
-            </div>
-          ) : null}
-        </div>
+          }
+          field={fieldMarkers}
+          fieldAside={fieldAside}
+          risingPanel={selectedDetailPanel}
+          nav={
+            <EarthNavPill
+              items={[
+                { href: '/actions', label: 'Actions' },
+                { href: '/events', label: 'Events', active: true },
+                { href: '/relief', label: 'Relief' },
+                { href: '/impact', label: 'Impact' },
+              ]}
+            />
+          }
+          utility={utilityView}
+        />
       </div>
 
       {showCreateEvent ? <CreateEventModal onClose={() => setShowCreateEvent(false)} onSubmit={handleCreateEvent} /> : null}

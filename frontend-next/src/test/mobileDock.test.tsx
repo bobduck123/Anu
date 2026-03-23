@@ -38,7 +38,8 @@ describe('MobileDock', () => {
     render(<MobileDock />);
 
     expect(screen.getByRole('link', { name: /profile/i })).toHaveAttribute('href', '/profile');
-    expect(screen.getByRole('link', { name: /tasks/i })).toHaveAttribute('href', '/cost-lowering');
+    expect(screen.getByRole('link', { name: /actions/i })).toHaveAttribute('href', '/actions');
+    expect(screen.getByRole('link', { name: /events/i })).toHaveAttribute('href', '/events');
   });
 
   it('switches to sandbox links for steward-only internal routes', () => {

@@ -1,3 +1,5 @@
+import { getRealmSurface } from '@/ui-system/realms/realmRegistry';
+
 export type NavigationMode = 'explore' | 'tasks' | 'all';
 
 export interface PathwayStep {
@@ -17,10 +19,14 @@ export function deriveNavigationMode(pathname: string | null): NavigationMode {
     return 'explore';
   }
 
+  const realmSurface = getRealmSurface(pathname);
+
+  if (realmSurface.realm === 'earth' || realmSurface.realm === 'labyrinth') {
+    return 'tasks';
+  }
+
   if (
-    pathname.startsWith('/actions')
-    || pathname.startsWith('/events')
-    || pathname.startsWith('/cost-lowering')
+    pathname.startsWith('/cost-lowering')
     || pathname.startsWith('/runs')
     || pathname.startsWith('/pledges')
     || pathname.startsWith('/dashboard/savings')
@@ -62,11 +68,23 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
   if (pathname.startsWith('/community')) {
     return {
       title: 'Community flow',
-      summary: 'Observe live traces, then contribute when ready.',
+      summary: 'Enter through the celestial chart, browse the starfield, then fall back to the gallery only when deeper inspection is needed.',
       steps: [
-        { href: '/community', label: 'Explore the feed' },
+        { href: '/community', label: 'Open community field' },
         { href: '/community?compose=1', label: 'Post a signal', authRequired: true },
-        { href: '/education', label: 'Branch into learning' },
+        { href: '/constellations', label: 'Inspect constellations' },
+      ],
+    };
+  }
+
+  if (pathname.startsWith('/constellations')) {
+    return {
+      title: 'Celestial traversal',
+      summary: 'Browse clustered structures first, then descend into the signal or record that needs attention.',
+      steps: [
+        { href: '/constellations', label: 'Open constellation field' },
+        { href: '/community', label: 'Return to community mesh' },
+        { href: '/impact', label: 'Inspect impact bridge' },
       ],
     };
   }
@@ -95,6 +113,42 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
     };
   }
 
+  if (pathname.startsWith('/governance/model-registry')) {
+    return {
+      title: 'Archive descent',
+      summary: 'Enter the archive, inspect state-bearing models, then descend into manuscript chambers for detail.',
+      steps: [
+        { href: '/governance/model-registry', label: 'Open archive registry' },
+        { href: '/governance', label: 'Return to governance index' },
+        { href: '/transparency', label: 'Cross-check public truth' },
+      ],
+    };
+  }
+
+  if (pathname.startsWith('/relief')) {
+    return {
+      title: 'Grounded care flow',
+      summary: 'Open private intake first, then follow trust and impact routes around the care lane.',
+      steps: [
+        { href: '/relief', label: 'Open relief intake', authRequired: true },
+        { href: '/transparency', label: 'Read public trust' },
+        { href: '/impact', label: 'Follow care capacity upward' },
+      ],
+    };
+  }
+
+  if (pathname.startsWith('/impact')) {
+    return {
+      title: 'Earth to sky bridge',
+      summary: 'Read grounded contribution and participation first, then follow the outcomes that rise into the wider commons.',
+      steps: [
+        { href: '/actions', label: 'Open actions' },
+        { href: '/relief', label: 'Inspect care routes' },
+        { href: '/community', label: 'Return to community traces' },
+      ],
+    };
+  }
+
   if (pathname.startsWith('/events') || pathname.startsWith('/actions')) {
     return {
       title: 'Field operations',
@@ -115,6 +169,44 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
         { href: '/profile', label: 'Open profile' },
         { href: '/organizer', label: 'Open organizer cockpit', authRequired: true },
         { href: '/sandbox/ui-lab', label: 'Review UI lab', authRequired: true },
+      ],
+    };
+  }
+
+  const realmSurface = getRealmSurface(pathname);
+
+  if (realmSurface.realm === 'earth') {
+    return {
+      title: 'Grounded action flow',
+      summary: 'Move through field conditions first, then open the operational detail that rises out of the terrain.',
+      steps: [
+        { href: '/actions', label: 'Open actions' },
+        { href: '/events', label: 'Open events' },
+        { href: '/impact', label: 'Follow outcomes upward' },
+      ],
+    };
+  }
+
+  if (realmSurface.realm === 'labyrinth') {
+    return {
+      title: 'Archive descent',
+      summary: 'Move through governance and truth surfaces as archive passages before opening deeper records.',
+      steps: [
+        { href: '/governance', label: 'Open governance index' },
+        { href: '/governance/model-registry', label: 'Inspect models' },
+        { href: '/transparency', label: 'Read public truth' },
+      ],
+    };
+  }
+
+  if (realmSurface.realm === 'celestial') {
+    return {
+      title: 'Celestial traversal',
+      summary: 'Enter the starfield, orient by signal type, then open the chamber or bubble that fits the content.',
+      steps: [
+        { href: '/community', label: 'Open community field' },
+        { href: '/constellations', label: 'Inspect constellations' },
+        { href: '/impact', label: 'Trace outcomes' },
       ],
     };
   }

@@ -12,6 +12,7 @@ import { ShiftCard, type ShiftData } from '@/components/calendar/ShiftCard';
 import { AvailabilityEditor, type AvailabilitySlot } from '@/components/calendar/AvailabilityEditor';
 import { downloadICS } from '@/lib/calendar/icsExport';
 import { useTenant } from '@/ui-system/layout/TenantBrandWrapper';
+import { AnuProcessPanel, AnuRouteBridgePanel } from '@/ui-system/anu/coordinationPrimitives';
 import styles from './CalendarFloating.module.css';
 
 interface CalendarEvent {
@@ -33,6 +34,21 @@ interface CalendarEvent {
 type Tab = 'events' | 'shifts' | 'availability';
 
 const TAB_ORDER: Tab[] = ['events', 'shifts', 'availability'];
+
+const calendarLoopSteps = [
+  {
+    title: 'Schedule events and shifts',
+    detail: 'Calendar is where gatherings and operational labor become concrete time commitments.',
+  },
+  {
+    title: 'Coordinate people and availability',
+    detail: 'Availability windows and sign-ups connect community willingness to actual coverage.',
+  },
+  {
+    title: 'Feed readiness back into the commons',
+    detail: 'Calendar state should support organizer, events, and impact surfaces instead of living as a separate utility.',
+  },
+];
 
 export default function CalendarPage() {
   const [items, setItems] = useState<CalendarEvent[]>([]);
@@ -177,6 +193,51 @@ export default function CalendarPage() {
             <Download className="h-4 w-4" /> Export ICS
           </button>
         </header>
+
+        <div className="px-4 pt-4 sm:px-6">
+          <div className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
+            <AnuRouteBridgePanel
+              eyebrow="Connected routes"
+              title="Calendar is the timing layer of the commons"
+              description="Scheduling should sit clearly between events, organizer operations, impact, and community participation rather than acting like an isolated utility."
+              links={[
+                {
+                  href: '/events',
+                  label: 'Events',
+                  detail: 'Move back into discovery and attendance when the question is what is happening publicly.',
+                  icon: CalIcon,
+                  tone: 'signal',
+                },
+                {
+                  href: '/organizer',
+                  label: 'Organizer',
+                  detail: 'Use organizer routes for operational follow-through, runs, and applied stewardship.',
+                  icon: Clock,
+                  tone: 'accent',
+                },
+                {
+                  href: '/community',
+                  label: 'Community commons',
+                  detail: 'Use the public commons when schedules need social context or publication visibility.',
+                  icon: CalIcon,
+                },
+                {
+                  href: '/impact',
+                  label: 'Impact workspace',
+                  detail: 'Participation and shift coverage should remain legible in the wider impact loop.',
+                  icon: Clock,
+                },
+              ]}
+            />
+
+            <AnuProcessPanel
+              eyebrow="Timing doctrine"
+              title="How calendar connects to earth-plane work"
+              description="Calendar should explain how time, staffing, and event readiness affect the rest of the system."
+              steps={calendarLoopSteps}
+            />
+          </div>
+        </div>
 
         <div className={styles.shell}>
           <nav className={styles.tabRail} aria-label="Calendar sections">

@@ -33,4 +33,22 @@ describe('pathway guidance model', () => {
   it('treats governance routes as operational mode', () => {
     expect(deriveNavigationMode('/governance/formulas')).toBe('tasks');
   });
+
+  it('builds archive descent guidance for model registry routes', () => {
+    const guide = buildPathwayGuide('/governance/model-registry');
+    expect(guide.title).toBe('Archive descent');
+    expect(guide.steps.map((step) => step.href)).toContain('/transparency');
+  });
+
+  it('builds explicit care guidance for relief routes', () => {
+    const guide = buildPathwayGuide('/relief');
+    expect(guide.title).toBe('Grounded care flow');
+    expect(guide.steps.map((step) => step.href)).toContain('/impact');
+  });
+
+  it('builds bridge guidance for impact routes', () => {
+    const guide = buildPathwayGuide('/impact');
+    expect(guide.title).toBe('Earth to sky bridge');
+    expect(guide.steps.map((step) => step.href)).toContain('/community');
+  });
 });

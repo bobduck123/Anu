@@ -8,15 +8,16 @@ import { Footer } from './Footer';
 import { SystemHealthBanner } from '@/components/systemic/SystemHealthBanner';
 import { PathwayGuideBar } from './PathwayGuideBar';
 import { MobileDock } from './MobileDock';
+import { getRealmSurface } from '@/ui-system/realms/realmRegistry';
 
 export function LayoutShell({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const realmSurface = getRealmSurface(pathname);
 
   const isFullBleedRoute = pathname?.startsWith('/wishlist/');
-  const isImmersiveUniverseRoute = pathname?.startsWith('/universe');
-  const isCommunityRoute = pathname?.startsWith('/community');
-  const hideSupportChrome = isImmersiveUniverseRoute || isCommunityRoute;
+  const isImmersiveUniverseRoute = realmSurface.immersiveCanvas;
+  const hideSupportChrome = realmSurface.hideSupportChrome;
 
   const desktopRailOffsetClass = 'md:ml-[88px]';
 
@@ -25,7 +26,12 @@ export function LayoutShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="manara-shell min-h-screen flex flex-col">
+    <div
+      className="manara-shell min-h-screen flex flex-col"
+      data-realm={realmSurface.realm}
+      data-realm-strength={realmSurface.strength}
+      data-realm-surface={realmSurface.surfaceKind}
+    >
       <Sidebar
         panelOpen={sidebarOpen}
         onPanelToggle={() => setSidebarOpen((open) => !open)}
@@ -44,6 +50,9 @@ export function LayoutShell({ children }: { children: ReactNode }) {
         className={`manara-grid-hero shell-main relative flex-1 pt-16 transition-all duration-500 ${
           isImmersiveUniverseRoute ? 'overflow-hidden' : desktopRailOffsetClass
         }`}
+        data-realm={realmSurface.realm}
+        data-realm-strength={realmSurface.strength}
+        data-realm-entry={realmSurface.entryPattern}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(248,208,142,0.15),transparent_34%),radial-gradient(circle_at_86%_8%,rgba(52,98,145,0.16),transparent_38%),linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[length:auto,auto,108px_108px,108px_108px]" />
 

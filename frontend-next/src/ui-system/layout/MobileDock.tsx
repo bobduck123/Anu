@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { hasSandboxAccessRole } from '@/ui-system/anu/SandboxAccessBoundary';
 import { getShellSignal } from './shellSignals';
 import { getMobileDockLinks } from './mobileDockModel';
+import { getRealmSurface } from '@/ui-system/realms/realmRegistry';
 
 function isActive(pathname: string | null, href: string): boolean {
   if (!pathname) {
@@ -19,6 +20,7 @@ export function MobileDock() {
   const pathname = usePathname();
   const { isAuthenticated, user } = useAuth();
   const shellSignal = getShellSignal(pathname);
+  const realmSurface = getRealmSurface(pathname);
   const links = getMobileDockLinks(pathname, isAuthenticated, user ? hasSandboxAccessRole(user.role) : false);
 
   return (
@@ -33,7 +35,7 @@ export function MobileDock() {
             <p className="truncate text-[11px] font-medium text-slate-100">{shellSignal.label}</p>
           </div>
           <span className="rounded-full border border-white/10 bg-white/[0.06] px-2 py-0.5 text-[9px] uppercase tracking-[0.18em] text-slate-300/76">
-            Dock
+            {realmSurface.environmentTitle}
           </span>
         </div>
 

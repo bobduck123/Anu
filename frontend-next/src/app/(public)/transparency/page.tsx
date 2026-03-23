@@ -13,6 +13,7 @@ import {
   AnuSectionHeading,
   AnuSurfacePanel,
 } from '@/ui-system/anu/surfacePrimitives';
+import { AnuNarrativeBriefPanel } from '@/ui-system/anu/narrativePrimitives';
 
 function money(cents: number): string {
   return `$${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -87,6 +88,49 @@ export default function TransparencyPage() {
             />
           </div>
         </AnuPageHero>
+
+        <section className="mt-10">
+          <AnuNarrativeBriefPanel
+            eyebrow="Route reading"
+            title="How to read this truth surface"
+            description="Transparency is a public narrative output of the commons ledger. It should tell people what state is visible, how trustworthy the current reporting is, and what privacy boundary is being respected."
+            signals={[
+              {
+                label: 'Output mode',
+                value: contractState,
+                detail:
+                  contractState === 'Live'
+                    ? 'Current public reporting is available through pool balances, receipts, and relief-capacity summaries.'
+                    : contractState === 'Syncing'
+                      ? 'The trust route is loading the current reporting state before it renders the public totals.'
+                      : 'The route is staying honest about a reporting degradation instead of collapsing into a generic failure.',
+                tone: error ? 'accent' : 'signal',
+                icon: ShieldCheck,
+              },
+              {
+                label: 'Source state',
+                value: data ? `${data.pools.length} pools / ${data.receipts?.length ?? 0} receipts` : 'Awaiting report data',
+                detail:
+                  'Public state is built from privacy-preserving totals, visible receipts, and relief-capacity signals rather than member-level ledger exposure.',
+                tone: 'muted',
+                icon: ReceiptText,
+              },
+              {
+                label: 'Fallback truth',
+                value: error ? 'Degraded openly' : 'Trust path remains inspectable',
+                detail:
+                  'If reporting degrades, this surface should say so directly and redirect people toward docs and contact instead of hiding the contract state.',
+                tone: error ? 'accent' : 'signal',
+                icon: Activity,
+              },
+            ]}
+            whyItMatters="Institutional trust depends on honest public reading. People should be able to distinguish live totals, privacy boundaries, and degraded reporting without needing insider context."
+            actions={[
+              { href: '/docs', label: 'Open operations library', tone: 'secondary', icon: FileSearch },
+              { href: '/contact', label: 'Route a report', tone: 'ghost', icon: ShieldCheck },
+            ]}
+          />
+        </section>
 
         {error ? (
           <AnuSurfacePanel tone="quiet" className="mt-5 border-amber-300/28 p-5 text-amber-100">

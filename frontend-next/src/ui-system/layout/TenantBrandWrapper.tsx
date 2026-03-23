@@ -7,6 +7,7 @@ import { getTenantCSSVars, type TenantThemeOverride } from '../theme';
 
 export interface TenantConfig {
   id: number | null;
+  semanticKey?: string;
   slug: string;
   name: string;
   logo: string;
@@ -23,6 +24,7 @@ export interface TenantConfig {
 
 const defaultConfig: TenantConfig = {
   id: null,
+  semanticKey: brand.semanticKey,
   slug: '',
   name: brand.name,
   logo: '',
@@ -63,6 +65,7 @@ function getTenantFromCookie(): Partial<TenantConfig> | null {
       const brandConfig = JSON.parse(decodeURIComponent(cookies.tenant_brand));
       return {
         id: parseInt(cookies.tenant_id) || null,
+        semanticKey: cookies.tenant_semantic_key || brand.semanticKey,
         slug: cookies.tenant_slug || '',
         name: cookies.tenant_name || brand.name,
         isWhiteLabel: cookies.tenant_white_label === 'true',
@@ -78,6 +81,7 @@ function getTenantFromCookie(): Partial<TenantConfig> | null {
     if (cookies.tenant_id) {
       return {
         id: parseInt(cookies.tenant_id) || null,
+        semanticKey: cookies.tenant_semantic_key || brand.semanticKey,
       };
     }
   } catch {
@@ -129,6 +133,7 @@ export function TenantBrandWrapper({ children }: { children: ReactNode }) {
         const cfg = data.data || data;
         setConfig({
           id: cfg.node_id || cfg.id || tenantId || null,
+          semanticKey: cfg.semantic_key || cookieTenant?.semanticKey || brand.semanticKey,
           slug: cfg.slug || cookieTenant?.slug || '',
           name: cfg.name || cookieTenant?.name || defaultConfig.name,
           logo: cfg.logo || cfg.branding?.logo || cfg.branding?.logo_url || cookieTenant?.logo || '',
@@ -225,6 +230,7 @@ export function useTenantBranding() {
   return {
     name: tenant.name,
     logo: tenant.logo,
+    semanticKey: tenant.semanticKey,
     primaryColor: tenant.primaryColor,
     secondaryColor: tenant.secondaryColor,
     accentColor: tenant.accentColor,

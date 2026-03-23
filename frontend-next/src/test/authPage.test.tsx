@@ -43,6 +43,8 @@ describe('AuthPage', () => {
 
     render(<AuthPage />);
 
+    expect(screen.getByText('How access deepens')).toBeInTheDocument();
+    expect(screen.getByText('Witness threshold')).toBeInTheDocument();
     fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'alpha@example.com' } });
     fireEvent.change(screen.getByPlaceholderText('Password'), { target: { value: 'alpha_public' } });
     fireEvent.click(screen.getByRole('button', { name: 'Login' }));

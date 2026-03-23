@@ -31,9 +31,20 @@ vi.mock('@/ui/patterns/draggable-gallery', () => ({
   DraggableGallery: () => <div data-testid="community-gallery">gallery</div>,
 }));
 
-vi.mock('@/components/maps/FalakMapViewer', () => ({
-  FalakMapViewer: ({ packet }: { packet?: { title?: string } | null }) => (
-    <div data-testid="community-viewer">{packet?.title ?? 'No packet'}</div>
+vi.mock('@/components/maps/universe/UniverseScene', () => ({
+  UniverseScene: ({
+    packet,
+    onSelectStarId,
+  }: {
+    packet?: { title?: string } | null;
+    onSelectStarId: (starId: string) => void;
+  }) => (
+    <div data-testid="community-starfield">
+      <span>{packet?.title ?? 'No packet'}</span>
+      <button type="button" onClick={() => onSelectStarId('community-story-1')}>
+        Select node
+      </button>
+    </div>
   ),
 }));
 
@@ -50,7 +61,7 @@ describe('CommunityPage', () => {
     loadCommunityUniverseDataMock.mockReset();
   });
 
-  it('keeps the community universe path available in live mode, not only fallback mode', async () => {
+  it('uses the celestial field as the primary community surface and keeps the gallery as a backup path', async () => {
     loadCommunityUniverseDataMock.mockResolvedValue({
       posts: [
         {
@@ -89,12 +100,19 @@ describe('CommunityPage', () => {
     expect((await screen.findAllByText('Live commons')).length).toBeGreaterThan(0);
     expect(screen.getByText('1 public traces visible')).toBeInTheDocument();
     expect(screen.getByText('1 trusted signals')).toBeInTheDocument();
+    expect(screen.getByText('How to read this commons surface')).toBeInTheDocument();
+    expect(screen.getByText('Enter the starfield')).toBeInTheDocument();
+    expect(screen.queryByTestId('community-gallery')).not.toBeInTheDocument();
 
-    const toggle = await screen.findByRole('button', { name: 'Open universe panel' });
+    fireEvent.click(screen.getByRole('button', { name: 'Enter the starfield' }));
 
-    fireEvent.click(toggle);
+    expect(await screen.findByTestId('community-starfield')).toHaveTextContent('Manara Community Universe');
 
-    expect(await screen.findByTestId('community-viewer')).toHaveTextContent('Manara Community Universe');
-    expect(screen.getByRole('button', { name: 'Hide universe panel' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Select node' }));
+    expect(await screen.findByText('Open related gallery')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open related gallery' }));
+
+    expect(await screen.findByTestId('community-gallery')).toBeInTheDocument();
   });
 });

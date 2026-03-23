@@ -7,12 +7,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AnuChip, AnuSurfacePanel } from '@/ui-system/anu/surfacePrimitives';
 import { buildPathwayGuide } from './pathwayGuidance';
 import { getShellSignal } from './shellSignals';
+import { getRealmSurface } from '@/ui-system/realms/realmRegistry';
 
 export function PathwayGuideBar() {
   const pathname = usePathname();
   const { isAuthenticated } = useAuth();
   const guide = buildPathwayGuide(pathname);
   const signal = getShellSignal(pathname);
+  const realmSurface = getRealmSurface(pathname);
 
   const steps = guide.steps.filter((step) => !step.authRequired || isAuthenticated).slice(0, 3);
 
@@ -27,6 +29,7 @@ export function PathwayGuideBar() {
           <div className="min-w-[220px]">
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#d8c9a4]/80">Route guidance</p>
+              <AnuChip tone="muted">{realmSurface.environmentTitle}</AnuChip>
               <AnuChip tone="muted">{signal.label}</AnuChip>
             </div>
             <p className="text-sm font-medium text-slate-100">{guide.title}</p>

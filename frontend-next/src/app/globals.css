@@ -953,6 +953,471 @@
       radial-gradient(circle at 92% 8%, rgba(216, 169, 95, 0.14), transparent 30%),
       linear-gradient(150deg, rgba(32, 23, 15, 0.96), rgba(18, 13, 11, 0.92));
   }
+
+  .anu-earth-shell {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border: 1px solid rgba(108, 142, 103, 0.24);
+    border-radius: calc(var(--anu-radius-panel) + 0.35rem);
+    background:
+      radial-gradient(circle at 18% 0%, rgba(172, 119, 61, 0.16), transparent 26%),
+      radial-gradient(circle at 88% 2%, rgba(118, 168, 133, 0.12), transparent 24%),
+      linear-gradient(180deg, rgba(11, 18, 25, 0.98), rgba(8, 14, 17, 0.98));
+    padding: clamp(1.1rem, 2vw, 1.7rem);
+    box-shadow:
+      0 34px 96px -64px rgba(0, 0, 0, 0.92),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .anu-earth-shell::before {
+    content: '';
+    position: absolute;
+    inset: -8% -6%;
+    background:
+      radial-gradient(circle at 20% 26%, rgba(82, 118, 83, 0.16), transparent 24%),
+      radial-gradient(circle at 82% 18%, rgba(154, 107, 56, 0.16), transparent 22%);
+    opacity: 0.9;
+    pointer-events: none;
+  }
+
+  .anu-earth-field-frame {
+    position: relative;
+    border: 1px solid rgba(119, 152, 112, 0.22);
+    border-radius: calc(var(--anu-radius-panel) + 0.25rem);
+    background:
+      radial-gradient(circle at 84% 0%, rgba(215, 164, 103, 0.08), transparent 24%),
+      linear-gradient(180deg, rgba(8, 14, 17, 0.96), rgba(7, 11, 14, 0.98));
+    overflow: hidden;
+    box-shadow:
+      0 28px 84px -58px rgba(0, 0, 0, 0.96),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  }
+
+  .anu-earth-field-grid {
+    display: grid;
+    gap: 1rem;
+    padding: 1.1rem 1.1rem 7rem;
+  }
+
+  .anu-earth-field-stage {
+    position: relative;
+    min-height: 29rem;
+    overflow: hidden;
+    border: 1px solid rgba(130, 167, 120, 0.18);
+    border-radius: calc(var(--anu-radius-panel) + 0.2rem);
+    background:
+      radial-gradient(circle at 18% 24%, rgba(71, 108, 74, 0.28), transparent 24%),
+      radial-gradient(circle at 78% 38%, rgba(78, 67, 37, 0.24), transparent 22%),
+      radial-gradient(circle at 60% 72%, rgba(42, 59, 44, 0.38), transparent 22%),
+      linear-gradient(180deg, rgba(10, 18, 22, 0.98), rgba(7, 11, 13, 1));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.03),
+      inset 0 -24px 60px rgba(0, 0, 0, 0.28);
+  }
+
+  .anu-earth-field-stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-radial-gradient(circle at 24% 62%, rgba(197, 175, 131, 0.12) 0 1px, transparent 1px 28px),
+      repeating-radial-gradient(circle at 72% 32%, rgba(132, 156, 118, 0.1) 0 1px, transparent 1px 32px),
+      linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.22));
+    opacity: 0.56;
+    pointer-events: none;
+  }
+
+  .anu-earth-field-stage::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 34%;
+    background:
+      linear-gradient(180deg, rgba(9, 14, 17, 0), rgba(6, 10, 12, 0.88) 46%, rgba(6, 10, 12, 0.98));
+    pointer-events: none;
+  }
+
+  .anu-earth-field-sidecar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .anu-earth-marker {
+    position: absolute;
+    z-index: 2;
+    width: min(16rem, calc(100% - 2.5rem));
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.6rem;
+    background:
+      linear-gradient(150deg, rgba(14, 23, 28, 0.94), rgba(9, 15, 18, 0.96));
+    padding: 0.95rem 1rem;
+    text-align: left;
+    box-shadow:
+      0 18px 44px -30px rgba(0, 0, 0, 0.84),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    transition:
+      transform var(--anu-motion-base) var(--anu-ease-standard),
+      border-color var(--anu-motion-base) var(--anu-ease-standard),
+      background-color var(--anu-motion-base) var(--anu-ease-standard),
+      box-shadow var(--anu-motion-base) var(--anu-ease-standard);
+  }
+
+  .anu-earth-marker:hover {
+    transform: translate(-50%, calc(-50% - 4px));
+  }
+
+  .anu-earth-marker-active {
+    border-color: rgba(231, 194, 127, 0.44);
+    box-shadow:
+      0 24px 48px -28px rgba(0, 0, 0, 0.86),
+      0 0 0 1px rgba(231, 194, 127, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .anu-earth-marker-camp {
+    background:
+      radial-gradient(circle at 86% 0%, rgba(109, 165, 116, 0.15), transparent 28%),
+      linear-gradient(150deg, rgba(15, 28, 24, 0.96), rgba(10, 17, 14, 0.96));
+  }
+
+  .anu-earth-marker-parcel {
+    background:
+      radial-gradient(circle at 86% 0%, rgba(216, 169, 95, 0.16), transparent 28%),
+      linear-gradient(150deg, rgba(29, 22, 16, 0.96), rgba(16, 12, 10, 0.96));
+  }
+
+  .anu-earth-marker-gathering {
+    background:
+      radial-gradient(circle at 86% 0%, rgba(89, 143, 189, 0.18), transparent 28%),
+      linear-gradient(150deg, rgba(14, 22, 32, 0.96), rgba(10, 15, 22, 0.96));
+  }
+
+  .anu-earth-marker-market {
+    background:
+      radial-gradient(circle at 86% 0%, rgba(193, 108, 73, 0.18), transparent 28%),
+      linear-gradient(150deg, rgba(31, 20, 16, 0.96), rgba(17, 12, 10, 0.96));
+  }
+
+  .anu-earth-marker-care {
+    background:
+      radial-gradient(circle at 86% 0%, rgba(102, 168, 151, 0.18), transparent 28%),
+      linear-gradient(150deg, rgba(12, 28, 27, 0.96), rgba(8, 16, 18, 0.96));
+  }
+
+  .anu-earth-marker-outcome {
+    background:
+      radial-gradient(circle at 86% 0%, rgba(154, 124, 214, 0.2), transparent 28%),
+      linear-gradient(150deg, rgba(18, 20, 34, 0.96), rgba(11, 13, 24, 0.96));
+  }
+
+  .anu-earth-marker-icon {
+    display: inline-flex;
+    height: 2.2rem;
+    width: 2.2rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(241, 223, 182, 0.94);
+  }
+
+  .anu-earth-marker-badge {
+    display: inline-flex;
+    min-height: 1.85rem;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 0.25rem 0.65rem;
+    font-size: 0.72rem;
+    color: rgba(234, 239, 247, 0.82);
+  }
+
+  .anu-earth-rising-panel-wrap {
+    position: relative;
+    z-index: 3;
+    margin: -3.6rem 1.1rem 0;
+    padding-bottom: 4.75rem;
+  }
+
+  .anu-earth-rising-panel {
+    border: 1px solid rgba(182, 158, 114, 0.22);
+    border-radius: calc(var(--anu-radius-panel) + 0.2rem);
+    background:
+      radial-gradient(circle at 84% 0%, rgba(215, 164, 103, 0.1), transparent 26%),
+      linear-gradient(155deg, rgba(12, 20, 24, 0.98), rgba(8, 13, 16, 0.98));
+    padding: clamp(1rem, 2vw, 1.45rem);
+    box-shadow:
+      0 26px 72px -48px rgba(0, 0, 0, 0.92),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+  }
+
+  .anu-earth-nav-slot {
+    position: absolute;
+    left: 50%;
+    bottom: 1rem;
+    z-index: 4;
+    transform: translateX(-50%);
+    width: calc(100% - 2rem);
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .anu-earth-nav-pill {
+    pointer-events: auto;
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+    border: 1px solid rgba(168, 145, 106, 0.26);
+    border-radius: 999px;
+    background:
+      linear-gradient(145deg, rgba(11, 17, 20, 0.96), rgba(7, 11, 13, 0.96));
+    padding: 0.4rem;
+    box-shadow:
+      0 18px 44px -30px rgba(0, 0, 0, 0.92),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(18px);
+  }
+
+  .anu-earth-nav-link {
+    display: inline-flex;
+    min-height: 2.35rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(231, 236, 244, 0.82);
+    transition:
+      background-color var(--anu-motion-base) var(--anu-ease-standard),
+      color var(--anu-motion-base) var(--anu-ease-standard),
+      transform var(--anu-motion-base) var(--anu-ease-standard);
+  }
+
+  .anu-earth-nav-link:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(250, 248, 242, 0.96);
+  }
+
+  .anu-earth-nav-link-active {
+    background: linear-gradient(145deg, rgba(215, 164, 103, 0.94), rgba(169, 119, 67, 0.9));
+    color: #14191d;
+    box-shadow: 0 18px 34px -26px rgba(215, 164, 103, 0.72);
+  }
+
+  .anu-earth-utility-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  @media (max-width: 1023px) {
+    .anu-earth-field-grid {
+      padding-bottom: 6.75rem;
+    }
+
+    .anu-earth-field-stage {
+      min-height: 24rem;
+    }
+
+    .anu-earth-marker {
+      width: min(13.5rem, calc(100% - 2rem));
+    }
+
+    .anu-earth-rising-panel-wrap {
+      margin-top: -2.4rem;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .anu-earth-shell {
+      padding: 1rem;
+    }
+
+    .anu-earth-field-grid {
+      padding: 0.85rem 0.85rem 7.25rem;
+    }
+
+    .anu-earth-field-stage {
+      min-height: 21rem;
+    }
+
+    .anu-earth-marker {
+      width: min(11.5rem, calc(100% - 1.35rem));
+      padding: 0.85rem 0.85rem;
+    }
+
+    .anu-earth-nav-slot {
+      width: calc(100% - 1.2rem);
+    }
+
+    .anu-earth-rising-panel-wrap {
+      margin-left: 0.85rem;
+      margin-right: 0.85rem;
+      padding-bottom: 5.5rem;
+    }
+  }
+
+  .anu-labyrinth-shell {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border: 1px solid rgba(210, 188, 147, 0.14);
+    border-radius: calc(var(--anu-radius-panel) + 0.6rem);
+    background:
+      radial-gradient(circle at 16% 10%, rgba(151, 125, 82, 0.12), transparent 28%),
+      radial-gradient(circle at 84% -4%, rgba(93, 77, 51, 0.16), transparent 26%),
+      linear-gradient(180deg, rgba(11, 12, 15, 0.98), rgba(18, 18, 21, 0.96) 38%, rgba(23, 20, 17, 0.98) 100%);
+    box-shadow: 0 34px 82px -52px rgba(0, 0, 0, 0.98);
+    padding: 1.35rem;
+  }
+
+  .anu-labyrinth-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 18% 18%, rgba(239, 211, 157, 0.06), transparent 14%),
+      radial-gradient(circle at 84% 26%, rgba(239, 211, 157, 0.04), transparent 16%),
+      linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+    background-size: auto, auto, 120px 120px, 120px 120px;
+    opacity: 0.35;
+    mask-image: radial-gradient(circle at center, black 28%, transparent 92%);
+  }
+
+  .anu-labyrinth-shell::after {
+    content: "";
+    position: absolute;
+    inset: auto -8% -12% auto;
+    height: 22rem;
+    width: 22rem;
+    border-radius: 999px;
+    border: 1px solid rgba(233, 205, 149, 0.08);
+    background:
+      radial-gradient(circle, rgba(247, 225, 182, 0.08) 0%, rgba(247, 225, 182, 0.02) 40%, transparent 72%);
+    filter: blur(6px);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .anu-labyrinth-sidecar {
+    border: 1px solid rgba(210, 188, 147, 0.16);
+    border-radius: calc(var(--anu-radius-card) + 0.2rem);
+    background:
+      linear-gradient(150deg, rgba(31, 26, 21, 0.94), rgba(18, 16, 14, 0.92));
+    padding: 1rem;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 20px 48px -38px rgba(0, 0, 0, 0.96);
+  }
+
+  .anu-labyrinth-marker {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    border: 1px solid rgba(213, 190, 150, 0.12);
+    border-radius: calc(var(--anu-radius-card) + 0.3rem);
+    background:
+      radial-gradient(circle at 100% 0%, rgba(214, 181, 118, 0.08), transparent 28%),
+      linear-gradient(155deg, rgba(24, 22, 20, 0.94), rgba(16, 15, 14, 0.92));
+    padding: 1rem;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 22px 52px -42px rgba(0, 0, 0, 0.98);
+    transition:
+      transform var(--anu-motion-base) var(--anu-ease-standard),
+      border-color var(--anu-motion-base) var(--anu-ease-standard),
+      background-color var(--anu-motion-base) var(--anu-ease-standard);
+  }
+
+  .anu-labyrinth-marker:hover {
+    transform: translateY(-1px);
+    border-color: rgba(233, 205, 149, 0.22);
+  }
+
+  .anu-labyrinth-marker-active {
+    border-color: rgba(233, 205, 149, 0.3);
+    background:
+      radial-gradient(circle at 100% 0%, rgba(214, 181, 118, 0.12), transparent 28%),
+      linear-gradient(155deg, rgba(31, 27, 21, 0.96), rgba(18, 16, 14, 0.94));
+  }
+
+  .anu-state-seal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 0.36rem 0.8rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .anu-state-seal-active {
+    border-color: rgba(108, 178, 126, 0.26);
+    background: rgba(108, 178, 126, 0.1);
+    color: rgba(198, 236, 202, 0.95);
+  }
+
+  .anu-state-seal-contested {
+    border-color: rgba(209, 150, 92, 0.28);
+    background: rgba(209, 150, 92, 0.1);
+    color: rgba(251, 214, 170, 0.96);
+  }
+
+  .anu-state-seal-deprecated {
+    border-color: rgba(160, 119, 119, 0.28);
+    background: rgba(160, 119, 119, 0.1);
+    color: rgba(238, 208, 208, 0.95);
+  }
+
+  .anu-state-seal-dormant {
+    border-color: rgba(143, 145, 151, 0.22);
+    background: rgba(143, 145, 151, 0.08);
+    color: rgba(227, 230, 236, 0.9);
+  }
+
+  .anu-state-seal-experimental {
+    border-color: rgba(122, 145, 214, 0.28);
+    background: rgba(122, 145, 214, 0.1);
+    color: rgba(216, 226, 255, 0.94);
+  }
+
+  .anu-labyrinth-instrument {
+    border: 1px solid rgba(91, 72, 42, 0.16);
+    border-radius: calc(var(--anu-radius-card) + 0.08rem);
+    background:
+      linear-gradient(155deg, rgba(255, 248, 234, 0.8), rgba(241, 226, 197, 0.62));
+    padding: 0.95rem;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.42),
+      0 18px 34px -30px rgba(55, 39, 17, 0.36);
+  }
+
+  .anu-manuscript-overlay {
+    border: 1px solid rgba(109, 85, 43, 0.18);
+    border-radius: calc(var(--anu-radius-panel) + 0.55rem);
+    background:
+      radial-gradient(circle at 12% 6%, rgba(247, 232, 202, 0.48), transparent 30%),
+      radial-gradient(circle at 86% 0%, rgba(185, 148, 88, 0.14), transparent 24%),
+      linear-gradient(180deg, rgba(246, 236, 218, 0.98), rgba(236, 223, 197, 0.98) 56%, rgba(228, 212, 182, 0.98) 100%);
+    box-shadow: 0 42px 110px -58px rgba(0, 0, 0, 0.98);
+  }
 }
 
 @layer utilities {

@@ -269,6 +269,7 @@ describe('FalakMapViewer', () => {
 
     expect(packetFactoryMock).not.toHaveBeenCalled();
     expect(screen.getByTestId('education-scene')).toHaveTextContent('Packet First Universe');
+    expect(screen.getByText('How to read this universe output')).toBeInTheDocument();
     expect(await screen.findAllByText('Packet First Star')).toHaveLength(2);
     expect(screen.getByText('Packet-first summary.')).toBeInTheDocument();
   });

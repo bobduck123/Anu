@@ -131,6 +131,8 @@ describe('ProfilePage', () => {
     render(<ProfilePage />);
 
     expect(await screen.findByText('Profile cockpit')).toBeInTheDocument();
+    expect(screen.getByText('Contributor threshold')).toBeInTheDocument();
+    expect(screen.getByText('Where this member stands in the commons')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Tasks (1)' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Tasks (1)' }));

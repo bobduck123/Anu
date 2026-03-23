@@ -18,6 +18,7 @@ import {
   AnuSectionHeading,
   AnuSurfacePanel,
 } from '@/ui-system/anu/surfacePrimitives';
+import { AnuNarrativeBriefPanel } from '@/ui-system/anu/narrativePrimitives';
 
 const libraryCollections = [
   {
@@ -182,6 +183,42 @@ export default function DocsPage() {
             value="Education + Flora & Fauna"
             detail="Subsystem libraries should inherit ANU structure while keeping their own operational identities."
             icon={ScrollText}
+          />
+        </section>
+
+        <section className="mt-12">
+          <AnuNarrativeBriefPanel
+            eyebrow="Route reading"
+            title="How to read this library"
+            description="The operations library is a structured output surface. It separates public truth, operator doctrine, and applied systems so people can enter ANU through the right lane."
+            signals={[
+              {
+                label: 'Output mode',
+                value: 'Curated route families',
+                detail: 'This page is not a catch-all help center. It is a controlled reading surface that groups routes by institutional role.',
+                tone: 'signal',
+                icon: LibraryBig,
+              },
+              {
+                label: 'Source state',
+                value: 'Authored summaries',
+                detail: 'Collections are intentionally written so people understand which route explains, which governs, and which acts.',
+                tone: 'muted',
+                icon: BookOpenText,
+              },
+              {
+                label: 'Fallback truth',
+                value: 'Truth before escalation',
+                detail: 'When unsure, start from transparency, contact, or memberships before jumping into governance or operator tooling.',
+                tone: 'accent',
+                icon: ShieldCheck,
+              },
+            ]}
+            whyItMatters="Wrong-route escalation makes institutions feel confusing and opaque. This library is meant to keep the reading path coherent before someone enters a more privileged or operational surface."
+            actions={[
+              { href: '/transparency', label: 'Open transparency', tone: 'secondary', icon: ShieldCheck },
+              { href: '/contact', label: 'Choose a routing lane', tone: 'ghost', icon: FileSearch },
+            ]}
           />
         </section>
 

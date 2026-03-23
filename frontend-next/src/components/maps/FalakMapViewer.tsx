@@ -15,6 +15,7 @@ import {
   universePresentationTerms,
 } from './universe/presentationTerms';
 import type { UniversePacket, UniverseRelation, UniverseStar } from './universe/types';
+import { AnuNarrativeBriefPanel } from '@/ui-system/anu/narrativePrimitives';
 import {
   formatNumber,
   formatPercent,
@@ -728,6 +729,45 @@ export function FalakMapViewer({
           </div>
         </div>
       </header>
+
+      <AnuNarrativeBriefPanel
+        eyebrow="Route reading"
+        title={`How to read this ${universePresentationTerms.universe.toLowerCase()} output`}
+        description={`This viewer is a narrative output of the shared packet contract. It should make packet mode, source state, and fallback truth inspectable before someone starts navigating ${universePresentationTerms.stars.toLowerCase()} and relations.`}
+        signals={[
+          {
+            label: 'Output mode',
+            value: packet.fallbackState?.active ? packet.fallbackState.label : displayStatus ?? 'Live packet',
+            detail: packet.fallbackState?.active
+              ? packet.fallbackState.message ??
+                `This ${universePresentationTerms.universe.toLowerCase()} is currently rendering a non-live packet path and should say so directly.`
+              : `The viewer is rendering the current packet through the shared scene, ${starIndexLabel().toLowerCase()}, and ${universePresentationTerms.explainer.toLowerCase()}.`,
+            tone: packet.fallbackState?.active ? 'accent' : 'signal',
+            icon: Sparkles,
+          },
+          {
+            label: 'Source state',
+            value: displaySummary,
+            detail:
+              displayCoverage !== null
+                ? `Coverage ${formatPercent(displayCoverage)} and packet status ${displayStatus ?? 'unlabeled'} are part of the readable contract, not hidden implementation details.`
+                : 'Packet summaries, versions, and relations should stay visible enough to support inspection.',
+            tone: 'muted',
+            icon: Layers3,
+          },
+          {
+            label: 'Fallback truth',
+            value: packet.fallbackState?.active ? 'Declared packet fallback' : 'Inspectable live packet',
+            detail: packet.fallbackState?.active
+              ? 'If live or authored state is unavailable, this viewer should say exactly what kind of packet replaced it rather than silently degrading.'
+              : `If packet inputs degrade later, the same viewer should move into an explicit read-only or demo state rather than hiding the contract.`,
+            tone: packet.fallbackState?.active ? 'accent' : 'signal',
+            icon: RefreshCw,
+          },
+        ]}
+        whyItMatters={`Knowledge surfaces are only trustworthy when people can tell whether they are reading a live packet, a reviewed packet, or a fallback ${universePresentationTerms.readOnlyPacket.toLowerCase()}.`}
+        compact
+      />
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_24rem]">
         <div className="space-y-4">
