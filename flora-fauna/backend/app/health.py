@@ -36,10 +36,31 @@ def _timestamp() -> str:
 
 def _database_ready() -> bool:
     try:
-        db.session.execute(text("SELECT 1"))
+        db.session.rollback()
     except Exception:
+        try:
+            db.session.remove()
+        except Exception:
+            pass
+
+    try:
+        with _database_engine().connect() as connection:
+            connection.execute(text("SELECT 1"))
+    except Exception as exc:
+        current_app.logger.warning(
+            "Database readiness probe failed via engine connect: %s",
+            exc.__class__.__name__,
+        )
+        try:
+            db.session.remove()
+        except Exception:
+            pass
         return False
     return True
+
+
+def _database_engine():
+    return db.engine
 
 
 def _database_placeholder() -> bool:

@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 os.environ["FLASK_ENV"] = "testing"
 os.environ["SECRET_KEY"] = "test-secret-key-for-health-routes-1234"
@@ -23,14 +23,14 @@ client = app.test_client()
 
 
 def test_health_is_lightweight_and_advertises_readiness():
-    with patch("manara_backend_app.health.db.session.execute") as execute:
+    with patch("manara_backend_app.health._database_engine") as database_engine:
         response = client.get("/health")
 
     assert response.status_code == 200
     assert response.get_json()["status"] == "ok"
     assert response.get_json()["database_checked"] is False
     assert response.get_json()["readiness"] == "/readiness"
-    execute.assert_not_called()
+    database_engine.assert_not_called()
 
 
 def test_healthz_is_minimal_liveness_probe():
@@ -41,24 +41,37 @@ def test_healthz_is_minimal_liveness_probe():
 
 
 def test_readiness_reports_database_success():
-    with patch("manara_backend_app.health.db.session.execute", return_value=None) as execute:
+    connection = MagicMock()
+    connect_context = MagicMock()
+    connect_context.__enter__.return_value = connection
+
+    engine = MagicMock()
+    engine.connect.return_value = connect_context
+
+    with patch("manara_backend_app.health._database_engine", return_value=engine) as database_engine:
         response = client.get("/readiness")
 
     assert response.status_code == 200
     assert response.get_json()["status"] == "ok"
     assert response.get_json()["db"] is True
     assert response.get_json()["warnings"] == []
-    execute.assert_called_once()
+    database_engine.assert_called_once()
+    engine.connect.assert_called_once()
+    connection.execute.assert_called_once()
 
 
 def test_readiness_reports_database_failure():
-    with patch("manara_backend_app.health.db.session.execute", side_effect=RuntimeError("db unavailable")) as execute:
+    engine = MagicMock()
+    engine.connect.side_effect = RuntimeError("db unavailable")
+
+    with patch("manara_backend_app.health._database_engine", return_value=engine) as database_engine:
         response = client.get("/readiness")
 
     assert response.status_code == 503
     assert response.get_json()["status"] == "degraded"
     assert response.get_json()["db"] is False
-    execute.assert_called_once()
+    database_engine.assert_called_once()
+    engine.connect.assert_called_once()
 
 
 def test_readiness_stays_green_when_only_stripe_is_placeholder():
@@ -73,12 +86,41 @@ def test_readiness_stays_green_when_only_stripe_is_placeholder():
     )
     stripe_placeholder_client = stripe_placeholder_app.test_client()
 
-    with patch("manara_backend_app.health.db.session.execute", return_value=None):
+    connection = MagicMock()
+    connect_context = MagicMock()
+    connect_context.__enter__.return_value = connection
+
+    engine = MagicMock()
+    engine.connect.return_value = connect_context
+
+    with patch("manara_backend_app.health._database_engine", return_value=engine):
         response = stripe_placeholder_client.get("/readiness")
 
     assert response.status_code == 200
     assert response.get_json()["status"] == "ok"
     assert response.get_json()["warnings"] == ["stripe_placeholder"]
+
+
+def test_readiness_uses_engine_probe_even_if_request_session_was_stale():
+    connection = MagicMock()
+    connect_context = MagicMock()
+    connect_context.__enter__.return_value = connection
+
+    with patch("manara_backend_app.health.db.session.rollback", side_effect=RuntimeError("stale session")) as rollback:
+        with patch("manara_backend_app.health.db.session.remove") as remove:
+            engine = MagicMock()
+            engine.connect.return_value = connect_context
+
+            with patch("manara_backend_app.health._database_engine", return_value=engine) as database_engine:
+                response = client.get("/readiness")
+
+    assert response.status_code == 200
+    assert response.get_json()["status"] == "ok"
+    rollback.assert_called_once()
+    assert remove.call_count >= 1
+    database_engine.assert_called_once()
+    engine.connect.assert_called_once()
+    connection.execute.assert_called_once()
 
 
 def test_domain_resolution_route_contract_is_single_prefixed():
