@@ -1,22 +1,27 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { HeartHandshake, ShieldCheck, Sparkles, Wallet } from 'lucide-react';
+import dynamicImport from 'next/dynamic';
+import Link from 'next/link';
+import { HeartHandshake, ShieldCheck, Sparkles, TentTree, Users, Wallet, Waypoints } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import ReliefIntakeForm from '@/components/relief/ReliefIntakeForm';
 import { reliefApi, type ReliefRequestRecord } from '@/lib/api/endpoints';
 import {
   AnuActionLink,
   AnuChip,
-  AnuHeroMetric,
   AnuInstrumentationCard,
   AnuSurfacePanel,
 } from '@/ui-system/anu/surfacePrimitives';
-import { AnuProcessPanel, AnuRouteBridgePanel } from '@/ui-system/anu/coordinationPrimitives';
 import { EarthFieldShell } from '@/ui-system/realms/earth/EarthFieldShell';
 import { EarthNavPill } from '@/ui-system/realms/earth/EarthNavPill';
 import { EarthObjectMarker } from '@/ui-system/realms/earth/EarthObjectMarker';
 import { EarthRisingPanel } from '@/ui-system/realms/earth/EarthRisingPanel';
+
+const EarthTerrainBackdrop = dynamicImport(
+  () => import('@/ui-system/realms/earth/EarthTerrainBackdrop').then((module) => module.EarthTerrainBackdrop),
+  { ssr: false },
+);
 
 const RELIEF_FIELD_POSITIONS = [
   { top: '20%', left: '20%' },
@@ -99,10 +104,18 @@ export default function ReliefPage() {
           moneyLabel(request.amount_requested_cents),
           request.urgency,
           request.queue_position_estimate ? `Queue ${request.queue_position_estimate}` : 'Queue pending',
-        ],
+        ].filter(Boolean),
         style: RELIEF_FIELD_POSITIONS[index],
         request,
       })),
+    [requests],
+  );
+
+  const terrainMarkers = useMemo(
+    () =>
+      requests
+        .filter((request) => typeof request.lat === 'number' && typeof request.lng === 'number')
+        .map((request) => ({ lat: request.lat as number, lng: request.lng as number })),
     [requests],
   );
 
@@ -123,12 +136,7 @@ export default function ReliefPage() {
 
   const field = (
     <div className="relative h-full w-full">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center pt-5">
-        <div className="rounded-full border border-white/10 bg-black/16 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#e5d2aa]/84 backdrop-blur-md">
-          Care stays grounded, private, and visible to the member who needs it.
-        </div>
-      </div>
-
+      {terrainMarkers.length > 0 ? <EarthTerrainBackdrop markers={terrainMarkers} /> : null}
       {isAuthenticated && requestMarkers.length > 0 ? (
         requestMarkers.map((marker) => (
           <EarthObjectMarker
@@ -159,64 +167,6 @@ export default function ReliefPage() {
         ))
       )}
     </div>
-  );
-
-  const fieldAside = (
-    <>
-      <AnuProcessPanel
-        eyebrow="Grounded care"
-        title="How the care lane stays accountable"
-        description="Relief should stay grounded and urgent without turning private requests into public spectacle."
-        steps={[
-          {
-            title: 'Private intake',
-            detail: 'Only the information needed for review enters the route.',
-          },
-          {
-            title: 'Consent-based review',
-            detail: 'Requests move through review and case-worker follow-up instead of opaque routing.',
-          },
-          {
-            title: 'Queue visibility',
-            detail: 'Members can track request status and approximate queue position without exposing the case publicly.',
-          },
-        ]}
-      />
-
-      <AnuRouteBridgePanel
-        eyebrow="Connected routes"
-        title="Relief stays inside the wider commons loop"
-        description="Care requests do not live in isolation. These nearby routes explain funding, trust, contribution, and public state around relief."
-        links={[
-          {
-            href: '/impact',
-            label: 'Impact bridge',
-            detail: 'Follow how contribution, streaks, pool state, and participation connect to care capacity.',
-            icon: Sparkles,
-            tone: 'signal',
-          },
-          {
-            href: '/transparency',
-            label: 'Transparency ledger',
-            detail: 'Read public totals, pool balances, and relief-capacity state without exposing individual requests.',
-            icon: ShieldCheck,
-          },
-          {
-            href: '/memberships',
-            label: 'Commons memberships',
-            detail: 'Evaluate how recurring contribution supports the care infrastructure behind this route.',
-            icon: Wallet,
-            tone: 'accent',
-          },
-          {
-            href: '/community',
-            label: 'Community commons',
-            detail: 'Return to public commons when the question is context rather than a private case.',
-            icon: HeartHandshake,
-          },
-        ]}
-      />
-    </>
   );
 
   const risingPanel = selectedRequestMarker ? (
@@ -267,12 +217,12 @@ export default function ReliefPage() {
       }
       footer={
         <div className="flex flex-wrap gap-3">
-          <AnuActionLink href="/impact" tone="secondary">
+          <Link href="/impact" className="anu-earth-top-link">
             Follow care capacity upward
-          </AnuActionLink>
-          <AnuActionLink href="/transparency" tone="ghost">
+          </Link>
+          <Link href="/transparency" className="anu-earth-top-link">
             Cross-check public trust
-          </AnuActionLink>
+          </Link>
         </div>
       }
     />
@@ -306,12 +256,12 @@ export default function ReliefPage() {
       }
       footer={
         <div className="flex flex-wrap gap-3">
-          <AnuActionLink href={isAuthenticated ? '/impact' : '/auth'} tone="secondary">
+          <Link href={isAuthenticated ? '/impact' : '/auth'} className="anu-earth-top-link">
             {isAuthenticated ? 'Open impact bridge' : 'Sign in to request support'}
-          </AnuActionLink>
-          <AnuActionLink href="/transparency" tone="ghost">
+          </Link>
+          <Link href="/transparency" className="anu-earth-top-link">
             Open transparency
-          </AnuActionLink>
+          </Link>
         </div>
       }
     />
@@ -437,49 +387,52 @@ export default function ReliefPage() {
 
   return (
     <div className="min-h-screen px-4 pb-20 pt-24 md:px-8">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto w-full max-w-[96rem]">
         <EarthFieldShell
           eyebrow="Earth bridge / relief"
-          title="Ground private care in a visible route."
-          description="Relief is a grounded care lane inside the wider commons. Requests stay private, queue visibility stays protected, and the surrounding trust and impact routes remain explicit."
+          title="The Commons"
+          description="Private care stays grounded, queue visibility stays protected, and the wider trust routes remain readable without turning relief into a spectacle."
           actions={
-            isAuthenticated ? (
-              <>
-                <AnuActionLink href="/impact" tone="primary" iconRight={Sparkles}>
-                  Open impact bridge
-                </AnuActionLink>
-                <AnuActionLink href="/transparency" tone="secondary" iconRight={ShieldCheck}>
-                  Public transparency
-                </AnuActionLink>
-              </>
-            ) : (
-              <>
-                <AnuActionLink href="/auth" tone="primary" iconRight={Sparkles}>
-                  Sign in to request support
-                </AnuActionLink>
-                <AnuActionLink href="/transparency" tone="secondary" iconRight={ShieldCheck}>
-                  Open transparency
-                </AnuActionLink>
-              </>
-            )
+            <div className="anu-earth-top-links">
+              <Link href={isAuthenticated ? '/impact' : '/auth'} className="anu-earth-top-link">
+                {isAuthenticated ? 'Open impact bridge' : 'Sign in to request support'}
+              </Link>
+              <Link href="/transparency" className="anu-earth-top-link">
+                Public transparency
+              </Link>
+              <Link href="/memberships" className="anu-earth-top-link">
+                Commons memberships
+              </Link>
+            </div>
           }
           metrics={
-            <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-              <AnuHeroMetric label="Visibility" value="Private intake" detail="Request details stay protected even while the route remains legible." />
-              <AnuHeroMetric label="Review model" value="Consent-based" detail="Case handling depends on consent and review rather than hidden discretionary routing." />
-              <AnuHeroMetric label="Route state" value={isAuthenticated ? `${requests.length} requests` : 'Sign-in gated'} detail="Signed-in members can track queue state; public visitors can still understand the route." />
+            <div className="anu-earth-hud-lines">
+              <div className="anu-earth-hud-line">
+                <span className="anu-earth-hud-key">Visibility</span>
+                <span className="anu-earth-hud-rule" />
+                <span className="anu-earth-hud-value">private intake</span>
+              </div>
+              <div className="anu-earth-hud-line">
+                <span className="anu-earth-hud-key">Review</span>
+                <span className="anu-earth-hud-rule" />
+                <span className="anu-earth-hud-value">consent-based care lane</span>
+              </div>
+              <div className="anu-earth-hud-line">
+                <span className="anu-earth-hud-key">Route state</span>
+                <span className="anu-earth-hud-rule" />
+                <span className="anu-earth-hud-value">{isAuthenticated ? `${requests.length} visible requests` : 'sign-in gated'}</span>
+              </div>
             </div>
           }
           field={field}
-          fieldAside={fieldAside}
           risingPanel={risingPanel}
           nav={
             <EarthNavPill
               items={[
-                { href: '/actions', label: 'Actions' },
-                { href: '/events', label: 'Events' },
-                { href: '/relief', label: 'Relief', active: true },
-                { href: '/impact', label: 'Impact' },
+                { href: '/actions', label: 'Actions', icon: TentTree },
+                { href: '/events', label: 'Events', icon: Users },
+                { href: '/relief', label: 'Relief', active: true, icon: HeartHandshake },
+                { href: '/impact', label: 'Impact', icon: Waypoints },
               ]}
             />
           }

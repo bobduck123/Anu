@@ -79,6 +79,10 @@ export interface ReliefRequestRecord {
   queue_position_estimate?: number;
   next_update_eta_hours?: number;
   contact_preference?: string;
+  lat?: number;
+  lng?: number;
+  city?: string;
+  country?: string;
 }
 
 export interface ReliefDecision {

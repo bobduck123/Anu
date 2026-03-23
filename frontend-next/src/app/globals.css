@@ -955,65 +955,48 @@
   }
 
   .anu-earth-shell {
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-    border: 1px solid rgba(108, 142, 103, 0.24);
-    border-radius: calc(var(--anu-radius-panel) + 0.35rem);
-    background:
-      radial-gradient(circle at 18% 0%, rgba(172, 119, 61, 0.16), transparent 26%),
-      radial-gradient(circle at 88% 2%, rgba(118, 168, 133, 0.12), transparent 24%),
-      linear-gradient(180deg, rgba(11, 18, 25, 0.98), rgba(8, 14, 17, 0.98));
-    padding: clamp(1.1rem, 2vw, 1.7rem);
-    box-shadow:
-      0 34px 96px -64px rgba(0, 0, 0, 0.92),
-      inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  }
-
-  .anu-earth-shell::before {
-    content: '';
-    position: absolute;
-    inset: -8% -6%;
-    background:
-      radial-gradient(circle at 20% 26%, rgba(82, 118, 83, 0.16), transparent 24%),
-      radial-gradient(circle at 82% 18%, rgba(154, 107, 56, 0.16), transparent 22%);
-    opacity: 0.9;
-    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   .anu-earth-field-frame {
     position: relative;
-    border: 1px solid rgba(119, 152, 112, 0.22);
-    border-radius: calc(var(--anu-radius-panel) + 0.25rem);
-    background:
-      radial-gradient(circle at 84% 0%, rgba(215, 164, 103, 0.08), transparent 24%),
-      linear-gradient(180deg, rgba(8, 14, 17, 0.96), rgba(7, 11, 14, 0.98));
     overflow: hidden;
-    box-shadow:
-      0 28px 84px -58px rgba(0, 0, 0, 0.96),
-      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    border-radius: 2.4rem;
+    background: linear-gradient(180deg, rgba(26, 14, 39, 0.98), rgba(20, 8, 33, 1));
+    box-shadow: 0 42px 96px -62px rgba(0, 0, 0, 0.94);
   }
 
-  .anu-earth-field-grid {
-    display: grid;
-    gap: 1rem;
-    padding: 1.1rem 1.1rem 7rem;
+  .anu-earth-field-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(20, 8, 33, 0.42), rgba(20, 8, 33, 0.1) 24%, rgba(20, 8, 33, 0.18) 54%, rgba(20, 8, 33, 0.76) 100%),
+      radial-gradient(circle at 18% 26%, rgba(34, 211, 238, 0.08), transparent 18%),
+      radial-gradient(circle at 68% 72%, rgba(255, 182, 136, 0.12), transparent 18%);
+    pointer-events: none;
+  }
+
+  .anu-earth-field-frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(34, 211, 238, 0.06), transparent 12%),
+      radial-gradient(circle at 50% 50%, transparent 44%, rgba(20, 8, 33, 0.08) 68%, rgba(20, 8, 33, 0.32) 100%),
+      repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.012) 0 1px, transparent 1px 4px);
+    mix-blend-mode: screen;
+    opacity: 0.36;
+    pointer-events: none;
   }
 
   .anu-earth-field-stage {
     position: relative;
-    min-height: 29rem;
+    min-height: clamp(35rem, 72vh, 50rem);
     overflow: hidden;
-    border: 1px solid rgba(130, 167, 120, 0.18);
-    border-radius: calc(var(--anu-radius-panel) + 0.2rem);
-    background:
-      radial-gradient(circle at 18% 24%, rgba(71, 108, 74, 0.28), transparent 24%),
-      radial-gradient(circle at 78% 38%, rgba(78, 67, 37, 0.24), transparent 22%),
-      radial-gradient(circle at 60% 72%, rgba(42, 59, 44, 0.38), transparent 22%),
-      linear-gradient(180deg, rgba(10, 18, 22, 0.98), rgba(7, 11, 13, 1));
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.03),
-      inset 0 -24px 60px rgba(0, 0, 0, 0.28);
+    background: linear-gradient(180deg, rgba(26, 14, 39, 0.96), rgba(20, 8, 33, 1));
   }
 
   .anu-earth-field-stage::before {
@@ -1021,149 +1004,428 @@
     position: absolute;
     inset: 0;
     background:
-      repeating-radial-gradient(circle at 24% 62%, rgba(197, 175, 131, 0.12) 0 1px, transparent 1px 28px),
-      repeating-radial-gradient(circle at 72% 32%, rgba(132, 156, 118, 0.1) 0 1px, transparent 1px 32px),
-      linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.22));
-    opacity: 0.56;
+      radial-gradient(circle at 12% 18%, rgba(34, 211, 238, 0.05), transparent 14%),
+      radial-gradient(circle at 72% 64%, rgba(255, 182, 136, 0.09), transparent 14%),
+      linear-gradient(180deg, rgba(26, 14, 39, 0.18), rgba(20, 8, 33, 0) 24%, rgba(20, 8, 33, 0.28) 86%, rgba(20, 8, 33, 0.62));
     pointer-events: none;
   }
 
-  .anu-earth-field-stage::after {
-    content: '';
+  .anu-earth-shell-topline {
     position: absolute;
-    inset: auto 0 0;
-    height: 34%;
-    background:
-      linear-gradient(180deg, rgba(9, 14, 17, 0), rgba(6, 10, 12, 0.88) 46%, rgba(6, 10, 12, 0.98));
+    inset: 1.85rem 2.25rem auto;
+    z-index: 4;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
     pointer-events: none;
   }
 
-  .anu-earth-field-sidecar {
+  .anu-earth-shell-metrics,
+  .anu-earth-shell-actions {
+    pointer-events: auto;
+  }
+
+  .anu-earth-hud-lines {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.55rem;
+  }
+
+  .anu-earth-hud-line {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-family: var(--anu-type-label);
+    font-size: 0.62rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  .anu-earth-hud-key {
+    min-width: 5rem;
+    color: rgba(34, 211, 238, 0.78);
+  }
+
+  .anu-earth-hud-rule {
+    display: block;
+    width: 4rem;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(34, 211, 238, 0.4), transparent);
+  }
+
+  .anu-earth-hud-value {
+    color: rgba(239, 219, 254, 0.64);
+  }
+
+  .anu-earth-top-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
+  .anu-earth-top-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    background: rgba(38, 26, 52, 0.44);
+    padding: 0.55rem 0.95rem;
+    font-family: var(--anu-type-ui);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(205, 195, 208, 0.82);
+    backdrop-filter: blur(16px);
+    transition:
+      color var(--anu-motion-base) var(--anu-ease-standard),
+      background-color var(--anu-motion-base) var(--anu-ease-standard),
+      transform var(--anu-motion-base) var(--anu-ease-standard);
+  }
+
+  .anu-earth-top-link:hover {
+    transform: translateY(-1px);
+    background: rgba(49, 36, 63, 0.68);
+    color: rgba(138, 235, 255, 0.94);
+  }
+
+  .anu-earth-title-block {
+    position: absolute;
+    right: clamp(1.5rem, 3vw, 3rem);
+    bottom: clamp(6.8rem, 12vw, 8.9rem);
+    z-index: 4;
+    max-width: min(28rem, 42vw);
+    text-align: right;
+    pointer-events: none;
+  }
+
+  .anu-earth-title-eyebrow {
+    font-family: var(--anu-type-label);
+    font-size: 0.68rem;
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+    color: rgba(34, 211, 238, 0.56);
+  }
+
+  .anu-earth-title {
+    margin-top: 0.85rem;
+    color: rgba(239, 219, 254, 0.92);
+    font-family: var(--anu-type-display);
+    font-size: clamp(3rem, 5vw, 5.2rem);
+    font-style: italic;
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+    text-wrap: balance;
+  }
+
+  .anu-earth-description {
+    margin-top: 1rem;
+    margin-left: auto;
+    max-width: 26rem;
+    font-family: var(--anu-type-ui);
+    font-size: 0.78rem;
+    line-height: 1.7;
+    letter-spacing: 0.08em;
+    color: rgba(239, 219, 254, 0.62);
   }
 
   .anu-earth-marker {
     position: absolute;
-    z-index: 2;
-    width: min(16rem, calc(100% - 2.5rem));
-    transform: translate(-50%, -50%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1.6rem;
-    background:
-      linear-gradient(150deg, rgba(14, 23, 28, 0.94), rgba(9, 15, 18, 0.96));
-    padding: 0.95rem 1rem;
-    text-align: left;
-    box-shadow:
-      0 18px 44px -30px rgba(0, 0, 0, 0.84),
-      inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    transition:
-      transform var(--anu-motion-base) var(--anu-ease-standard),
-      border-color var(--anu-motion-base) var(--anu-ease-standard),
-      background-color var(--anu-motion-base) var(--anu-ease-standard),
-      box-shadow var(--anu-motion-base) var(--anu-ease-standard);
-  }
-
-  .anu-earth-marker:hover {
-    transform: translate(-50%, calc(-50% - 4px));
-  }
-
-  .anu-earth-marker-active {
-    border-color: rgba(231, 194, 127, 0.44);
-    box-shadow:
-      0 24px 48px -28px rgba(0, 0, 0, 0.86),
-      0 0 0 1px rgba(231, 194, 127, 0.18),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  }
-
-  .anu-earth-marker-camp {
-    background:
-      radial-gradient(circle at 86% 0%, rgba(109, 165, 116, 0.15), transparent 28%),
-      linear-gradient(150deg, rgba(15, 28, 24, 0.96), rgba(10, 17, 14, 0.96));
-  }
-
-  .anu-earth-marker-parcel {
-    background:
-      radial-gradient(circle at 86% 0%, rgba(216, 169, 95, 0.16), transparent 28%),
-      linear-gradient(150deg, rgba(29, 22, 16, 0.96), rgba(16, 12, 10, 0.96));
-  }
-
-  .anu-earth-marker-gathering {
-    background:
-      radial-gradient(circle at 86% 0%, rgba(89, 143, 189, 0.18), transparent 28%),
-      linear-gradient(150deg, rgba(14, 22, 32, 0.96), rgba(10, 15, 22, 0.96));
-  }
-
-  .anu-earth-marker-market {
-    background:
-      radial-gradient(circle at 86% 0%, rgba(193, 108, 73, 0.18), transparent 28%),
-      linear-gradient(150deg, rgba(31, 20, 16, 0.96), rgba(17, 12, 10, 0.96));
-  }
-
-  .anu-earth-marker-care {
-    background:
-      radial-gradient(circle at 86% 0%, rgba(102, 168, 151, 0.18), transparent 28%),
-      linear-gradient(150deg, rgba(12, 28, 27, 0.96), rgba(8, 16, 18, 0.96));
-  }
-
-  .anu-earth-marker-outcome {
-    background:
-      radial-gradient(circle at 86% 0%, rgba(154, 124, 214, 0.2), transparent 28%),
-      linear-gradient(150deg, rgba(18, 20, 34, 0.96), rgba(11, 13, 24, 0.96));
-  }
-
-  .anu-earth-marker-icon {
+    z-index: 3;
     display: inline-flex;
-    height: 2.2rem;
-    width: 2.2rem;
     align-items: center;
     justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    border: 0;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .anu-earth-terrain-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .anu-earth-terrain-map {
+    height: 100%;
+    width: 100%;
+    filter: grayscale(0.2) saturate(0.56) brightness(0.48) contrast(1.14);
+    opacity: 0.84;
+    transform: scale(1.03);
+    transform-origin: center;
+  }
+
+  .anu-earth-terrain-map .leaflet-control-container,
+  .anu-earth-terrain-map .leaflet-pane .leaflet-marker-pane,
+  .anu-earth-terrain-map .leaflet-pane .leaflet-shadow-pane {
+    display: none;
+  }
+
+  .anu-earth-terrain-map .leaflet-tile {
+    filter: hue-rotate(252deg) saturate(0.72) brightness(0.56) contrast(1.16);
+  }
+
+  .anu-earth-terrain-credit {
+    position: absolute;
+    left: 1.15rem;
+    bottom: 1rem;
+    font-family: var(--anu-type-label);
+    font-size: 0.54rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(205, 195, 208, 0.34);
+  }
+
+  .anu-earth-marker:focus-visible {
+    outline: 2px solid rgba(138, 235, 255, 0.72);
+    outline-offset: 4px;
     border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
-    color: rgba(241, 223, 182, 0.94);
+  }
+
+  .anu-earth-marker-pulse {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    border-radius: 999px;
+    filter: blur(18px);
+    opacity: 0.32;
+    transition:
+      transform var(--anu-motion-base) var(--anu-ease-standard),
+      opacity var(--anu-motion-base) var(--anu-ease-standard);
+  }
+
+  .anu-earth-marker-core {
+    position: relative;
+    z-index: 2;
+    display: block;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.04),
+      0 0 24px rgba(34, 211, 238, 0.28);
+    transition:
+      transform var(--anu-motion-base) var(--anu-ease-standard),
+      box-shadow var(--anu-motion-base) var(--anu-ease-standard),
+      border-color var(--anu-motion-base) var(--anu-ease-standard);
+  }
+
+  .anu-earth-marker-hud {
+    position: absolute;
+    left: calc(100% + 0.95rem);
+    top: 50%;
+    z-index: 4;
+    min-width: min(18rem, calc(100vw - 8rem));
+    max-width: 19rem;
+    transform: translateY(-50%) scale(0.96);
+    border-radius: 1.4rem;
+    background:
+      linear-gradient(155deg, rgba(38, 26, 52, 0.88), rgba(26, 14, 39, 0.92));
+    padding: 0.9rem 1rem;
+    box-shadow:
+      0 24px 48px -38px rgba(0, 0, 0, 0.88),
+      0 0 0 1px rgba(255, 255, 255, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(22px);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity var(--anu-motion-base) var(--anu-ease-standard),
+      transform var(--anu-motion-base) var(--anu-ease-standard);
+  }
+
+  .anu-earth-marker:hover .anu-earth-marker-hud,
+  .anu-earth-marker:focus-visible .anu-earth-marker-hud,
+  .anu-earth-marker-active .anu-earth-marker-hud {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+
+  .anu-earth-marker:hover .anu-earth-marker-pulse,
+  .anu-earth-marker:focus-visible .anu-earth-marker-pulse,
+  .anu-earth-marker-active .anu-earth-marker-pulse {
+    opacity: 0.46;
+    transform: scale(1.14);
+  }
+
+  .anu-earth-marker:hover .anu-earth-marker-core,
+  .anu-earth-marker:focus-visible .anu-earth-marker-core,
+  .anu-earth-marker-active .anu-earth-marker-core {
+    transform: scale(1.08);
+  }
+
+  .anu-earth-marker-kind {
+    font-family: var(--anu-type-label);
+    font-size: 0.58rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(205, 195, 208, 0.62);
+  }
+
+  .anu-earth-marker-title {
+    margin-top: 0.35rem;
+    color: rgba(239, 219, 254, 0.96);
+    font-family: var(--anu-type-display);
+    font-size: 1.35rem;
+    font-style: italic;
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+  }
+
+  .anu-earth-marker-summary {
+    margin-top: 0.6rem;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: rgba(239, 219, 254, 0.76);
+  }
+
+  .anu-earth-marker-meta {
+    margin-top: 0.7rem;
+    font-family: var(--anu-type-label);
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(138, 235, 255, 0.7);
+  }
+
+  .anu-earth-marker-badge-row {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
   }
 
   .anu-earth-marker-badge {
     display: inline-flex;
-    min-height: 1.85rem;
     align-items: center;
     border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.04);
-    padding: 0.25rem 0.65rem;
-    font-size: 0.72rem;
-    color: rgba(234, 239, 247, 0.82);
+    background: rgba(60, 47, 74, 0.72);
+    padding: 0.22rem 0.5rem;
+    font-family: var(--anu-type-ui);
+    font-size: 0.66rem;
+    color: rgba(239, 219, 254, 0.76);
+  }
+
+  .anu-earth-marker-camp .anu-earth-marker-pulse,
+  .anu-earth-marker-gathering .anu-earth-marker-pulse,
+  .anu-earth-marker-care .anu-earth-marker-pulse {
+    width: 3rem;
+    height: 3rem;
+    background: rgba(34, 211, 238, 0.72);
+  }
+
+  .anu-earth-marker-camp .anu-earth-marker-core,
+  .anu-earth-marker-gathering .anu-earth-marker-core,
+  .anu-earth-marker-care .anu-earth-marker-core {
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 999px;
+    background: linear-gradient(160deg, rgba(138, 235, 255, 1), rgba(34, 211, 238, 0.88));
+  }
+
+  .anu-earth-marker-parcel .anu-earth-marker-pulse,
+  .anu-earth-marker-market .anu-earth-marker-pulse,
+  .anu-earth-marker-outcome .anu-earth-marker-pulse {
+    width: 3.5rem;
+    height: 3rem;
+    background: rgba(255, 182, 136, 0.68);
+  }
+
+  .anu-earth-marker-parcel .anu-earth-marker-core,
+  .anu-earth-marker-market .anu-earth-marker-core,
+  .anu-earth-marker-outcome .anu-earth-marker-core {
+    width: 1.9rem;
+    height: 1.55rem;
+    border-radius: 999px;
+    background: linear-gradient(160deg, rgba(255, 198, 64, 0.94), rgba(255, 182, 136, 0.82));
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.04),
+      0 0 24px rgba(255, 182, 136, 0.36);
+  }
+
+  .anu-earth-marker-care .anu-earth-marker-core {
+    background: linear-gradient(160deg, rgba(178, 244, 255, 0.96), rgba(112, 219, 227, 0.88));
   }
 
   .anu-earth-rising-panel-wrap {
-    position: relative;
-    z-index: 3;
-    margin: -3.6rem 1.1rem 0;
-    padding-bottom: 4.75rem;
+    position: absolute;
+    left: 1.2rem;
+    right: 1.2rem;
+    bottom: 5.7rem;
+    z-index: 4;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
   }
 
   .anu-earth-rising-panel {
-    border: 1px solid rgba(182, 158, 114, 0.22);
-    border-radius: calc(var(--anu-radius-panel) + 0.2rem);
+    position: relative;
+    width: min(100%, 72rem);
+    border-radius: 1.85rem;
     background:
-      radial-gradient(circle at 84% 0%, rgba(215, 164, 103, 0.1), transparent 26%),
-      linear-gradient(155deg, rgba(12, 20, 24, 0.98), rgba(8, 13, 16, 0.98));
+      linear-gradient(155deg, rgba(38, 26, 52, 0.74), rgba(26, 14, 39, 0.92));
     padding: clamp(1rem, 2vw, 1.45rem);
     box-shadow:
-      0 26px 72px -48px rgba(0, 0, 0, 0.92),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(16px);
+      0 28px 64px -44px rgba(0, 0, 0, 0.92),
+      0 0 0 1px rgba(255, 255, 255, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(28px);
+    pointer-events: auto;
+  }
+
+  .anu-earth-rising-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto auto 1.2rem;
+    width: min(24rem, calc(100% - 2.4rem));
+    height: 1px;
+    background: linear-gradient(90deg, rgba(34, 211, 238, 0.4), transparent);
+    pointer-events: none;
+  }
+
+  .anu-earth-rising-eyebrow {
+    font-family: var(--anu-type-label);
+    font-size: 0.62rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: rgba(255, 182, 136, 0.66);
+  }
+
+  .anu-earth-rising-title {
+    margin-top: 0.75rem;
+    color: rgba(239, 219, 254, 0.96);
+    font-family: var(--anu-type-display);
+    font-size: clamp(2rem, 3vw, 3.3rem);
+    font-style: italic;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+  }
+
+  .anu-earth-rising-summary {
+    margin-top: 0.95rem;
+    max-width: 44rem;
+    font-size: 0.92rem;
+    line-height: 1.8;
+    color: rgba(239, 219, 254, 0.8);
+  }
+
+  .anu-earth-rising-footer {
+    margin-top: 1.2rem;
+    padding-top: 0.2rem;
   }
 
   .anu-earth-nav-slot {
     position: absolute;
     left: 50%;
-    bottom: 1rem;
-    z-index: 4;
+    bottom: 1.25rem;
+    z-index: 5;
     transform: translateX(-50%);
-    width: calc(100% - 2rem);
+    width: calc(100% - 2.2rem);
     display: flex;
     justify-content: center;
     pointer-events: none;
@@ -1174,96 +1436,155 @@
     display: inline-flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 0.4rem;
-    border: 1px solid rgba(168, 145, 106, 0.26);
+    gap: 0.25rem;
     border-radius: 999px;
-    background:
-      linear-gradient(145deg, rgba(11, 17, 20, 0.96), rgba(7, 11, 13, 0.96));
-    padding: 0.4rem;
+    background: rgba(7, 13, 31, 0.32);
+    padding: 0.5rem 0.65rem;
     box-shadow:
-      0 18px 44px -30px rgba(0, 0, 0, 0.92),
+      0 0 40px rgba(34, 211, 238, 0.12),
       inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(18px);
+    backdrop-filter: blur(28px);
   }
 
   .anu-earth-nav-link {
     display: inline-flex;
-    min-height: 2.35rem;
+    min-width: 4.6rem;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 0.25rem;
     border-radius: 999px;
-    padding: 0.5rem 0.9rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: rgba(231, 236, 244, 0.82);
+    padding: 0.55rem 0.8rem;
+    font-family: var(--anu-type-label);
+    font-size: 0.56rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(205, 195, 208, 0.4);
     transition:
-      background-color var(--anu-motion-base) var(--anu-ease-standard),
       color var(--anu-motion-base) var(--anu-ease-standard),
-      transform var(--anu-motion-base) var(--anu-ease-standard);
+      background-color var(--anu-motion-base) var(--anu-ease-standard),
+      transform var(--anu-motion-base) var(--anu-ease-standard),
+      box-shadow var(--anu-motion-base) var(--anu-ease-standard);
   }
 
   .anu-earth-nav-link:hover {
     transform: translateY(-1px);
-    background: rgba(255, 255, 255, 0.06);
-    color: rgba(250, 248, 242, 0.96);
+    color: rgba(138, 235, 255, 0.86);
   }
 
   .anu-earth-nav-link-active {
-    background: linear-gradient(145deg, rgba(215, 164, 103, 0.94), rgba(169, 119, 67, 0.9));
-    color: #14191d;
-    box-shadow: 0 18px 34px -26px rgba(215, 164, 103, 0.72);
+    background: rgba(34, 211, 238, 0.14);
+    color: rgba(138, 235, 255, 0.94);
+    box-shadow: 0 0 26px rgba(34, 211, 238, 0.32);
   }
 
-  .anu-earth-utility-stack {
+  .anu-earth-support-stack {
     display: flex;
     flex-direction: column;
     gap: 1rem;
   }
 
+  .anu-earth-support-grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .anu-earth-support-block {
+    min-width: 0;
+  }
+
   @media (max-width: 1023px) {
-    .anu-earth-field-grid {
-      padding-bottom: 6.75rem;
-    }
-
     .anu-earth-field-stage {
-      min-height: 24rem;
+      min-height: 32rem;
     }
 
-    .anu-earth-marker {
-      width: min(13.5rem, calc(100% - 2rem));
+    .anu-earth-shell-topline {
+      inset: 1.35rem 1.35rem auto;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .anu-earth-shell-actions {
+      align-self: flex-end;
+    }
+
+    .anu-earth-title-block {
+      right: 1.35rem;
+      bottom: 6.4rem;
+      max-width: 22rem;
     }
 
     .anu-earth-rising-panel-wrap {
-      margin-top: -2.4rem;
+      left: 0.95rem;
+      right: 0.95rem;
+      bottom: 5.4rem;
     }
   }
 
   @media (max-width: 767px) {
-    .anu-earth-shell {
-      padding: 1rem;
-    }
-
-    .anu-earth-field-grid {
-      padding: 0.85rem 0.85rem 7.25rem;
+    .anu-earth-field-frame {
+      border-radius: 1.8rem;
     }
 
     .anu-earth-field-stage {
-      min-height: 21rem;
+      min-height: 28rem;
+    }
+
+    .anu-earth-shell-topline {
+      gap: 1rem;
+    }
+
+    .anu-earth-top-links {
+      justify-content: flex-start;
+    }
+
+    .anu-earth-title-block {
+      right: 1rem;
+      left: 1rem;
+      bottom: 7rem;
+      max-width: none;
+      text-align: left;
+    }
+
+    .anu-earth-description {
+      margin-left: 0;
+      max-width: 18rem;
     }
 
     .anu-earth-marker {
-      width: min(11.5rem, calc(100% - 1.35rem));
-      padding: 0.85rem 0.85rem;
+      width: 3.4rem;
+      height: 3.4rem;
+    }
+
+    .anu-earth-marker-hud {
+      left: 50%;
+      top: auto;
+      bottom: calc(100% + 0.75rem);
+      min-width: min(16rem, calc(100vw - 3rem));
+      transform: translateX(-50%) scale(0.96);
+    }
+
+    .anu-earth-marker:hover .anu-earth-marker-hud,
+    .anu-earth-marker:focus-visible .anu-earth-marker-hud,
+    .anu-earth-marker-active .anu-earth-marker-hud {
+      transform: translateX(-50%) scale(1);
     }
 
     .anu-earth-nav-slot {
       width: calc(100% - 1.2rem);
     }
 
-    .anu-earth-rising-panel-wrap {
-      margin-left: 0.85rem;
-      margin-right: 0.85rem;
-      padding-bottom: 5.5rem;
+    .anu-earth-nav-pill {
+      width: 100%;
+      padding-left: 0.35rem;
+      padding-right: 0.35rem;
+    }
+
+    .anu-earth-nav-link {
+      min-width: 0;
+      flex: 1 1 0;
+      padding-left: 0.4rem;
+      padding-right: 0.4rem;
     }
   }
 

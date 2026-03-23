@@ -29,11 +29,11 @@ export function EarthRisingPanel({
     <article className={joinClasses('anu-earth-rising-panel', className)}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-[0.28em] text-[#dfc28f]/78">{eyebrow}</p>
-          <h2 className="mt-3 text-3xl text-white md:text-[2.55rem]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+          <p className="anu-earth-rising-eyebrow">{eyebrow}</p>
+          <h2 className="anu-earth-rising-title">
             {title}
           </h2>
-          <div className="mt-4 max-w-3xl text-sm leading-7 text-slate-200/82">{summary}</div>
+          <div className="anu-earth-rising-summary">{summary}</div>
         </div>
         {badges ? <div className="flex shrink-0 flex-wrap gap-2">{badges}</div> : null}
       </div>
@@ -45,7 +45,7 @@ export function EarthRisingPanel({
         </div>
       ) : null}
 
-      {footer ? <div className="mt-6 border-t border-white/10 pt-5">{footer}</div> : null}
+      {footer ? <div className="anu-earth-rising-footer">{footer}</div> : null}
     </article>
   );
 }

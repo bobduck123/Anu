@@ -25,7 +25,6 @@ import {
   AnuActionLink,
   AnuChip,
   AnuControlButton,
-  AnuHeroMetric,
   AnuInstrumentationCard,
   AnuSurfacePanel,
 } from '@/ui-system/anu/surfacePrimitives';
@@ -677,23 +676,35 @@ export default function ImpactHomePage() {
       <div className="mx-auto max-w-7xl">
         <EarthFieldShell
           eyebrow="Earth bridge / impact"
-          title="Ground consequence before it rises."
-          description="Impact is the bridge between grounded contribution and visible consequence. Outcomes should gather on the field first, then rise upward into the wider commons without losing the ground they came from."
+          title="The Commons"
+          description="Impact gathers grounded consequence before it rises upward. Outcomes stay shaped by their earthly origin even when the wider commons reads them as public trace."
           actions={
-            <>
-              <AnuActionLink href="/relief" tone="secondary" iconRight={Heart}>
+            <div className="anu-earth-top-links">
+              <Link href="/relief" className="anu-earth-top-link">
                 Open relief
-              </AnuActionLink>
-              <AnuActionLink href="/community" tone="ghost" iconRight={Sparkles}>
+              </Link>
+              <Link href="/community" className="anu-earth-top-link">
                 Return to community traces
-              </AnuActionLink>
-            </>
+              </Link>
+            </div>
           }
           metrics={
-            <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-              <AnuHeroMetric label="Actions completed" value={String(actionsCompleted)} detail="Grounded action that can now be read as consequence." />
-              <AnuHeroMetric label="Event attendance" value={String(eventAttendance)} detail="Participation loops visible before they become social signal." />
-              <AnuHeroMetric label="Relief paid" value={`$${Math.round(reliefPaid / 100).toLocaleString()}`} detail="Care delivered through the commons." />
+            <div className="anu-earth-hud-lines">
+              <div className="anu-earth-hud-line">
+                <span className="anu-earth-hud-key">Actions</span>
+                <span className="anu-earth-hud-rule" />
+                <span className="anu-earth-hud-value">{actionsCompleted} completed</span>
+              </div>
+              <div className="anu-earth-hud-line">
+                <span className="anu-earth-hud-key">Attendance</span>
+                <span className="anu-earth-hud-rule" />
+                <span className="anu-earth-hud-value">{eventAttendance} participants</span>
+              </div>
+              <div className="anu-earth-hud-line">
+                <span className="anu-earth-hud-key">Relief paid</span>
+                <span className="anu-earth-hud-rule" />
+                <span className="anu-earth-hud-value">${Math.round(reliefPaid / 100).toLocaleString()}</span>
+              </div>
             </div>
           }
           field={field}

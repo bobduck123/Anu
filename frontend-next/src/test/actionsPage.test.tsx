@@ -90,8 +90,9 @@ describe('ActionsPage', () => {
 
     await waitFor(() => expect(actionsGetAllMock).toHaveBeenCalled());
 
-    expect(screen.getByText('Ground action in camps and parcels.')).toBeInTheDocument();
-    expect(screen.getByText('Camps and parcels mark where grounded work is waiting.')).toBeInTheDocument();
+    expect(screen.getByText('The Commons')).toBeInTheDocument();
+    expect(screen.getByText('Move to gatherings')).toBeInTheDocument();
+    expect(screen.getByText('Trace outcomes')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Events' })).toHaveAttribute('href', '/events');
     expect(screen.getByRole('link', { name: 'Impact' })).toHaveAttribute('href', '/impact');
   });

@@ -85,9 +85,8 @@ describe('EventsPage', () => {
 
     await waitFor(() => expect(eventsGetAllMock).toHaveBeenCalled());
 
-    expect(screen.getByText('Ground gatherings and markets on one field.')).toBeInTheDocument();
-    expect(screen.getByText('Gatherings cluster across the field as moments of commons activity.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /calendar/i })).toHaveAttribute('href', '/calendar');
+    expect(screen.getByText('The Commons')).toBeInTheDocument();
+    expect(screen.getByText('Move to actions')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /community/i })).toHaveAttribute('href', '/community');
     expect(screen.getAllByRole('link', { name: /impact/i }).some((link) => link.getAttribute('href') === '/impact')).toBe(true);
   });

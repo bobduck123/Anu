@@ -1,16 +1,6 @@
 import type { CSSProperties } from 'react';
-import { Box, HeartHandshake, Sparkles, Store, TentTree, Users } from 'lucide-react';
 
 export type EarthObjectKind = 'camp' | 'parcel' | 'gathering' | 'market' | 'care' | 'outcome';
-
-const iconMap = {
-  camp: TentTree,
-  parcel: Box,
-  gathering: Users,
-  market: Store,
-  care: HeartHandshake,
-  outcome: Sparkles,
-} satisfies Record<EarthObjectKind, typeof TentTree>;
 
 function joinClasses(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(' ');
@@ -37,8 +27,6 @@ export function EarthObjectMarker({
   style,
   onSelect,
 }: EarthObjectMarkerProps) {
-  const Icon = iconMap[kind];
-
   return (
     <button
       type="button"
@@ -47,30 +35,24 @@ export function EarthObjectMarker({
       style={style}
       aria-pressed={active}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.22em] text-white/62">{kind}</p>
-          <h3 className="mt-2 text-lg text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
-            {title}
-          </h3>
-        </div>
-        <span className="anu-earth-marker-icon">
-          <Icon className="h-4 w-4" />
-        </span>
+      <span className="anu-earth-marker-pulse" aria-hidden="true" />
+      <span className="anu-earth-marker-core" aria-hidden="true" />
+      <div className="anu-earth-marker-hud">
+        <p className="anu-earth-marker-kind">{kind}</p>
+        <h3 className="anu-earth-marker-title">{title}</h3>
+        <p className="anu-earth-marker-summary">{summary}</p>
+        <p className="anu-earth-marker-meta">{meta}</p>
+
+        {badges.length > 0 ? (
+          <div className="anu-earth-marker-badge-row">
+            {badges.map((badge, index) => (
+              <span key={`${badge}-${index}`} className="anu-earth-marker-badge">
+                {badge}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
-
-      <p className="mt-3 text-sm leading-6 text-slate-200/78">{summary}</p>
-      <p className="mt-4 text-xs uppercase tracking-[0.16em] text-[#eed7a8]/88">{meta}</p>
-
-      {badges.length > 0 ? (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {badges.map((badge, index) => (
-            <span key={`${badge}-${index}`} className="anu-earth-marker-badge">
-              {badge}
-            </span>
-          ))}
-        </div>
-      ) : null}
     </button>
   );
 }

@@ -47,9 +47,9 @@ describe('ReliefPage', () => {
 
     await waitFor(() => expect(myRequestsMock).toHaveBeenCalled());
 
-    expect(screen.getByText('Ground private care in a visible route.')).toBeInTheDocument();
-    expect(screen.getByText('How the care lane stays accountable')).toBeInTheDocument();
-    expect(screen.getByText('Relief stays inside the wider commons loop')).toBeInTheDocument();
+    expect(screen.getByText('The Commons')).toBeInTheDocument();
+    expect(screen.getByText('private intake')).toBeInTheDocument();
+    expect(screen.getByText('Public transparency')).toBeInTheDocument();
     expect(screen.getAllByText('Request #1').length).toBeGreaterThan(0);
     expect(
       screen

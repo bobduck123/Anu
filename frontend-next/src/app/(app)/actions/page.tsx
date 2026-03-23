@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import dynamicImport from 'next/dynamic';
+import Link from 'next/link';
 import {
   AlertCircle,
   CalendarDays,
   CheckCircle2,
   Compass,
   Globe2,
+  HeartHandshake,
   List,
   Map,
   Package2,
@@ -25,11 +27,9 @@ import {
   AnuFilterBar,
   AnuFilterGroup,
   AnuFilterInput,
-  AnuHeroMetric,
   AnuInstrumentationCard,
   AnuSurfacePanel,
 } from '@/ui-system/anu/surfacePrimitives';
-import { AnuProcessPanel, AnuRouteBridgePanel } from '@/ui-system/anu/coordinationPrimitives';
 import { EarthFieldShell } from '@/ui-system/realms/earth/EarthFieldShell';
 import { EarthNavPill } from '@/ui-system/realms/earth/EarthNavPill';
 import { EarthObjectMarker, type EarthObjectKind } from '@/ui-system/realms/earth/EarthObjectMarker';
@@ -40,6 +40,10 @@ export const dynamic = 'force-dynamic';
 const MapView = dynamicImport(() => import('@/components/shared/MapView'), { ssr: false });
 const CalendarView = dynamicImport(() => import('@/components/shared/CalendarView'), { ssr: false });
 const CreateActionModal = dynamicImport(() => import('@/components/shared/CreateActionModal'), { ssr: false });
+const EarthTerrainBackdrop = dynamicImport(
+  () => import('@/ui-system/realms/earth/EarthTerrainBackdrop').then((module) => module.EarthTerrainBackdrop),
+  { ssr: false },
+);
 
 type ActionViewMode = 'field' | 'list' | 'map' | 'calendar';
 
@@ -233,6 +237,11 @@ export default function ActionsPage() {
     [filteredActions],
   );
 
+  const terrainMarkers = useMemo(
+    () => mapMarkers.map((marker) => ({ lat: marker.lat, lng: marker.lng })),
+    [mapMarkers],
+  );
+
   const calendarEvents = useMemo(
     () =>
       filteredActions.map((action) => ({
@@ -247,12 +256,7 @@ export default function ActionsPage() {
 
   const fieldMarkers = (
     <div className="relative h-full w-full">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center pt-5">
-        <div className="rounded-full border border-white/10 bg-black/16 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#e5d2aa]/84 backdrop-blur-md">
-          Camps and parcels mark where grounded work is waiting.
-        </div>
-      </div>
-
+      {terrainMarkers.length > 0 ? <EarthTerrainBackdrop markers={terrainMarkers} /> : null}
       {filteredActions.length > 0 ? (
         filteredActions.slice(0, ACTION_FIELD_POSITIONS.length).map((action, index) => (
           <EarthObjectMarker
@@ -288,58 +292,6 @@ export default function ActionsPage() {
         </div>
       )}
     </div>
-  );
-
-  const fieldAside = (
-    <>
-      <AnuProcessPanel
-        eyebrow="Earth coordination"
-        title="How actions move across the field"
-        description="Actions should feel like grounded civic matter, with clear routes into scheduling, community context, and measurable consequence."
-        steps={[
-          {
-            title: 'Surface a camp or parcel',
-            detail: 'The field shows local camps and routed parcels rather than flattening everything into the same card style.',
-          },
-          {
-            title: 'Open a grounded detail panel',
-            detail: 'Details rise from the terrain so the route stays anchored in action rather than jumping to a detached modal.',
-          },
-          {
-            title: 'Carry the result into wider systems',
-            detail: 'Calendar, relief, and impact remain part of the same earth-plane rather than disconnected follow-up routes.',
-          },
-        ]}
-      />
-
-      <AnuRouteBridgePanel
-        eyebrow="Earth route links"
-        title="Actions should connect to the rest of the field"
-        description="The field is strongest when action discovery, event participation, relief coordination, and consequence stay visibly related."
-        links={[
-          {
-            href: '/events',
-            label: 'Events',
-            detail: 'Move from grounded action into gatherings and participation windows.',
-            icon: CalendarDays,
-            tone: 'signal',
-          },
-          {
-            href: '/relief',
-            label: 'Relief',
-            detail: 'Bring urgent needs, care queues, and response capacity into the same grounded civic loop.',
-            icon: TentTree,
-          },
-          {
-            href: '/impact',
-            label: 'Impact',
-            detail: 'Trace where completions and effort become visible consequence and public outcome.',
-            icon: Waypoints,
-            tone: 'accent',
-          },
-        ]}
-      />
-    </>
   );
 
   const risingPanel = selectedAction ? (
@@ -403,9 +355,9 @@ export default function ActionsPage() {
       }
       footer={
         <div className="flex flex-wrap gap-3">
-          <AnuActionLink href={`/actions/${selectedAction._id}`} tone="secondary">
+          <Link href={`/actions/${selectedAction._id}`} className="anu-earth-top-link">
             Open full action record
-          </AnuActionLink>
+          </Link>
           <AnuControlButton tone="active" iconLeft={CheckCircle2} onClick={() => void handleComplete(selectedAction._id)}>
             Complete action
           </AnuControlButton>
@@ -506,26 +458,41 @@ export default function ActionsPage() {
 
   return (
     <div className="min-h-screen px-4 pb-20 pt-24 md:px-8">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto w-full max-w-[96rem]">
         <EarthFieldShell
           eyebrow="Earth proof / actions"
-          title="Ground action in camps and parcels."
-          description="Actions should feel like grounded civic matter. Local work gathers in camps, routed or distributed work appears as parcels, and route details rise from the terrain instead of fragmenting into detached cards."
+          title="The Commons"
+          description="Local work gathers in camps, distributed work appears as parcels, and route detail rises from the terrain instead of collapsing into dashboard cards."
           actions={
-            <>
-              <AnuActionLink href="/events" tone="secondary" iconLeft={CalendarDays}>
+            <div className="anu-earth-top-links">
+              <Link href="/events" className="anu-earth-top-link">
                 Move to gatherings
-              </AnuActionLink>
-              <AnuActionLink href="/impact" tone="ghost" iconLeft={Waypoints}>
+              </Link>
+              <Link href="/relief" className="anu-earth-top-link">
+                Open relief
+              </Link>
+              <Link href="/impact" className="anu-earth-top-link">
                 Trace outcomes
-              </AnuActionLink>
-            </>
+              </Link>
+            </div>
           }
           metrics={
-            <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-              <AnuHeroMetric label="Visible actions" value={String(filteredActions.length)} detail={`${filter} filter`} />
-              <AnuHeroMetric label="Field points" value={totalPoints.toLocaleString()} detail="Potential points across the visible field." />
-              <AnuHeroMetric label="Recorded completions" value={totalCompletions.toLocaleString()} detail="Grounded follow-through already counted." />
+            <div className="anu-earth-hud-lines">
+              <div className="anu-earth-hud-line">
+                <span className="anu-earth-hud-key">Visible</span>
+                <span className="anu-earth-hud-rule" />
+                <span className="anu-earth-hud-value">{filteredActions.length} camps/parcels</span>
+              </div>
+              <div className="anu-earth-hud-line">
+                <span className="anu-earth-hud-key">Points</span>
+                <span className="anu-earth-hud-rule" />
+                <span className="anu-earth-hud-value">{totalPoints.toLocaleString()} field points</span>
+              </div>
+              <div className="anu-earth-hud-line">
+                <span className="anu-earth-hud-key">Follow-through</span>
+                <span className="anu-earth-hud-rule" />
+                <span className="anu-earth-hud-value">{totalCompletions.toLocaleString()} completions logged</span>
+              </div>
             </div>
           }
           controls={
@@ -587,15 +554,14 @@ export default function ActionsPage() {
             </div>
           }
           field={fieldMarkers}
-          fieldAside={fieldAside}
           risingPanel={risingPanel}
           nav={
             <EarthNavPill
               items={[
-                { href: '/actions', label: 'Actions', active: true },
-                { href: '/events', label: 'Events' },
-                { href: '/relief', label: 'Relief' },
-                { href: '/impact', label: 'Impact' },
+                { href: '/actions', label: 'Actions', active: true, icon: TentTree },
+                { href: '/events', label: 'Events', icon: CalendarDays },
+                { href: '/relief', label: 'Relief', icon: HeartHandshake },
+                { href: '/impact', label: 'Impact', icon: Waypoints },
               ]}
             />
           }

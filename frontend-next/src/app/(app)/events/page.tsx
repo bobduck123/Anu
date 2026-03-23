@@ -5,6 +5,7 @@ import dynamicImport from 'next/dynamic';
 import {
   AlertCircle,
   Compass,
+  HeartHandshake,
   List,
   Map,
   MapPin,
@@ -24,11 +25,9 @@ import {
   AnuFilterBar,
   AnuFilterGroup,
   AnuFilterInput,
-  AnuHeroMetric,
   AnuInstrumentationCard,
   AnuSurfacePanel,
 } from '@/ui-system/anu/surfacePrimitives';
-import { AnuProcessPanel, AnuRouteBridgePanel } from '@/ui-system/anu/coordinationPrimitives';
 import { EarthFieldShell } from '@/ui-system/realms/earth/EarthFieldShell';
 import { EarthNavPill } from '@/ui-system/realms/earth/EarthNavPill';
 import { EarthObjectMarker } from '@/ui-system/realms/earth/EarthObjectMarker';
@@ -39,6 +38,10 @@ export const dynamic = 'force-dynamic';
 const MapView = dynamicImport(() => import('@/components/shared/MapView'), { ssr: false });
 const CreateEventModal = dynamicImport(() => import('@/components/shared/CreateEventModal'), { ssr: false });
 const CreateVenueModal = dynamicImport(() => import('@/components/shared/CreateVenueModal'), { ssr: false });
+const EarthTerrainBackdrop = dynamicImport(
+  () => import('@/ui-system/realms/earth/EarthTerrainBackdrop').then((module) => module.EarthTerrainBackdrop),
+  { ssr: false },
+);
 
 type EventViewMode = 'field' | 'list' | 'map';
 type TabMode = 'events' | 'venues';
@@ -244,16 +247,18 @@ export default function EventsPage() {
     [venues],
   );
 
+  const terrainMarkers = useMemo(
+    () =>
+      (tabMode === 'events' ? eventMarkers : venueMarkers).map((marker) => ({
+        lat: marker.lat,
+        lng: marker.lng,
+      })),
+    [eventMarkers, tabMode, venueMarkers],
+  );
+
   const fieldMarkers = (
     <div className="relative h-full w-full">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center pt-5">
-        <div className="rounded-full border border-white/10 bg-black/16 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#e5d2aa]/84 backdrop-blur-md">
-          {tabMode === 'events'
-            ? 'Gatherings cluster across the field as moments of commons activity.'
-            : 'Markets hold the venue network that gatherings depend on.'}
-        </div>
-      </div>
-
+      {terrainMarkers.length > 0 ? <EarthTerrainBackdrop markers={terrainMarkers} /> : null}
       {tabMode === 'events' ? (
         events.length > 0 ? (
           events.slice(0, EVENT_FIELD_POSITIONS.length).map((event, index) => (
@@ -320,58 +325,6 @@ export default function EventsPage() {
     </div>
   );
 
-  const fieldAside = (
-    <>
-      <AnuProcessPanel
-        eyebrow="Earth coordination"
-        title="How gatherings stay grounded"
-        description="Events should feel like civic terrain, with visible paths into scheduling, venues, organizer workflows, and consequence."
-        steps={[
-          {
-            title: 'Surface gatherings on the field',
-            detail: 'Events should appear as grounded gatherings rather than generic event cards floating free of the system.',
-          },
-          {
-            title: 'Treat venues as market infrastructure',
-            detail: 'Venue records are the supporting market layer beneath public gatherings and attendance.',
-          },
-          {
-            title: 'Route participation into consequence',
-            detail: 'Attendance and hosting need clear continuity into organizer work and impact reporting.',
-          },
-        ]}
-      />
-
-      <AnuRouteBridgePanel
-        eyebrow="Earth route links"
-        title="Events should connect to the wider field"
-        description="Calendar, community context, organizer operations, and impact should remain visibly reachable from gatherings and markets."
-        links={[
-          {
-            href: '/calendar',
-            label: 'Calendar',
-            detail: 'Move from discovery into shifts, timing, and schedule coordination.',
-            icon: MapPin,
-            tone: 'signal',
-          },
-          {
-            href: '/community',
-            label: 'Community',
-            detail: 'Return to the commons when a gathering needs social context or publication.',
-            icon: Users,
-          },
-          {
-            href: '/impact',
-            label: 'Impact',
-            detail: 'Attendance, volunteering, and local presence should remain visible in impact.',
-            icon: Waypoints,
-            tone: 'accent',
-          },
-        ]}
-      />
-    </>
-  );
-
   const selectedDetailPanel = tabMode === 'events' && selectedEvent ? (
     <EarthRisingPanel
       eyebrow="Grounded gathering"
@@ -415,9 +368,9 @@ export default function EventsPage() {
       }
       footer={
         <div className="flex flex-wrap gap-3">
-          <AnuActionLink href={`/events/${selectedEvent.id}`} tone="secondary">
+          <Link href={`/events/${selectedEvent.id}`} className="anu-earth-top-link">
             Open full event record
-          </AnuActionLink>
+          </Link>
           <AnuControlButton
             tone={selectedEvent.attendees >= selectedEvent.goal ? 'warning' : 'active'}
             onClick={() => void handleAttend(selectedEvent.id)}
@@ -585,26 +538,41 @@ export default function EventsPage() {
 
   return (
     <div className="min-h-screen px-4 pb-20 pt-24 md:px-8">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto w-full max-w-[96rem]">
         <EarthFieldShell
           eyebrow="Earth proof / events"
-          title="Ground gatherings and markets on one field."
-          description="Events should read as grounded gatherings, with venue infrastructure held in the same Earth system as markets. Detail rises from the field while map and list views remain available as operational backups."
+          title="The Commons"
+          description="Gatherings and markets sit on one topographic field, with detail rising from the terrain while map and list remain available as backup instruments."
           actions={
-            <>
-              <AnuActionLink href="/actions" tone="secondary" iconLeft={TentTree}>
+            <div className="anu-earth-top-links">
+              <Link href="/actions" className="anu-earth-top-link">
                 Move to actions
-              </AnuActionLink>
-              <AnuActionLink href="/impact" tone="ghost" iconLeft={Waypoints}>
-                Trace attendance into impact
-              </AnuActionLink>
-            </>
+              </Link>
+              <Link href="/community" className="anu-earth-top-link">
+                Enter community
+              </Link>
+              <Link href="/impact" className="anu-earth-top-link">
+                Trace attendance
+              </Link>
+            </div>
           }
           metrics={
-            <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-              <AnuHeroMetric label="Visible gatherings" value={String(events.length)} detail="Filtered by date and locality." />
-              <AnuHeroMetric label="Venue markets" value={String(venues.length)} detail="Supporting venue infrastructure." />
-              <AnuHeroMetric label="Recorded attendance" value={totalAttendance.toLocaleString()} detail="Participation already counted." />
+            <div className="anu-earth-hud-lines">
+              <div className="anu-earth-hud-line">
+                <span className="anu-earth-hud-key">Mode</span>
+                <span className="anu-earth-hud-rule" />
+                <span className="anu-earth-hud-value">{tabMode === 'events' ? 'gatherings active' : 'markets active'}</span>
+              </div>
+              <div className="anu-earth-hud-line">
+                <span className="anu-earth-hud-key">Gatherings</span>
+                <span className="anu-earth-hud-rule" />
+                <span className="anu-earth-hud-value">{events.length} visible</span>
+              </div>
+              <div className="anu-earth-hud-line">
+                <span className="anu-earth-hud-key">Attendance</span>
+                <span className="anu-earth-hud-rule" />
+                <span className="anu-earth-hud-value">{totalAttendance.toLocaleString()} registered</span>
+              </div>
             </div>
           }
           controls={
@@ -672,15 +640,14 @@ export default function EventsPage() {
             </div>
           }
           field={fieldMarkers}
-          fieldAside={fieldAside}
           risingPanel={selectedDetailPanel}
           nav={
             <EarthNavPill
               items={[
-                { href: '/actions', label: 'Actions' },
-                { href: '/events', label: 'Events', active: true },
-                { href: '/relief', label: 'Relief' },
-                { href: '/impact', label: 'Impact' },
+                { href: '/actions', label: 'Actions', icon: TentTree },
+                { href: '/events', label: 'Events', active: true, icon: Users },
+                { href: '/relief', label: 'Relief', icon: HeartHandshake },
+                { href: '/impact', label: 'Impact', icon: Waypoints },
               ]}
             />
           }
