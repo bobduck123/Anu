@@ -1,24 +1,8 @@
 import Link from 'next/link';
-import {
-  ArrowRight,
-  BookOpenText,
-  Compass,
-  FileSearch,
-  LibraryBig,
-  ScrollText,
-  ShieldCheck,
-} from 'lucide-react';
-import {
-  AnuActionLink,
-  AnuChamberCard,
-  AnuChip,
-  AnuHeroMetric,
-  AnuInstrumentationCard,
-  AnuPageHero,
-  AnuSectionHeading,
-  AnuSurfacePanel,
-} from '@/ui-system/anu/surfacePrimitives';
-import { AnuNarrativeBriefPanel } from '@/ui-system/anu/narrativePrimitives';
+import { ArrowRight, BookOpenText, Compass, FileSearch, LibraryBig, ScrollText, ShieldCheck } from 'lucide-react';
+import { AnuActionLink } from '@/ui-system/anu/surfacePrimitives';
+import { LabyrinthArchiveShell } from '@/ui-system/realms/labyrinth/LabyrinthArchiveShell';
+import { EmbeddedInstrumentPanel } from '@/ui-system/realms/labyrinth/EmbeddedInstrumentPanel';
 
 const libraryCollections = [
   {
@@ -109,220 +93,166 @@ const readingProtocol = [
 
 export default function DocsPage() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
-      <div className="mx-auto max-w-6xl px-4 pb-20 pt-28 md:px-8">
-        <AnuPageHero
+    <div className="min-h-screen px-4 pb-20 pt-20 md:px-8">
+      <div className="mx-auto max-w-[110rem]">
+        <LabyrinthArchiveShell
           eyebrow="Operations library"
           title="Read the institution before you operate it."
-          description="This library is the connective tissue between public trust, operator doctrine, and applied systems. Use it to understand how routes relate before you move into governance, memberships, education, or subsystem work."
-          actions={
+          description="The docs route should feel like passing through the archive and arriving at manuscript chambers for trust, doctrine, and applied systems. It is an orientation surface, not a help-center grid."
+          legend={
+            <div className="space-y-3">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[#d2bf99]/72">Library rule</p>
+              <p className="text-sm leading-6 text-[#d8ccb6]/76">
+                Separate public truth, operator doctrine, and applied systems so people learn the right path before they escalate or intervene.
+              </p>
+            </div>
+          }
+          stats={
             <>
-              <AnuActionLink href="/transparency" tone="primary" iconLeft={ShieldCheck} iconRight={ArrowRight}>
-                Open transparency
-              </AnuActionLink>
-              <AnuActionLink href="/governance" tone="secondary" iconLeft={Compass} iconRight={ArrowRight}>
-                Enter governance observatory
-              </AnuActionLink>
+              <EmbeddedInstrumentPanel
+                label="Collections"
+                value="3 route families"
+                detail="Trust, governance, and applied systems are separated so explanation is not confused with execution."
+              />
+              <EmbeddedInstrumentPanel
+                label="Posture"
+                value="Editorial + inspectable"
+                detail="The library should behave like a curated operating archive, not a generic documentation grid."
+              />
+              <EmbeddedInstrumentPanel
+                label="Protocol"
+                value="Truth before escalation"
+                detail="Transparency and route context should come before tickets, admin work, or governance review."
+              />
             </>
           }
-          aside={
-            <AnuSurfacePanel tone="quiet" className="h-full p-5">
+          controls={
+            <div className="anu-labyrinth-console">
               <div className="flex flex-wrap gap-2">
-                <AnuChip tone="signal" icon={LibraryBig}>
-                  Inspectable first
-                </AnuChip>
-                <AnuChip tone="muted" icon={BookOpenText}>
-                  Route-aware
-                </AnuChip>
-                <AnuChip tone="accent" icon={FileSearch}>
-                  Evidence before escalation
-                </AnuChip>
+                <AnuActionLink href="/transparency" tone="primary" iconLeft={ShieldCheck} iconRight={ArrowRight}>
+                  Open transparency
+                </AnuActionLink>
+                <AnuActionLink href="/governance" tone="secondary" iconLeft={Compass} iconRight={ArrowRight}>
+                  Enter governance observatory
+                </AnuActionLink>
               </div>
-              <p className="mt-4 text-sm leading-6 text-slate-300/84">
-                The library should not feel like a link dump. It explains which surfaces are public truth,
-                which are operator doctrine, and which are applied subsystem entry points.
+              <p className="text-xs leading-6 text-[#cdbd9f]/72">
+                The library should reduce wrong-route escalation by teaching which surfaces explain, which govern, and which act.
               </p>
-            </AnuSurfacePanel>
+            </div>
           }
         >
-          <div className="grid gap-4 md:grid-cols-3">
-            <AnuHeroMetric
-              label="Collections"
-              value="3 route families"
-              detail="Trust, governance, and applied systems are separated so operators do not confuse explanation with execution."
-            />
-            <AnuHeroMetric
-              label="Posture"
-              value="Editorial + inspectable"
-              detail="This surface should read like a curated operating library rather than a product landing page."
-            />
-            <AnuHeroMetric
-              label="Protocol"
-              value="Truth before escalation"
-              detail="Transparency and route context should come before internal intervention, tickets, or governance review."
-            />
-          </div>
-        </AnuPageHero>
-
-        <section className="mt-10 grid gap-4 md:grid-cols-3">
-          <AnuInstrumentationCard
-            label="Public trust routes"
-            value="3"
-            detail="Surfaces that explain the institution openly before anyone commits money, sends reports, or enters operator spaces."
-            icon={ShieldCheck}
-            tone="signal"
-          />
-          <AnuInstrumentationCard
-            label="Observatory anchors"
-            value="Governance"
-            detail="Operator doctrine, registries, and simulations belong to a calmer observatory grammar instead of public marketing language."
-            icon={Compass}
-          />
-          <AnuInstrumentationCard
-            label="Applied systems"
-            value="Education + Flora & Fauna"
-            detail="Subsystem libraries should inherit ANU structure while keeping their own operational identities."
-            icon={ScrollText}
-          />
-        </section>
-
-        <section className="mt-12">
-          <AnuNarrativeBriefPanel
-            eyebrow="Route reading"
-            title="How to read this library"
-            description="The operations library is a structured output surface. It separates public truth, operator doctrine, and applied systems so people can enter ANU through the right lane."
-            signals={[
-              {
-                label: 'Output mode',
-                value: 'Curated route families',
-                detail: 'This page is not a catch-all help center. It is a controlled reading surface that groups routes by institutional role.',
-                tone: 'signal',
-                icon: LibraryBig,
-              },
-              {
-                label: 'Source state',
-                value: 'Authored summaries',
-                detail: 'Collections are intentionally written so people understand which route explains, which governs, and which acts.',
-                tone: 'muted',
-                icon: BookOpenText,
-              },
-              {
-                label: 'Fallback truth',
-                value: 'Truth before escalation',
-                detail: 'When unsure, start from transparency, contact, or memberships before jumping into governance or operator tooling.',
-                tone: 'accent',
-                icon: ShieldCheck,
-              },
-            ]}
-            whyItMatters="Wrong-route escalation makes institutions feel confusing and opaque. This library is meant to keep the reading path coherent before someone enters a more privileged or operational surface."
-            actions={[
-              { href: '/transparency', label: 'Open transparency', tone: 'secondary', icon: ShieldCheck },
-              { href: '/contact', label: 'Choose a routing lane', tone: 'ghost', icon: FileSearch },
-            ]}
-          />
-        </section>
-
-        <section className="mt-12">
-          <AnuSectionHeading
-            eyebrow="Library collections"
-            title="Move by route family"
-            description="Each collection groups routes by institutional role so the library teaches navigation, not just destination names."
-          />
-
-          <div className="mt-8 grid gap-5 xl:grid-cols-3">
+          <div className="anu-labyrinth-route-grid anu-labyrinth-route-grid-3">
             {libraryCollections.map((collection) => (
-              <AnuChamberCard
-                key={collection.title}
-                eyebrow={collection.eyebrow}
-                title={collection.title}
-                description={collection.description}
-                tone="default"
-              >
-                <div className="space-y-3">
+              <section key={collection.title} className="anu-labyrinth-manuscript-card">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#7d613b]">{collection.eyebrow}</p>
+                <h2 className="mt-3 text-3xl text-[#2f1f12]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                  {collection.title}
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-[#4f3d28]">{collection.description}</p>
+
+                <div className="mt-5 space-y-3">
                   {collection.links.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className="block rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 transition-colors hover:border-white/18 hover:bg-white/[0.05]"
-                    >
+                    <Link key={link.href} href={link.href} className="anu-labyrinth-portal-link">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-white">{link.label}</p>
-                          <p className="mt-2 text-sm leading-6 text-slate-300/82">{link.detail}</p>
-                          <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-slate-400">{link.href}</p>
+                          <p className="text-sm font-semibold text-[#25170d]">{link.label}</p>
+                          <p className="mt-2 text-sm leading-6 text-[#5f4930]">{link.detail}</p>
+                          <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-[#7e6848]">{link.href}</p>
                         </div>
-                        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[#f3cd92]" />
+                        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[#7a5419]" />
                       </div>
                     </Link>
                   ))}
                 </div>
-              </AnuChamberCard>
+              </section>
             ))}
           </div>
-        </section>
 
-        <section className="mt-12 grid gap-5 lg:grid-cols-[0.92fr_1.08fr]">
-          <AnuSurfacePanel tone="soft" className="p-5">
-            <AnuSectionHeading
-              eyebrow="Reading protocol"
-              title="How to use this library"
-              description="The library is an orientation surface. Its job is to reduce wrong-route escalation."
-            />
-            <div className="mt-5 space-y-4">
-              {readingProtocol.map((item, index) => (
-                <div
-                  key={item.title}
-                  className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4"
-                >
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Step {index + 1}</p>
-                  <p className="mt-2 text-sm font-semibold text-white">{item.title}</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-300/82">{item.detail}</p>
-                </div>
-              ))}
-            </div>
-          </AnuSurfacePanel>
+          <div className="mt-6 anu-labyrinth-route-grid anu-labyrinth-route-grid-2">
+            <section className="anu-labyrinth-manuscript-card">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#7d613b]">Reading protocol</p>
+              <h2 className="mt-3 text-3xl text-[#2f1f12]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                How to read this library
+              </h2>
+              <div className="mt-5 space-y-3">
+                {readingProtocol.map((item, index) => (
+                  <div key={item.title} className="anu-labyrinth-portal-link">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-[#7e6848]">Step {index + 1}</p>
+                    <p className="mt-2 text-sm font-semibold text-[#25170d]">{item.title}</p>
+                    <p className="mt-2 text-sm leading-6 text-[#5f4930]">{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
 
-          <AnuSurfacePanel tone="quiet" className="p-5">
-            <AnuSectionHeading
-              eyebrow="Common first moves"
-              title="Start with the right surface"
-              description="These are the default entry points when someone is unsure where to go."
-            />
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {[
-                {
-                  href: '/transparency',
-                  label: 'Check live institutional totals',
-                  detail: 'Use transparency for public truth, receipts, and relief capacity.',
-                },
-                {
-                  href: '/contact',
-                  label: 'Route a question or incident',
-                  detail: 'Use contact when you need the correct escalation lane and evidence checklist.',
-                },
-                {
-                  href: '/governance',
-                  label: 'Open the governance observatory',
-                  detail: 'Use governance for policy, model, federation, and registry surfaces.',
-                },
-                {
-                  href: '/memberships',
-                  label: 'Evaluate a contribution covenant',
-                  detail: 'Use memberships when the question is trust, sustainability, and secure recurring support.',
-                },
-              ].map((route) => (
-                <Link
-                  key={route.href}
-                  href={route.href}
-                  className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 transition-colors hover:border-white/18 hover:bg-white/[0.05]"
-                >
-                  <p className="text-sm font-semibold text-white">{route.label}</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-300/82">{route.detail}</p>
-                </Link>
-              ))}
+            <section className="anu-labyrinth-manuscript-card">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#7d613b]">Common first moves</p>
+              <h2 className="mt-3 text-3xl text-[#2f1f12]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                Start with the right surface
+              </h2>
+              <div className="mt-5 space-y-3">
+                {[
+                  {
+                    href: '/transparency',
+                    label: 'Check live institutional totals',
+                    detail: 'Use transparency for public truth, receipts, and relief capacity.',
+                  },
+                  {
+                    href: '/contact',
+                    label: 'Route a question or incident',
+                    detail: 'Use contact when you need the correct escalation lane and evidence checklist.',
+                  },
+                  {
+                    href: '/governance',
+                    label: 'Open the governance observatory',
+                    detail: 'Use governance for policy, model, federation, and registry surfaces.',
+                  },
+                  {
+                    href: '/memberships',
+                    label: 'Evaluate a contribution covenant',
+                    detail: 'Use memberships when the question is trust, sustainability, and secure recurring support.',
+                  },
+                ].map((route) => (
+                  <Link key={route.href} href={route.href} className="anu-labyrinth-portal-link">
+                    <p className="text-sm font-semibold text-[#25170d]">{route.label}</p>
+                    <p className="mt-2 text-sm leading-6 text-[#5f4930]">{route.detail}</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          <div className="mt-6 anu-labyrinth-route-grid anu-labyrinth-route-grid-3">
+            <div className="anu-labyrinth-archive-note">
+              <div className="flex items-center gap-2 text-[#f6e6c3]">
+                <LibraryBig className="h-4 w-4" />
+                <span className="text-xs uppercase tracking-[0.16em]">Inspectable first</span>
+              </div>
+              <p className="mt-3 text-sm leading-7">
+                This route should reduce confusion before anyone reaches governance, memberships, or a subsystem-specific operator surface.
+              </p>
             </div>
-          </AnuSurfacePanel>
-        </section>
+            <div className="anu-labyrinth-archive-note">
+              <div className="flex items-center gap-2 text-[#f6e6c3]">
+                <BookOpenText className="h-4 w-4" />
+                <span className="text-xs uppercase tracking-[0.16em]">Route-aware</span>
+              </div>
+              <p className="mt-3 text-sm leading-7">
+                The library is not neutral content. It teaches the relationship between trust routes, governance doctrine, and applied systems.
+              </p>
+            </div>
+            <div className="anu-labyrinth-archive-note">
+              <div className="flex items-center gap-2 text-[#f6e6c3]">
+                <ScrollText className="h-4 w-4" />
+                <span className="text-xs uppercase tracking-[0.16em]">Evidence before escalation</span>
+              </div>
+              <p className="mt-3 text-sm leading-7">
+                Start from transparency, contact, or memberships before moving into deeper operator or subsystem lanes.
+              </p>
+            </div>
+          </div>
+        </LabyrinthArchiveShell>
       </div>
     </div>
   );

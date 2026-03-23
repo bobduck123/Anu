@@ -52,7 +52,7 @@ describe('TransparencyPage', () => {
     await waitFor(() => expect(nodeSummaryMock).toHaveBeenCalled());
 
     expect(screen.getByText('Read the commons without exposing the members.')).toBeInTheDocument();
-    expect(screen.getByText('How to read this truth surface')).toBeInTheDocument();
+    expect(screen.getByText('Commons-backed liquidity')).toBeInTheDocument();
     expect(screen.getByText('Commons-backed liquidity')).toBeInTheDocument();
     expect(screen.getByText('Relief Pool')).toBeInTheDocument();
     expect(screen.getByText('Visible ledger trail')).toBeInTheDocument();

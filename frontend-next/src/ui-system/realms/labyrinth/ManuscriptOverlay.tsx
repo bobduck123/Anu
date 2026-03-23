@@ -69,8 +69,8 @@ export function ManuscriptOverlay({
         aria-label="Close manuscript chamber"
       />
 
-      <article className={joinClasses('anu-manuscript-overlay relative z-10 w-full max-w-5xl overflow-hidden')}>
-        <div className="flex items-start justify-between gap-4 border-b border-[#3f3527]/50 px-5 py-5 md:px-7">
+      <article className={joinClasses('anu-manuscript-overlay relative z-10 w-full max-w-6xl overflow-hidden')}>
+        <div className="anu-manuscript-overlay__header">
           <div>
             <p className="text-[10px] uppercase tracking-[0.28em] text-[#8e7047]">{eyebrow}</p>
             <h2
@@ -99,12 +99,24 @@ export function ManuscriptOverlay({
           </button>
         </div>
 
-        <div className="grid gap-6 px-5 py-5 md:grid-cols-[1.08fr_0.92fr] md:px-7">
-          <div className="min-w-0">{primary}</div>
-          {secondary ? <div className="min-w-0">{secondary}</div> : null}
-        </div>
+        <div className="anu-manuscript-overlay__plan">
+          <div className="anu-manuscript-overlay__axis">
+            <section className="anu-manuscript-chamber anu-manuscript-chamber-grand">{primary}</section>
+            {secondary ? <span className="anu-manuscript-passage anu-manuscript-passage-ascending" aria-hidden="true" /> : null}
+            {secondary ? <section className="anu-manuscript-chamber anu-manuscript-chamber-queen">{secondary}</section> : null}
+          </div>
 
-        {footer ? <div className="border-t border-[#3f3527]/50 px-5 py-4 md:px-7">{footer}</div> : null}
+          <aside className="anu-manuscript-overlay__drawer">
+            <div className="anu-manuscript-chamber anu-manuscript-chamber-side">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#7d613b]">Archive guidance</p>
+              <p className="mt-3 text-sm leading-7 text-[#4d3d2a]">
+                The chamber opens inside the archive rather than replacing it. Read the purpose, state, version, and simulation shape first, then descend into steward lane, dependencies, and release history.
+              </p>
+            </div>
+
+            {footer ? <div className="anu-manuscript-chamber anu-manuscript-chamber-side">{footer}</div> : null}
+          </aside>
+        </div>
       </article>
     </div>
   );

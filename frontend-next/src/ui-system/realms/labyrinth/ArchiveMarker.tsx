@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { LabyrinthState } from '@/app/(app)/governance/model-registry/modelRegistryPresentation';
 import { StateSeal } from './StateSeal';
 
@@ -13,9 +14,13 @@ interface ArchiveMarkerProps {
   versionLabel: string;
   state: LabyrinthState;
   stateReason: string;
+  lane: number;
+  depth: number;
+  towerHeight: number;
   active?: boolean;
   dialogId?: string;
   onClick: () => void;
+  onHover?: () => void;
 }
 
 export function ArchiveMarker({
@@ -26,38 +31,65 @@ export function ArchiveMarker({
   versionLabel,
   state,
   stateReason,
+  lane,
+  depth,
+  towerHeight,
   active = false,
   dialogId,
   onClick,
+  onHover,
 }: ArchiveMarkerProps) {
+  const style = {
+    '--anu-archive-lane': lane,
+    '--anu-archive-depth': depth,
+    '--anu-archive-height': `${towerHeight}rem`,
+  } as CSSProperties;
+
   return (
     <button
       type="button"
       onClick={onClick}
+      onFocus={onHover}
+      onMouseEnter={onHover}
       className={joinClasses('anu-labyrinth-marker text-left', active && 'anu-labyrinth-marker-active')}
       aria-pressed={active}
       aria-expanded={active}
       aria-haspopup="dialog"
       aria-controls={dialogId}
+      style={style}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.22em] text-[#cbb792]/74">{eyebrow}</p>
-          <h3 className="mt-2 text-xl text-[#f8ecd2]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-            {title}
-          </h3>
-        </div>
-        <StateSeal state={state} />
-      </div>
+      <span className="anu-labyrinth-marker__mass" aria-hidden="true">
+        <span className="anu-labyrinth-marker__tower" />
+        <span className="anu-labyrinth-marker__roof" />
+      </span>
 
-      <p className="mt-3 text-sm leading-6 text-[#ded1bc]/78">{summary}</p>
+      <span className="anu-labyrinth-marker__label">
+        <span className="flex items-start justify-between gap-3">
+          <span>
+            <span className="text-[10px] uppercase tracking-[0.22em] text-[#dbc8a6]/74">{eyebrow}</span>
+            <span
+              className="mt-2 block text-xl text-[#f7ead2]"
+              style={{ fontFamily: 'var(--anu-type-display)' }}
+            >
+              {title}
+            </span>
+          </span>
+          <StateSeal state={state} />
+        </span>
 
-      <div className="mt-4 flex flex-wrap gap-2 text-xs">
-        <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[#e9dcc4]/82">{versionLabel}</span>
-        <span className="rounded-full border border-[#d3b37c]/18 bg-[#d3b37c]/8 px-3 py-1 text-[#f2ddb0]">{shapeLabel}</span>
-      </div>
+        <span className="mt-3 block text-sm leading-6 text-[#ded1bc]/78">{summary}</span>
 
-      <p className="mt-4 text-xs leading-5 text-[#b8ab96]/68">{stateReason}</p>
+        <span className="mt-4 flex flex-wrap gap-2 text-xs">
+          <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[#e9dcc4]/82">
+            {versionLabel}
+          </span>
+          <span className="rounded-full border border-[#d3b37c]/18 bg-[#d3b37c]/8 px-3 py-1 text-[#f2ddb0]">
+            {shapeLabel}
+          </span>
+        </span>
+
+        <span className="mt-4 block text-xs leading-5 text-[#b8ab96]/68">{stateReason}</span>
+      </span>
     </button>
   );
 }

@@ -38,6 +38,12 @@ export interface PresentedRegistryModel {
   outputUnitsLabel: string;
 }
 
+export interface PresentedRegistryMarker extends PresentedRegistryModel {
+  lane: number;
+  depth: number;
+  towerHeight: number;
+}
+
 function toWords(value: string): string {
   return value
     .split(/[_\-]+/g)
@@ -75,7 +81,7 @@ function deriveState(model: ModelRegistryItem): { state: LabyrinthState; reason:
     .join(' ')
     .toLowerCase();
 
-  if (/(deprecated|legacy|sunset|retired|archive)/.test(searchable)) {
+  if (/\b(deprecated|legacy|sunset|retired|archived)\b/.test(searchable)) {
     return {
       state: 'deprecated',
       reason: 'This model carries legacy or sunset signals in its registry policy or naming.',
@@ -225,4 +231,30 @@ export function presentRegistryModel(model: ModelRegistryItem): PresentedRegistr
     stewardSummary: deriveStewardSummary(model),
     outputUnitsLabel: model.output_units ? sentenceCase(model.output_units, 'Declared output') : 'Declared output unavailable',
   };
+}
+
+const STATE_HEIGHTS: Record<LabyrinthState, number> = {
+  active: 13.2,
+  contested: 11.6,
+  experimental: 10.4,
+  dormant: 9.2,
+  deprecated: 8.4,
+};
+
+export function layoutRegistryArchive(models: PresentedRegistryModel[]): PresentedRegistryMarker[] {
+  const columns = Math.max(1, Math.min(4, models.length >= 4 ? 4 : models.length));
+
+  return models.map((model, index) => {
+    const row = Math.floor(index / columns);
+    const column = index % columns;
+    const centeredColumn = column - (columns - 1) / 2;
+    const rowJitter = row % 2 === 0 ? 0.2 : -0.2;
+
+    return {
+      ...model,
+      lane: centeredColumn * 1.35 + rowJitter,
+      depth: row,
+      towerHeight: STATE_HEIGHTS[model.state] + ((index + row) % 2 === 0 ? 0.7 : 0),
+    };
+  });
 }

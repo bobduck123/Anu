@@ -1,21 +1,8 @@
 import Link from 'next/link';
-import {
-  ArrowRight,
-  Compass,
-  FileSearch,
-  Orbit,
-  ShieldCheck,
-  Waypoints,
-} from 'lucide-react';
-import {
-  AnuActionLink,
-  AnuChamberCard,
-  AnuHeroMetric,
-  AnuInstrumentationCard,
-  AnuPageHero,
-  AnuSectionHeading,
-  AnuSurfacePanel,
-} from '@/ui-system/anu/surfacePrimitives';
+import { ArrowRight, Compass, FileSearch, Orbit, ShieldCheck, Waypoints } from 'lucide-react';
+import { AnuActionLink } from '@/ui-system/anu/surfacePrimitives';
+import { LabyrinthArchiveShell } from '@/ui-system/realms/labyrinth/LabyrinthArchiveShell';
+import { EmbeddedInstrumentPanel } from '@/ui-system/realms/labyrinth/EmbeddedInstrumentPanel';
 
 const governanceCollections = [
   {
@@ -58,110 +45,117 @@ const governanceCollections = [
 
 export default function GovernanceIndexPage() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
-      <div className="mx-auto max-w-6xl px-4 pb-20 pt-28 md:px-8">
-        <AnuPageHero
+    <div className="min-h-screen px-4 pb-20 pt-20 md:px-8">
+      <div className="mx-auto max-w-[110rem]">
+        <LabyrinthArchiveShell
           eyebrow="Governance observatory"
           title="Read models, pressure, and institutional shape."
-          description="Governance is the observatory for institutional reasoning. It should feel calmer and more legible than the public shell, with state, registry, and review surfaces grouped by function instead of scattered as unrelated pages."
-          actions={
+          description="Governance now reads as a dark archive before it resolves into manuscript chambers. Collections are grouped by institutional function so the route feels like descending into civic memory, not browsing a dashboard."
+          legend={
+            <div className="space-y-3">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[#d2bf99]/72">Archive reading</p>
+              <p className="text-sm leading-6 text-[#d8ccb6]/76">
+                Move from modes and reviews into formal registries, then into federation and coordination surfaces. The archive should teach route meaning before you open any one instrument.
+              </p>
+            </div>
+          }
+          stats={
             <>
-              <AnuActionLink href="/transparency" tone="secondary" iconLeft={ShieldCheck} iconRight={ArrowRight}>
-                Back to public truth
-              </AnuActionLink>
-              <AnuActionLink href="/docs" tone="ghost" iconLeft={FileSearch} iconRight={ArrowRight}>
-                Open library doctrine
-              </AnuActionLink>
+              <EmbeddedInstrumentPanel
+                label="Collections"
+                value="3 observatory families"
+                detail="Modes and reviews, formal registries, and coordination surfaces."
+              />
+              <EmbeddedInstrumentPanel
+                label="Posture"
+                value="Calm + specific"
+                detail="Governance should behave like institutional reasoning, not public spectacle."
+              />
+              <EmbeddedInstrumentPanel
+                label="Linked routes"
+                value="Truth -> doctrine"
+                detail="Transparency explains public state; governance opens the deeper instruments."
+              />
             </>
           }
-          aside={
-            <AnuSurfacePanel tone="quiet" className="h-full p-5">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Observatory rule</p>
-              <p className="mt-3 text-sm leading-6 text-slate-300/84">
-                Charts, metrics, registries, and review surfaces are the primary grammar here. Public-shell spectacle should recede in favor of scanability and institutional specificity.
+          controls={
+            <div className="anu-labyrinth-console">
+              <div className="flex flex-wrap gap-2">
+                <AnuActionLink href="/transparency" tone="secondary" iconLeft={ShieldCheck} iconRight={ArrowRight}>
+                  Back to public truth
+                </AnuActionLink>
+                <AnuActionLink href="/docs" tone="ghost" iconLeft={FileSearch} iconRight={ArrowRight}>
+                  Open library doctrine
+                </AnuActionLink>
+              </div>
+              <p className="text-xs leading-6 text-[#cdbd9f]/72">
+                Governance is the first manuscript family after the model archive. It should stay navigable, but the archive atmosphere should remain intact.
               </p>
-            </AnuSurfacePanel>
+            </div>
           }
         >
-          <div className="grid gap-4 md:grid-cols-3">
-            <AnuHeroMetric
-              label="Collections"
-              value="3 observatory families"
-              detail="Modes and reviews, formal registries, and coordination surfaces are grouped separately."
-            />
-            <AnuHeroMetric
-              label="Posture"
-              value="Calm + specific"
-              detail="Governance should feel like institutional instrumentation rather than a decorative hub."
-            />
-            <AnuHeroMetric
-              label="Linked route"
-              value="Truth -> doctrine"
-              detail="Transparency explains public state; governance explains institutional reasoning and review."
-            />
-          </div>
-        </AnuPageHero>
-
-        <section className="mt-10 grid gap-4 md:grid-cols-3">
-          <AnuInstrumentationCard
-            label="Modes and reviews"
-            value="3"
-            detail="System state, simulations, and collision reviews define how governance watches pressure and change."
-            icon={Compass}
-            tone="signal"
-          />
-          <AnuInstrumentationCard
-            label="Formal instruments"
-            value="4"
-            detail="Registries and formulas hold named institutional semantics instead of leaving them implicit."
-            icon={Orbit}
-          />
-          <AnuInstrumentationCard
-            label="Coordination surfaces"
-            value="5"
-            detail="Federation, sovereignty, capital, and needs make cross-node coordination legible."
-            icon={Waypoints}
-          />
-        </section>
-
-        <section className="mt-12">
-          <AnuSectionHeading
-            eyebrow="Observatory index"
-            title="Enter by institutional function"
-            description="The governance index should reduce visual randomness and make route purpose obvious before someone dives into a specific analytical page."
-          />
-
-          <div className="mt-8 grid gap-5 xl:grid-cols-3">
+          <div className="anu-labyrinth-route-grid anu-labyrinth-route-grid-3">
             {governanceCollections.map((collection) => (
-              <AnuChamberCard
-                key={collection.title}
-                eyebrow={collection.eyebrow}
-                title={collection.title}
-                description={collection.description}
-                tone="default"
-              >
-                <div className="space-y-3">
+              <section key={collection.title} className="anu-labyrinth-manuscript-card">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#7d613b]">{collection.eyebrow}</p>
+                <h2
+                  className="mt-3 text-3xl text-[#2f1f12]"
+                  style={{ fontFamily: 'var(--anu-type-display)' }}
+                >
+                  {collection.title}
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-[#4f3d28]">{collection.description}</p>
+
+                <div className="mt-5 space-y-3">
                   {collection.links.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className="block rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 transition-colors hover:border-white/18 hover:bg-white/[0.05]"
-                    >
+                    <Link key={link.href} href={link.href} className="anu-labyrinth-portal-link">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-white">{link.label}</p>
-                          <p className="mt-2 text-sm leading-6 text-slate-300/82">{link.detail}</p>
-                          <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-slate-400">{link.href}</p>
+                          <p className="text-sm font-semibold text-[#25170d]">{link.label}</p>
+                          <p className="mt-2 text-sm leading-6 text-[#5f4930]">{link.detail}</p>
+                          <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-[#7e6848]">{link.href}</p>
                         </div>
-                        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[#f3cd92]" />
+                        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[#7a5419]" />
                       </div>
                     </Link>
                   ))}
                 </div>
-              </AnuChamberCard>
+              </section>
             ))}
           </div>
-        </section>
+
+          <div className="mt-6 anu-labyrinth-route-grid anu-labyrinth-route-grid-3">
+            <div className="anu-labyrinth-archive-note">
+              <div className="flex items-center gap-2 text-[#f6e6c3]">
+                <Compass className="h-4 w-4" />
+                <span className="text-xs uppercase tracking-[0.16em]">Modes and reviews</span>
+              </div>
+              <p className="mt-3 text-sm leading-7">
+                Systemic mode, simulations, and collisions belong at the archive entrance because they tell you what kind of institutional weather you are stepping into.
+              </p>
+            </div>
+
+            <div className="anu-labyrinth-archive-note">
+              <div className="flex items-center gap-2 text-[#f6e6c3]">
+                <Orbit className="h-4 w-4" />
+                <span className="text-xs uppercase tracking-[0.16em]">Formal instruments</span>
+              </div>
+              <p className="mt-3 text-sm leading-7">
+                Registries, formulas, and competencies should feel like named carved instruments, not loose analytics pages.
+              </p>
+            </div>
+
+            <div className="anu-labyrinth-archive-note">
+              <div className="flex items-center gap-2 text-[#f6e6c3]">
+                <Waypoints className="h-4 w-4" />
+                <span className="text-xs uppercase tracking-[0.16em]">Coordination surfaces</span>
+              </div>
+              <p className="mt-3 text-sm leading-7">
+                Federation, sovereignty, capital, and needs are the passages where institutional reasoning turns outward into cross-node coordination.
+              </p>
+            </div>
+          </div>
+        </LabyrinthArchiveShell>
       </div>
     </div>
   );

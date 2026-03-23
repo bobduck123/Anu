@@ -47,16 +47,42 @@ describe('ModelRegistryPage', () => {
 
     render(<ModelRegistryPage />);
 
-    expect(screen.getByText('Descend into the model archive.')).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText('Sovereignty Index')).toBeInTheDocument());
-    expect(screen.getByText('Tracks node sovereignty and dependency exposure.')).toBeInTheDocument();
+    expect(screen.getByText('Arrive in the archive before you read the manuscript.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /enter archive/i })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('button', { name: /sovereignty index/i })).toBeInTheDocument());
+    expect(screen.getAllByText('Tracks node sovereignty and dependency exposure.').length).toBeGreaterThan(0);
 
+    fireEvent.click(screen.getByRole('button', { name: /enter archive/i }));
     fireEvent.click(screen.getByRole('button', { name: /sovereignty index/i }));
 
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
     expect(screen.getAllByText('Sovereignty Index').length).toBeGreaterThan(1);
     expect(screen.getAllByText('Probabilistic contour').length).toBeGreaterThan(1);
     expect(screen.getByText('Backtest required before activation')).toBeInTheDocument();
+  });
+
+  it('supports keyboard descent through the archive after entering', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: {
+          models: [
+            { key: 'sovereignty_index', version: 3, description: 'Tracks node sovereignty.' },
+            { key: 'care_pressure_proto', version: 1, description: 'Pilot care routing model.' },
+          ],
+        },
+      }),
+    });
+
+    render(<ModelRegistryPage />);
+
+    await waitFor(() => expect(screen.getByRole('button', { name: /sovereignty index/i })).toBeInTheDocument());
+    fireEvent.keyDown(window, { key: 'Enter' });
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    fireEvent.keyDown(window, { key: 'Enter' });
+
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+    expect(screen.getAllByText('Care Pressure Proto').length).toBeGreaterThan(0);
   });
 
   it('filters the archive by state', async () => {
@@ -82,13 +108,13 @@ describe('ModelRegistryPage', () => {
 
     render(<ModelRegistryPage />);
 
-    await waitFor(() => expect(screen.getByText('Sovereignty Index')).toBeInTheDocument());
-    expect(screen.getByText('Prototype Care Model')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('button', { name: /sovereignty index/i })).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: /prototype care model/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Experimental' }));
 
-    expect(screen.getByText('Prototype Care Model')).toBeInTheDocument();
-    expect(screen.queryByText('Sovereignty Index')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /prototype care model/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sovereignty index/i })).not.toBeInTheDocument();
   });
 
   it('shows an honest archive sync error when the registry request fails', async () => {

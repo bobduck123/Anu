@@ -8,7 +8,7 @@ describe('GovernanceIndexPage', () => {
     render(<GovernanceIndexPage />);
 
     expect(screen.getByText('Read models, pressure, and institutional shape.')).toBeInTheDocument();
-    expect(screen.getByText('Enter by institutional function')).toBeInTheDocument();
+    expect(screen.getByText('Modes, simulations, and reviews')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /systemic mode/i })).toHaveAttribute('href', '/governance/systemic');
     expect(screen.getByText('Formal institutional instruments')).toBeInTheDocument();
     expect(screen.getByText('Federation and institutional shape')).toBeInTheDocument();

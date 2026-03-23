@@ -1,27 +1,19 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Layers3, Orbit, RefreshCw, ScrollText, Search, ShieldCheck, Workflow } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { AlertCircle, Compass, Layers3, RefreshCw, Search, ShieldCheck } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
-import {
-  AnuActionLink,
-  AnuChip,
-  AnuControlButton,
-  AnuFilterBar,
-  AnuFilterGroup,
-  AnuFilterInput,
-  AnuSurfacePanel,
-} from '@/ui-system/anu/surfacePrimitives';
+import { AnuActionLink } from '@/ui-system/anu/surfacePrimitives';
 import { LabyrinthArchiveShell } from '@/ui-system/realms/labyrinth/LabyrinthArchiveShell';
 import { ArchiveMarker } from '@/ui-system/realms/labyrinth/ArchiveMarker';
 import { ManuscriptOverlay } from '@/ui-system/realms/labyrinth/ManuscriptOverlay';
 import { StateSeal } from '@/ui-system/realms/labyrinth/StateSeal';
 import { EmbeddedInstrumentPanel } from '@/ui-system/realms/labyrinth/EmbeddedInstrumentPanel';
 import {
+  layoutRegistryArchive,
   presentRegistryModel,
   type LabyrinthState,
   type ModelRegistryItem,
-  type PresentedRegistryModel,
 } from './modelRegistryPresentation';
 
 const API_BASE = getCoreApiBase();
@@ -35,6 +27,8 @@ const STATE_FILTERS: Array<{ key: 'all' | LabyrinthState; label: string }> = [
   { key: 'deprecated', label: 'Deprecated' },
 ];
 
+const ARCHIVE_COLUMNS = 4;
+
 const getAuthHeaders = (): Record<string, string> => {
   if (typeof window === 'undefined') {
     return {};
@@ -44,7 +38,7 @@ const getAuthHeaders = (): Record<string, string> => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-function countByState(models: PresentedRegistryModel[]) {
+function countByState(models: ReturnType<typeof presentRegistryModel>[]) {
   return models.reduce<Record<LabyrinthState, number>>(
     (counts, model) => {
       counts[model.state] += 1;
@@ -60,8 +54,21 @@ function countByState(models: PresentedRegistryModel[]) {
   );
 }
 
-function distinctShapeCount(models: PresentedRegistryModel[]) {
+function distinctShapeCount(models: ReturnType<typeof presentRegistryModel>[]) {
   return new Set(models.map((model) => model.shapeLabel)).size;
+}
+
+function isTypingTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  const tagName = target.tagName.toLowerCase();
+  return tagName === 'input' || tagName === 'textarea' || tagName === 'select' || target.isContentEditable;
+}
+
+function archiveColumnsForCount(count: number) {
+  return Math.max(1, Math.min(ARCHIVE_COLUMNS, count >= ARCHIVE_COLUMNS ? ARCHIVE_COLUMNS : count));
 }
 
 export default function ModelRegistryPage() {
@@ -72,6 +79,8 @@ export default function ModelRegistryPage() {
   const [query, setQuery] = useState('');
   const [stateFilter, setStateFilter] = useState<'all' | LabyrinthState>('all');
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+  const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
+  const [entered, setEntered] = useState(false);
 
   const loadModels = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -113,6 +122,7 @@ export default function ModelRegistryPage() {
 
   const presentedModels = useMemo(() => models.map((model) => presentRegistryModel(model)), [models]);
   const archiveCounts = useMemo(() => countByState(presentedModels), [presentedModels]);
+
   const filteredModels = useMemo(() => {
     const search = query.trim().toLowerCase();
 
@@ -143,36 +153,112 @@ export default function ModelRegistryPage() {
     });
   }, [presentedModels, query, stateFilter]);
 
+  const archiveMarkers = useMemo(() => layoutRegistryArchive(filteredModels), [filteredModels]);
+  const archiveColumns = useMemo(() => archiveColumnsForCount(archiveMarkers.length), [archiveMarkers.length]);
+
   const selectedModel = useMemo(
     () => presentedModels.find((model) => model.id === selectedModelId) ?? null,
     [presentedModels, selectedModelId],
   );
 
+  const activeMarker = useMemo(
+    () => archiveMarkers.find((model) => model.id === activeMarkerId) ?? archiveMarkers[0] ?? null,
+    [activeMarkerId, archiveMarkers],
+  );
+
   useEffect(() => {
-    if (!selectedModelId) {
+    if (archiveMarkers.length < 1) {
+      setActiveMarkerId(null);
+      setSelectedModelId(null);
       return;
     }
 
-    const stillVisible = presentedModels.some((model) => model.id === selectedModelId);
-    if (!stillVisible) {
+    const activeStillVisible = archiveMarkers.some((model) => model.id === activeMarkerId);
+    if (!activeStillVisible) {
+      setActiveMarkerId(archiveMarkers[0].id);
+    }
+
+    if (selectedModelId && !archiveMarkers.some((model) => model.id === selectedModelId)) {
       setSelectedModelId(null);
     }
-  }, [presentedModels, selectedModelId]);
+  }, [archiveMarkers, activeMarkerId, selectedModelId]);
 
   useEffect(() => {
-    if (!selectedModel) {
-      return;
-    }
-
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setSelectedModelId(null);
+      if (selectedModelId) {
+        if (event.key === 'Escape') {
+          setSelectedModelId(null);
+        }
+        return;
+      }
+
+      if (!entered) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          setEntered(true);
+        }
+        return;
+      }
+
+      if (isTypingTarget(event.target)) {
+        return;
+      }
+
+      const currentIndex = archiveMarkers.findIndex((model) => model.id === activeMarker?.id);
+      if (currentIndex < 0 && archiveMarkers.length > 0) {
+        setActiveMarkerId(archiveMarkers[0].id);
+        return;
+      }
+
+      const setIndex = (nextIndex: number) => {
+        const bounded = Math.max(0, Math.min(archiveMarkers.length - 1, nextIndex));
+        setActiveMarkerId(archiveMarkers[bounded]?.id ?? null);
+      };
+
+      switch (event.key) {
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          event.preventDefault();
+          setIndex(currentIndex + 1);
+          break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          event.preventDefault();
+          setIndex(currentIndex - 1);
+          break;
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          event.preventDefault();
+          setIndex(currentIndex - archiveColumns);
+          break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          event.preventDefault();
+          setIndex(currentIndex + archiveColumns);
+          break;
+        case 'Enter':
+        case ' ':
+          if (activeMarker?.id) {
+            event.preventDefault();
+            setSelectedModelId(activeMarker.id);
+          }
+          break;
+        case 'Escape':
+          event.preventDefault();
+          setEntered(false);
+          break;
+        default:
+          break;
       }
     };
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [selectedModel]);
+  }, [activeMarker, archiveColumns, archiveMarkers, entered, selectedModelId]);
 
   const legend = (
     <div className="space-y-3">
@@ -185,7 +271,7 @@ export default function ModelRegistryPage() {
         <StateSeal state="deprecated" />
       </div>
       <p className="text-sm leading-6 text-[#d8ccb6]/76">
-        Registry items signal state before entry so operators can distinguish stable instruments from contested or early-stage models before opening a manuscript chamber.
+        Markers surface institutional state before entry so the archive behaves like terrain, not a flat list.
       </p>
     </div>
   );
@@ -195,7 +281,7 @@ export default function ModelRegistryPage() {
       <EmbeddedInstrumentPanel
         label="Archive count"
         value={`${presentedModels.length} models`}
-        detail="All versioned institutional models currently returned by the live registry endpoint."
+        detail="All versioned institutional models returned by the live registry endpoint."
       />
       <EmbeddedInstrumentPanel
         label="Live states"
@@ -205,102 +291,105 @@ export default function ModelRegistryPage() {
       <EmbeddedInstrumentPanel
         label="Shape families"
         value={`${distinctShapeCount(presentedModels)} forms`}
-        detail="Distinct simulation shapes derived from the published registry metadata."
+        detail="Distinct simulation shapes derived from the registry payload."
       />
     </>
   );
 
+  const movementHint = (
+    <div className="anu-labyrinth-controls-strip">
+      <span>W A S D / Arrows</span>
+      <span>Traverse archive</span>
+      <span>Enter</span>
+      <span>Open chamber</span>
+      <span>Esc</span>
+      <span>Pause archive</span>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen px-4 pb-20 pt-24 md:px-8">
-      <div className="mx-auto max-w-7xl">
+    <div className="min-h-screen px-4 pb-20 pt-20 md:px-8">
+      <div className="mx-auto max-w-[110rem]">
         <LabyrinthArchiveShell
           eyebrow="Labyrinth proof / model registry"
-          title="Descend into the model archive."
-          description="Governance models should not read like a flat list. This route enters through the archive first, lets state surface before selection, and then opens manuscript chambers for deeper inspection of purpose, version, and simulation form."
+          title="Arrive in the archive before you read the manuscript."
+          description="The model registry should feel like entering a dark institutional vault. Traverse the archive first, let state and form surface in space, then open a manuscript chamber without leaving the archive."
           legend={legend}
           stats={stats}
+          entered={entered}
+          onEnter={() => setEntered(true)}
+          movementHint={movementHint}
           controls={
-            <div className="space-y-4">
-              <AnuFilterBar>
-                <AnuFilterGroup>
-                  <AnuFilterInput
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search model key, purpose, shape, or release discipline"
-                    aria-label="Search model registry"
-                  />
-                  <AnuControlButton
-                    tone="default"
-                    iconLeft={RefreshCw}
-                    onClick={() => void loadModels()}
-                    disabled={loading}
-                    className={loading ? 'opacity-80' : ''}
-                  >
-                    {loading ? 'Refreshing' : 'Refresh archive'}
-                  </AnuControlButton>
-                </AnuFilterGroup>
-                <AnuFilterGroup className="justify-end">
-                  {STATE_FILTERS.map((option) => (
-                    <AnuControlButton
-                      key={option.key}
-                      tone={stateFilter === option.key ? 'active' : 'default'}
-                      onClick={() => setStateFilter(option.key)}
-                    >
-                      {option.label}
-                    </AnuControlButton>
-                  ))}
-                </AnuFilterGroup>
-              </AnuFilterBar>
+            <div className="anu-labyrinth-console">
+              <label className="anu-labyrinth-console__search">
+                <Search className="h-4 w-4 text-[#d9c6a0]/72" />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search model key, purpose, shape, or discipline"
+                  aria-label="Search model registry"
+                  className="anu-labyrinth-console__input"
+                />
+              </label>
 
-              <div className="flex flex-wrap gap-2">
-                <AnuChip tone="muted" icon={ScrollText}>
-                  Manuscript overlays stay in the archive
-                </AnuChip>
-                <AnuChip tone="muted" icon={Layers3}>
-                  Shape and simulation form appear at first glance
-                </AnuChip>
-                <AnuChip tone="muted" icon={Workflow}>
-                  Dependencies and release discipline sit on the second layer
-                </AnuChip>
+              <button
+                type="button"
+                onClick={() => void loadModels()}
+                disabled={loading}
+                className="anu-labyrinth-console__refresh"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                <span>{loading ? 'Syncing archive' : 'Refresh archive'}</span>
+              </button>
+
+              <div className="anu-labyrinth-console__filters">
+                {STATE_FILTERS.map((option) => (
+                  <button
+                    key={option.key}
+                    type="button"
+                    className={`anu-labyrinth-console__filter ${stateFilter === option.key ? 'anu-labyrinth-console__filter-active' : ''}`}
+                    onClick={() => setStateFilter(option.key)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
               </div>
+
+              <p className="text-xs leading-6 text-[#cdbd9f]/72">
+                Search and filters belong to the archive console, not the main scene. Movement and state reading stay spatial first.
+              </p>
             </div>
           }
         >
-          <div className="space-y-6">
-            {error ? (
-              <AnuSurfacePanel tone="soft" className="px-5 py-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="mt-0.5 h-5 w-5 text-[#f3c489]" />
-                  <div>
-                    <p className="text-sm font-semibold text-[#f7e0b1]">Archive sync failed</p>
-                    <p className="mt-1 text-sm leading-6 text-[#ddd0ba]/80">{error}</p>
-                  </div>
-                </div>
-              </AnuSurfacePanel>
-            ) : null}
+          <div className="anu-labyrinth-stage" aria-live="polite">
+            <div className="anu-labyrinth-stage__floor" aria-hidden="true" />
+            <div className="anu-labyrinth-stage__haze" aria-hidden="true" />
 
             {loading ? (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, index) => (
-                  <div
-                    key={`loading-${index}`}
-                    className="anu-labyrinth-marker animate-pulse"
-                    aria-hidden="true"
-                  >
-                    <div className="h-3 w-28 rounded-full bg-white/10" />
-                    <div className="mt-4 h-8 w-3/4 rounded-full bg-white/10" />
-                    <div className="mt-4 h-4 w-full rounded-full bg-white/10" />
-                    <div className="mt-2 h-4 w-5/6 rounded-full bg-white/10" />
-                    <div className="mt-6 flex gap-2">
-                      <div className="h-7 w-16 rounded-full bg-white/10" />
-                      <div className="h-7 w-20 rounded-full bg-white/10" />
-                    </div>
-                  </div>
-                ))}
+              Array.from({ length: 8 }).map((_, index) => (
+                <div
+                  key={`archive-skeleton-${index}`}
+                  className="anu-labyrinth-skeleton"
+                  style={
+                    {
+                      '--anu-archive-lane': (index % 4) * 1.35 - 2,
+                      '--anu-archive-depth': Math.floor(index / 4),
+                      '--anu-archive-height': `${8.6 + (index % 3) * 1.2}rem`,
+                    } as CSSProperties
+                  }
+                />
+              ))
+            ) : error ? (
+              <div className="anu-labyrinth-stage__message">
+                <AlertCircle className="h-5 w-5 text-[#f3c489]" />
+                <div>
+                  <p className="text-sm font-semibold text-[#f7e0b1]">Archive sync failed</p>
+                  <p className="mt-1 text-sm leading-6 text-[#ddd0ba]/80">{error}</p>
+                </div>
               </div>
-            ) : filteredModels.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {filteredModels.map((model) => (
+            ) : archiveMarkers.length > 0 ? (
+              <>
+                {archiveMarkers.map((model) => (
                   <ArchiveMarker
                     key={model.id}
                     title={model.title}
@@ -310,24 +399,55 @@ export default function ModelRegistryPage() {
                     versionLabel={model.versionLabel}
                     state={model.state}
                     stateReason={model.stateReason}
-                    active={selectedModelId === model.id}
+                    lane={model.lane}
+                    depth={model.depth}
+                    towerHeight={model.towerHeight}
+                    active={activeMarker?.id === model.id || selectedModelId === model.id}
                     dialogId={manuscriptDialogId}
-                    onClick={() => setSelectedModelId(model.id)}
+                    onHover={() => setActiveMarkerId(model.id)}
+                    onClick={() => {
+                      setActiveMarkerId(model.id);
+                      setSelectedModelId(model.id);
+                    }}
                   />
                 ))}
-              </div>
+
+                {activeMarker ? (
+                  <aside className="anu-labyrinth-stage__plaque">
+                    <div className="flex items-center gap-2">
+                      <StateSeal state={activeMarker.state} />
+                      <span className="text-[10px] uppercase tracking-[0.18em] text-[#d8c49d]/72">
+                        {activeMarker.source.key}
+                      </span>
+                    </div>
+                    <h3
+                      className="mt-4 text-2xl text-[#f7ead2]"
+                      style={{ fontFamily: 'var(--anu-type-display)' }}
+                    >
+                      {activeMarker.title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-7 text-[#ded1bc]/78">{activeMarker.purpose}</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-[#e9dcc4]/82">
+                        {activeMarker.versionLabel}
+                      </span>
+                      <span className="rounded-full border border-[#d3b37c]/18 bg-[#d3b37c]/8 px-3 py-1 text-xs text-[#f2ddb0]">
+                        {activeMarker.shapeLabel}
+                      </span>
+                    </div>
+                  </aside>
+                ) : null}
+              </>
             ) : (
-              <AnuSurfacePanel tone="quiet" className="px-5 py-6">
-                <div className="flex items-start gap-3">
-                  <Search className="mt-0.5 h-5 w-5 text-slate-300/78" />
-                  <div>
-                    <p className="text-sm font-semibold text-white">No archive entries match this pass</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-300/78">
-                      Adjust the search or state filter to reopen the archive markers.
-                    </p>
-                  </div>
+              <div className="anu-labyrinth-stage__message">
+                <Search className="h-5 w-5 text-slate-300/78" />
+                <div>
+                  <p className="text-sm font-semibold text-white">No archive entries match this pass</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-300/78">
+                    Adjust the archive console to reopen a visible lane of markers.
+                  </p>
                 </div>
-              </AnuSurfacePanel>
+              </div>
             )}
           </div>
         </LabyrinthArchiveShell>
@@ -348,12 +468,14 @@ export default function ModelRegistryPage() {
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <StateSeal state={selectedModel.state} />
-                  <AnuChip tone="muted" icon={Orbit}>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[#d3b37c]/18 bg-[#d3b37c]/8 px-3 py-1 text-xs text-[#70542f]">
+                    <Compass className="h-3.5 w-3.5" />
                     {selectedModel.shapeLabel}
-                  </AnuChip>
-                  <AnuChip tone="muted" icon={ShieldCheck}>
+                  </span>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[#b18d58]/18 bg-white/35 px-3 py-1 text-xs text-[#684d28]">
+                    <ShieldCheck className="h-3.5 w-3.5" />
                     {selectedModel.source.key}
-                  </AnuChip>
+                  </span>
                 </div>
                 <p>{selectedModel.purpose}</p>
               </div>
@@ -407,17 +529,25 @@ export default function ModelRegistryPage() {
                   <p className="mt-3 text-sm leading-7 text-[#ddd0ba]/82">{selectedModel.dependencySummary}</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {selectedModel.dependencyInputs.map((input) => (
-                      <AnuChip key={input} tone="muted">
+                      <span
+                        key={input}
+                        className="rounded-full border border-[#c9ad74]/22 bg-[#f0ddbb]/24 px-3 py-1 text-xs text-[#5d4529]"
+                      >
                         {input}
-                      </AnuChip>
+                      </span>
                     ))}
                     {selectedModel.parameterKeys.map((key) => (
-                      <AnuChip key={key} tone="accent">
+                      <span
+                        key={key}
+                        className="rounded-full border border-[#99744a]/22 bg-white/28 px-3 py-1 text-xs text-[#5b4326]"
+                      >
                         param: {key}
-                      </AnuChip>
+                      </span>
                     ))}
                     {selectedModel.dependencyInputs.length < 1 && selectedModel.parameterKeys.length < 1 ? (
-                      <AnuChip tone="muted">No published dependency fields</AnuChip>
+                      <span className="rounded-full border border-[#99744a]/16 bg-white/24 px-3 py-1 text-xs text-[#5b4326]">
+                        No published dependency fields
+                      </span>
                     ) : null}
                   </div>
                 </div>

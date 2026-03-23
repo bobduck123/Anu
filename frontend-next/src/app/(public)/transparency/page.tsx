@@ -3,17 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, ArrowRight, FileSearch, ReceiptText, ShieldCheck } from 'lucide-react';
 import { transparencyApi, TransparencySummary } from '@/lib/api/endpoints';
-import {
-  AnuActionLink,
-  AnuChamberCard,
-  AnuChip,
-  AnuHeroMetric,
-  AnuInstrumentationCard,
-  AnuPageHero,
-  AnuSectionHeading,
-  AnuSurfacePanel,
-} from '@/ui-system/anu/surfacePrimitives';
-import { AnuNarrativeBriefPanel } from '@/ui-system/anu/narrativePrimitives';
+import { AnuActionLink } from '@/ui-system/anu/surfacePrimitives';
+import { LabyrinthArchiveShell } from '@/ui-system/realms/labyrinth/LabyrinthArchiveShell';
+import { EmbeddedInstrumentPanel } from '@/ui-system/realms/labyrinth/EmbeddedInstrumentPanel';
 
 function money(cents: number): string {
   return `$${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -34,285 +26,210 @@ export default function TransparencyPage() {
   const contractState = error ? 'Degraded' : data ? 'Live' : 'Syncing';
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
-      <div className="mx-auto max-w-6xl px-4 pb-20 pt-28 md:px-8">
-        <AnuPageHero
+    <div className="min-h-screen px-4 pb-20 pt-20 md:px-8">
+      <div className="mx-auto max-w-[110rem]">
+        <LabyrinthArchiveShell
           eyebrow="Public transparency"
           title="Read the commons without exposing the members."
-          description="This surface is the public truth layer for institutional finance and relief capacity. It should make the state of the commons legible without leaking member-level financial traces or private support cases."
-          actions={
+          description="Transparency is now part of the Labyrinth family: a dark archive threshold leading into manuscript chambers for public totals, receipts, and relief capacity. It should feel inspectable, honest, and privacy-preserving."
+          legend={
+            <div className="space-y-3">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[#d2bf99]/72">Trust doctrine</p>
+              <p className="text-sm leading-6 text-[#d8ccb6]/76">
+                This route explains what can be known publicly, what remains private, and whether the reporting contract is live, syncing, or degraded.
+              </p>
+            </div>
+          }
+          stats={
             <>
-              <AnuActionLink href="/docs" tone="secondary" iconLeft={FileSearch} iconRight={ArrowRight}>
-                Open operations library
-              </AnuActionLink>
-              <AnuActionLink href="/governance" tone="ghost" iconLeft={ShieldCheck} iconRight={ArrowRight}>
-                Governance observatory
-              </AnuActionLink>
+              <EmbeddedInstrumentPanel
+                label="Contract"
+                value={contractState}
+                detail="Live means current public reporting. Degraded means the trust path is open but the reporting layer needs attention."
+              />
+              <EmbeddedInstrumentPanel
+                label="Pool coverage"
+                value={data ? String(data.pools.length) : '--'}
+                detail="Public pool balances remain inspectable without exposing contributor-level details."
+              />
+              <EmbeddedInstrumentPanel
+                label="Receipt trail"
+                value={data ? String(data.receipts?.length ?? 0) : '--'}
+                detail="Recent public receipts anchor interpretation of movement through the commons."
+              />
             </>
           }
-          aside={
-            <AnuSurfacePanel tone="quiet" className="h-full p-5">
+          controls={
+            <div className="anu-labyrinth-console">
               <div className="flex flex-wrap gap-2">
-                <AnuChip tone="signal" icon={ShieldCheck}>
-                  Privacy-preserving
-                </AnuChip>
-                <AnuChip tone="muted" icon={ReceiptText}>
-                  Public receipts
-                </AnuChip>
-                <AnuChip tone="accent" icon={Activity}>
-                  Relief legibility
-                </AnuChip>
+                <AnuActionLink href="/docs" tone="secondary" iconLeft={FileSearch} iconRight={ArrowRight}>
+                  Open operations library
+                </AnuActionLink>
+                <AnuActionLink href="/governance" tone="ghost" iconLeft={ShieldCheck} iconRight={ArrowRight}>
+                  Governance observatory
+                </AnuActionLink>
               </div>
-              <p className="mt-4 text-sm leading-6 text-slate-300/84">
-                Transparency exists to sustain institutional trust. If the reporting contract degrades,
-                the surface should degrade honestly and keep pointing people toward the right explanatory routes.
+              <p className="text-xs leading-6 text-[#cdbd9f]/72">
+                Public trust routes should stay readable like manuscripts: clear totals, clear privacy boundary, clear truth about degraded reporting.
               </p>
-            </AnuSurfacePanel>
+            </div>
           }
         >
-          <div className="grid gap-4 md:grid-cols-3">
-            <AnuHeroMetric
-              label="Contract"
-              value={contractState}
-              detail="Live means current public reporting. Syncing means data is being loaded. Degraded means the trust path is up but the reporting layer needs attention."
-            />
-            <AnuHeroMetric
-              label="Pool coverage"
-              value={data ? String(data.pools.length) : '--'}
-              detail="Pool balances remain inspectable without exposing contributor-level transaction detail."
-            />
-            <AnuHeroMetric
-              label="Receipt trail"
-              value={data ? String(data.receipts?.length ?? 0) : '--'}
-              detail="Recent public receipts and reference types help explain where changes in the commons ledger came from."
-            />
-          </div>
-        </AnuPageHero>
-
-        <section className="mt-10">
-          <AnuNarrativeBriefPanel
-            eyebrow="Route reading"
-            title="How to read this truth surface"
-            description="Transparency is a public narrative output of the commons ledger. It should tell people what state is visible, how trustworthy the current reporting is, and what privacy boundary is being respected."
-            signals={[
-              {
-                label: 'Output mode',
-                value: contractState,
-                detail:
-                  contractState === 'Live'
-                    ? 'Current public reporting is available through pool balances, receipts, and relief-capacity summaries.'
-                    : contractState === 'Syncing'
-                      ? 'The trust route is loading the current reporting state before it renders the public totals.'
-                      : 'The route is staying honest about a reporting degradation instead of collapsing into a generic failure.',
-                tone: error ? 'accent' : 'signal',
-                icon: ShieldCheck,
-              },
-              {
-                label: 'Source state',
-                value: data ? `${data.pools.length} pools / ${data.receipts?.length ?? 0} receipts` : 'Awaiting report data',
-                detail:
-                  'Public state is built from privacy-preserving totals, visible receipts, and relief-capacity signals rather than member-level ledger exposure.',
-                tone: 'muted',
-                icon: ReceiptText,
-              },
-              {
-                label: 'Fallback truth',
-                value: error ? 'Degraded openly' : 'Trust path remains inspectable',
-                detail:
-                  'If reporting degrades, this surface should say so directly and redirect people toward docs and contact instead of hiding the contract state.',
-                tone: error ? 'accent' : 'signal',
-                icon: Activity,
-              },
-            ]}
-            whyItMatters="Institutional trust depends on honest public reading. People should be able to distinguish live totals, privacy boundaries, and degraded reporting without needing insider context."
-            actions={[
-              { href: '/docs', label: 'Open operations library', tone: 'secondary', icon: FileSearch },
-              { href: '/contact', label: 'Route a report', tone: 'ghost', icon: ShieldCheck },
-            ]}
-          />
-        </section>
-
-        {error ? (
-          <AnuSurfacePanel tone="quiet" className="mt-5 border-amber-300/28 p-5 text-amber-100">
-            <p className="text-sm font-semibold">Public transparency is temporarily degraded.</p>
-            <p className="mt-1 text-sm text-amber-100/92">
-              The reporting layer is stabilising. Public trust routes remain available and the degradation is being stated openly.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <AnuActionLink href="/docs" tone="ghost" iconRight={ArrowRight}>
-                Open docs
-              </AnuActionLink>
-              <AnuActionLink href="/contact" tone="ghost" iconRight={ArrowRight}>
-                Route a report
-              </AnuActionLink>
+          {error ? (
+            <div className="anu-labyrinth-stage__message">
+              <Activity className="h-5 w-5 text-[#f3c489]" />
+              <div>
+                <p className="text-sm font-semibold text-[#f7e0b1]">Public transparency is temporarily degraded</p>
+                <p className="mt-1 text-sm leading-6 text-[#ddd0ba]/80">
+                  {error}
+                </p>
+              </div>
             </div>
-          </AnuSurfacePanel>
-        ) : null}
+          ) : null}
 
-        {!data && !error ? (
-          <AnuSurfacePanel tone="quiet" className="mt-5 p-5 text-sm text-slate-300">
-            Loading transparency ledger...
-          </AnuSurfacePanel>
-        ) : null}
+          {!data && !error ? (
+            <div className="anu-labyrinth-stage__message">
+              <ReceiptText className="h-5 w-5 text-[#f3c489]" />
+              <div>
+                <p className="text-sm font-semibold text-[#f7e0b1]">Loading transparency ledger</p>
+                <p className="mt-1 text-sm leading-6 text-[#ddd0ba]/80">
+                  The archive is assembling public totals, receipts, and relief-capacity summaries.
+                </p>
+              </div>
+            </div>
+          ) : null}
 
-        {data ? (
-          <div className="mt-5 space-y-5">
-            <section className="grid gap-4 md:grid-cols-4">
-              <AnuInstrumentationCard
-                label="Inflows (30d)"
-                value={money(data.totals.inflows_30d)}
-                detail="Publicly visible throughput entering the commons in the last 30 days."
-                tone="signal"
-              />
-              <AnuInstrumentationCard
-                label="Outflows (30d)"
-                value={money(data.totals.outflows_30d)}
-                detail="Publicly visible support, operating, and flow-out movement in the same window."
-              />
-              <AnuInstrumentationCard
-                label="Admin ratio"
-                value={`${(data.totals.admin_ratio_30d * 100).toFixed(1)}%`}
-                detail="Share of 30-day throughput allocated to administrative load."
-              />
-              <AnuInstrumentationCard
-                label="Receipts visible"
-                value={String(data.receipts?.length ?? 0)}
-                detail="Recent receipts anchor interpretation of movement through the commons ledger."
-                icon={ReceiptText}
-              />
-            </section>
+          {data ? (
+            <div className="anu-labyrinth-route-grid anu-labyrinth-route-grid-2">
+              <section className="anu-labyrinth-manuscript-card">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#7d613b]">Pool balances</p>
+                <h2 className="mt-3 text-3xl text-[#2f1f12]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                  Commons-backed liquidity
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-[#4f3d28]">
+                  Each pool remains visible as a public commons instrument rather than a private finance bucket.
+                </p>
 
-            <section className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr]">
-              <AnuSurfacePanel tone="soft" className="p-5 text-slate-100">
-                <AnuSectionHeading
-                  eyebrow="Pool balances"
-                  title="Commons-backed liquidity"
-                  description="Each pool remains visible as a public commons instrument rather than a private finance bucket."
-                  action={<ShieldCheck className="h-4 w-4 text-[#f3cd92]" />}
-                />
-                <div className="mt-4 space-y-3">
+                <div className="mt-5 anu-labyrinth-ledger-list">
                   {data.pools.map((pool) => (
-                    <div
-                      key={pool.slug}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4"
-                    >
+                    <div key={pool.slug} className="anu-labyrinth-portal-link">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-white">{pool.name || pool.slug}</p>
-                          <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                          <p className="text-sm font-semibold text-[#25170d]">{pool.name || pool.slug}</p>
+                          <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-[#7e6848]">
                             {pool.category || 'Commons pool'}
                           </p>
                         </div>
-                        <span className="font-mono-data text-base text-white">{money(pool.balance)}</span>
+                        <span className="font-mono-data text-base text-[#2f1f12]">{money(pool.balance)}</span>
                       </div>
-                      <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-300/82">
+                      <div className="mt-3 flex flex-wrap gap-3 text-xs text-[#5f4930]">
                         <span>30d outflows: {money(pool.outflows_30d)}</span>
                         {pool.target_amount_cents ? <span>Target: {money(pool.target_amount_cents)}</span> : null}
                       </div>
                     </div>
                   ))}
                 </div>
-              </AnuSurfacePanel>
+              </section>
 
-              <AnuSurfacePanel tone="quiet" className="p-5 text-slate-100">
-                <AnuSectionHeading
-                  eyebrow="Relief capacity"
-                  title="Current response room"
-                  description="Relief remains publicly legible at a systems level even when case-level queues stay private."
-                  action={<Activity className="h-4 w-4 text-[#8dd9b2]" />}
-                />
-                <div className="mt-4 space-y-3 text-sm text-slate-300">
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4">
-                    Monthly grants remaining:{' '}
-                    <strong className="font-mono-data text-white">{data.relief_capacity.monthly_grants_remaining}</strong>
+              <section className="anu-labyrinth-manuscript-card">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#7d613b]">Relief capacity</p>
+                <h2 className="mt-3 text-3xl text-[#2f1f12]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                  Current response room
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-[#4f3d28]">
+                  Relief remains publicly legible at a systems level even when case-level queues stay private.
+                </p>
+
+                <div className="mt-5 anu-labyrinth-ledger-list">
+                  <div className="anu-labyrinth-portal-link">
+                    <p className="text-sm font-semibold text-[#25170d]">Monthly grants remaining</p>
+                    <p className="mt-2 text-2xl text-[#2f1f12]">{data.relief_capacity.monthly_grants_remaining}</p>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4">
-                    Avg processing days:{' '}
-                    <strong className="font-mono-data text-white">{data.relief_capacity.avg_processing_days}</strong>
+                  <div className="anu-labyrinth-portal-link">
+                    <p className="text-sm font-semibold text-[#25170d]">Average processing days</p>
+                    <p className="mt-2 text-2xl text-[#2f1f12]">{data.relief_capacity.avg_processing_days}</p>
                   </div>
                   {data.relief_metrics ? (
                     <>
-                      <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4">
-                        Approval ratio:{' '}
-                        <strong className="font-mono-data text-white">
+                      <div className="anu-labyrinth-portal-link">
+                        <p className="text-sm font-semibold text-[#25170d]">Approval ratio</p>
+                        <p className="mt-2 text-2xl text-[#2f1f12]">
                           {(data.relief_metrics.approval_ratio * 100).toFixed(1)}%
-                        </strong>
+                        </p>
                       </div>
-                      <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4">
-                        Median response days:{' '}
-                        <strong className="font-mono-data text-white">
+                      <div className="anu-labyrinth-portal-link">
+                        <p className="text-sm font-semibold text-[#25170d]">Median response days</p>
+                        <p className="mt-2 text-2xl text-[#2f1f12]">
                           {data.relief_metrics.median_response_days.toFixed(1)}
-                        </strong>
+                        </p>
                       </div>
                     </>
                   ) : null}
                 </div>
-              </AnuSurfacePanel>
-            </section>
+              </section>
 
-            <section className="grid gap-5 lg:grid-cols-[1fr_0.95fr]">
-              <AnuSurfacePanel tone="soft" className="p-5 text-slate-100">
-                <AnuSectionHeading
-                  eyebrow="Recent receipts"
-                  title="Visible ledger trail"
-                  description="Recent receipt entries make public movement inspectable without turning the surface into a raw transaction explorer."
-                  action={<ReceiptText className="h-4 w-4 text-[#f3cd92]" />}
-                />
-                <div className="mt-4 space-y-3">
+              <section className="anu-labyrinth-manuscript-card">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#7d613b]">Recent receipts</p>
+                <h2 className="mt-3 text-3xl text-[#2f1f12]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                  Visible ledger trail
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-[#4f3d28]">
+                  Recent receipt entries make public movement inspectable without turning the surface into a raw transaction explorer.
+                </p>
+
+                <div className="mt-5 anu-labyrinth-ledger-list">
                   {receipts.length ? (
                     receipts.map((receipt) => (
-                      <div
-                        key={receipt.id}
-                        className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4"
-                      >
+                      <div key={receipt.id} className="anu-labyrinth-portal-link">
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="text-sm font-semibold text-white">
+                            <p className="text-sm font-semibold text-[#25170d]">
                               {receipt.description || receipt.reference_type || receipt.entry_type}
                             </p>
-                            <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                            <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-[#7e6848]">
                               {receipt.pool_name || receipt.pool_slug || 'Commons ledger'}
                               {receipt.reference_type ? ` • ${receipt.reference_type}` : ''}
                             </p>
                           </div>
-                          <span className="font-mono-data text-base text-white">{money(receipt.amount_cents)}</span>
+                          <span className="font-mono-data text-base text-[#2f1f12]">{money(receipt.amount_cents)}</span>
                         </div>
                         {receipt.created_at ? (
-                          <p className="mt-3 text-xs text-slate-400">
+                          <p className="mt-3 text-xs text-[#6d5538]">
                             {new Date(receipt.created_at).toLocaleString()}
                           </p>
                         ) : null}
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm text-slate-300/82">
-                      Receipt publication is available, but there are no recent entries to display in this window.
+                    <div className="anu-labyrinth-portal-link">
+                      <p className="text-sm text-[#5f4930]">
+                        Receipt publication is available, but there are no recent entries to display in this window.
+                      </p>
                     </div>
                   )}
                 </div>
-              </AnuSurfacePanel>
+              </section>
 
-              <AnuChamberCard
-                eyebrow="Reading doctrine"
-                title="What this surface guarantees"
-                description="Transparency is a truth surface, not a dashboard toy. It should tell people what can be known publicly, what remains private, and where to go next."
-                tone="affirmed"
-              >
-                <div className="space-y-3 text-sm text-slate-200/84">
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4">
-                    <p className="font-semibold text-white">Public totals without private exposure</p>
+              <section className="anu-labyrinth-manuscript-card">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#7d613b]">Reading doctrine</p>
+                <h2 className="mt-3 text-3xl text-[#2f1f12]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                  What this surface guarantees
+                </h2>
+                <div className="mt-5 space-y-3 text-sm text-[#4f3d28]">
+                  <div className="anu-labyrinth-portal-link">
+                    <p className="font-semibold text-[#25170d]">Public totals without private exposure</p>
                     <p className="mt-2 leading-6">
                       Member-level finance and relief cases remain private even while commons state remains inspectable.
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4">
-                    <p className="font-semibold text-white">Honest degradation</p>
+                  <div className="anu-labyrinth-portal-link">
+                    <p className="font-semibold text-[#25170d]">Honest degradation</p>
                     <p className="mt-2 leading-6">
                       If the reporting contract degrades, the surface should say so clearly and point to docs and contact rather than failing opaquely.
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4">
-                    <p className="font-semibold text-white">Linked institutional reading</p>
+                  <div className="anu-labyrinth-portal-link">
+                    <p className="font-semibold text-[#25170d]">Linked institutional reading</p>
                     <p className="mt-2 leading-6">
                       Use docs for route relationships and governance for deeper institutional reasoning behind the visible state.
                     </p>
@@ -326,10 +243,10 @@ export default function TransparencyPage() {
                     Route a report
                   </AnuActionLink>
                 </div>
-              </AnuChamberCard>
-            </section>
-          </div>
-        ) : null}
+              </section>
+            </div>
+          ) : null}
+        </LabyrinthArchiveShell>
       </div>
     </div>
   );
