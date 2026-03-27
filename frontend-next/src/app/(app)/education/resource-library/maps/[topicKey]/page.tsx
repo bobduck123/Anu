@@ -1,12 +1,16 @@
-import { redirect } from 'next/navigation';
+import { EduHubShell } from '@/components/education/hub/EduHubShell';
+import { MapResourcePage } from '@/components/education/maps/MapResourcePage';
 
-interface EducationResourceLibraryMapCompatPageProps {
-  params: Promise<{ topicKey: string }>;
-}
-
-export default async function EducationResourceLibraryMapCompatPage({
+export default async function EducationMapDetailPage({
   params,
-}: EducationResourceLibraryMapCompatPageProps) {
+}: {
+  params: Promise<{ topicKey: string }>;
+}) {
   const { topicKey } = await params;
-  redirect(`/education/maps/${encodeURIComponent(topicKey)}`);
+
+  return (
+    <EduHubShell>
+      <MapResourcePage topicKey={topicKey} />
+    </EduHubShell>
+  );
 }

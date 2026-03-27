@@ -14,12 +14,29 @@ interface QuantumCanvasProps {
   data: UniverseData;
   paletteIndex?: number;
   densityFactor?: number;
+  layoutMode?: 'orbital' | 'semantic';
+  flattenFactor?: number;
+  showConnections?: boolean;
+  focusStarId?: string | null;
   onStarClick?: (star: Star) => void;
   className?: string;
 }
 
 export const QuantumCanvas = forwardRef<QuantumCanvasHandle, QuantumCanvasProps>(
-  function QuantumCanvas({ data, paletteIndex = 0, densityFactor = 1.0, onStarClick, className }, ref) {
+  function QuantumCanvas(
+    {
+      data,
+      paletteIndex = 0,
+      densityFactor = 1.0,
+      layoutMode = 'orbital',
+      flattenFactor = 0,
+      showConnections = true,
+      focusStarId = null,
+      onStarClick,
+      className,
+    },
+    ref,
+  ) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const engineRef = useRef<QuantumEngine | null>(null);
 
@@ -59,6 +76,22 @@ export const QuantumCanvas = forwardRef<QuantumCanvasHandle, QuantumCanvasProps>
     useEffect(() => {
       engineRef.current?.setDensity(densityFactor);
     }, [densityFactor]);
+
+    useEffect(() => {
+      engineRef.current?.setLayoutMode(layoutMode);
+    }, [layoutMode]);
+
+    useEffect(() => {
+      engineRef.current?.setFlattenFactor(flattenFactor);
+    }, [flattenFactor]);
+
+    useEffect(() => {
+      engineRef.current?.setConnectionsVisible(showConnections);
+    }, [showConnections]);
+
+    useEffect(() => {
+      engineRef.current?.focusStar(focusStarId ?? null);
+    }, [focusStarId]);
 
     // Star click callback
     useEffect(() => {

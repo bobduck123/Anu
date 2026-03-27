@@ -1,5 +1,10 @@
-import { redirect } from 'next/navigation';
+import { EduHubShell } from '@/components/education/hub/EduHubShell';
+import { MapLibraryIndex } from '@/components/education/maps/MapLibraryIndex';
 
-export default function EducationResourceLibraryMapsCompatPage() {
-  redirect('/education/maps');
+export default function EducationResourceLibraryMapsPage() {
+  return (
+    <EduHubShell>
+      <MapLibraryIndex />
+    </EduHubShell>
+  );
 }

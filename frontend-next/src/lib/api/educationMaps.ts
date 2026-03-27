@@ -503,7 +503,7 @@ export function resolveEducationMap(
 
 export function previewEducationMapSeedImport(
   body: { mode?: MapCompileMode; seed: MapSeedImportSeedCorpus },
-  actorId: string,
+  actorId: string | null = null,
 ) {
   return educationMapFetch<{ preview: MapSeedImportPreview }>('/v1/education/maps/import/preview', {
     method: 'POST',
@@ -522,7 +522,7 @@ export function persistEducationMapSeedImport(
     importNote?: string;
     seed: MapSeedImportSeedCorpus;
   },
-  actorId: string,
+  actorId: string | null = null,
 ) {
   return educationMapFetch<MapSeedImportPersistResponse>('/v1/education/maps/import/persist', {
     method: 'POST',
@@ -536,7 +536,7 @@ export function persistEducationMapSeedImport(
   }, actorId);
 }
 
-export function listEducationMapImportActivity(topicKey: string, actorId: string) {
+export function listEducationMapImportActivity(topicKey: string, actorId: string | null = null) {
   return educationMapFetch<MapImportActivityEntry[]>(
     `/v1/education/maps/${encodeURIComponent(topicKey)}/import-activity`,
     {},
@@ -544,43 +544,109 @@ export function listEducationMapImportActivity(topicKey: string, actorId: string
   );
 }
 
-export function updateEducationMapStatus(topicKey: string, status: MapStatus, actorId: string) {
+export function updateEducationMapStatus(topicKey: string, status: MapStatus, actorId: string | null = null) {
   return educationMapFetch<MapResource>(`/v1/education/maps/${encodeURIComponent(topicKey)}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ status }),
   }, actorId);
 }
 
-export function updateEducationMapCategory(topicKey: string, categoryKey: string, patch: EducationMapCategoryPatch, actorId: string) {
+export function updateEducationMapCategory(
+  topicKey: string,
+  categoryKey: string,
+  patch: EducationMapCategoryPatch,
+  actorId: string | null = null,
+) {
   return educationMapFetch<MapResource>(`/v1/education/maps/${encodeURIComponent(topicKey)}/categories/${encodeURIComponent(categoryKey)}`, {
     method: 'PATCH',
     body: JSON.stringify(patch),
   }, actorId);
 }
 
-export function updateEducationMapNode(topicKey: string, nodeId: string, patch: EducationMapNodePatch, actorId: string) {
+export function updateEducationMapNode(
+  topicKey: string,
+  nodeId: string,
+  patch: EducationMapNodePatch,
+  actorId: string | null = null,
+) {
   return educationMapFetch<MapResource>(`/v1/education/maps/${encodeURIComponent(topicKey)}/nodes/${encodeURIComponent(nodeId)}`, {
     method: 'PATCH',
     body: JSON.stringify(patch),
   }, actorId);
 }
 
-export function updateEducationMapEdge(topicKey: string, edgeId: string, patch: EducationMapEdgePatch, actorId: string) {
+export function updateEducationMapEdge(
+  topicKey: string,
+  edgeId: string,
+  patch: EducationMapEdgePatch,
+  actorId: string | null = null,
+) {
   return educationMapFetch<MapResource>(`/v1/education/maps/${encodeURIComponent(topicKey)}/edges/${encodeURIComponent(edgeId)}`, {
     method: 'PATCH',
     body: JSON.stringify(patch),
   }, actorId);
 }
 
-export function rerunEducationMapLayout(topicKey: string, actorId: string) {
+export function rerunEducationMapLayout(topicKey: string, actorId: string | null = null) {
   return educationMapFetch<MapResource>(`/v1/education/maps/${encodeURIComponent(topicKey)}/layout/rerun`, {
     method: 'POST',
   }, actorId);
 }
 
-export function restoreEducationMapSnapshot(topicKey: string, snapshotId: string, actorId: string) {
+export function restoreEducationMapSnapshot(topicKey: string, snapshotId: string, actorId: string | null = null) {
   return educationMapFetch<MapResource>(`/v1/education/maps/${encodeURIComponent(topicKey)}/layout/restore`, {
     method: 'POST',
     body: JSON.stringify({ snapshotId }),
   }, actorId);
 }
+
+export interface EducationMapEntityView {
+  id: string;
+  label: string;
+  categoryKey: string | null;
+  importance: number;
+  evidence: number;
+  confidence: number;
+}
+
+export interface EducationMapCategoryView {
+  category: MapCategory;
+  nodes: MapNode[];
+}
+
+export const educationMapsApi = {
+  listMaps: (filters: { q?: string; status?: MapStatus } = {}) => listEducationMaps(filters),
+  getMap: (topicKey: string) => getEducationMap(topicKey),
+  resolveMap: (body: { topic: string; mode?: MapCompileMode }) => resolveEducationMap(body),
+  updateStatus: (topicKey: string, status: MapStatus) => updateEducationMapStatus(topicKey, status),
+  rerunLayout: (topicKey: string) => rerunEducationMapLayout(topicKey),
+  updateNode: (topicKey: string, nodeId: string, patch: EducationMapNodePatch) => updateEducationMapNode(topicKey, nodeId, patch),
+  updateEdge: (topicKey: string, edgeId: string, patch: EducationMapEdgePatch) => updateEducationMapEdge(topicKey, edgeId, patch),
+  async listEntities(topicKey: string): Promise<EducationMapEntityView[]> {
+    const resource = await getEducationMap(topicKey);
+    return resource.nodes
+      .map((node) => ({
+        id: node.id,
+        label: node.label,
+        categoryKey: node.categoryKey ?? null,
+        importance: node.metrics.importance,
+        evidence: node.metrics.evidence,
+        confidence: node.confidence.positioning,
+      }))
+      .sort((left, right) => right.importance - left.importance);
+  },
+  async getCategoryView(topicKey: string, categoryKey: string): Promise<EducationMapCategoryView> {
+    const resource = await getEducationMap(topicKey);
+    const category = resource.categories.find((entry) => entry.key === categoryKey);
+    if (!category) {
+      throw new EducationMapApiError(`Category not found: ${categoryKey}`, 404, 'CATEGORY_NOT_FOUND', null, null);
+    }
+
+    return {
+      category,
+      nodes: resource.nodes
+        .filter((node) => node.categoryKey === categoryKey)
+        .sort((left, right) => right.metrics.importance - left.metrics.importance),
+    };
+  },
+};

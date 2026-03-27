@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { EducationMapsAdminPage } from '@/components/education/maps/EducationMapsAdminPage';
 
-export default function AdminEducationMapsCompatPage() {
-  redirect('/admin/maps');
+export default function AdminEducationMapsRoute() {
+  return <EducationMapsAdminPage />;
 }
