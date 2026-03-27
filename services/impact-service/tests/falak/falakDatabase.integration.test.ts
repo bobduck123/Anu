@@ -1,5 +1,6 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import { createPrismaClient } from '../../src/lib/prisma';
 import { RequestContext } from '../../src/falak/domain/types';
 import { PrismaFalakRepository } from '../../src/falak/repositories/prismaFalakRepository';
 import { FalakService } from '../../src/falak/services/falakService';
@@ -41,7 +42,7 @@ interface LiveFixture {
 }
 
 describeIfDatabase('Falak database invariants', () => {
-  const prisma = new PrismaClient();
+  const prisma = createPrismaClient();
   const repository = new PrismaFalakRepository(prisma);
   const policyEngine = new PolicyEngine(repository);
   const fanoutPublisher = new NoopFanoutPublisher();

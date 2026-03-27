@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import StripeService from '../services/stripe.service';
 import logger from '../utils/logger';
+import { createPrismaClient } from '../lib/prisma';
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 /**
  * Daily reconciliation job

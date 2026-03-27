@@ -1,11 +1,10 @@
 /**
  * Shared Prisma client with connection pooling optimized for serverless.
- * 
- * This module provides a singleton Prisma client that:
- * - Uses global caching to prevent connection leaks in serverless
- * - Pre-warms connections on module load
- * - Configures logging appropriately for each environment
+ *
+ * Prisma ORM v7 requires a driver adapter at runtime, so this module centralizes
+ * adapter creation and keeps a singleton client to avoid connection churn.
  */
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as typeof globalThis & {
@@ -13,9 +12,6 @@ const globalForPrisma = globalThis as typeof globalThis & {
   __prismaConnectionWarmed?: boolean;
 };
 
-/**
- * Check if a DATABASE_URL is a placeholder/unconfigured value
- */
 function isPlaceholder(value: string | undefined): boolean {
   const raw = (value || '').trim();
   if (!raw) return true;
@@ -29,30 +25,42 @@ function isPlaceholder(value: string | undefined): boolean {
   );
 }
 
-/**
- * Check if database is configured
- */
-export function hasDatabase(): boolean {
-  return !isPlaceholder(process.env.DATABASE_URL);
+function resolveDatabaseConnectionString(): string | null {
+  const databaseUrl = (process.env.DATABASE_URL ?? '').trim();
+  if (!isPlaceholder(databaseUrl)) {
+    return databaseUrl;
+  }
+
+  const directUrl = (process.env.DIRECT_URL ?? '').trim();
+  if (!isPlaceholder(directUrl)) {
+    return directUrl;
+  }
+
+  return null;
 }
 
-/**
- * Create a new Prisma client with serverless-optimized settings
- */
-function createPrismaClient(): PrismaClient {
+export function hasDatabase(): boolean {
+  return resolveDatabaseConnectionString() !== null;
+}
+
+function createPrismaAdapter(connectionString: string): PrismaPg {
+  return new PrismaPg({ connectionString });
+}
+
+export function createPrismaClient(): PrismaClient {
+  const connectionString = resolveDatabaseConnectionString();
+  if (!connectionString) {
+    throw new Error('Database is not configured. Set DATABASE_URL (or DIRECT_URL) environment variable.');
+  }
+
   return new PrismaClient({
-    log: process.env.NODE_ENV === 'development' 
-      ? ['query', 'error', 'warn'] 
+    adapter: createPrismaAdapter(connectionString),
+    log: process.env.NODE_ENV === 'development'
+      ? ['query', 'error', 'warn']
       : ['error'],
-    // Connection pool settings are configured via DATABASE_URL query params
-    // e.g., ?pgbouncer=true&connection_limit=1
   });
 }
 
-/**
- * Get the shared Prisma client instance.
- * Returns null if DATABASE_URL is not configured.
- */
 export function getPrismaClient(): PrismaClient | null {
   if (!hasDatabase()) {
     return null;
@@ -65,21 +73,14 @@ export function getPrismaClient(): PrismaClient | null {
   return globalForPrisma.__sharedPrismaClient;
 }
 
-/**
- * Get the shared Prisma client, throwing if not available.
- */
 export function requirePrismaClient(): PrismaClient {
   const client = getPrismaClient();
   if (!client) {
-    throw new Error('Database is not configured. Set DATABASE_URL environment variable.');
+    throw new Error('Database is not configured. Set DATABASE_URL (or DIRECT_URL) environment variable.');
   }
   return client;
 }
 
-/**
- * Pre-warm the database connection.
- * Call this at module load time to reduce cold start latency.
- */
 export async function warmPrismaConnection(): Promise<void> {
   if (globalForPrisma.__prismaConnectionWarmed) {
     return;
@@ -91,19 +92,13 @@ export async function warmPrismaConnection(): Promise<void> {
   }
 
   try {
-    // Simple query to establish connection
     await client.$queryRaw`SELECT 1`;
     globalForPrisma.__prismaConnectionWarmed = true;
   } catch (error) {
-    // Log but don't throw - connection will be established on first real query
     console.warn('[Prisma] Failed to pre-warm connection:', error);
   }
 }
 
-/**
- * Disconnect the Prisma client.
- * Call this during graceful shutdown.
- */
 export async function disconnectPrisma(): Promise<void> {
   const client = globalForPrisma.__sharedPrismaClient;
   if (client) {
@@ -113,12 +108,10 @@ export async function disconnectPrisma(): Promise<void> {
   }
 }
 
-// Pre-warm connection on module load (non-blocking)
 if (hasDatabase()) {
   warmPrismaConnection().catch(() => {
     // Ignore pre-warm failures - connection will be established on first query
   });
 }
 
-// Default export for convenience
 export const prisma = getPrismaClient();

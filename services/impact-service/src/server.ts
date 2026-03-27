@@ -1,14 +1,14 @@
-import { PrismaClient } from '@prisma/client';
 import config from './config';
 import logger from './utils/logger';
 import { buildFalakApp } from './falak/app';
+import { createPrismaClient } from './lib/prisma';
 
 async function main(): Promise<void> {
   if (!config.hasDatabase) {
     throw new Error('Falak runtime requires DATABASE_URL with PostgreSQL + PostGIS configured');
   }
 
-  const prisma = new PrismaClient();
+  const prisma = createPrismaClient();
   const { app, fanoutPublisher } = await buildFalakApp(prisma);
 
   const close = async (signal: string): Promise<void> => {

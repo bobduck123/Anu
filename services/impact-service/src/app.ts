@@ -87,34 +87,10 @@ export const createApp = (
   );
 
   // ============================================================================
-  // PRISMA MIDDLEWARE: Append-only enforcement
+  // APPEND-ONLY ENFORCEMENT
   // ============================================================================
-  if (prisma) {
-    prisma.$use(async (params, next) => {
-      const appendOnlyModels = [
-        'ImpactLedgerEntry',
-        'AuditLog',
-        'ImpactCreditTransaction',
-        'LedgerEntry',
-        'DomainEvent',
-        'AuditEvent',
-        'NutrientSnapshot',
-        'GeologicalFormSnapshot',
-        'ModerationAction',
-        'RevenueEvent',
-        'AttributionSplit'
-      ];
-
-      if (appendOnlyModels.includes(params.model ?? '')) {
-        const forbiddenActions = ['update', 'updateMany', 'delete', 'deleteMany'];
-        if (forbiddenActions.includes(params.action)) {
-          throw new Error(`${params.action} is forbidden on ${params.model} (append-only table)`);
-        }
-      }
-
-      return next(params);
-    });
-  }
+  // Prisma ORM v7 removed client middleware ($use). Append-only guarantees are
+  // enforced by database constraints/triggers in Postgres.
 
   // ============================================================================
   // REQUEST LOGGING

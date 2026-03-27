@@ -1,5 +1,6 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import { createPrismaClient } from '../src/lib/prisma';
 import { assertSafeLocalVerificationEnvironment } from '../src/falak/utils/localVerificationGuard';
 import { assertSafeHostedStagingEnvironment } from '../src/falak/utils/stagingRolloutGuard';
 import { PrismaFalakRepository } from '../src/falak/repositories/prismaFalakRepository';
@@ -12,7 +13,7 @@ import { PolicyEngine } from '../src/falak/services/policyEngine';
 import { RequestContext, ResolvedActor } from '../src/falak/domain/types';
 import { normalizeTopicKey } from '../src/maps/compiler/utils';
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 const SANDBOX_TENANT_ID = '11111111-1111-4111-8111-111111111111';
 const SANDBOX_ADMIN_ACTOR_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
