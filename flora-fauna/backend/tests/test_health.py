@@ -101,6 +101,13 @@ def test_readiness_stays_green_when_only_stripe_is_placeholder():
     assert response.get_json()["warnings"] == ["stripe_placeholder"]
 
 
+def test_health_reports_database_target_family_for_sqlite():
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.get_json()["database_target"]["family"] == "sqlite"
+
+
 def test_readiness_uses_engine_probe_even_if_request_session_was_stale():
     connection = MagicMock()
     connect_context = MagicMock()
@@ -121,6 +128,21 @@ def test_readiness_uses_engine_probe_even_if_request_session_was_stale():
     database_engine.assert_called_once()
     engine.connect.assert_called_once()
     connection.execute.assert_called_once()
+
+
+def test_readiness_flags_serverless_direct_supabase_target():
+    with app.app_context():
+        original_uri = app.config["SQLALCHEMY_DATABASE_URI"]
+        app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres.example:password@db.example.supabase.co:5432/postgres"
+        try:
+            with patch.dict(os.environ, {"VERCEL": "1"}, clear=False):
+                from manara_backend_app import health as health_module
+
+                assert health_module._database_target()["family"] == "supabase_direct"
+                assert "database_serverless_non_pooler" in health_module._readiness_warnings()
+                assert "transaction pooler" in health_module._database_target_hint()
+        finally:
+            app.config["SQLALCHEMY_DATABASE_URI"] = original_uri
 
 
 def test_domain_resolution_route_contract_is_single_prefixed():
