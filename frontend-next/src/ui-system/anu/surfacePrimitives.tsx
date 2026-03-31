@@ -194,6 +194,73 @@ export function AnuHeroMetric({ label, value, detail }: AnuHeroMetricProps) {
   );
 }
 
+type AnuHeroMetricColumns = 'two' | 'three' | 'four';
+
+type AnuChamberMetricColumns = 'two' | 'three' | 'four';
+
+const heroMetricColumnClasses: Record<AnuHeroMetricColumns, string> = {
+  two: 'md:grid-cols-2',
+  three: 'md:grid-cols-3',
+  four: 'md:grid-cols-4',
+};
+
+const chamberMetricColumnClasses: Record<AnuChamberMetricColumns, string> = {
+  two: 'md:grid-cols-2',
+  three: 'md:grid-cols-3',
+  four: 'md:grid-cols-4',
+};
+
+interface AnuHeroMetricsRailProps {
+  children: ReactNode;
+  columns?: AnuHeroMetricColumns;
+  className?: string;
+}
+
+export function AnuHeroMetricsRail({ children, columns = 'three', className }: AnuHeroMetricsRailProps) {
+  return <div className={joinClasses('grid gap-4', heroMetricColumnClasses[columns], className)}>{children}</div>;
+}
+
+interface AnuChamberMetricsRailProps {
+  children: ReactNode;
+  columns?: AnuChamberMetricColumns;
+  className?: string;
+}
+
+export function AnuChamberMetricsRail({ children, columns = 'three', className }: AnuChamberMetricsRailProps) {
+  return <div className={joinClasses('grid gap-4', chamberMetricColumnClasses[columns], className)}>{children}</div>;
+}
+
+export interface AnuCommonsStatusItem {
+  label: string;
+  value: string;
+  detail: string;
+  tone?: AnuChipTone;
+  icon?: LucideIcon;
+}
+
+interface AnuCommonsStatusRailProps {
+  items: readonly AnuCommonsStatusItem[];
+  className?: string;
+}
+
+export function AnuCommonsStatusRail({ items, className }: AnuCommonsStatusRailProps) {
+  return (
+    <div className={joinClasses('grid gap-3 md:grid-cols-3', className)}>
+      {items.map((item) => (
+        <AnuSurfacePanel key={item.label} tone="soft">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{item.label}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <AnuChip tone={item.tone ?? 'muted'} icon={item.icon}>
+              {item.value}
+            </AnuChip>
+          </div>
+          <p className="mt-3 text-sm leading-6 text-slate-300/82">{item.detail}</p>
+        </AnuSurfacePanel>
+      ))}
+    </div>
+  );
+}
+
 interface AnuInstrumentationCardProps {
   label: string;
   value: ReactNode;

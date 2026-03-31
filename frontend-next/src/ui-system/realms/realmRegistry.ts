@@ -5,6 +5,12 @@ type RealmMatcher = {
   surface: RealmSurface;
 };
 
+export interface RealmRouteEntry {
+  id: string;
+  prefixes: readonly string[];
+  surface: RealmSurface;
+}
+
 const DEFAULT_REALM_SURFACE: RealmSurface = {
   realm: 'neutral',
   strength: 'none',
@@ -21,9 +27,10 @@ function routeStartsWith(pathname: string, prefixes: readonly string[]): boolean
   return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
-const REALM_MATCHERS: RealmMatcher[] = [
+export const REALM_ROUTE_REGISTRY: RealmRouteEntry[] = [
   {
-    match: (pathname) => routeStartsWith(pathname, ['/governance/model-registry']),
+    id: 'labyrinth-passage',
+    prefixes: ['/governance/model-registry'],
     surface: {
       realm: 'labyrinth',
       strength: 'strong',
@@ -37,7 +44,8 @@ const REALM_MATCHERS: RealmMatcher[] = [
     },
   },
   {
-    match: (pathname) => routeStartsWith(pathname, ['/governance', '/transparency', '/docs']),
+    id: 'labyrinth-threshold',
+    prefixes: ['/governance', '/transparency', '/docs'],
     surface: {
       realm: 'labyrinth',
       strength: 'subtle',
@@ -51,7 +59,8 @@ const REALM_MATCHERS: RealmMatcher[] = [
     },
   },
   {
-    match: (pathname) => routeStartsWith(pathname, ['/actions', '/events', '/relief']),
+    id: 'earth-field',
+    prefixes: ['/actions', '/events', '/relief'],
     surface: {
       realm: 'earth',
       strength: 'strong',
@@ -65,7 +74,8 @@ const REALM_MATCHERS: RealmMatcher[] = [
     },
   },
   {
-    match: (pathname) => routeStartsWith(pathname, ['/impact']),
+    id: 'earth-impact',
+    prefixes: ['/impact'],
     surface: {
       realm: 'earth',
       strength: 'strong',
@@ -79,7 +89,23 @@ const REALM_MATCHERS: RealmMatcher[] = [
     },
   },
   {
-    match: (pathname) => routeStartsWith(pathname, ['/community']),
+    id: 'private-chambers',
+    prefixes: ['/profile', '/teams', '/community/microcosms'],
+    surface: {
+      realm: 'neutral',
+      strength: 'strong',
+      surfaceKind: 'internal',
+      environmentTitle: 'Private chamber network',
+      entryPattern: 'carving',
+      supportsRealmTransition: true,
+      fallbackMode: 'standard',
+      hideSupportChrome: false,
+      immersiveCanvas: false,
+    },
+  },
+  {
+    id: 'celestial-weave',
+    prefixes: ['/community'],
     surface: {
       realm: 'celestial',
       strength: 'strong',
@@ -93,7 +119,8 @@ const REALM_MATCHERS: RealmMatcher[] = [
     },
   },
   {
-    match: (pathname) => routeStartsWith(pathname, ['/constellations']),
+    id: 'celestial-threshold',
+    prefixes: ['/constellations'],
     surface: {
       realm: 'celestial',
       strength: 'subtle',
@@ -107,7 +134,8 @@ const REALM_MATCHERS: RealmMatcher[] = [
     },
   },
   {
-    match: (pathname) => routeStartsWith(pathname, ['/universe']),
+    id: 'universe-track',
+    prefixes: ['/universe'],
     surface: {
       realm: 'neutral',
       strength: 'none',
@@ -121,7 +149,8 @@ const REALM_MATCHERS: RealmMatcher[] = [
     },
   },
   {
-    match: (pathname) => routeStartsWith(pathname, ['/sandbox']),
+    id: 'internal-lab',
+    prefixes: ['/sandbox', '/lab'],
     surface: {
       realm: 'neutral',
       strength: 'subtle',
@@ -135,7 +164,8 @@ const REALM_MATCHERS: RealmMatcher[] = [
     },
   },
   {
-    match: (pathname) => routeStartsWith(pathname, ['/education']),
+    id: 'learning-pathways',
+    prefixes: ['/education'],
     surface: {
       realm: 'neutral',
       strength: 'subtle',
@@ -149,6 +179,11 @@ const REALM_MATCHERS: RealmMatcher[] = [
     },
   },
 ];
+
+const REALM_MATCHERS: RealmMatcher[] = REALM_ROUTE_REGISTRY.map((entry) => ({
+  match: (pathname) => routeStartsWith(pathname, entry.prefixes),
+  surface: entry.surface,
+}));
 
 export function getRealmSurface(pathname: string | null): RealmSurface {
   if (!pathname) {

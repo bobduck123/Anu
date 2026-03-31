@@ -13,6 +13,7 @@ import {
   AnuChamberCard,
   AnuChip,
   AnuHeroMetric,
+  AnuHeroMetricsRail,
   AnuInstrumentationCard,
   AnuPageHero,
   AnuSectionHeading,
@@ -121,7 +122,7 @@ export default function ContactPage() {
             </AnuSurfacePanel>
           }
         >
-          <div className="grid gap-4 md:grid-cols-3">
+          <AnuHeroMetricsRail columns="three">
             <AnuHeroMetric
               label="Primary mode"
               value="Route-aware support"
@@ -137,7 +138,7 @@ export default function ContactPage() {
               value="Community first"
               detail="Public routes, docs, and transparency should resolve most uncertainty before governance review is needed."
             />
-          </div>
+          </AnuHeroMetricsRail>
         </AnuPageHero>
 
         <section className="mt-10 grid gap-4 md:grid-cols-3">

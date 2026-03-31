@@ -6,6 +6,8 @@ import { rawBodyMiddleware } from './middleware/rawBody';
 import config from './config';
 import { ManaraFeedMode, resolveManaraFeedState } from './manaraFeed';
 
+const RUNTIME_CONTRACT_VERSION = 'm0.2026-04-01';
+
 function parseCorsOrigins(rawValue?: string): string[] {
   if (!rawValue?.trim()) {
     return ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8090'];
@@ -117,16 +119,24 @@ export const createApp = (
   // ============================================================================
   app.get('/', (req, res) => {
     const fullyConfigured = config.hasDatabase && config.hasStripe;
+    const timestamp = new Date().toISOString();
+
     res.json({
       service: 'impact-service',
+      component: 'impact',
       brand: 'Manara',
       status: fullyConfigured ? 'ok' : 'degraded',
+      contract_version: RUNTIME_CONTRACT_VERSION,
+      timestamp,
+      ready: fullyConfigured,
       health: '/health',
       apiRoots: ['/api', '/api/manara', '/api/flora-fauna'],
       betaPlaceholderInfra: config.allowPlaceholderInfra,
       dependencies: {
-        database: config.hasDatabase ? 'configured' : 'todo',
-        stripe: config.hasStripe ? 'configured' : 'todo',
+        database: config.hasDatabase ? 'ok' : 'placeholder',
+        redis: config.hasRedis ? 'ok' : 'placeholder',
+        stripe: config.hasStripe ? 'ok' : 'placeholder',
+        postgis: 'skipped',
       },
       manaraFeed,
     });
@@ -137,10 +147,16 @@ export const createApp = (
     res.json({
       status: fullyConfigured ? 'ok' : 'degraded',
       service: 'impact-service',
+      component: 'impact',
+      contract_version: RUNTIME_CONTRACT_VERSION,
+      timestamp: new Date().toISOString(),
+      ready: fullyConfigured,
       betaPlaceholderInfra: config.allowPlaceholderInfra,
       dependencies: {
-        database: config.hasDatabase ? 'configured' : 'todo',
-        stripe: config.hasStripe ? 'configured' : 'todo',
+        database: config.hasDatabase ? 'ok' : 'placeholder',
+        redis: config.hasRedis ? 'ok' : 'placeholder',
+        stripe: config.hasStripe ? 'ok' : 'placeholder',
+        postgis: 'skipped',
       },
       manaraFeed,
     });

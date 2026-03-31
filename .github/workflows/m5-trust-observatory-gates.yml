@@ -1,0 +1,23 @@
+name: m5-trust-observatory-gates
+
+on:
+  pull_request:
+  push:
+    branches: [main, merge/prisma-packages]
+
+jobs:
+  trust-observatory:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend-next
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend-next/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx vitest run src/test/anuUiLab.test.tsx src/test/anuSurfacePrimitives.test.tsx src/test/primitiveManifest.test.ts src/test/chamberManifest.test.ts src/test/communityManifest.test.ts src/test/observatoryManifest.test.ts src/test/realmRegistryShellMetadata.test.ts src/test/shellMetadataApiRoute.test.ts src/test/shellPrimitivesApiRoute.test.ts src/test/chamberMetadataApiRoute.test.ts src/test/communityCommonsMetadataApiRoute.test.ts src/test/observatoryMetadataApiRoute.test.ts src/test/observatoryStatsRail.test.tsx src/test/transparencyPage.test.tsx src/test/docsPage.test.tsx src/test/governancePage.test.tsx src/test/runtimeHealthPage.test.tsx src/test/communityPage.test.tsx src/test/communityComposerModal.test.tsx src/test/profilePage.test.tsx src/test/teamsView.test.tsx src/test/microcosmDetailPage.test.tsx src/test/joinMicrocosmPage.test.tsx

@@ -216,14 +216,22 @@ export const errorResponseSchema = z.object({
   })
 });
 
+const falakDependencyStatusSchema = z.enum(['ok', 'error', 'placeholder', 'skipped']);
+
 export const healthResponseSchema = z.object({
-  status: z.enum(['ok', 'degraded']),
+  status: z.enum(['ok', 'degraded', 'not_ready']),
   service: z.string(),
+  component: z.enum(['impact']),
   protocol: z.string(),
   version: z.string(),
+  contract_version: z.string(),
+  timestamp: z.string(),
+  ready: z.boolean(),
   dependencies: z.object({
-    database: z.enum(['configured', 'todo']),
-    redis: z.enum(['configured', 'todo'])
+    database: falakDependencyStatusSchema,
+    redis: falakDependencyStatusSchema,
+    stripe: falakDependencyStatusSchema,
+    postgis: falakDependencyStatusSchema,
   })
 });
 
@@ -232,7 +240,17 @@ const falakCheckStatusSchema = z.enum(['ok', 'error', 'skipped']);
 export const falakOperationalHealthSchema = z.object({
   status: z.enum(['ok', 'degraded', 'not_ready']),
   service: z.string(),
+  component: z.enum(['impact']),
   protocol: z.string(),
+  contract_version: z.string(),
+  timestamp: z.string(),
+  ready: z.boolean(),
+  dependencies: z.object({
+    database: falakDependencyStatusSchema,
+    redis: falakDependencyStatusSchema,
+    stripe: falakDependencyStatusSchema,
+    postgis: falakDependencyStatusSchema,
+  }),
   runtime: z.object({
     mode: z.enum(['default', 'map_sandbox']),
     sandbox: z.boolean(),

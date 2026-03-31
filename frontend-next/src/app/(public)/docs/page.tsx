@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ArrowRight, BookOpenText, Compass, FileSearch, LibraryBig, ScrollText, ShieldCheck } from 'lucide-react';
 import { AnuActionLink } from '@/ui-system/anu/surfacePrimitives';
 import { LabyrinthArchiveShell } from '@/ui-system/realms/labyrinth/LabyrinthArchiveShell';
-import { EmbeddedInstrumentPanel } from '@/ui-system/realms/labyrinth/EmbeddedInstrumentPanel';
+import { ObservatoryStatsRail } from '@/ui-system/realms/labyrinth/ObservatoryStatsRail';
 
 const libraryCollections = [
   {
@@ -108,23 +108,28 @@ export default function DocsPage() {
             </div>
           }
           stats={
-            <>
-              <EmbeddedInstrumentPanel
-                label="Collections"
-                value="3 route families"
-                detail="Trust, governance, and applied systems are separated so explanation is not confused with execution."
-              />
-              <EmbeddedInstrumentPanel
-                label="Posture"
-                value="Editorial + inspectable"
-                detail="The library should behave like a curated operating archive, not a generic documentation grid."
-              />
-              <EmbeddedInstrumentPanel
-                label="Protocol"
-                value="Truth before escalation"
-                detail="Transparency and route context should come before tickets, admin work, or governance review."
-              />
-            </>
+            <ObservatoryStatsRail
+              items={[
+                {
+                  label: 'Collections',
+                  value: '3 route families',
+                  detail:
+                    'Trust, governance, and applied systems are separated so explanation is not confused with execution.',
+                },
+                {
+                  label: 'Posture',
+                  value: 'Editorial + inspectable',
+                  detail:
+                    'The library should behave like a curated operating archive, not a generic documentation grid.',
+                },
+                {
+                  label: 'Protocol',
+                  value: 'Truth before escalation',
+                  detail:
+                    'Transparency and route context should come before tickets, admin work, or governance review.',
+                },
+              ]}
+            />
           }
           controls={
             <div className="anu-labyrinth-console">

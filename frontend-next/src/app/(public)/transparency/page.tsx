@@ -5,7 +5,7 @@ import { Activity, ArrowRight, FileSearch, ReceiptText, ShieldCheck } from 'luci
 import { transparencyApi, TransparencySummary } from '@/lib/api/endpoints';
 import { AnuActionLink } from '@/ui-system/anu/surfacePrimitives';
 import { LabyrinthArchiveShell } from '@/ui-system/realms/labyrinth/LabyrinthArchiveShell';
-import { EmbeddedInstrumentPanel } from '@/ui-system/realms/labyrinth/EmbeddedInstrumentPanel';
+import { ObservatoryStatsRail } from '@/ui-system/realms/labyrinth/ObservatoryStatsRail';
 
 function money(cents: number): string {
   return `$${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -41,23 +41,26 @@ export default function TransparencyPage() {
             </div>
           }
           stats={
-            <>
-              <EmbeddedInstrumentPanel
-                label="Contract"
-                value={contractState}
-                detail="Live means current public reporting. Degraded means the trust path is open but the reporting layer needs attention."
-              />
-              <EmbeddedInstrumentPanel
-                label="Pool coverage"
-                value={data ? String(data.pools.length) : '--'}
-                detail="Public pool balances remain inspectable without exposing contributor-level details."
-              />
-              <EmbeddedInstrumentPanel
-                label="Receipt trail"
-                value={data ? String(data.receipts?.length ?? 0) : '--'}
-                detail="Recent public receipts anchor interpretation of movement through the commons."
-              />
-            </>
+            <ObservatoryStatsRail
+              items={[
+                {
+                  label: 'Contract',
+                  value: contractState,
+                  detail:
+                    'Live means current public reporting. Degraded means the trust path is open but the reporting layer needs attention.',
+                },
+                {
+                  label: 'Pool coverage',
+                  value: data ? String(data.pools.length) : '--',
+                  detail: 'Public pool balances remain inspectable without exposing contributor-level details.',
+                },
+                {
+                  label: 'Receipt trail',
+                  value: data ? String(data.receipts?.length ?? 0) : '--',
+                  detail: 'Recent public receipts anchor interpretation of movement through the commons.',
+                },
+              ]}
+            />
           }
           controls={
             <div className="anu-labyrinth-console">

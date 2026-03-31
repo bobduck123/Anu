@@ -5,7 +5,9 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 import {
   AnuActionLink,
   AnuChamberCard,
+  AnuChamberMetricsRail,
   AnuChip,
+  AnuCommonsStatusRail,
   AnuControlButton,
   AnuFilterBar,
   AnuFilterGroup,
@@ -62,6 +64,29 @@ describe('ANU surface primitives', () => {
             <AnuControlButton tone="active">Featured only</AnuControlButton>
           </AnuFilterGroup>
         </AnuFilterBar>
+        <AnuChamberMetricsRail columns="two">
+          <AnuHeroMetric label="Queue" value="4" detail="Pending tasks" />
+          <AnuHeroMetric label="Unread" value="2" detail="Inbox notices" />
+        </AnuChamberMetricsRail>
+        <AnuCommonsStatusRail
+          items={[
+            {
+              label: 'Feed mode',
+              value: 'Live commons',
+              detail: 'Browsing the current public feed.',
+            },
+            {
+              label: 'Publication',
+              value: '12 traces',
+              detail: 'Visible publication count.',
+            },
+            {
+              label: 'Trusted',
+              value: '3 signals',
+              detail: 'Secondary trusted layer.',
+            },
+          ]}
+        />
         <AnuInstrumentationCard label="Inflows" value="$120.00" detail="Monthly inflows" />
         <AnuChamberCard eyebrow="Private chamber" title="Tasks" description="Local accountable work.">
           <p>Chamber content</p>
@@ -71,6 +96,8 @@ describe('ANU surface primitives', () => {
 
     expect(screen.getByPlaceholderText('Search titles...')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /featured only/i })).toBeInTheDocument();
+    expect(screen.getByText('Pending tasks')).toBeInTheDocument();
+    expect(screen.getByText('Live commons')).toBeInTheDocument();
     expect(screen.getByText('$120.00')).toBeInTheDocument();
     expect(screen.getByText('Chamber content')).toBeInTheDocument();
   });

@@ -7,6 +7,7 @@ import {
   AnuActionLink,
   AnuChip,
   AnuHeroMetric,
+  AnuHeroMetricsRail,
   AnuPageHero,
   AnuSurfacePanel,
 } from '@/ui-system/anu/surfacePrimitives';
@@ -134,11 +135,11 @@ export default function HomePage() {
             </AnuSurfacePanel>
           }
         >
-          <div className="grid gap-3 sm:grid-cols-3">
+          <AnuHeroMetricsRail columns="three" className="sm:grid-cols-3">
             {STEWARDSHIP_PILLARS.map((pillar) => (
               <AnuHeroMetric key={pillar.label} label={pillar.label} value={pillar.value} detail={pillar.detail} />
             ))}
-          </div>
+          </AnuHeroMetricsRail>
         </AnuPageHero>
 
         <StartHereRail />

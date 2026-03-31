@@ -10,6 +10,7 @@ import { useFeatureFlag } from '@/lib/featureFlags';
 import {
   AnuActionLink,
   AnuChip,
+  AnuCommonsStatusRail,
   AnuControlButton,
   AnuControlLink,
   AnuFilterBar,
@@ -298,36 +299,32 @@ function CommunityPageContent() {
             description="The community route now opens as a celestial browsing surface. The gallery remains available as a 2D backup and deep-inspection path."
           />
 
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <AnuSurfacePanel tone="soft">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Feed mode</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <AnuChip tone={feedStateTone} icon={Sparkles}>{feedStateLabel}</AnuChip>
-                <AnuChip tone={showStarfield ? 'signal' : 'muted'} icon={Stars}>
-                  {showStarfield ? 'Celestial field' : '2D backup'}
-                </AnuChip>
-              </div>
-              <p className="mt-3 text-sm leading-6 text-slate-300/82">{modeGuidance}</p>
-            </AnuSurfacePanel>
-
-            <AnuSurfacePanel tone="soft">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Publication state</p>
-              <p className="mt-3 text-lg font-semibold text-white">{publicationStateLabel}</p>
-              <p className="mt-2 text-sm leading-6 text-slate-300/82">
-                {hasLivePosts
+          <AnuCommonsStatusRail
+            className="mt-4"
+            items={[
+              {
+                label: 'Feed mode',
+                value: `${feedStateLabel} / ${showStarfield ? 'Celestial field' : '2D backup'}`,
+                tone: feedStateTone,
+                icon: Sparkles,
+                detail: modeGuidance,
+              },
+              {
+                label: 'Publication state',
+                value: publicationStateLabel,
+                tone: hasLivePosts ? 'signal' : 'accent',
+                detail: hasLivePosts
                   ? 'Published traces are feeding both the starfield and the backup gallery.'
-                  : 'The starfield remains inspectable even when live publication is thin or absent.'}
-              </p>
-            </AnuSurfacePanel>
-
-            <AnuSurfacePanel tone="soft">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Trusted signal layer</p>
-              <p className="mt-3 text-lg font-semibold text-white">{trustedSignalsLabel}</p>
-              <p className="mt-2 text-sm leading-6 text-slate-300/82">
-                Trusted signals stay secondary to community publication and are clearly labeled inside the field.
-              </p>
-            </AnuSurfacePanel>
-          </div>
+                  : 'The starfield remains inspectable even when live publication is thin or absent.',
+              },
+              {
+                label: 'Trusted signal layer',
+                value: trustedSignalsLabel,
+                tone: trustedNewsMeta.count > 0 ? 'muted' : 'accent',
+                detail: 'Trusted signals stay secondary to community publication and are clearly labeled inside the field.',
+              },
+            ]}
+          />
         </div>
 
         <div className="min-w-0">

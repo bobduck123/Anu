@@ -6,6 +6,8 @@ from .extensions import db
 
 health_bp = Blueprint("health", __name__)
 
+CONTRACT_VERSION = "m0.2026-04-01"
+
 
 def _placeholder_infra() -> bool:
     return bool(
@@ -32,6 +34,16 @@ def _stripe_mode() -> str:
 
 def _timestamp() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _dependency_snapshot(*, database: str) -> dict[str, str]:
+    stripe = "placeholder" if current_app.config.get("BETA_PLACEHOLDER_STRIPE") else "skipped"
+    return {
+        "database": database,
+        "redis": "skipped",
+        "stripe": stripe,
+        "postgis": "skipped",
+    }
 
 
 def _database_ready() -> bool:
@@ -92,13 +104,21 @@ def root_status():
 
 @health_bp.route("/health", methods=["GET"])
 def health():
+    placeholder_database = _database_placeholder()
+    status = "degraded" if placeholder_database else "ok"
+
     return jsonify({
-        "status": "ok",
+        "status": status,
         "service": "core-api",
+        "component": "core",
         "brand": "Manara",
+        "version": current_app.config.get("APP_VERSION", "dev"),
+        "contract_version": CONTRACT_VERSION,
         "database_checked": False,
         "database_mode": _database_mode(),
         "stripe_mode": _stripe_mode(),
+        "dependencies": _dependency_snapshot(database="placeholder" if placeholder_database else "ok"),
+        "ready": not placeholder_database,
         "readiness": "/readiness",
         "timestamp": _timestamp(),
     })
@@ -113,12 +133,25 @@ def healthz():
 def readiness():
     db_ok = _database_ready()
     warnings = _readiness_warnings()
-    ready = db_ok and not _database_placeholder()
+    placeholder_database = _database_placeholder()
+    ready = db_ok and not placeholder_database
+
     return jsonify({
         "status": "ok" if ready else "degraded",
+        "service": "core-api",
+        "component": "core",
+        "contract_version": CONTRACT_VERSION,
+        "timestamp": _timestamp(),
+        "ready": ready,
         "db": db_ok,
         "database_mode": _database_mode(),
         "stripe_mode": _stripe_mode(),
+        "dependencies": _dependency_snapshot(database="ok" if db_ok else "error"),
+        "checks": {
+            "database": "ok" if db_ok else "error",
+            "postgis": "skipped",
+            "redis": "skipped",
+            "stripe": "skipped" if not current_app.config.get("BETA_PLACEHOLDER_STRIPE") else "error",
+        },
         "warnings": warnings,
-        "timestamp": _timestamp(),
     }), 200 if ready else 503

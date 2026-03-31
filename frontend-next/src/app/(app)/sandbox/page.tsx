@@ -1,7 +1,7 @@
 import { ArrowUpRight, Beaker, FlaskConical, Map, ShieldCheck } from 'lucide-react';
 import { ANU_PATTERN_EXPERIMENTS } from '@/ui-system/anu/patternBank';
 import { SandboxAccessBoundary } from '@/ui-system/anu/SandboxAccessBoundary';
-import { AnuActionLink, AnuHeroMetric, AnuPageHero, AnuSurfacePanel } from '@/ui-system/anu/surfacePrimitives';
+import { AnuActionLink, AnuHeroMetric, AnuHeroMetricsRail, AnuPageHero, AnuSurfacePanel } from '@/ui-system/anu/surfacePrimitives';
 
 export default function SandboxIndexPage() {
   return (
@@ -22,7 +22,7 @@ export default function SandboxIndexPage() {
             </>
           }
         >
-          <div className="grid gap-3 md:grid-cols-3">
+          <AnuHeroMetricsRail columns="three">
             <AnuHeroMetric
               label="Experiments"
               value={String(ANU_PATTERN_EXPERIMENTS.length)}
@@ -38,7 +38,7 @@ export default function SandboxIndexPage() {
               value="Universe held separate"
               detail="Map and universe work remains explicitly isolated from shell rollout decisions."
             />
-          </div>
+          </AnuHeroMetricsRail>
         </AnuPageHero>
 
         <section className="grid gap-5 md:grid-cols-2">

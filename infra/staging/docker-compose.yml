@@ -1,0 +1,75 @@
+version: '3.9'
+
+name: anu-staging
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: anu-staging-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: anu
+      POSTGRES_PASSWORD: anu
+      POSTGRES_DB: anu_staging
+    ports:
+      - '5432:5432'
+    volumes:
+      - anu_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U anu -d anu_staging']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: anu-staging-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - anu_redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: anu-staging-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ':9001'
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - anu_minio_data:/data
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  lgtm:
+    image: grafana/otel-lgtm:latest
+    container_name: anu-staging-lgtm
+    restart: unless-stopped
+    ports:
+      - '3001:3000'
+      - '4317:4317'
+      - '4318:4318'
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:3000']
+      interval: 20s
+      timeout: 5s
+      retries: 15
+
+volumes:
+  anu_postgres_data:
+  anu_redis_data:
+  anu_minio_data:
