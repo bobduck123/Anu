@@ -18,9 +18,13 @@ TARGETS = {
         'DATABASE_URL',
         'JWT_SECRET_KEY',
     },
-    ROOT / 'frontend-next/.env.example': {
+    # frontend-next/.env.example is intentionally gitignored by frontend-next/.gitignore.
+    # For CI contract checks, validate the tracked Vercel template instead.
+    ROOT / 'frontend-next/vercel.env.example': {
         'NEXT_PUBLIC_SUPABASE_URL',
         'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+        'CORE_API_ORIGIN',
+        'IMPACT_API_ORIGIN',
     },
 }
 
