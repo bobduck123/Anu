@@ -1,29 +1,42 @@
 import 'dotenv/config';
-import { defineConfig, env } from 'prisma/config';
-
-type PrismaEnv = {
-  DATABASE_URL: string;
-  DIRECT_URL?: string;
-  SHADOW_DATABASE_URL?: string;
-};
+import { defineConfig } from 'prisma/config';
 
 const FALLBACK_DATABASE_URL = 'postgresql://placeholder:placeholder@localhost:5432/placeholder';
 
-const migrationUrl = (process.env.DIRECT_URL ?? '').trim()
-  ? env<PrismaEnv>('DIRECT_URL')
-  : (process.env.DATABASE_URL ?? '').trim()
-    ? env<PrismaEnv>('DATABASE_URL')
-    : FALLBACK_DATABASE_URL;
+function isPresent(value: string | undefined): value is string {
+  return Boolean(value?.trim());
+}
 
-const shadowDatabaseUrl = (process.env.SHADOW_DATABASE_URL ?? '').trim()
-  ? env<PrismaEnv>('SHADOW_DATABASE_URL')
-  : undefined;
+function firstPresent(envVarNames: readonly string[]): string {
+  for (const envVarName of envVarNames) {
+    const candidate = process.env[envVarName];
+    if (isPresent(candidate)) {
+      return candidate;
+    }
+  }
+  return '';
+}
+
+const migrationUrl =
+  firstPresent([
+    'DIRECT_URL',
+    'POSTGRES_URL_NON_POOLING',
+    'DATABASE_URL',
+    'POSTGRES_PRISMA_URL',
+    'POSTGRES_URL',
+  ]) || FALLBACK_DATABASE_URL;
+
+const shadowDatabaseUrl = firstPresent([
+  'SHADOW_DATABASE_URL',
+  'DIRECT_URL',
+  'POSTGRES_URL_NON_POOLING',
+]);
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   datasource: {
     url: migrationUrl,
-    shadowDatabaseUrl,
+    shadowDatabaseUrl: shadowDatabaseUrl || undefined,
   },
   migrations: {
     path: 'prisma/migrations',

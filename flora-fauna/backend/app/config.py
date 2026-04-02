@@ -306,9 +306,14 @@ class Config:
         self.JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
         
         # Database - Support multiple env var names for flexibility
-        # Priority: DATABASE_URL > POSTGRES_URL > POSTGRES_PRISMA_URL
+        # Priority:
+        #   1) DATABASE_URL
+        #   2) POSTGRES_URL_NON_POOLING (direct)
+        #   3) POSTGRES_URL (runtime pooled)
+        #   4) POSTGRES_PRISMA_URL
         raw_database_url = (
             os.environ.get('DATABASE_URL')
+            or os.environ.get('POSTGRES_URL_NON_POOLING')
             or os.environ.get('POSTGRES_URL')
             or os.environ.get('POSTGRES_PRISMA_URL')
         )
@@ -672,10 +677,15 @@ class ProductionConfig(Config):
             )
         
         # Critical: PostgreSQL required in production
-        db_url = os.environ.get('DATABASE_URL', '')
+        db_url = (
+            os.environ.get('DATABASE_URL', '')
+            or os.environ.get('POSTGRES_URL_NON_POOLING', '')
+            or os.environ.get('POSTGRES_URL', '')
+            or os.environ.get('POSTGRES_PRISMA_URL', '')
+        )
         if not db_url and not self.BETA_PLACEHOLDER_DATABASE:
             security_errors.append(
-                "DATABASE_URL must be set in production (SQLite not allowed)"
+                "DATABASE_URL must be set in production (or provide POSTGRES_URL_NON_POOLING / POSTGRES_URL / POSTGRES_PRISMA_URL)"
             )
         elif db_url and 'sqlite' in db_url.lower() and not self.BETA_PLACEHOLDER_DATABASE:
             security_errors.append(

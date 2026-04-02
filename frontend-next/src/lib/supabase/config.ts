@@ -1,28 +1,49 @@
-const PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || '';
-const PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || '';
+const SUPABASE_URL_CANDIDATES = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'SUPABASE_URL',
+] as const;
 
-function getSupabasePublicEnv(env?: NodeJS.ProcessEnv): {
+const SUPABASE_ANON_KEY_CANDIDATES = [
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+  'SUPABASE_ANON_KEY',
+] as const;
+
+function firstPresent(env: NodeJS.ProcessEnv, keys: readonly string[]): string {
+  for (const key of keys) {
+    const value = env[key]?.trim();
+    if (value) {
+      return value;
+    }
+  }
+  return '';
+}
+
+function resolveSupabasePublicEnvFrom(env: NodeJS.ProcessEnv): {
+  url: string;
+  anonKey: string;
+} {
+  return {
+    url: firstPresent(env, SUPABASE_URL_CANDIDATES),
+    anonKey: firstPresent(env, SUPABASE_ANON_KEY_CANDIDATES),
+  };
+}
+
+const PUBLIC_SUPABASE_ENV = resolveSupabasePublicEnvFrom(process.env);
+
+export function getSupabasePublicEnv(env?: NodeJS.ProcessEnv): {
   url: string;
   anonKey: string;
 } {
   if (env) {
-    return {
-      url: env.NEXT_PUBLIC_SUPABASE_URL?.trim() || '',
-      anonKey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || '',
-    };
+    return resolveSupabasePublicEnvFrom(env);
   }
 
   if (typeof window === 'undefined' || process.env.NODE_ENV === 'test') {
-    return {
-      url: process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || '',
-      anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || '',
-    };
+    return resolveSupabasePublicEnvFrom(process.env);
   }
 
-  return {
-    url: PUBLIC_SUPABASE_URL,
-    anonKey: PUBLIC_SUPABASE_ANON_KEY,
-  };
+  return PUBLIC_SUPABASE_ENV;
 }
 
 export function isSupabaseConfigured(env?: NodeJS.ProcessEnv): boolean {

@@ -1,6 +1,11 @@
 import { createServerClient, type SetAllCookies } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { allowSupabaseAnonymousFallback, isSupabaseConfigured, warnMissingSupabaseConfig } from './config';
+import {
+  allowSupabaseAnonymousFallback,
+  getSupabasePublicEnv,
+  isSupabaseConfigured,
+  warnMissingSupabaseConfig,
+} from './config';
 
 /**
  * Updates the Supabase session by refreshing tokens.
@@ -21,9 +26,11 @@ export async function updateSupabaseSession(request: NextRequest) {
     return { supabaseResponse, user: null };
   }
 
+  const { url, anonKey } = getSupabasePublicEnv();
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    anonKey,
     {
       cookies: {
         getAll() {

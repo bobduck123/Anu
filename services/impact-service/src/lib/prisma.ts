@@ -25,18 +25,24 @@ function isPlaceholder(value: string | undefined): boolean {
   );
 }
 
-function resolveDatabaseConnectionString(): string | null {
-  const databaseUrl = (process.env.DATABASE_URL ?? '').trim();
-  if (!isPlaceholder(databaseUrl)) {
-    return databaseUrl;
+function firstPresent(envVarNames: readonly string[]): string | null {
+  for (const envVarName of envVarNames) {
+    const value = (process.env[envVarName] ?? '').trim();
+    if (!isPlaceholder(value)) {
+      return value;
+    }
   }
-
-  const directUrl = (process.env.DIRECT_URL ?? '').trim();
-  if (!isPlaceholder(directUrl)) {
-    return directUrl;
-  }
-
   return null;
+}
+
+function resolveDatabaseConnectionString(): string | null {
+  return firstPresent([
+    'DATABASE_URL',
+    'POSTGRES_PRISMA_URL',
+    'POSTGRES_URL',
+    'DIRECT_URL',
+    'POSTGRES_URL_NON_POOLING',
+  ]);
 }
 
 export function hasDatabase(): boolean {
@@ -50,7 +56,7 @@ function createPrismaAdapter(connectionString: string): PrismaPg {
 export function createPrismaClient(): PrismaClient {
   const connectionString = resolveDatabaseConnectionString();
   if (!connectionString) {
-    throw new Error('Database is not configured. Set DATABASE_URL (or DIRECT_URL) environment variable.');
+    throw new Error('Database is not configured. Set DATABASE_URL / POSTGRES_PRISMA_URL / POSTGRES_URL (or DIRECT_URL / POSTGRES_URL_NON_POOLING).');
   }
 
   return new PrismaClient({
@@ -76,7 +82,7 @@ export function getPrismaClient(): PrismaClient | null {
 export function requirePrismaClient(): PrismaClient {
   const client = getPrismaClient();
   if (!client) {
-    throw new Error('Database is not configured. Set DATABASE_URL (or DIRECT_URL) environment variable.');
+    throw new Error('Database is not configured. Set DATABASE_URL / POSTGRES_PRISMA_URL / POSTGRES_URL (or DIRECT_URL / POSTGRES_URL_NON_POOLING).');
   }
   return client;
 }
