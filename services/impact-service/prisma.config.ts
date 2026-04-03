@@ -26,17 +26,22 @@ const migrationUrl =
     'POSTGRES_URL',
   ]) || FALLBACK_DATABASE_URL;
 
-const shadowDatabaseUrl = firstPresent([
-  'SHADOW_DATABASE_URL',
-  'DIRECT_URL',
-  'POSTGRES_URL_NON_POOLING',
-]);
+const explicitShadowDatabaseUrl = firstPresent(['SHADOW_DATABASE_URL']);
+
+// Shadow DB is only required for `prisma migrate dev` style workflows.
+// Deploy builds run `prisma migrate deploy`, so we should not infer a shadow URL
+// from DIRECT_URL/POSTGRES_URL_NON_POOLING. Doing so can accidentally point
+// shadow + main at the same database and fail the build.
+const shadowDatabaseUrl =
+  explicitShadowDatabaseUrl && explicitShadowDatabaseUrl !== migrationUrl
+    ? explicitShadowDatabaseUrl
+    : undefined;
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   datasource: {
     url: migrationUrl,
-    shadowDatabaseUrl: shadowDatabaseUrl || undefined,
+    shadowDatabaseUrl,
   },
   migrations: {
     path: 'prisma/migrations',

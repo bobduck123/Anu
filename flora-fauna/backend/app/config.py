@@ -49,6 +49,21 @@ def _allow_beta_placeholder_infra() -> bool:
     return _is_truthy(os.environ.get("BETA_ALLOW_PLACEHOLDER_INFRA"))
 
 
+def _normalize_postgres_scheme(database_url: str | None) -> str | None:
+    """
+    Normalize legacy postgres:// URLs for SQLAlchemy 2.x.
+
+    SQLAlchemy expects the canonical postgresql:// dialect prefix.
+    Supabase still surfaces postgres:// strings in some dashboards.
+    """
+    raw = str(database_url or "").strip()
+    if not raw:
+        return None
+    if raw.startswith("postgres://"):
+        return f"postgresql://{raw[len('postgres://'):]}"
+    return raw
+
+
 def _default_writable_runtime_root() -> str:
     if "WRITABLE_RUNTIME_ROOT" in os.environ:
         return os.environ.get("WRITABLE_RUNTIME_ROOT", "").strip()
@@ -311,7 +326,7 @@ class Config:
         #   2) POSTGRES_URL_NON_POOLING (direct)
         #   3) POSTGRES_URL (runtime pooled)
         #   4) POSTGRES_PRISMA_URL
-        raw_database_url = (
+        raw_database_url = _normalize_postgres_scheme(
             os.environ.get('DATABASE_URL')
             or os.environ.get('POSTGRES_URL_NON_POOLING')
             or os.environ.get('POSTGRES_URL')
