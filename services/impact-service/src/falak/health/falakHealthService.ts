@@ -116,6 +116,11 @@ export class FalakHealthService {
             },
             'Falak health migration verification failed'
           );
+          console.warn('[Falak health] migration verification failed', {
+            stage: 'migrations_check',
+            migrationsTable,
+            ...errorInfo,
+          });
         }
       }
 
@@ -162,6 +167,12 @@ export class FalakHealthService {
         },
         'Falak health database probe failed'
       );
+      console.error('[Falak health] database probe failed', {
+        stage: options.readiness ? 'readiness_check' : 'health_check',
+        runtimeMode: this.runtimeConfig.mode,
+        routeGuardMode: this.runtimeConfig.routeGuardMode,
+        ...errorInfo,
+      });
 
       return {
         status: options.readiness ? 'not_ready' : 'degraded',
