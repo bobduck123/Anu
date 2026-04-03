@@ -13,7 +13,8 @@ export const createRoutes = (options?: { hasPrisma?: boolean; manaraFeedMode?: M
 
   // Health check (also available at app level)
   router.get('/health', (req, res) => {
-    const fullyConfigured = config.hasDatabase && config.hasStripe;
+    const stripeReady = config.hasStripe || !config.requireStripeInfra;
+    const fullyConfigured = config.hasDatabase && stripeReady;
     res.json({
       status: fullyConfigured ? 'ok' : 'degraded',
       service: 'impact-service',

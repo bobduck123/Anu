@@ -118,7 +118,8 @@ export const createApp = (
   // HEALTH CHECK
   // ============================================================================
   app.get('/', (req, res) => {
-    const fullyConfigured = config.hasDatabase && config.hasStripe;
+    const stripeReady = config.hasStripe || !config.requireStripeInfra;
+    const fullyConfigured = config.hasDatabase && stripeReady;
     const timestamp = new Date().toISOString();
 
     res.json({
@@ -143,7 +144,8 @@ export const createApp = (
   });
 
   app.get('/health', (req, res) => {
-    const fullyConfigured = config.hasDatabase && config.hasStripe;
+    const stripeReady = config.hasStripe || !config.requireStripeInfra;
+    const fullyConfigured = config.hasDatabase && stripeReady;
     res.json({
       status: fullyConfigured ? 'ok' : 'degraded',
       service: 'impact-service',
