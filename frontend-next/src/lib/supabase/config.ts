@@ -31,6 +31,30 @@ function resolveSupabasePublicEnvFrom(env: NodeJS.ProcessEnv): {
 
 const PUBLIC_SUPABASE_ENV = resolveSupabasePublicEnvFrom(process.env);
 
+type BrowserInjectedSupabaseEnv = {
+  url?: string;
+  anonKey?: string;
+};
+
+function getInjectedBrowserSupabaseEnv(): { url: string; anonKey: string } | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const injected = (window as typeof window & {
+    __MANARA_PUBLIC_SUPABASE__?: BrowserInjectedSupabaseEnv;
+  }).__MANARA_PUBLIC_SUPABASE__;
+
+  if (!injected) {
+    return null;
+  }
+
+  return {
+    url: (injected.url ?? '').trim(),
+    anonKey: (injected.anonKey ?? '').trim(),
+  };
+}
+
 export function getSupabasePublicEnv(env?: NodeJS.ProcessEnv): {
   url: string;
   anonKey: string;
@@ -41,6 +65,11 @@ export function getSupabasePublicEnv(env?: NodeJS.ProcessEnv): {
 
   if (typeof window === 'undefined' || process.env.NODE_ENV === 'test') {
     return resolveSupabasePublicEnvFrom(process.env);
+  }
+
+  const injected = getInjectedBrowserSupabaseEnv();
+  if (injected?.url && injected.anonKey) {
+    return injected;
   }
 
   return PUBLIC_SUPABASE_ENV;
