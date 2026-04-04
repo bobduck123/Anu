@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import current_app, jsonify, g
-from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
+from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
 
 from ..models import User
 from .alpha import alpha_jwt_required
@@ -149,19 +149,66 @@ def get_current_user():
         verify_jwt_in_request(optional=True)
     except Exception:
         pass
+
     try:
         identity = get_jwt_identity()
     except RuntimeError:
         identity = None
-    if not identity:
-        if current_app.config.get("ALPHA_PUBLIC") and current_app.config.get("ALPHA_AUTH_OPTIONAL"):
-            username = current_app.config.get("ALPHA_DEFAULT_USERNAME", "alpha_public")
-            return User.query.filter_by(username=username).first()
-        return None
-    username = identity.get("username") if isinstance(identity, dict) else identity
-    if isinstance(username, str) and username.startswith("control::"):
-        username = username.split("control::", 1)[1]
-    return User.query.filter_by(username=username).first()
+
+    try:
+        claims = get_jwt() or {}
+    except Exception:
+        claims = {}
+
+    candidates: list[str] = []
+
+    if isinstance(identity, dict):
+        for key in ("username", "email", "sub"):
+            value = identity.get(key)
+            if isinstance(value, str) and value.strip():
+                candidates.append(value.strip())
+    elif isinstance(identity, str) and identity.strip():
+        candidates.append(identity.strip())
+
+    for key in ("username", "preferred_username", "email", "sub"):
+        value = claims.get(key)
+        if isinstance(value, str) and value.strip():
+            candidates.append(value.strip())
+
+    normalized_candidates: list[str] = []
+    for candidate in candidates:
+        normalized = (
+            candidate.split("control::", 1)[1]
+            if candidate.startswith("control::")
+            else candidate
+        )
+        if normalized and normalized not in normalized_candidates:
+            normalized_candidates.append(normalized)
+
+    # 1) Username match
+    for candidate in normalized_candidates:
+        user = User.query.filter_by(username=candidate).first()
+        if user:
+            return user
+
+    # 2) Email match
+    for candidate in normalized_candidates:
+        if "@" in candidate:
+            user = User.query.filter_by(email=candidate).first()
+            if user:
+                return user
+
+    # 3) Global subject ID (Supabase sub) match
+    for candidate in normalized_candidates:
+        user = User.query.filter_by(global_subject_id=candidate).first()
+        if user:
+            return user
+
+    if current_app.config.get("ALPHA_PUBLIC") and current_app.config.get("ALPHA_AUTH_OPTIONAL"):
+        username = current_app.config.get("ALPHA_DEFAULT_USERNAME", "alpha_public")
+        return User.query.filter_by(username=username).first()
+
+    return None
 
 
 def require_role(*roles):

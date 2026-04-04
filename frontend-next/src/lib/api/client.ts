@@ -1,6 +1,6 @@
 import { getCoreApiBase } from '@/lib/runtime';
 import { createClient as createSupabaseClient } from '@/lib/supabase/client';
-import { isSupabaseConfigurationError } from '@/lib/supabase/config';
+import { isSupabaseConfigurationError, isSupabaseConfigured } from '@/lib/supabase/config';
 
 export interface ApiErrorPayload {
   code: string;
@@ -40,6 +40,35 @@ function getDefaultApiErrorPayload(status: number): ApiErrorPayload {
   }
 }
 
+const INVALID_LEGACY_TOKEN_VALUES = new Set([
+  '',
+  'null',
+  'undefined',
+  '[object Object]',
+]);
+
+function looksLikeJwt(token: string): boolean {
+  const parts = token.split('.');
+  return parts.length === 3 && parts.every((part) => part.length > 0);
+}
+
+function readLegacyTokenFromStorage(): string | null {
+  const raw = localStorage.getItem('auth_token');
+  const token = raw?.trim();
+  if (!token || INVALID_LEGACY_TOKEN_VALUES.has(token)) {
+    localStorage.removeItem('auth_token');
+    return null;
+  }
+
+  if (!looksLikeJwt(token)) {
+    console.warn('[api] Dropping malformed legacy auth_token from localStorage.');
+    localStorage.removeItem('auth_token');
+    return null;
+  }
+
+  return token;
+}
+
 const getAuthHeaders = async (): Promise<Record<string, string>> => {
   if (typeof window === 'undefined') return {};
 
@@ -55,6 +84,16 @@ const getAuthHeaders = async (): Promise<Record<string, string>> => {
       return { Authorization: `Bearer ${accessToken}` };
     }
 
+    // Hosted Supabase auth should be the source of truth. If there is no active
+    // session, do not send a stale legacy token from localStorage.
+    if (isSupabaseConfigured()) {
+      localStorage.removeItem('auth_token');
+      if (error) {
+        console.warn('Supabase session is unavailable for API requests; skipping auth header.', error);
+      }
+      return {};
+    }
+
     if (error) {
       console.warn('Unable to read Supabase session token for API requests. Falling back to local token cache.', error);
     }
@@ -65,7 +104,7 @@ const getAuthHeaders = async (): Promise<Record<string, string>> => {
     console.warn('Unable to resolve Supabase session token for API requests. Falling back to local token cache.', error);
   }
 
-  const token = localStorage.getItem('auth_token')?.trim();
+  const token = readLegacyTokenFromStorage();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 

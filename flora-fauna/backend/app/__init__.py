@@ -175,6 +175,7 @@ def _init_jwt_key_routing(app):
         return (
             app.config.get("PUBLIC_JWT_SECRET_KEY")
             or app.config.get("JWT_SECRET_KEY")
+            or os.environ.get("SUPABASE_JWT_SECRET")
             or app.config.get("SECRET_KEY")
             or ""
         )
