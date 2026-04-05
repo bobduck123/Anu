@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ArrowRight, Compass, FileSearch, Orbit, ShieldCheck, Waypoints } from 'lucide-react';
 import { AnuActionLink } from '@/ui-system/anu/surfacePrimitives';
 import { LabyrinthArchiveShell } from '@/ui-system/realms/labyrinth/LabyrinthArchiveShell';
-import { EmbeddedInstrumentPanel } from '@/ui-system/realms/labyrinth/EmbeddedInstrumentPanel';
+import { ObservatoryStatsRail } from '@/ui-system/realms/labyrinth/ObservatoryStatsRail';
 
 const governanceCollections = [
   {
@@ -60,23 +60,25 @@ export default function GovernanceIndexPage() {
             </div>
           }
           stats={
-            <>
-              <EmbeddedInstrumentPanel
-                label="Collections"
-                value="3 observatory families"
-                detail="Modes and reviews, formal registries, and coordination surfaces."
-              />
-              <EmbeddedInstrumentPanel
-                label="Posture"
-                value="Calm + specific"
-                detail="Governance should behave like institutional reasoning, not public spectacle."
-              />
-              <EmbeddedInstrumentPanel
-                label="Linked routes"
-                value="Truth -> doctrine"
-                detail="Transparency explains public state; governance opens the deeper instruments."
-              />
-            </>
+            <ObservatoryStatsRail
+              items={[
+                {
+                  label: 'Collections',
+                  value: '3 observatory families',
+                  detail: 'Modes and reviews, formal registries, and coordination surfaces.',
+                },
+                {
+                  label: 'Posture',
+                  value: 'Calm + specific',
+                  detail: 'Governance should behave like institutional reasoning, not public spectacle.',
+                },
+                {
+                  label: 'Linked routes',
+                  value: 'Truth -> doctrine',
+                  detail: 'Transparency explains public state; governance opens the deeper instruments.',
+                },
+              ]}
+            />
           }
           controls={
             <div className="anu-labyrinth-console">

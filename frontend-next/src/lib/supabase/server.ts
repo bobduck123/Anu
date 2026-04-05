@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import {
   allowSupabaseAnonymousFallback,
+  getSupabasePublicEnv,
   isSupabaseConfigured,
   SupabaseConfigurationError,
   warnMissingSupabaseConfig,
@@ -45,9 +46,11 @@ export async function createClient() {
     return noopClient;
   }
 
+  const { url, anonKey } = getSupabasePublicEnv();
+
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    anonKey,
     {
       cookies: {
         getAll() {

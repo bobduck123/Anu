@@ -14,6 +14,7 @@ import {
 import { ErrorState } from '@/ui-system/states/ErrorState';
 import {
   AnuChamberCard,
+  AnuChamberMetricsRail,
   AnuChip,
   AnuControlButton,
   AnuHeroMetric,
@@ -231,11 +232,11 @@ export default function TeamsView() {
             </AnuSurfacePanel>
           }
         >
-          <div className="grid gap-4 md:grid-cols-3">
+          <AnuChamberMetricsRail columns="three">
             <AnuHeroMetric label="Teams" value={String(teams.length)} detail="Current chamber count in the selected microcosm scope." />
             <AnuHeroMetric label="Members" value={selectedTeam ? String(selectedTeam.member_count) : '0'} detail="Visible count for the selected team chamber." />
             <AnuHeroMetric label="Challenges" value={String(challenges.length)} detail="Shared challenge tracks currently attached to the selected team." />
-          </div>
+          </AnuChamberMetricsRail>
         </AnuPageHero>
 
         {loadError || actionNotice ? (

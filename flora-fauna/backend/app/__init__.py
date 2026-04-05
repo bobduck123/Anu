@@ -22,16 +22,23 @@ from .security.rate_limits import register_rate_limit_handlers
 import uuid
 import os
 import click
+import json
+import time
+from urllib.request import urlopen
+from urllib.error import URLError, HTTPError
 from flask import current_app
 from werkzeug.security import generate_password_hash
 from datetime import date, datetime, timedelta, time as time_obj
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 import re
+import jwt as pyjwt
 
 # Lazy imports for cold start optimization
 # These are only imported when needed to reduce initial parse time
 _sentry_sdk = None
 _prometheus_metrics = None
+_supabase_jwks_cache: dict[str, dict] = {}
+_SUPABASE_JWKS_TTL_SECONDS = 300
 
 def _get_sentry():
     """Lazy import Sentry SDK to reduce cold start time."""
@@ -49,6 +56,54 @@ def _get_prometheus():
         from prometheus_flask_exporter import PrometheusMetrics
         _prometheus_metrics = PrometheusMetrics
     return _prometheus_metrics
+
+
+def _supabase_jwks_url_from_issuer(issuer: str) -> str:
+    base = str(issuer or "").rstrip("/")
+    return f"{base}/.well-known/jwks.json"
+
+
+def _load_supabase_jwks(issuer: str, *, force_refresh: bool = False) -> dict[str, dict]:
+    now = time.time()
+    cached = _supabase_jwks_cache.get(issuer)
+    if cached and not force_refresh and cached.get("expires_at", 0) > now:
+        return cached.get("keys", {})
+
+    url = _supabase_jwks_url_from_issuer(issuer)
+    with urlopen(url, timeout=3) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+
+    keys: dict[str, dict] = {}
+    for item in payload.get("keys", []):
+        kid = str(item.get("kid") or "").strip()
+        if kid:
+            keys[kid] = item
+
+    _supabase_jwks_cache[issuer] = {
+        "expires_at": now + _SUPABASE_JWKS_TTL_SECONDS,
+        "keys": keys,
+    }
+    return keys
+
+
+def _resolve_supabase_es256_public_key(issuer: str, kid: str):
+    keys = _load_supabase_jwks(issuer)
+    jwk = keys.get(kid)
+    if not jwk:
+        keys = _load_supabase_jwks(issuer, force_refresh=True)
+        jwk = keys.get(kid)
+    if not jwk:
+        return None
+
+    jwk_json = json.dumps(jwk)
+    kty = str(jwk.get("kty") or "").upper()
+    if kty == "EC":
+        return pyjwt.algorithms.ECAlgorithm.from_jwk(jwk_json)
+    if kty == "RSA":
+        return pyjwt.algorithms.RSAAlgorithm.from_jwk(jwk_json)
+
+    return None
+
 
 mail = Mail()
 encryption = EncryptionManager()
@@ -113,6 +168,7 @@ def create_app(config_overrides=None):
     # Initialize JWT
     jwt.init_app(app)
     _init_jwt_key_routing(app)
+    _init_jwt_error_handlers(app)
     
     # Initialize Prometheus metrics lazily (only if enabled)
     if os.environ.get('ENABLE_PROMETHEUS', '').lower() in ('1', 'true', 'yes'):
@@ -175,6 +231,7 @@ def _init_jwt_key_routing(app):
         return (
             app.config.get("PUBLIC_JWT_SECRET_KEY")
             or app.config.get("JWT_SECRET_KEY")
+            or os.environ.get("SUPABASE_JWT_SECRET")
             or app.config.get("SECRET_KEY")
             or ""
         )
@@ -201,7 +258,53 @@ def _init_jwt_key_routing(app):
         expected_control_aud = app.config.get("CONTROL_PLANE_JWT_AUDIENCE", "control")
         if aud == expected_control_aud:
             return _control_signing_key()
+
+        iss = str(jwt_payload.get("iss") or "").strip()
+        iss_lower = iss.lower()
+        alg = str(jwt_header.get("alg") or "").upper()
+        kid = str(jwt_header.get("kid") or "").strip()
+
+        # Supabase modern projects may issue asymmetric JWTs (ES256/RS256).
+        # In that case we must verify with JWKS public keys, not shared secrets.
+        if "supabase.co/auth/v1" in iss_lower and alg in {"ES256", "RS256"} and kid:
+            try:
+                signing_key = _resolve_supabase_es256_public_key(iss, kid)
+                if signing_key is not None:
+                    return signing_key
+            except (URLError, HTTPError, TimeoutError, ValueError) as exc:
+                app.logger.warning(
+                    f"Supabase JWKS lookup failed: issuer={iss} alg={alg} kid={kid} error={exc}"
+                )
+            except Exception as exc:
+                app.logger.warning(
+                    f"Unexpected Supabase JWKS error: issuer={iss} alg={alg} kid={kid} error={exc}"
+                )
+
+        # Legacy Supabase shared-secret JWT mode.
+        supabase_secret = os.environ.get("SUPABASE_JWT_SECRET")
+        if supabase_secret and "supabase.co/auth/v1" in iss_lower:
+            return supabase_secret
+
         return _public_signing_key()
+
+
+def _init_jwt_error_handlers(app):
+    """Expose structured JWT auth failures and log cause for diagnostics."""
+
+    @jwt.invalid_token_loader
+    def _invalid_token(reason):
+        app.logger.warning(f"JWT invalid token: {reason}")
+        return jsonify({"msg": reason}), 422
+
+    @jwt.unauthorized_loader
+    def _missing_token(reason):
+        app.logger.info(f"JWT missing token: {reason}")
+        return jsonify({"msg": reason}), 401
+
+    @jwt.expired_token_loader
+    def _expired_token(jwt_header, jwt_payload):
+        app.logger.info("JWT expired token", extra={"sub": jwt_payload.get("sub")})
+        return jsonify({"msg": "Token has expired"}), 401
 
 
 def _init_cors(app):

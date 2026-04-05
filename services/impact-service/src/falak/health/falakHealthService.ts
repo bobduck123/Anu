@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { FalakRuntimeConfig } from '../config/falakRuntimeConfig';
+import logger from '../../utils/logger';
 
 export interface FalakHealthReport {
   status: 'ok' | 'degraded' | 'not_ready';
@@ -23,6 +24,20 @@ export interface FalakHealthReport {
     databaseName: string | null;
     migrationFailures: number | null;
     postgisVersion: string | null;
+  };
+}
+
+function formatError(error: unknown): { message: string; code?: string; stack?: string } {
+  if (error instanceof Error) {
+    return {
+      message: error.message,
+      code: (error as { code?: string }).code,
+      stack: error.stack,
+    };
+  }
+
+  return {
+    message: String(error),
   };
 }
 
@@ -91,6 +106,21 @@ export class FalakHealthService {
           // If migrations table query fails, mark as checked with failures
           migrationsChecked = true;
           migrationFailures = 1;
+          const errorInfo = formatError(err);
+          logger.warn(
+            {
+              category: 'falak.health',
+              stage: 'migrations_check',
+              migrationsTable,
+              ...errorInfo,
+            },
+            'Falak health migration verification failed'
+          );
+          console.warn('[Falak health] migration verification failed', {
+            stage: 'migrations_check',
+            migrationsTable,
+            ...errorInfo,
+          });
         }
       }
 
@@ -125,7 +155,25 @@ export class FalakHealthService {
           postgisVersion: databaseInfo?.postgis_version ?? null
         }
       };
-    } catch {
+    } catch (error) {
+      const errorInfo = formatError(error);
+      logger.error(
+        {
+          category: 'falak.health',
+          stage: options.readiness ? 'readiness_check' : 'health_check',
+          runtimeMode: this.runtimeConfig.mode,
+          routeGuardMode: this.runtimeConfig.routeGuardMode,
+          ...errorInfo,
+        },
+        'Falak health database probe failed'
+      );
+      console.error('[Falak health] database probe failed', {
+        stage: options.readiness ? 'readiness_check' : 'health_check',
+        runtimeMode: this.runtimeConfig.mode,
+        routeGuardMode: this.runtimeConfig.routeGuardMode,
+        ...errorInfo,
+      });
+
       return {
         status: options.readiness ? 'not_ready' : 'degraded',
         checks: {

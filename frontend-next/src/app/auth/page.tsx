@@ -18,6 +18,7 @@ import {
   AnuControlButton,
   AnuControlLink,
   AnuHeroMetric,
+  AnuHeroMetricsRail,
   AnuPageHero,
   AnuSurfacePanel,
 } from '@/ui-system/anu/surfacePrimitives';
@@ -138,7 +139,7 @@ function AuthPageContent() {
             </AnuSurfacePanel>
           }
         >
-          <div className="grid gap-4 md:grid-cols-3">
+          <AnuHeroMetricsRail columns="three">
             <AnuHeroMetric
               label="Current threshold"
               value={thresholdState.current.label}
@@ -154,7 +155,7 @@ function AuthPageContent() {
               value={hasExplicitReturnTo ? 'Preserved' : 'Default profile'}
               detail={hasExplicitReturnTo ? nextHref : 'Successful sign-in returns to /profile by default.'}
             />
-          </div>
+          </AnuHeroMetricsRail>
         </AnuPageHero>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[1fr_0.95fr]">

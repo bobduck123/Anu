@@ -220,14 +220,34 @@ Make sure these are set in your Vercel project:
 
 | Variable | Purpose | Required |
 |----------|---------|----------|
-| `DATABASE_URL` | PostgreSQL connection string | ✓ Yes |
+| `DATABASE_URL` | Runtime PostgreSQL connection string (pooler) | ✓ Yes |
+| `DIRECT_URL` | Direct PostgreSQL connection string (non-pooling) | ✓ Yes |
 | `NODE_ENV` | Set to `production` | ✓ Yes |
+| `REQUIRE_STRIPE_INFRA` | Keep `false` when testing without Stripe | Recommended |
 | `MIGRATION_TOKEN` | Secret for manual migration API | Optional |
 
 **To set them:**
 1. Dashboard → Project Settings → Environment Variables
 2. Add each variable
 3. Redeploy for changes to take effect
+
+### Known-good Supabase URL templates (TLS-safe for Prisma + pg adapter)
+
+Use `postgresql://` (not `postgres://`) and include `uselibpqcompat=true`.
+
+```env
+# Runtime (pooler)
+DATABASE_URL=postgresql://postgres.<project_ref>:<PASSWORD>@aws-1-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require&uselibpqcompat=true&pgbouncer=true
+
+# Prisma/direct operations
+DIRECT_URL=postgresql://postgres:<PASSWORD>@db.<project_ref>.supabase.co:5432/postgres?sslmode=require&uselibpqcompat=true
+```
+
+If you see this in logs:
+
+`Error opening a TLS connection: self-signed certificate in certificate chain`
+
+it usually means the URL is missing `uselibpqcompat=true`, is still using `postgres://`, or has unsupported query parameters.
 
 ---
 

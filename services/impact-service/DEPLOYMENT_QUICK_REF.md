@@ -100,6 +100,16 @@ npm run falak:readiness:staging
 npm run falak:sandbox:db:logs
 ```
 
+### "TLS self-signed certificate in chain"
+Use TLS-safe Supabase URLs with `postgresql://` and `uselibpqcompat=true`:
+
+```env
+DATABASE_URL=postgresql://postgres.<project_ref>:<PASSWORD>@aws-1-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require&uselibpqcompat=true&pgbouncer=true
+DIRECT_URL=postgresql://postgres:<PASSWORD>@db.<project_ref>.supabase.co:5432/postgres?sslmode=require&uselibpqcompat=true
+```
+
+Then redeploy and re-check `/v1/falak/readiness`.
+
 ### "Need to reset local database"
 ```bash
 npm run falak:sandbox:db:down

@@ -49,6 +49,21 @@ def _allow_beta_placeholder_infra() -> bool:
     return _is_truthy(os.environ.get("BETA_ALLOW_PLACEHOLDER_INFRA"))
 
 
+def _normalize_postgres_scheme(database_url: str | None) -> str | None:
+    """
+    Normalize legacy postgres:// URLs for SQLAlchemy 2.x.
+
+    SQLAlchemy expects the canonical postgresql:// dialect prefix.
+    Supabase still surfaces postgres:// strings in some dashboards.
+    """
+    raw = str(database_url or "").strip()
+    if not raw:
+        return None
+    if raw.startswith("postgres://"):
+        return f"postgresql://{raw[len('postgres://'):]}"
+    return raw
+
+
 def _default_writable_runtime_root() -> str:
     if "WRITABLE_RUNTIME_ROOT" in os.environ:
         return os.environ.get("WRITABLE_RUNTIME_ROOT", "").strip()
@@ -306,9 +321,14 @@ class Config:
         self.JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
         
         # Database - Support multiple env var names for flexibility
-        # Priority: DATABASE_URL > POSTGRES_URL > POSTGRES_PRISMA_URL
-        raw_database_url = (
+        # Priority:
+        #   1) DATABASE_URL
+        #   2) POSTGRES_URL_NON_POOLING (direct)
+        #   3) POSTGRES_URL (runtime pooled)
+        #   4) POSTGRES_PRISMA_URL
+        raw_database_url = _normalize_postgres_scheme(
             os.environ.get('DATABASE_URL')
+            or os.environ.get('POSTGRES_URL_NON_POOLING')
             or os.environ.get('POSTGRES_URL')
             or os.environ.get('POSTGRES_PRISMA_URL')
         )
@@ -672,10 +692,15 @@ class ProductionConfig(Config):
             )
         
         # Critical: PostgreSQL required in production
-        db_url = os.environ.get('DATABASE_URL', '')
+        db_url = (
+            os.environ.get('DATABASE_URL', '')
+            or os.environ.get('POSTGRES_URL_NON_POOLING', '')
+            or os.environ.get('POSTGRES_URL', '')
+            or os.environ.get('POSTGRES_PRISMA_URL', '')
+        )
         if not db_url and not self.BETA_PLACEHOLDER_DATABASE:
             security_errors.append(
-                "DATABASE_URL must be set in production (SQLite not allowed)"
+                "DATABASE_URL must be set in production (or provide POSTGRES_URL_NON_POOLING / POSTGRES_URL / POSTGRES_PRISMA_URL)"
             )
         elif db_url and 'sqlite' in db_url.lower() and not self.BETA_PLACEHOLDER_DATABASE:
             security_errors.append(

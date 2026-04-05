@@ -2,13 +2,32 @@ import { getCoreApiBase } from '@/lib/runtime';
 
 const API_BASE = getCoreApiBase();
 
+const INVALID_LEGACY_TOKEN_VALUES = new Set(['', 'null', 'undefined', '[object Object]']);
+
+function looksLikeJwt(token: string): boolean {
+  const parts = token.split('.');
+  return parts.length === 3 && parts.every((part) => part.length > 0);
+}
+
 // Helper function to get auth headers
 const getAuthHeaders = (): Record<string, string> => {
   // Only access localStorage on the client side
   if (typeof window === 'undefined') return {};
   try {
-    const token = localStorage.getItem('auth_token');
-    return token ? { 'Authorization': `Bearer ${token}` } : {};
+    const rawToken = localStorage.getItem('auth_token');
+    const token = rawToken?.trim();
+    if (!token || INVALID_LEGACY_TOKEN_VALUES.has(token)) {
+      localStorage.removeItem('auth_token');
+      return {};
+    }
+
+    if (!looksLikeJwt(token)) {
+      console.warn('[api] Dropping malformed auth_token from localStorage.');
+      localStorage.removeItem('auth_token');
+      return {};
+    }
+
+    return { Authorization: `Bearer ${token}` };
   } catch {
     return {};
   }

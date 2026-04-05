@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -171,8 +172,25 @@ export function stageInfo(label, detail) {
   console.log(`[Falak Staging] ${label}${detail ? `: ${detail}` : ''}`);
 }
 
+function resolvePrismaConnectionString() {
+  const databaseUrl = (process.env.DATABASE_URL ?? '').trim();
+  if (databaseUrl) {
+    return databaseUrl;
+  }
+
+  const directUrl = (process.env.DIRECT_URL ?? '').trim();
+  if (directUrl) {
+    return directUrl;
+  }
+
+  throw new Error('Missing required environment variable: DATABASE_URL (or DIRECT_URL)');
+}
+
 export async function createPrismaClient() {
-  const prisma = new PrismaClient();
+  const adapter = new PrismaPg({
+    connectionString: resolvePrismaConnectionString(),
+  });
+  const prisma = new PrismaClient({ adapter });
   await prisma.$connect();
   return prisma;
 }

@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify, current_app as app, g, send_from_
 from .models import User, Action, Todo, db, Event, Article, Venue, Feedback, Notification, Favorite, Ticket, Message, Microcosm, Comment, ActionProof, ActionImpactMetric, EventPrimitive, StoryPost, AuditRecord
 from .security.mode_guard import require_mode_allows
 from datetime import datetime, timedelta
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt, get_jwt_identity
 from flask import current_app
 from .security.alpha import alpha_jwt_required
 from .config import Config
@@ -48,9 +48,64 @@ def uploaded_media(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
+def _resolve_user_from_identity(identity):
+    candidates = []
+
+    if isinstance(identity, dict):
+        for key in ("username", "email", "sub"):
+            value = identity.get(key)
+            if isinstance(value, str) and value.strip():
+                candidates.append(value.strip())
+    elif isinstance(identity, str) and identity.strip():
+        candidates.append(identity.strip())
+
+    try:
+        claims = get_jwt() or {}
+    except Exception:
+        claims = {}
+
+    for key in ("username", "preferred_username", "email", "sub"):
+        value = claims.get(key)
+        if isinstance(value, str) and value.strip():
+            candidates.append(value.strip())
+
+    normalized_candidates = []
+    for candidate in candidates:
+        normalized = (
+            candidate.split("control::", 1)[1]
+            if candidate.startswith("control::")
+            else candidate
+        )
+        if normalized and normalized not in normalized_candidates:
+            normalized_candidates.append(normalized)
+
+    for candidate in normalized_candidates:
+        user = User.query.filter_by(username=candidate).first()
+        if user:
+            return user
+
+    for candidate in normalized_candidates:
+        if "@" in candidate:
+            user = User.query.filter_by(email=candidate).first()
+            if user:
+                return user
+
+    for candidate in normalized_candidates:
+        user = User.query.filter_by(global_subject_id=candidate).first()
+        if user:
+            return user
+
+    return None
+
+
 def _normalize_identity(identity):
     if identity is None and current_app.config.get("ALPHA_PUBLIC") and current_app.config.get("ALPHA_AUTH_OPTIONAL"):
         return {"username": Config.ALPHA_DEFAULT_USERNAME}
+
+    user = _resolve_user_from_identity(identity)
+    if user:
+        return {"username": user.username}
+
     if isinstance(identity, dict):
         return identity
     if isinstance(identity, str) and identity.startswith("control::"):
@@ -62,6 +117,11 @@ def _current_user():
     identity = get_jwt_identity()
     if identity is None and current_app.config.get("ALPHA_PUBLIC") and current_app.config.get("ALPHA_AUTH_OPTIONAL"):
         return User.query.filter_by(username=Config.ALPHA_DEFAULT_USERNAME).first()
+
+    user = _resolve_user_from_identity(identity)
+    if user:
+        return user
+
     if isinstance(identity, dict):
         username = identity.get("username")
     else:

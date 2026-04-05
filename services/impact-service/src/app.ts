@@ -6,6 +6,8 @@ import { rawBodyMiddleware } from './middleware/rawBody';
 import config from './config';
 import { ManaraFeedMode, resolveManaraFeedState } from './manaraFeed';
 
+const RUNTIME_CONTRACT_VERSION = 'm0.2026-04-01';
+
 function parseCorsOrigins(rawValue?: string): string[] {
   if (!rawValue?.trim()) {
     return ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8090'];
@@ -87,34 +89,10 @@ export const createApp = (
   );
 
   // ============================================================================
-  // PRISMA MIDDLEWARE: Append-only enforcement
+  // APPEND-ONLY ENFORCEMENT
   // ============================================================================
-  if (prisma) {
-    prisma.$use(async (params, next) => {
-      const appendOnlyModels = [
-        'ImpactLedgerEntry',
-        'AuditLog',
-        'ImpactCreditTransaction',
-        'LedgerEntry',
-        'DomainEvent',
-        'AuditEvent',
-        'NutrientSnapshot',
-        'GeologicalFormSnapshot',
-        'ModerationAction',
-        'RevenueEvent',
-        'AttributionSplit'
-      ];
-
-      if (appendOnlyModels.includes(params.model ?? '')) {
-        const forbiddenActions = ['update', 'updateMany', 'delete', 'deleteMany'];
-        if (forbiddenActions.includes(params.action)) {
-          throw new Error(`${params.action} is forbidden on ${params.model} (append-only table)`);
-        }
-      }
-
-      return next(params);
-    });
-  }
+  // Prisma ORM v7 removed client middleware ($use). Append-only guarantees are
+  // enforced by database constraints/triggers in Postgres.
 
   // ============================================================================
   // REQUEST LOGGING
@@ -140,31 +118,47 @@ export const createApp = (
   // HEALTH CHECK
   // ============================================================================
   app.get('/', (req, res) => {
-    const fullyConfigured = config.hasDatabase && config.hasStripe;
+    const stripeReady = config.hasStripe || !config.requireStripeInfra;
+    const fullyConfigured = config.hasDatabase && stripeReady;
+    const timestamp = new Date().toISOString();
+
     res.json({
       service: 'impact-service',
+      component: 'impact',
       brand: 'Manara',
       status: fullyConfigured ? 'ok' : 'degraded',
+      contract_version: RUNTIME_CONTRACT_VERSION,
+      timestamp,
+      ready: fullyConfigured,
       health: '/health',
       apiRoots: ['/api', '/api/manara', '/api/flora-fauna'],
       betaPlaceholderInfra: config.allowPlaceholderInfra,
       dependencies: {
-        database: config.hasDatabase ? 'configured' : 'todo',
-        stripe: config.hasStripe ? 'configured' : 'todo',
+        database: config.hasDatabase ? 'ok' : 'placeholder',
+        redis: config.hasRedis ? 'ok' : 'placeholder',
+        stripe: config.hasStripe ? 'ok' : 'placeholder',
+        postgis: 'skipped',
       },
       manaraFeed,
     });
   });
 
   app.get('/health', (req, res) => {
-    const fullyConfigured = config.hasDatabase && config.hasStripe;
+    const stripeReady = config.hasStripe || !config.requireStripeInfra;
+    const fullyConfigured = config.hasDatabase && stripeReady;
     res.json({
       status: fullyConfigured ? 'ok' : 'degraded',
       service: 'impact-service',
+      component: 'impact',
+      contract_version: RUNTIME_CONTRACT_VERSION,
+      timestamp: new Date().toISOString(),
+      ready: fullyConfigured,
       betaPlaceholderInfra: config.allowPlaceholderInfra,
       dependencies: {
-        database: config.hasDatabase ? 'configured' : 'todo',
-        stripe: config.hasStripe ? 'configured' : 'todo',
+        database: config.hasDatabase ? 'ok' : 'placeholder',
+        redis: config.hasRedis ? 'ok' : 'placeholder',
+        stripe: config.hasStripe ? 'ok' : 'placeholder',
+        postgis: 'skipped',
       },
       manaraFeed,
     });

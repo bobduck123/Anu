@@ -1,10 +1,5 @@
-import { AnuUiLab } from '@/ui-system/anu/AnuUiLab';
-import { SandboxAccessBoundary } from '@/ui-system/anu/SandboxAccessBoundary';
+import { redirect } from 'next/navigation';
 
-export default function SandboxUiLabPage() {
-  return (
-    <SandboxAccessBoundary returnTo="/sandbox/ui-lab">
-      <AnuUiLab />
-    </SandboxAccessBoundary>
-  );
+export default function SandboxUiLabLegacyPage() {
+  redirect('/lab');
 }

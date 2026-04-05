@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import {
   AnuChamberCard,
+  AnuChamberMetricsRail,
   AnuChip,
   AnuControlButton,
   AnuControlLink,
@@ -361,12 +362,12 @@ export default function ProfilePage() {
             </AnuSurfacePanel>
           }
         >
-          <div className="grid gap-4 md:grid-cols-4">
+          <AnuChamberMetricsRail columns="four">
             <AnuHeroMetric label="Level" value={String(profile?.level || 0)} detail={`${Math.round(progressPct)}% to next level`} />
             <AnuHeroMetric label="Points" value={String(profile?.points || 0)} detail="Personal contribution points currently recognized." />
             <AnuHeroMetric label="Pending tasks" value={String(pendingTodos.length)} detail={`${completedTodos.length} completed actions archived.`} />
             <AnuHeroMetric label="Unread inbox" value={String(unreadNotifications.length)} detail={`${notifications.length} total notifications in your chamber.`} />
-          </div>
+          </AnuChamberMetricsRail>
         </AnuPageHero>
 
         <AnuThresholdPathPanel

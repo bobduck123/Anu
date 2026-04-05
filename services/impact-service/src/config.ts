@@ -30,9 +30,40 @@ function optional(envVar: string, defaultValue: string): string {
   return process.env[envVar] || defaultValue;
 }
 
+function firstPresent(envVarNames: readonly string[]): string {
+  for (const envVarName of envVarNames) {
+    const candidate = (process.env[envVarName] ?? '').trim();
+    if (!isPlaceholder(candidate)) {
+      return candidate;
+    }
+  }
+  return '';
+}
+
+function resolveDatabaseUrl(): string {
+  return firstPresent([
+    'DATABASE_URL',
+    'POSTGRES_PRISMA_URL',
+    'POSTGRES_URL',
+    'POSTGRES_URL_NON_POOLING',
+  ]);
+}
+
+function resolveDirectDatabaseUrl(): string {
+  return firstPresent([
+    'DIRECT_URL',
+    'POSTGRES_URL_NON_POOLING',
+    'POSTGRES_URL',
+    'POSTGRES_PRISMA_URL',
+    'DATABASE_URL',
+  ]);
+}
+
 const allowPlaceholderInfra = optional('BETA_ALLOW_PLACEHOLDER_INFRA', 'false') === 'true';
 const nodeEnv = optional('NODE_ENV', 'development');
-const hasDatabase = !isPlaceholder(process.env.DATABASE_URL);
+const resolvedDatabaseUrl = resolveDatabaseUrl();
+const resolvedDirectDatabaseUrl = resolveDirectDatabaseUrl();
+const hasDatabase = Boolean(resolvedDatabaseUrl || resolvedDirectDatabaseUrl);
 const hasRedis = !isPlaceholder(process.env.REDIS_URL);
 const hasStripe =
   !isPlaceholder(process.env.STRIPE_SECRET_KEY) &&
@@ -55,7 +86,8 @@ export const config = {
   manaraFeedMode,
 
   // Database
-  DATABASE_URL: process.env.DATABASE_URL || '',
+  DATABASE_URL: resolvedDatabaseUrl,
+  DIRECT_URL: resolvedDirectDatabaseUrl,
   TEST_DATABASE_URL: optional('TEST_DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/impact_test'),
   REDIS_URL: process.env.REDIS_URL || '',
 
@@ -80,7 +112,9 @@ export const config = {
 try {
   required('JWT_SECRET_KEY');
   if (!hasDatabase && !allowPlaceholderInfra) {
-    required('DATABASE_URL');
+    throw new Error(
+      'Missing required database configuration. Set DATABASE_URL or one of POSTGRES_PRISMA_URL / POSTGRES_URL / POSTGRES_URL_NON_POOLING (or DIRECT_URL).'
+    );
   }
   if (requireStripeInfra && !hasStripe && !allowPlaceholderInfra) {
     required('STRIPE_SECRET_KEY');

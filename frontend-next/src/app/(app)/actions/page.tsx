@@ -196,10 +196,12 @@ export default function ActionsPage() {
 
   const handleCreateAction = useCallback(
     async (formData: FormData) => {
-      const token = localStorage.getItem('auth_token');
+      const rawToken = localStorage.getItem('auth_token');
+      const token = rawToken?.trim();
+      const isJwt = Boolean(token && token.split('.').length === 3);
       const response = await fetch(`${API_BASE}/api/actions`, {
         method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: isJwt && token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
       });
 

@@ -1,7 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import logger from '../utils/logger';
+import { createPrismaClient } from '../lib/prisma';
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 /**
  * Weekly digest job (runs Monday 08:00 UTC)

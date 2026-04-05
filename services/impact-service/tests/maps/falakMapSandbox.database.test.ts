@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../../src/lib/prisma';
 import { PrismaFalakMapRepository } from '../../src/maps/repositories/prismaFalakMapRepository';
 import { FalakMapService } from '../../src/maps/services/falakMapService';
 
@@ -8,7 +8,7 @@ const describeIfSandbox =
 const TENANT_ID = '11111111-1111-4111-8111-111111111111';
 
 describeIfSandbox('Falak map sandbox live database', () => {
-  const prisma = new PrismaClient();
+  const prisma = createPrismaClient();
   const repository = new PrismaFalakMapRepository(prisma);
   const service = new FalakMapService(repository);
 

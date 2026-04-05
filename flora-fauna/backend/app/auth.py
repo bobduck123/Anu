@@ -29,6 +29,53 @@ auth = Blueprint('auth', __name__)
 def _normalize_identity(identity):
     if identity is None and current_app.config.get("ALPHA_PUBLIC") and current_app.config.get("ALPHA_AUTH_OPTIONAL"):
         return {"username": Config.ALPHA_DEFAULT_USERNAME}
+
+    candidates = []
+
+    if isinstance(identity, dict):
+        for key in ("username", "email", "sub"):
+            value = identity.get(key)
+            if isinstance(value, str) and value.strip():
+                candidates.append(value.strip())
+    elif isinstance(identity, str) and identity.strip():
+        candidates.append(identity.strip())
+
+    try:
+        claims = get_jwt() or {}
+    except Exception:
+        claims = {}
+
+    for key in ("username", "preferred_username", "email", "sub"):
+        value = claims.get(key)
+        if isinstance(value, str) and value.strip():
+            candidates.append(value.strip())
+
+    normalized_candidates = []
+    for candidate in candidates:
+        normalized = (
+            candidate.split("control::", 1)[1]
+            if candidate.startswith("control::")
+            else candidate
+        )
+        if normalized and normalized not in normalized_candidates:
+            normalized_candidates.append(normalized)
+
+    for candidate in normalized_candidates:
+        user = User.query.filter_by(username=candidate).first()
+        if user:
+            return {"username": user.username}
+
+    for candidate in normalized_candidates:
+        if "@" in candidate:
+            user = User.query.filter_by(email=candidate).first()
+            if user:
+                return {"username": user.username}
+
+    for candidate in normalized_candidates:
+        user = User.query.filter_by(global_subject_id=candidate).first()
+        if user:
+            return {"username": user.username}
+
     if isinstance(identity, dict):
         return identity
     if isinstance(identity, str) and identity.startswith("control::"):

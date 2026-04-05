@@ -44,12 +44,29 @@ export default async function RootLayout({
   const locale = await getLocale();
   const messages = await getMessages();
 
+  const runtimePublicSupabaseEnv = {
+    url: (
+      process.env.NEXT_PUBLIC_SUPABASE_URL
+      || process.env.SUPABASE_URL
+      || ''
+    ).trim(),
+    anonKey: (
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+      || process.env.SUPABASE_ANON_KEY
+      || ''
+    ).trim(),
+  };
+
+  const runtimePublicSupabaseEnvScript = `window.__MANARA_PUBLIC_SUPABASE__=${JSON.stringify(runtimePublicSupabaseEnv).replace(/</g, '\\u003c')};`;
+
   return (
     <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'} data-scroll-behavior="smooth">
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
         style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif' }}
       >
+        <script id="manara-public-supabase-env" dangerouslySetInnerHTML={{ __html: runtimePublicSupabaseEnvScript }} />
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>
             <SentryProvider>

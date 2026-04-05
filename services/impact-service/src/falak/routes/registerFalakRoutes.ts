@@ -82,6 +82,12 @@ const blockedMutationSchema = errorResponseSchema.extend({
   decision: policyDecisionResponseSchema
 });
 
+const RUNTIME_CONTRACT_VERSION = 'm0.2026-04-01';
+
+function mapCheckToDependencyStatus(status: 'ok' | 'error' | 'skipped'): 'ok' | 'error' | 'skipped' {
+  return status === 'ok' ? 'ok' : status === 'error' ? 'error' : 'skipped';
+}
+
 function asJsonObject(value: unknown): JsonObject {
   return value as JsonObject;
 }
@@ -148,16 +154,27 @@ export async function registerFalakRoutes(
         200: healthResponseSchema
       }
     }
-  }, async () => ({
-    status: runtime.hasDatabase ? ('ok' as const) : ('degraded' as const),
-    service: 'impact-service',
-    protocol: 'Falak Protocol',
-    version: '0.1.0',
-    dependencies: {
-      database: runtime.hasDatabase ? ('configured' as const) : ('todo' as const),
-      redis: runtime.hasRedis ? ('configured' as const) : ('todo' as const)
-    }
-  }));
+  }, async () => {
+    const timestamp = new Date().toISOString();
+    const ready = runtime.hasDatabase;
+
+    return {
+      status: ready ? ('ok' as const) : ('degraded' as const),
+      service: 'impact-service',
+      component: 'impact' as const,
+      protocol: 'Falak Protocol',
+      version: '0.1.0',
+      contract_version: RUNTIME_CONTRACT_VERSION,
+      timestamp,
+      ready,
+      dependencies: {
+        database: runtime.hasDatabase ? ('ok' as const) : ('placeholder' as const),
+        redis: runtime.hasRedis ? ('ok' as const) : ('placeholder' as const),
+        stripe: 'skipped' as const,
+        postgis: 'skipped' as const
+      }
+    };
+  });
 
   typed.get('/v1/falak/health', {
     schema: {
@@ -169,10 +186,24 @@ export async function registerFalakRoutes(
     }
   }, async (_request, reply) => {
     if (!runtime.falakHealthService) {
+      const timestamp = new Date().toISOString();
+      const status = runtime.hasDatabase ? 'degraded' : 'not_ready';
+      const ready = false;
+
       return reply.status(200).send({
-        status: runtime.hasDatabase ? 'degraded' : 'not_ready',
+        status,
         service: 'impact-service',
+        component: 'impact' as const,
         protocol: 'Falak Protocol',
+        contract_version: RUNTIME_CONTRACT_VERSION,
+        timestamp,
+        ready,
+        dependencies: {
+          database: runtime.hasDatabase ? ('ok' as const) : ('error' as const),
+          redis: runtime.hasRedis ? ('ok' as const) : ('placeholder' as const),
+          stripe: 'skipped' as const,
+          postgis: 'skipped' as const
+        },
         runtime: {
           mode: runtime.runtimeConfig.mode,
           sandbox: runtime.runtimeConfig.isSandbox,
@@ -201,7 +232,17 @@ export async function registerFalakRoutes(
     return {
       status: report.status,
       service: 'impact-service',
+      component: 'impact' as const,
       protocol: 'Falak Protocol',
+      contract_version: RUNTIME_CONTRACT_VERSION,
+      timestamp: new Date().toISOString(),
+      ready: report.status === 'ok',
+      dependencies: {
+        database: mapCheckToDependencyStatus(report.checks.database),
+        redis: runtime.hasRedis ? ('ok' as const) : ('placeholder' as const),
+        stripe: 'skipped' as const,
+        postgis: mapCheckToDependencyStatus(report.checks.postgis),
+      },
       runtime: {
         mode: report.runtime.mode,
         sandbox: report.runtime.sandbox,
@@ -238,10 +279,22 @@ export async function registerFalakRoutes(
   }, async (_request, reply) => {
     if (!runtime.falakHealthService) {
       const status = runtime.hasDatabase ? 'degraded' : 'not_ready';
+      const ready = false;
+
       return reply.status(503).send({
         status,
         service: 'impact-service',
+        component: 'impact' as const,
         protocol: 'Falak Protocol',
+        contract_version: RUNTIME_CONTRACT_VERSION,
+        timestamp: new Date().toISOString(),
+        ready,
+        dependencies: {
+          database: runtime.hasDatabase ? ('ok' as const) : ('error' as const),
+          redis: runtime.hasRedis ? ('ok' as const) : ('placeholder' as const),
+          stripe: 'skipped' as const,
+          postgis: 'skipped' as const
+        },
         runtime: {
           mode: runtime.runtimeConfig.mode,
           sandbox: runtime.runtimeConfig.isSandbox,
@@ -270,7 +323,17 @@ export async function registerFalakRoutes(
     return reply.status(report.status === 'ok' ? 200 : 503).send({
       status: report.status,
       service: 'impact-service',
+      component: 'impact' as const,
       protocol: 'Falak Protocol',
+      contract_version: RUNTIME_CONTRACT_VERSION,
+      timestamp: new Date().toISOString(),
+      ready: report.status === 'ok',
+      dependencies: {
+        database: mapCheckToDependencyStatus(report.checks.database),
+        redis: runtime.hasRedis ? ('ok' as const) : ('placeholder' as const),
+        stripe: 'skipped' as const,
+        postgis: mapCheckToDependencyStatus(report.checks.postgis),
+      },
       runtime: {
         mode: report.runtime.mode,
         sandbox: report.runtime.sandbox,

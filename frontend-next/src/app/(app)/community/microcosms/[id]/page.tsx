@@ -14,8 +14,10 @@ import { ErrorState } from '@/ui-system/states/ErrorState';
 import { LoadingState } from '@/ui-system/states/LoadingState';
 import {
   AnuChamberCard,
+  AnuChamberMetricsRail,
   AnuChip,
   AnuControlButton,
+  AnuHeroMetric,
   AnuPageHero,
   AnuSurfacePanel,
 } from '@/ui-system/anu/surfacePrimitives';
@@ -132,19 +134,12 @@ export default function MicrocosmDetailPage({ params }: { params: Promise<{ id: 
         </div>
       ) : null}
 
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
-        <AnuSurfacePanel tone="soft">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Members</p>
-          <p className="mt-3 text-3xl font-semibold text-white font-mono-data">{detail.member_count}</p>
-        </AnuSurfacePanel>
-        <AnuSurfacePanel tone="soft">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Stories</p>
-          <p className="mt-3 text-3xl font-semibold text-white font-mono-data">{detail.story_count}</p>
-        </AnuSurfacePanel>
-        <AnuSurfacePanel tone="soft">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Teams</p>
-          <p className="mt-3 text-3xl font-semibold text-white font-mono-data">{detail.team_count}</p>
-        </AnuSurfacePanel>
+      <div className="mt-8">
+        <AnuChamberMetricsRail columns="three">
+          <AnuHeroMetric label="Members" value={String(detail.member_count)} detail="Current local chamber members." />
+          <AnuHeroMetric label="Stories" value={String(detail.story_count)} detail="Recent and archived story signals." />
+          <AnuHeroMetric label="Teams" value={String(detail.team_count)} detail="Linked team chambers in this microcosm." />
+        </AnuChamberMetricsRail>
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
