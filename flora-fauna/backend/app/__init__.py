@@ -166,6 +166,10 @@ def create_app(config_overrides=None):
         )
     
     # Initialize JWT
+    # Allow decoding both legacy symmetric tokens (HS256) and
+    # Supabase asymmetric access tokens (ES256/RS256).
+    app.config.setdefault("JWT_DECODE_ALGORITHMS", ["HS256", "ES256", "RS256"])
+    app.config.setdefault("JWT_ALGORITHM", "HS256")
     jwt.init_app(app)
     _init_jwt_key_routing(app)
     _init_jwt_error_handlers(app)
