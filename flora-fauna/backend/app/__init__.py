@@ -113,6 +113,7 @@ def create_app(config_overrides=None):
     # Initialize JWT
     jwt.init_app(app)
     _init_jwt_key_routing(app)
+    _init_jwt_error_handlers(app)
     
     # Initialize Prometheus metrics lazily (only if enabled)
     if os.environ.get('ENABLE_PROMETHEUS', '').lower() in ('1', 'true', 'yes'):
@@ -202,7 +203,35 @@ def _init_jwt_key_routing(app):
         expected_control_aud = app.config.get("CONTROL_PLANE_JWT_AUDIENCE", "control")
         if aud == expected_control_aud:
             return _control_signing_key()
+
+        # Supabase access tokens typically carry issuer metadata and may be
+        # signed with SUPABASE_JWT_SECRET rather than PUBLIC_JWT_SECRET_KEY.
+        # Prefer SUPABASE_JWT_SECRET for verification when token issuer matches.
+        iss = str(jwt_payload.get("iss") or "").lower()
+        supabase_secret = os.environ.get("SUPABASE_JWT_SECRET")
+        if supabase_secret and "supabase.co/auth/v1" in iss:
+            return supabase_secret
+
         return _public_signing_key()
+
+
+def _init_jwt_error_handlers(app):
+    """Expose structured JWT auth failures and log cause for diagnostics."""
+
+    @jwt.invalid_token_loader
+    def _invalid_token(reason):
+        app.logger.warning("JWT invalid token", extra={"reason": reason})
+        return jsonify({"msg": reason}), 422
+
+    @jwt.unauthorized_loader
+    def _missing_token(reason):
+        app.logger.info("JWT missing token", extra={"reason": reason})
+        return jsonify({"msg": reason}), 401
+
+    @jwt.expired_token_loader
+    def _expired_token(jwt_header, jwt_payload):
+        app.logger.info("JWT expired token", extra={"sub": jwt_payload.get("sub")})
+        return jsonify({"msg": "Token has expired"}), 401
 
 
 def _init_cors(app):
