@@ -89,9 +89,9 @@ export const PRESET_THEMES: { name: string; theme: DesktopTheme }[] = [
   {
     name: 'Warm Beige',
     theme: {
-      bgType: 'solid', bgColor: '#d4b5a8', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#d4b5a8', position: 0 }, { color: '#c4a598', position: 100 }] },
+      bgType: 'solid', bgColor: '#f6d4cb', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#f6d4cb', position: 0 }, { color: '#f6d4cb', position: 100 }] },
       bgImage: '', bgImageFit: 'cover',
-      accentColor: '#8b6f5c', textColor: '#2d2520', windowBg: 'rgba(255,255,255,0.12)',
+      accentColor: '#7c413c', textColor: '#1e0227', windowBg: 'rgba(246,212,203,0.12)',
       fontFamily: 'Inter', fontSize: 'medium',
       buttonStyle: 'rounded', borderRadius: 12, shadowIntensity: 1, windowBlur: 20, windowOpacity: 0.85,
       iconStyle: 'default',
@@ -100,9 +100,9 @@ export const PRESET_THEMES: { name: string; theme: DesktopTheme }[] = [
   {
     name: 'Cool Blue',
     theme: {
-      bgType: 'solid', bgColor: '#a8c4d4', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#a8c4d4', position: 0 }, { color: '#98b4c4', position: 100 }] },
+      bgType: 'solid', bgColor: '#f6d4cb', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#f6d4cb', position: 0 }, { color: '#f6d4cb', position: 100 }] },
       bgImage: '', bgImageFit: 'cover',
-      accentColor: '#5c7a8b', textColor: '#1a2a33', windowBg: 'rgba(255,255,255,0.12)',
+      accentColor: '#7c413c', textColor: '#1e0227', windowBg: 'rgba(246,212,203,0.12)',
       fontFamily: 'Inter', fontSize: 'medium',
       buttonStyle: 'rounded', borderRadius: 12, shadowIntensity: 1, windowBlur: 20, windowOpacity: 0.85,
       iconStyle: 'default',
@@ -111,9 +111,9 @@ export const PRESET_THEMES: { name: string; theme: DesktopTheme }[] = [
   {
     name: 'Warm Gold',
     theme: {
-      bgType: 'solid', bgColor: '#d4c4a8', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#d4c4a8', position: 0 }, { color: '#c4b498', position: 100 }] },
+      bgType: 'solid', bgColor: '#f6d4cb', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#f6d4cb', position: 0 }, { color: '#f6d4cb', position: 100 }] },
       bgImage: '', bgImageFit: 'cover',
-      accentColor: '#8b7a5c', textColor: '#2d2820', windowBg: 'rgba(255,255,255,0.12)',
+      accentColor: '#7c413c', textColor: '#1e0227', windowBg: 'rgba(246,212,203,0.12)',
       fontFamily: 'Inter', fontSize: 'medium',
       buttonStyle: 'rounded', borderRadius: 12, shadowIntensity: 1, windowBlur: 20, windowOpacity: 0.85,
       iconStyle: 'default',
@@ -122,9 +122,9 @@ export const PRESET_THEMES: { name: string; theme: DesktopTheme }[] = [
   {
     name: 'Dark Mode',
     theme: {
-      bgType: 'solid', bgColor: '#2d2d2d', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#2d2d2d', position: 0 }, { color: '#1a1a1a', position: 100 }] },
+      bgType: 'solid', bgColor: '#1e0227', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#1e0227', position: 0 }, { color: '#1e0227', position: 100 }] },
       bgImage: '', bgImageFit: 'cover',
-      accentColor: '#6b8cae', textColor: '#e0e0e0', windowBg: 'rgba(255,255,255,0.08)',
+      accentColor: '#7c413c', textColor: '#f6d4cb', windowBg: 'rgba(246,212,203,0.08)',
       fontFamily: 'Inter', fontSize: 'medium',
       buttonStyle: 'rounded', borderRadius: 12, shadowIntensity: 2, windowBlur: 20, windowOpacity: 0.8,
       iconStyle: 'default',
@@ -133,9 +133,9 @@ export const PRESET_THEMES: { name: string; theme: DesktopTheme }[] = [
   {
     name: 'Midnight Purple',
     theme: {
-      bgType: 'gradient', bgColor: '#1a1030', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#1a1030', position: 0 }, { color: '#2d1b4e', position: 50 }, { color: '#0f0a1a', position: 100 }] },
+      bgType: 'gradient', bgColor: '#1e0227', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#1e0227', position: 0 }, { color: '#1e0227', position: 50 }, { color: '#1e0227', position: 100 }] },
       bgImage: '', bgImageFit: 'cover',
-      accentColor: '#a78bfa', textColor: '#e8e0f0', windowBg: 'rgba(160,130,220,0.1)',
+      accentColor: '#f6d4cb', textColor: '#f6d4cb', windowBg: 'rgba(246,212,203,0.1)',
       fontFamily: 'Inter', fontSize: 'medium',
       buttonStyle: 'pill', borderRadius: 16, shadowIntensity: 2, windowBlur: 24, windowOpacity: 0.75,
       iconStyle: 'rounded',
@@ -144,9 +144,9 @@ export const PRESET_THEMES: { name: string; theme: DesktopTheme }[] = [
   {
     name: 'Forest Green',
     theme: {
-      bgType: 'gradient', bgColor: '#1a2e1a', bgGradient: { type: 'linear', angle: 180, stops: [{ color: '#2d4a2d', position: 0 }, { color: '#1a2e1a', position: 100 }] },
+      bgType: 'gradient', bgColor: '#1e0227', bgGradient: { type: 'linear', angle: 180, stops: [{ color: '#665700', position: 0 }, { color: '#1e0227', position: 100 }] },
       bgImage: '', bgImageFit: 'cover',
-      accentColor: '#4ade80', textColor: '#d4e8d4', windowBg: 'rgba(74,222,128,0.08)',
+      accentColor: '#7c413c', textColor: '#f6d4cb', windowBg: 'rgba(124,65,60,0.08)',
       fontFamily: 'DM Sans', fontSize: 'medium',
       buttonStyle: 'rounded', borderRadius: 10, shadowIntensity: 1, windowBlur: 16, windowOpacity: 0.85,
       iconStyle: 'default',
@@ -155,9 +155,9 @@ export const PRESET_THEMES: { name: string; theme: DesktopTheme }[] = [
   {
     name: 'Sunset Orange',
     theme: {
-      bgType: 'gradient', bgColor: '#f97316', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#fbbf24', position: 0 }, { color: '#f97316', position: 50 }, { color: '#dc2626', position: 100 }] },
+      bgType: 'gradient', bgColor: '#e0b115', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#e0b115', position: 0 }, { color: '#e0b115', position: 50 }, { color: '#7c413c', position: 100 }] },
       bgImage: '', bgImageFit: 'cover',
-      accentColor: '#1e293b', textColor: '#1e293b', windowBg: 'rgba(255,255,255,0.2)',
+      accentColor: '#1e0227', textColor: '#1e0227', windowBg: 'rgba(246,212,203,0.2)',
       fontFamily: 'Poppins', fontSize: 'medium',
       buttonStyle: 'pill', borderRadius: 16, shadowIntensity: 2, windowBlur: 20, windowOpacity: 0.9,
       iconStyle: 'rounded',
@@ -166,9 +166,9 @@ export const PRESET_THEMES: { name: string; theme: DesktopTheme }[] = [
   {
     name: 'Ocean Deep',
     theme: {
-      bgType: 'gradient', bgColor: '#0c1426', bgGradient: { type: 'linear', angle: 180, stops: [{ color: '#0c1426', position: 0 }, { color: '#1e3a5f', position: 50 }, { color: '#0c1426', position: 100 }] },
+      bgType: 'gradient', bgColor: '#1e0227', bgGradient: { type: 'linear', angle: 180, stops: [{ color: '#1e0227', position: 0 }, { color: '#1e0227', position: 50 }, { color: '#1e0227', position: 100 }] },
       bgImage: '', bgImageFit: 'cover',
-      accentColor: '#38bdf8', textColor: '#bae6fd', windowBg: 'rgba(56,189,248,0.08)',
+      accentColor: '#f6d4cb', textColor: '#f6d4cb', windowBg: 'rgba(246,212,203,0.08)',
       fontFamily: 'Inter', fontSize: 'medium',
       buttonStyle: 'rounded', borderRadius: 12, shadowIntensity: 2, windowBlur: 24, windowOpacity: 0.75,
       iconStyle: 'minimal',
@@ -177,9 +177,9 @@ export const PRESET_THEMES: { name: string; theme: DesktopTheme }[] = [
   {
     name: 'Neon Cyberpunk',
     theme: {
-      bgType: 'solid', bgColor: '#0a0a0a', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#0a0a0a', position: 0 }, { color: '#1a0a2e', position: 100 }] },
+      bgType: 'solid', bgColor: '#1e0227', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#1e0227', position: 0 }, { color: '#1e0227', position: 100 }] },
       bgImage: '', bgImageFit: 'cover',
-      accentColor: '#f0abfc', textColor: '#f0abfc', windowBg: 'rgba(240,171,252,0.06)',
+      accentColor: '#f6d4cb', textColor: '#f6d4cb', windowBg: 'rgba(246,212,203,0.06)',
       fontFamily: 'JetBrains Mono', fontSize: 'small',
       buttonStyle: 'sharp', borderRadius: 0, shadowIntensity: 3, windowBlur: 8, windowOpacity: 0.7,
       iconStyle: 'square',
@@ -188,9 +188,9 @@ export const PRESET_THEMES: { name: string; theme: DesktopTheme }[] = [
   {
     name: 'Paper White',
     theme: {
-      bgType: 'solid', bgColor: '#f5f0eb', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#f5f0eb', position: 0 }, { color: '#ebe5df', position: 100 }] },
+      bgType: 'solid', bgColor: '#f6d4cb', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#f6d4cb', position: 0 }, { color: '#f6d4cb', position: 100 }] },
       bgImage: '', bgImageFit: 'cover',
-      accentColor: '#1a1a1a', textColor: '#1a1a1a', windowBg: 'rgba(255,255,255,0.6)',
+      accentColor: '#1e0227', textColor: '#1e0227', windowBg: 'rgba(246,212,203,0.6)',
       fontFamily: 'Lora', fontSize: 'medium',
       buttonStyle: 'rounded', borderRadius: 8, shadowIntensity: 1, windowBlur: 12, windowOpacity: 0.95,
       iconStyle: 'minimal',
@@ -199,9 +199,9 @@ export const PRESET_THEMES: { name: string; theme: DesktopTheme }[] = [
   {
     name: 'Retro Terminal',
     theme: {
-      bgType: 'solid', bgColor: '#0a0a0a', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#0a0a0a', position: 0 }, { color: '#0a1a0a', position: 100 }] },
+      bgType: 'solid', bgColor: '#1e0227', bgGradient: { type: 'linear', angle: 135, stops: [{ color: '#1e0227', position: 0 }, { color: '#1e0227', position: 100 }] },
       bgImage: '', bgImageFit: 'cover',
-      accentColor: '#22c55e', textColor: '#22c55e', windowBg: 'rgba(34,197,94,0.06)',
+      accentColor: '#665700', textColor: '#665700', windowBg: 'rgba(102,87,0,0.06)',
       fontFamily: 'VT323', fontSize: 'large',
       buttonStyle: 'sharp', borderRadius: 0, shadowIntensity: 0, windowBlur: 0, windowOpacity: 0.9,
       iconStyle: 'square',
@@ -248,9 +248,9 @@ export function getShadow(intensity: number, focused: boolean): string {
   const base = focused ? 1.5 : 1;
   switch (intensity) {
     case 0: return 'none';
-    case 1: return `0 ${4 * base}px ${12 * base}px rgba(0,0,0,0.1)`;
-    case 2: return `0 ${12 * base}px ${32 * base}px rgba(0,0,0,0.2)`;
-    case 3: return `0 ${24 * base}px ${48 * base}px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.05)`;
-    default: return `0 ${12 * base}px ${24 * base}px rgba(0,0,0,0.15)`;
+    case 1: return `0 ${4 * base}px ${12 * base}px rgba(30,2,39,0.1)`;
+    case 2: return `0 ${12 * base}px ${32 * base}px rgba(30,2,39,0.2)`;
+    case 3: return `0 ${24 * base}px ${48 * base}px rgba(30,2,39,0.35), 0 0 0 1px rgba(246,212,203,0.05)`;
+    default: return `0 ${12 * base}px ${24 * base}px rgba(30,2,39,0.15)`;
   }
 }

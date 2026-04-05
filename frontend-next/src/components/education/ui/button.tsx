@@ -8,9 +8,9 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const variantClasses: Record<ButtonVariants, string> = {
-  primary: "bg-[var(--color-institutional)] text-white hover:bg-[#152a45]",
-  accent: "bg-[var(--color-accent)] text-white hover:bg-[#b45309]",
-  sage: "bg-[var(--color-sage)] text-white hover:bg-[var(--color-forest)]",
+  primary: "bg-[var(--color-institutional)] text-[var(--color-foreground)] hover:bg-[#1e0227]",
+  accent: "bg-[var(--color-accent)] text-[var(--color-foreground)] hover:bg-[#7c413c]",
+  sage: "bg-[var(--color-sage)] text-[var(--color-foreground)] hover:bg-[var(--color-forest)]",
   ghost: "bg-transparent border border-transparent text-[var(--color-foreground)] hover:bg-[var(--color-muted)]",
   outline: "bg-transparent border border-[var(--color-border)] text-[var(--color-foreground)] hover:border-[var(--color-institutional)] hover:text-[var(--color-institutional)] hover:bg-[var(--color-institutional-light)]",
 };

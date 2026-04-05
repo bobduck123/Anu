@@ -81,49 +81,49 @@ export default function CertificationsPage() {
     <EducationLayerShell>
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-12 space-y-8">
         <section className="edu-card edu-card-highlight p-6 md:p-8">
-          <h1 className="text-4xl font-bold mb-2 text-white" style={{ fontFamily: 'var(--font-serif)' }}>
+          <h1 className="text-4xl font-bold mb-2 text-[var(--color-foreground)]" style={{ fontFamily: 'var(--font-serif)' }}>
             Certifications
           </h1>
-          <p className="text-white/75">
+          <p className="text-[color:rgba(246,212,203,0.75)]">
             Public registry access stays open. Personal competency and issued credentials stay tied to your session.
           </p>
 
           <div className="mt-5 grid gap-3 md:grid-cols-3">
-            <article className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/75">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-white/60">1. Learn</p>
+            <article className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] p-4 text-sm text-[color:rgba(246,212,203,0.75)]">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-[color:rgba(246,212,203,0.6)]">1. Learn</p>
               <p className="mt-2">Complete modules and assessments inside the curriculum flow.</p>
             </article>
-            <article className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/75">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-white/60">2. Credential</p>
+            <article className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] p-4 text-sm text-[color:rgba(246,212,203,0.75)]">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-[color:rgba(246,212,203,0.6)]">2. Credential</p>
               <p className="mt-2">Issue certificates for completed modules through your learner session.</p>
             </article>
-            <article className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/75">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-white/60">3. Verify</p>
+            <article className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] p-4 text-sm text-[color:rgba(246,212,203,0.75)]">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-[color:rgba(246,212,203,0.6)]">3. Verify</p>
               <p className="mt-2">Use public UID verification to confirm trust and credential state.</p>
             </article>
           </div>
         </section>
 
         <section className="edu-card p-6">
-          <h2 className="text-lg font-semibold mb-3 text-white">Competency Profile</h2>
+          <h2 className="text-lg font-semibold mb-3 text-[var(--color-foreground)]">Competency Profile</h2>
           {authLoading ? (
-            <p className="text-sm text-white/70">Checking learner session…</p>
+            <p className="text-sm text-[color:rgba(246,212,203,0.7)]">Checking learner session…</p>
           ) : isAuthenticated ? (
             profile?.competency_matrix ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {Object.entries(profile.competency_matrix).map(([key, value]) => (
-                  <div key={key} className="p-3 rounded-lg border border-white/15">
-                    <p className="text-xs uppercase tracking-[0.12em] text-white/60">{key}</p>
-                    <p className="text-2xl font-semibold font-mono-data text-white">{value}</p>
+                  <div key={key} className="p-3 rounded-lg border border-[color:rgba(246,212,203,0.15)]">
+                    <p className="text-xs uppercase tracking-[0.12em] text-[color:rgba(246,212,203,0.6)]">{key}</p>
+                    <p className="text-2xl font-semibold font-mono-data text-[var(--color-foreground)]">{value}</p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-white/70">No competency profile yet.</p>
+              <p className="text-sm text-[color:rgba(246,212,203,0.7)]">No competency profile yet.</p>
             )
           ) : (
-            <p className="text-sm text-white/70">
-              <Link href={authHref} className="font-medium text-white hover:underline">
+            <p className="text-sm text-[color:rgba(246,212,203,0.7)]">
+              <Link href={authHref} className="font-medium text-[var(--color-foreground)] hover:underline">
                 Sign in
               </Link>{' '}
               to view your competency matrix and personal certification history.
@@ -132,9 +132,9 @@ export default function CertificationsPage() {
         </section>
 
         <section className="edu-card p-6">
-          <h2 className="text-lg font-semibold mb-4 text-white">Certificate Verifier</h2>
+          <h2 className="text-lg font-semibold mb-4 text-[var(--color-foreground)]">Certificate Verifier</h2>
           <form onSubmit={verifyCertificate} className="space-y-3">
-            <label className="block text-xs uppercase tracking-[0.12em] text-white/60" htmlFor="certificate-uid-input">
+            <label className="block text-xs uppercase tracking-[0.12em] text-[color:rgba(246,212,203,0.6)]" htmlFor="certificate-uid-input">
               Public certificate UID
             </label>
             <div className="flex flex-wrap gap-2">
@@ -151,10 +151,10 @@ export default function CertificationsPage() {
             </div>
           </form>
 
-          {verificationError ? <p className="mt-3 text-sm text-rose-200">{verificationError}</p> : null}
+          {verificationError ? <p className="mt-3 text-sm text-[#7c413c]">{verificationError}</p> : null}
           {verificationResult ? (
-            <div className="mt-4 rounded-lg border border-white/15 bg-white/[0.03] p-4 text-sm text-white/75">
-              <p className="font-semibold text-white">Certificate verified</p>
+            <div className="mt-4 rounded-lg border border-[color:rgba(246,212,203,0.15)] bg-[color:rgba(246,212,203,0.03)] p-4 text-sm text-[color:rgba(246,212,203,0.75)]">
+              <p className="font-semibold text-[var(--color-foreground)]">Certificate verified</p>
               <p className="mt-2">UID: {verificationResult.certificate_uid}</p>
               <p>Module: {verificationResult.module_id}</p>
               <p>Status: {verificationResult.status}</p>
@@ -167,24 +167,24 @@ export default function CertificationsPage() {
         </section>
 
         <section className="edu-card p-6">
-          <h2 className="text-lg font-semibold mb-4 text-white">Your Issued Certificates</h2>
+          <h2 className="text-lg font-semibold mb-4 text-[var(--color-foreground)]">Your Issued Certificates</h2>
           {!isAuthenticated ? (
-            <p className="text-sm text-white/70">Sign in to see your personal certificate history.</p>
+            <p className="text-sm text-[color:rgba(246,212,203,0.7)]">Sign in to see your personal certificate history.</p>
           ) : certifications.length === 0 ? (
-            <p className="text-sm text-white/70">No certificates yet.</p>
+            <p className="text-sm text-[color:rgba(246,212,203,0.7)]">No certificates yet.</p>
           ) : (
             <div className="space-y-3">
               {certifications.map((cert) => (
-                <div key={cert.id} className="flex items-center justify-between border-b border-white/10 pb-2">
+                <div key={cert.id} className="flex items-center justify-between border-b border-[color:rgba(246,212,203,0.1)] pb-2">
                   <div>
-                    <p className="text-sm font-medium text-white">Certificate {cert.certificate_uid}</p>
-                    <p className="text-xs text-white/60">
+                    <p className="text-sm font-medium text-[var(--color-foreground)]">Certificate {cert.certificate_uid}</p>
+                    <p className="text-xs text-[color:rgba(246,212,203,0.6)]">
                       Module {cert.module_id} · Issued {cert.issued_at ? new Date(cert.issued_at).toLocaleDateString() : ''}
                     </p>
                   </div>
                   <span
                     className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                      cert.status === 'active' ? 'bg-emerald-400/20 text-emerald-100' : 'bg-white/15 text-white/75'
+                      cert.status === 'active' ? 'bg-[color:rgba(102,87,0,0.2)] text-[#f6d4cb]' : 'bg-[color:rgba(246,212,203,0.15)] text-[color:rgba(246,212,203,0.75)]'
                     }`}
                   >
                     {cert.status}
@@ -196,30 +196,30 @@ export default function CertificationsPage() {
         </section>
 
         <section className="edu-card p-6">
-          <h2 className="text-lg font-semibold mb-4 text-white">Public Credential Registry</h2>
+          <h2 className="text-lg font-semibold mb-4 text-[var(--color-foreground)]">Public Credential Registry</h2>
           {registryError ? (
             <div className="space-y-3">
-              <p className="text-sm text-rose-200">{registryError}</p>
-              <p className="text-xs text-white/60">
+              <p className="text-sm text-[#7c413c]">{registryError}</p>
+              <p className="text-xs text-[color:rgba(246,212,203,0.6)]">
                 Registry refresh is unavailable right now. You can keep navigating curriculum, assessments, and
                 regeneration flows without losing session continuity.
               </p>
             </div>
           ) : publicRegistry.length === 0 ? (
-            <p className="text-sm text-white/70">No public certificates are listed yet.</p>
+            <p className="text-sm text-[color:rgba(246,212,203,0.7)]">No public certificates are listed yet.</p>
           ) : (
             <div className="space-y-3">
               {publicRegistry.map((cert) => (
-                <div key={cert.certificate_uid} className="flex items-center justify-between border-b border-white/10 pb-2">
+                <div key={cert.certificate_uid} className="flex items-center justify-between border-b border-[color:rgba(246,212,203,0.1)] pb-2">
                   <div>
-                    <p className="text-sm font-medium text-white">Certificate {cert.certificate_uid}</p>
-                    <p className="text-xs text-white/60">
+                    <p className="text-sm font-medium text-[var(--color-foreground)]">Certificate {cert.certificate_uid}</p>
+                    <p className="text-xs text-[color:rgba(246,212,203,0.6)]">
                       Module {cert.module_id} · Issued {cert.issued_at ? new Date(cert.issued_at).toLocaleDateString() : ''}
                     </p>
                   </div>
                   <span
                     className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                      cert.status === 'active' ? 'bg-emerald-400/20 text-emerald-100' : 'bg-white/15 text-white/75'
+                      cert.status === 'active' ? 'bg-[color:rgba(102,87,0,0.2)] text-[#f6d4cb]' : 'bg-[color:rgba(246,212,203,0.15)] text-[color:rgba(246,212,203,0.75)]'
                     }`}
                   >
                     {cert.status}

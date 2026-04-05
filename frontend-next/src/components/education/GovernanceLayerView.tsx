@@ -135,58 +135,58 @@ export function GovernanceLayerView() {
                 value={form.region}
                 onChange={(event) => setForm((prev) => ({ ...prev, region: event.target.value }))}
                 placeholder="Region"
-                className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+                className="rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] px-3 py-2 text-sm"
               />
               <input
                 required
                 value={form.language_group}
                 onChange={(event) => setForm((prev) => ({ ...prev, language_group: event.target.value }))}
                 placeholder="Language group"
-                className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+                className="rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] px-3 py-2 text-sm"
               />
               <input
                 required
                 value={form.indigenous_name}
                 onChange={(event) => setForm((prev) => ({ ...prev, indigenous_name: event.target.value }))}
                 placeholder="Indigenous plant name"
-                className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+                className="rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] px-3 py-2 text-sm"
               />
               <input
                 required
                 value={form.season}
                 onChange={(event) => setForm((prev) => ({ ...prev, season: event.target.value }))}
                 placeholder="Season"
-                className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+                className="rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] px-3 py-2 text-sm"
               />
               <textarea
                 required
                 value={form.traditional_uses}
                 onChange={(event) => setForm((prev) => ({ ...prev, traditional_uses: event.target.value }))}
                 placeholder="Traditional uses"
-                className="min-h-[84px] rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm md:col-span-2"
+                className="min-h-[84px] rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] px-3 py-2 text-sm md:col-span-2"
               />
               <textarea
                 value={form.preparation_methods}
                 onChange={(event) => setForm((prev) => ({ ...prev, preparation_methods: event.target.value }))}
                 placeholder="Preparation methods"
-                className="min-h-[70px] rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+                className="min-h-[70px] rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] px-3 py-2 text-sm"
               />
               <textarea
                 value={form.cultural_context}
                 onChange={(event) => setForm((prev) => ({ ...prev, cultural_context: event.target.value }))}
                 placeholder="Cultural context"
-                className="min-h-[70px] rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+                className="min-h-[70px] rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] px-3 py-2 text-sm"
               />
               <textarea
                 value={form.scientific_notes}
                 onChange={(event) => setForm((prev) => ({ ...prev, scientific_notes: event.target.value }))}
                 placeholder="Scientific notes"
-                className="min-h-[70px] rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+                className="min-h-[70px] rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] px-3 py-2 text-sm"
               />
               <select
                 value={form.sensitivity_level}
                 onChange={(event) => setForm((prev) => ({ ...prev, sensitivity_level: event.target.value as SensitivityLevel }))}
-                className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+                className="rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] px-3 py-2 text-sm"
               >
                 <option value="public">public</option>
                 <option value="community">community</option>
@@ -250,7 +250,7 @@ export function GovernanceLayerView() {
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
-              className="rounded-md border border-[var(--color-border)] bg-white px-2 py-1 text-xs"
+              className="rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] px-2 py-1 text-xs"
             >
               <option value="approved">approved</option>
               {canVerify && <option value="pending">pending</option>}

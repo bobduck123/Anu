@@ -12,14 +12,14 @@ function ExperimentPreview({ experiment }: { experiment: AnuPatternExperiment })
   if (experiment.preview === 'shell') {
     return (
       <div className="anu-lab-preview">
-        <div className="flex items-center justify-between rounded-[1.15rem] border border-white/10 bg-white/[0.04] px-4 py-3">
+        <div className="flex items-center justify-between rounded-[1.15rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-4 py-3">
           <div className="flex items-center gap-3">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#d7b06a]/45 bg-[#162847] text-[#f4d39e]">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#e0b115]/45 bg-[#1e0227] text-[#f6d4cb]">
               <Sparkles className="h-4 w-4" />
             </span>
             <div>
-              <p className="text-[10px] uppercase tracking-[0.24em] text-[#e9d6b2]/75">Institution beacon</p>
-              <p className="text-sm text-white">Cultural commons shell</p>
+              <p className="text-[10px] uppercase tracking-[0.24em] text-[#f6d4cb]/75">Institution beacon</p>
+              <p className="text-sm text-[var(--color-foreground)]">Cultural commons shell</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -28,17 +28,17 @@ function ExperimentPreview({ experiment }: { experiment: AnuPatternExperiment })
           </div>
         </div>
         <div className="grid gap-3 md:grid-cols-[0.86fr_1.14fr]">
-          <div className="rounded-[1.15rem] border border-white/10 bg-[#0b1323]/78 p-4">
+          <div className="rounded-[1.15rem] border border-[color:rgba(246,212,203,0.1)] bg-[#1e0227]/78 p-4">
             <div className="space-y-2">
-              <div className="h-2 w-20 rounded-full bg-[#e0bf84]/65" />
-              <div className="h-10 rounded-2xl bg-[linear-gradient(125deg,rgba(255,255,255,0.15),rgba(255,255,255,0.05))]" />
-              <div className="h-10 rounded-2xl bg-[linear-gradient(125deg,rgba(107,141,184,0.26),rgba(26,47,77,0.62))]" />
-              <div className="h-10 rounded-2xl bg-[linear-gradient(125deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))]" />
+              <div className="h-2 w-20 rounded-full bg-[#f6d4cb]/65" />
+              <div className="h-10 rounded-2xl bg-[linear-gradient(125deg,rgba(246,212,203,0.15),rgba(246,212,203,0.05))]" />
+              <div className="h-10 rounded-2xl bg-[linear-gradient(125deg,rgba(124,65,60,0.26),rgba(30,2,39,0.62))]" />
+              <div className="h-10 rounded-2xl bg-[linear-gradient(125deg,rgba(246,212,203,0.08),rgba(246,212,203,0.03))]" />
             </div>
           </div>
-          <div className="rounded-[1.15rem] border border-[#d7b06a]/24 bg-[linear-gradient(150deg,rgba(13,27,51,0.95),rgba(12,24,42,0.84))] p-5">
-            <p className="text-[10px] uppercase tracking-[0.24em] text-[#f1d3a1]/82">Shell signature candidate</p>
-            <h3 className="mt-3 text-2xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+          <div className="rounded-[1.15rem] border border-[#e0b115]/24 bg-[linear-gradient(150deg,rgba(30,2,39,0.95),rgba(30,2,39,0.84))] p-5">
+            <p className="text-[10px] uppercase tracking-[0.24em] text-[#f6d4cb]/82">Shell signature candidate</p>
+            <h3 className="mt-3 text-2xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
               Entry should feel like a beacon, not a dashboard.
             </h3>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -56,7 +56,7 @@ function ExperimentPreview({ experiment }: { experiment: AnuPatternExperiment })
     return (
       <div className="anu-lab-preview">
         <div className="grid gap-3 md:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-[1.15rem] border border-white/10 bg-[#0b1323]/78 p-4">
+          <div className="rounded-[1.15rem] border border-[color:rgba(246,212,203,0.1)] bg-[#1e0227]/78 p-4">
             <div className="flex flex-wrap gap-3">
               <button className="anu-lab-button anu-lab-button-primary" type="button">
                 Advance route
@@ -68,11 +68,11 @@ function ExperimentPreview({ experiment }: { experiment: AnuPatternExperiment })
               <span className="anu-lab-chip">Trusted state</span>
             </div>
           </div>
-          <div className="rounded-[1.15rem] border border-[#d7b06a]/22 bg-[linear-gradient(145deg,rgba(20,28,46,0.9),rgba(10,18,31,0.82))] p-4">
+          <div className="rounded-[1.15rem] border border-[#e0b115]/22 bg-[linear-gradient(145deg,rgba(30,2,39,0.9),rgba(30,2,39,0.82))] p-4">
             <div className="space-y-2">
-              <div className="h-2 w-16 rounded-full bg-[#e0bf84]/65" />
-              <div className="h-11 rounded-[1rem] border border-white/10 bg-white/[0.06]" />
-              <div className="h-11 rounded-[1rem] border border-white/10 bg-white/[0.06]" />
+              <div className="h-2 w-16 rounded-full bg-[#f6d4cb]/65" />
+              <div className="h-11 rounded-[1rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.06)]" />
+              <div className="h-11 rounded-[1rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.06)]" />
             </div>
           </div>
         </div>
@@ -85,20 +85,20 @@ function ExperimentPreview({ experiment }: { experiment: AnuPatternExperiment })
       <div className="anu-lab-preview">
         <div className="grid gap-3 md:grid-cols-[1.15fr_0.85fr]">
           <div className="grid min-h-[16rem] grid-cols-[1.2fr_0.8fr] gap-3">
-            <div className="rounded-[1.2rem] border border-white/10 bg-[linear-gradient(150deg,rgba(30,56,98,0.78),rgba(13,23,42,0.92))] p-4">
-              <p className="text-[10px] uppercase tracking-[0.24em] text-[#f1d3a1]/82">Featured commons signal</p>
-              <div className="mt-4 h-24 rounded-[1rem] bg-[linear-gradient(135deg,rgba(255,255,255,0.2),rgba(255,255,255,0.06))]" />
+            <div className="rounded-[1.2rem] border border-[color:rgba(246,212,203,0.1)] bg-[linear-gradient(150deg,rgba(30,2,39,0.78),rgba(30,2,39,0.92))] p-4">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-[#f6d4cb]/82">Featured commons signal</p>
+              <div className="mt-4 h-24 rounded-[1rem] bg-[linear-gradient(135deg,rgba(246,212,203,0.2),rgba(246,212,203,0.06))]" />
             </div>
             <div className="grid gap-3">
-              <div className="rounded-[1rem] border border-white/10 bg-[#101a2d]/82" />
-              <div className="rounded-[1rem] border border-white/10 bg-[#16223c]/82" />
+              <div className="rounded-[1rem] border border-[color:rgba(246,212,203,0.1)] bg-[#1e0227]/82" />
+              <div className="rounded-[1rem] border border-[color:rgba(246,212,203,0.1)] bg-[#1e0227]/82" />
             </div>
           </div>
-          <div className="rounded-[1.15rem] border border-[#d7b06a]/22 bg-[#0d1729]/84 p-4">
+          <div className="rounded-[1.15rem] border border-[#e0b115]/22 bg-[#1e0227]/84 p-4">
             <div className="space-y-2">
-              <div className="h-10 rounded-[0.9rem] border border-white/10 bg-white/[0.06]" />
-              <div className="h-10 rounded-[0.9rem] border border-white/10 bg-white/[0.06]" />
-              <div className="h-10 rounded-[0.9rem] border border-white/10 bg-white/[0.06]" />
+              <div className="h-10 rounded-[0.9rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.06)]" />
+              <div className="h-10 rounded-[0.9rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.06)]" />
+              <div className="h-10 rounded-[0.9rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.06)]" />
             </div>
           </div>
         </div>
@@ -109,28 +109,28 @@ function ExperimentPreview({ experiment }: { experiment: AnuPatternExperiment })
   return (
     <div className="anu-lab-preview">
       <div className="grid gap-3 md:grid-cols-[0.92fr_1.08fr]">
-        <div className="rounded-[1.15rem] border border-white/10 bg-[linear-gradient(150deg,rgba(15,22,38,0.92),rgba(11,18,30,0.84))] p-4">
-          <p className="text-[10px] uppercase tracking-[0.24em] text-[#f1d3a1]/82">Private chamber stack</p>
+        <div className="rounded-[1.15rem] border border-[color:rgba(246,212,203,0.1)] bg-[linear-gradient(150deg,rgba(30,2,39,0.92),rgba(30,2,39,0.84))] p-4">
+          <p className="text-[10px] uppercase tracking-[0.24em] text-[#f6d4cb]/82">Private chamber stack</p>
           <div className="mt-4 space-y-3">
-            <div className="rounded-[1rem] border border-[#8f76dd]/28 bg-[#141f33]/86 p-3">
-              <div className="h-2 w-24 rounded-full bg-[#8f76dd]/55" />
-              <div className="mt-3 h-8 rounded-[0.85rem] bg-white/[0.05]" />
+            <div className="rounded-[1rem] border border-[#f6d4cb]/28 bg-[#1e0227]/86 p-3">
+              <div className="h-2 w-24 rounded-full bg-[#f6d4cb]/55" />
+              <div className="mt-3 h-8 rounded-[0.85rem] bg-[color:rgba(246,212,203,0.05)]" />
             </div>
-            <div className="rounded-[1rem] border border-[#d7b06a]/24 bg-[#111a2c]/86 p-3">
-              <div className="h-2 w-20 rounded-full bg-[#d7b06a]/55" />
-              <div className="mt-3 h-8 rounded-[0.85rem] bg-white/[0.05]" />
+            <div className="rounded-[1rem] border border-[#e0b115]/24 bg-[#1e0227]/86 p-3">
+              <div className="h-2 w-20 rounded-full bg-[#e0b115]/55" />
+              <div className="mt-3 h-8 rounded-[0.85rem] bg-[color:rgba(246,212,203,0.05)]" />
             </div>
           </div>
         </div>
-        <div className="rounded-[1.15rem] border border-white/10 bg-[#0b1323]/78 p-4">
+        <div className="rounded-[1.15rem] border border-[color:rgba(246,212,203,0.1)] bg-[#1e0227]/78 p-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-[1rem] border border-white/10 bg-white/[0.05] p-3">
-              <div className="h-2 w-14 rounded-full bg-[#e0bf84]/55" />
-              <div className="mt-3 h-10 rounded-[0.85rem] bg-white/[0.05]" />
+            <div className="rounded-[1rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.05)] p-3">
+              <div className="h-2 w-14 rounded-full bg-[#f6d4cb]/55" />
+              <div className="mt-3 h-10 rounded-[0.85rem] bg-[color:rgba(246,212,203,0.05)]" />
             </div>
-            <div className="rounded-[1rem] border border-white/10 bg-white/[0.05] p-3">
-              <div className="h-2 w-16 rounded-full bg-[#7ba1ff]/55" />
-              <div className="mt-3 h-10 rounded-[0.85rem] bg-white/[0.05]" />
+            <div className="rounded-[1rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.05)] p-3">
+              <div className="h-2 w-16 rounded-full bg-[#f6d4cb]/55" />
+              <div className="mt-3 h-10 rounded-[0.85rem] bg-[color:rgba(246,212,203,0.05)]" />
             </div>
           </div>
         </div>
@@ -149,10 +149,10 @@ export function AnuUiLab() {
         <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
             <p className="anu-lab-kicker">Phase 0 internal route</p>
-            <h1 className="mt-3 text-4xl leading-[1.02] text-white md:text-[3.3rem]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+            <h1 className="mt-3 text-4xl leading-[1.02] text-[var(--color-foreground)] md:text-[3.3rem]" style={{ fontFamily: 'var(--anu-type-display)' }}>
               ANU UI lab and pattern-bank foundation
             </h1>
-            <p className="mt-5 max-w-3xl text-base leading-relaxed text-slate-200/88 md:text-lg">
+            <p className="mt-5 max-w-3xl text-base leading-relaxed text-[color:rgba(246,212,203,0.88)] md:text-lg">
               This surface holds adapted experiments before they reach production. It is for ANU-specific restructuring,
               not raw example dumping. Every pattern here must prove its source, its target surface, and why it belongs in
               the product.
@@ -167,34 +167,34 @@ export function AnuUiLab() {
 
           <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
             <div className="anu-lab-panel px-4 py-4">
-              <div className="flex items-center gap-2 text-[#f1d3a1]">
+              <div className="flex items-center gap-2 text-[#f6d4cb]">
                 <Beaker className="h-4 w-4" />
                 <span className="text-[11px] uppercase tracking-[0.22em]">Experiments</span>
               </div>
-              <p className="mt-4 text-3xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              <p className="mt-4 text-3xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
                 {ANU_PATTERN_EXPERIMENTS.length}
               </p>
-              <p className="mt-2 text-sm text-slate-300/82">Adapted ANU concepts with explicit provenance.</p>
+              <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.82)]">Adapted ANU concepts with explicit provenance.</p>
             </div>
             <div className="anu-lab-panel px-4 py-4">
-              <div className="flex items-center gap-2 text-[#f1d3a1]">
+              <div className="flex items-center gap-2 text-[#f6d4cb]">
                 <Layers3 className="h-4 w-4" />
                 <span className="text-[11px] uppercase tracking-[0.22em]">Candidates</span>
               </div>
-              <p className="mt-4 text-3xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              <p className="mt-4 text-3xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
                 {candidateCount}
               </p>
-              <p className="mt-2 text-sm text-slate-300/82">Production-track experiments tied to shell and community surfaces.</p>
+              <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.82)]">Production-track experiments tied to shell and community surfaces.</p>
             </div>
             <div className="anu-lab-panel px-4 py-4">
-              <div className="flex items-center gap-2 text-[#f1d3a1]">
+              <div className="flex items-center gap-2 text-[#f6d4cb]">
                 <ShieldCheck className="h-4 w-4" />
                 <span className="text-[11px] uppercase tracking-[0.22em]">High risk</span>
               </div>
-              <p className="mt-4 text-3xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              <p className="mt-4 text-3xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
                 {highRiskCount}
               </p>
-              <p className="mt-2 text-sm text-slate-300/82">Subsystem ideas that need stronger proof before shipping.</p>
+              <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.82)]">Subsystem ideas that need stronger proof before shipping.</p>
             </div>
           </div>
         </div>
@@ -202,16 +202,16 @@ export function AnuUiLab() {
 
       <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <article className="anu-lab-panel space-y-4 p-5 md:p-6">
-          <div className="flex items-center gap-2 text-[#f1d3a1]">
+          <div className="flex items-center gap-2 text-[#f6d4cb]">
             <Compass className="h-4 w-4" />
             <p className="text-[11px] uppercase tracking-[0.22em]">Promotion rules</p>
           </div>
-          <h2 className="text-2xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+          <h2 className="text-2xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
             What a pattern must prove before it ships
           </h2>
-          <ul className="space-y-3 text-sm leading-6 text-slate-200/86">
+          <ul className="space-y-3 text-sm leading-6 text-[color:rgba(246,212,203,0.86)]">
             {ANU_PROMOTION_RULES.map((rule) => (
-              <li key={rule} className="rounded-[1rem] border border-white/10 bg-white/[0.045] px-4 py-3">
+              <li key={rule} className="rounded-[1rem] border border-[color:rgba(246,212,203,0.1)] bg-[var(--color-foreground)]/[0.045] px-4 py-3">
                 {rule}
               </li>
             ))}
@@ -219,19 +219,19 @@ export function AnuUiLab() {
         </article>
 
         <article className="anu-lab-panel space-y-4 p-5 md:p-6">
-          <div className="flex items-center gap-2 text-[#f1d3a1]">
+          <div className="flex items-center gap-2 text-[#f6d4cb]">
             <Sparkles className="h-4 w-4" />
             <p className="text-[11px] uppercase tracking-[0.22em]">Token staging</p>
           </div>
-          <h2 className="text-2xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+          <h2 className="text-2xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
             Shared ANU tokens now staged in code
           </h2>
           <div className="grid gap-3 md:grid-cols-2">
             {ANU_TOKEN_STAGING_GROUPS.map((group) => (
-              <div key={group.title} className="rounded-[1rem] border border-white/10 bg-white/[0.045] px-4 py-4">
-                <p className="text-sm font-semibold text-white">{group.title}</p>
-                <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-[#e9d6b2]/72">{group.tokenPrefix}</p>
-                <p className="mt-3 text-sm leading-6 text-slate-300/84">{group.intent}</p>
+              <div key={group.title} className="rounded-[1rem] border border-[color:rgba(246,212,203,0.1)] bg-[var(--color-foreground)]/[0.045] px-4 py-4">
+                <p className="text-sm font-semibold text-[var(--color-foreground)]">{group.title}</p>
+                <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-[#f6d4cb]/72">{group.tokenPrefix}</p>
+                <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">{group.intent}</p>
               </div>
             ))}
           </div>
@@ -242,7 +242,7 @@ export function AnuUiLab() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="anu-lab-kicker">Pattern-bank manifest</p>
-            <h2 className="mt-2 text-3xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+            <h2 className="mt-2 text-3xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
               Adapted experiments with explicit provenance
             </h2>
           </div>
@@ -261,10 +261,10 @@ export function AnuUiLab() {
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="max-w-3xl">
                   <p className="anu-lab-kicker">{experiment.surface}</p>
-                  <h3 className="mt-2 text-2xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                  <h3 className="mt-2 text-2xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
                     {experiment.title}
                   </h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-200/86">{experiment.summary}</p>
+                  <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.86)]">{experiment.summary}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <span className="anu-lab-chip">{experiment.track}</span>
@@ -276,17 +276,17 @@ export function AnuUiLab() {
               <ExperimentPreview experiment={experiment} />
 
               <div className="grid gap-4 lg:grid-cols-[0.92fr_1.08fr]">
-                <div className="rounded-[1.15rem] border border-white/10 bg-white/[0.045] p-4">
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#f1d3a1]/82">Extracted qualities</p>
-                  <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-200/86">
+                <div className="rounded-[1.15rem] border border-[color:rgba(246,212,203,0.1)] bg-[var(--color-foreground)]/[0.045] p-4">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/82">Extracted qualities</p>
+                  <ul className="mt-3 space-y-2 text-sm leading-6 text-[color:rgba(246,212,203,0.86)]">
                     {experiment.extractedQualities.map((quality) => (
                       <li key={quality}>• {quality}</li>
                     ))}
                   </ul>
                 </div>
-                <div className="rounded-[1.15rem] border border-white/10 bg-white/[0.045] p-4">
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#f1d3a1]/82">Discarded qualities</p>
-                  <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-300/82">
+                <div className="rounded-[1.15rem] border border-[color:rgba(246,212,203,0.1)] bg-[var(--color-foreground)]/[0.045] p-4">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/82">Discarded qualities</p>
+                  <ul className="mt-3 space-y-2 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
                     {experiment.discardedQualities.map((quality) => (
                       <li key={quality}>• {quality}</li>
                     ))}
@@ -294,14 +294,14 @@ export function AnuUiLab() {
                 </div>
               </div>
 
-              <div className="rounded-[1.15rem] border border-white/10 bg-[#0a1322]/78 p-4">
-                <p className="text-[11px] uppercase tracking-[0.22em] text-[#f1d3a1]/82">Source manifest</p>
+              <div className="rounded-[1.15rem] border border-[color:rgba(246,212,203,0.1)] bg-[#1e0227]/78 p-4">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/82">Source manifest</p>
                 <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {experiment.sources.map((source) => (
-                    <div key={`${experiment.id}-${source.path}`} className="rounded-[1rem] border border-white/10 bg-white/[0.045] px-4 py-3">
-                      <p className="text-sm font-semibold text-white">{source.label}</p>
-                      <p className="mt-2 break-all text-xs text-slate-300/72">{source.path}</p>
-                      <p className="mt-3 text-sm leading-6 text-slate-200/82">{source.role}</p>
+                    <div key={`${experiment.id}-${source.path}`} className="rounded-[1rem] border border-[color:rgba(246,212,203,0.1)] bg-[var(--color-foreground)]/[0.045] px-4 py-3">
+                      <p className="text-sm font-semibold text-[var(--color-foreground)]">{source.label}</p>
+                      <p className="mt-2 break-all text-xs text-[color:rgba(246,212,203,0.72)]">{source.path}</p>
+                      <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{source.role}</p>
                     </div>
                   ))}
                 </div>

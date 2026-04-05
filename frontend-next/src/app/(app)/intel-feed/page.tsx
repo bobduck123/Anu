@@ -97,13 +97,13 @@ export default function IntelFeedPage() {
           </span>
           <button
             onClick={() => setShowIntelHeat((value) => !value)}
-            className={`rounded-full px-3 py-1 ${showIntelHeat ? 'bg-emerald-100 text-emerald-900' : 'bg-[var(--color-muted)]'}`}
+            className={`rounded-full px-3 py-1 ${showIntelHeat ? 'bg-[#665700] text-[#665700]' : 'bg-[var(--color-muted)]'}`}
           >
             Intel Heat {showIntelHeat ? 'On' : 'Off'}
           </button>
           <button
             onClick={() => setShowEducationLayer((value) => !value)}
-            className={`rounded-full px-3 py-1 ${showEducationLayer ? 'bg-sky-100 text-sky-900' : 'bg-[var(--color-muted)]'}`}
+            className={`rounded-full px-3 py-1 ${showEducationLayer ? 'bg-[#7c413c] text-[#7c413c]' : 'bg-[var(--color-muted)]'}`}
           >
             Education Links {showEducationLayer ? 'On' : 'Off'}
           </button>

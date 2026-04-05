@@ -14,10 +14,10 @@ interface Props {
 }
 
 const ICON_MAP = {
-  image:  { Icon: Image, gradient: 'from-pink-100 to-purple-100', color: 'text-pink-500' },
-  folder: { Icon: Folder, gradient: 'from-amber-100 to-orange-100', color: 'text-amber-600' },
-  app:    { Icon: AppWindow, gradient: 'from-blue-100 to-cyan-100', color: 'text-blue-500' },
-  file:   { Icon: FileText, gradient: 'from-gray-100 to-stone-100', color: 'text-gray-600' },
+  image:  { Icon: Image, gradient: 'from-[#7c413c] to-[#7c413c]', color: 'text-[#7c413c]' },
+  folder: { Icon: Folder, gradient: 'from-[#e0b115] to-[#e0b115]', color: 'text-[#665700]' },
+  app:    { Icon: AppWindow, gradient: 'from-[#7c413c] to-[#7c413c]', color: 'text-[#7c413c]' },
+  file:   { Icon: FileText, gradient: 'from-[#f6d4cb] to-[#f6d4cb]', color: 'text-[#1e0227]' },
 } as const;
 
 export function DesktopIcon({ icon, selected, onOpen, onSelect, onMove }: Props) {
@@ -74,7 +74,7 @@ export function DesktopIcon({ icon, selected, onOpen, onSelect, onMove }: Props)
         className="mt-1 text-[10px] font-medium text-center leading-tight max-w-[80px] truncate"
         style={{
           color: 'var(--text-color)',
-          textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+          textShadow: '0 1px 3px rgba(30,2,39,0.5)',
         }}
       >
         {icon.label}

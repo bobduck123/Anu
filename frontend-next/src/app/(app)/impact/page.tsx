@@ -199,7 +199,7 @@ export default function ImpactHomePage() {
   const field = (
     <div className="relative h-full w-full">
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center pt-5">
-        <div className="rounded-full border border-white/10 bg-black/16 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#e5d2aa]/84 backdrop-blur-md">
+        <div className="rounded-full border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.16)] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#f6d4cb]/84 backdrop-blur-md">
           Outcomes gather on the ground before they rise into the wider commons.
         </div>
       </div>
@@ -320,8 +320,8 @@ export default function ImpactHomePage() {
       }
       secondary={
         <AnuSurfacePanel tone="quiet" className="px-5 py-5">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Bridge provenance</p>
-          <div className="mt-4 space-y-3 text-sm leading-6 text-slate-200/82">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">Bridge provenance</p>
+          <div className="mt-4 space-y-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
             <p>{selectedOutcome.provenance}</p>
             <p>{selectedOutcome.celestialInfluence}</p>
           </div>
@@ -345,7 +345,7 @@ export default function ImpactHomePage() {
       <ImpactHeader tier={status?.subscription?.status || 'community'} streakMonths={status?.subscription?.streak_months || 0} />
 
       {error ? (
-        <AnuSurfacePanel tone="quiet" className="p-4 text-amber-200">
+        <AnuSurfacePanel tone="quiet" className="p-4 text-[#e0b115]">
           <p className="text-sm">{error}</p>
         </AnuSurfacePanel>
       ) : null}
@@ -417,9 +417,9 @@ export default function ImpactHomePage() {
         <AnuSurfacePanel tone="soft" className="p-5">
           <div className="flex items-center gap-2">
             <Compass className="h-4 w-4 text-[var(--color-institutional)]" />
-            <h3 className="font-semibold text-white">Next milestone</h3>
+            <h3 className="font-semibold text-[var(--color-foreground)]">Next milestone</h3>
           </div>
-          <p className="mt-3 text-sm leading-6 text-slate-300/82">
+          <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
             Invite a neighbor, complete a shared action, and unlock a community credit.
           </p>
           <div className="mt-4 flex gap-2">
@@ -439,7 +439,7 @@ export default function ImpactHomePage() {
         </AnuSurfacePanel>
 
         <AnuSurfacePanel tone="quiet" className="p-5">
-          <h3 className="font-semibold text-white">Quick links</h3>
+          <h3 className="font-semibold text-[var(--color-foreground)]">Quick links</h3>
           <div className="mt-4 space-y-2">
             {[
               { href: '/relief', label: 'Relief Intake', icon: Heart },
@@ -465,23 +465,23 @@ export default function ImpactHomePage() {
         <AnuSurfacePanel tone="soft" className="p-5 md:col-span-2">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-white">Collective streaks</h3>
-              <p className="text-xs text-slate-400">Weekly momentum</p>
+              <h3 className="font-semibold text-[var(--color-foreground)]">Collective streaks</h3>
+              <p className="text-xs text-[color:rgba(246,212,203,0.64)]">Weekly momentum</p>
             </div>
           </div>
           {nodeStreak ? (
             <div className="mt-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-white">{nodeStreak.scope_name || 'Node'}</p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-sm font-medium text-[var(--color-foreground)]">{nodeStreak.scope_name || 'Node'}</p>
+                  <p className="text-xs text-[color:rgba(246,212,203,0.64)]">
                     {nodeStreak.weekly_stats?.is_active ? 'Active this week' : 'Needs momentum'} · Next milestone{' '}
                     {nodeStreak.reward_milestones?.next || '—'}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="font-mono-data text-2xl font-semibold text-[var(--color-forest)]">{nodeStreak.current_streak}</p>
-                  <p className="text-xs text-slate-400">week streak</p>
+                  <p className="text-xs text-[color:rgba(246,212,203,0.64)]">week streak</p>
                 </div>
               </div>
               <div className="progress-bar">
@@ -492,21 +492,21 @@ export default function ImpactHomePage() {
               </div>
             </div>
           ) : (
-            <p className="mt-4 text-sm text-slate-300/82">No collective streak data yet.</p>
+            <p className="mt-4 text-sm text-[color:rgba(246,212,203,0.82)]">No collective streak data yet.</p>
           )}
         </AnuSurfacePanel>
 
         <AnuSurfacePanel tone="quiet" className="p-5">
-          <h3 className="font-semibold text-white">Microcosm streaks</h3>
+          <h3 className="font-semibold text-[var(--color-foreground)]">Microcosm streaks</h3>
           {microStreaks.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-300/82">No microcosm streaks yet.</p>
+            <p className="mt-4 text-sm text-[color:rgba(246,212,203,0.82)]">No microcosm streaks yet.</p>
           ) : (
             <div className="mt-4 space-y-3">
               {microStreaks.slice(0, 3).map((streak) => (
                 <div key={streak.scope_id} className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-white">{streak.scope_name}</p>
-                    <p className="text-xs text-slate-400">Best {streak.best_streak} weeks</p>
+                    <p className="text-sm font-medium text-[var(--color-foreground)]">{streak.scope_name}</p>
+                    <p className="text-xs text-[color:rgba(246,212,203,0.64)]">Best {streak.best_streak} weeks</p>
                   </div>
                   <span className="font-mono-data text-lg font-semibold text-[var(--color-institutional)]">{streak.current_streak}</span>
                 </div>
@@ -519,10 +519,10 @@ export default function ImpactHomePage() {
       <section>
         <div className="mb-6 flex items-end justify-between">
           <div>
-            <h2 className="text-2xl md:text-3xl font-semibold text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+            <h2 className="text-2xl md:text-3xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
               Impact Pools
             </h2>
-            <p className="mt-1 text-sm text-slate-300/82">See how your contributions are stewarded.</p>
+            <p className="mt-1 text-sm text-[color:rgba(246,212,203,0.82)]">See how your contributions are stewarded.</p>
           </div>
           <Link href="/pools" className="hidden items-center gap-2 text-sm font-medium text-[var(--color-institutional)] transition-all hover:gap-3 md:inline-flex">
             View all
@@ -542,10 +542,10 @@ export default function ImpactHomePage() {
       <section className="space-y-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 className="text-2xl md:text-3xl font-semibold text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+            <h2 className="text-2xl md:text-3xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
               Collaborative Challenges
             </h2>
-            <p className="mt-1 text-sm text-slate-300/82">
+            <p className="mt-1 text-sm text-[color:rgba(246,212,203,0.82)]">
               Work with your {collabScopeName || collabScope} to reach shared goals this week.
             </p>
           </div>
@@ -578,8 +578,8 @@ export default function ImpactHomePage() {
             const pct = Math.min(100, Math.round((challenge.progress / challenge.target) * 100));
             return (
               <AnuSurfacePanel key={challenge.id} tone="soft" className="p-5">
-                <h3 className="font-semibold text-white">{challenge.title}</h3>
-                <p className="mt-2 text-sm text-slate-300/82">{challenge.description}</p>
+                <h3 className="font-semibold text-[var(--color-foreground)]">{challenge.title}</h3>
+                <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.82)]">{challenge.description}</p>
                 <div className="mt-4 flex items-center justify-between text-xs">
                   <span>{challenge.progress}/{challenge.target}</span>
                   <span className="font-mono-data text-[var(--color-institutional)]">+{challenge.reward_points} pts</span>
@@ -592,7 +592,7 @@ export default function ImpactHomePage() {
           })}
           {collaborative.length === 0 ? (
             <AnuSurfacePanel tone="quiet" className="p-5 text-center md:col-span-2 lg:col-span-3">
-              <p className="text-slate-300/82">No collaborative challenges yet.</p>
+              <p className="text-[color:rgba(246,212,203,0.82)]">No collaborative challenges yet.</p>
             </AnuSurfacePanel>
           ) : null}
         </div>
@@ -600,16 +600,16 @@ export default function ImpactHomePage() {
 
       <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <AnuSurfacePanel tone="soft" className="p-5">
-          <p className="text-xs text-slate-400">Total Pools</p>
-          <p className="font-mono-data text-2xl font-semibold text-white">{poolMetrics?.total_pools ?? pools.length}</p>
+          <p className="text-xs text-[color:rgba(246,212,203,0.64)]">Total Pools</p>
+          <p className="font-mono-data text-2xl font-semibold text-[var(--color-foreground)]">{poolMetrics?.total_pools ?? pools.length}</p>
         </AnuSurfacePanel>
         <AnuSurfacePanel tone="soft" className="p-5">
-          <p className="text-xs text-slate-400">Active Pools</p>
-          <p className="font-mono-data text-2xl font-semibold text-white">{poolMetrics?.active_pools ?? pools.filter((pool) => pool.is_active).length}</p>
+          <p className="text-xs text-[color:rgba(246,212,203,0.64)]">Active Pools</p>
+          <p className="font-mono-data text-2xl font-semibold text-[var(--color-foreground)]">{poolMetrics?.active_pools ?? pools.filter((pool) => pool.is_active).length}</p>
         </AnuSurfacePanel>
         <AnuSurfacePanel tone="soft" className="p-5">
-          <p className="text-xs text-slate-400">Target Total</p>
-          <p className="font-mono-data text-2xl font-semibold text-white">
+          <p className="text-xs text-[color:rgba(246,212,203,0.64)]">Target Total</p>
+          <p className="font-mono-data text-2xl font-semibold text-[var(--color-foreground)]">
             ${(poolMetrics?.total_target_cents ?? pools.reduce((acc, pool) => acc + (pool.target_amount_cents || 0), 0)) / 100}
           </p>
         </AnuSurfacePanel>
@@ -618,11 +618,11 @@ export default function ImpactHomePage() {
   ) : (
     <>
       <AnuSurfacePanel tone="soft" className="p-6 md:p-8">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Impact workspace</p>
-        <h2 className="mt-3 text-4xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+        <p className="text-[11px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">Impact workspace</p>
+        <h2 className="mt-3 text-4xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
           Sign in for live pool, streak, and membership data
         </h2>
-        <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-300/84">
+        <p className="mt-4 max-w-3xl text-base leading-relaxed text-[color:rgba(246,212,203,0.84)]">
           The authenticated impact workspace pulls membership status, pool balances, collaborative challenges, and node metrics. Public visitors can still inspect the grounded bridge around it.
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">

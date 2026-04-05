@@ -13,8 +13,8 @@ const COMPACT_TOOLS: { tool: PixelTool; icon: React.ElementType }[] = [
 ];
 
 const QUICK_PALETTE = [
-  '#000000', '#ffffff', '#ef4444', '#f59e0b', '#22c55e',
-  '#3b82f6', '#8b5cf6', '#ec4899', '#6b7280', '#d4b5a8',
+  '#1e0227', '#f6d4cb', '#7c413c', '#e0b115', '#665700',
+  '#7c413c', '#f6d4cb', '#7c413c', '#7c413c', '#f6d4cb',
 ];
 
 export function PixelStudioWidget() {
@@ -66,15 +66,15 @@ export function PixelStudioWidget() {
         <h4 className="text-xs font-medium uppercase tracking-wider opacity-60">Pixel Art</h4>
         {savedArt ? (
           <canvas ref={displayCanvasRef}
-            className="w-full max-w-[192px] aspect-square border border-white/10 rounded"
+            className="w-full max-w-[192px] aspect-square border border-[color:rgba(246,212,203,0.1)] rounded"
             style={{ imageRendering: 'pixelated' }} />
         ) : (
-          <div className="w-full max-w-[192px] aspect-square border border-dashed border-white/20 rounded flex items-center justify-center">
+          <div className="w-full max-w-[192px] aspect-square border border-dashed border-[color:rgba(246,212,203,0.2)] rounded flex items-center justify-center">
             <p className="text-[10px] opacity-30">No art yet</p>
           </div>
         )}
         <button onClick={() => setMode('create')}
-          className="flex items-center gap-1 text-[10px] px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 transition-colors">
+          className="flex items-center gap-1 text-[10px] px-3 py-1.5 rounded-lg bg-[color:rgba(246,212,203,0.1)] hover:bg-[color:rgba(246,212,203,0.15)] transition-colors">
           <Edit3 className="w-3 h-3" /> {savedArt ? 'Edit' : 'Create'}
         </button>
       </div>
@@ -90,16 +90,16 @@ export function PixelStudioWidget() {
       <div className="flex items-center gap-1">
         {COMPACT_TOOLS.map(({ tool, icon: Icon }) => (
           <button key={tool} onClick={() => dispatch({ type: 'SET_TOOL', tool })}
-            className={`p-1 rounded ${state.tool === tool ? 'bg-white/20' : 'hover:bg-white/10'}`}>
+            className={`p-1 rounded ${state.tool === tool ? 'bg-[color:rgba(246,212,203,0.2)]' : 'hover:bg-[color:rgba(246,212,203,0.1)]'}`}>
             <Icon className="w-3 h-3" />
           </button>
         ))}
-        <div className="w-px h-4 bg-white/20 mx-0.5" />
-        <button onClick={actions.undo} className="p-1 rounded hover:bg-white/10"><Undo2 className="w-3 h-3" /></button>
-        <button onClick={actions.redo} className="p-1 rounded hover:bg-white/10"><Redo2 className="w-3 h-3" /></button>
+        <div className="w-px h-4 bg-[color:rgba(246,212,203,0.2)] mx-0.5" />
+        <button onClick={actions.undo} className="p-1 rounded hover:bg-[color:rgba(246,212,203,0.1)]"><Undo2 className="w-3 h-3" /></button>
+        <button onClick={actions.redo} className="p-1 rounded hover:bg-[color:rgba(246,212,203,0.1)]"><Redo2 className="w-3 h-3" /></button>
         <div className="flex-1" />
         <button onClick={handleSave}
-          className="flex items-center gap-1 px-2 py-1 text-[9px] rounded bg-green-600 hover:bg-green-500 text-white">
+          className="flex items-center gap-1 px-2 py-1 text-[9px] rounded bg-[#665700] hover:bg-[#665700] text-[var(--color-foreground)]">
           <Save className="w-3 h-3" /> Save
         </button>
       </div>

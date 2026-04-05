@@ -114,7 +114,7 @@ export function DesktopWindow({ win, focused, theme, onClose, onFocus, onMove, o
         backdropFilter: `blur(${theme.windowBlur}px) saturate(1.4)`,
         WebkitBackdropFilter: `blur(${theme.windowBlur}px) saturate(1.4)`,
         opacity: theme.windowOpacity,
-        border: `1px solid ${focused ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.2)'}`,
+        border: `1px solid ${focused ? 'rgba(246,212,203,0.4)' : 'rgba(246,212,203,0.2)'}`,
         boxShadow: getShadow(theme.shadowIntensity, focused),
         transition: 'box-shadow 0.2s, border-color 0.2s, opacity 0.2s',
         fontFamily: theme.fontFamily,
@@ -124,7 +124,7 @@ export function DesktopWindow({ win, focused, theme, onClose, onFocus, onMove, o
       {/* Title bar */}
       <div
         className="flex items-center justify-between px-3 py-2 cursor-grab active:cursor-grabbing select-none"
-        style={{ background: focused ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)' }}
+        style={{ background: focused ? 'rgba(246,212,203,0.15)' : 'rgba(246,212,203,0.05)' }}
         onPointerDown={onHeaderDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -133,19 +133,19 @@ export function DesktopWindow({ win, focused, theme, onClose, onFocus, onMove, o
           {/* Close = Red */}
           <button
             onClick={(e) => { e.stopPropagation(); onClose(win.id); }}
-            className={`${btnBase} ${btnRound} bg-red-500 hover:bg-red-400`}
+            className={`${btnBase} ${btnRound} bg-[#7c413c] hover:bg-[#7c413c]`}
             aria-label="Close"
           />
           {/* Minimize = Yellow */}
           <button
             onClick={(e) => { e.stopPropagation(); onMinimize(win.id); }}
-            className={`${btnBase} ${btnRound} bg-yellow-500 hover:bg-yellow-400`}
+            className={`${btnBase} ${btnRound} bg-[#e0b115] hover:bg-[#e0b115]`}
             aria-label="Minimize"
           />
           {/* Maximize = Green */}
           <button
             onClick={(e) => { e.stopPropagation(); handleMaximize(); }}
-            className={`${btnBase} ${btnRound} ${win.isMaximized ? 'bg-green-300' : 'bg-green-500 hover:bg-green-400'}`}
+            className={`${btnBase} ${btnRound} ${win.isMaximized ? 'bg-[#665700]' : 'bg-[#665700] hover:bg-[#665700]'}`}
             aria-label="Maximize"
           />
         </div>

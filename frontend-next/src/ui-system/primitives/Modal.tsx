@@ -49,7 +49,7 @@ export function Modal({ open, onClose, title, maxWidth = 'lg', children, footer 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-[color:rgba(30,2,39,0.5)]"
             onClick={onClose}
           />
           {/* Panel */}

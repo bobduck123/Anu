@@ -115,7 +115,7 @@ export default function ContactPage() {
                   Escalate with context
                 </AnuChip>
               </div>
-              <p className="mt-4 text-sm leading-6 text-slate-300/84">
+              <p className="mt-4 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">
                 The fastest path is usually not “contact us.” It is “start from the surface that already
                 contains the relevant truth, then escalate with that context attached.”
               </p>
@@ -183,14 +183,14 @@ export default function ContactPage() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="block rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 transition-colors hover:border-white/18 hover:bg-white/[0.05]"
+                      className="block rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-4 py-4 transition-colors hover:border-[color:rgba(246,212,203,0.18)] hover:bg-[color:rgba(246,212,203,0.05)]"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-white">{link.label}</p>
-                          <p className="mt-2 text-sm leading-6 text-slate-300/82">{link.detail}</p>
+                          <p className="text-sm font-semibold text-[var(--color-foreground)]">{link.label}</p>
+                          <p className="mt-2 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{link.detail}</p>
                         </div>
-                        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[#f3cd92]" />
+                        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[#f6d4cb]" />
                       </div>
                     </Link>
                   ))}
@@ -211,10 +211,10 @@ export default function ContactPage() {
               {evidenceChecklist.map((item, index) => (
                 <div
                   key={item}
-                  className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4"
+                  className="rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-4 py-4"
                 >
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Bundle item {index + 1}</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-200/86">{item}</p>
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">Bundle item {index + 1}</p>
+                  <p className="mt-2 text-sm leading-6 text-[color:rgba(246,212,203,0.86)]">{item}</p>
                 </div>
               ))}
             </div>
@@ -252,15 +252,15 @@ export default function ContactPage() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 transition-colors hover:border-white/18 hover:bg-white/[0.05]"
+                    className="rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-4 py-4 transition-colors hover:border-[color:rgba(246,212,203,0.18)] hover:bg-[color:rgba(246,212,203,0.05)]"
                   >
                     <div className="flex items-start gap-3">
-                      <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-[#f3cd92]">
+                      <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.05)] text-[#f6d4cb]">
                         <Icon className="h-4.5 w-4.5" />
                       </span>
                       <div>
-                        <p className="text-sm font-semibold text-white">{item.label}</p>
-                        <p className="mt-2 text-sm leading-6 text-slate-300/82">{item.detail}</p>
+                        <p className="text-sm font-semibold text-[var(--color-foreground)]">{item.label}</p>
+                        <p className="mt-2 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{item.detail}</p>
                       </div>
                     </div>
                   </Link>

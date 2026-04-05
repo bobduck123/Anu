@@ -51,7 +51,7 @@ interface OrganizerStatus {
 type ChamberTab = 'overview' | 'tasks' | 'commons' | 'organizer' | 'inbox';
 
 const chamberInputClass =
-  'w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-400';
+  'w-full rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-3 py-2 text-sm text-[var(--color-foreground)] placeholder:text-[color:rgba(246,212,203,0.64)]';
 
 function TabButton({
   active,
@@ -75,9 +75,9 @@ function TabButton({
 
 function ProfileField({ label, value }: { label: string; value: string | number | null | undefined }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
-      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{label}</p>
-      <p className="mt-2 text-sm text-slate-100">{value ?? 'n/a'}</p>
+    <div className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-4 py-3">
+      <p className="text-[11px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">{label}</p>
+      <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.92)]">{value ?? 'n/a'}</p>
     </div>
   );
 }
@@ -312,7 +312,7 @@ export default function ProfilePage() {
                   <AnuChip tone="accent" icon={Monitor}>Experimental desktop</AnuChip>
                   <AnuChip tone="muted">Classic cockpit remains primary</AnuChip>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-slate-300/82">
+                <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
                   The desktop workspace stays available as an alternate chamber, but the classic cockpit is the canonical profile surface.
                 </p>
               </div>
@@ -356,7 +356,7 @@ export default function ProfilePage() {
                 {thresholdState.next ? <AnuChip tone="accent">Next: {thresholdState.next.label}</AnuChip> : null}
                 {onboardingComplete ? <AnuChip tone="muted" icon={Sparkles}>Journey complete</AnuChip> : null}
               </div>
-              <p className="mt-4 text-sm leading-6 text-slate-300/84">
+              <p className="mt-4 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">
                 {thresholdState.current.summary} Tasks, organizer status, and inbox surfaces should be faster to scan than the older fragmented tab stack.
               </p>
             </AnuSurfacePanel>
@@ -405,10 +405,10 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm leading-6 text-slate-300/82">No featured badges yet.</p>
+                  <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">No featured badges yet.</p>
                 )}
                 {featuredProgress ? (
-                  <p className="mt-4 text-sm text-slate-300/82">
+                  <p className="mt-4 text-sm text-[color:rgba(246,212,203,0.82)]">
                     Next badge {featuredProgress.nextLabel}: {featuredProgress.current}/{featuredProgress.target}
                   </p>
                 ) : null}
@@ -422,11 +422,11 @@ export default function ProfilePage() {
                 {pendingTodos.length ? (
                   <div className="space-y-3">
                     {pendingTodos.map((todo) => (
-                      <div key={todo.id} className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                      <div key={todo.id} className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] p-4">
                         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                           <div>
-                            <p className="font-semibold text-white">{todo.title}</p>
-                            <p className="mt-2 text-sm leading-6 text-slate-300/82">{todo.details}</p>
+                            <p className="font-semibold text-[var(--color-foreground)]">{todo.title}</p>
+                            <p className="mt-2 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{todo.details}</p>
                           </div>
                           <AnuChip tone="muted">{todo.points_assigned} pts</AnuChip>
                         </div>
@@ -434,7 +434,7 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm leading-6 text-slate-300/82">No pending tasks. The chamber is clear.</p>
+                  <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">No pending tasks. The chamber is clear.</p>
                 )}
               </AnuChamberCard>
               <div className="space-y-6">
@@ -442,19 +442,19 @@ export default function ProfilePage() {
                   {completedTodos.length ? (
                     <div className="space-y-3">
                       {completedTodos.map((todo) => (
-                        <div key={todo.id} className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                        <div key={todo.id} className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] p-4">
                           <div className="flex items-center justify-between gap-3">
                             <div>
-                              <p className="font-semibold text-white line-through decoration-white/30">{todo.title}</p>
-                              <p className="mt-1 text-xs text-slate-400">{todo.points_assigned} pts earned</p>
+                              <p className="font-semibold text-[var(--color-foreground)] line-through decoration-white/30">{todo.title}</p>
+                              <p className="mt-1 text-xs text-[color:rgba(246,212,203,0.64)]">{todo.points_assigned} pts earned</p>
                             </div>
-                            <CheckCircle2 className="h-5 w-5 text-[#6dc2a4]" />
+                            <CheckCircle2 className="h-5 w-5 text-[#f6d4cb]" />
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm leading-6 text-slate-300/82">No completed actions yet.</p>
+                    <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">No completed actions yet.</p>
                   )}
                 </AnuChamberCard>
                 <AnuChamberCard eyebrow="State" title="Challenges and wellbeing" tone={burnout?.risk && burnout.risk !== 'low' ? 'alert' : 'default'}>
@@ -470,13 +470,13 @@ export default function ProfilePage() {
           {activeTab === 'commons' ? (
             <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
               <AnuChamberCard eyebrow="Public surface" title="How the commons sees you">
-                <div className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.04] p-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.08] text-xl font-semibold text-white">
+                <div className="flex items-center gap-4 rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] p-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[color:rgba(246,212,203,0.08)] text-xl font-semibold text-[var(--color-foreground)]">
                     {publicName.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-semibold text-white">{publicName}</p>
-                    <p className="text-sm capitalize text-slate-400">{profile?.role}</p>
+                    <p className="font-semibold text-[var(--color-foreground)]">{publicName}</p>
+                    <p className="text-sm capitalize text-[color:rgba(246,212,203,0.64)]">{profile?.role}</p>
                   </div>
                 </div>
               </AnuChamberCard>
@@ -503,12 +503,12 @@ export default function ProfilePage() {
               </AnuChamberCard>
             ) : organizerStatus?.hasApplied ? (
               <AnuChamberCard eyebrow="Organizer status" title="Application pending" tone="alert">
-                <p className="text-sm leading-6 text-slate-300/82">Your organizer application is under review.</p>
+                <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">Your organizer application is under review.</p>
               </AnuChamberCard>
             ) : (
               <div className="grid gap-6 lg:grid-cols-[0.84fr_1.16fr]">
                 <AnuChamberCard eyebrow="Organizer pathway" title="Become an organizer">
-                  <p className="text-sm leading-6 text-slate-300/82">
+                  <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
                     Steward access is a threshold, not a toggle. Use this chamber to establish intent, experience, and cause focus before moderation review.
                   </p>
                 </AnuChamberCard>
@@ -552,7 +552,7 @@ export default function ProfilePage() {
                     />
                     <div className="flex flex-wrap gap-3">
                       {['Environmental', 'Social Justice', 'Education', 'Community Development', 'Climate Action'].map((cause) => (
-                        <label key={cause} className="flex items-center gap-2 text-sm text-slate-300/82">
+                        <label key={cause} className="flex items-center gap-2 text-sm text-[color:rgba(246,212,203,0.82)]">
                           <input
                             type="checkbox"
                             checked={applicationForm.causeFocus.includes(cause)}
@@ -592,21 +592,21 @@ export default function ProfilePage() {
                 {notifications.length ? (
                   <div className="space-y-3">
                     {notifications.map((notification) => (
-                      <div key={notification.id} className={`rounded-xl border p-4 ${notification.is_read ? 'border-white/10 bg-white/[0.04]' : 'border-[rgba(216,169,95,0.24)] bg-[rgba(216,169,95,0.08)]'}`}>
+                      <div key={notification.id} className={`rounded-xl border p-4 ${notification.is_read ? 'border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)]' : 'border-[rgba(224,177,21,0.24)] bg-[rgba(224,177,21,0.08)]'}`}>
                         <div className="flex items-start justify-between gap-3">
-                          <p className="text-sm leading-6 text-slate-100">{notification.message}</p>
-                          {!notification.is_read ? <Bell className="h-4 w-4 text-[#f1d3a1]" /> : null}
+                          <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.92)]">{notification.message}</p>
+                          {!notification.is_read ? <Bell className="h-4 w-4 text-[#f6d4cb]" /> : null}
                         </div>
-                        <p className="mt-3 text-[11px] text-slate-400">{new Date(notification.timestamp).toLocaleString()}</p>
+                        <p className="mt-3 text-[11px] text-[color:rgba(246,212,203,0.64)]">{new Date(notification.timestamp).toLocaleString()}</p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm leading-6 text-slate-300/82">No notifications yet.</p>
+                  <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">No notifications yet.</p>
                 )}
               </AnuChamberCard>
               <AnuChamberCard eyebrow="Protocol" title="Message and alert doctrine">
-                <p className="text-sm leading-6 text-slate-300/82">
+                <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
                   Future thread previews and message lists should inherit chamber clarity: semantic grouping first, novelty last.
                 </p>
               </AnuChamberCard>

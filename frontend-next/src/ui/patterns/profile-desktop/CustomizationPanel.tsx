@@ -81,7 +81,7 @@ export function CustomizationPanel({ theme, onUpdate }: Props) {
           <button key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex-1 flex flex-col items-center gap-0.5 p-1.5 rounded-lg transition-colors text-[9px] ${
-              activeTab === tab.id ? 'bg-white/15 font-medium' : 'hover:bg-white/5 opacity-60'
+              activeTab === tab.id ? 'bg-[color:rgba(246,212,203,0.15)] font-medium' : 'hover:bg-[color:rgba(246,212,203,0.05)] opacity-60'
             }`}>
             <tab.icon className="w-3.5 h-3.5" />
             {tab.label}
@@ -96,7 +96,7 @@ export function CustomizationPanel({ theme, onUpdate }: Props) {
             {(['solid', 'gradient', 'image'] as BgType[]).map(t => (
               <button key={t} onClick={() => update('bgType', t)}
                 className={`flex-1 px-2 py-1.5 rounded text-[9px] capitalize transition-colors ${
-                  theme.bgType === t ? 'bg-white/20' : 'bg-white/5 hover:bg-white/10'
+                  theme.bgType === t ? 'bg-[color:rgba(246,212,203,0.2)]' : 'bg-[color:rgba(246,212,203,0.05)] hover:bg-[color:rgba(246,212,203,0.1)]'
                 }`}>{t}</button>
             ))}
           </div>
@@ -114,7 +114,7 @@ export function CustomizationPanel({ theme, onUpdate }: Props) {
                 {(['linear', 'radial', 'conic'] as GradientType[]).map(t => (
                   <button key={t} onClick={() => update('bgGradient', { ...theme.bgGradient, type: t })}
                     className={`flex-1 px-1 py-1 rounded text-[8px] capitalize ${
-                      theme.bgGradient.type === t ? 'bg-white/15' : 'bg-white/5'
+                      theme.bgGradient.type === t ? 'bg-[color:rgba(246,212,203,0.15)]' : 'bg-[color:rgba(246,212,203,0.05)]'
                     }`}>{t}</button>
                 ))}
               </div>
@@ -147,15 +147,15 @@ export function CustomizationPanel({ theme, onUpdate }: Props) {
                 </div>
               ))}
               <button onClick={() => {
-                const stops = [...theme.bgGradient.stops, { color: '#888888', position: 100 }];
+                const stops = [...theme.bgGradient.stops, { color: '#7c413c', position: 100 }];
                 update('bgGradient', { ...theme.bgGradient, stops });
-              }} className="w-full text-[9px] py-1 rounded bg-white/5 hover:bg-white/10">+ Add Stop</button>
+              }} className="w-full text-[9px] py-1 rounded bg-[color:rgba(246,212,203,0.05)] hover:bg-[color:rgba(246,212,203,0.1)]">+ Add Stop</button>
             </div>
           )}
 
           {theme.bgType === 'image' && (
             <div className="space-y-2">
-              <button onClick={handleBgImage} className="w-full flex items-center justify-center gap-1 py-2 rounded bg-white/5 hover:bg-white/10">
+              <button onClick={handleBgImage} className="w-full flex items-center justify-center gap-1 py-2 rounded bg-[color:rgba(246,212,203,0.05)] hover:bg-[color:rgba(246,212,203,0.1)]">
                 <Upload className="w-3 h-3" /> Upload Image
               </button>
               {theme.bgImage && (
@@ -163,7 +163,7 @@ export function CustomizationPanel({ theme, onUpdate }: Props) {
                   {(['cover', 'contain', 'fill', 'tile'] as const).map(fit => (
                     <button key={fit} onClick={() => update('bgImageFit', fit)}
                       className={`flex-1 px-1 py-1 rounded text-[8px] capitalize ${
-                        theme.bgImageFit === fit ? 'bg-white/15' : 'bg-white/5'
+                        theme.bgImageFit === fit ? 'bg-[color:rgba(246,212,203,0.15)]' : 'bg-[color:rgba(246,212,203,0.05)]'
                       }`}>{fit}</button>
                   ))}
                 </div>
@@ -186,7 +186,7 @@ export function CustomizationPanel({ theme, onUpdate }: Props) {
           </label>
           <label className="flex items-center justify-between">
             <span>Window BG</span>
-            <input type="color" value={theme.windowBg.startsWith('rgba') ? '#ffffff' : theme.windowBg}
+            <input type="color" value={theme.windowBg.startsWith('rgba') ? '#f6d4cb' : theme.windowBg}
               onChange={e => update('windowBg', `${e.target.value}20`)} className="w-8 h-6 rounded cursor-pointer" />
           </label>
 
@@ -196,9 +196,9 @@ export function CustomizationPanel({ theme, onUpdate }: Props) {
               {PRESET_THEMES.map(p => (
                 <button key={p.name} onClick={() => onUpdate(p.theme)}
                   className={`flex flex-col items-center gap-1 p-1.5 rounded text-[8px] transition-colors ${
-                    theme.bgColor === p.theme.bgColor ? 'ring-1 ring-white/40 bg-white/10' : 'bg-white/5 hover:bg-white/10'
+                    theme.bgColor === p.theme.bgColor ? 'ring-1 ring-white/40 bg-[color:rgba(246,212,203,0.1)]' : 'bg-[color:rgba(246,212,203,0.05)] hover:bg-[color:rgba(246,212,203,0.1)]'
                   }`}>
-                  <div className="w-6 h-6 rounded-full border border-white/20" style={{ background: p.theme.bgColor }} />
+                  <div className="w-6 h-6 rounded-full border border-[color:rgba(246,212,203,0.2)]" style={{ background: p.theme.bgColor }} />
                   <span className="truncate w-full text-center">{p.name}</span>
                 </button>
               ))}
@@ -216,7 +216,7 @@ export function CustomizationPanel({ theme, onUpdate }: Props) {
               {GOOGLE_FONTS.map(font => (
                 <button key={font} onClick={() => update('fontFamily', font)}
                   className={`w-full text-left px-2 py-1.5 rounded text-[10px] transition-colors ${
-                    theme.fontFamily === font ? 'bg-white/15' : 'hover:bg-white/5'
+                    theme.fontFamily === font ? 'bg-[color:rgba(246,212,203,0.15)]' : 'hover:bg-[color:rgba(246,212,203,0.05)]'
                   }`}
                   style={{ fontFamily: font }}>
                   {font}
@@ -230,7 +230,7 @@ export function CustomizationPanel({ theme, onUpdate }: Props) {
               {(['small', 'medium', 'large'] as FontSize[]).map(s => (
                 <button key={s} onClick={() => update('fontSize', s)}
                   className={`flex-1 px-2 py-1.5 rounded text-[9px] capitalize ${
-                    theme.fontSize === s ? 'bg-white/15' : 'bg-white/5 hover:bg-white/10'
+                    theme.fontSize === s ? 'bg-[color:rgba(246,212,203,0.15)]' : 'bg-[color:rgba(246,212,203,0.05)] hover:bg-[color:rgba(246,212,203,0.1)]'
                   }`}>{s}</button>
               ))}
             </div>
@@ -247,7 +247,7 @@ export function CustomizationPanel({ theme, onUpdate }: Props) {
               {(['rounded', 'sharp', 'pill', 'ghost', 'outline'] as ButtonStyle[]).map(s => (
                 <button key={s} onClick={() => update('buttonStyle', s)}
                   className={`flex-1 px-1 py-1.5 rounded text-[8px] capitalize ${
-                    theme.buttonStyle === s ? 'bg-white/15' : 'bg-white/5 hover:bg-white/10'
+                    theme.buttonStyle === s ? 'bg-[color:rgba(246,212,203,0.15)]' : 'bg-[color:rgba(246,212,203,0.05)] hover:bg-[color:rgba(246,212,203,0.1)]'
                   }`}>{s}</button>
               ))}
             </div>
@@ -287,9 +287,9 @@ export function CustomizationPanel({ theme, onUpdate }: Props) {
             {(['default', 'minimal', 'rounded', 'square'] as IconStyle[]).map(s => (
               <button key={s} onClick={() => update('iconStyle', s)}
                 className={`flex items-center justify-center gap-1.5 p-2 rounded text-[9px] capitalize ${
-                  theme.iconStyle === s ? 'bg-white/15 ring-1 ring-white/20' : 'bg-white/5 hover:bg-white/10'
+                  theme.iconStyle === s ? 'bg-[color:rgba(246,212,203,0.15)] ring-1 ring-white/20' : 'bg-[color:rgba(246,212,203,0.05)] hover:bg-[color:rgba(246,212,203,0.1)]'
                 }`}>
-                <div className={`w-4 h-4 bg-white/30 ${
+                <div className={`w-4 h-4 bg-[color:rgba(246,212,203,0.3)] ${
                   s === 'rounded' ? 'rounded-full' : s === 'square' ? 'rounded-none' : s === 'minimal' ? 'rounded-sm' : 'rounded-md'
                 }`} />
                 {s}
@@ -300,17 +300,17 @@ export function CustomizationPanel({ theme, onUpdate }: Props) {
       )}
 
       {/* Footer actions */}
-      <div className="flex gap-1.5 pt-2 border-t border-white/10">
+      <div className="flex gap-1.5 pt-2 border-t border-[color:rgba(246,212,203,0.1)]">
         <button onClick={handleReset}
-          className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-[9px] bg-white/5 hover:bg-white/10">
+          className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-[9px] bg-[color:rgba(246,212,203,0.05)] hover:bg-[color:rgba(246,212,203,0.1)]">
           <RotateCcw className="w-3 h-3" /> Reset
         </button>
         <button onClick={handleExport}
-          className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-[9px] bg-white/5 hover:bg-white/10">
+          className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-[9px] bg-[color:rgba(246,212,203,0.05)] hover:bg-[color:rgba(246,212,203,0.1)]">
           <Download className="w-3 h-3" /> Export
         </button>
         <button onClick={handleImport}
-          className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-[9px] bg-white/5 hover:bg-white/10">
+          className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-[9px] bg-[color:rgba(246,212,203,0.05)] hover:bg-[color:rgba(246,212,203,0.1)]">
           <Upload className="w-3 h-3" /> Import
         </button>
       </div>

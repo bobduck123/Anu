@@ -67,13 +67,13 @@ export default function AdminAtlasPage() {
             <span className="text-[var(--color-muted-foreground)]">Density</span>
             <button
               onClick={() => setCellCount(20)}
-              className={`px-2 py-0.5 rounded ${cellCount === 20 ? 'bg-[var(--color-primary)] text-white' : 'bg-[var(--color-card)]'}`}
+              className={`px-2 py-0.5 rounded ${cellCount === 20 ? 'bg-[var(--color-primary)] text-[var(--color-foreground)]' : 'bg-[var(--color-card)]'}`}
             >
               20
             </button>
             <button
               onClick={() => setCellCount(50)}
-              className={`px-2 py-0.5 rounded ${cellCount === 50 ? 'bg-[var(--color-primary)] text-white' : 'bg-[var(--color-card)]'}`}
+              className={`px-2 py-0.5 rounded ${cellCount === 50 ? 'bg-[var(--color-primary)] text-[var(--color-foreground)]' : 'bg-[var(--color-card)]'}`}
             >
               50
             </button>
@@ -87,7 +87,7 @@ export default function AdminAtlasPage() {
                 onClick={() => setColorScale(value)}
                 className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
                   colorScale === value
-                    ? 'bg-[var(--color-primary)] text-white'
+                    ? 'bg-[var(--color-primary)] text-[var(--color-foreground)]'
                     : 'bg-[var(--color-card)] text-[var(--color-foreground)] hover:bg-[var(--color-muted)]'
                 }`}
               >

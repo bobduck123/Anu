@@ -13,7 +13,7 @@ export function DumbDumbActivityFeed({ entries }: DumbDumbActivityFeedProps) {
   return (
     <Card
       padding="lg"
-      className="border-[rgba(30,58,95,0.12)] bg-[linear-gradient(180deg,rgba(30,58,95,0.03),rgba(255,255,255,0.96))]"
+      className="border-[rgba(30,2,39,0.12)] bg-[linear-gradient(180deg,rgba(30,2,39,0.03),rgba(246,212,203,0.96))]"
     >
       <div className="flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-institutional-light)] text-[var(--color-institutional)]">
@@ -31,7 +31,7 @@ export function DumbDumbActivityFeed({ entries }: DumbDumbActivityFeedProps) {
         {entries.map((entry) => (
           <div
             key={entry.id}
-            className="rounded-2xl border border-[var(--color-border)] bg-white/90 px-4 py-3 shadow-[0_8px_24px_-20px_rgba(44,36,27,0.3)]"
+            className="rounded-2xl border border-[var(--color-border)] bg-[color:rgba(246,212,203,0.9)] px-4 py-3 shadow-[0_8px_24px_-20px_rgba(30,2,39,0.3)]"
           >
             <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-earth-dark)]">
               <span className="font-semibold">{entry.buyer_name}</span>

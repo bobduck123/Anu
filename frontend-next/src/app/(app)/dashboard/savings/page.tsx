@@ -59,14 +59,14 @@ export default function SavingsDashboard() {
     >
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#665700]" />
         </div>
       ) : (
         <div className="max-w-4xl mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-serif)' }}>
+          <h1 className="text-3xl font-bold text-[var(--color-foreground)] mb-2" style={{ fontFamily: 'var(--font-serif)' }}>
             Savings Dashboard
           </h1>
-          <p className="text-white/70 mb-8">Track how much you&apos;re saving through weekly bulk buying runs.</p>
+          <p className="text-[color:rgba(246,212,203,0.7)] mb-8">Track how much you&apos;re saving through weekly bulk buying runs.</p>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <StatCard label="This Week" value={cents(summary.savings_this_week_cents)} accent="green" />
@@ -77,21 +77,21 @@ export default function SavingsDashboard() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div className="card-civic text-center">
-              <p className="text-4xl font-bold text-emerald-200">{summary.participation_streak_weeks}</p>
-              <p className="text-sm text-white/70 mt-1">Week streak</p>
+              <p className="text-4xl font-bold text-[#665700]">{summary.participation_streak_weeks}</p>
+              <p className="text-sm text-[color:rgba(246,212,203,0.7)] mt-1">Week streak</p>
             </div>
             <div className="card-civic text-center">
-              <p className="text-4xl font-bold text-white">{summary.runs_participated}</p>
-              <p className="text-sm text-white/70 mt-1">Runs joined</p>
+              <p className="text-4xl font-bold text-[var(--color-foreground)]">{summary.runs_participated}</p>
+              <p className="text-sm text-[color:rgba(246,212,203,0.7)] mt-1">Runs joined</p>
             </div>
             <div className="card-civic text-center">
-              <p className="text-4xl font-bold text-emerald-200">{cents(community?.total_savings_cents)}</p>
-              <p className="text-sm text-white/70 mt-1">Community total saved</p>
+              <p className="text-4xl font-bold text-[#665700]">{cents(community?.total_savings_cents)}</p>
+              <p className="text-sm text-[color:rgba(246,212,203,0.7)] mt-1">Community total saved</p>
             </div>
           </div>
 
           <div className="card-civic text-center">
-            <p className="text-white/80 mb-3">Keep your streak going. Join this week&apos;s run.</p>
+            <p className="text-[color:rgba(246,212,203,0.8)] mb-3">Keep your streak going. Join this week&apos;s run.</p>
             <Link href="/cost-lowering" className="btn-pill btn-pill-primary">
               Browse Runs
             </Link>
@@ -113,10 +113,10 @@ function StatCard({
   accent?: string;
   large?: boolean;
 }) {
-  const textColor = accent === 'emerald' ? 'text-emerald-200' : 'text-emerald-100';
+  const textColor = accent === 'emerald' ? 'text-[#665700]' : 'text-[#f6d4cb]';
   return (
     <div className="card-civic">
-      <p className="text-xs text-white/60 uppercase tracking-wide">{label}</p>
+      <p className="text-xs text-[color:rgba(246,212,203,0.6)] uppercase tracking-wide">{label}</p>
       <p className={`${large ? 'text-3xl' : 'text-2xl'} font-bold ${textColor} mt-1`}>{value}</p>
     </div>
   );

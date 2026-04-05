@@ -122,17 +122,17 @@ export default function ExplorePage() {
           <span
             className={`inline-flex items-center gap-1 rounded-full px-3 py-1 ${
               clientVerified
-                ? 'bg-emerald-100 text-emerald-800'
-                : 'bg-rose-100 text-rose-800'
+                ? 'bg-[#665700] text-[#665700]'
+                : 'bg-[#7c413c] text-[#7c413c]'
             }`}
           >
             {clientVerified ? <ShieldCheck className="h-4 w-4" /> : <ShieldX className="h-4 w-4" />}
             Integrity: {clientVerified ? 'verified in browser' : 'unverified'}
           </span>
         </div>
-        {error && <p className="mt-3 text-sm text-rose-600">{error}</p>}
+        {error && <p className="mt-3 text-sm text-[#7c413c]">{error}</p>}
         {!clientVerified && verificationReasons.length > 0 && (
-          <p className="mt-2 text-xs text-rose-600">
+          <p className="mt-2 text-xs text-[#7c413c]">
             Reasons: {verificationReasons.slice(0, 6).join(', ')}
           </p>
         )}
@@ -145,7 +145,7 @@ export default function ExplorePage() {
               Loading world snapshot...
             </div>
           ) : !clientVerified ? (
-            <div className="grid h-[420px] place-items-center text-center text-sm text-rose-700">
+            <div className="grid h-[420px] place-items-center text-center text-sm text-[#7c413c]">
               Snapshot integrity could not be verified in the browser.
               <br />
               World rendering is blocked for safety.

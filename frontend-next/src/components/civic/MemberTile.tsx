@@ -30,7 +30,7 @@ const roleConfig: Record<MemberRole, { label: string; color: string; icon: typeo
   organizer: { label: 'Organizer', color: 'rgb(var(--color-forest))', icon: Star },
   validator: { label: 'Validator', color: 'rgb(var(--color-institutional))', icon: Shield },
   case_worker: { label: 'Case Worker', color: 'rgb(var(--color-accent))', icon: Heart },
-  relief_moderator: { label: 'Moderator', color: '#dc2626', icon: Shield },
+  relief_moderator: { label: 'Moderator', color: '#7c413c', icon: Shield },
   auditor: { label: 'Auditor', color: 'rgb(var(--color-earth-medium))', icon: Shield },
   board_member: { label: 'Board', color: 'rgb(var(--color-institutional))', icon: Award },
   node_admin: { label: 'Admin', color: 'rgb(var(--color-earth-dark))', icon: Award },
@@ -40,7 +40,7 @@ const roleConfig: Record<MemberRole, { label: string; color: string; icon: typeo
 };
 
 const tierConfig = {
-  seed: { label: 'Seed', color: '#d4c4b7', icon: Leaf },
+  seed: { label: 'Seed', color: '#f6d4cb', icon: Leaf },
   sapling: { label: 'Sapling', color: 'rgb(var(--color-sage))', icon: Leaf },
   oak: { label: 'Oak', color: 'rgb(var(--color-forest))', icon: Leaf },
   redwood: { label: 'Redwood', color: 'rgb(var(--color-institutional))', icon: Leaf },
@@ -116,7 +116,7 @@ export function MemberTile({
   return (
     <div 
       ref={tileRef}
-      className="group relative bg-white rounded-xl p-5 border border-gray-100 transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer"
+      className="group relative bg-[var(--color-foreground)] rounded-xl p-5 border border-[#f6d4cb] transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer"
     >
       {/* Role-colored border on hover */}
       <div 
@@ -130,7 +130,7 @@ export function MemberTile({
         {/* Avatar with circular mask */}
         <div className="relative">
           <div 
-            className="circular-mask w-14 h-14 flex items-center justify-center text-white font-semibold text-lg"
+            className="circular-mask w-14 h-14 flex items-center justify-center text-[var(--color-foreground)] font-semibold text-lg"
             style={{ backgroundColor: avatarColor }}
           >
             {avatarUrl ? (
@@ -149,10 +149,10 @@ export function MemberTile({
           
           {/* Role indicator dot */}
           <div 
-            className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center"
+            className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-2 border-[var(--color-foreground)] flex items-center justify-center"
             style={{ backgroundColor: roleInfo.color }}
           >
-            <RoleIcon className="w-2.5 h-2.5 text-white" />
+            <RoleIcon className="w-2.5 h-2.5 text-[var(--color-foreground)]" />
           </div>
         </div>
 
@@ -179,7 +179,7 @@ export function MemberTile({
       </div>
 
       {/* Impact Score & Streak */}
-      <div className="mt-4 pt-4 border-t border-gray-100">
+      <div className="mt-4 pt-4 border-t border-[#f6d4cb]">
         <div className="flex items-center justify-between">
           {/* Impact Score Badge */}
           <div className="flex items-center gap-2">

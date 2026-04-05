@@ -66,9 +66,9 @@ export function ArchiveMarker({
       <span className="anu-labyrinth-marker__label">
         <span className="flex items-start justify-between gap-3">
           <span>
-            <span className="text-[10px] uppercase tracking-[0.22em] text-[#dbc8a6]/74">{eyebrow}</span>
+            <span className="text-[10px] uppercase tracking-[0.22em] text-[#f6d4cb]/74">{eyebrow}</span>
             <span
-              className="mt-2 block text-xl text-[#f7ead2]"
+              className="mt-2 block text-xl text-[#f6d4cb]"
               style={{ fontFamily: 'var(--anu-type-display)' }}
             >
               {title}
@@ -77,18 +77,18 @@ export function ArchiveMarker({
           <StateSeal state={state} />
         </span>
 
-        <span className="mt-3 block text-sm leading-6 text-[#ded1bc]/78">{summary}</span>
+        <span className="mt-3 block text-sm leading-6 text-[#f6d4cb]/78">{summary}</span>
 
         <span className="mt-4 flex flex-wrap gap-2 text-xs">
-          <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[#e9dcc4]/82">
+          <span className="rounded-full border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-3 py-1 text-[#f6d4cb]/82">
             {versionLabel}
           </span>
-          <span className="rounded-full border border-[#d3b37c]/18 bg-[#d3b37c]/8 px-3 py-1 text-[#f2ddb0]">
+          <span className="rounded-full border border-[#f6d4cb]/18 bg-[#f6d4cb]/8 px-3 py-1 text-[#f6d4cb]">
             {shapeLabel}
           </span>
         </span>
 
-        <span className="mt-4 block text-xs leading-5 text-[#b8ab96]/68">{stateReason}</span>
+        <span className="mt-4 block text-xs leading-5 text-[#f6d4cb]/68">{stateReason}</span>
       </span>
     </button>
   );

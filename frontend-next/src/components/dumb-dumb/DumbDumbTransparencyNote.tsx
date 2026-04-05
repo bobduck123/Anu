@@ -13,10 +13,10 @@ export function DumbDumbTransparencyNote({ headline, body, points }: DumbDumbTra
   return (
     <Card
       padding="lg"
-      className="border-[rgba(45,90,61,0.18)] bg-[linear-gradient(135deg,rgba(232,240,228,0.92),rgba(255,255,255,0.98))]"
+      className="border-[rgba(124,65,60,0.18)] bg-[linear-gradient(135deg,rgba(246,212,203,0.92),rgba(246,212,203,0.98))]"
     >
       <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-forest)] text-white shadow-[0_14px_24px_-18px_rgba(45,90,61,0.8)]">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-forest)] text-[var(--color-foreground)] shadow-[0_14px_24px_-18px_rgba(124,65,60,0.8)]">
           <ShieldCheck className="h-5 w-5" />
         </div>
         <div className="flex-1">
@@ -27,7 +27,7 @@ export function DumbDumbTransparencyNote({ headline, body, points }: DumbDumbTra
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--color-earth-medium)]">{body}</p>
           <div className="mt-5 grid gap-3 md:grid-cols-3">
             {points.map((point) => (
-              <div key={point} className="rounded-2xl border border-white/70 bg-white/70 px-4 py-4 text-sm leading-6 text-[var(--color-earth-dark)]">
+              <div key={point} className="rounded-2xl border border-[color:rgba(246,212,203,0.7)] bg-[color:rgba(246,212,203,0.7)] px-4 py-4 text-sm leading-6 text-[var(--color-earth-dark)]">
                 {point}
               </div>
             ))}

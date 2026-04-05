@@ -27,12 +27,12 @@ const CONSTELLATION_AXES = [
 ];
 
 const DOMAIN_COLORS: Record<string, string> = {
-  governance: '#f1c57a',
-  community: '#8dc7f3',
-  relief: '#e7a4a4',
-  education: '#7bc9b6',
-  impact: '#d8c27d',
-  general: '#a3b7d8',
+  governance: '#f6d4cb',
+  community: '#f6d4cb',
+  relief: '#f6d4cb',
+  education: '#f6d4cb',
+  impact: '#f6d4cb',
+  general: '#f6d4cb',
 };
 
 function domainColor(domain?: string): string {

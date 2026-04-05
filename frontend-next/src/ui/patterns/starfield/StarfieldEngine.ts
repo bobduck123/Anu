@@ -122,11 +122,11 @@ export class StarfieldEngine {
     const ctx = this.ctx;
 
     // Background
-    ctx.fillStyle = '#050510';
+    ctx.fillStyle = '#1e0227';
     ctx.fillRect(0, 0, w, h);
 
     // Background stars (static dust)
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillStyle = 'rgba(246,212,203,0.15)';
     for (let i = 0; i < 200; i++) {
       const x = (i * 7919 + 1234) % w;
       const y = (i * 6271 + 5678) % h;
@@ -181,7 +181,7 @@ export class StarfieldEngine {
 
       // Hovered star highlight
       if (this.hoveredStar?.id === star.id) {
-        ctx.strokeStyle = '#ffffff';
+        ctx.strokeStyle = '#f6d4cb';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
@@ -190,7 +190,7 @@ export class StarfieldEngine {
 
       // Labels at high zoom
       if (this.camera.zoom > 1.5 && size > 1.5) {
-        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.fillStyle = 'rgba(246,212,203,0.6)';
         ctx.font = '10px system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(star.label.slice(0, 20), x, y + radius + 12);

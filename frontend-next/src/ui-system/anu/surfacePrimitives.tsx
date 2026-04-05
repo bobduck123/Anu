@@ -187,9 +187,9 @@ interface AnuHeroMetricProps {
 export function AnuHeroMetric({ label, value, detail }: AnuHeroMetricProps) {
   return (
     <div className="anu-surface-metric">
-      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{label}</p>
-      <p className="mt-2 text-lg font-semibold text-white">{value}</p>
-      {detail ? <p className="mt-2 text-xs leading-5 text-slate-300/78">{detail}</p> : null}
+      <p className="text-[11px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">{label}</p>
+      <p className="mt-2 text-lg font-semibold text-[var(--color-foreground)]">{value}</p>
+      {detail ? <p className="mt-2 text-xs leading-5 text-[color:rgba(246,212,203,0.78)]">{detail}</p> : null}
     </div>
   );
 }
@@ -248,13 +248,13 @@ export function AnuCommonsStatusRail({ items, className }: AnuCommonsStatusRailP
     <div className={joinClasses('grid gap-3 md:grid-cols-3', className)}>
       {items.map((item) => (
         <AnuSurfacePanel key={item.label} tone="soft">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{item.label}</p>
+          <p className="text-[11px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">{item.label}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <AnuChip tone={item.tone ?? 'muted'} icon={item.icon}>
               {item.value}
             </AnuChip>
           </div>
-          <p className="mt-3 text-sm leading-6 text-slate-300/82">{item.detail}</p>
+          <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{item.detail}</p>
         </AnuSurfacePanel>
       ))}
     </div>
@@ -284,17 +284,17 @@ export function AnuInstrumentationCard({
     <article className={joinClasses(instrumentationToneClasses[tone], className)}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{label}</p>
-          <div className="mt-3 text-3xl font-semibold text-white">{value}</div>
+          <p className="text-[11px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">{label}</p>
+          <div className="mt-3 text-3xl font-semibold text-[var(--color-foreground)]">{value}</div>
         </div>
         {Icon ? (
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-[#f1d3a1]">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.05)] text-[#f6d4cb]">
             <Icon className="h-4.5 w-4.5" />
           </span>
         ) : null}
       </div>
-      {detail ? <p className="mt-3 text-sm leading-6 text-slate-300/82">{detail}</p> : null}
-      {footer ? <div className="mt-4 border-t border-white/10 pt-4 text-sm text-slate-200/84">{footer}</div> : null}
+      {detail ? <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{detail}</p> : null}
+      {footer ? <div className="mt-4 border-t border-[color:rgba(246,212,203,0.1)] pt-4 text-sm text-[color:rgba(246,212,203,0.84)]">{footer}</div> : null}
     </article>
   );
 }
@@ -311,10 +311,10 @@ export function AnuSectionHeading({ eyebrow, title, description, action }: AnuSe
     <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
         <p className="anu-lab-kicker">{eyebrow}</p>
-        <h2 className="mt-2 text-3xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+        <h2 className="mt-2 text-3xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
           {title}
         </h2>
-        {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300/82">{description}</p> : null}
+        {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{description}</p> : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>
@@ -345,10 +345,10 @@ export function AnuChamberCard({
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
           {eyebrow ? <p className="anu-lab-kicker">{eyebrow}</p> : null}
-          <h3 className="mt-2 text-2xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+          <h3 className="mt-2 text-2xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
             {title}
           </h3>
-          {description ? <div className="mt-3 text-sm leading-6 text-slate-300/84">{description}</div> : null}
+          {description ? <div className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">{description}</div> : null}
         </div>
         {action ? <div className="shrink-0">{action}</div> : null}
       </div>
@@ -382,12 +382,12 @@ export function AnuPageHero({
         <div className="min-w-0">
           <p className="anu-lab-kicker">{eyebrow}</p>
           <div
-            className="mt-3 text-4xl leading-[1.02] text-white md:text-[3.35rem]"
+            className="mt-3 text-4xl leading-[1.02] text-[var(--color-foreground)] md:text-[3.35rem]"
             style={{ fontFamily: 'var(--anu-type-display)' }}
           >
             {title}
           </div>
-          <div className="mt-5 max-w-3xl text-base leading-relaxed text-slate-200/88 md:text-lg">{description}</div>
+          <div className="mt-5 max-w-3xl text-base leading-relaxed text-[color:rgba(246,212,203,0.88)] md:text-lg">{description}</div>
           {actions ? <div className="mt-7 flex flex-wrap gap-3">{actions}</div> : null}
           {children ? <div className="mt-8">{children}</div> : null}
         </div>

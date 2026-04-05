@@ -200,7 +200,7 @@ export default function MarketplacePage() {
 
         {/* Create Product Modal */}
         {showCreateProduct && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-[color:rgba(30,2,39,0.5)] flex items-center justify-center p-4 z-50">
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
               className="bg-[var(--color-card)] rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">

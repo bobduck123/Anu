@@ -50,19 +50,19 @@ export function PostDetailModal({ post, onClose, footerActions }: PostDetailModa
       aria-modal="true"
       aria-label={`Post by ${post.author.pseudonym}`}
     >
-      <div className="absolute inset-0 bg-[rgba(2,6,14,0.78)] backdrop-blur-md" />
+      <div className="absolute inset-0 bg-[rgba(30,2,39,0.78)] backdrop-blur-md" />
 
-      <div className="relative w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/10 bg-[rgba(5,9,18,0.94)] text-white shadow-[0_35px_120px_rgba(0,0,0,0.55)]">
+      <div className="relative w-full max-w-5xl overflow-hidden rounded-[2rem] border border-[color:rgba(246,212,203,0.1)] bg-[rgba(30,2,39,0.94)] text-[var(--color-foreground)] shadow-[0_35px_120px_rgba(30,2,39,0.55)]">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 rounded-full border border-white/10 bg-white/[0.05] p-2 text-white/72 transition hover:border-white/25 hover:text-white"
+          className="absolute right-4 top-4 z-10 rounded-full border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.05)] p-2 text-[color:rgba(246,212,203,0.72)] transition hover:border-[color:rgba(246,212,203,0.25)] hover:text-[var(--color-foreground)]"
           aria-label="Close"
         >
           <X className="h-4 w-4" />
         </button>
 
         <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="relative min-h-[18rem] bg-[rgba(4,10,20,0.9)]">
+          <div className="relative min-h-[18rem] bg-[rgba(30,2,39,0.9)]">
             {post.image || post.coverImage ? (
               <Image
                 src={post.image || post.coverImage}
@@ -73,37 +73,37 @@ export function PostDetailModal({ post, onClose, footerActions }: PostDetailModa
                 className="object-cover"
               />
             ) : null}
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(2,6,14,0.18)_36%,rgba(2,6,14,0.74)_100%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(246,212,203,0.04),rgba(30,2,39,0.18)_36%,rgba(30,2,39,0.74)_100%)]" />
           </div>
 
           <div className="p-6 lg:p-8">
             <div className="space-y-6">
               <div>
                 <div className="flex flex-wrap gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-lg border border-white/12 bg-white/[0.05] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/72">
+                  <span className="inline-flex items-center gap-1 rounded-lg border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.05)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.72)]">
                     <Sparkles className="h-3.5 w-3.5" />
                     {post.sourceName ? 'Trusted signal' : 'Community trace'}
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-lg border border-white/12 bg-white/[0.05] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/72">
+                  <span className="inline-flex items-center gap-1 rounded-lg border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.05)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.72)]">
                     <MapPin className="h-3.5 w-3.5" />
                     {post.microcosm || 'Shared commons'}
                   </span>
                 </div>
 
                 <h2
-                  className="mt-4 text-3xl leading-[1.02] text-white"
+                  className="mt-4 text-3xl leading-[1.02] text-[var(--color-foreground)]"
                   style={{ fontFamily: 'var(--anu-type-display)' }}
                 >
                   {post.title || post.author.pseudonym}
                 </h2>
 
                 <div className="mt-4 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/12 bg-white/[0.08] text-sm font-semibold text-white">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.08)] text-sm font-semibold text-[var(--color-foreground)]">
                     {post.author.pseudonym.charAt(0)}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-white">{post.author.pseudonym}</p>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-white/52">
+                    <p className="text-sm font-medium text-[var(--color-foreground)]">{post.author.pseudonym}</p>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-[color:rgba(246,212,203,0.52)]">
                       <span className="inline-flex items-center gap-1">
                         <User className="h-3.5 w-3.5" />
                         {post.author.role}
@@ -118,7 +118,7 @@ export function PostDetailModal({ post, onClose, footerActions }: PostDetailModa
                 </div>
               </div>
 
-              <p className="text-sm leading-7 text-slate-200/86 whitespace-pre-wrap">
+              <p className="text-sm leading-7 text-[color:rgba(246,212,203,0.86)] whitespace-pre-wrap">
                 {post.content}
               </p>
 
@@ -127,7 +127,7 @@ export function PostDetailModal({ post, onClose, footerActions }: PostDetailModa
                   {post.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-lg border border-white/12 bg-white/[0.05] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/72"
+                      className="rounded-lg border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.05)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.72)]"
                     >
                       #{tag}
                     </span>
@@ -136,35 +136,35 @@ export function PostDetailModal({ post, onClose, footerActions }: PostDetailModa
               ) : null}
 
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/42">Likes</p>
-                  <div className="mt-2 flex items-center gap-2 text-sm text-white">
-                    <Heart className={`h-4 w-4 ${post.liked ? 'fill-red-500 text-red-500' : ''}`} />
+                <div className="rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.42)]">Likes</p>
+                  <div className="mt-2 flex items-center gap-2 text-sm text-[var(--color-foreground)]">
+                    <Heart className={`h-4 w-4 ${post.liked ? 'fill-[#7c413c] text-[#7c413c]' : ''}`} />
                     <span>{post.likes}</span>
                   </div>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/42">Comments</p>
-                  <div className="mt-2 flex items-center gap-2 text-sm text-white">
+                <div className="rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.42)]">Comments</p>
+                  <div className="mt-2 flex items-center gap-2 text-sm text-[var(--color-foreground)]">
                     <MessageCircle className="h-4 w-4" />
                     <span>{post.comments}</span>
                   </div>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/42">Shares</p>
-                  <div className="mt-2 flex items-center gap-2 text-sm text-white">
+                <div className="rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.42)]">Shares</p>
+                  <div className="mt-2 flex items-center gap-2 text-sm text-[var(--color-foreground)]">
                     <Share2 className="h-4 w-4" />
                     <span>{post.shares}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 text-sm text-slate-300/82">
+              <div className="rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-4 py-4 text-sm text-[color:rgba(246,212,203,0.82)]">
                 Comments and threaded replies should inherit the same chamber grammar: accountable attribution first, novelty last.
               </div>
 
               {footerActions ? (
-                <div className="flex flex-wrap gap-3 border-t border-white/10 pt-4">
+                <div className="flex flex-wrap gap-3 border-t border-[color:rgba(246,212,203,0.1)] pt-4">
                   {footerActions}
                 </div>
               ) : null}

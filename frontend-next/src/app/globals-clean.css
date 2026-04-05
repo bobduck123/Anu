@@ -9,27 +9,27 @@
   /* ----------------------------------------
      Color System - Streamlined
      ---------------------------------------- */
-  --color-primary: #1e3a5f;
-  --color-primary-light: #e8eef5;
+  --color-primary: #1e0227;
+  --color-primary-light: #f6d4cb;
   
-  --color-secondary: #2d5a3d;
-  --color-secondary-light: #e8f0ea;
+  --color-secondary: #7c413c;
+  --color-secondary-light: #f6d4cb;
   
-  --color-tertiary: #6b8e5e;
-  --color-tertiary-light: #f0f5ed;
+  --color-tertiary: #7c413c;
+  --color-tertiary-light: #f6d4cb;
   
-  --color-highlight: #b87316;
-  --color-highlight-light: #fdf6e8;
+  --color-highlight: #e0b115;
+  --color-highlight-light: #f6d4cb;
   
-  --color-surface: #faf9f7;
-  --color-elevated: #ffffff;
+  --color-surface: #f6d4cb;
+  --color-elevated: #f6d4cb;
   
-  --color-text: #1a1612;
-  --color-text-secondary: #6b6560;
-  --color-text-muted: #a39e98;
+  --color-text: #1e0227;
+  --color-text-secondary: #7c413c;
+  --color-text-muted: #f6d4cb;
   
-  --color-border: #e8e5e2;
-  --color-border-light: #f2f0ed;
+  --color-border: #f6d4cb;
+  --color-border-light: #f6d4cb;
   
   /* Semantic mappings */
   --color-background: var(--color-surface);
@@ -38,9 +38,9 @@
   --color-card-foreground: var(--color-text);
   
   /* Status colors */
-  --color-success: #2d5a3d;
-  --color-warning: #b87316;
-  --color-error: #c9372d;
+  --color-success: #7c413c;
+  --color-warning: #e0b115;
+  --color-error: #7c413c;
   
   /* ----------------------------------------
      Typography - Refined Scale
@@ -277,7 +277,7 @@
   
   .card-clean-interactive:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 12px rgba(30,2,39,0.06);
   }
   
   /* Button */
@@ -299,7 +299,7 @@
   }
   
   .btn-clean-primary:hover {
-    background-color: rgba(30, 58, 95, 0.9);
+    background-color: rgba(30,2,39,0.9);
   }
   
   .btn-clean-secondary {
@@ -362,7 +362,7 @@
   
   .hover-lift:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 12px rgba(30,2,39,0.06);
   }
   
   /* Fade in animation */

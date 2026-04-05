@@ -283,11 +283,11 @@ export default function EventsPage() {
           ))
         ) : (
           <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
-            <div className="max-w-xl rounded-[2rem] border border-white/10 bg-black/20 px-6 py-8 backdrop-blur-md">
-              <p className="text-lg text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+            <div className="max-w-xl rounded-[2rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.2)] px-6 py-8 backdrop-blur-md">
+              <p className="text-lg text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
                 No gatherings match the current route pass.
               </p>
-              <p className="mt-3 text-sm leading-6 text-slate-300/78">
+              <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.78)]">
                 Adjust the city or date filters to surface a different gathering on the field.
               </p>
             </div>
@@ -312,11 +312,11 @@ export default function EventsPage() {
         ))
       ) : (
         <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
-          <div className="max-w-xl rounded-[2rem] border border-white/10 bg-black/20 px-6 py-8 backdrop-blur-md">
-            <p className="text-lg text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+          <div className="max-w-xl rounded-[2rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.2)] px-6 py-8 backdrop-blur-md">
+            <p className="text-lg text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
               No markets are indexed yet.
             </p>
-            <p className="mt-3 text-sm leading-6 text-slate-300/78">
+            <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.78)]">
               Venue creation remains available as an operational backup.
             </p>
           </div>
@@ -358,8 +358,8 @@ export default function EventsPage() {
       }
       secondary={
         <AnuSurfacePanel tone="quiet" className="px-5 py-5">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Field notes</p>
-          <div className="mt-4 space-y-3 text-sm leading-6 text-slate-200/82">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">Field notes</p>
+          <div className="mt-4 space-y-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
             <p>Badge: {getBadge(selectedEvent)}</p>
             <p>Venue id: {selectedEvent.venueId}</p>
             <p>Points assigned: {selectedEvent.pointsAssigned}</p>
@@ -406,8 +406,8 @@ export default function EventsPage() {
       }
       secondary={
         <AnuSurfacePanel tone="quiet" className="px-5 py-5">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Field notes</p>
-          <div className="mt-4 space-y-3 text-sm leading-6 text-slate-200/82">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">Field notes</p>
+          <div className="mt-4 space-y-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
             <p>Address: {selectedVenue.address}</p>
             <p>Coordinates: {selectedVenue.latitude}, {selectedVenue.longitude}</p>
           </div>
@@ -428,8 +428,8 @@ export default function EventsPage() {
   const utilityView =
     viewMode === 'map' ? (
       <AnuSurfacePanel tone="soft" className="px-5 py-5">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Map backup</p>
-        <p className="mt-3 text-sm leading-6 text-slate-300/82">
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">Map backup</p>
+        <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
           Geographic backup remains available when the field is not the best operational surface.
         </p>
         <div className="mt-5">
@@ -440,8 +440,8 @@ export default function EventsPage() {
       <AnuSurfacePanel tone="soft" className="px-5 py-5">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">List backup</p>
-            <p className="mt-3 text-sm leading-6 text-slate-300/82">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">List backup</p>
+            <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
               Utility list mode remains available for direct scanning and straightforward operations.
             </p>
           </div>
@@ -459,14 +459,14 @@ export default function EventsPage() {
                   <div className="flex flex-col gap-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-[10px] uppercase tracking-[0.16em] text-slate-400">gathering</p>
-                        <h3 className="mt-2 text-2xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                        <p className="text-[10px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">gathering</p>
+                        <h3 className="mt-2 text-2xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
                           {event.title}
                         </h3>
                       </div>
                       <AnuChip tone="accent">{getBadge(event)}</AnuChip>
                     </div>
-                    <p className="text-sm leading-6 text-slate-300/82">{event.description}</p>
+                    <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{event.description}</p>
                     <div className="flex flex-wrap gap-2">
                       <AnuChip tone="muted">{eventMeta(event)}</AnuChip>
                       <AnuChip tone="muted">{event.attendees}/{event.goal} attending</AnuChip>
@@ -487,7 +487,7 @@ export default function EventsPage() {
                 </AnuSurfacePanel>
               ))
             ) : (
-              <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] px-5 py-6 text-sm text-slate-300/78 xl:col-span-2">
+              <div className="rounded-[2rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-5 py-6 text-sm text-[color:rgba(246,212,203,0.78)] xl:col-span-2">
                 No events match the current filters.
               </div>
             )}
@@ -499,12 +499,12 @@ export default function EventsPage() {
                 <AnuSurfacePanel key={venue.id} tone="quiet" className="px-4 py-4">
                   <div className="flex flex-col gap-4">
                     <div>
-                      <p className="text-[10px] uppercase tracking-[0.16em] text-slate-400">market</p>
-                      <h3 className="mt-2 text-2xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">market</p>
+                      <h3 className="mt-2 text-2xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
                         {venue.name}
                       </h3>
                     </div>
-                    <p className="text-sm leading-6 text-slate-300/82">{venue.address}</p>
+                    <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{venue.address}</p>
                     <div className="flex flex-wrap gap-2">
                       <AnuChip tone="muted">{venue.city}, {venue.country}</AnuChip>
                     </div>
@@ -519,7 +519,7 @@ export default function EventsPage() {
                 </AnuSurfacePanel>
               ))
             ) : (
-              <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] px-5 py-6 text-sm text-slate-300/78 xl:col-span-2">
+              <div className="rounded-[2rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-5 py-6 text-sm text-[color:rgba(246,212,203,0.78)] xl:col-span-2">
                 No venues are indexed yet.
               </div>
             )}
@@ -580,8 +580,8 @@ export default function EventsPage() {
               {notice ? (
                 <AnuSurfacePanel tone="quiet" className="px-4 py-3">
                   <div className="flex items-start gap-3">
-                    <AlertCircle className="mt-0.5 h-4 w-4 text-[#f3c489]" />
-                    <p className="text-sm leading-6 text-slate-200/82">{notice}</p>
+                    <AlertCircle className="mt-0.5 h-4 w-4 text-[#f6d4cb]" />
+                    <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{notice}</p>
                   </div>
                 </AnuSurfacePanel>
               ) : null}

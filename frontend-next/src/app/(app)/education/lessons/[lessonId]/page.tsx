@@ -78,57 +78,57 @@ export default function EducationLessonPage() {
   return (
     <EducationLayerShell>
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pb-12 space-y-6">
-        <Link href="/education" className="inline-flex text-xs uppercase tracking-[0.18em] text-white/70 hover:text-white">
+        <Link href="/education" className="inline-flex text-xs uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.7)] hover:text-[var(--color-foreground)]">
           ← Education hub
         </Link>
 
         {loading ? (
-          <div className="edu-card p-8 text-sm text-white/75">Loading lesson context…</div>
+          <div className="edu-card p-8 text-sm text-[color:rgba(246,212,203,0.75)]">Loading lesson context…</div>
         ) : error ? (
-          <div className="edu-card p-8 text-sm text-rose-200">{error}</div>
+          <div className="edu-card p-8 text-sm text-[#7c413c]">{error}</div>
         ) : !lesson ? (
-          <div className="edu-card p-8 text-sm text-white/75">Lesson not found.</div>
+          <div className="edu-card p-8 text-sm text-[color:rgba(246,212,203,0.75)]">Lesson not found.</div>
         ) : (
           <>
             <section className="edu-card edu-card-highlight p-6 md:p-8">
               <p className="edu-pill">Lesson</p>
-              <h1 className="mt-4 text-3xl font-semibold text-white" style={{ fontFamily: 'var(--font-serif)' }}>
+              <h1 className="mt-4 text-3xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--font-serif)' }}>
                 {lesson.title}
               </h1>
-              <p className="mt-3 text-sm uppercase tracking-[0.14em] text-white/65">Delivery · {lesson.delivery_type}</p>
+              <p className="mt-3 text-sm uppercase tracking-[0.14em] text-[color:rgba(246,212,203,0.65)]">Delivery · {lesson.delivery_type}</p>
 
               <div className="mt-5 grid gap-3 md:grid-cols-3 text-xs">
-                <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white/75">
-                  <p className="uppercase tracking-[0.13em] text-white/60">Version</p>
-                  <p className="mt-1 text-sm text-white">{lesson.version}</p>
+                <div className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.2)] px-3 py-2 text-[color:rgba(246,212,203,0.75)]">
+                  <p className="uppercase tracking-[0.13em] text-[color:rgba(246,212,203,0.6)]">Version</p>
+                  <p className="mt-1 text-sm text-[var(--color-foreground)]">{lesson.version}</p>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white/75">
-                  <p className="uppercase tracking-[0.13em] text-white/60">Module progression</p>
-                  <p className="mt-1 text-sm text-white">
+                <div className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.2)] px-3 py-2 text-[color:rgba(246,212,203,0.75)]">
+                  <p className="uppercase tracking-[0.13em] text-[color:rgba(246,212,203,0.6)]">Module progression</p>
+                  <p className="mt-1 text-sm text-[var(--color-foreground)]">
                     {sequenceMeta.index && sequenceMeta.total
                       ? `Lesson ${sequenceMeta.index} of ${sequenceMeta.total}`
                       : 'Sequence info pending'}
                   </p>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white/75">
-                  <p className="uppercase tracking-[0.13em] text-white/60">Content reference</p>
-                  <p className="mt-1 text-sm text-white">{lesson.content_ref || 'Attached in delivery package'}</p>
+                <div className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.2)] px-3 py-2 text-[color:rgba(246,212,203,0.75)]">
+                  <p className="uppercase tracking-[0.13em] text-[color:rgba(246,212,203,0.6)]">Content reference</p>
+                  <p className="mt-1 text-sm text-[var(--color-foreground)]">{lesson.content_ref || 'Attached in delivery package'}</p>
                 </div>
               </div>
             </section>
 
             <section className="edu-card p-6">
-              <p className="text-sm leading-7 text-white/75">
+              <p className="text-sm leading-7 text-[color:rgba(246,212,203,0.75)]">
                 This lesson surface is active and can host mapped content, guided activities, or embedded delivery media.
                 Once curriculum payloads are attached, this space keeps the same sequence and trust context shown above.
               </p>
               {lesson.content_ref ? (
-                <p className="mt-3 text-xs uppercase tracking-[0.13em] text-white/60">Content reference · {lesson.content_ref}</p>
+                <p className="mt-3 text-xs uppercase tracking-[0.13em] text-[color:rgba(246,212,203,0.6)]">Content reference · {lesson.content_ref}</p>
               ) : null}
             </section>
 
             <section className="edu-card p-5 space-y-3">
-              <p className="text-xs uppercase tracking-[0.13em] text-white/60">What next</p>
+              <p className="text-xs uppercase tracking-[0.13em] text-[color:rgba(246,212,203,0.6)]">What next</p>
               {sequenceMeta.nextLesson ? (
                 <Link href={`/education/lessons/${sequenceMeta.nextLesson.id}`} className="btn-pill btn-pill-primary text-sm">
                   Continue to next lesson

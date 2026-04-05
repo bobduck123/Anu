@@ -144,7 +144,7 @@ export function ImmersiveLayerView() {
               <label className="flex flex-col gap-1 text-xs text-[var(--color-muted-foreground)]">
                 Region
                 <select
-                  className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-foreground)]"
+                  className="rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] px-3 py-2 text-sm text-[var(--color-foreground)]"
                   value={selectedRegion}
                   onChange={(event) => setSelectedRegion(event.target.value)}
                 >
@@ -159,7 +159,7 @@ export function ImmersiveLayerView() {
               <label className="flex flex-col gap-1 text-xs text-[var(--color-muted-foreground)]">
                 Season
                 <select
-                  className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-foreground)]"
+                  className="rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] px-3 py-2 text-sm text-[var(--color-foreground)]"
                   value={selectedSeason}
                   onChange={(event) => setSelectedSeason(event.target.value)}
                 >
@@ -198,7 +198,7 @@ export function ImmersiveLayerView() {
           })}
         </section>
 
-        <section className="rounded-2xl border border-[var(--color-border)] bg-gradient-to-b from-[#f4efe9] via-[#eef2ea] to-[#f8f6f2] p-4 sm:p-6">
+        <section className="rounded-2xl border border-[var(--color-border)] bg-gradient-to-b from-[#f6d4cb] via-[#f6d4cb] to-[#f6d4cb] p-4 sm:p-6">
           <h2 className="mb-4 text-2xl font-semibold" style={{ fontFamily: "var(--font-serif)" }}>
             Digital Bush Walk
           </h2>
@@ -217,7 +217,7 @@ export function ImmersiveLayerView() {
                   <motion.button
                     key={plant.id}
                     type="button"
-                    className="group absolute w-32 rounded-lg border border-[var(--color-border)] bg-white/88 p-2 text-left shadow-sm backdrop-blur focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-institutional)]"
+                    className="group absolute w-32 rounded-lg border border-[var(--color-border)] bg-[color:rgba(246,212,203,0.88)] p-2 text-left shadow-sm backdrop-blur focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-institutional)]"
                     style={{ left: position.left, top: position.top }}
                     onClick={() => setSelectedPlant(plant)}
                     initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
@@ -253,7 +253,7 @@ export function ImmersiveLayerView() {
 
       {selectedPlant && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[color:rgba(30,2,39,0.45)] p-4"
           role="presentation"
           onClick={(event) => {
             if (event.target === event.currentTarget) {
@@ -267,7 +267,7 @@ export function ImmersiveLayerView() {
             aria-modal="true"
             aria-labelledby="plant-modal-title"
             aria-describedby="plant-modal-description"
-            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-[var(--color-foreground)] p-6 shadow-xl"
           >
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
@@ -307,7 +307,7 @@ export function ImmersiveLayerView() {
                     <p className="text-sm text-[var(--color-muted-foreground)]">No ecological links recorded yet.</p>
                   ) : (
                     selectedPlant.ecological_relationships.map((relation) => (
-                      <div key={relation.id} className="rounded-md border border-[var(--color-border)] bg-white p-3">
+                      <div key={relation.id} className="rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] p-3">
                         <p className="text-xs font-semibold text-[var(--color-institutional)]">{relation.relationship_type.replaceAll("_", " ")}</p>
                         <p className="text-sm text-[var(--color-earth-dark)]">
                           {relation.related_plant_name || relation.related_label || "Linked species"}

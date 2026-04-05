@@ -169,7 +169,7 @@ export function EditorialSection() {
               />
             </div>
             {/* Floating stat card */}
-            <div className="absolute -bottom-6 -left-6 bg-white rounded-xl p-5 shadow-xl border border-gray-100">
+            <div className="absolute -bottom-6 -left-6 bg-[var(--color-foreground)] rounded-xl p-5 shadow-xl border border-[#f6d4cb]">
               <div className="text-3xl font-semibold text-[var(--color-sage)] font-mono-data">
                 99.2%
               </div>
@@ -224,7 +224,7 @@ export function EditorialSection() {
             <div className="space-y-4 pt-4">
               <div className="flex items-start gap-4">
                 <div className="w-8 h-8 rounded-full bg-[var(--color-sage)] flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-white text-sm font-semibold">1</span>
+                  <span className="text-[var(--color-foreground)] text-sm font-semibold">1</span>
                 </div>
                 <div>
                   <h4 className="font-semibold text-earth-dark">Local Decision Making</h4>
@@ -233,7 +233,7 @@ export function EditorialSection() {
               </div>
               <div className="flex items-start gap-4">
                 <div className="w-8 h-8 rounded-full bg-[var(--color-sage)] flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-white text-sm font-semibold">2</span>
+                  <span className="text-[var(--color-foreground)] text-sm font-semibold">2</span>
                 </div>
                 <div>
                   <h4 className="font-semibold text-earth-dark">Privacy by Design</h4>
@@ -242,7 +242,7 @@ export function EditorialSection() {
               </div>
               <div className="flex items-start gap-4">
                 <div className="w-8 h-8 rounded-full bg-[var(--color-sage)] flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-white text-sm font-semibold">3</span>
+                  <span className="text-[var(--color-foreground)] text-sm font-semibold">3</span>
                 </div>
                 <div>
                   <h4 className="font-semibold text-earth-dark">Open Source</h4>
@@ -269,25 +269,25 @@ export function EditorialSection() {
                   Join Us
                 </span>
                 <h2 
-                  className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white leading-tight mb-6"
+                  className="text-3xl md:text-4xl lg:text-5xl font-semibold text-[var(--color-foreground)] leading-tight mb-6"
                   style={{ fontFamily: 'var(--font-source-serif), Georgia, serif' }}
                 >
                   Ready to be part of the commons?
                 </h2>
-                <p className="text-white/70 text-lg leading-relaxed mb-8">
+                <p className="text-[color:rgba(246,212,203,0.7)] text-lg leading-relaxed mb-8">
                   Whether you want to contribute, request support, or help govern—
               there&apos;s a place for you in {brand.name}.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link
                     href="/memberships"
-                    className="btn-pill bg-[var(--color-sage)] text-white hover:bg-[var(--color-forest)] text-center"
+                    className="btn-pill bg-[var(--color-sage)] text-[var(--color-foreground)] hover:bg-[var(--color-forest)] text-center"
                   >
                     Become a Member
                   </Link>
                   <Link
                     href="/relief"
-                    className="btn-pill bg-white/10 text-white hover:bg-white/20 text-center"
+                    className="btn-pill bg-[color:rgba(246,212,203,0.1)] text-[var(--color-foreground)] hover:bg-[color:rgba(246,212,203,0.2)] text-center"
                   >
                     Request Support
                   </Link>

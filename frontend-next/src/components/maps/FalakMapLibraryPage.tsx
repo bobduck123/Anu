@@ -137,43 +137,43 @@ export function FalakMapLibraryPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <header className="rounded-[2rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.18),_transparent_42%),linear-gradient(160deg,_rgba(15,23,42,0.98),_rgba(2,6,23,0.98))] p-8 text-white">
+      <header className="rounded-[2rem] border border-[#1e0227] bg-[radial-gradient(circle_at_top_left,_rgba(246,212,203,0.18),_transparent_42%),linear-gradient(160deg,_rgba(30,2,39,0.98),_rgba(30,2,39,0.98))] p-8 text-[var(--color-foreground)]">
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="max-w-3xl">
-            <p className="text-xs uppercase tracking-[0.32em] text-cyan-300/80">Education Resource Library</p>
+            <p className="text-xs uppercase tracking-[0.32em] text-[color:rgba(124,65,60,0.8)]">Education Resource Library</p>
             <h1 className="mt-3 text-4xl font-semibold">Manara Education Universe</h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:rgba(246,212,203,0.76)]">
               Open persisted learning universes, compare seeded domains, and generate new draft universes through the live compiler path.
               The sandbox exercises the same route surface, schema, and renderer path used by the hosted system.
             </p>
           </div>
-          <div className="grid gap-3 text-sm text-slate-300">
+          <div className="grid gap-3 text-sm text-[color:rgba(246,212,203,0.76)]">
             {!fallbackActive ? (
               <>
                 <Link
                   href="/education/maps/new"
-                  className="inline-flex items-center gap-2 rounded-full bg-cyan-400 px-4 py-2 font-medium text-slate-950 transition hover:bg-cyan-300"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#7c413c] px-4 py-2 font-medium text-[#1e0227] transition hover:bg-[#7c413c]"
                 >
                   <PlusCircle className="h-4 w-4" />
                   Request missing universe
                 </Link>
                 <Link
                   href="/sandbox/maps"
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 transition hover:border-cyan-400 hover:text-cyan-100"
+                  className="inline-flex items-center gap-2 rounded-full border border-[#1e0227] px-4 py-2 transition hover:border-[#7c413c] hover:text-[#7c413c]"
                 >
                   <Compass className="h-4 w-4" />
                   Sandbox home
                 </Link>
                 <Link
                   href="/admin/maps"
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 transition hover:border-cyan-400 hover:text-cyan-100"
+                  className="inline-flex items-center gap-2 rounded-full border border-[#1e0227] px-4 py-2 transition hover:border-[#7c413c] hover:text-[#7c413c]"
                 >
                   <GitBranch className="h-4 w-4" />
                   Admin tools
                 </Link>
               </>
             ) : (
-              <div className="rounded-[1.25rem] border border-amber-400/40 bg-amber-300/10 px-4 py-3 text-xs leading-6 text-amber-100">
+              <div className="rounded-[1.25rem] border border-[color:rgba(224,177,21,0.4)] bg-[color:rgba(224,177,21,0.1)] px-4 py-3 text-xs leading-6 text-[#e0b115]">
                 Live learning universes are unavailable from the hosted API right now. This page is showing bundled read-only universe packets until the frontend can reach the live service correctly.
               </div>
             )}
@@ -181,15 +181,15 @@ export function FalakMapLibraryPage() {
         </div>
       </header>
 
-      <section className="mt-6 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="mt-6 rounded-[1.75rem] border border-[#f6d4cb] bg-[var(--color-foreground)] p-5 shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
-          <label className="flex min-w-[16rem] flex-1 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-600">
-            <Search className="h-4 w-4 text-slate-400" />
+          <label className="flex min-w-[16rem] flex-1 items-center gap-2 rounded-full border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-2 text-sm text-[#1e0227]">
+            <Search className="h-4 w-4 text-[color:rgba(246,212,203,0.64)]" />
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search topics, archetypes, descriptions..."
-              className="w-full bg-transparent outline-none placeholder:text-slate-400"
+              className="w-full bg-transparent outline-none placeholder:text-[color:rgba(246,212,203,0.64)]"
             />
           </label>
           <select
@@ -198,7 +198,7 @@ export function FalakMapLibraryPage() {
               const next = event.target.value as MapStatus | 'all';
               startTransition(() => setStatusFilter(next));
             }}
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700"
+            className="rounded-full border border-[#f6d4cb] bg-[var(--color-foreground)] px-4 py-2 text-sm text-[#1e0227]"
           >
             <option value="all">All statuses</option>
             <option value="published">Published</option>
@@ -208,53 +208,53 @@ export function FalakMapLibraryPage() {
           <button
             type="button"
             onClick={loadMaps}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
+            className="inline-flex items-center gap-2 rounded-full border border-[#f6d4cb] px-4 py-2 text-sm font-medium text-[#1e0227] transition hover:border-[#7c413c] hover:text-[#7c413c]"
           >
             <RefreshCw className="h-4 w-4" />
             Refresh
           </button>
         </div>
         {sandbox ? (
-          <p className="mt-3 text-xs text-slate-500">
+          <p className="mt-3 text-xs text-[#7c413c]">
             Sandbox mode is active. Drafts, reviewed universes, and admin editing flows are safe to exercise locally.
           </p>
         ) : null}
         {isAuthenticated && sessionStatus?.status === 'verified' ? (
-          <p className="mt-3 text-xs text-emerald-700">
+          <p className="mt-3 text-xs text-[#665700]">
             Live Falak actor verified for tenant {sessionStatus.tenant.slug ?? sessionStatus.tenant.id}. Hosted admin-only universe routes are available to this session.
           </p>
         ) : null}
         {isAuthenticated && sessionStatus?.status === 'blocked' ? (
-          <p className="mt-3 text-xs text-rose-700">
+          <p className="mt-3 text-xs text-[#7c413c]">
             Live Falak actor check failed: {sessionStatus.map_access.message ?? 'This signed-in session is not currently accepted by the hosted admin-only universe routes.'}
           </p>
         ) : null}
         {isAuthenticated && sessionStatusError ? (
-          <p className="mt-3 text-xs text-rose-700">
+          <p className="mt-3 text-xs text-[#7c413c]">
             Hosted Falak actor verification could not be completed: {sessionStatusError}
           </p>
         ) : null}
         {fallbackActive ? (
-          <p className="mt-3 text-xs text-amber-700">
+          <p className="mt-3 text-xs text-[#e0b115]">
             {fallbackMessage ?? 'The hosted frontend is using bundled read-only universe packet data because the live universe request did not succeed.'}
           </p>
         ) : null}
       </section>
 
       {error ? (
-        <div className="mt-6 rounded-[1.5rem] border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">{error}</div>
+        <div className="mt-6 rounded-[1.5rem] border border-[#7c413c] bg-[#7c413c] px-5 py-4 text-sm text-[#7c413c]">{error}</div>
       ) : null}
 
       <section className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_23rem]">
         <div className="space-y-4">
           {loading ? (
-            <div className="rounded-[1.75rem] border border-slate-200 bg-white px-6 py-10 text-center text-sm text-slate-500">
+            <div className="rounded-[1.75rem] border border-[#f6d4cb] bg-[var(--color-foreground)] px-6 py-10 text-center text-sm text-[#7c413c]">
               Loading universe library...
             </div>
           ) : null}
 
           {!loading && filteredMaps.length < 1 ? (
-            <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
+            <div className="rounded-[1.75rem] border border-dashed border-[#7c413c] bg-[#f6d4cb] px-6 py-10 text-center text-sm text-[#7c413c]">
               No universes match the current filters.
             </div>
           ) : null}
@@ -265,7 +265,7 @@ export function FalakMapLibraryPage() {
                 return (
                   <article
                     key={map.id}
-                    className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:border-cyan-200 hover:shadow-md"
+                    className="rounded-[1.75rem] border border-[#f6d4cb] bg-[var(--color-foreground)] p-5 shadow-sm transition hover:border-[#7c413c] hover:shadow-md"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="max-w-2xl">
@@ -273,18 +273,18 @@ export function FalakMapLibraryPage() {
                           <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusBadgeClass(map.status)}`}>
                             {map.status}
                           </span>
-                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                          <span className="rounded-full bg-[#f6d4cb] px-3 py-1 text-xs font-medium text-[#1e0227]">
                             {map.archetype}
                           </span>
-                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                          <span className="rounded-full bg-[#f6d4cb] px-3 py-1 text-xs font-medium text-[#1e0227]">
                             {map.entityType}
                           </span>
                         </div>
-                        <h2 className="mt-3 text-2xl font-semibold text-slate-900">{map.title}</h2>
-                        <p className="mt-2 text-sm leading-7 text-slate-600">
+                        <h2 className="mt-3 text-2xl font-semibold text-[#1e0227]">{map.title}</h2>
+                        <p className="mt-2 text-sm leading-7 text-[#1e0227]">
                           {map.description || 'No curated summary has been published for this universe yet.'}
                         </p>
-                        <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                        <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-[#7c413c]">
                           <span>domain key: {map.topicKey}</span>
                           <span>version {map.version}</span>
                           <span>coverage {formatPercent(map.confidence.coverage)}</span>
@@ -294,14 +294,14 @@ export function FalakMapLibraryPage() {
                       <div className="grid gap-2 text-sm">
                         <Link
                           href={`/education/maps/${encodeURIComponent(map.topicKey)}`}
-                          className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 font-medium text-white transition hover:bg-slate-800"
+                          className="inline-flex items-center justify-center rounded-full bg-[#1e0227] px-4 py-2 font-medium text-[var(--color-foreground)] transition hover:bg-[#1e0227]"
                         >
                           Open universe
                         </Link>
                         {!fallbackActive ? (
                           <Link
                             href={`/admin/maps?topic=${encodeURIComponent(map.topicKey)}`}
-                            className="inline-flex items-center justify-center rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
+                            className="inline-flex items-center justify-center rounded-full border border-[#f6d4cb] px-4 py-2 font-medium text-[#1e0227] transition hover:border-[#7c413c] hover:text-[#7c413c]"
                           >
                             Admin edit
                           </Link>
@@ -317,8 +317,8 @@ export function FalakMapLibraryPage() {
                           }
                           className={`inline-flex items-center justify-center rounded-full px-4 py-2 font-medium transition ${
                             compared
-                              ? 'bg-amber-300 text-slate-950'
-                              : 'border border-slate-200 text-slate-700 hover:border-amber-300 hover:text-amber-700'
+                              ? 'bg-[#e0b115] text-[#1e0227]'
+                              : 'border border-[#f6d4cb] text-[#1e0227] hover:border-[#e0b115] hover:text-[#e0b115]'
                           }`}
                         >
                           {compared ? 'Compared' : 'Compare'}
@@ -332,48 +332,48 @@ export function FalakMapLibraryPage() {
         </div>
 
         <aside className="space-y-4">
-          <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-[1.75rem] border border-[#f6d4cb] bg-[var(--color-foreground)] p-5 shadow-sm">
             <div className="flex items-center gap-2">
-              <Layers3 className="h-4 w-4 text-cyan-600" />
-              <h2 className="text-lg font-semibold text-slate-900">Compare universes</h2>
+              <Layers3 className="h-4 w-4 text-[#7c413c]" />
+              <h2 className="text-lg font-semibold text-[#1e0227]">Compare universes</h2>
             </div>
             {comparedMaps.length > 0 ? (
               <div className="mt-4 space-y-3">
                 {comparedMaps.map((map) => (
-                  <div key={map.id} className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4">
+                  <div key={map.id} className="rounded-[1.25rem] border border-[#f6d4cb] bg-[#f6d4cb] p-4">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="font-semibold text-slate-900">{map.title}</p>
+                      <p className="font-semibold text-[#1e0227]">{map.title}</p>
                       <button
                         type="button"
                         onClick={() => setCompareKeys((current) => current.filter((entry) => entry !== map.topicKey))}
-                        className="text-xs text-slate-500 hover:text-rose-500"
+                        className="text-xs text-[#7c413c] hover:text-[#7c413c]"
                       >
                         Remove
                       </button>
                     </div>
-                    <div className="mt-3 space-y-2 text-sm text-slate-600">
+                    <div className="mt-3 space-y-2 text-sm text-[#1e0227]">
                       <div className="flex items-center justify-between">
                         <span>Status</span>
-                        <span className="font-medium text-slate-900">{map.status}</span>
+                        <span className="font-medium text-[#1e0227]">{map.status}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span>Coverage</span>
-                        <span className="font-medium text-slate-900">{formatPercent(map.confidence.coverage)}</span>
+                        <span className="font-medium text-[#1e0227]">{formatPercent(map.confidence.coverage)}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span>Positions</span>
-                        <span className="font-medium text-slate-900">{formatPercent(map.confidence.positions)}</span>
+                        <span className="font-medium text-[#1e0227]">{formatPercent(map.confidence.positions)}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span>Relationships</span>
-                        <span className="font-medium text-slate-900">{formatPercent(map.confidence.relationships)}</span>
+                        <span className="font-medium text-[#1e0227]">{formatPercent(map.confidence.relationships)}</span>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="mt-4 text-sm text-slate-500">
+              <p className="mt-4 text-sm text-[#7c413c]">
                 Add up to three universes from the library to compare their readiness and publication state.
               </p>
             )}

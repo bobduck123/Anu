@@ -45,8 +45,8 @@ export default function CreateTenantPage() {
   const [status, setStatus] = useState('active');
   const [modules, setModules] = useState(DEFAULT_MODULES);
   const [dataPolicy, setDataPolicy] = useState(0);
-  const [primaryColor, setPrimaryColor] = useState('#1e3a5f');
-  const [secondaryColor, setSecondaryColor] = useState('#d4c4b7');
+  const [primaryColor, setPrimaryColor] = useState('#1e0227');
+  const [secondaryColor, setSecondaryColor] = useState('#f6d4cb');
   const [logoUrl, setLogoUrl] = useState('');
   const [domain, setDomain] = useState('');
   const [encKey, setEncKey] = useState('');
@@ -121,7 +121,7 @@ export default function CreateTenantPage() {
                 onClick={() => i < stepIdx && setStepIdx(i)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                   isActive
-                    ? 'bg-[var(--color-primary)] text-white'
+                    ? 'bg-[var(--color-primary)] text-[var(--color-foreground)]'
                     : isDone
                     ? 'bg-[var(--color-sage-light)] text-[var(--color-forest)] cursor-pointer'
                     : 'bg-[var(--color-muted)] text-[var(--color-muted-foreground)]'

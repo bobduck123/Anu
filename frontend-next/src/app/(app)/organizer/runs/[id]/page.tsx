@@ -124,7 +124,7 @@ export default function OrganizerRunPage() {
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#665700]" />
       </div>
     );
   }
@@ -143,7 +143,7 @@ export default function OrganizerRunPage() {
   }
 
   if (!data) {
-    return <div className="max-w-4xl mx-auto px-4 py-10 text-center text-rose-200">{error || 'Not found'}</div>;
+    return <div className="max-w-4xl mx-auto px-4 py-10 text-center text-[#7c413c]">{error || 'Not found'}</div>;
   }
 
   const { run, pledges, aggregated_quantities } = data;
@@ -153,20 +153,20 @@ export default function OrganizerRunPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      <Link href="/cost-lowering" className="text-sm text-white/80 hover:underline mb-4 inline-block">
+      <Link href="/cost-lowering" className="text-sm text-[color:rgba(246,212,203,0.8)] hover:underline mb-4 inline-block">
         &larr; Back to runs
       </Link>
 
-      <h1 className="text-2xl font-bold text-white mb-1">Organizer Panel</h1>
-      <h2 className="text-lg text-white/70 mb-6">{run.title}</h2>
+      <h1 className="text-2xl font-bold text-[var(--color-foreground)] mb-1">Organizer Panel</h1>
+      <h2 className="text-lg text-[color:rgba(246,212,203,0.7)] mb-6">{run.title}</h2>
 
-      {error && <div className="card-civic text-sm text-rose-200 mb-4">{error}</div>}
+      {error && <div className="card-civic text-sm text-[#7c413c] mb-4">{error}</div>}
 
       <div className="card-civic mb-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <span className="text-sm text-white/65">Status:</span>{' '}
-            <span className="font-semibold text-white">{run.status}</span>
+            <span className="text-sm text-[color:rgba(246,212,203,0.65)]">Status:</span>{' '}
+            <span className="font-semibold text-[var(--color-foreground)]">{run.status}</span>
           </div>
           <div className="flex gap-2 flex-wrap">
             {run.status === 'DRAFT' && <ActionBtn label="Open Run" action="open" loading={actionLoading} onClick={doAction} color="green" />}
@@ -184,10 +184,10 @@ export default function OrganizerRunPage() {
 
       {['CLOSED', 'EXECUTED'].includes(run.status) && (
         <div className="card-civic mb-6">
-          <h3 className="font-semibold text-white mb-3">Receipt Entry</h3>
+          <h3 className="font-semibold text-[var(--color-foreground)] mb-3">Receipt Entry</h3>
           <div className="flex gap-3 items-end">
             <div>
-              <label className="block text-sm text-white/70 mb-1">Actual bulk total ($)</label>
+              <label className="block text-sm text-[color:rgba(246,212,203,0.7)] mb-1">Actual bulk total ($)</label>
               <input
                 type="number"
                 step="0.01"
@@ -205,14 +205,14 @@ export default function OrganizerRunPage() {
       )}
 
       <div className="card-civic mb-6">
-        <h3 className="font-semibold text-white mb-3">Aggregated Quantities</h3>
+        <h3 className="font-semibold text-[var(--color-foreground)] mb-3">Aggregated Quantities</h3>
         {aggregated_quantities.length === 0 ? (
-          <p className="text-white/65 text-sm">No confirmed pledges yet.</p>
+          <p className="text-[color:rgba(246,212,203,0.65)] text-sm">No confirmed pledges yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/15 text-left text-white/65">
+                <tr className="border-b border-[color:rgba(246,212,203,0.15)] text-left text-[color:rgba(246,212,203,0.65)]">
                   <th className="py-2 pr-4">Item</th>
                   <th className="py-2 pr-4">Unit</th>
                   <th className="py-2">Total Qty</th>
@@ -220,10 +220,10 @@ export default function OrganizerRunPage() {
               </thead>
               <tbody>
                 {aggregated_quantities.map((item, index) => (
-                  <tr key={`${item.name}-${index}`} className="border-b border-white/10">
-                    <td className="py-2 pr-4 text-white">{item.name}</td>
-                    <td className="py-2 pr-4 text-white/70">{item.unit}</td>
-                    <td className="py-2 font-semibold text-white">{item.total_qty}</td>
+                  <tr key={`${item.name}-${index}`} className="border-b border-[color:rgba(246,212,203,0.1)]">
+                    <td className="py-2 pr-4 text-[var(--color-foreground)]">{item.name}</td>
+                    <td className="py-2 pr-4 text-[color:rgba(246,212,203,0.7)]">{item.unit}</td>
+                    <td className="py-2 font-semibold text-[var(--color-foreground)]">{item.total_qty}</td>
                   </tr>
                 ))}
               </tbody>
@@ -233,48 +233,48 @@ export default function OrganizerRunPage() {
       </div>
 
       <div className="card-civic mb-6">
-        <h3 className="font-semibold text-white mb-3">
+        <h3 className="font-semibold text-[var(--color-foreground)] mb-3">
           Pledges ({pledges.length})
-          <span className="text-white/60 text-sm font-normal ml-2">
+          <span className="text-[color:rgba(246,212,203,0.6)] text-sm font-normal ml-2">
             {confirmed.length} confirmed, {fulfilled.length} fulfilled, {noShow.length} no-show
           </span>
         </h3>
         {pledges.length === 0 ? (
-          <p className="text-white/65 text-sm">No pledges yet.</p>
+          <p className="text-[color:rgba(246,212,203,0.65)] text-sm">No pledges yet.</p>
         ) : (
           <div className="space-y-2">
             {pledges.map((pledge) => (
-              <div key={pledge.id} className="flex items-center justify-between py-2 border-b border-white/10 last:border-0">
+              <div key={pledge.id} className="flex items-center justify-between py-2 border-b border-[color:rgba(246,212,203,0.1)] last:border-0">
                 <div>
-                  <span className="text-white text-sm">User #{pledge.user_id}</span>
+                  <span className="text-[var(--color-foreground)] text-sm">User #{pledge.user_id}</span>
                   <span
                     className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
                       pledge.status === 'FULFILLED'
-                        ? 'bg-emerald-300/20 text-emerald-100'
+                        ? 'bg-[color:rgba(102,87,0,0.2)] text-[#f6d4cb]'
                         : pledge.status === 'CONFIRMED'
-                          ? 'bg-sky-300/20 text-sky-100'
+                          ? 'bg-[color:rgba(124,65,60,0.2)] text-[#7c413c]'
                           : pledge.status === 'NO_SHOW'
-                            ? 'bg-amber-300/20 text-amber-100'
-                            : 'bg-white/15 text-white/70'
+                            ? 'bg-[color:rgba(224,177,21,0.2)] text-[#e0b115]'
+                            : 'bg-[color:rgba(246,212,203,0.15)] text-[color:rgba(246,212,203,0.7)]'
                     }`}
                   >
                     {pledge.status}
                   </span>
                 </div>
                 <div className="flex gap-2 items-center">
-                  <span className="text-sm text-white/70">{cents(pledge.estimated_retail_cents)}</span>
+                  <span className="text-sm text-[color:rgba(246,212,203,0.7)]">{cents(pledge.estimated_retail_cents)}</span>
                   {pledge.status === 'CONFIRMED' && ['EXECUTED', 'CLOSED'].includes(run.status) && (
                     <>
-                      <button onClick={() => handleFulfil(pledge.id)} className="text-xs bg-emerald-300/20 text-emerald-100 px-2 py-1 rounded hover:bg-emerald-300/30">
+                      <button onClick={() => handleFulfil(pledge.id)} className="text-xs bg-[color:rgba(102,87,0,0.2)] text-[#f6d4cb] px-2 py-1 rounded hover:bg-[color:rgba(102,87,0,0.3)]">
                         Picked Up
                       </button>
-                      <button onClick={() => handleNoShow(pledge.id)} className="text-xs bg-amber-300/20 text-amber-100 px-2 py-1 rounded hover:bg-amber-300/30">
+                      <button onClick={() => handleNoShow(pledge.id)} className="text-xs bg-[color:rgba(224,177,21,0.2)] text-[#e0b115] px-2 py-1 rounded hover:bg-[color:rgba(224,177,21,0.3)]">
                         No Show
                       </button>
                     </>
                   )}
                   {pledge.status === 'FULFILLED' && pledge.savings_cents != null && (
-                    <span className="text-sm font-semibold text-emerald-200">Saved {cents(pledge.savings_cents)}</span>
+                    <span className="text-sm font-semibold text-[#665700]">Saved {cents(pledge.savings_cents)}</span>
                   )}
                 </div>
               </div>
@@ -285,19 +285,19 @@ export default function OrganizerRunPage() {
 
       {run.status === 'COMPLETED' && (
         <div className="card-civic">
-          <h3 className="font-semibold text-emerald-100 mb-3">Run Summary</h3>
+          <h3 className="font-semibold text-[#f6d4cb] mb-3">Run Summary</h3>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-xs text-white/60 uppercase">Retail Equivalent</p>
-              <p className="text-xl font-bold text-white">{cents(run.retail_equivalent_total_cents)}</p>
+              <p className="text-xs text-[color:rgba(246,212,203,0.6)] uppercase">Retail Equivalent</p>
+              <p className="text-xl font-bold text-[var(--color-foreground)]">{cents(run.retail_equivalent_total_cents)}</p>
             </div>
             <div>
-              <p className="text-xs text-white/60 uppercase">Actual Bulk Cost</p>
-              <p className="text-xl font-bold text-white">{cents(run.bulk_actual_total_cents)}</p>
+              <p className="text-xs text-[color:rgba(246,212,203,0.6)] uppercase">Actual Bulk Cost</p>
+              <p className="text-xl font-bold text-[var(--color-foreground)]">{cents(run.bulk_actual_total_cents)}</p>
             </div>
             <div>
-              <p className="text-xs text-white/60 uppercase">Total Saved</p>
-              <p className="text-xl font-bold text-emerald-200">
+              <p className="text-xs text-[color:rgba(246,212,203,0.6)] uppercase">Total Saved</p>
+              <p className="text-xl font-bold text-[#665700]">
                 {cents((run.retail_equivalent_total_cents || 0) - (run.bulk_actual_total_cents || 0))}
               </p>
             </div>
@@ -323,11 +323,11 @@ function ActionBtn({
 }) {
   const isLoading = loading === action;
   const colorMap: Record<string, string> = {
-    green: 'bg-emerald-500 hover:bg-emerald-600 text-white',
-    yellow: 'bg-amber-500 hover:bg-amber-600 text-white',
-    blue: 'bg-sky-500 hover:bg-sky-600 text-white',
-    emerald: 'bg-teal-500 hover:bg-teal-600 text-white',
-    red: 'bg-rose-300/20 hover:bg-rose-300/30 text-rose-100',
+    green: 'bg-[#665700] hover:bg-[#665700] text-[var(--color-foreground)]',
+    yellow: 'bg-[#e0b115] hover:bg-[#e0b115] text-[var(--color-foreground)]',
+    blue: 'bg-[#7c413c] hover:bg-[#7c413c] text-[var(--color-foreground)]',
+    emerald: 'bg-[#665700] hover:bg-[#665700] text-[var(--color-foreground)]',
+    red: 'bg-[color:rgba(124,65,60,0.2)] hover:bg-[color:rgba(124,65,60,0.3)] text-[#f6d4cb]',
   };
   return (
     <button

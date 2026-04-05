@@ -1,14 +1,14 @@
 :root {
-  --edu-bg: #091221;
-  --edu-foreground: #e7edf8;
-  --edu-card: rgba(9, 18, 33, 0.78);
-  --edu-border: rgba(145, 171, 201, 0.24);
+  --edu-bg: #1e0227;
+  --edu-foreground: #f6d4cb;
+  --edu-card: rgba(30,2,39,0.78);
+  --edu-border: rgba(246,212,203,0.24);
   --edu-card-radius: 1.2rem;
-  --edu-accent: #f2c786;
-  --edu-accent-light: rgba(242, 199, 134, 0.18);
-  --edu-sage: #4c916f;
-  --edu-sage-light: rgba(76, 145, 111, 0.2);
-  --edu-forest: #bce2c9;
+  --edu-accent: #f6d4cb;
+  --edu-accent-light: rgba(246,212,203,0.18);
+  --edu-sage: #7c413c;
+  --edu-sage-light: rgba(124,65,60,0.2);
+  --edu-forest: #f6d4cb;
 }
 
 .edu-background {
@@ -18,24 +18,24 @@
 
 .edu-card {
   border-radius: var(--edu-card-radius);
-  background: linear-gradient(148deg, rgba(10, 19, 34, 0.84), rgba(8, 15, 28, 0.8));
+  background: linear-gradient(148deg, rgba(30,2,39,0.84), rgba(30,2,39,0.8));
   border: 1px solid var(--edu-border);
-  box-shadow: 0 24px 70px -40px rgba(0, 0, 0, 0.95);
+  box-shadow: 0 24px 70px -40px rgba(30,2,39,0.95);
   backdrop-filter: blur(14px);
 }
 
 .edu-card-highlight {
-  border: 1px solid rgba(242, 199, 134, 0.34);
-  box-shadow: 0 26px 66px -42px rgba(242, 199, 134, 0.4);
+  border: 1px solid rgba(246,212,203,0.34);
+  box-shadow: 0 26px 66px -42px rgba(246,212,203,0.4);
 }
 
 .edu-glass {
   position: relative;
-  background: linear-gradient(110deg, rgba(9, 18, 33, 0.9), rgba(12, 28, 46, 0.86));
-  border: 1px solid rgba(130, 160, 194, 0.3);
+  background: linear-gradient(110deg, rgba(30,2,39,0.9), rgba(30,2,39,0.86));
+  border: 1px solid rgba(246,212,203,0.3);
   backdrop-filter: blur(20px);
   border-radius: 1rem;
-  box-shadow: 0 24px 62px -38px rgba(0, 0, 0, 0.94), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 62px -38px rgba(30,2,39,0.94), inset 0 1px 0 rgba(246,212,203,0.08);
 }
 
 .edu-glass::before {
@@ -44,8 +44,8 @@
   inset: -45% -20% 35%;
   pointer-events: none;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(246,212,203,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(246,212,203,0.04) 1px, transparent 1px);
   background-size: 74px 74px;
   opacity: 0.24;
   transform: perspective(420px) rotateX(58deg);
@@ -56,13 +56,13 @@
 .edu-progress {
   height: 0.5rem;
   border-radius: 999px;
-  background: rgba(242, 199, 134, 0.14);
+  background: rgba(246,212,203,0.14);
   overflow: hidden;
 }
 
 .edu-progress-fill {
   height: 100%;
-  background: linear-gradient(120deg, var(--edu-accent), #ffd9a4);
+  background: linear-gradient(120deg, var(--edu-accent), #f6d4cb);
   transition: width 800ms ease-out;
 }
 
@@ -75,8 +75,8 @@
   font-size: 0.65rem;
   font-weight: 600;
   background-color: var(--edu-accent-light);
-  color: #f8d6a3;
-  border: 1px solid rgba(242, 199, 134, 0.34);
+  color: #f6d4cb;
+  border: 1px solid rgba(246,212,203,0.34);
 }
 
 .edu-glow {
@@ -84,18 +84,18 @@
 }
 
 @keyframes pulse {
-  0%, 100% { box-shadow: 0 0 22px -12px rgba(242, 199, 134, 0.65); }
-  50% { box-shadow: 0 0 36px -10px rgba(242, 199, 134, 0.82); }
+  0%, 100% { box-shadow: 0 0 22px -12px rgba(246,212,203,0.65); }
+  50% { box-shadow: 0 0 36px -10px rgba(246,212,203,0.82); }
 }
 
 .edu-layout {
   min-height: 100vh;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    radial-gradient(circle at 18% 0%, rgba(242, 199, 134, 0.16), transparent 32%),
-    radial-gradient(circle at 86% 6%, rgba(72, 122, 176, 0.2), transparent 34%),
-    linear-gradient(180deg, #0a1322 0%, #08111f 56%, #08111c 100%);
+    linear-gradient(rgba(246,212,203,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(246,212,203,0.04) 1px, transparent 1px),
+    radial-gradient(circle at 18% 0%, rgba(246,212,203,0.16), transparent 32%),
+    radial-gradient(circle at 86% 6%, rgba(124,65,60,0.2), transparent 34%),
+    linear-gradient(180deg, #1e0227 0%, #1e0227 56%, #1e0227 100%);
   background-size: 120px 120px, 120px 120px, auto, auto, auto;
 }
 
@@ -106,10 +106,10 @@
 }
 
 .edu-hero {
-  background: linear-gradient(142deg, rgba(14, 28, 48, 0.82), rgba(10, 18, 31, 0.84));
+  background: linear-gradient(142deg, rgba(30,2,39,0.82), rgba(30,2,39,0.84));
   border-radius: var(--edu-card-radius);
   padding: 2rem;
-  border: 1px solid rgba(130, 164, 201, 0.28);
+  border: 1px solid rgba(246,212,203,0.28);
 }
 
 .edu-stat-grid {
@@ -119,10 +119,10 @@
 }
 
 .edu-stat {
-  background: rgba(6, 12, 22, 0.72);
+  background: rgba(30,2,39,0.72);
   border-radius: 0.95rem;
   padding: 1rem;
-  border: 1px solid rgba(130, 164, 201, 0.2);
+  border: 1px solid rgba(246,212,203,0.2);
 }
 
 .edu-badge {

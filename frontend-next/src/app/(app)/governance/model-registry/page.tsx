@@ -262,7 +262,7 @@ export default function ModelRegistryPage() {
 
   const legend = (
     <div className="space-y-3">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-[#d2bf99]/72">Archive states</p>
+      <p className="text-[10px] uppercase tracking-[0.18em] text-[#f6d4cb]/72">Archive states</p>
       <div className="flex flex-wrap gap-2">
         <StateSeal state="active" />
         <StateSeal state="contested" />
@@ -270,7 +270,7 @@ export default function ModelRegistryPage() {
         <StateSeal state="dormant" />
         <StateSeal state="deprecated" />
       </div>
-      <p className="text-sm leading-6 text-[#d8ccb6]/76">
+      <p className="text-sm leading-6 text-[#f6d4cb]/76">
         Markers surface institutional state before entry so the archive behaves like terrain, not a flat list.
       </p>
     </div>
@@ -322,7 +322,7 @@ export default function ModelRegistryPage() {
           controls={
             <div className="anu-labyrinth-console">
               <label className="anu-labyrinth-console__search">
-                <Search className="h-4 w-4 text-[#d9c6a0]/72" />
+                <Search className="h-4 w-4 text-[#f6d4cb]/72" />
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
@@ -355,7 +355,7 @@ export default function ModelRegistryPage() {
                 ))}
               </div>
 
-              <p className="text-xs leading-6 text-[#cdbd9f]/72">
+              <p className="text-xs leading-6 text-[#f6d4cb]/72">
                 Search and filters belong to the archive console, not the main scene. Movement and state reading stay spatial first.
               </p>
             </div>
@@ -381,10 +381,10 @@ export default function ModelRegistryPage() {
               ))
             ) : error ? (
               <div className="anu-labyrinth-stage__message">
-                <AlertCircle className="h-5 w-5 text-[#f3c489]" />
+                <AlertCircle className="h-5 w-5 text-[#f6d4cb]" />
                 <div>
-                  <p className="text-sm font-semibold text-[#f7e0b1]">Archive sync failed</p>
-                  <p className="mt-1 text-sm leading-6 text-[#ddd0ba]/80">{error}</p>
+                  <p className="text-sm font-semibold text-[#f6d4cb]">Archive sync failed</p>
+                  <p className="mt-1 text-sm leading-6 text-[#f6d4cb]/80">{error}</p>
                 </div>
               </div>
             ) : archiveMarkers.length > 0 ? (
@@ -416,22 +416,22 @@ export default function ModelRegistryPage() {
                   <aside className="anu-labyrinth-stage__plaque">
                     <div className="flex items-center gap-2">
                       <StateSeal state={activeMarker.state} />
-                      <span className="text-[10px] uppercase tracking-[0.18em] text-[#d8c49d]/72">
+                      <span className="text-[10px] uppercase tracking-[0.18em] text-[#f6d4cb]/72">
                         {activeMarker.source.key}
                       </span>
                     </div>
                     <h3
-                      className="mt-4 text-2xl text-[#f7ead2]"
+                      className="mt-4 text-2xl text-[#f6d4cb]"
                       style={{ fontFamily: 'var(--anu-type-display)' }}
                     >
                       {activeMarker.title}
                     </h3>
-                    <p className="mt-3 text-sm leading-7 text-[#ded1bc]/78">{activeMarker.purpose}</p>
+                    <p className="mt-3 text-sm leading-7 text-[#f6d4cb]/78">{activeMarker.purpose}</p>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-[#e9dcc4]/82">
+                      <span className="rounded-full border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-3 py-1 text-xs text-[#f6d4cb]/82">
                         {activeMarker.versionLabel}
                       </span>
-                      <span className="rounded-full border border-[#d3b37c]/18 bg-[#d3b37c]/8 px-3 py-1 text-xs text-[#f2ddb0]">
+                      <span className="rounded-full border border-[#f6d4cb]/18 bg-[#f6d4cb]/8 px-3 py-1 text-xs text-[#f6d4cb]">
                         {activeMarker.shapeLabel}
                       </span>
                     </div>
@@ -440,10 +440,10 @@ export default function ModelRegistryPage() {
               </>
             ) : (
               <div className="anu-labyrinth-stage__message">
-                <Search className="h-5 w-5 text-slate-300/78" />
+                <Search className="h-5 w-5 text-[color:rgba(246,212,203,0.78)]" />
                 <div>
-                  <p className="text-sm font-semibold text-white">No archive entries match this pass</p>
-                  <p className="mt-1 text-sm leading-6 text-slate-300/78">
+                  <p className="text-sm font-semibold text-[var(--color-foreground)]">No archive entries match this pass</p>
+                  <p className="mt-1 text-sm leading-6 text-[color:rgba(246,212,203,0.78)]">
                     Adjust the archive console to reopen a visible lane of markers.
                   </p>
                 </div>
@@ -468,11 +468,11 @@ export default function ModelRegistryPage() {
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <StateSeal state={selectedModel.state} />
-                  <span className="inline-flex items-center gap-2 rounded-full border border-[#d3b37c]/18 bg-[#d3b37c]/8 px-3 py-1 text-xs text-[#70542f]">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[#f6d4cb]/18 bg-[#f6d4cb]/8 px-3 py-1 text-xs text-[#7c413c]">
                     <Compass className="h-3.5 w-3.5" />
                     {selectedModel.shapeLabel}
                   </span>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-[#b18d58]/18 bg-white/35 px-3 py-1 text-xs text-[#684d28]">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[#e0b115]/18 bg-[color:rgba(246,212,203,0.35)] px-3 py-1 text-xs text-[#7c413c]">
                     <ShieldCheck className="h-3.5 w-3.5" />
                     {selectedModel.source.key}
                   </span>
@@ -508,8 +508,8 @@ export default function ModelRegistryPage() {
                 </div>
 
                 <div className="anu-labyrinth-sidecar">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#d4c199]/74">Shape reading</p>
-                  <p className="mt-3 text-sm leading-7 text-[#ddd0ba]/82">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#f6d4cb]/74">Shape reading</p>
+                  <p className="mt-3 text-sm leading-7 text-[#f6d4cb]/82">
                     {selectedModel.shapeDetail}
                   </p>
                 </div>
@@ -520,18 +520,18 @@ export default function ModelRegistryPage() {
             selectedModel ? (
               <div className="space-y-4">
                 <div className="anu-labyrinth-sidecar">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#d4c199]/74">Steward lane</p>
-                  <p className="mt-3 text-sm leading-7 text-[#ddd0ba]/82">{selectedModel.stewardSummary}</p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#f6d4cb]/74">Steward lane</p>
+                  <p className="mt-3 text-sm leading-7 text-[#f6d4cb]/82">{selectedModel.stewardSummary}</p>
                 </div>
 
                 <div className="anu-labyrinth-sidecar">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#d4c199]/74">Dependencies</p>
-                  <p className="mt-3 text-sm leading-7 text-[#ddd0ba]/82">{selectedModel.dependencySummary}</p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#f6d4cb]/74">Dependencies</p>
+                  <p className="mt-3 text-sm leading-7 text-[#f6d4cb]/82">{selectedModel.dependencySummary}</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {selectedModel.dependencyInputs.map((input) => (
                       <span
                         key={input}
-                        className="rounded-full border border-[#c9ad74]/22 bg-[#f0ddbb]/24 px-3 py-1 text-xs text-[#5d4529]"
+                        className="rounded-full border border-[#e0b115]/22 bg-[#f6d4cb]/24 px-3 py-1 text-xs text-[#7c413c]"
                       >
                         {input}
                       </span>
@@ -539,13 +539,13 @@ export default function ModelRegistryPage() {
                     {selectedModel.parameterKeys.map((key) => (
                       <span
                         key={key}
-                        className="rounded-full border border-[#99744a]/22 bg-white/28 px-3 py-1 text-xs text-[#5b4326]"
+                        className="rounded-full border border-[#7c413c]/22 bg-[color:rgba(246,212,203,0.28)] px-3 py-1 text-xs text-[#7c413c]"
                       >
                         param: {key}
                       </span>
                     ))}
                     {selectedModel.dependencyInputs.length < 1 && selectedModel.parameterKeys.length < 1 ? (
-                      <span className="rounded-full border border-[#99744a]/16 bg-white/24 px-3 py-1 text-xs text-[#5b4326]">
+                      <span className="rounded-full border border-[#7c413c]/16 bg-[color:rgba(246,212,203,0.24)] px-3 py-1 text-xs text-[#7c413c]">
                         No published dependency fields
                       </span>
                     ) : null}
@@ -553,12 +553,12 @@ export default function ModelRegistryPage() {
                 </div>
 
                 <div className="anu-labyrinth-sidecar">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#d4c199]/74">History and release discipline</p>
-                  <p className="mt-3 text-sm leading-7 text-[#ddd0ba]/82">{selectedModel.historySummary}</p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#f6d4cb]/74">History and release discipline</p>
+                  <p className="mt-3 text-sm leading-7 text-[#f6d4cb]/82">{selectedModel.historySummary}</p>
                   {selectedModel.releaseNotes.length > 0 ? (
-                    <ul className="mt-4 space-y-2 text-sm text-[#5a4630]">
+                    <ul className="mt-4 space-y-2 text-sm text-[#7c413c]">
                       {selectedModel.releaseNotes.map((note) => (
-                        <li key={note} className="rounded-2xl border border-[#4d3a23]/14 bg-white/38 px-3 py-2">
+                        <li key={note} className="rounded-2xl border border-[#665700]/14 bg-[color:rgba(246,212,203,0.38)] px-3 py-2">
                           {note}
                         </li>
                       ))}

@@ -73,7 +73,7 @@ export default function FloraFaunaMemePageRoute() {
       className="min-h-screen"
       style={{
         background:
-          'radial-gradient(circle at top center, rgba(217,119,6,0.12), transparent 22%), linear-gradient(180deg, rgba(250,249,247,1) 0%, rgba(240,244,239,1) 100%)',
+          'radial-gradient(circle at top center, rgba(224,177,21,0.12), transparent 22%), linear-gradient(180deg, rgba(246,212,203,1) 0%, rgba(246,212,203,1) 100%)',
       }}
     >
       <div className="max-w-6xl mx-auto px-4 md:px-8 pt-28 pb-20 space-y-8">
@@ -94,14 +94,14 @@ export default function FloraFaunaMemePageRoute() {
                 {meme.title}
               </h1>
               <p className="mt-4 text-lg text-[var(--color-earth-medium)]">{meme.summary}</p>
-              <div className="mt-6 rounded-[1.75rem] border border-[var(--color-border)] bg-white/80 px-6 py-6">
+              <div className="mt-6 rounded-[1.75rem] border border-[var(--color-border)] bg-[color:rgba(246,212,203,0.8)] px-6 py-6">
                 <p className="text-[var(--color-earth-dark)] leading-relaxed whitespace-pre-line">
                   {meme.body}
                 </p>
               </div>
             </div>
 
-            <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-white/75 px-5 py-5 min-w-[260px]">
+            <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-[color:rgba(246,212,203,0.75)] px-5 py-5 min-w-[260px]">
               <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--color-earth-medium)]">
                 Channel
               </p>

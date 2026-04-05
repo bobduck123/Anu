@@ -238,7 +238,7 @@ export default function DumbDumbManagePage() {
           </p>
           <Link
             href="/auth"
-            className="mt-6 inline-flex items-center justify-center rounded-full bg-[var(--color-institutional)] px-6 py-3 text-sm font-medium text-white"
+            className="mt-6 inline-flex items-center justify-center rounded-full bg-[var(--color-institutional)] px-6 py-3 text-sm font-medium text-[var(--color-foreground)]"
           >
             Sign in
           </Link>
@@ -263,7 +263,7 @@ export default function DumbDumbManagePage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href={`/wishlist/${selectedList.slug}`}
-              className="inline-flex items-center justify-center rounded-full bg-[var(--color-earth-dark)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-92"
+              className="inline-flex items-center justify-center rounded-full bg-[var(--color-earth-dark)] px-5 py-2.5 text-sm font-medium text-[var(--color-foreground)] transition-colors hover:opacity-92"
             >
               Preview discreet share page
             </Link>
@@ -410,7 +410,7 @@ export default function DumbDumbManagePage() {
             </FormField>
 
             {(itemForm.source_site_name || itemForm.source_url) && (
-              <div className="md:col-span-2 rounded-[1.2rem] border border-[rgba(30,58,95,0.12)] bg-[rgba(250,249,247,0.92)] px-4 py-3 text-sm text-[var(--color-earth-medium)]">
+              <div className="md:col-span-2 rounded-[1.2rem] border border-[rgba(30,2,39,0.12)] bg-[rgba(246,212,203,0.92)] px-4 py-3 text-sm text-[var(--color-earth-medium)]">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-foreground)]">Imported source</p>
@@ -442,13 +442,13 @@ export default function DumbDumbManagePage() {
             </FormField>
 
             {itemForm.image_url ? (
-              <div className="md:col-span-2 rounded-[1.5rem] border border-[rgba(30,58,95,0.12)] bg-[linear-gradient(180deg,rgba(250,249,247,0.98),rgba(255,255,255,0.94))] p-4">
+              <div className="md:col-span-2 rounded-[1.5rem] border border-[rgba(30,2,39,0.12)] bg-[linear-gradient(180deg,rgba(246,212,203,0.98),rgba(246,212,203,0.94))] p-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-foreground)]">Image preview</p>
-                <div className="mt-3 flex min-h-[220px] items-center justify-center rounded-[1.25rem] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.95),rgba(229,224,214,0.9))] p-4">
+                <div className="mt-3 flex min-h-[220px] items-center justify-center rounded-[1.25rem] bg-[radial-gradient(circle_at_top,rgba(246,212,203,0.95),rgba(246,212,203,0.9))] p-4">
                   <img
                     src={itemForm.image_url}
                     alt={itemForm.title || 'Wishlist item preview'}
-                    className="max-h-[240px] w-auto max-w-full object-contain drop-shadow-[0_20px_20px_rgba(34,28,18,0.18)]"
+                    className="max-h-[240px] w-auto max-w-full object-contain drop-shadow-[0_20px_20px_rgba(30,2,39,0.18)]"
                   />
                 </div>
               </div>

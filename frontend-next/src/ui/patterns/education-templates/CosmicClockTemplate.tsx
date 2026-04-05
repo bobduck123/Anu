@@ -73,7 +73,7 @@ export function CosmicClockTemplate({ mode = 'full' }: Props) {
   const isCompact = mode === 'compact';
 
   return (
-    <div className={`relative ${isCompact ? 'h-full' : 'min-h-[calc(100vh-56px)]'} bg-[#0a0a0a] text-white flex`}>
+    <div className={`relative ${isCompact ? 'h-full' : 'min-h-[calc(100vh-56px)]'} bg-[#1e0227] text-[var(--color-foreground)] flex`}>
       {/* Full-viewport canvas */}
       <div className="flex-1 relative">
         <canvas
@@ -87,13 +87,13 @@ export function CosmicClockTemplate({ mode = 'full' }: Props) {
         <div
           ref={tooltipRef}
           className="absolute hidden z-30 px-3 py-2 rounded-lg text-[11px] max-w-[200px] pointer-events-none"
-          style={{ background: 'rgba(0,0,0,0.9)', border: '1px solid rgba(255,255,255,0.15)' }}
+          style={{ background: 'rgba(30,2,39,0.9)', border: '1px solid rgba(246,212,203,0.15)' }}
         />
 
         {/* Info panel (top-left) */}
         {!isCompact && (
           <div className="absolute top-4 left-4 z-20 p-4 rounded-xl max-w-[220px]"
-            style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            style={{ background: 'rgba(30,2,39,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(246,212,203,0.08)' }}>
             <h2 className="text-sm font-semibold mb-1">Cosmic Clock</h2>
             <div className="text-lg font-mono tracking-wide">{displayTime}</div>
             <div className="text-[10px] opacity-50 mt-1">{displayDate}</div>
@@ -118,10 +118,10 @@ export function CosmicClockTemplate({ mode = 'full' }: Props) {
 
         {/* Speed controls (bottom) */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 px-2 py-1 rounded-full"
-          style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          style={{ background: 'rgba(30,2,39,0.7)', border: '1px solid rgba(246,212,203,0.1)' }}>
           {isCompact ? (
             <button onClick={cycleSpeed}
-              className="px-3 py-1 text-[10px] rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+              className="px-3 py-1 text-[10px] rounded-full bg-[color:rgba(246,212,203,0.1)] hover:bg-[color:rgba(246,212,203,0.2)] transition-colors">
               {SPEED_OPTIONS[speedCycleIdx].label}
             </button>
           ) : (
@@ -129,7 +129,7 @@ export function CosmicClockTemplate({ mode = 'full' }: Props) {
               <button key={opt.label}
                 onClick={() => setSpeed(opt.value)}
                 className={`px-3 py-1.5 text-[10px] rounded-full transition-colors ${
-                  speedMultiplier === opt.value ? 'bg-white/20 text-white' : 'text-white/50 hover:text-white/80'
+                  speedMultiplier === opt.value ? 'bg-[color:rgba(246,212,203,0.2)] text-[var(--color-foreground)]' : 'text-[color:rgba(246,212,203,0.5)] hover:text-[color:rgba(246,212,203,0.8)]'
                 }`}>
                 {opt.label}
               </button>
@@ -140,14 +140,14 @@ export function CosmicClockTemplate({ mode = 'full' }: Props) {
 
       {/* Event panel (right side) — full mode only */}
       {!isCompact && (
-        <div className="w-72 border-l border-white/10 flex flex-col overflow-hidden"
-          style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(12px)' }}>
+        <div className="w-72 border-l border-[color:rgba(246,212,203,0.1)] flex flex-col overflow-hidden"
+          style={{ background: 'rgba(30,2,39,0.5)', backdropFilter: 'blur(12px)' }}>
           {/* Filter buttons */}
-          <div className="flex flex-wrap gap-1 p-3 border-b border-white/10">
+          <div className="flex flex-wrap gap-1 p-3 border-b border-[color:rgba(246,212,203,0.1)]">
             <button
               onClick={() => setActiveFilter('all')}
               className={`px-2 py-1 text-[9px] rounded-full transition-colors ${
-                activeFilter === 'all' ? 'bg-white/20 text-white' : 'text-white/40 hover:text-white/70'
+                activeFilter === 'all' ? 'bg-[color:rgba(246,212,203,0.2)] text-[var(--color-foreground)]' : 'text-[color:rgba(246,212,203,0.4)] hover:text-[color:rgba(246,212,203,0.7)]'
               }`}>
               All
             </button>
@@ -155,7 +155,7 @@ export function CosmicClockTemplate({ mode = 'full' }: Props) {
               <button key={cat}
                 onClick={() => setActiveFilter(cat)}
                 className={`px-2 py-1 text-[9px] rounded-full transition-colors ${
-                  activeFilter === cat ? 'text-white' : 'text-white/40 hover:text-white/70'
+                  activeFilter === cat ? 'text-[var(--color-foreground)]' : 'text-[color:rgba(246,212,203,0.4)] hover:text-[color:rgba(246,212,203,0.7)]'
                 }`}
                 style={activeFilter === cat ? { backgroundColor: CATEGORY_COLORS[cat] + '44' } : {}}>
                 {CATEGORY_LABELS[cat]}
@@ -169,9 +169,9 @@ export function CosmicClockTemplate({ mode = 'full' }: Props) {
           </div>
 
           {/* Edit events button */}
-          <div className="p-3 border-t border-white/10">
+          <div className="p-3 border-t border-[color:rgba(246,212,203,0.1)]">
             <button onClick={() => setShowEventEditor(true)}
-              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[10px] rounded-lg bg-white/10 hover:bg-white/15 transition-colors">
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[10px] rounded-lg bg-[color:rgba(246,212,203,0.1)] hover:bg-[color:rgba(246,212,203,0.15)] transition-colors">
               <Edit3 className="w-3 h-3" /> Edit Events
             </button>
           </div>
@@ -180,31 +180,31 @@ export function CosmicClockTemplate({ mode = 'full' }: Props) {
 
       {/* Event Editor Modal */}
       {showEventEditor && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={() => setShowEventEditor(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[color:rgba(30,2,39,0.7)]" onClick={() => setShowEventEditor(false)}>
           <div className="rounded-xl p-5 max-w-md w-full max-h-[80vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
-            style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.15)' }}>
+            style={{ background: '#1e0227', border: '1px solid rgba(246,212,203,0.15)' }}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold">Event Editor</h3>
-              <button onClick={() => setShowEventEditor(false)} className="p-1 hover:bg-white/10 rounded"><X className="w-4 h-4" /></button>
+              <button onClick={() => setShowEventEditor(false)} className="p-1 hover:bg-[color:rgba(246,212,203,0.1)] rounded"><X className="w-4 h-4" /></button>
             </div>
 
             {/* Add new event form */}
-            <div className="space-y-2 mb-4 p-3 rounded-lg bg-white/5">
+            <div className="space-y-2 mb-4 p-3 rounded-lg bg-[color:rgba(246,212,203,0.05)]">
               <input value={newEventName} onChange={e => setNewEventName(e.target.value)}
-                placeholder="Event name" className="w-full text-[11px] px-2 py-1.5 rounded bg-white/10 border border-white/10 outline-none" />
+                placeholder="Event name" className="w-full text-[11px] px-2 py-1.5 rounded bg-[color:rgba(246,212,203,0.1)] border border-[color:rgba(246,212,203,0.1)] outline-none" />
               <input value={newEventDesc} onChange={e => setNewEventDesc(e.target.value)}
-                placeholder="Description" className="w-full text-[11px] px-2 py-1.5 rounded bg-white/10 border border-white/10 outline-none" />
+                placeholder="Description" className="w-full text-[11px] px-2 py-1.5 rounded bg-[color:rgba(246,212,203,0.1)] border border-[color:rgba(246,212,203,0.1)] outline-none" />
               <div className="flex gap-2">
                 <input type="date" value={newEventDate} onChange={e => setNewEventDate(e.target.value)}
-                  className="flex-1 text-[11px] px-2 py-1.5 rounded bg-white/10 border border-white/10 outline-none" />
+                  className="flex-1 text-[11px] px-2 py-1.5 rounded bg-[color:rgba(246,212,203,0.1)] border border-[color:rgba(246,212,203,0.1)] outline-none" />
                 <select value={newEventCategory} onChange={e => setNewEventCategory(e.target.value as EventCategory)}
-                  className="text-[11px] px-2 py-1.5 rounded bg-white/10 border border-white/10 outline-none">
+                  className="text-[11px] px-2 py-1.5 rounded bg-[color:rgba(246,212,203,0.1)] border border-[color:rgba(246,212,203,0.1)] outline-none">
                   {ALL_CATEGORIES.map(cat => <option key={cat} value={cat}>{CATEGORY_LABELS[cat]}</option>)}
                 </select>
               </div>
               <button onClick={handleAddEvent}
-                className="w-full flex items-center justify-center gap-1 px-3 py-1.5 text-[10px] rounded bg-blue-600 hover:bg-blue-500 transition-colors">
+                className="w-full flex items-center justify-center gap-1 px-3 py-1.5 text-[10px] rounded bg-[#7c413c] hover:bg-[#7c413c] transition-colors">
                 <Plus className="w-3 h-3" /> Add Event
               </button>
             </div>
@@ -214,12 +214,12 @@ export function CosmicClockTemplate({ mode = 'full' }: Props) {
               <div className="space-y-1 mb-3">
                 <div className="text-[9px] uppercase tracking-wider opacity-50 mb-1">Custom Events</div>
                 {customEvents.map((evt, i) => (
-                  <div key={i} className="flex items-center justify-between p-2 rounded bg-white/5 text-[10px]">
+                  <div key={i} className="flex items-center justify-between p-2 rounded bg-[color:rgba(246,212,203,0.05)] text-[10px]">
                     <div>
                       <span className="w-2 h-2 inline-block rounded-full mr-1.5" style={{ backgroundColor: CATEGORY_COLORS[evt.category] }} />
                       {evt.name}
                     </div>
-                    <button onClick={() => removeCustomEvent(i)} className="p-1 hover:bg-white/10 rounded text-red-400">
+                    <button onClick={() => removeCustomEvent(i)} className="p-1 hover:bg-[color:rgba(246,212,203,0.1)] rounded text-[#7c413c]">
                       <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
@@ -228,7 +228,7 @@ export function CosmicClockTemplate({ mode = 'full' }: Props) {
             )}
 
             <button onClick={resetToDefaults}
-              className="w-full flex items-center justify-center gap-1 px-3 py-2 text-[10px] rounded border border-white/20 hover:bg-white/10 transition-colors">
+              className="w-full flex items-center justify-center gap-1 px-3 py-2 text-[10px] rounded border border-[color:rgba(246,212,203,0.2)] hover:bg-[color:rgba(246,212,203,0.1)] transition-colors">
               <RotateCcw className="w-3 h-3" /> Reset to Defaults
             </button>
           </div>
@@ -266,7 +266,7 @@ function EventList({ getCurrentTime, filter }: { getCurrentTime: () => Date; fil
         const daysUntil = Math.ceil((evt.date.getTime() - now.getTime()) / 86400000);
         const dateStr = evt.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         return (
-          <div key={i} className="flex items-start gap-2 text-[10px] p-2 rounded-lg bg-white/5">
+          <div key={i} className="flex items-start gap-2 text-[10px] p-2 rounded-lg bg-[color:rgba(246,212,203,0.05)]">
             <span className="w-2 h-2 rounded-full mt-0.5 shrink-0" style={{ backgroundColor: CATEGORY_COLORS[evt.category] }} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">

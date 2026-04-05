@@ -26,7 +26,7 @@ export function TemplateSelector({ selected, onChange }: TemplateSelectorProps) 
           >
             {active && (
               <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[var(--color-primary)] flex items-center justify-center">
-                <Check className="w-3 h-3 text-white" />
+                <Check className="w-3 h-3 text-[var(--color-foreground)]" />
               </div>
             )}
             <div className="text-2xl mb-2">{t.icon}</div>

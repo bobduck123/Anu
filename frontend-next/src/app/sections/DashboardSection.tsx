@@ -101,7 +101,7 @@ export function DashboardSection() {
     <section 
       ref={sectionRef}
       id="dashboard"
-      className="section-editorial bg-[rgb(var(--background))]"
+      className="section-editorial bg-[var(--color-background)]"
       aria-label="Impact Pools Dashboard"
     >
       <div className="max-w-7xl mx-auto">
@@ -109,7 +109,7 @@ export function DashboardSection() {
         <div ref={headerRef} className="mb-12">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div>
-              <span className="inline-flex items-center gap-2 text-sm font-medium text-[rgb(var(--color-institutional))] mb-3">
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-institutional)] mb-3">
                 <Activity className="w-4 h-4" />
                 Live Dashboard
                 {isLoading && <Loader2 className="w-3 h-3 animate-spin ml-1" />}
@@ -130,7 +130,7 @@ export function DashboardSection() {
                 </p>
               )}
               {error && (
-                <p className="text-xs text-amber-600 mt-2">
+                <p className="text-xs text-[#665700] mt-2">
                   Live pool balances are unavailable right now.
                 </p>
               )}
@@ -139,22 +139,22 @@ export function DashboardSection() {
             {/* Total Balance Card */}
             <div className="card-civic-dark min-w-[280px]">
               <div className="flex items-center gap-3 mb-2">
-                <Wallet className="w-5 h-5 text-[rgb(var(--color-sage))]" />
-                <span className="text-white/70 text-sm">
+                <Wallet className="w-5 h-5 text-[var(--color-sage)]" />
+                <span className="text-[color:rgba(246,212,203,0.7)] text-sm">
                   {isAuthenticated ? 'Total Commons Balance' : 'Live Ledger Status'}
                 </span>
               </div>
               {isAuthenticated ? (
                 <>
-                  <div className="text-4xl font-semibold text-white font-mono-data">
+                  <div className="text-4xl font-semibold text-[var(--color-foreground)] font-mono-data">
                     <TotalBalance value={totalBalance} />
                   </div>
                   <div className="flex items-center gap-2 mt-2 text-sm">
-                    <span className="text-white/50">Visible from your signed-in node context</span>
+                    <span className="text-[color:rgba(246,212,203,0.5)]">Visible from your signed-in node context</span>
                   </div>
                 </>
               ) : (
-                <div className="text-sm text-white/70 leading-relaxed">
+                <div className="text-sm text-[color:rgba(246,212,203,0.7)] leading-relaxed">
                   Public visitors see structure and purpose here. Signed-in members see live balances.
                 </div>
               )}
@@ -180,9 +180,9 @@ export function DashboardSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
               <div key={i} className="card-civic animate-pulse">
-                <div className="h-20 bg-gray-200 rounded mb-4" />
-                <div className="h-8 bg-gray-200 rounded mb-2 w-3/4" />
-                <div className="h-4 bg-gray-200 rounded w-1/2" />
+                <div className="h-20 bg-[color:rgba(246,212,203,0.18)] rounded mb-4" />
+                <div className="h-8 bg-[color:rgba(246,212,203,0.18)] rounded mb-2 w-3/4" />
+                <div className="h-4 bg-[color:rgba(246,212,203,0.18)] rounded w-1/2" />
               </div>
             ))}
           </div>
@@ -224,7 +224,7 @@ export function DashboardSection() {
         <div className="mt-10 text-center">
           <Link
             href="/pools"
-            className="inline-flex items-center gap-2 text-[rgb(var(--color-institutional))] font-medium hover:gap-3 transition-all duration-300 focus-ring rounded-lg px-4 py-2"
+            className="inline-flex items-center gap-2 text-[var(--color-institutional)] font-medium hover:gap-3 transition-all duration-300 focus-ring rounded-lg px-4 py-2"
           >
             View all pools and ledger entries
             <ArrowRight className="w-4 h-4" />

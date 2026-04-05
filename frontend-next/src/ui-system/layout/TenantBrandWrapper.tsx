@@ -28,8 +28,8 @@ const defaultConfig: TenantConfig = {
   slug: '',
   name: brand.name,
   logo: '',
-  primaryColor: '#17324a',
-  accentColor: '#d18632',
+  primaryColor: '#1e0227',
+  accentColor: '#e0b115',
   modules: {
     marketplace: true,
     calendar: true,

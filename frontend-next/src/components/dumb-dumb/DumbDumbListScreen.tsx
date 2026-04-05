@@ -18,7 +18,7 @@ export function DumbDumbListScreen({ list }: DumbDumbListScreenProps) {
           Back to Dumb Dumb Mode
         </Link>
 
-        <section className="mt-8 rounded-[2rem] border border-[rgba(30,58,95,0.1)] bg-[linear-gradient(135deg,rgba(224,232,240,0.76),rgba(255,255,255,0.94),rgba(232,240,228,0.86))] px-6 py-10 shadow-[0_24px_44px_-32px_rgba(30,58,95,0.45)] sm:px-8">
+        <section className="mt-8 rounded-[2rem] border border-[rgba(30,2,39,0.1)] bg-[linear-gradient(135deg,rgba(246,212,203,0.76),rgba(246,212,203,0.94),rgba(246,212,203,0.86))] px-6 py-10 shadow-[0_24px_44px_-32px_rgba(30,2,39,0.45)] sm:px-8">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-institutional)]">Public parody list</p>
@@ -28,7 +28,7 @@ export function DumbDumbListScreen({ list }: DumbDumbListScreenProps) {
               <p className="mt-4 text-lg leading-8 text-[var(--color-earth-medium)]">{list.intro_text}</p>
             </div>
 
-            <div className="rounded-[1.6rem] border border-white/70 bg-white/85 px-5 py-5">
+            <div className="rounded-[1.6rem] border border-[color:rgba(246,212,203,0.7)] bg-[color:rgba(246,212,203,0.85)] px-5 py-5">
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-institutional-light)] text-[var(--color-institutional)]">
                   <User2 className="h-5 w-5" />
@@ -45,7 +45,7 @@ export function DumbDumbListScreen({ list }: DumbDumbListScreenProps) {
             </div>
           </div>
 
-          <div className="mt-8 rounded-[1.5rem] border border-[rgba(45,90,61,0.15)] bg-white/82 p-5">
+          <div className="mt-8 rounded-[1.5rem] border border-[rgba(124,65,60,0.15)] bg-[color:rgba(246,212,203,0.82)] p-5">
             <p className="text-sm leading-7 text-[var(--color-earth-dark)]">
               <strong className="text-[var(--color-forest)]">Transparent satire disclaimer:</strong> {list.parody_disclaimer}
             </p>

@@ -24,10 +24,10 @@ interface ImpactPoolCardProps {
 }
 
 const colorMap = {
-  sage: { bg: 'rgb(var(--color-sage))', light: 'rgba(135, 168, 120, 0.1)' },
-  forest: { bg: 'rgb(var(--color-forest))', light: 'rgba(45, 90, 61, 0.1)' },
-  institutional: { bg: 'rgb(var(--color-institutional))', light: 'rgba(30, 58, 95, 0.1)' },
-  accent: { bg: 'rgb(var(--color-accent))', light: 'rgba(217, 119, 6, 0.1)' },
+  sage: { bg: 'rgb(var(--color-sage))', light: 'rgba(124,65,60,0.1)' },
+  forest: { bg: 'rgb(var(--color-forest))', light: 'rgba(124,65,60,0.1)' },
+  institutional: { bg: 'rgb(var(--color-institutional))', light: 'rgba(30,2,39,0.1)' },
+  accent: { bg: 'rgb(var(--color-accent))', light: 'rgba(224,177,21,0.1)' },
 };
 
 const iconMap = {
@@ -82,7 +82,7 @@ function DonutChart({
         fill="none"
         stroke="currentColor"
         strokeWidth={strokeWidth}
-        className="text-gray-200"
+        className="text-[#f6d4cb]"
       />
       {/* Progress circle */}
       <circle
@@ -243,10 +243,10 @@ export function ImpactPoolCard({
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+      <div className="flex items-center justify-between pt-4 border-t border-[#f6d4cb]">
         <div className={`flex items-center gap-1 text-sm ${
-          trend === 'up' ? 'text-green-600' : 
-          trend === 'down' ? 'text-red-600' : 'text-gray-500'
+          trend === 'up' ? 'text-[#665700]' : 
+          trend === 'down' ? 'text-[#7c413c]' : 'text-[#7c413c]'
         }`}>
           {trend === 'up' ? (
             <TrendingUp className="w-4 h-4" />

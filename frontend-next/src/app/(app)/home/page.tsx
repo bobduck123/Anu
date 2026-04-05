@@ -98,7 +98,7 @@ export default function HomePage() {
           }
           description={
             <>
-              <span className="font-medium text-white">/home</span> is the steward workspace for members, organisers, and
+              <span className="font-medium text-[var(--color-foreground)]">/home</span> is the steward workspace for members, organisers, and
               admins. Enter with an account to coordinate local action, then move between Manara signals, trust surfaces,
               and learning pathways without losing context.
             </>
@@ -116,7 +116,7 @@ export default function HomePage() {
           aside={
             <AnuSurfacePanel tone="quiet" className="h-full p-5 md:p-6">
               <p className="anu-lab-kicker">Steward access</p>
-              <h2 className="mt-3 text-2xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              <h2 className="mt-3 text-2xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
                 Why sign in?
               </h2>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -124,12 +124,12 @@ export default function HomePage() {
                 <AnuChip tone="muted">Saved progress</AnuChip>
                 <AnuChip tone="muted">Node activity</AnuChip>
               </div>
-              <ul className="mt-4 space-y-3 text-sm text-slate-200/90">
-                <li className="rounded-xl border border-white/10 bg-[#0f1b2d]/55 px-3 py-2">Save your learning progress and reflections.</li>
-                <li className="rounded-xl border border-white/10 bg-[#0f1b2d]/55 px-3 py-2">Post to community streams with accountable identity.</li>
-                <li className="rounded-xl border border-white/10 bg-[#0f1b2d]/55 px-3 py-2">Track pledges, resources, and node-level activity.</li>
+              <ul className="mt-4 space-y-3 text-sm text-[color:rgba(246,212,203,0.9)]">
+                <li className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[#1e0227]/55 px-3 py-2">Save your learning progress and reflections.</li>
+                <li className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[#1e0227]/55 px-3 py-2">Post to community streams with accountable identity.</li>
+                <li className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[#1e0227]/55 px-3 py-2">Track pledges, resources, and node-level activity.</li>
               </ul>
-              <p className="mt-4 text-xs leading-5 text-slate-300/90">
+              <p className="mt-4 text-xs leading-5 text-[color:rgba(246,212,203,0.9)]">
                 If you are exploring for the first time, begin with the orientation flow below before entering steward mode.
               </p>
             </AnuSurfacePanel>
@@ -156,10 +156,10 @@ export default function HomePage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-3xl">
             <p className="anu-lab-kicker">Home beacon</p>
-            <h1 className="mt-3 text-3xl text-white md:text-[2.6rem]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+            <h1 className="mt-3 text-3xl text-[var(--color-foreground)] md:text-[2.6rem]" style={{ fontFamily: 'var(--anu-type-display)' }}>
               {roleSummary.title}
             </h1>
-            <p className="mt-3 text-sm leading-6 text-slate-200/86 md:text-base">{roleSummary.detail}</p>
+            <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.86)] md:text-base">{roleSummary.detail}</p>
           </div>
           <div className="flex flex-wrap gap-2 lg:justify-end">
             <AnuChip tone="accent">Role: {formatRoleLabel(role)}</AnuChip>

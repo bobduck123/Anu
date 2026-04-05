@@ -57,7 +57,7 @@ export function AnuNarrativeBriefPanel({
         {signals.map((signal) => (
           <div
             key={signal.label}
-            className={`rounded-2xl border border-white/10 bg-white/[0.03] ${
+            className={`rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] ${
               compact ? 'px-4 py-4' : 'px-4 py-4'
             }`}
           >
@@ -66,21 +66,21 @@ export function AnuNarrativeBriefPanel({
                 {signal.label}
               </AnuChip>
             </div>
-            <div className={compact ? 'mt-3 text-base font-semibold text-white' : 'mt-3 text-lg font-semibold text-white'}>
+            <div className={compact ? 'mt-3 text-base font-semibold text-[var(--color-foreground)]' : 'mt-3 text-lg font-semibold text-[var(--color-foreground)]'}>
               {signal.value}
             </div>
-            <div className="mt-2 text-sm leading-6 text-slate-300/82">{signal.detail}</div>
+            <div className="mt-2 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{signal.detail}</div>
           </div>
         ))}
       </div>
 
-      <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4">
+      <div className="mt-5 rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-4 py-4">
         <div className="flex flex-wrap items-center gap-2">
           <AnuChip tone="signal" icon={FileSearch}>
             Why this matters
           </AnuChip>
         </div>
-        <div className="mt-3 text-sm leading-6 text-slate-200/84">{whyItMatters}</div>
+        <div className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">{whyItMatters}</div>
         {actions.length > 0 ? (
           <div className="mt-4 flex flex-wrap gap-2">
             {actions.map((action) => (

@@ -207,8 +207,8 @@ export default function ReliefPage() {
       }
       secondary={
         <AnuSurfacePanel tone="quiet" className="px-5 py-5">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Care lane notes</p>
-          <div className="mt-4 space-y-3 text-sm leading-6 text-slate-200/82">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">Care lane notes</p>
+          <div className="mt-4 space-y-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
             <p>Purpose: {selectedRequestMarker.request.purpose}</p>
             <p>Queue estimate: {selectedRequestMarker.request.queue_position_estimate ?? 'Pending'}</p>
             <p>Status: {selectedRequestMarker.request.status}</p>
@@ -250,8 +250,8 @@ export default function ReliefPage() {
       }
       secondary={
         <AnuSurfacePanel tone="quiet" className="px-5 py-5">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Route notes</p>
-          <p className="mt-4 text-sm leading-6 text-slate-200/82">{selectedStation.detail}</p>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">Route notes</p>
+          <p className="mt-4 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{selectedStation.detail}</p>
         </AnuSurfacePanel>
       }
       footer={
@@ -296,11 +296,11 @@ export default function ReliefPage() {
           <ReliefIntakeForm />
         ) : (
           <AnuSurfacePanel tone="soft" className="p-5">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Protected intake</p>
-            <h2 className="mt-3 text-3xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">Protected intake</p>
+            <h2 className="mt-3 text-3xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
               Sign in to enter the care lane.
             </h2>
-            <p className="mt-4 text-sm leading-6 text-slate-300/82">
+            <p className="mt-4 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
               Relief requests and case updates require authentication because request details are private by default.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
@@ -315,8 +315,8 @@ export default function ReliefPage() {
         )}
 
         <AnuSurfacePanel tone="quiet" className="p-5">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Care posture</p>
-          <p className="mt-4 text-sm leading-6 text-slate-300/84">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">Care posture</p>
+          <p className="mt-4 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">
             Relief should feel careful and accountable. The request stays private, the broader trust surface stays public, and the route relationships remain clear.
           </p>
         </AnuSurfacePanel>
@@ -326,18 +326,18 @@ export default function ReliefPage() {
         <section>
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Your requests</p>
-              <h2 className="mt-2 text-3xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">Your requests</p>
+              <h2 className="mt-2 text-3xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
                 Track private queue state
               </h2>
-              <p className="mt-3 text-sm leading-6 text-slate-300/82">
+              <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
                 Status, amount, and purpose remain visible to you without exposing your case to the public layer.
               </p>
             </div>
           </div>
 
           {error ? (
-            <AnuSurfacePanel tone="quiet" className="mt-5 p-5 text-amber-200">
+            <AnuSurfacePanel tone="quiet" className="mt-5 p-5 text-[#e0b115]">
               <p className="text-sm">{error}</p>
             </AnuSurfacePanel>
           ) : null}
@@ -347,20 +347,20 @@ export default function ReliefPage() {
               <AnuSurfacePanel key={req.id} tone="soft" className="p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-white">Request #{req.id}</p>
-                    <p className="mt-1 text-sm text-slate-300/82">Purpose: {req.purpose}</p>
+                    <p className="text-sm font-semibold text-[var(--color-foreground)]">Request #{req.id}</p>
+                    <p className="mt-1 text-sm text-[color:rgba(246,212,203,0.82)]">Purpose: {req.purpose}</p>
                   </div>
-                  <span className="rounded-full border border-white/12 bg-white/[0.04] px-3 py-1 text-xs uppercase tracking-[0.16em] text-slate-200">
+                  <span className="rounded-full border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.04)] px-3 py-1 text-xs uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.84)]">
                     {req.status}
                   </span>
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-300/84">
-                    Amount requested: <strong className="font-mono-data text-white">{moneyLabel(req.amount_requested_cents)}</strong>
+                  <div className="rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-4 py-3 text-sm text-[color:rgba(246,212,203,0.84)]">
+                    Amount requested: <strong className="font-mono-data text-[var(--color-foreground)]">{moneyLabel(req.amount_requested_cents)}</strong>
                   </div>
                   {req.queue_position_estimate ? (
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-300/84">
-                      Queue estimate: <strong className="font-mono-data text-white">{req.queue_position_estimate}</strong>
+                    <div className="rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-4 py-3 text-sm text-[color:rgba(246,212,203,0.84)]">
+                      Queue estimate: <strong className="font-mono-data text-[var(--color-foreground)]">{req.queue_position_estimate}</strong>
                     </div>
                   ) : null}
                 </div>
@@ -368,7 +368,7 @@ export default function ReliefPage() {
             ))}
             {!requests.length ? (
               <AnuSurfacePanel tone="quiet" className="p-5">
-                <p className="text-sm text-slate-300/82">No requests yet.</p>
+                <p className="text-sm text-[color:rgba(246,212,203,0.82)]">No requests yet.</p>
               </AnuSurfacePanel>
             ) : null}
           </div>

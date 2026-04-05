@@ -50,7 +50,7 @@ export default function DumbDumbSuccessPage() {
   if (missing) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="rounded-[1.6rem] border border-[var(--color-border)] bg-white px-6 py-8 text-center">
+        <div className="rounded-[1.6rem] border border-[var(--color-border)] bg-[var(--color-foreground)] px-6 py-8 text-center">
           <h1 className="text-3xl font-semibold text-[var(--color-earth-dark)]" style={{ fontFamily: 'var(--font-serif)' }}>
             Receipt not found
           </h1>
@@ -59,7 +59,7 @@ export default function DumbDumbSuccessPage() {
           </p>
           <Link
             href="/dumb-dumb"
-            className="mt-6 inline-flex items-center justify-center rounded-full bg-[var(--color-institutional)] px-5 py-2.5 text-sm font-medium text-white"
+            className="mt-6 inline-flex items-center justify-center rounded-full bg-[var(--color-institutional)] px-5 py-2.5 text-sm font-medium text-[var(--color-foreground)]"
           >
             Back to hub
           </Link>

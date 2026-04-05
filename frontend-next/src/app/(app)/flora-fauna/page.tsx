@@ -88,14 +88,14 @@ export default function FloraFaunaFeedPage() {
       className="manara-grid-hero min-h-screen"
       style={{
         background:
-          'radial-gradient(circle at 20% 0%, rgba(242,199,134,0.14), transparent 28%), radial-gradient(circle at 86% 8%, rgba(63,110,160,0.18), transparent 34%), linear-gradient(180deg,#0a1322_0%,#08111e_60%,#08101a_100%)',
+          'radial-gradient(circle at 20% 0%, rgba(246,212,203,0.14), transparent 28%), radial-gradient(circle at 86% 8%, rgba(124,65,60,0.18), transparent 34%), linear-gradient(180deg,#0a1322_0%,#08111e_60%,#08101a_100%)',
       }}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-28 pb-20 space-y-8">
         {actionableError ? (
-          <AnuSurfacePanel tone="quiet" className="border-amber-300/34 bg-[linear-gradient(152deg,rgba(39,29,12,0.92),rgba(24,17,8,0.92))] p-5 text-amber-100">
-            <p className="text-sm font-semibold text-amber-200">{actionableError.headline}</p>
-            <p className="mt-2 text-sm text-amber-100/92">{actionableError.detail}</p>
+          <AnuSurfacePanel tone="quiet" className="border-[color:rgba(224,177,21,0.34)] bg-[linear-gradient(152deg,rgba(30,2,39,0.92),rgba(30,2,39,0.92))] p-5 text-[#e0b115]">
+            <p className="text-sm font-semibold text-[#e0b115]">{actionableError.headline}</p>
+            <p className="mt-2 text-sm text-[color:rgba(224,177,21,0.92)]">{actionableError.detail}</p>
             <div className="mt-3">
               <AnuActionLink href={actionableError.fallbackHref} tone="ghost" iconRight={ArrowRight}>
                 {actionableError.fallbackLabel}
@@ -105,9 +105,9 @@ export default function FloraFaunaFeedPage() {
         ) : null}
 
         {!isAuthenticated ? (
-          <AnuSurfacePanel tone="quiet" className="p-5 text-slate-100">
-            <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Start here</p>
-            <p className="mt-2 text-sm text-slate-300">
+          <AnuSurfacePanel tone="quiet" className="p-5 text-[color:rgba(246,212,203,0.92)]">
+            <p className="text-xs uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">Start here</p>
+            <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.76)]">
               New here? Begin with Manara Signals, then review Transparency and Docs before signing in.
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
@@ -177,12 +177,12 @@ export default function FloraFaunaFeedPage() {
 
             <div className="grid gap-5">
               {feed.length === 0 ? (
-                <AnuSurfacePanel tone="quiet" className="p-5 text-slate-100">
-                  <p className="text-slate-300">No memes published yet, or the memetics service is unavailable.</p>
+                <AnuSurfacePanel tone="quiet" className="p-5 text-[color:rgba(246,212,203,0.92)]">
+                  <p className="text-[color:rgba(246,212,203,0.76)]">No memes published yet, or the memetics service is unavailable.</p>
                 </AnuSurfacePanel>
               ) : feed.map((meme) => (
                 <Link key={meme.id} href={manaraPath(`/memes/${meme.id}`)} className="group block">
-                  <AnuSurfacePanel tone="soft" className="h-full p-5 text-slate-100 transition-colors group-hover:border-white/20">
+                  <AnuSurfacePanel tone="soft" className="h-full p-5 text-[color:rgba(246,212,203,0.92)] transition-colors group-hover:border-[color:rgba(246,212,203,0.2)]">
                     <div className="mb-4 flex flex-wrap items-center gap-2">
                       <AnuChip tone="accent" icon={Share2}>Free meme</AnuChip>
                       <AnuChip tone="muted" icon={Orbit}>
@@ -192,26 +192,26 @@ export default function FloraFaunaFeedPage() {
 
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="max-w-2xl">
-                        <h3 className="text-2xl text-white transition-colors group-hover:text-[#f3cd92]">
+                        <h3 className="text-2xl text-[var(--color-foreground)] transition-colors group-hover:text-[#f6d4cb]">
                           {meme.title}
                         </h3>
-                        <p className="mt-3 leading-relaxed text-slate-300">
+                        <p className="mt-3 leading-relaxed text-[color:rgba(246,212,203,0.76)]">
                           {meme.summary || 'Free cultural matter for cooperative propagation.'}
                         </p>
                       </div>
                       <AnuSurfacePanel tone="quiet" className="min-w-[180px] px-4 py-4">
-                        <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Attention score</p>
-                        <p className="mt-2 text-3xl font-semibold font-mono-data text-white">
+                        <p className="text-[11px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">Attention score</p>
+                        <p className="mt-2 text-3xl font-semibold font-mono-data text-[var(--color-foreground)]">
                           {Math.round(Number(meme.attentionScore || 0) * 100)}
                         </p>
                       </AnuSurfacePanel>
                     </div>
 
-                    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4 text-sm">
-                      <span className="text-slate-300">
-                        Channel: <strong className="text-white">{meme.channel?.title}</strong>
+                    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[color:rgba(246,212,203,0.1)] pt-4 text-sm">
+                      <span className="text-[color:rgba(246,212,203,0.76)]">
+                        Channel: <strong className="text-[var(--color-foreground)]">{meme.channel?.title}</strong>
                       </span>
-                      <span className="inline-flex items-center gap-2 font-semibold text-[#f3cd92]">
+                      <span className="inline-flex items-center gap-2 font-semibold text-[#f6d4cb]">
                         Open meme page
                         <ArrowRight className="h-4 w-4" />
                       </span>
@@ -224,44 +224,44 @@ export default function FloraFaunaFeedPage() {
 
           <aside className="space-y-5">
             {channel && (
-              <AnuSurfacePanel tone="quiet" className="p-5 text-slate-100">
-                <p className="mb-2 text-xs uppercase tracking-[0.18em] text-slate-400">Creator Channel</p>
-                <h3 className="text-2xl text-white" style={{ fontFamily: 'var(--font-serif)' }}>
+              <AnuSurfacePanel tone="quiet" className="p-5 text-[color:rgba(246,212,203,0.92)]">
+                <p className="mb-2 text-xs uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">Creator Channel</p>
+                <h3 className="text-2xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--font-serif)' }}>
                   {channel.title}
                 </h3>
-                <p className="mt-3 leading-relaxed text-slate-300">{channel.description}</p>
+                <p className="mt-3 leading-relaxed text-[color:rgba(246,212,203,0.76)]">{channel.description}</p>
                 <div className="mt-5 flex items-center justify-between text-sm">
-                  <span className="text-slate-400">Share policy</span>
-                  <strong className="text-[#d8f1e3]">{channel.sharePolicy}</strong>
+                  <span className="text-[color:rgba(246,212,203,0.64)]">Share policy</span>
+                  <strong className="text-[#f6d4cb]">{channel.sharePolicy}</strong>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-sm">
-                  <span className="text-slate-400">Open moderation flags</span>
-                  <strong className="font-mono-data text-white">{channel.moderation.openFlags}</strong>
+                  <span className="text-[color:rgba(246,212,203,0.64)]">Open moderation flags</span>
+                  <strong className="font-mono-data text-[var(--color-foreground)]">{channel.moderation.openFlags}</strong>
                 </div>
               </AnuSurfacePanel>
             )}
 
             {pool && (
               <Link href={manaraPath(`/pools/${pool.id}`)} className="block">
-                <AnuSurfacePanel tone="quiet" className="p-5 text-slate-100 transition-colors hover:border-white/20">
+                <AnuSurfacePanel tone="quiet" className="p-5 text-[color:rgba(246,212,203,0.92)] transition-colors hover:border-[color:rgba(246,212,203,0.2)]">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="mb-2 text-xs uppercase tracking-[0.18em] text-slate-400">Mutual-Aid Liquidity Pool</p>
-                      <h3 className="text-2xl text-white" style={{ fontFamily: 'var(--font-serif)' }}>
+                      <p className="mb-2 text-xs uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">Mutual-Aid Liquidity Pool</p>
+                      <h3 className="text-2xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--font-serif)' }}>
                         {pool.name}
                       </h3>
                     </div>
-                    <Coins className="h-7 w-7 text-[#f3cd92]" />
+                    <Coins className="h-7 w-7 text-[#f6d4cb]" />
                   </div>
-                  <p className="mt-3 text-slate-300">{pool.description}</p>
-                  <div className="mt-6 flex items-end justify-between border-t border-white/10 pt-4">
+                  <p className="mt-3 text-[color:rgba(246,212,203,0.76)]">{pool.description}</p>
+                  <div className="mt-6 flex items-end justify-between border-t border-[color:rgba(246,212,203,0.1)] pt-4">
                     <div>
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Available balance</p>
-                      <p className="mt-2 text-3xl font-semibold font-mono-data text-white">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">Available balance</p>
+                      <p className="mt-2 text-3xl font-semibold font-mono-data text-[var(--color-foreground)]">
                         ${(pool.availableBalanceCents / 100).toLocaleString()}
                       </p>
                     </div>
-                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#f3cd92]">
+                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#f6d4cb]">
                       Inspect ledger
                       <ArrowRight className="h-4 w-4" />
                     </span>

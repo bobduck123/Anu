@@ -39,7 +39,7 @@ const initialDraft = {
 };
 
 const chamberInputClass =
-  'w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-white/24';
+  'w-full rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-4 py-3 text-sm text-[var(--color-foreground)] outline-none transition placeholder:text-[color:rgba(246,212,203,0.64)] focus:border-[color:rgba(246,212,203,0.24)]';
 
 export default function CommunityComposerModal({
   open,
@@ -131,15 +131,15 @@ export default function CommunityComposerModal({
         type="button"
         aria-label="Close composer"
         onClick={handleClose}
-        className="absolute inset-0 bg-[rgba(2,6,14,0.78)] backdrop-blur-sm"
+        className="absolute inset-0 bg-[rgba(30,2,39,0.78)] backdrop-blur-sm"
       />
 
-      <div className="relative w-full max-w-6xl rounded-[2rem] border border-white/10 bg-[rgba(5,9,18,0.95)] text-white shadow-[0_35px_120px_rgba(0,0,0,0.55)]">
+      <div className="relative w-full max-w-6xl rounded-[2rem] border border-[color:rgba(246,212,203,0.1)] bg-[rgba(30,2,39,0.95)] text-[var(--color-foreground)] shadow-[0_35px_120px_rgba(30,2,39,0.55)]">
         <button
           type="button"
           onClick={handleClose}
           disabled={isSubmitting}
-          className="absolute right-4 top-4 z-10 rounded-full border border-white/10 bg-white/[0.05] p-2 text-white/72 transition hover:border-white/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          className="absolute right-4 top-4 z-10 rounded-full border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.05)] p-2 text-[color:rgba(246,212,203,0.72)] transition hover:border-[color:rgba(246,212,203,0.25)] hover:text-[var(--color-foreground)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <X className="h-5 w-5" />
         </button>
@@ -149,12 +149,12 @@ export default function CommunityComposerModal({
             <div>
               <p className="anu-lab-kicker">Community composer</p>
               <h2
-                className="mt-3 text-4xl leading-[1.02] text-white"
+                className="mt-3 text-4xl leading-[1.02] text-[var(--color-foreground)]"
                 style={{ fontFamily: 'var(--anu-type-display)' }}
               >
                 {mode === 'story' ? 'Publish a commons story' : 'Publish a commons article'}
               </h2>
-              <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-200/84">
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-[color:rgba(246,212,203,0.84)]">
                 Publishing here creates a public trace in the community commons. The composer should feel accountable, local, and clear about what enters the shared surface.
               </p>
             </div>
@@ -179,7 +179,7 @@ export default function CommunityComposerModal({
             </div>
 
             {error ? (
-              <div className="rounded-2xl border border-[rgba(216,169,95,0.22)] bg-[rgba(216,169,95,0.08)] px-4 py-3 text-sm text-[#f4dbc2]">
+              <div className="rounded-2xl border border-[rgba(224,177,21,0.22)] bg-[rgba(224,177,21,0.08)] px-4 py-3 text-sm text-[#f6d4cb]">
                 <div className="flex items-start gap-3">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                   <span>{error}</span>
@@ -190,7 +190,7 @@ export default function CommunityComposerModal({
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_240px]">
                 <div>
-                  <label htmlFor="community-composer-title" className="mb-2 block text-sm font-medium text-white/80">Title</label>
+                  <label htmlFor="community-composer-title" className="mb-2 block text-sm font-medium text-[color:rgba(246,212,203,0.8)]">Title</label>
                   <input
                     id="community-composer-title"
                     value={title}
@@ -204,21 +204,21 @@ export default function CommunityComposerModal({
 
                 {mode === 'article' ? (
                   <div>
-                    <label htmlFor="community-composer-category" className="mb-2 block text-sm font-medium text-white/80">Category</label>
+                    <label htmlFor="community-composer-category" className="mb-2 block text-sm font-medium text-[color:rgba(246,212,203,0.8)]">Category</label>
                     <select
                       id="community-composer-category"
                       value={category}
                       onChange={(event) => setCategory(event.target.value as ArticleCategory)}
                       className={chamberInputClass}
                     >
-                      <option value="news" className="bg-[#101625]">News</option>
-                      <option value="opinion" className="bg-[#101625]">Opinion</option>
-                      <option value="creative" className="bg-[#101625]">Creative</option>
+                      <option value="news" className="bg-[#1e0227]">News</option>
+                      <option value="opinion" className="bg-[#1e0227]">Opinion</option>
+                      <option value="creative" className="bg-[#1e0227]">Creative</option>
                     </select>
                   </div>
                 ) : (
                   <div>
-                    <label htmlFor="community-composer-media-url" className="mb-2 block text-sm font-medium text-white/80">Media URL</label>
+                    <label htmlFor="community-composer-media-url" className="mb-2 block text-sm font-medium text-[color:rgba(246,212,203,0.8)]">Media URL</label>
                     <input
                       id="community-composer-media-url"
                       value={mediaUrl}
@@ -232,7 +232,7 @@ export default function CommunityComposerModal({
               </div>
 
               <div>
-                <label htmlFor="community-composer-content" className="mb-2 block text-sm font-medium text-white/80">Content</label>
+                <label htmlFor="community-composer-content" className="mb-2 block text-sm font-medium text-[color:rgba(246,212,203,0.8)]">Content</label>
                 <textarea
                   id="community-composer-content"
                   value={content}
@@ -247,8 +247,8 @@ export default function CommunityComposerModal({
                 />
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
-                <p className="text-xs leading-5 text-white/50">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[color:rgba(246,212,203,0.1)] pt-5">
+                <p className="text-xs leading-5 text-[color:rgba(246,212,203,0.5)]">
                   Published posts are public on the community route and should avoid destructive language.
                 </p>
                 <div className="flex flex-wrap gap-3">
@@ -275,7 +275,7 @@ export default function CommunityComposerModal({
                 <AnuChip tone="signal">{mode === 'story' ? 'Story trace' : 'Editorial trace'}</AnuChip>
                 <AnuChip tone="muted">{mode === 'story' ? 'Reaction-led tile' : 'Inspectable detail view'}</AnuChip>
               </div>
-              <p className="mt-4 text-sm leading-6 text-slate-300/84">
+              <p className="mt-4 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">
                 {mode === 'story'
                   ? 'Stories should feel local and immediate. They enter the commons as public social traces.'
                   : 'Articles should feel more formal and inspectable. They share the same commons surface but carry stronger editorial weight.'}
@@ -287,7 +287,7 @@ export default function CommunityComposerModal({
               title="Commons doctrine"
               description="Every public trace should clarify place, meaning, and accountability before style."
             >
-              <div className="space-y-3 text-sm leading-6 text-slate-300/82">
+              <div className="space-y-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
                 <p>Use clear titles that help others understand the signal without opening the detail pane.</p>
                 <p>Keep destructive or threatening language out of public publication.</p>
                 <p>Stories can be immediate; articles should carry a stronger editorial frame.</p>
@@ -299,7 +299,7 @@ export default function CommunityComposerModal({
               title="What happens next"
               description="Once published, the new trace is inserted into the commons feed and re-synced against live sources."
             >
-              <div className="space-y-3 text-sm leading-6 text-slate-300/82">
+              <div className="space-y-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
                 <p>The gallery updates immediately so the contribution is visible in the current browse session.</p>
                 <p>Trusted signals stay secondary; your post enters the same shared commons layer as other community traces.</p>
               </div>

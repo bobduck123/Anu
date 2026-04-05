@@ -57,46 +57,46 @@ export default function EducationModulePage() {
   return (
     <EducationLayerShell>
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-12 space-y-8">
-        <Link href="/education" className="inline-flex text-xs uppercase tracking-[0.18em] text-white/70 hover:text-white">
+        <Link href="/education" className="inline-flex text-xs uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.7)] hover:text-[var(--color-foreground)]">
           ← Education hub
         </Link>
 
         {loading ? (
-          <div className="edu-card p-8 text-sm text-white/75">Loading module sequence…</div>
+          <div className="edu-card p-8 text-sm text-[color:rgba(246,212,203,0.75)]">Loading module sequence…</div>
         ) : error ? (
-          <div className="edu-card p-8 text-sm text-rose-200">{error}</div>
+          <div className="edu-card p-8 text-sm text-[#7c413c]">{error}</div>
         ) : !module ? (
-          <div className="edu-card p-8 text-sm text-white/75">Module not found.</div>
+          <div className="edu-card p-8 text-sm text-[color:rgba(246,212,203,0.75)]">Module not found.</div>
         ) : (
           <>
             <section className="edu-card edu-card-highlight p-6 md:p-8">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="max-w-3xl">
                   <p className="edu-pill">Module</p>
-                  <h1 className="mt-4 text-3xl font-semibold text-white" style={{ fontFamily: 'var(--font-serif)' }}>
+                  <h1 className="mt-4 text-3xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--font-serif)' }}>
                     {module.title}
                   </h1>
-                  <p className="mt-3 text-sm text-white/75">{module.description}</p>
+                  <p className="mt-3 text-sm text-[color:rgba(246,212,203,0.75)]">{module.description}</p>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-xs text-white/70 space-y-1 min-w-[14rem]">
-                  <p className="uppercase tracking-[0.15em] text-white/60">Trust signals</p>
+                <div className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.2)] px-4 py-3 text-xs text-[color:rgba(246,212,203,0.7)] space-y-1 min-w-[14rem]">
+                  <p className="uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.6)]">Trust signals</p>
                   <p>Version: {module.version}</p>
                   <p>Completion threshold: {module.completion_threshold}%</p>
                   <p>Retakes allowed: {module.retake_limit}</p>
                 </div>
               </div>
 
-              <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.04] p-4">
-                <p className="text-[11px] uppercase tracking-[0.14em] text-white/60">Progression map</p>
-                <p className="mt-1 text-sm text-white/80">{sequenceLabel}</p>
-                <div className="mt-3 flex flex-wrap gap-2 text-xs text-white/75">
+              <div className="mt-6 rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] p-4">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-[color:rgba(246,212,203,0.6)]">Progression map</p>
+                <p className="mt-1 text-sm text-[color:rgba(246,212,203,0.8)]">{sequenceLabel}</p>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs text-[color:rgba(246,212,203,0.75)]">
                   {lessons.map((lesson, index) => (
-                    <span key={lesson.id} className="rounded-full border border-white/15 px-2 py-1">
+                    <span key={lesson.id} className="rounded-full border border-[color:rgba(246,212,203,0.15)] px-2 py-1">
                       {index + 1}. {lesson.title}
                     </span>
                   ))}
                   {assessment ? (
-                    <span className="rounded-full border border-[#f2c786]/40 bg-[rgba(242,199,134,0.14)] px-2 py-1 text-[#f6d6a3]">
+                    <span className="rounded-full border border-[#f6d4cb]/40 bg-[rgba(246,212,203,0.14)] px-2 py-1 text-[#f6d4cb]">
                       Final checkpoint: {assessment.title}
                     </span>
                   ) : null}
@@ -105,13 +105,13 @@ export default function EducationModulePage() {
             </section>
 
             <section className="space-y-4">
-              <h2 className="text-lg font-semibold text-white">Lessons</h2>
+              <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Lessons</h2>
               {lessons.map((lesson, index) => (
                 <article key={lesson.id} className="edu-card p-5 flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.12em] text-white/60">Lesson {index + 1}</p>
-                    <p className="mt-1 font-medium text-white">{lesson.title}</p>
-                    <p className="mt-1 text-xs uppercase tracking-[0.14em] text-white/60">
+                    <p className="text-xs uppercase tracking-[0.12em] text-[color:rgba(246,212,203,0.6)]">Lesson {index + 1}</p>
+                    <p className="mt-1 font-medium text-[var(--color-foreground)]">{lesson.title}</p>
+                    <p className="mt-1 text-xs uppercase tracking-[0.14em] text-[color:rgba(246,212,203,0.6)]">
                       Delivery · {lesson.delivery_type}
                     </p>
                   </div>
@@ -121,7 +121,7 @@ export default function EducationModulePage() {
                 </article>
               ))}
               {lessons.length === 0 && (
-                <div className="edu-card p-5 text-sm text-white/70">
+                <div className="edu-card p-5 text-sm text-[color:rgba(246,212,203,0.7)]">
                   No lessons are published yet. This module shell stays visible so progression never dead-ends.
                 </div>
               )}
@@ -130,8 +130,8 @@ export default function EducationModulePage() {
             {assessment ? (
               <section className="edu-card p-5 flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <p className="font-medium text-white">Assessment</p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.14em] text-white/60">
+                  <p className="font-medium text-[var(--color-foreground)]">Assessment</p>
+                  <p className="mt-1 text-xs uppercase tracking-[0.14em] text-[color:rgba(246,212,203,0.6)]">
                     {assessment.title} · Pass {assessment.pass_score}%
                   </p>
                 </div>
@@ -142,8 +142,8 @@ export default function EducationModulePage() {
             ) : null}
 
             <section className="edu-card p-5">
-              <p className="text-xs uppercase tracking-[0.13em] text-white/60">Insight → action bridge</p>
-              <p className="mt-2 text-sm text-white/75">
+              <p className="text-xs uppercase tracking-[0.13em] text-[color:rgba(246,212,203,0.6)]">Insight → action bridge</p>
+              <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.75)]">
                 Completion feeds practical pathways: regeneration action logs, competency updates, and credential
                 readiness.
               </p>

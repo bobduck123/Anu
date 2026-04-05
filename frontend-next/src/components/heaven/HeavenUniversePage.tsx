@@ -91,16 +91,16 @@ export function HeavenUniversePage() {
   }, [packet, selectedGalaxy, galaxies]);
 
   if (loadState === 'loading' || loadState === 'idle') {
-    return <div className="min-h-screen bg-slate-950 px-6 py-24 text-slate-100">Loading Universe...</div>;
+    return <div className="min-h-screen bg-[#1e0227] px-6 py-24 text-[color:rgba(246,212,203,0.92)]">Loading Universe...</div>;
   }
 
   if (!featureEnabled) {
     return (
-      <div className="min-h-screen bg-slate-950 px-6 py-24 text-slate-100">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-slate-800 bg-slate-900/70 p-8">
+      <div className="min-h-screen bg-[#1e0227] px-6 py-24 text-[color:rgba(246,212,203,0.92)]">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-[#1e0227] bg-[color:rgba(30,2,39,0.7)] p-8">
           <h1 className="text-2xl font-semibold">Heaven is disabled for this node.</h1>
-          <p className="mt-2 text-sm text-slate-300">Earth remains fully operational while universe projection is turned off.</p>
-          <Link href="/earth" className="mt-5 inline-block rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500">
+          <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.76)]">Earth remains fully operational while universe projection is turned off.</p>
+          <Link href="/earth" className="mt-5 inline-block rounded-lg bg-[#7c413c] px-4 py-2 text-sm font-medium text-[var(--color-foreground)] hover:bg-[#7c413c]">
             Return to Earth
           </Link>
         </div>
@@ -117,10 +117,10 @@ export function HeavenUniversePage() {
     });
 
     return (
-      <div className="min-h-screen bg-slate-950 px-6 py-24 text-slate-100">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-rose-800/70 bg-slate-900/70 p-8">
+      <div className="min-h-screen bg-[#1e0227] px-6 py-24 text-[color:rgba(246,212,203,0.92)]">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-[color:rgba(124,65,60,0.7)] bg-[color:rgba(30,2,39,0.7)] p-8">
           <h1 className="text-2xl font-semibold">{actionableError.headline}</h1>
-          <p className="mt-2 text-sm text-slate-300">{actionableError.detail}</p>
+          <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.76)]">{actionableError.detail}</p>
           <div className="mt-5 flex gap-3">
             <button
               onClick={() => {
@@ -128,11 +128,11 @@ export function HeavenUniversePage() {
                 setErrorMessage(null);
                 setReloadToken((value) => value + 1);
               }}
-              className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
+              className="rounded-lg bg-[#7c413c] px-4 py-2 text-sm font-medium text-[var(--color-foreground)] hover:bg-[#7c413c]"
             >
               Retry
             </button>
-            <Link href={actionableError.fallbackHref} className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800">
+            <Link href={actionableError.fallbackHref} className="rounded-lg border border-[#1e0227] px-4 py-2 text-sm text-[color:rgba(246,212,203,0.84)] hover:bg-[#1e0227]">
               {actionableError.fallbackLabel}
             </Link>
           </div>
@@ -146,14 +146,14 @@ export function HeavenUniversePage() {
   const flares = packet.objects.flares;
 
   return (
-    <div className="min-h-screen bg-slate-950 px-4 pb-16 pt-24 text-slate-100 md:px-8">
+    <div className="min-h-screen bg-[#1e0227] px-4 pb-16 pt-24 text-[color:rgba(246,212,203,0.92)] md:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 backdrop-blur">
+        <div className="rounded-2xl border border-[#1e0227] bg-[color:rgba(30,2,39,0.6)] p-4 backdrop-blur">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-400">Heaven Projection</p>
+              <p className="text-xs uppercase tracking-wide text-[color:rgba(246,212,203,0.64)]">Heaven Projection</p>
               <h1 className="mt-1 text-2xl font-semibold">Universe projection is render-only, derived from Hell.</h1>
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-[color:rgba(246,212,203,0.64)]">
                 {packet.generatedAt} • redaction {packet.privacy.redactionLevel} • kMin {packet.privacy.kMin}
               </p>
             </div>
@@ -165,7 +165,7 @@ export function HeavenUniversePage() {
                   setErrorMessage(null);
                   setNodeId(Number(e.target.value));
                 }}
-                className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-sm"
+                className="rounded-md border border-[#1e0227] bg-[#1e0227] px-2 py-1 text-sm"
               >
                 <option value={1}>Node 1</option>
                 <option value={2}>Node 2</option>
@@ -178,7 +178,7 @@ export function HeavenUniversePage() {
                   setErrorMessage(null);
                   setMode(e.target.value as UniverseMode);
                 }}
-                className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-sm"
+                className="rounded-md border border-[#1e0227] bg-[#1e0227] px-2 py-1 text-sm"
               >
                 {UNIVERSE_MODES.map((m) => (
                   <option key={m} value={m}>{m}</option>
@@ -191,7 +191,7 @@ export function HeavenUniversePage() {
                   setErrorMessage(null);
                   setTimeWindow(e.target.value as TimeWindow);
                 }}
-                className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-sm"
+                className="rounded-md border border-[#1e0227] bg-[#1e0227] px-2 py-1 text-sm"
               >
                 {TIME_WINDOWS.map((window) => (
                   <option key={window} value={window}>{window}</option>
@@ -215,21 +215,21 @@ export function HeavenUniversePage() {
                   setErrorMessage(null);
                   setReloadToken((value) => value + 1);
                 }}
-                className="rounded-md bg-sky-600 px-3 py-1 text-sm font-medium text-white hover:bg-sky-500"
+                className="rounded-md bg-[#7c413c] px-3 py-1 text-sm font-medium text-[var(--color-foreground)] hover:bg-[#7c413c]"
               >
                 Refresh
               </button>
-              <Link href="/earth" className="rounded-md border border-slate-700 px-3 py-1 text-sm text-slate-100 hover:bg-slate-800">Earth</Link>
+              <Link href="/earth" className="rounded-md border border-[#1e0227] px-3 py-1 text-sm text-[color:rgba(246,212,203,0.92)] hover:bg-[#1e0227]">Earth</Link>
             </div>
           </div>
         </div>
 
-        <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
-          <p className="text-xs uppercase tracking-wide text-slate-400">Galaxy Filter</p>
+        <div className="mt-4 rounded-2xl border border-[#1e0227] bg-[color:rgba(30,2,39,0.6)] p-3">
+          <p className="text-xs uppercase tracking-wide text-[color:rgba(246,212,203,0.64)]">Galaxy Filter</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedGalaxy(null)}
-              className={`rounded-full px-3 py-1 text-xs ${selectedGalaxy === null ? 'bg-sky-600 text-white' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'}`}
+              className={`rounded-full px-3 py-1 text-xs ${selectedGalaxy === null ? 'bg-[#7c413c] text-[var(--color-foreground)]' : 'bg-[#1e0227] text-[color:rgba(246,212,203,0.84)] hover:bg-[#1e0227]'}`}
             >
               All
             </button>
@@ -237,7 +237,7 @@ export function HeavenUniversePage() {
               <button
                 key={galaxy.id}
                 onClick={() => setSelectedGalaxy(galaxy.id)}
-                className={`rounded-full px-3 py-1 text-xs ${selectedGalaxy === galaxy.id ? 'bg-sky-600 text-white' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'}`}
+                className={`rounded-full px-3 py-1 text-xs ${selectedGalaxy === galaxy.id ? 'bg-[#7c413c] text-[var(--color-foreground)]' : 'bg-[#1e0227] text-[color:rgba(246,212,203,0.84)] hover:bg-[#1e0227]'}`}
               >
                 {galaxy.label}
               </button>
@@ -246,8 +246,8 @@ export function HeavenUniversePage() {
         </div>
 
         <div className="mt-4 grid gap-4 lg:grid-cols-[2fr_1fr]">
-          <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-3">
-            <div className="relative h-[540px] rounded-xl border border-slate-800 bg-slate-950/80">
+          <div className="relative overflow-hidden rounded-2xl border border-[#1e0227] bg-gradient-to-b from-[#1e0227] to-[#1e0227] p-3">
+            <div className="relative h-[540px] rounded-xl border border-[#1e0227] bg-[color:rgba(30,2,39,0.8)]">
               {nebulas.map((nebula, idx) => {
                 const x = (hashBucket(String(nebula.id ?? idx), 100) / 100) * 100;
                 const y = (hashBucket(`${String(nebula.id ?? idx)}-y`, 100) / 100) * 100;
@@ -262,7 +262,7 @@ export function HeavenUniversePage() {
                       width: `${size}px`,
                       height: `${size}px`,
                       transform: 'translate(-50%, -50%)',
-                      background: 'rgba(125, 211, 252, 0.14)',
+                      background: 'rgba(246,212,203,0.14)',
                     }}
                   />
                 );
@@ -287,8 +287,8 @@ export function HeavenUniversePage() {
                       height: `${size}px`,
                       transform: 'translate(-50%, -50%)',
                       opacity: Math.max(0.2, Math.min(1, star.brightness)),
-                      backgroundColor: allowHover ? '#7dd3fc' : '#64748b',
-                      boxShadow: allowHover ? '0 0 14px rgba(125, 211, 252, 0.65)' : 'none',
+                      backgroundColor: allowHover ? '#f6d4cb' : '#7c413c',
+                      boxShadow: allowHover ? '0 0 14px rgba(246,212,203,0.65)' : 'none',
                     }}
                   />
                 );
@@ -300,7 +300,7 @@ export function HeavenUniversePage() {
                 return (
                   <span
                     key={String(flare.id ?? idx)}
-                    className="pointer-events-none absolute rounded-full border border-rose-400/70"
+                    className="pointer-events-none absolute rounded-full border border-[color:rgba(124,65,60,0.7)]"
                     style={{
                       left: `${x}%`,
                       top: `${y}%`,
@@ -313,7 +313,7 @@ export function HeavenUniversePage() {
               })}
 
               {hoveredStar ? (
-                <div className="pointer-events-none absolute bottom-3 left-3 rounded-lg border border-slate-700 bg-slate-900/95 px-3 py-2 text-xs text-slate-100">
+                <div className="pointer-events-none absolute bottom-3 left-3 rounded-lg border border-[#1e0227] bg-[color:rgba(30,2,39,0.95)] px-3 py-2 text-xs text-[color:rgba(246,212,203,0.92)]">
                   <p className="font-semibold">{hoveredStar.kind}</p>
                   <p>id: {hoveredStar.id}</p>
                   <p>mass: {hoveredStar.mass.toFixed(2)} • brightness: {hoveredStar.brightness.toFixed(2)}</p>
@@ -323,11 +323,11 @@ export function HeavenUniversePage() {
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
-              <p className="text-xs uppercase tracking-wide text-slate-400">Constellations</p>
+            <div className="rounded-2xl border border-[#1e0227] bg-[color:rgba(30,2,39,0.6)] p-3">
+              <p className="text-xs uppercase tracking-wide text-[color:rgba(246,212,203,0.64)]">Constellations</p>
               <div className="mt-2 space-y-2">
                 {constellations.length === 0 ? (
-                  <p className="text-sm text-slate-400">No constellations in this packet.</p>
+                  <p className="text-sm text-[color:rgba(246,212,203,0.64)]">No constellations in this packet.</p>
                 ) : (
                   constellations.map((constellation, idx) => {
                     const id = String(constellation.id ?? `constellation-${idx}`);
@@ -342,7 +342,7 @@ export function HeavenUniversePage() {
                           if (!drilldown?.allowed || !drilldown.query) return;
                           router.push(drilldown.query);
                         }}
-                        className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-left text-sm text-slate-200 hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="w-full rounded-lg border border-[#1e0227] bg-[#1e0227] px-3 py-2 text-left text-sm text-[color:rgba(246,212,203,0.84)] hover:border-[#7c413c] disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         {label}
                       </button>
@@ -352,8 +352,8 @@ export function HeavenUniversePage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3 text-xs text-slate-300">
-              <p className="uppercase tracking-wide text-slate-400">Packet Audit</p>
+            <div className="rounded-2xl border border-[#1e0227] bg-[color:rgba(30,2,39,0.6)] p-3 text-xs text-[color:rgba(246,212,203,0.76)]">
+              <p className="uppercase tracking-wide text-[color:rgba(246,212,203,0.64)]">Packet Audit</p>
               <p className="mt-2 break-all">configVersion: {packet.configVersion}</p>
               <p className="mt-1 break-all">evidenceHash: {packet.evidenceHash}</p>
               <p className="mt-1">resolution floor: {packet.privacy.resolutionMetersMin}m</p>

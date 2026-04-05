@@ -101,8 +101,8 @@ export default function DocsPage() {
           description="The docs route should feel like passing through the archive and arriving at manuscript chambers for trust, doctrine, and applied systems. It is an orientation surface, not a help-center grid."
           legend={
             <div className="space-y-3">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-[#d2bf99]/72">Library rule</p>
-              <p className="text-sm leading-6 text-[#d8ccb6]/76">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[#f6d4cb]/72">Library rule</p>
+              <p className="text-sm leading-6 text-[#f6d4cb]/76">
                 Separate public truth, operator doctrine, and applied systems so people learn the right path before they escalate or intervene.
               </p>
             </div>
@@ -141,7 +141,7 @@ export default function DocsPage() {
                   Enter governance observatory
                 </AnuActionLink>
               </div>
-              <p className="text-xs leading-6 text-[#cdbd9f]/72">
+              <p className="text-xs leading-6 text-[#f6d4cb]/72">
                 The library should reduce wrong-route escalation by teaching which surfaces explain, which govern, and which act.
               </p>
             </div>
@@ -150,22 +150,22 @@ export default function DocsPage() {
           <div className="anu-labyrinth-route-grid anu-labyrinth-route-grid-3">
             {libraryCollections.map((collection) => (
               <section key={collection.title} className="anu-labyrinth-manuscript-card">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#7d613b]">{collection.eyebrow}</p>
-                <h2 className="mt-3 text-3xl text-[#2f1f12]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#7c413c]">{collection.eyebrow}</p>
+                <h2 className="mt-3 text-3xl text-[#1e0227]" style={{ fontFamily: 'var(--anu-type-display)' }}>
                   {collection.title}
                 </h2>
-                <p className="mt-3 text-sm leading-7 text-[#4f3d28]">{collection.description}</p>
+                <p className="mt-3 text-sm leading-7 text-[#7c413c]">{collection.description}</p>
 
                 <div className="mt-5 space-y-3">
                   {collection.links.map((link) => (
                     <Link key={link.href} href={link.href} className="anu-labyrinth-portal-link">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-[#25170d]">{link.label}</p>
-                          <p className="mt-2 text-sm leading-6 text-[#5f4930]">{link.detail}</p>
-                          <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-[#7e6848]">{link.href}</p>
+                          <p className="text-sm font-semibold text-[#1e0227]">{link.label}</p>
+                          <p className="mt-2 text-sm leading-6 text-[#7c413c]">{link.detail}</p>
+                          <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-[#7c413c]">{link.href}</p>
                         </div>
-                        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[#7a5419]" />
+                        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[#665700]" />
                       </div>
                     </Link>
                   ))}
@@ -176,24 +176,24 @@ export default function DocsPage() {
 
           <div className="mt-6 anu-labyrinth-route-grid anu-labyrinth-route-grid-2">
             <section className="anu-labyrinth-manuscript-card">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#7d613b]">Reading protocol</p>
-              <h2 className="mt-3 text-3xl text-[#2f1f12]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#7c413c]">Reading protocol</p>
+              <h2 className="mt-3 text-3xl text-[#1e0227]" style={{ fontFamily: 'var(--anu-type-display)' }}>
                 How to read this library
               </h2>
               <div className="mt-5 space-y-3">
                 {readingProtocol.map((item, index) => (
                   <div key={item.title} className="anu-labyrinth-portal-link">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-[#7e6848]">Step {index + 1}</p>
-                    <p className="mt-2 text-sm font-semibold text-[#25170d]">{item.title}</p>
-                    <p className="mt-2 text-sm leading-6 text-[#5f4930]">{item.detail}</p>
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-[#7c413c]">Step {index + 1}</p>
+                    <p className="mt-2 text-sm font-semibold text-[#1e0227]">{item.title}</p>
+                    <p className="mt-2 text-sm leading-6 text-[#7c413c]">{item.detail}</p>
                   </div>
                 ))}
               </div>
             </section>
 
             <section className="anu-labyrinth-manuscript-card">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#7d613b]">Common first moves</p>
-              <h2 className="mt-3 text-3xl text-[#2f1f12]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#7c413c]">Common first moves</p>
+              <h2 className="mt-3 text-3xl text-[#1e0227]" style={{ fontFamily: 'var(--anu-type-display)' }}>
                 Start with the right surface
               </h2>
               <div className="mt-5 space-y-3">
@@ -220,8 +220,8 @@ export default function DocsPage() {
                   },
                 ].map((route) => (
                   <Link key={route.href} href={route.href} className="anu-labyrinth-portal-link">
-                    <p className="text-sm font-semibold text-[#25170d]">{route.label}</p>
-                    <p className="mt-2 text-sm leading-6 text-[#5f4930]">{route.detail}</p>
+                    <p className="text-sm font-semibold text-[#1e0227]">{route.label}</p>
+                    <p className="mt-2 text-sm leading-6 text-[#7c413c]">{route.detail}</p>
                   </Link>
                 ))}
               </div>
@@ -230,7 +230,7 @@ export default function DocsPage() {
 
           <div className="mt-6 anu-labyrinth-route-grid anu-labyrinth-route-grid-3">
             <div className="anu-labyrinth-archive-note">
-              <div className="flex items-center gap-2 text-[#f6e6c3]">
+              <div className="flex items-center gap-2 text-[#f6d4cb]">
                 <LibraryBig className="h-4 w-4" />
                 <span className="text-xs uppercase tracking-[0.16em]">Inspectable first</span>
               </div>
@@ -239,7 +239,7 @@ export default function DocsPage() {
               </p>
             </div>
             <div className="anu-labyrinth-archive-note">
-              <div className="flex items-center gap-2 text-[#f6e6c3]">
+              <div className="flex items-center gap-2 text-[#f6d4cb]">
                 <BookOpenText className="h-4 w-4" />
                 <span className="text-xs uppercase tracking-[0.16em]">Route-aware</span>
               </div>
@@ -248,7 +248,7 @@ export default function DocsPage() {
               </p>
             </div>
             <div className="anu-labyrinth-archive-note">
-              <div className="flex items-center gap-2 text-[#f6e6c3]">
+              <div className="flex items-center gap-2 text-[#f6d4cb]">
                 <ScrollText className="h-4 w-4" />
                 <span className="text-xs uppercase tracking-[0.16em]">Evidence before escalation</span>
               </div>

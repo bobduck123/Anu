@@ -59,12 +59,12 @@ const COMMUNITY_SORT_OPTIONS: Array<{ mode: SortMode; label: string }> = [
 
 function CommunityPageFallback() {
   return (
-    <div className="fixed inset-0 z-40 overflow-hidden bg-black" style={{ isolation: 'isolate' }}>
+    <div className="fixed inset-0 z-40 overflow-hidden bg-[var(--color-background)]" style={{ isolation: 'isolate' }}>
       <div className="absolute inset-0 z-[11] flex items-center justify-center px-4">
-        <div className="w-full max-w-xl rounded-[2rem] border border-white/10 bg-black/65 p-8 text-white shadow-2xl backdrop-blur-xl">
-          <p className="mb-3 text-xs uppercase tracking-[0.24em] text-white/45">Loading</p>
+        <div className="w-full max-w-xl rounded-[2rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.65)] p-8 text-[var(--color-foreground)] shadow-2xl backdrop-blur-xl">
+          <p className="mb-3 text-xs uppercase tracking-[0.24em] text-[color:rgba(246,212,203,0.45)]">Loading</p>
           <h1 className="mb-4 text-3xl font-semibold">Preparing the community commons</h1>
-          <p className="text-sm leading-relaxed text-white/70">
+          <p className="text-sm leading-relaxed text-[color:rgba(246,212,203,0.7)]">
             The celestial community surface is loading its public feed, trusted signals, and route state.
           </p>
         </div>
@@ -290,7 +290,7 @@ function CommunityPageContent() {
   const chamberOpen = showStarfield && enteredStarfield && selectedNodeSurface === 'chamber' && Boolean(selectedPost);
 
   const topChrome = (
-    <AnuSurfacePanel tone="quiet" className="p-4 text-white">
+    <AnuSurfacePanel tone="quiet" className="p-4 text-[var(--color-foreground)]">
       <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
         <div className="min-w-0">
           <AnuSectionHeading
@@ -398,7 +398,7 @@ function CommunityPageContent() {
             {warningMessage || loadError || trustedNewsMeta.stale || autoFallbackReason ? (
               <div className="mt-4 space-y-3">
                 {warningMessage ? (
-                  <div className="rounded-2xl border border-[rgba(216,169,95,0.22)] bg-[rgba(216,169,95,0.08)] px-4 py-3 text-sm text-[#f4dbc2]">
+                  <div className="rounded-2xl border border-[rgba(224,177,21,0.22)] bg-[rgba(224,177,21,0.08)] px-4 py-3 text-sm text-[#f6d4cb]">
                     <div className="flex items-start gap-3">
                       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                       <span>{warningMessage}</span>
@@ -406,7 +406,7 @@ function CommunityPageContent() {
                   </div>
                 ) : null}
                 {loadError && !warningMessage ? (
-                  <div className="rounded-2xl border border-[rgba(216,169,95,0.22)] bg-[rgba(216,169,95,0.08)] px-4 py-3 text-sm text-[#f4dbc2]">
+                  <div className="rounded-2xl border border-[rgba(224,177,21,0.22)] bg-[rgba(224,177,21,0.08)] px-4 py-3 text-sm text-[#f6d4cb]">
                     <div className="flex items-start gap-3">
                       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                       <span>{loadError}</span>
@@ -414,12 +414,12 @@ function CommunityPageContent() {
                   </div>
                 ) : null}
                 {trustedNewsMeta.stale ? (
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-slate-200/84">
+                  <div className="rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-4 py-3 text-sm text-[color:rgba(246,212,203,0.84)]">
                     Trusted signal sources are stale. Community publication remains primary until they refresh.
                   </div>
                 ) : null}
                 {autoFallbackReason && !showStarfield ? (
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-slate-200/84">
+                  <div className="rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-4 py-3 text-sm text-[color:rgba(246,212,203,0.84)]">
                     {autoFallbackReason}
                   </div>
                 ) : null}
@@ -472,19 +472,19 @@ function CommunityPageContent() {
   );
 
   const bottomChrome = (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.4rem] border border-white/10 bg-black/30 px-4 py-3 text-xs text-slate-200 shadow-[0_20px_50px_-32px_rgba(0,0,0,0.95)] backdrop-blur-xl">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.4rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.3)] px-4 py-3 text-xs text-[color:rgba(246,212,203,0.84)] shadow-[0_20px_50px_-32px_rgba(30,2,39,0.95)] backdrop-blur-xl">
       <span>
-        Intent region: <strong className="font-semibold text-white">{COMMUNITY_CELESTIAL_INTENTS.find((intent) => intent.id === activeIntent)?.label}</strong>
+        Intent region: <strong className="font-semibold text-[var(--color-foreground)]">{COMMUNITY_CELESTIAL_INTENTS.find((intent) => intent.id === activeIntent)?.label}</strong>
       </span>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">
+        <span className="rounded-full border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-3 py-1">
           {communityPacket.packetMeta?.sourceSummary}
         </span>
         {focusPostId ? (
           <button
             type="button"
             onClick={() => setFocusPostId(null)}
-            className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 transition hover:bg-white/[0.08]"
+            className="rounded-full border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-3 py-1 transition hover:bg-[color:rgba(246,212,203,0.08)]"
           >
             Clear gallery focus
           </button>
@@ -543,7 +543,7 @@ function CommunityPageContent() {
           }
         />
       ) : (
-        <div className="fixed inset-0 z-[5] overflow-hidden bg-[#02050c]" style={{ isolation: 'isolate' }}>
+        <div className="fixed inset-0 z-[5] overflow-hidden bg-[#1e0227]" style={{ isolation: 'isolate' }}>
           <DraggableGallery
             posts={galleryPosts}
             sortMode={sortMode}
@@ -563,7 +563,7 @@ function CommunityPageContent() {
 
       <div className="fixed bottom-5 right-5 z-[12] sm:hidden">
         {authLoading ? (
-          <div className="manara-glass-chip inline-flex items-center gap-2 border border-white/12 bg-black/60 px-4 py-3 text-sm text-white/68 backdrop-blur-md">
+          <div className="manara-glass-chip inline-flex items-center gap-2 border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(30,2,39,0.6)] px-4 py-3 text-sm text-[color:rgba(246,212,203,0.68)] backdrop-blur-md">
             <Loader2 className="h-4 w-4 animate-spin" />
             Checking session
           </div>
@@ -571,7 +571,7 @@ function CommunityPageContent() {
           <button
             type="button"
             onClick={openComposer}
-            className="manara-glass-chip inline-flex items-center gap-2 border border-white/14 bg-white px-4 py-3 text-sm font-medium text-black shadow-lg transition hover:scale-[1.02] hover:bg-white/92"
+            className="manara-glass-chip inline-flex items-center gap-2 border border-[color:rgba(246,212,203,0.14)] bg-[var(--color-foreground)] px-4 py-3 text-sm font-medium text-[var(--color-background)] shadow-lg transition hover:scale-[1.02] hover:bg-[color:rgba(246,212,203,0.92)]"
           >
             <Plus className="h-4 w-4" />
             Create post
@@ -579,7 +579,7 @@ function CommunityPageContent() {
         ) : (
           <Link
             href={authHref}
-            className="manara-glass-chip inline-flex items-center gap-2 border border-white/12 bg-black/60 px-4 py-3 text-sm font-medium text-white shadow-lg backdrop-blur-md transition hover:border-white/25 hover:bg-black/75"
+            className="manara-glass-chip inline-flex items-center gap-2 border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(30,2,39,0.6)] px-4 py-3 text-sm font-medium text-[var(--color-foreground)] shadow-lg backdrop-blur-md transition hover:border-[color:rgba(246,212,203,0.25)] hover:bg-[color:rgba(30,2,39,0.75)]"
           >
             <Plus className="h-4 w-4" />
             Sign in to post
@@ -596,7 +596,7 @@ function CommunityPageContent() {
               <button
                 type="button"
                 onClick={openBackupGallery}
-                className="inline-flex items-center rounded-xl border border-white/16 bg-white/6 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-white/86 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
+                className="inline-flex items-center rounded-xl border border-[color:rgba(246,212,203,0.16)] bg-[color:rgba(246,212,203,0.06)] px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.86)] transition-colors hover:border-[color:rgba(246,212,203,0.3)] hover:bg-[color:rgba(246,212,203,0.1)] hover:text-[var(--color-foreground)]"
               >
                 Open related gallery
               </button>

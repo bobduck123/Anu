@@ -41,8 +41,8 @@ export function WorldExplorer({ sceneGraph, onSelectNode }: WorldExplorerProps) 
     const width = mount.clientWidth;
     const height = Math.max(360, mount.clientHeight);
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#091423');
-    scene.fog = new THREE.Fog('#091423', 6, 28);
+    scene.background = new THREE.Color('#1e0227');
+    scene.fog = new THREE.Fog('#1e0227', 6, 28);
 
     const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 100);
     camera.position.set(0, 4.2, 7.5);
@@ -60,15 +60,15 @@ export function WorldExplorer({ sceneGraph, onSelectNode }: WorldExplorerProps) 
     controls.maxDistance = 24;
     controls.maxPolarAngle = Math.PI * 0.49;
 
-    scene.add(new THREE.AmbientLight('#b6d5ff', 0.65));
-    const directional = new THREE.DirectionalLight('#dbeafe', 1.1);
+    scene.add(new THREE.AmbientLight('#f6d4cb', 0.65));
+    const directional = new THREE.DirectionalLight('#f6d4cb', 1.1);
     directional.position.set(5, 12, 6);
     scene.add(directional);
 
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(24, 24, 24, 24),
       new THREE.MeshStandardMaterial({
-        color: '#10233f',
+        color: '#1e0227',
         wireframe: true,
         transparent: true,
         opacity: 0.3,

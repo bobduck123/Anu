@@ -67,7 +67,7 @@ export function TimeTravelTemplate({ mode = 'full' }: Props) {
         {isLoading && (
           <div className={`grid ${isCompact ? 'grid-cols-1' : 'grid-cols-2 md:grid-cols-3'} gap-4`}>
             {Array.from({ length: isCompact ? 2 : 6 }).map((_, i) => (
-              <div key={i} className="rounded-lg aspect-[3/4] animate-pulse" style={{ background: 'rgba(255,255,255,0.05)' }} />
+              <div key={i} className="rounded-lg aspect-[3/4] animate-pulse" style={{ background: 'rgba(246,212,203,0.05)' }} />
             ))}
           </div>
         )}
@@ -76,7 +76,7 @@ export function TimeTravelTemplate({ mode = 'full' }: Props) {
           <div className="text-center py-12">
             <p className="text-sm opacity-50 mb-3">{error}</p>
             <button onClick={retry} className="flex items-center gap-1.5 mx-auto px-4 py-2 text-xs rounded-lg"
-              style={{ background: 'rgba(255,255,255,0.1)' }}>
+              style={{ background: 'rgba(246,212,203,0.1)' }}>
               <RefreshCw className="w-3 h-3" /> Retry
             </button>
           </div>
@@ -107,7 +107,7 @@ export function TimeTravelTemplate({ mode = 'full' }: Props) {
                 return (
                   <div key={img.id}
                     className="group rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] relative"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    style={{ background: 'rgba(246,212,203,0.05)', border: '1px solid rgba(246,212,203,0.1)' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={img.src} alt={img.title} className="w-full aspect-[3/4] object-cover" loading="lazy" />
                     <div className="p-3">
@@ -115,7 +115,7 @@ export function TimeTravelTemplate({ mode = 'full' }: Props) {
                       <p className="text-[10px] opacity-40 mt-0.5">{img.year} — Your upload</p>
                     </div>
                     <button onClick={(e) => { e.stopPropagation(); removeUserImage(img.id); }}
-                      className="absolute top-2 right-2 p-1 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                      className="absolute top-2 right-2 p-1 rounded-full bg-[color:rgba(30,2,39,0.5)] opacity-0 group-hover:opacity-100 transition-opacity">
                       <X className="w-3 h-3" />
                     </button>
                   </div>
@@ -127,11 +127,11 @@ export function TimeTravelTemplate({ mode = 'full' }: Props) {
       </div>
 
       {/* Year dialer */}
-      <div className="relative z-10 p-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+      <div className="relative z-10 p-4 border-t" style={{ borderColor: 'rgba(246,212,203,0.1)' }}>
         <div className="flex items-center gap-3 max-w-2xl mx-auto">
           {!isCompact && (
             <button onClick={() => navigateToYear(currentYear - 10)}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors">
+              className="p-2 rounded-full hover:bg-[color:rgba(246,212,203,0.1)] transition-colors">
               <ChevronLeft className="w-4 h-4" />
             </button>
           )}
@@ -144,9 +144,9 @@ export function TimeTravelTemplate({ mode = 'full' }: Props) {
               min={1440} max={1940} step={10}
               value={currentYear}
               onChange={(e) => navigateToYear(parseInt(e.target.value))}
-              className="w-full h-1 appearance-none bg-white/20 rounded-full cursor-pointer
+              className="w-full h-1 appearance-none bg-[color:rgba(246,212,203,0.2)] rounded-full cursor-pointer
                 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
-                [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-lg
+                [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--color-foreground)] [&::-webkit-slider-thumb]:shadow-lg
                 [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:active:cursor-grabbing"
             />
             {!isCompact && (
@@ -163,7 +163,7 @@ export function TimeTravelTemplate({ mode = 'full' }: Props) {
 
           {!isCompact && (
             <button onClick={() => navigateToYear(currentYear + 10)}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors">
+              className="p-2 rounded-full hover:bg-[color:rgba(246,212,203,0.1)] transition-colors">
               <ChevronRight className="w-4 h-4" />
             </button>
           )}
@@ -174,7 +174,7 @@ export function TimeTravelTemplate({ mode = 'full' }: Props) {
           <div className="flex justify-center mt-3">
             <button onClick={() => setShowUploadModal(true)}
               className="flex items-center gap-1.5 px-4 py-2 text-[10px] rounded-full transition-colors"
-              style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
+              style={{ background: 'rgba(246,212,203,0.1)', border: '1px solid rgba(246,212,203,0.15)' }}>
               <ImagePlus className="w-3 h-3" /> Add Your Art
             </button>
           </div>
@@ -183,21 +183,21 @@ export function TimeTravelTemplate({ mode = 'full' }: Props) {
 
       {/* Fullscreen viewer */}
       {fullscreenArtwork && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center" onClick={() => setFullscreenArtwork(null)}>
-          <button className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 z-10">
-            <X className="w-5 h-5 text-white" />
+        <div className="fixed inset-0 z-50 bg-[color:rgba(30,2,39,0.9)] flex items-center justify-center" onClick={() => setFullscreenArtwork(null)}>
+          <button className="absolute top-4 right-4 p-2 rounded-full bg-[color:rgba(246,212,203,0.1)] hover:bg-[color:rgba(246,212,203,0.2)] z-10">
+            <X className="w-5 h-5 text-[var(--color-foreground)]" />
           </button>
           <div className="max-w-4xl max-h-[90vh] p-4" onClick={e => e.stopPropagation()}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={fullscreenArtwork.primaryImage} alt={fullscreenArtwork.title}
               className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl" />
-            <div className="text-white text-center mt-4">
+            <div className="text-[var(--color-foreground)] text-center mt-4">
               <h3 className="text-lg font-medium">{fullscreenArtwork.title}</h3>
               <p className="text-sm opacity-60 mt-1">{fullscreenArtwork.artistDisplayName}</p>
               <p className="text-xs opacity-40 mt-1">{fullscreenArtwork.objectDate} — {fullscreenArtwork.medium}</p>
               {fullscreenArtwork.objectURL && (
                 <a href={fullscreenArtwork.objectURL} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 mt-3 text-xs text-blue-400 hover:text-blue-300">
+                  className="inline-flex items-center gap-1 mt-3 text-xs text-[#7c413c] hover:text-[#7c413c]">
                   View on Met Museum <ExternalLink className="w-3 h-3" />
                 </a>
               )}
@@ -208,12 +208,12 @@ export function TimeTravelTemplate({ mode = 'full' }: Props) {
 
       {/* Upload modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={() => setShowUploadModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[color:rgba(30,2,39,0.7)]" onClick={() => setShowUploadModal(false)}>
           <div className="rounded-xl p-5 max-w-sm w-full" onClick={e => e.stopPropagation()}
-            style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.15)', color: '#e8e0d8' }}>
+            style={{ background: '#1e0227', border: '1px solid rgba(246,212,203,0.15)', color: '#f6d4cb' }}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold">Add Your Art</h3>
-              <button onClick={() => setShowUploadModal(false)} className="p-1 hover:bg-white/10 rounded"><X className="w-4 h-4" /></button>
+              <button onClick={() => setShowUploadModal(false)} className="p-1 hover:bg-[color:rgba(246,212,203,0.1)] rounded"><X className="w-4 h-4" /></button>
             </div>
             <div className="space-y-3">
               <div>
@@ -224,16 +224,16 @@ export function TimeTravelTemplate({ mode = 'full' }: Props) {
               <div>
                 <label className="text-[10px] opacity-60">Title</label>
                 <input value={uploadTitle} onChange={e => setUploadTitle(e.target.value)} placeholder="Artwork title"
-                  className="w-full mt-1 text-[11px] px-2 py-1.5 rounded bg-white/10 border border-white/10 outline-none" />
+                  className="w-full mt-1 text-[11px] px-2 py-1.5 rounded bg-[color:rgba(246,212,203,0.1)] border border-[color:rgba(246,212,203,0.1)] outline-none" />
               </div>
               <div>
                 <label className="text-[10px] opacity-60">Year (1440-1940)</label>
                 <input type="number" min={1440} max={1940} value={uploadYear}
                   onChange={e => setUploadYear(parseInt(e.target.value) || currentYear)}
-                  className="w-full mt-1 text-[11px] px-2 py-1.5 rounded bg-white/10 border border-white/10 outline-none" />
+                  className="w-full mt-1 text-[11px] px-2 py-1.5 rounded bg-[color:rgba(246,212,203,0.1)] border border-[color:rgba(246,212,203,0.1)] outline-none" />
               </div>
               <button onClick={handleUploadSubmit} disabled={!uploadFile}
-                className="w-full flex items-center justify-center gap-1 px-3 py-2 text-[10px] rounded bg-blue-600 hover:bg-blue-500 disabled:opacity-30 transition-colors">
+                className="w-full flex items-center justify-center gap-1 px-3 py-2 text-[10px] rounded bg-[#7c413c] hover:bg-[#7c413c] disabled:opacity-30 transition-colors">
                 <Upload className="w-3 h-3" /> Upload
               </button>
             </div>
@@ -250,7 +250,7 @@ function ArtworkCard({ artwork, compact, onClick }: {
   return (
     <div
       className={`group rounded-lg overflow-hidden cursor-pointer transition-all hover:scale-[1.02] hover:shadow-xl ${compact ? '' : ''}`}
-      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+      style={{ background: 'rgba(246,212,203,0.05)', border: '1px solid rgba(246,212,203,0.1)' }}
       onClick={onClick}
     >
       <div className="relative">
@@ -259,8 +259,8 @@ function ArtworkCard({ artwork, compact, onClick }: {
           className={`w-full ${compact ? 'aspect-[4/3]' : 'aspect-[3/4]'} object-cover`}
           loading="lazy" />
         {!compact && (
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-            <ZoomIn className="w-6 h-6 text-white opacity-0 group-hover:opacity-80 transition-opacity" />
+          <div className="absolute inset-0 bg-[color:rgba(30,2,39,0)] group-hover:bg-[color:rgba(30,2,39,0.3)] transition-colors flex items-center justify-center">
+            <ZoomIn className="w-6 h-6 text-[var(--color-foreground)] opacity-0 group-hover:opacity-80 transition-opacity" />
           </div>
         )}
       </div>

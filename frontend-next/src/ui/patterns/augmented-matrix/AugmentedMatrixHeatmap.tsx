@@ -232,7 +232,7 @@ export function AugmentedMatrixHeatmap({
     labelCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     // Clear
-    ctx.fillStyle = 'var(--color-background, #faf9f7)';
+    ctx.fillStyle = 'var(--color-background, #f6d4cb)';
     ctx.fillRect(0, 0, w, h);
     labelCtx.clearRect(0, 0, w, h);
 
@@ -267,7 +267,7 @@ export function AugmentedMatrixHeatmap({
 
         // Focused cell highlight (keyboard navigation)
         if (focusedCell.row === r && focusedCell.col === c) {
-          ctx.strokeStyle = 'var(--color-ring, #1e3a5f)';
+          ctx.strokeStyle = 'var(--color-ring, #1e0227)';
           ctx.lineWidth = 2 / scale;
           ctx.strokeRect(cx - 1, cy - 1, cw + 2, ch + 2);
         }
@@ -277,7 +277,7 @@ export function AugmentedMatrixHeatmap({
     ctx.restore();
 
     // Row labels (left gutter)
-    labelCtx.fillStyle = 'var(--color-foreground, #2c241b)';
+    labelCtx.fillStyle = 'var(--color-foreground, #1e0227)';
     labelCtx.font = '11px system-ui, sans-serif';
     labelCtx.textAlign = 'right';
     labelCtx.textBaseline = 'middle';

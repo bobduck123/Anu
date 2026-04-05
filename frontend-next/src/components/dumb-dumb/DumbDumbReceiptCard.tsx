@@ -18,7 +18,7 @@ export function DumbDumbReceiptCard({ purchase }: DumbDumbReceiptCardProps) {
   return (
     <Card
       padding="lg"
-      className="overflow-hidden border-[rgba(30,58,95,0.16)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(224,232,240,0.54))]"
+      className="overflow-hidden border-[rgba(30,2,39,0.16)] bg-[linear-gradient(180deg,rgba(246,212,203,0.98),rgba(246,212,203,0.54))]"
     >
       <div className="flex flex-wrap items-start justify-between gap-6">
         <div>
@@ -33,13 +33,13 @@ export function DumbDumbReceiptCard({ purchase }: DumbDumbReceiptCardProps) {
             This purchase used a parody item as the wrapper. The funds were directed to the real cause shown below.
           </p>
         </div>
-        <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] border border-[rgba(30,58,95,0.12)] bg-white text-4xl">
+        <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] border border-[rgba(30,2,39,0.12)] bg-[var(--color-foreground)] text-4xl">
           {dumbDumbVisual(item)}
         </div>
       </div>
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
-        <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-white/80 p-5">
+        <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-[color:rgba(246,212,203,0.8)] p-5">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-foreground)]">Parody item bought</p>
           <p className="mt-2 text-xl font-semibold text-[var(--color-earth-dark)]">{item.title}</p>
           <p className="mt-2 text-sm leading-6 text-[var(--color-earth-medium)]">{item.parody_description}</p>
@@ -48,7 +48,7 @@ export function DumbDumbReceiptCard({ purchase }: DumbDumbReceiptCardProps) {
           </p>
         </div>
 
-        <div className="rounded-[1.5rem] border border-[rgba(45,90,61,0.14)] bg-[var(--color-sage-light)]/70 p-5">
+        <div className="rounded-[1.5rem] border border-[rgba(124,65,60,0.14)] bg-[var(--color-sage-light)]/70 p-5">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-forest)]">Actually funded</p>
           <p className="mt-2 text-xl font-semibold text-[var(--color-earth-dark)]">{item.impact_title}</p>
           <p className="mt-2 text-sm leading-6 text-[var(--color-earth-medium)]">{item.impact_description}</p>

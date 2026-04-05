@@ -144,7 +144,7 @@ export function EducationAdminDashboard() {
       <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <AnuSurfacePanel tone="quiet">
-            <p className="text-sm text-slate-300/84">
+            <p className="text-sm text-[color:rgba(246,212,203,0.84)]">
               Loading education administration observatory...
             </p>
           </AnuSurfacePanel>
@@ -180,7 +180,7 @@ export function EducationAdminDashboard() {
                   Curriculum analytics
                 </AnuChip>
               </div>
-              <p className="mt-4 text-sm leading-6 text-slate-300/84">
+              <p className="mt-4 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">
                 This surface should read like an observatory: scanable first, detailed second, and
                 explicit about the current review load across curriculum and governance.
               </p>
@@ -209,7 +209,7 @@ export function EducationAdminDashboard() {
         {error ? (
           <AnuSurfacePanel tone="soft" className="mt-6">
             <AnuChip tone="accent">Dashboard degraded</AnuChip>
-            <p className="mt-3 text-sm leading-6 text-slate-300/84">{error}</p>
+            <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">{error}</p>
           </AnuSurfacePanel>
         ) : null}
 
@@ -262,30 +262,30 @@ export function EducationAdminDashboard() {
                 {overview.module_performance.map((row) => (
                   <div
                     key={row.module_id}
-                    className="rounded-xl border border-white/10 bg-white/[0.04] p-4"
+                    className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] p-4"
                   >
                     <div className="mb-2 flex items-center justify-between gap-3">
-                      <p className="font-semibold text-white">{row.module_title}</p>
-                      <span className="text-xs text-slate-400">{row.record_count} records</span>
+                      <p className="font-semibold text-[var(--color-foreground)]">{row.module_title}</p>
+                      <span className="text-xs text-[color:rgba(246,212,203,0.64)]">{row.record_count} records</span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                    <div className="h-2 overflow-hidden rounded-full bg-[color:rgba(246,212,203,0.1)]">
                       <div
                         className="h-full transition-all duration-300 ease-out"
                         style={{
                           width: `${Math.min(100, Math.max(0, row.avg_completion_percent))}%`,
                           background:
-                            "linear-gradient(90deg, rgba(241,211,161,0.92), rgba(109,194,164,0.92))",
+                            "linear-gradient(90deg, rgba(246,212,203,0.92), rgba(246,212,203,0.92))",
                         }}
                       />
                     </div>
-                    <p className="mt-2 text-xs text-slate-400">
+                    <p className="mt-2 text-xs text-[color:rgba(246,212,203,0.64)]">
                       Average completion {row.avg_completion_percent.toFixed(1)}%
                     </p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="mt-6 text-sm text-slate-300/82">
+              <p className="mt-6 text-sm text-[color:rgba(246,212,203,0.82)]">
                 No module performance records yet.
               </p>
             )}
@@ -302,22 +302,22 @@ export function EducationAdminDashboard() {
                 {progressionRows.map(([label, value]) => (
                   <div
                     key={label}
-                    className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3"
+                    className="flex items-center justify-between rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-4 py-3"
                   >
-                    <span className="text-sm text-slate-200/84">{label}</span>
-                    <span className="font-mono-data text-sm font-semibold text-[#f1d3a1]">
+                    <span className="text-sm text-[color:rgba(246,212,203,0.84)]">{label}</span>
+                    <span className="font-mono-data text-sm font-semibold text-[#f6d4cb]">
                       {value}
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="mt-6 text-sm text-slate-300/82">
+              <p className="mt-6 text-sm text-[color:rgba(246,212,203,0.82)]">
                 No progression distribution data yet.
               </p>
             )}
 
-            <div className="mt-8 border-t border-white/10 pt-6">
+            <div className="mt-8 border-t border-[color:rgba(246,212,203,0.1)] pt-6">
               <AnuSectionHeading
                 eyebrow="Recent submissions"
                 title="Reflection pulse"
@@ -328,20 +328,20 @@ export function EducationAdminDashboard() {
                   {overview.recent_reflections.map((row) => (
                     <div
                       key={row.id}
-                      className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3"
+                      className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-4 py-3"
                     >
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-[color:rgba(246,212,203,0.64)]">
                         User {row.username || row.user_id} | Topic {row.topic_id}
                       </p>
-                      <p className="mt-2 text-sm text-white">{row.prompt}</p>
-                      <p className="mt-2 text-[11px] text-slate-400">
+                      <p className="mt-2 text-sm text-[var(--color-foreground)]">{row.prompt}</p>
+                      <p className="mt-2 text-[11px] text-[color:rgba(246,212,203,0.64)]">
                         {formatDateTime(row.submitted_at)}
                       </p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="mt-6 text-sm text-slate-300/82">
+                <p className="mt-6 text-sm text-[color:rgba(246,212,203,0.82)]">
                   No recent reflection submissions.
                 </p>
               )}
@@ -400,24 +400,24 @@ export function EducationAdminDashboard() {
                 {reflections.map((row) => (
                   <article
                     key={row.id}
-                    className="rounded-xl border border-white/10 bg-white/[0.04] p-4"
+                    className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] p-4"
                   >
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-[color:rgba(246,212,203,0.64)]">
                       User {row.user_id} | Program {row.program_id} | Module {row.module_id} |
                       {" "}Topic {row.topic_id}
                     </p>
-                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">
                       {row.prompt}
                     </p>
-                    <p className="mt-2 text-sm text-slate-100">{row.response_text}</p>
-                    <p className="mt-2 text-[11px] text-slate-400">
+                    <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.92)]">{row.response_text}</p>
+                    <p className="mt-2 text-[11px] text-[color:rgba(246,212,203,0.64)]">
                       {formatDateTime(row.submitted_at)}
                     </p>
                   </article>
                 ))}
               </div>
             ) : (
-              <p className="mt-6 text-sm text-slate-300/82">
+              <p className="mt-6 text-sm text-[color:rgba(246,212,203,0.82)]">
                 No reflections match the selected filters.
               </p>
             )}
@@ -436,12 +436,12 @@ export function EducationAdminDashboard() {
                 {approvalPanel.pending_entries.map((entry) => (
                   <div
                     key={entry.id}
-                    className="rounded-xl border border-white/10 bg-white/[0.04] p-4"
+                    className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] p-4"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className="font-semibold text-white">{entry.indigenous_name}</p>
-                        <p className="mt-1 text-xs text-slate-400">{entry.region}</p>
+                        <p className="font-semibold text-[var(--color-foreground)]">{entry.indigenous_name}</p>
+                        <p className="mt-1 text-xs text-[color:rgba(246,212,203,0.64)]">{entry.region}</p>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <AnuChip tone="muted">{entry.language_group}</AnuChip>
@@ -453,12 +453,12 @@ export function EducationAdminDashboard() {
                         </AnuChip>
                       </div>
                     </div>
-                    <p className="mt-3 text-sm text-slate-200/84">{entry.traditional_uses}</p>
+                    <p className="mt-3 text-sm text-[color:rgba(246,212,203,0.84)]">{entry.traditional_uses}</p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="mt-6 text-sm text-slate-300/82">No pending knowledge entries.</p>
+              <p className="mt-6 text-sm text-[color:rgba(246,212,203,0.82)]">No pending knowledge entries.</p>
             )}
           </AnuSurfacePanel>
 
@@ -473,14 +473,14 @@ export function EducationAdminDashboard() {
                 {approvalPanel.recent_approvals.map((row) => (
                   <div
                     key={row.id}
-                    className="rounded-xl border border-white/10 bg-white/[0.04] p-4"
+                    className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] p-4"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-[color:rgba(246,212,203,0.64)]">
                           Knowledge {row.knowledge_id} | Verifier {row.verifier_id}
                         </p>
-                        <p className="mt-2 text-sm font-semibold text-white">
+                        <p className="mt-2 text-sm font-semibold text-[var(--color-foreground)]">
                           {row.decision} {row.elder_verification_flag ? "(elder verified)" : ""}
                         </p>
                       </div>
@@ -489,16 +489,16 @@ export function EducationAdminDashboard() {
                       </AnuChip>
                     </div>
                     {row.notes ? (
-                      <p className="mt-3 text-sm text-slate-300/82">{row.notes}</p>
+                      <p className="mt-3 text-sm text-[color:rgba(246,212,203,0.82)]">{row.notes}</p>
                     ) : null}
-                    <p className="mt-3 text-[11px] text-slate-400">
+                    <p className="mt-3 text-[11px] text-[color:rgba(246,212,203,0.64)]">
                       {formatDateTime(row.created_at)}
                     </p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="mt-6 text-sm text-slate-300/82">No approval audit entries yet.</p>
+              <p className="mt-6 text-sm text-[color:rgba(246,212,203,0.82)]">No approval audit entries yet.</p>
             )}
           </AnuSurfacePanel>
         </section>

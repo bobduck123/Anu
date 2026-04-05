@@ -216,15 +216,15 @@ export function CurriculumLayerView() {
         </p>
 
         <div className="mt-6 grid gap-3 md:grid-cols-3">
-          <article className="rounded-xl border border-white/12 bg-white/[0.04] p-4 text-sm text-[var(--edu-foreground)]/78">
+          <article className="rounded-xl border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.04)] p-4 text-sm text-[var(--edu-foreground)]/78">
             <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--edu-foreground)]/60">1. Choose pathway</p>
             <p className="mt-2">Select the active program and review module sequence before starting.</p>
           </article>
-          <article className="rounded-xl border border-white/12 bg-white/[0.04] p-4 text-sm text-[var(--edu-foreground)]/78">
+          <article className="rounded-xl border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.04)] p-4 text-sm text-[var(--edu-foreground)]/78">
             <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--edu-foreground)]/60">2. Progress + reflect</p>
             <p className="mt-2">Advance topics in steps and store reflection evidence in the same flow.</p>
           </article>
-          <article className="rounded-xl border border-white/12 bg-white/[0.04] p-4 text-sm text-[var(--edu-foreground)]/78">
+          <article className="rounded-xl border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.04)] p-4 text-sm text-[var(--edu-foreground)]/78">
             <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--edu-foreground)]/60">3. Apply learning</p>
             <p className="mt-2">Move completed learning into regeneration actions and credential readiness.</p>
           </article>
@@ -234,8 +234,8 @@ export function CurriculumLayerView() {
       {loading ? (
         <div className="edu-card p-6 text-sm text-[var(--edu-foreground)]/70">Loading curriculum architecture…</div>
       ) : actionableError ? (
-        <div className="edu-card border-l-4 border-[var(--edu-accent)] bg-[rgba(242,199,134,0.1)] p-6 text-[var(--edu-foreground)]">
-          <p className="text-sm font-semibold text-[#f6d6a3]">{actionableError.headline}</p>
+        <div className="edu-card border-l-4 border-[var(--edu-accent)] bg-[rgba(246,212,203,0.1)] p-6 text-[var(--edu-foreground)]">
+          <p className="text-sm font-semibold text-[#f6d4cb]">{actionableError.headline}</p>
           <p className="mt-2 text-sm text-[var(--edu-foreground)]/80">{actionableError.detail}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link href={actionableError.fallbackHref} className="btn-pill btn-pill-outline text-xs">
@@ -277,7 +277,7 @@ export function CurriculumLayerView() {
               </div>
             </div>
 
-            <div className="mt-4 rounded-xl border border-white/12 bg-black/25 p-4 text-sm text-[var(--edu-foreground)]/75">
+            <div className="mt-4 rounded-xl border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(30,2,39,0.25)] p-4 text-sm text-[var(--edu-foreground)]/75">
               {authLoading ? (
                 <span>Checking learner session…</span>
               ) : isAuthenticated ? (
@@ -311,7 +311,7 @@ export function CurriculumLayerView() {
                     </h2>
                     <p className="mt-2 text-sm text-[var(--edu-foreground)]/72">{programDetail.program.description}</p>
                   </div>
-                  <div className="rounded-lg border border-white/12 bg-white/[0.03] px-3 py-2 text-xs text-[var(--edu-foreground)]/72 space-y-1 min-w-[14rem]">
+                  <div className="rounded-lg border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.03)] px-3 py-2 text-xs text-[var(--edu-foreground)]/72 space-y-1 min-w-[14rem]">
                     <p className="uppercase tracking-[0.13em] text-[var(--edu-foreground)]/55">Trust context</p>
                     <p>Region: {programDetail.program.region || "Global"}</p>
                     <p>Language group: {programDetail.program.language_group || "Multilingual"}</p>
@@ -338,7 +338,7 @@ export function CurriculumLayerView() {
                       const latestReflection = reflections.find((row) => row.topic_id === topic.topic_id);
 
                       return (
-                        <div key={topic.topic_id} className="rounded-lg border border-white/12 bg-white/[0.02] p-4">
+                        <div key={topic.topic_id} className="rounded-lg border border-[color:rgba(246,212,203,0.12)] bg-[var(--color-foreground)]/[0.02] p-4">
                           <div className="mb-2 flex flex-wrap items-start justify-between gap-3">
                             <div>
                               <p className="font-semibold text-[var(--edu-foreground)]">{topic.title}</p>
@@ -362,7 +362,7 @@ export function CurriculumLayerView() {
                             )}
                           </div>
 
-                          <div className="mb-3 h-2 overflow-hidden rounded-full bg-white/20">
+                          <div className="mb-3 h-2 overflow-hidden rounded-full bg-[color:rgba(246,212,203,0.2)]">
                             <div
                               className="h-full bg-[var(--edu-accent)] transition-all duration-300 ease-out"
                               style={{ width: `${completion}%` }}
@@ -429,7 +429,7 @@ export function CurriculumLayerView() {
                               </div>
                             </form>
                           ) : (
-                            <div className="mt-3 rounded-md border border-dashed border-white/20 bg-white/[0.02] p-3 text-xs text-[var(--edu-foreground)]/62">
+                            <div className="mt-3 rounded-md border border-dashed border-[color:rgba(246,212,203,0.2)] bg-[var(--color-foreground)]/[0.02] p-3 text-xs text-[var(--edu-foreground)]/62">
                               Sign in to unlock reflections, badges, and regeneration-linked learner actions.
                             </div>
                           )}

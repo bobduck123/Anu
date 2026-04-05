@@ -96,7 +96,7 @@ export function Navigation() {
     <nav
       className={`${positionClass} left-0 right-0 z-40 transition-all duration-500 ${
         scrolled
-          ? 'bg-white/90 backdrop-blur-md shadow-sm py-3'
+          ? 'bg-[color:rgba(246,212,203,0.9)] backdrop-blur-md shadow-sm py-3'
           : 'bg-transparent py-6'
       }`}
     >
@@ -136,7 +136,7 @@ export function Navigation() {
               Discover
             </button>
             {discoverOpen && (
-              <div className="absolute left-0 mt-2 w-44 rounded-lg shadow-lg bg-white border border-[var(--color-border)] z-50">
+              <div className="absolute left-0 mt-2 w-44 rounded-lg shadow-lg bg-[var(--color-foreground)] border border-[var(--color-border)] z-50">
                 <div className="py-2">
                   {navStructure.discover.map((link) => (
                     <Link
@@ -162,7 +162,7 @@ export function Navigation() {
               Community
             </button>
             {communityOpen && (
-              <div className="absolute left-0 mt-2 w-44 rounded-lg shadow-lg bg-white border border-[var(--color-border)] z-50">
+              <div className="absolute left-0 mt-2 w-44 rounded-lg shadow-lg bg-[var(--color-foreground)] border border-[var(--color-border)] z-50">
                 <div className="py-2">
                   {navStructure.community.map((link) => (
                     <Link
@@ -188,7 +188,7 @@ export function Navigation() {
               Admin
             </button>
             {adminOpen && (
-              <div className="absolute left-0 mt-2 w-56 rounded-lg shadow-lg bg-white border border-[var(--color-border)] z-50">
+              <div className="absolute left-0 mt-2 w-56 rounded-lg shadow-lg bg-[var(--color-foreground)] border border-[var(--color-border)] z-50">
                 <div className="py-2">
                   {navStructure.admin.map((link) => (
                     <Link
@@ -224,7 +224,7 @@ export function Navigation() {
               {isAuthenticated ? (user?.pseudonym || user?.username || 'Profile') : 'Sign in'}
             </button>
             {profileOpen && (
-              <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white border border-[var(--color-border)] z-50">
+              <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-[var(--color-foreground)] border border-[var(--color-border)] z-50">
                 <div className="py-2">
                   {isAuthenticated ? (
                     <>
@@ -264,7 +264,7 @@ export function Navigation() {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden p-2 rounded-lg transition-colors focus-ring hover:bg-gray-100 text-[var(--color-earth-dark)]"
+          className="md:hidden p-2 rounded-lg transition-colors focus-ring hover:bg-[#f6d4cb] text-[var(--color-earth-dark)]"
           aria-label={isOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={isOpen}
         >
@@ -278,7 +278,7 @@ export function Navigation() {
 
         {/* Mobile Menu */}
       <div
-        className={`md:hidden absolute top-full left-0 right-0 bg-white shadow-lg transition-all duration-300 overflow-hidden ${
+        className={`md:hidden absolute top-full left-0 right-0 bg-[var(--color-foreground)] shadow-lg transition-all duration-300 overflow-hidden ${
           isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
         }`}
       >

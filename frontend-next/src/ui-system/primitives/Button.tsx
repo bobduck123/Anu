@@ -17,12 +17,12 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary: 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)] hover:brightness-90',
-  accent: 'bg-[var(--color-accent)] text-white hover:brightness-90',
-  sage: 'bg-[var(--color-sage)] text-white hover:bg-[var(--color-forest)]',
-  forest: 'bg-[var(--color-forest)] text-white hover:brightness-90',
+  accent: 'bg-[var(--color-accent)] text-[var(--color-foreground)] hover:brightness-90',
+  sage: 'bg-[var(--color-sage)] text-[var(--color-foreground)] hover:bg-[var(--color-forest)]',
+  forest: 'bg-[var(--color-forest)] text-[var(--color-foreground)] hover:brightness-90',
   outline: 'bg-transparent border-[1.5px] border-[var(--color-border)] text-[var(--color-foreground)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] hover:bg-[var(--color-institutional-light)]',
   ghost: 'bg-transparent text-[var(--color-foreground)] hover:bg-[var(--color-muted)]',
-  danger: 'bg-[var(--color-danger)] text-white hover:brightness-90',
+  danger: 'bg-[var(--color-danger)] text-[var(--color-foreground)] hover:brightness-90',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

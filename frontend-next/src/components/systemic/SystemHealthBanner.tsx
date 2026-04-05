@@ -78,14 +78,14 @@ async function probeImpactHealth(): Promise<Indicator> {
 function chipClasses(state: IndicatorState): string {
   switch (state) {
     case 'online':
-      return 'border-emerald-300/45 bg-emerald-300/16 text-emerald-100';
+      return 'border-[color:rgba(102,87,0,0.45)] bg-[color:rgba(102,87,0,0.16)] text-[#f6d4cb]';
     case 'degraded':
-      return 'border-amber-300/45 bg-amber-300/16 text-amber-100';
+      return 'border-[color:rgba(224,177,21,0.45)] bg-[color:rgba(224,177,21,0.16)] text-[#e0b115]';
     case 'offline':
-      return 'border-rose-300/45 bg-rose-300/16 text-rose-100';
+      return 'border-[color:rgba(124,65,60,0.45)] bg-[color:rgba(124,65,60,0.16)] text-[#f6d4cb]';
     case 'checking':
     default:
-      return 'border-white/20 bg-white/10 text-slate-100';
+      return 'border-[color:rgba(246,212,203,0.2)] bg-[color:rgba(246,212,203,0.1)] text-[color:rgba(246,212,203,0.92)]';
   }
 }
 
@@ -211,10 +211,10 @@ export function SystemHealthBanner() {
 
   return (
     <section
-      className={`manara-grid-hero rounded-2xl border px-3 py-3 text-sm shadow-[0_16px_36px_-24px_rgba(18,30,46,0.88)] backdrop-blur-xl md:px-4 ${
+      className={`manara-grid-hero rounded-2xl border px-3 py-3 text-sm shadow-[0_16px_36px_-24px_rgba(30,2,39,0.88)] backdrop-blur-xl md:px-4 ${
         hasErrors
-          ? 'border-amber-200/46 bg-[linear-gradient(118deg,rgba(52,42,19,0.74),rgba(36,28,15,0.68))] text-amber-50'
-          : 'border-emerald-200/44 bg-[linear-gradient(118deg,rgba(16,50,33,0.7),rgba(14,40,29,0.64))] text-emerald-50'
+          ? 'border-[color:rgba(224,177,21,0.46)] bg-[linear-gradient(118deg,rgba(30,2,39,0.74),rgba(30,2,39,0.68))] text-[#e0b115]'
+          : 'border-[color:rgba(102,87,0,0.44)] bg-[linear-gradient(118deg,rgba(30,2,39,0.7),rgba(30,2,39,0.64))] text-[#665700]'
       }`}
       aria-live="polite"
     >
@@ -223,8 +223,8 @@ export function SystemHealthBanner() {
           <span
             className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border ${
               hasErrors
-                ? 'border-amber-300/55 bg-amber-300/20 text-amber-100'
-                : 'border-emerald-300/55 bg-emerald-300/20 text-emerald-100'
+                ? 'border-[color:rgba(224,177,21,0.55)] bg-[color:rgba(224,177,21,0.2)] text-[#e0b115]'
+                : 'border-[color:rgba(102,87,0,0.55)] bg-[color:rgba(102,87,0,0.2)] text-[#f6d4cb]'
             }`}
           >
             {hasErrors ? <AlertTriangle className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
@@ -239,7 +239,7 @@ export function SystemHealthBanner() {
           <button
             type="button"
             onClick={() => void checkServices()}
-            className="manara-glass-chip inline-flex min-h-10 items-center gap-1 border border-current/25 bg-white/10 px-3 py-1.5 text-xs font-medium text-current hover:bg-white/18"
+            className="manara-glass-chip inline-flex min-h-10 items-center gap-1 border border-current/25 bg-[color:rgba(246,212,203,0.1)] px-3 py-1.5 text-xs font-medium text-current hover:bg-[color:rgba(246,212,203,0.18)]"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Retry
@@ -247,7 +247,7 @@ export function SystemHealthBanner() {
 
           <Link
             href={cta.href}
-            className="manara-glass-chip inline-flex min-h-10 items-center border border-current/25 bg-white/10 px-3 py-1.5 text-xs font-medium text-current hover:bg-white/18"
+            className="manara-glass-chip inline-flex min-h-10 items-center border border-current/25 bg-[color:rgba(246,212,203,0.1)] px-3 py-1.5 text-xs font-medium text-current hover:bg-[color:rgba(246,212,203,0.18)]"
           >
             {cta.label}
           </Link>
@@ -255,7 +255,7 @@ export function SystemHealthBanner() {
           <button
             type="button"
             onClick={() => setDetailsOpen((open) => !open)}
-            className="manara-glass-chip inline-flex min-h-10 items-center gap-1 border border-current/25 bg-white/10 px-3 py-1.5 text-xs font-medium text-current hover:bg-white/18"
+            className="manara-glass-chip inline-flex min-h-10 items-center gap-1 border border-current/25 bg-[color:rgba(246,212,203,0.1)] px-3 py-1.5 text-xs font-medium text-current hover:bg-[color:rgba(246,212,203,0.18)]"
             aria-expanded={detailsOpen}
             aria-controls="system-health-details"
           >

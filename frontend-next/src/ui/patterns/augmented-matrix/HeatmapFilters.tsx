@@ -35,7 +35,7 @@ export function HeatmapFilters({ filters, onFilterChange, tenants, categories }:
             onClick={() => update({ timeRange: filters.timeRange === value ? undefined : value })}
             className={`px-2.5 py-1 text-xs rounded-full font-medium transition-colors ${
               filters.timeRange === value
-                ? 'bg-[var(--color-primary)] text-white'
+                ? 'bg-[var(--color-primary)] text-[var(--color-foreground)]'
                 : 'bg-[var(--color-card)] text-[var(--color-foreground)] hover:bg-[var(--color-border)]'
             }`}
           >

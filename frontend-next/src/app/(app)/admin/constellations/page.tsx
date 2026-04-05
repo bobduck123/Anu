@@ -92,7 +92,7 @@ export default function ConstellationAdminPage() {
             <div className="card-civic mb-6">
               <label className="text-xs text-[var(--color-earth-medium)]">Select constellation</label>
               <select
-                className="mt-2 w-full border border-[var(--color-border)] rounded-lg px-3 py-2 bg-white"
+                className="mt-2 w-full border border-[var(--color-border)] rounded-lg px-3 py-2 bg-[var(--color-foreground)]"
                 value={selectedId ?? ''}
                 onChange={(event) => setSelectedId(Number(event.target.value))}
               >
@@ -130,7 +130,7 @@ export default function ConstellationAdminPage() {
                           </p>
                         </div>
                         <button
-                          className="text-xs font-semibold px-3 py-2 rounded-lg bg-[var(--color-forest)] text-white disabled:opacity-50"
+                          className="text-xs font-semibold px-3 py-2 rounded-lg bg-[var(--color-forest)] text-[var(--color-foreground)] disabled:opacity-50"
                           onClick={() => handleResolve(alert.id)}
                           disabled={working}
                         >

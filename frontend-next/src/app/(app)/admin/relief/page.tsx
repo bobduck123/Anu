@@ -114,7 +114,7 @@ export default function AdminReliefPage() {
                   onClick={() => loadMembers(c.id)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     selectedCouncil === c.id
-                      ? 'text-white'
+                      ? 'text-[var(--color-foreground)]'
                       : 'border border-[var(--color-border)] text-[var(--color-earth-dark)] hover:bg-[var(--color-muted)]'
                   }`}
                   style={

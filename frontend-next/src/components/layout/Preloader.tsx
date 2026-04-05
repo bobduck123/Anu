@@ -80,7 +80,7 @@ export function Preloader() {
         
         {/* Brand Name */}
         <h1 
-          className="preloader-text text-3xl md:text-4xl font-semibold text-white mb-2"
+          className="preloader-text text-3xl md:text-4xl font-semibold text-[var(--color-foreground)] mb-2"
           style={{ fontFamily: 'var(--font-source-serif), Georgia, serif' }}
         >
           {brand.name.split(' ').map((word, i) => (
@@ -91,12 +91,12 @@ export function Preloader() {
         </h1>
         
         {/* Tagline */}
-        <p className="preloader-subtext text-white/70 text-sm tracking-[0.32em] uppercase">
+        <p className="preloader-subtext text-[color:rgba(246,212,203,0.7)] text-sm tracking-[0.32em] uppercase">
           Beacon Civic Commons
         </p>
 
         {/* Progress indicator */}
-        <div className="mt-8 w-32 h-0.5 bg-white/20 rounded-full overflow-hidden">
+        <div className="mt-8 w-32 h-0.5 bg-[color:rgba(246,212,203,0.2)] rounded-full overflow-hidden">
           <div 
             className="h-full bg-[var(--color-sage)] rounded-full"
             style={{

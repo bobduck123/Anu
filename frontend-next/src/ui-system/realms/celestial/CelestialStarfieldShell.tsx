@@ -24,7 +24,7 @@ export function CelestialStarfieldShell({
   tunnel,
 }: CelestialStarfieldShellProps) {
   return (
-    <div className="fixed inset-0 z-[5] overflow-hidden bg-[#02050c]" style={{ isolation: 'isolate' }}>
+    <div className="fixed inset-0 z-[5] overflow-hidden bg-[#1e0227]" style={{ isolation: 'isolate' }}>
       <UniverseScene
         packet={packet}
         activeStarId={activeStarId}

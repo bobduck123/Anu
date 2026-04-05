@@ -64,7 +64,7 @@ export function ManuscriptOverlay({
     >
       <button
         type="button"
-        className="absolute inset-0 bg-[rgba(4,7,12,0.74)] backdrop-blur-sm"
+        className="absolute inset-0 bg-[rgba(30,2,39,0.74)] backdrop-blur-sm"
         onClick={onClose}
         aria-label="Close manuscript chamber"
       />
@@ -72,17 +72,17 @@ export function ManuscriptOverlay({
       <article className={joinClasses('anu-manuscript-overlay relative z-10 w-full max-w-6xl overflow-hidden')}>
         <div className="anu-manuscript-overlay__header">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.28em] text-[#8e7047]">{eyebrow}</p>
+            <p className="text-[10px] uppercase tracking-[0.28em] text-[#7c413c]">{eyebrow}</p>
             <h2
               id={titleId}
-              className="mt-3 text-3xl text-[#2b1d11] md:text-[2.6rem]"
+              className="mt-3 text-3xl text-[#1e0227] md:text-[2.6rem]"
               style={{ fontFamily: 'var(--anu-type-display)' }}
             >
               {title}
             </h2>
-            {subtitle ? <p className="mt-2 text-sm text-[#6e5940]">{subtitle}</p> : null}
+            {subtitle ? <p className="mt-2 text-sm text-[#7c413c]">{subtitle}</p> : null}
             {description ? (
-              <div id={descriptionId} className="mt-4 max-w-3xl text-sm leading-7 text-[#4d3d2a]">
+              <div id={descriptionId} className="mt-4 max-w-3xl text-sm leading-7 text-[#7c413c]">
                 {description}
               </div>
             ) : null}
@@ -92,7 +92,7 @@ export function ManuscriptOverlay({
             type="button"
             ref={closeButtonRef}
             onClick={onClose}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#49331d]/18 bg-white/55 text-[#3a2715] transition-colors hover:bg-white/72"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#665700]/18 bg-[color:rgba(246,212,203,0.55)] text-[#1e0227] transition-colors hover:bg-[color:rgba(246,212,203,0.72)]"
             aria-label="Close manuscript chamber"
           >
             <X className="h-4 w-4" />
@@ -108,8 +108,8 @@ export function ManuscriptOverlay({
 
           <aside className="anu-manuscript-overlay__drawer">
             <div className="anu-manuscript-chamber anu-manuscript-chamber-side">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#7d613b]">Archive guidance</p>
-              <p className="mt-3 text-sm leading-7 text-[#4d3d2a]">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#7c413c]">Archive guidance</p>
+              <p className="mt-3 text-sm leading-7 text-[#7c413c]">
                 The chamber opens inside the archive rather than replacing it. Read the purpose, state, version, and simulation shape first, then descend into steward lane, dependencies, and release history.
               </p>
             </div>

@@ -25,7 +25,7 @@ import {
 import { AnuThresholdPathPanel } from '@/ui-system/anu/tenantSemanticsPrimitives';
 
 const authInputClass =
-  'w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-400';
+  'w-full rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-3 py-2 text-sm text-[var(--color-foreground)] placeholder:text-[color:rgba(246,212,203,0.64)]';
 
 function AuthPageFallback() {
   return (
@@ -133,7 +133,7 @@ function AuthPageContent() {
                 <AnuChip tone="muted" icon={Users}>Participant next</AnuChip>
                 {hasExplicitReturnTo ? <AnuChip tone="accent" icon={Sparkles}>Return path protected</AnuChip> : null}
               </div>
-              <p className="mt-4 text-sm leading-6 text-slate-300/84">
+              <p className="mt-4 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">
                 {thresholdState.manifest.civicFrame}
               </p>
             </AnuSurfacePanel>
@@ -162,10 +162,10 @@ function AuthPageContent() {
           <AnuSurfacePanel tone="soft" className="p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-semibold text-white" style={{ fontFamily: 'var(--font-serif)' }}>
+                <h1 className="text-3xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--font-serif)' }}>
                   {isLogin ? 'Welcome back' : 'Create your account'}
                 </h1>
-                <p className="mt-2 text-sm text-slate-300/82">
+                <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.82)]">
                   {isLogin
                     ? hasExplicitReturnTo
                       ? 'Log in to continue where you left off.'
@@ -200,7 +200,7 @@ function AuthPageContent() {
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-100">Email</label>
+                <label className="mb-2 block text-sm font-medium text-[color:rgba(246,212,203,0.92)]">Email</label>
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -214,7 +214,7 @@ function AuthPageContent() {
               {!isLogin ? (
                 <>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-100">Username</label>
+                    <label className="mb-2 block text-sm font-medium text-[color:rgba(246,212,203,0.92)]">Username</label>
                     <input
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
@@ -225,7 +225,7 @@ function AuthPageContent() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-100">Display Name</label>
+                    <label className="mb-2 block text-sm font-medium text-[color:rgba(246,212,203,0.92)]">Display Name</label>
                     <input
                       value={pseudonym}
                       onChange={(e) => setPseudonym(e.target.value)}
@@ -237,7 +237,7 @@ function AuthPageContent() {
                 </>
               ) : null}
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-100">Password</label>
+                <label className="mb-2 block text-sm font-medium text-[color:rgba(246,212,203,0.92)]">Password</label>
                 <input
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -251,7 +251,7 @@ function AuthPageContent() {
               </div>
               {!isLogin ? (
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-100">Confirm Password</label>
+                  <label className="mb-2 block text-sm font-medium text-[color:rgba(246,212,203,0.92)]">Confirm Password</label>
                   <input
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -265,18 +265,18 @@ function AuthPageContent() {
                 </div>
               ) : null}
               {error ? (
-                <div className="rounded-xl border border-rose-400/25 bg-rose-400/10 px-3 py-3 text-sm text-rose-100">{error}</div>
+                <div className="rounded-xl border border-[color:rgba(124,65,60,0.25)] bg-[color:rgba(124,65,60,0.10)] px-3 py-3 text-sm text-[#f6d4cb]">{error}</div>
               ) : null}
               {success ? (
-                <div className="rounded-xl border border-emerald-400/25 bg-emerald-400/10 px-3 py-3 text-sm text-emerald-100">{success}</div>
+                <div className="rounded-xl border border-[color:rgba(102,87,0,0.25)] bg-[color:rgba(102,87,0,0.10)] px-3 py-3 text-sm text-[#f6d4cb]">{success}</div>
               ) : null}
               <AnuControlButton type="submit" disabled={isLoading} tone="active" className="w-full justify-center">
                 {isLoading ? 'Please wait...' : isLogin ? 'Login' : 'Create Account'}
               </AnuControlButton>
             </form>
 
-            <div className="mt-4 text-sm text-slate-300/82">
-              Forgot password? <span className="text-[#f1d3a1]">Contact support</span>
+            <div className="mt-4 text-sm text-[color:rgba(246,212,203,0.82)]">
+              Forgot password? <span className="text-[#f6d4cb]">Contact support</span>
             </div>
           </AnuSurfacePanel>
 

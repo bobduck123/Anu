@@ -19,13 +19,13 @@ export function DumbDumbHubScreen({ data }: DumbDumbHubScreenProps) {
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
-      <section className="relative overflow-hidden border-b border-[rgba(30,58,95,0.08)] bg-[linear-gradient(135deg,rgba(224,232,240,0.72),rgba(255,255,255,0.96)_42%,rgba(232,240,228,0.82))]">
-        <div className="pointer-events-none absolute -left-24 top-12 h-56 w-56 rounded-full bg-[rgba(30,58,95,0.12)] blur-3xl" />
-        <div className="pointer-events-none absolute right-0 top-0 h-72 w-72 rounded-full bg-[rgba(45,90,61,0.1)] blur-3xl" />
+      <section className="relative overflow-hidden border-b border-[rgba(30,2,39,0.08)] bg-[linear-gradient(135deg,rgba(246,212,203,0.72),rgba(246,212,203,0.96)_42%,rgba(246,212,203,0.82))]">
+        <div className="pointer-events-none absolute -left-24 top-12 h-56 w-56 rounded-full bg-[rgba(30,2,39,0.12)] blur-3xl" />
+        <div className="pointer-events-none absolute right-0 top-0 h-72 w-72 rounded-full bg-[rgba(124,65,60,0.1)] blur-3xl" />
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(30,58,95,0.12)] bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-institutional)]">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(30,2,39,0.12)] bg-[color:rgba(246,212,203,0.8)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-institutional)]">
                 <Sparkles className="h-4 w-4" />
                 Transparent satire
               </div>
@@ -35,7 +35,7 @@ export function DumbDumbHubScreen({ data }: DumbDumbHubScreenProps) {
               <p className="mt-5 max-w-3xl text-lg leading-8 text-[var(--color-earth-medium)]">
                 {data.hero.subtitle}
               </p>
-              <div className="mt-8 rounded-[1.5rem] border border-[rgba(45,90,61,0.15)] bg-white/80 p-5">
+              <div className="mt-8 rounded-[1.5rem] border border-[rgba(124,65,60,0.15)] bg-[color:rgba(246,212,203,0.8)] p-5">
                 <p className="text-sm leading-7 text-[var(--color-earth-dark)]">
                   <strong className="text-[var(--color-forest)]">Important:</strong> {data.hero.disclaimer}
                 </p>
@@ -43,7 +43,7 @@ export function DumbDumbHubScreen({ data }: DumbDumbHubScreenProps) {
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="#lists"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-institutional)] px-6 py-3 text-sm font-medium text-white transition-all duration-300 hover:brightness-95"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-institutional)] px-6 py-3 text-sm font-medium text-[var(--color-foreground)] transition-all duration-300 hover:brightness-95"
                 >
                   Browse lists
                   <ArrowRight className="h-4 w-4" />
@@ -51,7 +51,7 @@ export function DumbDumbHubScreen({ data }: DumbDumbHubScreenProps) {
                 {demoList ? (
                   <Link
                     href={`/dumb-dumb/${demoList.slug}`}
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--color-border)] bg-white/80 px-6 py-3 text-sm font-medium text-[var(--color-earth-dark)] transition-colors hover:bg-[var(--color-muted)]"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--color-border)] bg-[color:rgba(246,212,203,0.8)] px-6 py-3 text-sm font-medium text-[var(--color-earth-dark)] transition-colors hover:bg-[var(--color-muted)]"
                   >
                     View demo list
                   </Link>
@@ -60,17 +60,17 @@ export function DumbDumbHubScreen({ data }: DumbDumbHubScreenProps) {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-              <div className="rounded-[1.7rem] border border-white/70 bg-white/78 p-5 shadow-[0_20px_40px_-30px_rgba(30,58,95,0.55)]">
+              <div className="rounded-[1.7rem] border border-[color:rgba(246,212,203,0.7)] bg-[color:rgba(246,212,203,0.78)] p-5 shadow-[0_20px_40px_-30px_rgba(30,2,39,0.55)]">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-foreground)]">Total directed</p>
                 <p className="mt-3 text-4xl font-semibold font-mono-data text-[var(--color-earth-dark)]">
                   {formatMoney(data.stats.total_raised_cents)}
                 </p>
               </div>
-              <div className="rounded-[1.7rem] border border-white/70 bg-white/78 p-5 shadow-[0_20px_40px_-30px_rgba(30,58,95,0.55)]">
+              <div className="rounded-[1.7rem] border border-[color:rgba(246,212,203,0.7)] bg-[color:rgba(246,212,203,0.78)] p-5 shadow-[0_20px_40px_-30px_rgba(30,2,39,0.55)]">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-foreground)]">Featured creators</p>
                 <p className="mt-3 text-4xl font-semibold font-mono-data text-[var(--color-earth-dark)]">{data.stats.lists}</p>
               </div>
-              <div className="rounded-[1.7rem] border border-white/70 bg-white/78 p-5 shadow-[0_20px_40px_-30px_rgba(30,58,95,0.55)]">
+              <div className="rounded-[1.7rem] border border-[color:rgba(246,212,203,0.7)] bg-[color:rgba(246,212,203,0.78)] p-5 shadow-[0_20px_40px_-30px_rgba(30,2,39,0.55)]">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-foreground)]">Recent purchases</p>
                 <p className="mt-3 text-4xl font-semibold font-mono-data text-[var(--color-earth-dark)]">{data.stats.recent_purchases}</p>
               </div>
@@ -93,7 +93,7 @@ export function DumbDumbHubScreen({ data }: DumbDumbHubScreenProps) {
               ['See what it actually funds', 'Each card foregrounds the real mutual-aid pool and impact.'],
               ['Contribute to real mutual aid', 'Checkout and receipt repeat the real destination before money moves.'],
             ].map(([title, body], index) => (
-              <div key={title} className="rounded-[1.5rem] border border-[var(--color-border)] bg-white px-5 py-6 shadow-[0_16px_28px_-24px_rgba(44,36,27,0.4)]">
+              <div key={title} className="rounded-[1.5rem] border border-[var(--color-border)] bg-[var(--color-foreground)] px-5 py-6 shadow-[0_16px_28px_-24px_rgba(30,2,39,0.4)]">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-institutional)]">Step {index + 1}</p>
                 <h3 className="mt-3 text-xl font-semibold text-[var(--color-earth-dark)]">{title}</h3>
                 <p className="mt-2 text-sm leading-7 text-[var(--color-earth-medium)]">{body}</p>
@@ -127,7 +127,7 @@ export function DumbDumbHubScreen({ data }: DumbDumbHubScreenProps) {
           </div>
           <div className="mt-8 grid gap-6 lg:grid-cols-3">
             {data.featured_lists.map((list) => (
-              <article key={list.id} className="rounded-[1.7rem] border border-[var(--color-border)] bg-white p-6 shadow-[0_18px_36px_-28px_rgba(44,36,27,0.35)]">
+              <article key={list.id} className="rounded-[1.7rem] border border-[var(--color-border)] bg-[var(--color-foreground)] p-6 shadow-[0_18px_36px_-28px_rgba(30,2,39,0.35)]">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-foreground)]">Creator</p>
                 <h3 className="mt-3 text-2xl font-semibold text-[var(--color-earth-dark)]" style={{ fontFamily: 'var(--font-serif)' }}>
                   {list.owner?.pseudonym}
@@ -159,23 +159,23 @@ export function DumbDumbHubScreen({ data }: DumbDumbHubScreenProps) {
           />
         </section>
 
-        <section className="rounded-[2rem] border border-[rgba(30,58,95,0.1)] bg-[linear-gradient(135deg,rgba(30,58,95,0.95),rgba(45,90,61,0.92))] px-6 py-8 text-white shadow-[0_24px_48px_-30px_rgba(30,58,95,0.72)] sm:px-8">
+        <section className="rounded-[2rem] border border-[rgba(30,2,39,0.1)] bg-[linear-gradient(135deg,rgba(30,2,39,0.95),rgba(124,65,60,0.92))] px-6 py-8 text-[var(--color-foreground)] shadow-[0_24px_48px_-30px_rgba(30,2,39,0.72)] sm:px-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/72">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.72)]">
                 <HandHeart className="h-4 w-4" />
                 Creator tools
               </div>
               <h2 className="mt-3 text-3xl font-semibold" style={{ fontFamily: 'var(--font-serif)' }}>
                 Build your own transparent parody list
               </h2>
-              <p className="mt-3 text-sm leading-7 text-white/78">
+              <p className="mt-3 text-sm leading-7 text-[color:rgba(246,212,203,0.78)]">
                 Create satirical items, map each one to a real pool, and preview the public page before sharing it.
               </p>
             </div>
             <Link
               href={isAuthenticated ? '/dumb-dumb/manage' : '/auth'}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-medium text-[var(--color-earth-dark)] transition-transform duration-300 hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-foreground)] px-6 py-3 text-sm font-medium text-[var(--color-earth-dark)] transition-transform duration-300 hover:-translate-y-0.5"
             >
               {isAuthenticated ? 'Create your own list' : 'Sign in to create a list'}
               <ArrowRight className="h-4 w-4" />

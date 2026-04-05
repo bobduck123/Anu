@@ -11,7 +11,7 @@ interface Section {
 }
 
 const STORAGE_KEY = 'desktop-scroll-snap-config';
-const DEFAULT_COLORS = ['#1a1a2e', '#16213e', '#0f3460', '#533483', '#e94560', '#2b2e4a', '#903749'];
+const DEFAULT_COLORS = ['#1e0227', '#1e0227', '#1e0227', '#7c413c', '#7c413c', '#1e0227', '#7c413c'];
 
 function loadConfig(): Section[] {
   try {
@@ -74,22 +74,22 @@ export function ScrollSnapWidget() {
       <div className="p-3 space-y-2 max-h-[360px] overflow-y-auto">
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-xs font-medium opacity-60">Scroll Snap Settings</h4>
-          <button onClick={() => setShowSettings(false)} className="text-[9px] px-2 py-1 rounded bg-white/10 hover:bg-white/15">Done</button>
+          <button onClick={() => setShowSettings(false)} className="text-[9px] px-2 py-1 rounded bg-[color:rgba(246,212,203,0.1)] hover:bg-[color:rgba(246,212,203,0.15)]">Done</button>
         </div>
 
         {sections.map((section, i) => (
-          <div key={section.id} className="p-2 rounded-lg bg-white/5 space-y-1.5">
+          <div key={section.id} className="p-2 rounded-lg bg-[color:rgba(246,212,203,0.05)] space-y-1.5">
             <div className="flex items-center gap-2">
               <span className="text-[9px] opacity-40 w-4">{i + 1}</span>
               <input value={section.title} onChange={e => updateSection(section.id, { title: e.target.value })}
-                className="flex-1 text-[10px] px-1.5 py-1 rounded bg-white/10 border border-white/10 outline-none" />
+                className="flex-1 text-[10px] px-1.5 py-1 rounded bg-[color:rgba(246,212,203,0.1)] border border-[color:rgba(246,212,203,0.1)] outline-none" />
               <input type="color" value={section.color} onChange={e => updateSection(section.id, { color: e.target.value })}
                 className="w-5 h-5 rounded cursor-pointer" />
-              <button onClick={() => handleImageUpload(section.id)} className="p-1 rounded hover:bg-white/10">
+              <button onClick={() => handleImageUpload(section.id)} className="p-1 rounded hover:bg-[color:rgba(246,212,203,0.1)]">
                 <Upload className="w-3 h-3" />
               </button>
               {sections.length > 2 && (
-                <button onClick={() => removeSection(section.id)} className="p-1 rounded hover:bg-white/10 text-red-400">
+                <button onClick={() => removeSection(section.id)} className="p-1 rounded hover:bg-[color:rgba(246,212,203,0.1)] text-[#7c413c]">
                   <Trash2 className="w-3 h-3" />
                 </button>
               )}
@@ -99,7 +99,7 @@ export function ScrollSnapWidget() {
 
         {sections.length < 10 && (
           <button onClick={addSection}
-            className="w-full flex items-center justify-center gap-1 py-1.5 text-[9px] rounded bg-white/5 hover:bg-white/10">
+            className="w-full flex items-center justify-center gap-1 py-1.5 text-[9px] rounded bg-[color:rgba(246,212,203,0.05)] hover:bg-[color:rgba(246,212,203,0.1)]">
             <Plus className="w-3 h-3" /> Add Section
           </button>
         )}
@@ -120,23 +120,23 @@ export function ScrollSnapWidget() {
                 ? `url(${section.image}) center/cover no-repeat`
                 : section.color,
             }}>
-            {section.image && <div className="absolute inset-0 bg-black/40" />}
-            <h3 className="text-lg font-medium relative z-10 text-white">{section.title}</h3>
-            <div className="text-[10px] opacity-40 relative z-10 mt-1 text-white">{i + 1} / {sections.length}</div>
+            {section.image && <div className="absolute inset-0 bg-[color:rgba(30,2,39,0.4)]" />}
+            <h3 className="text-lg font-medium relative z-10 text-[var(--color-foreground)]">{section.title}</h3>
+            <div className="text-[10px] opacity-40 relative z-10 mt-1 text-[var(--color-foreground)]">{i + 1} / {sections.length}</div>
           </div>
         ))}
       </div>
 
       {/* Settings button */}
       <button onClick={() => setShowSettings(true)}
-        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/30 hover:bg-black/50 transition-colors z-10">
-        <Settings2 className="w-3 h-3 text-white" />
+        className="absolute top-2 right-2 p-1.5 rounded-full bg-[color:rgba(30,2,39,0.3)] hover:bg-[color:rgba(30,2,39,0.5)] transition-colors z-10">
+        <Settings2 className="w-3 h-3 text-[var(--color-foreground)]" />
       </button>
 
       {/* Progress dots */}
       <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-1.5 z-10">
         {sections.map((_, i) => (
-          <div key={i} className="w-1.5 h-1.5 rounded-full bg-white/40" />
+          <div key={i} className="w-1.5 h-1.5 rounded-full bg-[color:rgba(246,212,203,0.4)]" />
         ))}
       </div>
     </div>

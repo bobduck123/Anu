@@ -21,10 +21,10 @@ type ModeResponse = {
 };
 
 const modeStyles: Record<string, string> = {
-  NORMAL: 'bg-emerald-50 text-emerald-900 border-emerald-200',
-  ELEVATED_STRESS: 'bg-amber-50 text-amber-900 border-amber-200',
-  CRISIS_STABILIZATION: 'bg-orange-50 text-orange-900 border-orange-200',
-  BLACK_SWAN: 'bg-red-50 text-red-900 border-red-200',
+  NORMAL: 'bg-[#665700] text-[#665700] border-[#665700]',
+  ELEVATED_STRESS: 'bg-[#e0b115] text-[#e0b115] border-[#e0b115]',
+  CRISIS_STABILIZATION: 'bg-[#e0b115] text-[#e0b115] border-[#e0b115]',
+  BLACK_SWAN: 'bg-[#7c413c] text-[#7c413c] border-[#7c413c]',
 };
 
 export function ModeBanner() {

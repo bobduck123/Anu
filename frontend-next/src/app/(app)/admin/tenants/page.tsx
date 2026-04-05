@@ -106,8 +106,8 @@ export default function TenantsListPage() {
           }
           aside={
             <AnuSurfacePanel tone="quiet" className="h-full p-5">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Administrative posture</p>
-              <p className="mt-3 text-sm leading-6 text-slate-300/84">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">Administrative posture</p>
+              <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">
                 Admin routes should be calmer than the public shell, with metrics, registries, and comparison rows doing most of the work.
               </p>
             </AnuSurfacePanel>

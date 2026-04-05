@@ -573,23 +573,23 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
 
   return (
     <div className="mx-auto max-w-[98rem] px-4 py-10 sm:px-6 lg:px-8">
-      <header className="rounded-[2rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.18),_transparent_40%),linear-gradient(155deg,_rgba(15,23,42,0.98),_rgba(2,6,23,0.98))] p-8 text-white">
+      <header className="rounded-[2rem] border border-[#1e0227] bg-[radial-gradient(circle_at_top_left,_rgba(224,177,21,0.18),_transparent_40%),linear-gradient(155deg,_rgba(30,2,39,0.98),_rgba(30,2,39,0.98))] p-8 text-[var(--color-foreground)]">
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="max-w-3xl">
-            <p className="text-xs uppercase tracking-[0.32em] text-amber-300/80">Manara Atlas Admin Sandbox</p>
+            <p className="text-xs uppercase tracking-[0.32em] text-[#e0b115]/80">Manara Atlas Admin Sandbox</p>
             <h1 className="mt-3 text-4xl font-semibold">Learning universe editor</h1>
-            <p className="mt-4 text-sm leading-7 text-slate-300">
+            <p className="mt-4 text-sm leading-7 text-[color:rgba(246,212,203,0.76)]">
               Edit taxonomy, stars, relations, publishing state, and layout snapshots against the live persistence
               path without touching hosted environments.
             </p>
           </div>
           <div className="grid gap-3">
-            <label className="rounded-[1.25rem] border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm">
-              <span className="mb-2 block text-xs uppercase tracking-[0.2em] text-slate-500">Sandbox actor</span>
+            <label className="rounded-[1.25rem] border border-[#1e0227] bg-[color:rgba(30,2,39,0.8)] px-4 py-3 text-sm">
+              <span className="mb-2 block text-xs uppercase tracking-[0.2em] text-[#7c413c]">Sandbox actor</span>
               <select
                 value={actorId}
                 onChange={(event) => setActorId(event.target.value)}
-                className="w-full bg-transparent text-white outline-none"
+                className="w-full bg-transparent text-[var(--color-foreground)] outline-none"
               >
                 {FALAK_SANDBOX_ACTORS.map((actor) => (
                   <option key={actor.id || 'public'} value={actor.id}>
@@ -597,13 +597,13 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                   </option>
                 ))}
               </select>
-              <span className="mt-2 block text-xs leading-5 text-slate-400">
+              <span className="mt-2 block text-xs leading-5 text-[color:rgba(246,212,203,0.64)]">
                 This identity drives policy checks, audit logging, and admin-only mutation permissions inside the sandbox.
               </span>
             </label>
             <Link
               href="/sandbox/maps"
-              className="inline-flex items-center justify-center rounded-full border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-400 hover:text-cyan-100"
+              className="inline-flex items-center justify-center rounded-full border border-[#1e0227] px-4 py-2 text-sm font-medium text-[color:rgba(246,212,203,0.84)] transition hover:border-[#7c413c] hover:text-[#7c413c]"
             >
               Sandbox home
             </Link>
@@ -612,19 +612,19 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
       </header>
 
       {error ? (
-        <div className="mt-6 rounded-[1.5rem] border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">{error}</div>
+        <div className="mt-6 rounded-[1.5rem] border border-[#7c413c] bg-[#7c413c] px-5 py-4 text-sm text-[#7c413c]">{error}</div>
       ) : null}
       {mutationMessage ? (
-        <div className="mt-4 rounded-[1.5rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
+        <div className="mt-4 rounded-[1.5rem] border border-[#665700] bg-[#665700] px-5 py-4 text-sm text-[#665700]">
           {mutationMessage}
         </div>
       ) : null}
 
       <div className="mt-6 grid gap-5 xl:grid-cols-[22rem_minmax(0,1fr)]">
         <aside className="space-y-4">
-          <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Target map</h2>
-            <p className="mt-1 text-sm text-slate-500">Choose a persisted topic key and route edits through the sandbox actor.</p>
+          <section className="rounded-[1.75rem] border border-[#f6d4cb] bg-[var(--color-foreground)] p-5 shadow-sm">
+            <h2 className="text-lg font-semibold text-[#1e0227]">Target map</h2>
+            <p className="mt-1 text-sm text-[#7c413c]">Choose a persisted topic key and route edits through the sandbox actor.</p>
             <label className="mt-4 block">
               <select
                 value={selectedTopic}
@@ -633,7 +633,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                   setSelectedTopic(topicKey);
                   router.replace(`/admin/maps?topic=${encodeURIComponent(topicKey)}`);
                 }}
-                className="w-full rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                className="w-full rounded-[1.25rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
               >
                 {loadingList ? <option>Loading maps...</option> : null}
                 {!loadingList
@@ -646,12 +646,12 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
               </select>
             </label>
             {maps.length > 0 ? (
-              <div className="mt-3 text-xs text-slate-500">{maps.length} editable maps available for this tenant.</div>
+              <div className="mt-3 text-xs text-[#7c413c]">{maps.length} editable maps available for this tenant.</div>
             ) : null}
           </section>
 
-          <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Publication</h2>
+          <section className="rounded-[1.75rem] border border-[#f6d4cb] bg-[var(--color-foreground)] p-5 shadow-sm">
+            <h2 className="text-lg font-semibold text-[#1e0227]">Publication</h2>
             <div className="mt-4 grid gap-2">
               {MAP_STATUS_OPTIONS.map((status) => (
                 <button
@@ -668,8 +668,8 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                   }
                   className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                     currentStatus === status
-                      ? 'bg-slate-900 text-white'
-                      : 'border border-slate-200 text-slate-700 hover:border-cyan-300 hover:text-cyan-700'
+                      ? 'bg-[#1e0227] text-[var(--color-foreground)]'
+                      : 'border border-[#f6d4cb] text-[#1e0227] hover:border-[#7c413c] hover:text-[#7c413c]'
                   }`}
                 >
                   {status}
@@ -678,31 +678,31 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
             </div>
           </section>
 
-          <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Phase C seed import</h2>
-            <p className="mt-1 text-sm text-slate-500">
+          <section className="rounded-[1.75rem] border border-[#f6d4cb] bg-[var(--color-foreground)] p-5 shadow-sm">
+            <h2 className="text-lg font-semibold text-[#1e0227]">Phase C seed import</h2>
+            <p className="mt-1 text-sm text-[#7c413c]">
               Starts with the left-thought template. Use Create new for a generic blank template, then preview/persist via privileged import routes.
             </p>
             <div className="mt-4 grid gap-3">
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                <label className="text-xs font-medium uppercase tracking-[0.18em] text-[#7c413c]">
                   Mode
                   <select
                     value={importForm.mode}
                     onChange={(event) => updateImportForm({ mode: event.target.value as ImportFormState['mode'] })}
-                    className="mt-2 w-full rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-normal normal-case tracking-normal text-slate-700 outline-none"
+                    className="mt-2 w-full rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm font-normal normal-case tracking-normal text-[#1e0227] outline-none"
                   >
                     <option value="curated_refine">curated_refine</option>
                     <option value="auto_expand">auto_expand</option>
                     <option value="auto_seed">auto_seed</option>
                   </select>
                 </label>
-                <label className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                <label className="text-xs font-medium uppercase tracking-[0.18em] text-[#7c413c]">
                   Status
                   <select
                     value={importForm.status}
                     onChange={(event) => updateImportForm({ status: event.target.value as ImportFormState['status'] })}
-                    className="mt-2 w-full rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-normal normal-case tracking-normal text-slate-700 outline-none"
+                    className="mt-2 w-full rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm font-normal normal-case tracking-normal text-[#1e0227] outline-none"
                   >
                     <option value="draft">draft</option>
                     <option value="reviewed">reviewed</option>
@@ -710,7 +710,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                   </select>
                 </label>
               </div>
-              <label className="flex items-center gap-2 rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              <label className="flex items-center gap-2 rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227]">
                 <input
                   type="checkbox"
                   checked={importForm.force}
@@ -722,7 +722,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                 value={importForm.importNote}
                 onChange={(event) => updateImportForm({ importNote: event.target.value })}
                 placeholder="Optional governance note"
-                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
               />
               <textarea
                 value={importForm.seedJson}
@@ -730,7 +730,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                 rows={10}
                 spellCheck={false}
                 placeholder="Paste seed corpus JSON"
-                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-xs text-slate-700 outline-none"
+                className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 font-mono text-xs text-[#1e0227] outline-none"
               />
               <div className="flex flex-wrap gap-2">
                 <button
@@ -738,7 +738,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                   onClick={() => {
                     void runImportPreview();
                   }}
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
+                  className="rounded-full border border-[#f6d4cb] px-4 py-2 text-sm font-medium text-[#1e0227] transition hover:border-[#7c413c] hover:text-[#7c413c]"
                 >
                   Preview import
                 </button>
@@ -747,7 +747,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                   onClick={() => {
                     void runImportPersist();
                   }}
-                  className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+                  className="rounded-full bg-[#1e0227] px-4 py-2 text-sm font-medium text-[var(--color-foreground)] transition hover:bg-[#1e0227]"
                 >
                   Persist import
                 </button>
@@ -761,7 +761,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                     setImportPreview(null);
                     setImportChecksum(null);
                   }}
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300"
+                  className="rounded-full border border-[#f6d4cb] px-4 py-2 text-sm font-medium text-[#1e0227] transition hover:border-[#7c413c]"
                 >
                   Use left-thought template
                 </button>
@@ -775,20 +775,20 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                     setImportPreview(null);
                     setImportChecksum(null);
                   }}
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300"
+                  className="rounded-full border border-[#f6d4cb] px-4 py-2 text-sm font-medium text-[#1e0227] transition hover:border-[#7c413c]"
                 >
                   Create new
                 </button>
               </div>
               {importPreview ? (
-                <div className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
-                  <p className="font-semibold text-slate-700">Preview · {importPreview.topicKey}</p>
+                <div className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-xs text-[#1e0227]">
+                  <p className="font-semibold text-[#1e0227]">Preview · {importPreview.topicKey}</p>
                   <p className="mt-1">
                     {importPreview.nodeCount} nodes · {importPreview.edgeCount} edges · {importPreview.sepLinkedNodeCount} SEP-linked nodes
                   </p>
                   {importChecksum ? <p className="mt-1">Checksum: {importChecksum}</p> : null}
                   {importPreview.warnings.length > 0 ? (
-                    <ul className="mt-2 list-disc space-y-1 pl-4 text-amber-700">
+                    <ul className="mt-2 list-disc space-y-1 pl-4 text-[#e0b115]">
                       {importPreview.warnings.map((warning) => (
                         <li key={warning}>{warning}</li>
                       ))}
@@ -797,34 +797,34 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                 </div>
               ) : null}
 
-              <div className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+              <div className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-xs text-[#1e0227]">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="font-semibold text-slate-700">Recent import activity</p>
+                  <p className="font-semibold text-[#1e0227]">Recent import activity</p>
                   <button
                     type="button"
                     onClick={() => {
                       void loadImportActivity(selectedTopic || map?.definition.topicKey || '');
                     }}
-                    className="rounded-full border border-slate-200 px-3 py-1 text-[11px] font-medium text-slate-600 transition hover:border-cyan-300 hover:text-cyan-700"
+                    className="rounded-full border border-[#f6d4cb] px-3 py-1 text-[11px] font-medium text-[#1e0227] transition hover:border-[#7c413c] hover:text-[#7c413c]"
                   >
                     Refresh
                   </button>
                 </div>
-                {loadingImportActivity ? <p className="mt-2 text-slate-500">Loading activity…</p> : null}
+                {loadingImportActivity ? <p className="mt-2 text-[#7c413c]">Loading activity…</p> : null}
                 {!loadingImportActivity && importActivity.length < 1 ? (
-                  <p className="mt-2 text-slate-500">No recorded imports for this topic yet.</p>
+                  <p className="mt-2 text-[#7c413c]">No recorded imports for this topic yet.</p>
                 ) : null}
                 {!loadingImportActivity && importActivity.length > 0 ? (
                   <ul className="mt-2 space-y-2">
                     {importActivity.slice(0, 5).map((entry) => (
-                      <li key={entry.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px]">
-                        <p className="font-semibold text-slate-700">
+                      <li key={entry.id} className="rounded-lg border border-[#f6d4cb] bg-[var(--color-foreground)] px-3 py-2 text-[11px]">
+                        <p className="font-semibold text-[#1e0227]">
                           {entry.importSource} · {entry.importMode} · {entry.importChecksum.slice(0, 12)}
                         </p>
-                        <p className="mt-1 text-slate-500">
+                        <p className="mt-1 text-[#7c413c]">
                           {entry.nodeCount} nodes · {entry.edgeCount} edges · {entry.sepLinkedNodeCount} SEP
                         </p>
-                        {entry.importNote ? <p className="mt-1 text-slate-600">Note: {entry.importNote}</p> : null}
+                        {entry.importNote ? <p className="mt-1 text-[#1e0227]">Note: {entry.importNote}</p> : null}
                       </li>
                     ))}
                   </ul>
@@ -833,12 +833,12 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
             </div>
           </section>
 
-          <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Taxonomy</h2>
+          <section className="rounded-[1.75rem] border border-[#f6d4cb] bg-[var(--color-foreground)] p-5 shadow-sm">
+            <h2 className="text-lg font-semibold text-[#1e0227]">Taxonomy</h2>
             <select
               value={selectedCategory?.key ?? ''}
               onChange={(event) => setSelectedCategoryKey(event.target.value)}
-              className="mt-4 w-full rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+              className="mt-4 w-full rounded-[1.25rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
             >
               {map?.categories.map((category) => (
                 <option key={category.id} value={category.key}>
@@ -851,20 +851,20 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                 value={categoryForm.label}
                 onChange={(event) => updateCategoryForm({ label: event.target.value })}
                 placeholder="Category label"
-                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
               />
               <input
                 value={categoryForm.colorToken}
                 onChange={(event) => updateCategoryForm({ colorToken: event.target.value })}
                 placeholder="Color token"
-                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
               />
               <textarea
                 value={categoryForm.description}
                 onChange={(event) => updateCategoryForm({ description: event.target.value })}
                 rows={3}
                 placeholder="Category description"
-                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
               />
               <input
                 value={categoryForm.order}
@@ -872,10 +872,10 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                 inputMode="numeric"
                 placeholder="Order"
                 aria-invalid={categoryOrderInvalid}
-                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
               />
               {categoryOrderInvalid ? (
-                <p className="text-xs text-rose-600">Order must be numeric before the taxonomy override can be saved.</p>
+                <p className="text-xs text-[#7c413c]">Order must be numeric before the taxonomy override can be saved.</p>
               ) : null}
               <button
                 type="button"
@@ -899,19 +899,19 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                       )
                     : undefined
                 }
-                className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
+                className="rounded-full bg-[#1e0227] px-4 py-2 text-sm font-medium text-[var(--color-foreground)] transition hover:bg-[#1e0227] disabled:opacity-60"
               >
                 Save taxonomy
               </button>
             </div>
           </section>
 
-          <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Star editor</h2>
+          <section className="rounded-[1.75rem] border border-[#f6d4cb] bg-[var(--color-foreground)] p-5 shadow-sm">
+            <h2 className="text-lg font-semibold text-[#1e0227]">Star editor</h2>
             <select
               value={selectedNode?.id ?? ''}
               onChange={(event) => setSelectedNodeId(event.target.value)}
-              className="mt-4 w-full rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+              className="mt-4 w-full rounded-[1.25rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
             >
               {map?.nodes.map((node) => (
                 <option key={node.id} value={node.id}>
@@ -923,7 +923,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
               <select
                 value={nodeForm.categoryKey}
                 onChange={(event) => updateNodeForm({ categoryKey: event.target.value })}
-                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
               >
                 <option value="">Uncategorized</option>
                 {map?.categories.map((category) => (
@@ -937,16 +937,16 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                 onChange={(event) => updateNodeForm({ summary: event.target.value })}
                 rows={3}
                 placeholder="Summary"
-                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
               />
               <textarea
                 value={nodeForm.longDescription}
                 onChange={(event) => updateNodeForm({ longDescription: event.target.value })}
                 rows={4}
                 placeholder="Long description"
-                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
               />
-              <label className="flex items-center gap-2 rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              <label className="flex items-center gap-2 rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227]">
                 <input
                   type="checkbox"
                   checked={nodeForm.pinned}
@@ -960,25 +960,25 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                   onChange={(event) => updateNodeForm({ x: event.target.value })}
                   placeholder="X"
                   aria-invalid={nodePositionInvalid}
-                  className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                  className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
                 />
                 <input
                   value={nodeForm.y}
                   onChange={(event) => updateNodeForm({ y: event.target.value })}
                   placeholder="Y"
                   aria-invalid={nodePositionInvalid}
-                  className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                  className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
                 />
                 <input
                   value={nodeForm.z}
                   onChange={(event) => updateNodeForm({ z: event.target.value })}
                   placeholder="Z"
                   aria-invalid={nodePositionInvalid}
-                  className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                  className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
                 />
               </div>
               {nodePositionInvalid ? (
-                <p className="text-xs text-rose-600">X, Y, and Z must all be numeric before the star position can be saved.</p>
+                <p className="text-xs text-[#7c413c]">X, Y, and Z must all be numeric before the star position can be saved.</p>
               ) : null}
               <button
                 type="button"
@@ -1007,19 +1007,19 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                       )
                     : undefined
                 }
-                className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
+                className="rounded-full bg-[#1e0227] px-4 py-2 text-sm font-medium text-[var(--color-foreground)] transition hover:bg-[#1e0227] disabled:opacity-60"
               >
                 Save star
               </button>
             </div>
           </section>
 
-          <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Constellation relation editor</h2>
+          <section className="rounded-[1.75rem] border border-[#f6d4cb] bg-[var(--color-foreground)] p-5 shadow-sm">
+            <h2 className="text-lg font-semibold text-[#1e0227]">Constellation relation editor</h2>
             <select
               value={selectedEdge?.id ?? ''}
               onChange={(event) => setSelectedEdgeId(event.target.value)}
-              className="mt-4 w-full rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+              className="mt-4 w-full rounded-[1.25rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
             >
               {map?.edges.map((edge) => (
                 <option key={edge.id} value={edge.id}>
@@ -1031,7 +1031,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
               <select
                 value={edgeForm.relation}
                 onChange={(event) => updateEdgeForm({ relation: event.target.value as MapRelation })}
-                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
               >
                 {MAP_RELATION_OPTIONS.map((relation) => (
                   <option key={relation} value={relation}>
@@ -1044,24 +1044,24 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                 onChange={(event) => updateEdgeForm({ weight: event.target.value })}
                 placeholder="Weight"
                 aria-invalid={edgeMetricsInvalid}
-                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
               />
               <input
                 value={edgeForm.confidence}
                 onChange={(event) => updateEdgeForm({ confidence: event.target.value })}
                 placeholder="Confidence"
                 aria-invalid={edgeMetricsInvalid}
-                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
               />
               <textarea
                 value={edgeForm.evidence}
                 onChange={(event) => updateEdgeForm({ evidence: event.target.value })}
                 rows={3}
                 placeholder="Evidence note"
-                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
               />
               {edgeMetricsInvalid ? (
-                <p className="text-xs text-rose-600">Weight and confidence must both be numeric before the relation can be saved.</p>
+                <p className="text-xs text-[#7c413c]">Weight and confidence must both be numeric before the relation can be saved.</p>
               ) : null}
               <button
                 type="button"
@@ -1085,16 +1085,16 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                       )
                     : undefined
                 }
-                className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
+                className="rounded-full bg-[#1e0227] px-4 py-2 text-sm font-medium text-[var(--color-foreground)] transition hover:bg-[#1e0227] disabled:opacity-60"
               >
                 Save relation
               </button>
             </div>
           </section>
 
-          <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Universe control</h2>
-            <p className="mt-1 text-sm text-slate-500">Re-run the layout compiler or restore an earlier constellation snapshot.</p>
+          <section className="rounded-[1.75rem] border border-[#f6d4cb] bg-[var(--color-foreground)] p-5 shadow-sm">
+            <h2 className="text-lg font-semibold text-[#1e0227]">Universe control</h2>
+            <p className="mt-1 text-sm text-[#7c413c]">Re-run the layout compiler or restore an earlier constellation snapshot.</p>
             <div className="mt-4 grid gap-3">
               <button
                 type="button"
@@ -1109,14 +1109,14 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                     'Layout rerun persisted. Pinned stars should remain fixed.',
                   );
                 }}
-                className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
+                className="rounded-full bg-[#1e0227] px-4 py-2 text-sm font-medium text-[var(--color-foreground)] transition hover:bg-[#1e0227] disabled:opacity-60"
               >
                 Rerun layout
               </button>
               <select
                 value={activeSnapshotId}
                 onChange={(event) => setSelectedSnapshotId(event.target.value)}
-                className="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none"
+                className="rounded-[1rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
               >
                 {map?.snapshots.map((snapshot) => (
                   <option key={snapshot.id} value={snapshot.id}>
@@ -1141,7 +1141,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                     'Layout snapshot restored.',
                   );
                 }}
-                className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700 disabled:opacity-60"
+                className="rounded-full border border-[#f6d4cb] px-4 py-2 text-sm font-medium text-[#1e0227] transition hover:border-[#7c413c] hover:text-[#7c413c] disabled:opacity-60"
               >
                 Restore snapshot
               </button>
@@ -1158,13 +1158,13 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
             titlePrefix="Admin"
             eyebrowLabel="Manara atlas admin sandbox"
             footerActions={
-              <div className="flex flex-wrap items-center gap-3 text-sm text-slate-200">
+              <div className="flex flex-wrap items-center gap-3 text-sm text-[color:rgba(246,212,203,0.84)]">
                 <span>Actor: {actorId || 'public'}</span>
                 <span>Route guard: local sandbox actor headers</span>
                 {map ? (
                   <Link
                     href={`/education/maps/${encodeURIComponent(map.definition.topicKey)}`}
-                    className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 transition hover:border-cyan-400 hover:text-cyan-100"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#1e0227] px-4 py-2 transition hover:border-[#7c413c] hover:text-[#7c413c]"
                   >
                     View public detail
                   </Link>

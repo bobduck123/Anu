@@ -1,65 +1,76 @@
-/** Design tokens extracted from globals.css — single source of truth */
+/**
+ * ANU Phase 1 color tokens.
+ * Constraint: only the five approved brand colors (or alpha derivatives).
+ */
+
+export const anuPalette = {
+  midnightViolet: '#1e0227',
+  oliveBark: '#665700',
+  almondSilk: '#f6d4cb',
+  metallicGold: '#e0b115',
+  claySoil: '#7c413c',
+} as const;
 
 export const colors = {
   earth: {
-    dark: '#2c241b',
-    medium: '#8b7355',
-    light: '#d4c4b7',
+    dark: anuPalette.midnightViolet,
+    medium: anuPalette.claySoil,
+    light: anuPalette.almondSilk,
   },
   sage: {
-    DEFAULT: '#87a878',
-    light: '#e8f0e4',
+    DEFAULT: anuPalette.oliveBark,
+    light: 'rgba(102,87,0,0.24)',
   },
   forest: {
-    DEFAULT: '#2d5a3d',
-    light: '#e0ebe3',
+    DEFAULT: anuPalette.oliveBark,
+    light: 'rgba(102,87,0,0.34)',
   },
   institutional: {
-    DEFAULT: '#1e3a5f',
-    light: '#e0e8f0',
+    DEFAULT: anuPalette.metallicGold,
+    light: 'rgba(224,177,21,0.24)',
   },
   accent: {
-    DEFAULT: '#d97706',
-    light: '#fef3e2',
+    DEFAULT: anuPalette.metallicGold,
+    light: 'rgba(224,177,21,0.18)',
   },
   danger: {
-    DEFAULT: '#dc2626',
-    light: '#fde8e8',
+    DEFAULT: anuPalette.claySoil,
+    light: 'rgba(124,65,60,0.2)',
   },
-  white: '#ffffff',
-  black: '#000000',
+  white: anuPalette.almondSilk,
+  black: anuPalette.midnightViolet,
 } as const;
 
 export const semanticColors = {
   light: {
-    background: '#faf9f7',
-    foreground: '#2c241b',
-    card: '#ffffff',
-    cardForeground: '#2c241b',
-    primary: '#1e3a5f',
-    primaryForeground: '#ffffff',
-    secondary: '#d4c4b7',
-    secondaryForeground: '#2c241b',
-    muted: '#f5f4f2',
-    mutedForeground: '#78736c',
-    border: '#e7e5e4',
-    input: '#e7e5e4',
-    ring: '#1e3a5f',
+    background: anuPalette.midnightViolet,
+    foreground: anuPalette.almondSilk,
+    card: 'rgba(124,65,60,0.24)',
+    cardForeground: anuPalette.almondSilk,
+    primary: anuPalette.metallicGold,
+    primaryForeground: anuPalette.midnightViolet,
+    secondary: anuPalette.claySoil,
+    secondaryForeground: anuPalette.almondSilk,
+    muted: 'rgba(102,87,0,0.24)',
+    mutedForeground: 'rgba(246,212,203,0.78)',
+    border: 'rgba(224,177,21,0.34)',
+    input: 'rgba(124,65,60,0.42)',
+    ring: anuPalette.metallicGold,
   },
   dark: {
-    background: '#1a1a2e',
-    foreground: '#e0e0e0',
-    card: '#16213e',
-    cardForeground: '#e0e0e0',
-    primary: '#5b8dce',
-    primaryForeground: '#ffffff',
-    secondary: '#3a3a5a',
-    secondaryForeground: '#e0e0e0',
-    muted: '#22223a',
-    mutedForeground: '#9a9ab0',
-    border: '#2a2a4a',
-    input: '#2a2a4a',
-    ring: '#5b8dce',
+    background: anuPalette.midnightViolet,
+    foreground: anuPalette.almondSilk,
+    card: 'rgba(124,65,60,0.3)',
+    cardForeground: anuPalette.almondSilk,
+    primary: anuPalette.metallicGold,
+    primaryForeground: anuPalette.midnightViolet,
+    secondary: anuPalette.oliveBark,
+    secondaryForeground: anuPalette.almondSilk,
+    muted: 'rgba(102,87,0,0.3)',
+    mutedForeground: 'rgba(246,212,203,0.72)',
+    border: 'rgba(224,177,21,0.28)',
+    input: 'rgba(124,65,60,0.5)',
+    ring: anuPalette.metallicGold,
   },
 } as const;
 
@@ -123,11 +134,11 @@ export const radii = {
 } as const;
 
 export const shadows = {
-  sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
-  DEFAULT: '0 4px 12px rgba(0, 0, 0, 0.08)',
-  md: '0 8px 20px -4px rgba(0, 0, 0, 0.12)',
-  lg: '0 20px 40px -12px rgba(44, 36, 27, 0.15)',
-  xl: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+  sm: '0 1px 2px rgba(30,2,39,0.2)',
+  DEFAULT: '0 4px 12px rgba(30,2,39,0.3)',
+  md: '0 8px 20px -4px rgba(30,2,39,0.36)',
+  lg: '0 20px 40px -12px rgba(30,2,39,0.42)',
+  xl: '0 25px 50px -12px rgba(30,2,39,0.54)',
 } as const;
 
 export const zIndex = {

@@ -18,7 +18,7 @@ const STATUS_THEME: Record<HarvestSimulationResult["status"], { label: string; c
   },
   caution: {
     label: "Caution",
-    color: "text-[#8a5b00]",
+    color: "text-[#665700]",
     bg: "bg-[var(--color-accent-light)]",
   },
   unsustainable: {
@@ -161,7 +161,7 @@ export function SystemsLayerView() {
                   <select
                     value={selectedPlantId ?? ""}
                     onChange={(event) => setSelectedPlantId(Number(event.target.value))}
-                    className="ml-2 rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-foreground)]"
+                    className="ml-2 rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] px-3 py-2 text-sm text-[var(--color-foreground)]"
                   >
                     {positionedNodes.map((node) => (
                       <option key={node.id} value={node.id}>
@@ -172,7 +172,7 @@ export function SystemsLayerView() {
                 </label>
               </div>
 
-              <div className="overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[#f8f5ef] p-2">
+              <div className="overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[#f6d4cb] p-2">
                 <svg viewBox="0 0 600 360" className="h-[22rem] w-full" role="img" aria-label="Plant relationship graph">
                   {edges
                     .filter((edge) => edge.target && nodeLookup[edge.source] && nodeLookup[edge.target])
@@ -189,7 +189,7 @@ export function SystemsLayerView() {
                           y1={source.y}
                           x2={target.x}
                           y2={target.y}
-                          stroke="#9a8e7e"
+                          stroke="#7c413c"
                           strokeWidth={1.4}
                           strokeDasharray={edge.type === "harvest_constraint" ? "4 4" : undefined}
                         />
@@ -199,8 +199,8 @@ export function SystemsLayerView() {
                     <g key={node.id} transform={`translate(${node.x}, ${node.y})`}>
                       <circle
                         r={node.id === selectedPlantId ? 24 : 18}
-                        fill={node.id === selectedPlantId ? "#2d5a3d" : "#e6ddd0"}
-                        stroke="#2c241b"
+                        fill={node.id === selectedPlantId ? "#7c413c" : "#f6d4cb"}
+                        stroke="#1e0227"
                         strokeWidth={1}
                       />
                       <text
@@ -242,7 +242,7 @@ export function SystemsLayerView() {
                 <select
                   value={harvestMethod}
                   onChange={(event) => setHarvestMethod(event.target.value)}
-                  className="mt-1 w-full rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-foreground)]"
+                  className="mt-1 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] px-3 py-2 text-sm text-[var(--color-foreground)]"
                 >
                   <option value="selective">Selective clipping</option>
                   <option value="whole_plant">Whole plant extraction</option>
@@ -257,7 +257,7 @@ export function SystemsLayerView() {
                   value={harvestSeason}
                   onChange={(event) => setHarvestSeason(event.target.value)}
                   placeholder="e.g., summer"
-                  className="mt-1 w-full rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-foreground)]"
+                  className="mt-1 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-foreground)] px-3 py-2 text-sm text-[var(--color-foreground)]"
                 />
               </label>
               <button type="submit" disabled={simulating || !selectedPlantId} className="btn-pill btn-pill-primary text-sm disabled:opacity-60">
@@ -301,7 +301,7 @@ export function SystemsLayerView() {
                   onClick={() => setSelectedLandscape(state.state_label)}
                   className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     selectedLandscape === state.state_label
-                      ? "bg-[var(--color-institutional)] text-white"
+                      ? "bg-[var(--color-institutional)] text-[var(--color-foreground)]"
                       : "bg-[var(--color-muted)] text-[var(--color-earth-dark)]"
                   }`}
                 >

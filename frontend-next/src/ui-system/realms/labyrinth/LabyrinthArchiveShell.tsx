@@ -38,14 +38,14 @@ export function LabyrinthArchiveShell({
 
         <header className="anu-labyrinth-shell__header">
           <div className="max-w-3xl">
-            <p className="text-[10px] uppercase tracking-[0.28em] text-[#dfceb0]/74">{eyebrow}</p>
+            <p className="text-[10px] uppercase tracking-[0.28em] text-[#f6d4cb]/74">{eyebrow}</p>
             <div
-              className="mt-4 text-4xl leading-[1.02] text-[#f7ead2] md:text-[3.3rem]"
+              className="mt-4 text-4xl leading-[1.02] text-[#f6d4cb] md:text-[3.3rem]"
               style={{ fontFamily: 'var(--anu-type-display)' }}
             >
               {title}
             </div>
-            <div className="mt-5 max-w-3xl text-base leading-relaxed text-[#dbcfbb]/84">{description}</div>
+            <div className="mt-5 max-w-3xl text-base leading-relaxed text-[#f6d4cb]/84">{description}</div>
           </div>
         </header>
 

@@ -89,7 +89,7 @@ export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <Link
           href="/education/maps"
-          className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
+          className="inline-flex items-center gap-2 rounded-full border border-[#7c413c] px-4 py-2 text-sm font-medium text-[#1e0227] transition hover:border-[#7c413c] hover:text-[#7c413c]"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to library
@@ -97,7 +97,7 @@ export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
         {!fallbackActive ? (
           <Link
             href={`/admin/maps?topic=${encodeURIComponent(topicKey)}`}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
+            className="inline-flex items-center gap-2 rounded-full border border-[#7c413c] px-4 py-2 text-sm font-medium text-[#1e0227] transition hover:border-[#7c413c] hover:text-[#7c413c]"
           >
             Open admin tools
           </Link>
@@ -105,7 +105,7 @@ export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
       </div>
 
       {fallbackActive ? (
-        <div className="mb-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
+        <div className="mb-6 rounded-[1.5rem] border border-[#e0b115] bg-[#e0b115] px-5 py-4 text-sm text-[#e0b115]">
           {fallbackMessage ?? 'The hosted frontend is using bundled read-only universe packet data because the live universe request did not succeed.'}
         </div>
       ) : null}

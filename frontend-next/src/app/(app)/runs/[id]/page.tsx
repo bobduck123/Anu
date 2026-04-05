@@ -89,7 +89,7 @@ export default function RunDetailPage() {
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#665700]" />
       </div>
     );
   }
@@ -97,8 +97,8 @@ export default function RunDetailPage() {
   if (!run) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-10 text-center">
-        <div className="card-civic text-sm text-rose-200">{error || 'Run not found'}</div>
-        <Link href="/cost-lowering" className="text-sm text-white/80 underline mt-4 inline-block">
+        <div className="card-civic text-sm text-[#7c413c]">{error || 'Run not found'}</div>
+        <Link href="/cost-lowering" className="text-sm text-[color:rgba(246,212,203,0.8)] underline mt-4 inline-block">
           Back to runs
         </Link>
       </div>
@@ -110,12 +110,12 @@ export default function RunDetailPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <Link href="/cost-lowering" className="text-sm text-white/80 hover:text-white mb-4 inline-block">
+      <Link href="/cost-lowering" className="text-sm text-[color:rgba(246,212,203,0.8)] hover:text-[var(--color-foreground)] mb-4 inline-block">
         &larr; Back to runs
       </Link>
 
       {!isAuthenticated ? (
-        <div className="card-civic mb-4 flex flex-wrap items-center justify-between gap-2 text-sm text-white/75">
+        <div className="card-civic mb-4 flex flex-wrap items-center justify-between gap-2 text-sm text-[color:rgba(246,212,203,0.75)]">
           <span>Preview mode active. Sign in when you are ready to pledge and track delivery.</span>
           <Link href={authHref} className="btn-pill btn-pill-primary text-xs">
             Sign in to pledge
@@ -125,40 +125,40 @@ export default function RunDetailPage() {
 
       <div className="card-civic mb-6">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-300/20 text-emerald-100">{run.supplier_type}</span>
+          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[color:rgba(102,87,0,0.2)] text-[#f6d4cb]">{run.supplier_type}</span>
           <span
             className={`text-xs font-medium px-2 py-0.5 rounded-full ${
               run.status === 'OPEN'
-                ? 'bg-emerald-300/20 text-emerald-100'
+                ? 'bg-[color:rgba(102,87,0,0.2)] text-[#f6d4cb]'
                 : run.status === 'COMPLETED'
-                  ? 'bg-emerald-300/20 text-emerald-50'
-                  : 'bg-white/15 text-white/80'
+                  ? 'bg-[color:rgba(102,87,0,0.2)] text-[#665700]'
+                  : 'bg-[color:rgba(246,212,203,0.15)] text-[color:rgba(246,212,203,0.8)]'
             }`}
           >
             {run.status}
           </span>
         </div>
-        <h1 className="text-2xl font-bold text-white mb-2">{run.title}</h1>
-        <p className="text-white/70">{run.location_name || run.address || 'Location TBD'}</p>
-        <p className="text-sm text-white/60 mt-1">
+        <h1 className="text-2xl font-bold text-[var(--color-foreground)] mb-2">{run.title}</h1>
+        <p className="text-[color:rgba(246,212,203,0.7)]">{run.location_name || run.address || 'Location TBD'}</p>
+        <p className="text-sm text-[color:rgba(246,212,203,0.6)] mt-1">
           {run.suburb} {run.postcode}
           {run.organizer_username && ` — Organised by ${run.organizer_username}`}
         </p>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
           <div>
-            <p className="text-xs text-white/55 uppercase tracking-wide">Run Date</p>
-            <p className="font-semibold text-white">
+            <p className="text-xs text-[color:rgba(246,212,203,0.55)] uppercase tracking-wide">Run Date</p>
+            <p className="font-semibold text-[var(--color-foreground)]">
               {new Date(run.run_date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}
             </p>
           </div>
           <div>
-            <p className="text-xs text-white/55 uppercase tracking-wide">Deadline</p>
-            <p className="font-semibold text-white">{timeUntil(run.pledge_deadline)}</p>
+            <p className="text-xs text-[color:rgba(246,212,203,0.55)] uppercase tracking-wide">Deadline</p>
+            <p className="font-semibold text-[var(--color-foreground)]">{timeUntil(run.pledge_deadline)}</p>
           </div>
           <div>
-            <p className="text-xs text-white/55 uppercase tracking-wide">Pickup</p>
-            <p className="font-semibold text-white">
+            <p className="text-xs text-[color:rgba(246,212,203,0.55)] uppercase tracking-wide">Pickup</p>
+            <p className="font-semibold text-[var(--color-foreground)]">
               {run.pickup_window_start
                 ? new Date(run.pickup_window_start).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })
                 : 'TBD'}
@@ -168,8 +168,8 @@ export default function RunDetailPage() {
             </p>
           </div>
           <div>
-            <p className="text-xs text-white/55 uppercase tracking-wide">Pledged</p>
-            <p className="font-semibold text-white">
+            <p className="text-xs text-[color:rgba(246,212,203,0.55)] uppercase tracking-wide">Pledged</p>
+            <p className="font-semibold text-[var(--color-foreground)]">
               {run.pledge_count ?? 0}
               {run.max_households ? ` / ${run.max_households}` : ''} households
             </p>
@@ -177,9 +177,9 @@ export default function RunDetailPage() {
         </div>
       </div>
 
-      <h2 className="text-xl font-bold text-white mb-4">Available Packs</h2>
+      <h2 className="text-xl font-bold text-[var(--color-foreground)] mb-4">Available Packs</h2>
       {packs.length === 0 ? (
-        <p className="text-white/70">No packs available yet.</p>
+        <p className="text-[color:rgba(246,212,203,0.7)]">No packs available yet.</p>
       ) : (
         <div className="grid gap-4 mb-6">
           {packs.map((pack: WCLEPack) => {
@@ -199,23 +199,23 @@ export default function RunDetailPage() {
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">{pack.name}</h3>
-                    {pack.description && <p className="text-sm text-white/70 mt-1">{pack.description}</p>}
+                    <h3 className="text-lg font-semibold text-[var(--color-foreground)]">{pack.name}</h3>
+                    {pack.description && <p className="text-sm text-[color:rgba(246,212,203,0.7)] mt-1">{pack.description}</p>}
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-xs text-white/55 line-through">{cents(retailTotal)} retail</p>
-                    <p className="text-lg font-bold text-emerald-200">{cents(bulkTotal)}</p>
-                    {savingsPct > 0 && <p className="text-xs text-emerald-200 font-medium">Save {savingsPct}%</p>}
+                    <p className="text-xs text-[color:rgba(246,212,203,0.55)] line-through">{cents(retailTotal)} retail</p>
+                    <p className="text-lg font-bold text-[#665700]">{cents(bulkTotal)}</p>
+                    {savingsPct > 0 && <p className="text-xs text-[#665700] font-medium">Save {savingsPct}%</p>}
                   </div>
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-1">
                   {(pack.items || []).slice(0, 8).map((item, index) => (
-                    <span key={`${item.name}-${index}`} className="text-xs bg-white/10 text-white/75 px-2 py-0.5 rounded-full">
+                    <span key={`${item.name}-${index}`} className="text-xs bg-[color:rgba(246,212,203,0.1)] text-[color:rgba(246,212,203,0.75)] px-2 py-0.5 rounded-full">
                       {item.name} ({item.qty} {item.unit})
                     </span>
                   ))}
-                  {(pack.items || []).length > 8 && <span className="text-xs text-white/60">+{(pack.items || []).length - 8} more</span>}
+                  {(pack.items || []).length > 8 && <span className="text-xs text-[color:rgba(246,212,203,0.6)]">+{(pack.items || []).length - 8} more</span>}
                 </div>
               </div>
             );
@@ -225,11 +225,11 @@ export default function RunDetailPage() {
 
       {isOpen ? (
         <div className="card-civic">
-          {error && <div className="bg-rose-500/15 text-rose-200 text-sm rounded-lg px-4 py-2 mb-4">{error}</div>}
+          {error && <div className="bg-[color:rgba(124,65,60,0.15)] text-[#7c413c] text-sm rounded-lg px-4 py-2 mb-4">{error}</div>}
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-semibold text-white">Join this run</p>
-              <p className="text-sm text-white/70">
+              <p className="font-semibold text-[var(--color-foreground)]">Join this run</p>
+              <p className="text-sm text-[color:rgba(246,212,203,0.7)]">
                 Select a pack above, then pledge. Coordination fee: {cents(run.coordination_fee_per_household_cents)} per household.
               </p>
             </div>
@@ -246,19 +246,19 @@ export default function RunDetailPage() {
 
       {run.status === 'COMPLETED' ? (
         <div className="card-civic mt-6">
-          <h3 className="font-semibold text-emerald-100 mb-3">Run Complete</h3>
+          <h3 className="font-semibold text-[#f6d4cb] mb-3">Run Complete</h3>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-xs text-white/60 uppercase tracking-wide">Retail Value</p>
-              <p className="text-lg font-bold text-white">{cents(run.retail_equivalent_total_cents)}</p>
+              <p className="text-xs text-[color:rgba(246,212,203,0.6)] uppercase tracking-wide">Retail Value</p>
+              <p className="text-lg font-bold text-[var(--color-foreground)]">{cents(run.retail_equivalent_total_cents)}</p>
             </div>
             <div>
-              <p className="text-xs text-white/60 uppercase tracking-wide">Bulk Cost</p>
-              <p className="text-lg font-bold text-white">{cents(run.bulk_actual_total_cents)}</p>
+              <p className="text-xs text-[color:rgba(246,212,203,0.6)] uppercase tracking-wide">Bulk Cost</p>
+              <p className="text-lg font-bold text-[var(--color-foreground)]">{cents(run.bulk_actual_total_cents)}</p>
             </div>
             <div>
-              <p className="text-xs text-white/60 uppercase tracking-wide">Total Saved</p>
-              <p className="text-lg font-bold text-emerald-200">
+              <p className="text-xs text-[color:rgba(246,212,203,0.6)] uppercase tracking-wide">Total Saved</p>
+              <p className="text-lg font-bold text-[#665700]">
                 {cents((run.retail_equivalent_total_cents || 0) - (run.bulk_actual_total_cents || 0))}
               </p>
             </div>

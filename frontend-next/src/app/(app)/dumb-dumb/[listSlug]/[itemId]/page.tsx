@@ -62,7 +62,7 @@ export default function DumbDumbItemPage() {
   if (missing) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="rounded-[1.6rem] border border-[var(--color-border)] bg-white px-6 py-8 text-center">
+        <div className="rounded-[1.6rem] border border-[var(--color-border)] bg-[var(--color-foreground)] px-6 py-8 text-center">
           <h1 className="text-3xl font-semibold text-[var(--color-earth-dark)]" style={{ fontFamily: 'var(--font-serif)' }}>
             Item not found
           </h1>
@@ -71,7 +71,7 @@ export default function DumbDumbItemPage() {
           </p>
           <Link
             href={`/dumb-dumb/${listSlug}`}
-            className="mt-6 inline-flex items-center justify-center rounded-full bg-[var(--color-institutional)] px-5 py-2.5 text-sm font-medium text-white"
+            className="mt-6 inline-flex items-center justify-center rounded-full bg-[var(--color-institutional)] px-5 py-2.5 text-sm font-medium text-[var(--color-foreground)]"
           >
             Back to list
           </Link>
@@ -129,9 +129,9 @@ export default function DumbDumbItemPage() {
           <DumbDumbItemCard item={item} onBuy={startCheckout} actionLabel={submitting ? 'Starting checkout...' : 'Fund this cause'} />
 
           <div className="space-y-6">
-            <Card padding="lg" className="border-[rgba(45,90,61,0.18)] bg-[linear-gradient(135deg,rgba(232,240,228,0.96),rgba(255,255,255,0.98))]">
+            <Card padding="lg" className="border-[rgba(124,65,60,0.18)] bg-[linear-gradient(135deg,rgba(246,212,203,0.96),rgba(246,212,203,0.98))]">
               <div className="flex items-start gap-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-forest)] text-white">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-forest)] text-[var(--color-foreground)]">
                   <ShieldCheck className="h-5 w-5" />
                 </div>
                 <div>
@@ -141,7 +141,7 @@ export default function DumbDumbItemPage() {
                   </h2>
                 </div>
               </div>
-              <div className="mt-5 rounded-[1.4rem] border border-white/80 bg-white/78 p-4">
+              <div className="mt-5 rounded-[1.4rem] border border-[color:rgba(246,212,203,0.8)] bg-[color:rgba(246,212,203,0.78)] p-4">
                 <p className="text-sm leading-7 text-[var(--color-earth-dark)]">
                   <strong>Parody item:</strong> {item.title}
                 </p>
@@ -169,7 +169,7 @@ export default function DumbDumbItemPage() {
               </div>
             </Card>
 
-            <Card padding="lg" className="bg-white">
+            <Card padding="lg" className="bg-[var(--color-foreground)]">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-institutional)]">Before you pay</p>
               <ul className="mt-4 space-y-3 text-sm leading-7 text-[var(--color-earth-medium)]">
                 <li>Stripe checkout repeats the parody notice and the real pool destination.</li>

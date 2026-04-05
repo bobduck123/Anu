@@ -32,10 +32,10 @@ export function FalakMapDraftPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <section className="rounded-[2rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),_transparent_40%),linear-gradient(155deg,_rgba(15,23,42,0.98),_rgba(2,6,23,0.98))] p-8 text-white">
-        <p className="text-xs uppercase tracking-[0.32em] text-cyan-300/80">Manara Atlas Compiler</p>
+      <section className="rounded-[2rem] border border-[#1e0227] bg-[radial-gradient(circle_at_top_left,_rgba(124,65,60,0.18),_transparent_40%),linear-gradient(155deg,_rgba(30,2,39,0.98),_rgba(30,2,39,0.98))] p-8 text-[var(--color-foreground)]">
+        <p className="text-xs uppercase tracking-[0.32em] text-[color:rgba(124,65,60,0.8)]">Manara Atlas Compiler</p>
         <h1 className="mt-3 text-4xl font-semibold">Request a missing learning universe</h1>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:rgba(246,212,203,0.76)]">
           This route hits the live `POST /v1/education/maps/resolve` compiler endpoint. Missing topics are persisted
           as draft learning universes through the same schema and layout pipeline used online.
         </p>
@@ -44,13 +44,13 @@ export function FalakMapDraftPage() {
             value={topic}
             onChange={(event) => setTopic(event.target.value)}
             placeholder="e.g. regenerative finance ontologies"
-            className="rounded-[1.25rem] border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+            className="rounded-[1.25rem] border border-[#1e0227] bg-[color:rgba(30,2,39,0.8)] px-4 py-3 text-sm text-[var(--color-foreground)] outline-none placeholder:text-[#7c413c]"
             required
           />
           <select
             value={mode}
             onChange={(event) => setMode(event.target.value as typeof mode)}
-            className="rounded-[1.25rem] border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-white outline-none"
+            className="rounded-[1.25rem] border border-[#1e0227] bg-[color:rgba(30,2,39,0.8)] px-4 py-3 text-sm text-[var(--color-foreground)] outline-none"
           >
             {MAP_COMPILE_MODE_OPTIONS.map((option) => (
               <option key={option} value={option}>
@@ -61,28 +61,28 @@ export function FalakMapDraftPage() {
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center justify-center gap-2 rounded-[1.25rem] bg-cyan-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex items-center justify-center gap-2 rounded-[1.25rem] bg-[#7c413c] px-4 py-3 text-sm font-semibold text-[#1e0227] transition hover:bg-[#7c413c] disabled:cursor-not-allowed disabled:opacity-70"
           >
             <WandSparkles className="h-4 w-4" />
             {loading ? 'Compiling...' : 'Resolve topic'}
           </button>
         </form>
-        {error ? <p className="mt-4 text-sm text-rose-300">{error}</p> : null}
+        {error ? <p className="mt-4 text-sm text-[#f6d4cb]">{error}</p> : null}
         {createdMap ? (
-          <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-slate-200">
-            <span className="rounded-full bg-slate-900/80 px-4 py-2">
+          <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-[color:rgba(246,212,203,0.84)]">
+            <span className="rounded-full bg-[color:rgba(30,2,39,0.8)] px-4 py-2">
               {jobCreated ? 'Draft created and persisted' : 'Existing universe returned'}
             </span>
             <Link
               href={`/education/maps/${encodeURIComponent(createdMap.definition.topicKey)}`}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 transition hover:border-cyan-400 hover:text-cyan-100"
+              className="inline-flex items-center gap-2 rounded-full border border-[#1e0227] px-4 py-2 transition hover:border-[#7c413c] hover:text-[#7c413c]"
             >
               Open universe detail
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href={`/admin/maps?topic=${encodeURIComponent(createdMap.definition.topicKey)}`}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 transition hover:border-cyan-400 hover:text-cyan-100"
+              className="inline-flex items-center gap-2 rounded-full border border-[#1e0227] px-4 py-2 transition hover:border-[#7c413c] hover:text-[#7c413c]"
             >
               Open admin tools
               <ArrowRight className="h-4 w-4" />

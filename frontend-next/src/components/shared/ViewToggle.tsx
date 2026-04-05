@@ -38,7 +38,7 @@ export default function ViewToggle({
             onClick={() => onChange(mode)}
             className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors ${
               isActive
-                ? 'bg-[var(--color-institutional)] text-white'
+                ? 'bg-[var(--color-institutional)] text-[var(--color-foreground)]'
                 : 'bg-[var(--color-card)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
             }`}
           >

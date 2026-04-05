@@ -38,7 +38,7 @@ export function RequestCard({
   const config = statusConfig[status];
   
   return (
-    <div className="bg-white rounded-lg p-5 hover:bg-surface transition-colors">
+    <div className="bg-[var(--color-foreground)] rounded-lg p-5 hover:bg-surface transition-colors">
       {/* Amount and Status */}
       <div className="flex items-center justify-between mb-3">
         <span className="metric text-text">${amount.toLocaleString()}</span>

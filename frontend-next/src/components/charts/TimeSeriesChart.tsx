@@ -16,7 +16,7 @@ export default function TimeSeriesChart({ data, label }: TimeSeriesChartProps) {
         {data.map((value, idx) => (
           <div
             key={idx}
-            className="flex-1 bg-emerald-500/70 rounded-sm"
+            className="flex-1 bg-[color:rgba(102,87,0,0.7)] rounded-sm"
             style={{ height: `${Math.round((value / max) * 100)}%` }}
           />
         ))}

@@ -386,11 +386,11 @@ function syncGraphStyles(
     if (!visible) {
       color.multiplyScalar(0.18);
     } else if (active) {
-      color.lerp(new THREE.Color('#ffffff'), 0.32);
+      color.lerp(new THREE.Color('#f6d4cb'), 0.32);
     } else if (compared) {
-      color.lerp(new THREE.Color('#f8d66d'), 0.24);
+      color.lerp(new THREE.Color('#f6d4cb'), 0.24);
     } else if (connected) {
-      color.lerp(new THREE.Color('#dbeafe'), 0.18);
+      color.lerp(new THREE.Color('#f6d4cb'), 0.18);
     }
 
     const opacity = visible ? 0.96 : HIDDEN_NODE_OPACITY;
@@ -815,7 +815,7 @@ export function FalakMapScene({
   }, [activeNodeId, compareNodeIds, visibleNodeIds]);
 
   return (
-    <div className="h-[28rem] w-full overflow-hidden rounded-[1.5rem] border border-slate-800 bg-[#05070b] md:h-[36rem]">
+    <div className="h-[28rem] w-full overflow-hidden rounded-[1.5rem] border border-[#1e0227] bg-[#1e0227] md:h-[36rem]">
       <div ref={mountRef} className="h-full w-full" />
     </div>
   );

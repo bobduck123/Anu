@@ -308,14 +308,14 @@ export default function UniversePage() {
         titlePrefix={viewerTitlePrefix}
         showAdminLink={selectedTopicKey !== 'all' && !fallbackActive && Boolean(displayPacket?.packetMeta?.adminTopicKey)}
         headerActions={
-          <div className="space-y-3 text-xs text-slate-200">
+          <div className="space-y-3 text-xs text-[color:rgba(246,212,203,0.84)]">
             <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-              <label className="manara-glass-chip rounded-[1rem] border border-white/15 bg-black/30 px-3 py-2 text-sm text-slate-100">
-                <span className="mb-1 block text-[10px] uppercase tracking-[0.2em] text-slate-400">Universe scope</span>
+              <label className="manara-glass-chip rounded-[1rem] border border-[color:rgba(246,212,203,0.15)] bg-[color:rgba(30,2,39,0.3)] px-3 py-2 text-sm text-[color:rgba(246,212,203,0.92)]">
+                <span className="mb-1 block text-[10px] uppercase tracking-[0.2em] text-[color:rgba(246,212,203,0.64)]">Universe scope</span>
                 <select
                   value={selectedTopicKey}
                   onChange={(event) => setSelectedTopicKey(event.target.value)}
-                  className="w-full bg-transparent text-sm text-white outline-none"
+                  className="w-full bg-transparent text-sm text-[var(--color-foreground)] outline-none"
                 >
                   <option value="all">All available domains</option>
                   {topicOptions.map((topic) => (
@@ -329,7 +329,7 @@ export default function UniversePage() {
               <button
                 type="button"
                 onClick={() => void loadUniverse()}
-                className="manara-glass-chip inline-flex min-h-10 items-center justify-center gap-2 border border-white/20 bg-white/6 px-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-100 transition-colors hover:bg-white/12"
+                className="manara-glass-chip inline-flex min-h-10 items-center justify-center gap-2 border border-[color:rgba(246,212,203,0.2)] bg-[color:rgba(246,212,203,0.06)] px-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:rgba(246,212,203,0.92)] transition-colors hover:bg-[color:rgba(246,212,203,0.12)]"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 {`Refresh ${universePresentationTerms.universe.toLowerCase()}`}
@@ -337,22 +337,22 @@ export default function UniversePage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <span className="manara-glass-chip inline-flex items-center gap-2 border border-white/15 bg-white/5 px-3 py-1">
-                <Sparkles className="h-3.5 w-3.5 text-indigo-200" />
+              <span className="manara-glass-chip inline-flex items-center gap-2 border border-[color:rgba(246,212,203,0.15)] bg-[color:rgba(246,212,203,0.05)] px-3 py-1">
+                <Sparkles className="h-3.5 w-3.5 text-[#7c413c]" />
                 {packetsByTopicKey.size} source {universePresentationTerms.domain.toLowerCase()}s loaded
               </span>
-              <span className="manara-glass-chip inline-flex items-center gap-2 border border-white/15 bg-white/5 px-3 py-1">
+              <span className="manara-glass-chip inline-flex items-center gap-2 border border-[color:rgba(246,212,203,0.15)] bg-[color:rgba(246,212,203,0.05)] px-3 py-1">
                 {`${universePresentationTerms.universe} scope: ${selectedTopicKey === 'all' ? 'cross-domain' : selectedTopicKey}`}
               </span>
               {isLeftThoughtScope && leftThoughtSourceCoverage ? (
-                <span className="manara-glass-chip inline-flex items-center gap-2 border border-cyan-300/35 bg-cyan-300/10 px-3 py-1 text-cyan-100">
+                <span className="manara-glass-chip inline-flex items-center gap-2 border border-[color:rgba(124,65,60,0.35)] bg-[color:rgba(124,65,60,0.1)] px-3 py-1 text-[#7c413c]">
                   Left Thought Phase A+ fallback · {leftThoughtSourceCoverage.totalStars} stars · {leftThoughtSourceCoverage.relations} relations · SEP linked {leftThoughtSourceCoverage.sepLinkedStars}/{leftThoughtSourceCoverage.totalStars}
                 </span>
               ) : null}
             </div>
 
             {fallbackActive ? (
-              <p className="rounded-lg border border-amber-300/35 bg-amber-300/12 px-3 py-2 text-[11px] leading-5 text-amber-100">
+              <p className="rounded-lg border border-[color:rgba(224,177,21,0.35)] bg-[color:rgba(224,177,21,0.12)] px-3 py-2 text-[11px] leading-5 text-[#e0b115]">
                 {fallbackMessage ??
                   'Live universe APIs are partially unavailable. This view is using bundled read-only universe packets where needed.'}
               </p>
@@ -360,10 +360,10 @@ export default function UniversePage() {
           </div>
         }
         footerActions={
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
-            <span className="rounded-xl border border-slate-700 px-3 py-1">{`${universePresentationTerms.universe} renderer: QuantumCanvas`}</span>
-            <span className="rounded-xl border border-slate-700 px-3 py-1">{`${universePresentationTerms.explainer}: floating inspector`}</span>
-            <span className="rounded-xl border border-slate-700 px-3 py-1">{`Source-linked ${universePresentationTerms.stars.toLowerCase()}: enabled`}</span>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-[color:rgba(246,212,203,0.76)]">
+            <span className="rounded-xl border border-[#1e0227] px-3 py-1">{`${universePresentationTerms.universe} renderer: QuantumCanvas`}</span>
+            <span className="rounded-xl border border-[#1e0227] px-3 py-1">{`${universePresentationTerms.explainer}: floating inspector`}</span>
+            <span className="rounded-xl border border-[#1e0227] px-3 py-1">{`Source-linked ${universePresentationTerms.stars.toLowerCase()}: enabled`}</span>
           </div>
         }
       />

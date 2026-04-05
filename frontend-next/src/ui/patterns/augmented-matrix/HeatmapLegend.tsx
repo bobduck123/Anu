@@ -20,9 +20,9 @@ export interface HeatmapLegendProps {
 /* ------------------------------------------------------------------ */
 
 const GRADIENT_STOPS: Record<ColorScale, string[]> = {
-  warm: ['rgb(34,139,34)', 'rgb(200,200,0)', 'rgb(220,38,38)'],
-  cool: ['rgb(59,130,246)', 'rgb(139,92,246)', 'rgb(220,38,38)'],
-  divergent: ['rgb(59,130,246)', 'rgb(255,255,255)', 'rgb(220,38,38)'],
+  warm: ['rgb(102,87,0)', 'rgb(224,177,21)', 'rgb(124,65,60)'],
+  cool: ['rgb(124,65,60)', 'rgb(246,212,203)', 'rgb(124,65,60)'],
+  divergent: ['rgb(124,65,60)', 'rgb(246,212,203)', 'rgb(124,65,60)'],
 };
 
 const SCALE_LABELS: Record<ColorScale, string> = {

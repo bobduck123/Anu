@@ -109,5 +109,5 @@ export function contrastRatio(a: string, b: string): number {
 
 /** Returns readable text color (white or dark) for a given background */
 export function readableText(bg: string): string {
-  return contrastRatio(bg, '#FFFFFF') >= contrastRatio(bg, '#1F2B2D') ? '#FFFFFF' : '#1F2B2D';
+  return contrastRatio(bg, '#f6d4cb') >= contrastRatio(bg, '#1e0227') ? '#f6d4cb' : '#1e0227';
 }

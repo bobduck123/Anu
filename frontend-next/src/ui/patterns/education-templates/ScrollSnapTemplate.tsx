@@ -35,12 +35,12 @@ export function ScrollSnapTemplate({ course }: Props) {
   }, [course.sections.length]);
 
   const SECTION_COLORS = [
-    'from-[#1e3a5f]/10 to-transparent',
-    'from-[#2d5a3d]/10 to-transparent',
-    'from-[#5a3d2d]/10 to-transparent',
-    'from-[#3d2d5a]/10 to-transparent',
-    'from-[#5a2d3d]/10 to-transparent',
-    'from-[#2d5a5a]/10 to-transparent',
+    'from-[#1e0227]/10 to-transparent',
+    'from-[#7c413c]/10 to-transparent',
+    'from-[#7c413c]/10 to-transparent',
+    'from-[#7c413c]/10 to-transparent',
+    'from-[#7c413c]/10 to-transparent',
+    'from-[#7c413c]/10 to-transparent',
   ];
 
   return (

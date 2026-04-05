@@ -86,11 +86,11 @@ export default function QuestsPage() {
           </button>
         </div>
         {!isAuthenticated && (
-          <p className="mt-2 text-sm text-amber-700">
+          <p className="mt-2 text-sm text-[#e0b115]">
             Login required to start quests and track progress.
           </p>
         )}
-        {error && <p className="mt-2 text-sm text-rose-600">{error}</p>}
+        {error && <p className="mt-2 text-sm text-[#7c413c]">{error}</p>}
       </section>
 
       <div className="grid gap-4 lg:grid-cols-[1.25fr,1fr]">

@@ -116,16 +116,16 @@ export default function AdminRuntimeHealthPage() {
         {results.map((result) => (
           <AnuSurfacePanel key={result.endpoint} tone={result.ok ? 'soft' : 'quiet'}>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="font-semibold text-white">{result.endpoint}</h2>
+              <h2 className="font-semibold text-[var(--color-foreground)]">{result.endpoint}</h2>
               <div className="text-xs uppercase tracking-[0.12em]">
-                <span className={result.ok ? 'text-[#6dc2a4]' : 'text-[#f7a07a]'}>{result.ok ? 'PASS' : 'FAIL'}</span>
-                <span className="ml-3 text-slate-300/80">
+                <span className={result.ok ? 'text-[#f6d4cb]' : 'text-[#f6d4cb]'}>{result.ok ? 'PASS' : 'FAIL'}</span>
+                <span className="ml-3 text-[color:rgba(246,212,203,0.8)]">
                   {result.statusCode ?? 'ERR'} {result.statusText}
                 </span>
-                <span className="ml-3 text-slate-300/80">{result.latencyMs ?? '-'} ms</span>
+                <span className="ml-3 text-[color:rgba(246,212,203,0.8)]">{result.latencyMs ?? '-'} ms</span>
               </div>
             </div>
-            <pre className="mt-3 overflow-auto rounded-xl border border-white/10 bg-black/25 p-3 text-xs text-slate-200/86">
+            <pre className="mt-3 overflow-auto rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.25)] p-3 text-xs text-[color:rgba(246,212,203,0.86)]">
               {formatPayload(result.payload)}
             </pre>
           </AnuSurfacePanel>

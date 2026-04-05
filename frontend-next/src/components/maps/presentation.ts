@@ -22,32 +22,32 @@ export const MAP_RELATION_OPTIONS: MapRelation[] = [
 ];
 
 const COLOR_TOKEN_MAP: Record<string, string> = {
-  amber: '#f59e0b',
-  blue: '#3b82f6',
-  cyan: '#06b6d4',
-  emerald: '#10b981',
-  fuchsia: '#d946ef',
-  gold: '#fbbf24',
-  indigo: '#6366f1',
-  lime: '#84cc16',
-  neutral: '#94a3b8',
-  orange: '#f97316',
-  pink: '#ec4899',
-  purple: '#8b5cf6',
-  rose: '#f43f5e',
-  sky: '#0ea5e9',
-  slate: '#64748b',
-  teal: '#14b8a6',
-  violet: '#7c3aed',
-  yellow: '#eab308',
+  amber: '#e0b115',
+  blue: '#7c413c',
+  cyan: '#7c413c',
+  emerald: '#7c413c',
+  fuchsia: '#f6d4cb',
+  gold: '#e0b115',
+  indigo: '#7c413c',
+  lime: '#e0b115',
+  neutral: '#f6d4cb',
+  orange: '#e0b115',
+  pink: '#7c413c',
+  purple: '#f6d4cb',
+  rose: '#7c413c',
+  sky: '#7c413c',
+  slate: '#7c413c',
+  teal: '#7c413c',
+  violet: '#7c413c',
+  yellow: '#e0b115',
 };
 
 export function colorTokenToHex(token?: string): string {
   if (!token) {
-    return '#60a5fa';
+    return '#f6d4cb';
   }
 
-  return COLOR_TOKEN_MAP[token.trim().toLowerCase()] ?? '#60a5fa';
+  return COLOR_TOKEN_MAP[token.trim().toLowerCase()] ?? '#f6d4cb';
 }
 
 export function formatPercent(value: number): string {
@@ -100,11 +100,11 @@ export function categoryColor(categories: MapCategory[], categoryKey?: string): 
 export function statusBadgeClass(status: MapStatus): string {
   switch (status) {
     case 'published':
-      return 'bg-emerald-100 text-emerald-800';
+      return 'bg-[#665700] text-[#665700]';
     case 'reviewed':
-      return 'bg-amber-100 text-amber-800';
+      return 'bg-[#e0b115] text-[#e0b115]';
     default:
-      return 'bg-slate-200 text-slate-700';
+      return 'bg-[#f6d4cb] text-[#1e0227]';
   }
 }
 

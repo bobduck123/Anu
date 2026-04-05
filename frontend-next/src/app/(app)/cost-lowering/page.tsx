@@ -15,25 +15,25 @@ function cents(v: number | null | undefined): string {
 
 function supplierBadge(type: string) {
   const colors: Record<string, string> = {
-    FLEMINGTON: 'bg-emerald-300/20 text-emerald-100',
-    COSTCO: 'bg-sky-300/20 text-sky-100',
-    BUTCHER: 'bg-rose-300/20 text-rose-100',
-    ALDI: 'bg-amber-300/20 text-amber-100',
-    CUSTOM: 'bg-white/15 text-white/85',
+    FLEMINGTON: 'bg-[color:rgba(102,87,0,0.2)] text-[#f6d4cb]',
+    COSTCO: 'bg-[color:rgba(124,65,60,0.2)] text-[#7c413c]',
+    BUTCHER: 'bg-[color:rgba(124,65,60,0.2)] text-[#f6d4cb]',
+    ALDI: 'bg-[color:rgba(224,177,21,0.2)] text-[#e0b115]',
+    CUSTOM: 'bg-[color:rgba(246,212,203,0.15)] text-[color:rgba(246,212,203,0.85)]',
   };
   return colors[type] || colors.CUSTOM;
 }
 
 function statusBadge(status: string) {
   const colors: Record<string, string> = {
-    DRAFT: 'bg-white/15 text-white/70',
-    OPEN: 'bg-emerald-300/20 text-emerald-100',
-    CLOSED: 'bg-amber-300/20 text-amber-100',
-    EXECUTED: 'bg-sky-300/20 text-sky-100',
-    COMPLETED: 'bg-emerald-300/25 text-emerald-50',
-    CANCELLED: 'bg-rose-300/20 text-rose-100',
+    DRAFT: 'bg-[color:rgba(246,212,203,0.15)] text-[color:rgba(246,212,203,0.7)]',
+    OPEN: 'bg-[color:rgba(102,87,0,0.2)] text-[#f6d4cb]',
+    CLOSED: 'bg-[color:rgba(224,177,21,0.2)] text-[#e0b115]',
+    EXECUTED: 'bg-[color:rgba(124,65,60,0.2)] text-[#7c413c]',
+    COMPLETED: 'bg-[color:rgba(102,87,0,0.25)] text-[#665700]',
+    CANCELLED: 'bg-[color:rgba(124,65,60,0.2)] text-[#f6d4cb]',
   };
-  return colors[status] || 'bg-white/15 text-white/70';
+  return colors[status] || 'bg-[color:rgba(246,212,203,0.15)] text-[color:rgba(246,212,203,0.7)]';
 }
 
 export default function CostLoweringPage() {
@@ -85,7 +85,7 @@ export default function CostLoweringPage() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#665700]" />
       </div>
     );
   }
@@ -93,16 +93,16 @@ export default function CostLoweringPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <section className="card-civic mb-8">
-        <p className="text-xs uppercase tracking-[0.18em] text-white/65">Weekly Cost-Lowering Engine</p>
-        <h1 className="text-3xl font-bold mt-2 mb-2 text-white" style={{ fontFamily: 'var(--font-serif)' }}>
+        <p className="text-xs uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.65)]">Weekly Cost-Lowering Engine</p>
+        <h1 className="text-3xl font-bold mt-2 mb-2 text-[var(--color-foreground)]" style={{ fontFamily: 'var(--font-serif)' }}>
           Weekly Cost-Lowering Engine
         </h1>
-        <p className="text-sm text-white/75 max-w-2xl">
+        <p className="text-sm text-[color:rgba(246,212,203,0.75)] max-w-2xl">
           Explore active runs, compare suppliers, and see indicative savings. Sign in when you are ready to pledge and track household outcomes.
         </p>
         {!isAuthenticated ? (
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-white/65">Preview mode active</span>
+            <span className="text-xs text-[color:rgba(246,212,203,0.65)]">Preview mode active</span>
             <Link href={authHref} className="btn-pill btn-pill-primary text-xs">
               Sign in to pledge
             </Link>
@@ -116,7 +116,7 @@ export default function CostLoweringPage() {
 
       <section className="card-civic flex flex-wrap gap-3 mb-8 items-end">
         <div>
-          <label className="block text-xs uppercase tracking-[0.14em] text-white/65 mb-1">Postcode</label>
+          <label className="block text-xs uppercase tracking-[0.14em] text-[color:rgba(246,212,203,0.65)] mb-1">Postcode</label>
           <input
             type="text"
             value={postcode}
@@ -126,7 +126,7 @@ export default function CostLoweringPage() {
           />
         </div>
         <div>
-          <label className="block text-xs uppercase tracking-[0.14em] text-white/65 mb-1">Supplier</label>
+          <label className="block text-xs uppercase tracking-[0.14em] text-[color:rgba(246,212,203,0.65)] mb-1">Supplier</label>
           <select
             value={supplierFilter}
             onChange={(event) => setSupplierFilter(event.target.value)}
@@ -145,14 +145,14 @@ export default function CostLoweringPage() {
         </button>
       </section>
 
-      {notice ? <div className="card-civic mb-6 text-sm text-amber-100">{notice}</div> : null}
+      {notice ? <div className="card-civic mb-6 text-sm text-[#e0b115]">{notice}</div> : null}
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#665700]" />
         </div>
       ) : runs.length === 0 ? (
-        <div className="card-civic text-center py-16 text-white/70">
+        <div className="card-civic text-center py-16 text-[color:rgba(246,212,203,0.7)]">
           <p className="text-lg mb-2">No runs found</p>
           <p className="text-sm">Try adjusting your filters or check back later.</p>
         </div>
@@ -172,11 +172,11 @@ export default function CostLoweringPage() {
                         {run.status}
                       </span>
                     </div>
-                    <h3 className="text-lg font-semibold text-white">{run.title}</h3>
-                    <p className="text-sm text-white/70 mt-1">
+                    <h3 className="text-lg font-semibold text-[var(--color-foreground)]">{run.title}</h3>
+                    <p className="text-sm text-[color:rgba(246,212,203,0.7)] mt-1">
                       {run.location_name || run.address || 'Location TBD'} · {run.suburb || ''} {run.postcode || ''}
                     </p>
-                    <p className="text-xs text-white/60 mt-1">
+                    <p className="text-xs text-[color:rgba(246,212,203,0.6)] mt-1">
                       {new Date(run.run_date).toLocaleDateString('en-AU', {
                         weekday: 'short',
                         day: 'numeric',
@@ -188,18 +188,18 @@ export default function CostLoweringPage() {
                   <div className="text-right shrink-0">
                     {run.status === 'COMPLETED' && run.retail_equivalent_total_cents ? (
                       <>
-                        <p className="text-xs text-white/60">Community saved</p>
-                        <p className="text-lg font-bold text-emerald-200">
+                        <p className="text-xs text-[color:rgba(246,212,203,0.6)]">Community saved</p>
+                        <p className="text-lg font-bold text-[#665700]">
                           {cents((run.retail_equivalent_total_cents || 0) - (run.bulk_actual_total_cents || 0))}
                         </p>
                       </>
                     ) : savingsEst > 0 ? (
                       <>
-                        <p className="text-xs text-white/60">Est. savings</p>
-                        <p className="text-lg font-bold text-emerald-200">{cents(savingsEst)}</p>
+                        <p className="text-xs text-[color:rgba(246,212,203,0.6)]">Est. savings</p>
+                        <p className="text-lg font-bold text-[#665700]">{cents(savingsEst)}</p>
                       </>
                     ) : null}
-                    <p className="text-xs text-white/60 mt-1">Fee: {cents(run.coordination_fee_per_household_cents)}/household</p>
+                    <p className="text-xs text-[color:rgba(246,212,203,0.6)] mt-1">Fee: {cents(run.coordination_fee_per_household_cents)}/household</p>
                   </div>
                 </div>
               </Link>

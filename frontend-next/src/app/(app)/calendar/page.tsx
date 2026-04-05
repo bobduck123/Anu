@@ -282,15 +282,15 @@ export default function CalendarPage() {
                 ) : (
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                     {events.map((event) => (
-                      <Card key={`event-${event.id}`} padding="md" hover className="bg-[rgba(11,24,52,0.72)] border-white/12">
+                      <Card key={`event-${event.id}`} padding="md" hover className="bg-[rgba(30,2,39,0.72)] border-[color:rgba(246,212,203,0.12)]">
                         <div className="mb-2 flex items-start justify-between">
-                          <h4 className="font-semibold text-white">{event.title}</h4>
+                          <h4 className="font-semibold text-[var(--color-foreground)]">{event.title}</h4>
                           <StatusBadge status="active" dot>
                             Event
                           </StatusBadge>
                         </div>
-                        <p className="mb-3 line-clamp-2 text-sm text-white/76">{event.description}</p>
-                        <div className="flex flex-wrap gap-3 text-xs text-white/70">
+                        <p className="mb-3 line-clamp-2 text-sm text-[color:rgba(246,212,203,0.76)]">{event.description}</p>
+                        <div className="flex flex-wrap gap-3 text-xs text-[color:rgba(246,212,203,0.7)]">
                           <span className="flex items-center gap-1">
                             <CalIcon className="h-3.5 w-3.5" /> {event.date}
                           </span>
@@ -353,9 +353,9 @@ export default function CalendarPage() {
             >
               <div className={styles.sectionPanel}>
                 <p className={styles.sectionHeading}>Availability</p>
-                <Card padding="md" className="bg-[rgba(9,20,44,0.66)] border-white/12">
-                  <CardTitle className="text-white">Your Weekly Availability</CardTitle>
-                  <p className="mb-6 text-sm text-white/72">Set when you&apos;re available for shifts.</p>
+                <Card padding="md" className="bg-[rgba(30,2,39,0.66)] border-[color:rgba(246,212,203,0.12)]">
+                  <CardTitle className="text-[var(--color-foreground)]">Your Weekly Availability</CardTitle>
+                  <p className="mb-6 text-sm text-[color:rgba(246,212,203,0.72)]">Set when you&apos;re available for shifts.</p>
                   <AvailabilityEditor slots={availability} onSave={handleSaveAvailability} saving={savingAvail} />
                 </Card>
               </div>

@@ -53,8 +53,8 @@ export default function GovernanceIndexPage() {
           description="Governance now reads as a dark archive before it resolves into manuscript chambers. Collections are grouped by institutional function so the route feels like descending into civic memory, not browsing a dashboard."
           legend={
             <div className="space-y-3">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-[#d2bf99]/72">Archive reading</p>
-              <p className="text-sm leading-6 text-[#d8ccb6]/76">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[#f6d4cb]/72">Archive reading</p>
+              <p className="text-sm leading-6 text-[#f6d4cb]/76">
                 Move from modes and reviews into formal registries, then into federation and coordination surfaces. The archive should teach route meaning before you open any one instrument.
               </p>
             </div>
@@ -90,7 +90,7 @@ export default function GovernanceIndexPage() {
                   Open library doctrine
                 </AnuActionLink>
               </div>
-              <p className="text-xs leading-6 text-[#cdbd9f]/72">
+              <p className="text-xs leading-6 text-[#f6d4cb]/72">
                 Governance is the first manuscript family after the model archive. It should stay navigable, but the archive atmosphere should remain intact.
               </p>
             </div>
@@ -99,25 +99,25 @@ export default function GovernanceIndexPage() {
           <div className="anu-labyrinth-route-grid anu-labyrinth-route-grid-3">
             {governanceCollections.map((collection) => (
               <section key={collection.title} className="anu-labyrinth-manuscript-card">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#7d613b]">{collection.eyebrow}</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#7c413c]">{collection.eyebrow}</p>
                 <h2
-                  className="mt-3 text-3xl text-[#2f1f12]"
+                  className="mt-3 text-3xl text-[#1e0227]"
                   style={{ fontFamily: 'var(--anu-type-display)' }}
                 >
                   {collection.title}
                 </h2>
-                <p className="mt-3 text-sm leading-7 text-[#4f3d28]">{collection.description}</p>
+                <p className="mt-3 text-sm leading-7 text-[#7c413c]">{collection.description}</p>
 
                 <div className="mt-5 space-y-3">
                   {collection.links.map((link) => (
                     <Link key={link.href} href={link.href} className="anu-labyrinth-portal-link">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-[#25170d]">{link.label}</p>
-                          <p className="mt-2 text-sm leading-6 text-[#5f4930]">{link.detail}</p>
-                          <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-[#7e6848]">{link.href}</p>
+                          <p className="text-sm font-semibold text-[#1e0227]">{link.label}</p>
+                          <p className="mt-2 text-sm leading-6 text-[#7c413c]">{link.detail}</p>
+                          <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-[#7c413c]">{link.href}</p>
                         </div>
-                        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[#7a5419]" />
+                        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[#665700]" />
                       </div>
                     </Link>
                   ))}
@@ -128,7 +128,7 @@ export default function GovernanceIndexPage() {
 
           <div className="mt-6 anu-labyrinth-route-grid anu-labyrinth-route-grid-3">
             <div className="anu-labyrinth-archive-note">
-              <div className="flex items-center gap-2 text-[#f6e6c3]">
+              <div className="flex items-center gap-2 text-[#f6d4cb]">
                 <Compass className="h-4 w-4" />
                 <span className="text-xs uppercase tracking-[0.16em]">Modes and reviews</span>
               </div>
@@ -138,7 +138,7 @@ export default function GovernanceIndexPage() {
             </div>
 
             <div className="anu-labyrinth-archive-note">
-              <div className="flex items-center gap-2 text-[#f6e6c3]">
+              <div className="flex items-center gap-2 text-[#f6d4cb]">
                 <Orbit className="h-4 w-4" />
                 <span className="text-xs uppercase tracking-[0.16em]">Formal instruments</span>
               </div>
@@ -148,7 +148,7 @@ export default function GovernanceIndexPage() {
             </div>
 
             <div className="anu-labyrinth-archive-note">
-              <div className="flex items-center gap-2 text-[#f6e6c3]">
+              <div className="flex items-center gap-2 text-[#f6d4cb]">
                 <Waypoints className="h-4 w-4" />
                 <span className="text-xs uppercase tracking-[0.16em]">Coordination surfaces</span>
               </div>

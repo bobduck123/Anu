@@ -20,7 +20,7 @@ import { PRESET_THEMES, buildBackground, getFontSize } from './types';
 function AboutWidget({ user }: { user: { pseudonym: string; role: string; level: number; points: number } }) {
   return (
     <div className="p-4 flex flex-col items-center text-center gap-3">
-      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-300 to-purple-300 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#7c413c] to-[#7c413c] flex items-center justify-center text-2xl font-bold text-[var(--color-foreground)] shadow-lg">
         {user.pseudonym.charAt(0).toUpperCase()}
       </div>
       <h3 className="text-lg font-semibold">{user.pseudonym}</h3>
@@ -42,7 +42,7 @@ function BadgesWidget({ badges }: { badges: string[] }) {
       ) : (
         <div className="flex flex-wrap gap-2">
           {badges.map((b) => (
-            <span key={b} className="px-2 py-1 rounded-full text-xs bg-white/10">{b}</span>
+            <span key={b} className="px-2 py-1 rounded-full text-xs bg-[color:rgba(246,212,203,0.1)]">{b}</span>
           ))}
         </div>
       )}
@@ -55,13 +55,13 @@ function ImpactWidget({ points, level }: { points: number; level: number }) {
     <div className="p-4 space-y-3">
       <h4 className="text-xs font-medium uppercase tracking-wider opacity-60">Impact</h4>
       <div className="grid grid-cols-2 gap-3">
-        <div className="text-center p-2 rounded-lg bg-white/5">
-          <Zap className="w-4 h-4 mx-auto mb-1 text-amber-400" />
+        <div className="text-center p-2 rounded-lg bg-[color:rgba(246,212,203,0.05)]">
+          <Zap className="w-4 h-4 mx-auto mb-1 text-[#e0b115]" />
           <div className="text-lg font-bold">{points}</div>
           <div className="text-[10px] opacity-50">Credits</div>
         </div>
-        <div className="text-center p-2 rounded-lg bg-white/5">
-          <Flame className="w-4 h-4 mx-auto mb-1 text-red-400" />
+        <div className="text-center p-2 rounded-lg bg-[color:rgba(246,212,203,0.05)]">
+          <Flame className="w-4 h-4 mx-auto mb-1 text-[#7c413c]" />
           <div className="text-lg font-bold">{level}</div>
           <div className="text-[10px] opacity-50">Level</div>
         </div>
@@ -80,7 +80,7 @@ function TodosWidget({ todos }: { todos: Array<{ id: number; title: string; is_c
       ) : (
         <div className="space-y-2 max-h-[280px] overflow-y-auto">
           {pending.slice(0, 10).map((t) => (
-            <div key={t.id} className="flex items-center justify-between text-sm p-2 rounded bg-white/5">
+            <div key={t.id} className="flex items-center justify-between text-sm p-2 rounded bg-[color:rgba(246,212,203,0.05)]">
               <span className="truncate">{t.title}</span>
               <span className="text-xs opacity-40 ml-2 shrink-0">{t.points_assigned}pts</span>
             </div>
@@ -105,12 +105,12 @@ function ChallengesWidget({ challenges }: { challenges: Array<{ id: string; titl
                 <span className="truncate">{c.title}</span>
                 <span className="opacity-50">{c.progress}/{c.target}</span>
               </div>
-              <div className="h-1.5 rounded-full bg-white/10">
+              <div className="h-1.5 rounded-full bg-[color:rgba(246,212,203,0.1)]">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{
                     width: `${Math.min(100, (c.progress / c.target) * 100)}%`,
-                    background: c.status === 'complete' ? '#10b981' : 'var(--accent-color, #6b8cae)',
+                    background: c.status === 'complete' ? '#7c413c' : 'var(--accent-color, #7c413c)',
                   }}
                 />
               </div>
@@ -145,16 +145,16 @@ function NotesWidget() {
           onChange={(e) => setNote(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && note.trim()) { save([note.trim(), ...notes]); setNote(''); } }}
           placeholder="Add note..."
-          className="flex-1 text-sm px-2 py-1 rounded bg-white/10 border border-white/10 outline-none"
+          className="flex-1 text-sm px-2 py-1 rounded bg-[color:rgba(246,212,203,0.1)] border border-[color:rgba(246,212,203,0.1)] outline-none"
         />
         <button
           onClick={() => { if (note.trim()) { save([note.trim(), ...notes]); setNote(''); } }}
-          className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20"
+          className="text-xs px-2 py-1 rounded bg-[color:rgba(246,212,203,0.1)] hover:bg-[color:rgba(246,212,203,0.2)]"
         >+</button>
       </div>
       <div className="space-y-1 max-h-[260px] overflow-y-auto">
         {notes.map((n, i) => (
-          <div key={i} className="flex items-center justify-between text-sm p-1.5 rounded bg-white/5">
+          <div key={i} className="flex items-center justify-between text-sm p-1.5 rounded bg-[color:rgba(246,212,203,0.05)]">
             <span className="truncate">{n}</span>
             <button onClick={() => save(notes.filter((_, j) => j !== i))} className="text-xs opacity-40 hover:opacity-80 ml-1">x</button>
           </div>
@@ -509,7 +509,7 @@ export function DesktopCanvas({ user, badges, todos, challenges, isOwner = true 
           style={{
             background: state.theme.windowBg,
             backdropFilter: `blur(${state.theme.windowBlur}px)`,
-            border: '1px solid rgba(255,255,255,0.15)',
+            border: '1px solid rgba(246,212,203,0.15)',
           }}>
           {minimizedWindows.map(win => {
             const widget = WIDGETS.find(w => w.type === win.type);
@@ -517,7 +517,7 @@ export function DesktopCanvas({ user, badges, todos, challenges, isOwner = true 
             return (
               <button key={win.id}
                 onClick={() => restoreWindow(win.id)}
-                className="flex flex-col items-center gap-0.5 p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                className="flex flex-col items-center gap-0.5 p-1.5 rounded-lg hover:bg-[color:rgba(246,212,203,0.1)] transition-colors"
                 style={{ color: state.theme.textColor }}
                 title={win.title}>
                 <Icon className="w-4 h-4" />
@@ -536,7 +536,7 @@ export function DesktopCanvas({ user, badges, todos, challenges, isOwner = true 
             style={{
               background: state.theme.windowBg,
               backdropFilter: `blur(${state.theme.windowBlur}px)`,
-              border: '1px solid rgba(255,255,255,0.2)',
+              border: '1px solid rgba(246,212,203,0.2)',
               minWidth: 260,
             }}
           >
@@ -549,7 +549,7 @@ export function DesktopCanvas({ user, badges, todos, challenges, isOwner = true 
                 <button
                   key={w.type}
                   onClick={() => { openWindow(w.type, w.label); setShowMenu(false); }}
-                  className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-white/10 transition-colors"
+                  className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-[color:rgba(246,212,203,0.1)] transition-colors"
                   style={{ color: state.theme.textColor }}
                 >
                   <w.icon className="w-4 h-4" />
@@ -573,7 +573,7 @@ export function DesktopCanvas({ user, badges, todos, challenges, isOwner = true 
       {isOwner && (
         <button
           onClick={() => openWindow('customization', 'Customize')}
-          className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center shadow-lg bg-white/10 hover:bg-white/20 transition-colors"
+          className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center shadow-lg bg-[color:rgba(246,212,203,0.1)] hover:bg-[color:rgba(246,212,203,0.2)] transition-colors"
           style={{ color: state.theme.textColor }}
           aria-label="Customize"
         >

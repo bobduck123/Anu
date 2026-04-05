@@ -46,7 +46,7 @@ export default function AdminDumbDumbPage() {
             Every row keeps the parody title and the real pool destination visible together.
           </p>
         </div>
-        <div className="rounded-2xl border border-[var(--color-border)] bg-white px-5 py-4">
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-foreground)] px-5 py-4">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-foreground)]">Visible total</p>
           <p className="mt-2 text-2xl font-semibold font-mono-data text-[var(--color-earth-dark)]">{formatMoney(totals)}</p>
         </div>
@@ -77,7 +77,7 @@ export default function AdminDumbDumbPage() {
           <Loader2 className="h-6 w-6 animate-spin text-[var(--color-institutional)]" />
         </div>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-[1.6rem] border border-[var(--color-border)] bg-white">
+        <div className="mt-6 overflow-hidden rounded-[1.6rem] border border-[var(--color-border)] bg-[var(--color-foreground)]">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-[var(--color-muted)] text-[var(--color-earth-medium)]">

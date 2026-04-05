@@ -35,10 +35,10 @@ export function AnuThresholdPathPanel({
               key={threshold.key}
               className={`rounded-2xl border px-4 py-4 ${
                 isCurrent
-                  ? 'border-[rgba(109,194,164,0.34)] bg-[rgba(109,194,164,0.1)]'
+                  ? 'border-[rgba(246,212,203,0.34)] bg-[rgba(246,212,203,0.1)]'
                   : isNext
-                    ? 'border-[rgba(216,169,95,0.26)] bg-[rgba(216,169,95,0.08)]'
-                    : 'border-white/10 bg-white/[0.03]'
+                    ? 'border-[rgba(224,177,21,0.26)] bg-[rgba(224,177,21,0.08)]'
+                    : 'border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)]'
               }`}
             >
               <div className="flex flex-wrap items-center gap-2">
@@ -48,8 +48,8 @@ export function AnuThresholdPathPanel({
                 {isCurrent ? <AnuChip tone="signal">Current</AnuChip> : null}
                 {isNext ? <AnuChip tone="accent">Next</AnuChip> : null}
               </div>
-              <p className="mt-3 text-sm leading-6 text-slate-100">{threshold.summary}</p>
-              <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-slate-400">{threshold.routeFocus}</p>
+              <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.92)]">{threshold.summary}</p>
+              <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">{threshold.routeFocus}</p>
             </div>
           );
         })}

@@ -81,21 +81,21 @@ export function CommunitySection() {
   return (
     <section 
       ref={sectionRef}
-      className="py-20 bg-[rgb(var(--color-institutional))] text-white overflow-hidden"
+      className="py-20 bg-[var(--color-background)] text-[var(--color-foreground)] overflow-hidden"
       aria-label="Community"
     >
       {/* Marquee Banner */}
       <div 
         ref={marqueeRef}
-        className="marquee-container py-6 border-y border-white/10 mb-16"
+        className="marquee-container py-6 border-y border-[color:rgba(246,212,203,0.1)] mb-16"
       >
         <div className="marquee-content">
           {[...marqueeItems, ...marqueeItems].map((item, i) => (
             <span 
               key={i} 
-              className="inline-flex items-center mx-8 text-lg font-medium text-white/60 whitespace-nowrap"
+              className="inline-flex items-center mx-8 text-lg font-medium text-[color:rgba(246,212,203,0.6)] whitespace-nowrap"
             >
-              <span className="w-2 h-2 rounded-full bg-[rgb(var(--color-sage))] mr-4" />
+              <span className="w-2 h-2 rounded-full bg-[var(--color-sage)] mr-4" />
               {item}
             </span>
           ))}
@@ -106,28 +106,28 @@ export function CommunitySection() {
         {/* Header */}
         <div className="community-header flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
           <div>
-            <span className="inline-flex items-center gap-2 text-sm font-medium text-[rgb(var(--color-sage))] mb-3">
+            <span className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-sage)] mb-3">
               <Users className="w-4 h-4" />
               Our Community
               {isLoading && <Loader2 className="w-3 h-3 animate-spin ml-1" />}
             </span>
             <h2 
-              className="text-3xl md:text-4xl font-semibold text-white mb-3"
+              className="text-3xl md:text-4xl font-semibold text-[var(--color-foreground)] mb-3"
               style={{ fontFamily: 'var(--font-source-serif), Georgia, serif' }}
             >
               Members & Stewards
             </h2>
-            <p className="text-white/60 max-w-xl">
+            <p className="text-[color:rgba(246,212,203,0.6)] max-w-xl">
               A diverse network of validators, organizers, and participants building 
               resilient communities together.
             </p>
             {!isAuthenticated && (
-              <p className="text-xs text-white/50 mt-2">
+              <p className="text-xs text-[color:rgba(246,212,203,0.5)] mt-2">
                 Public roster data stays private by default. Signed-in members see node-specific profiles.
               </p>
             )}
             {membersError && (
-              <p className="text-xs text-amber-300 mt-2">
+              <p className="text-xs text-[#e0b115] mt-2">
                 Live member data is unavailable right now.
               </p>
             )}
@@ -135,7 +135,7 @@ export function CommunitySection() {
 
           <Link
             href="/community"
-            className="inline-flex items-center gap-2 text-white font-medium hover:text-[rgb(var(--color-sage))] transition-colors focus-ring rounded-lg px-4 py-2"
+            className="inline-flex items-center gap-2 text-[var(--color-foreground)] font-medium hover:text-[var(--color-sage)] transition-colors focus-ring rounded-lg px-4 py-2"
           >
             View all members
             <ArrowRight className="w-4 h-4" />
@@ -146,25 +146,25 @@ export function CommunitySection() {
         {!isAuthenticated ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {previewRoles.map((role) => (
-              <div key={role.title} className="bg-white/10 rounded-xl p-5 border border-white/10">
-                <p className="text-sm font-semibold text-white mb-2">{role.title}</p>
-                <p className="text-sm text-white/60 leading-relaxed">{role.body}</p>
+              <div key={role.title} className="bg-[color:rgba(246,212,203,0.1)] rounded-xl p-5 border border-[color:rgba(246,212,203,0.1)]">
+                <p className="text-sm font-semibold text-[var(--color-foreground)] mb-2">{role.title}</p>
+                <p className="text-sm text-[color:rgba(246,212,203,0.6)] leading-relaxed">{role.body}</p>
               </div>
             ))}
           </div>
         ) : isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <div key={i} className="bg-white/10 rounded-xl p-5 animate-pulse">
-                <div className="w-14 h-14 rounded-full bg-white/20 mb-4" />
-                <div className="h-4 bg-white/20 rounded w-3/4 mb-2" />
-                <div className="h-3 bg-white/20 rounded w-1/2" />
+              <div key={i} className="bg-[color:rgba(246,212,203,0.1)] rounded-xl p-5 animate-pulse">
+                <div className="w-14 h-14 rounded-full bg-[color:rgba(246,212,203,0.2)] mb-4" />
+                <div className="h-4 bg-[color:rgba(246,212,203,0.2)] rounded w-3/4 mb-2" />
+                <div className="h-3 bg-[color:rgba(246,212,203,0.2)] rounded w-1/2" />
               </div>
             ))}
           </div>
         ) : membersError ? (
-          <div className="bg-white/10 rounded-xl p-5 border border-white/10">
-            <p className="text-sm text-white/70">
+          <div className="bg-[color:rgba(246,212,203,0.1)] rounded-xl p-5 border border-[color:rgba(246,212,203,0.1)]">
+            <p className="text-sm text-[color:rgba(246,212,203,0.7)]">
               Member profiles could not be loaded. Try again after signing in or when the core service is stable.
             </p>
           </div>
@@ -180,30 +180,30 @@ export function CommunitySection() {
         )}
 
         {/* Stats Row */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 py-8 border-t border-white/10">
+        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 py-8 border-t border-[color:rgba(246,212,203,0.1)]">
           <div className="text-center">
-            <div className="text-3xl font-semibold text-white mb-1 font-mono-data">
+            <div className="text-3xl font-semibold text-[var(--color-foreground)] mb-1 font-mono-data">
               {isAuthenticated && !statsLoading && !statsError ? stats?.total.toLocaleString() : 'Private'}
             </div>
-            <div className="text-white/50 text-sm">{isAuthenticated ? 'Total Members' : 'Member roster'}</div>
+            <div className="text-[color:rgba(246,212,203,0.5)] text-sm">{isAuthenticated ? 'Total Members' : 'Member roster'}</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-semibold text-white mb-1 font-mono-data">
+            <div className="text-3xl font-semibold text-[var(--color-foreground)] mb-1 font-mono-data">
               {isAuthenticated && !statsLoading && !statsError ? stats?.validators.toLocaleString() : 'Scoped'}
             </div>
-            <div className="text-white/50 text-sm">{isAuthenticated ? 'Validators' : 'Role-based access'}</div>
+            <div className="text-[color:rgba(246,212,203,0.5)] text-sm">{isAuthenticated ? 'Validators' : 'Role-based access'}</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-semibold text-white mb-1 font-mono-data">
+            <div className="text-3xl font-semibold text-[var(--color-foreground)] mb-1 font-mono-data">
               {isAuthenticated && !statsLoading && !statsError ? stats?.organizers.toLocaleString() : 'Local'}
             </div>
-            <div className="text-white/50 text-sm">{isAuthenticated ? 'Organizers' : 'Node stewardship'}</div>
+            <div className="text-[color:rgba(246,212,203,0.5)] text-sm">{isAuthenticated ? 'Organizers' : 'Node stewardship'}</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-semibold text-white mb-1 font-mono-data">
+            <div className="text-3xl font-semibold text-[var(--color-foreground)] mb-1 font-mono-data">
               {isAuthenticated && !statsLoading && !statsError ? stats?.activeNodes.toLocaleString() : 'Consent'}
             </div>
-            <div className="text-white/50 text-sm">{isAuthenticated ? 'Active Nodes' : 'Data sharing model'}</div>
+            <div className="text-[color:rgba(246,212,203,0.5)] text-sm">{isAuthenticated ? 'Active Nodes' : 'Data sharing model'}</div>
           </div>
         </div>
       </div>

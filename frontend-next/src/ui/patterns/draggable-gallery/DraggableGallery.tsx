@@ -161,16 +161,16 @@ function gapForZoom(zoom: number): number {
 /* -------------------------------------------------------------------------- */
 
 const AVATAR_COLORS = [
-  '#4f7942', '#6b8e6b', '#2e8b57', '#3b7a57', '#5f9ea0',
-  '#4682b4', '#6a5acd', '#7b68ee', '#9370db', '#db7093',
+  '#7c413c', '#7c413c', '#7c413c', '#7c413c', '#7c413c',
+  '#7c413c', '#7c413c', '#f6d4cb', '#f6d4cb', '#f6d4cb',
 ];
 const TILE_GRADIENTS = [
-  ['#16324f', '#0f172a'],
-  ['#3f6212', '#14532d'],
-  ['#7c2d12', '#431407'],
-  ['#5b21b6', '#1e1b4b'],
-  ['#0f766e', '#134e4a'],
-  ['#9a3412', '#4a044e'],
+  ['#1e0227', '#1e0227'],
+  ['#665700', '#1e0227'],
+  ['#7c413c', '#1e0227'],
+  ['#7c413c', '#1e0227'],
+  ['#7c413c', '#1e0227'],
+  ['#7c413c', '#1e0227'],
 ];
 
 function avatarColor(name: string): string {
@@ -237,8 +237,8 @@ function createDetailPreviewNode(post: CommunityPost, image: HTMLImageElement | 
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(circle at top left, rgba(255,255,255,0.22), transparent 42%),
-      linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.12) 40%, rgba(0,0,0,0.45) 100%);
+      radial-gradient(circle at top left, rgba(246,212,203,0.22), transparent 42%),
+      linear-gradient(180deg, rgba(246,212,203,0.08), rgba(30,2,39,0.12) 40%, rgba(30,2,39,0.45) 100%);
   `;
   preview.appendChild(glow);
 
@@ -269,24 +269,24 @@ function createDetailPreviewNode(post: CommunityPost, image: HTMLImageElement | 
 }
 
 const TAG_COLORS: Record<string, string> = {
-  'mutual-aid': 'bg-emerald-500/20 text-emerald-300',
-  garden: 'bg-green-500/20 text-green-300',
-  skills: 'bg-blue-500/20 text-blue-300',
-  events: 'bg-purple-500/20 text-purple-300',
-  relief: 'bg-red-500/20 text-red-300',
-  education: 'bg-amber-500/20 text-amber-300',
-  marketplace: 'bg-cyan-500/20 text-cyan-300',
-  governance: 'bg-indigo-500/20 text-indigo-300',
-  impact: 'bg-rose-500/20 text-rose-300',
-  stories: 'bg-orange-500/20 text-orange-300',
-  news: 'bg-sky-500/20 text-sky-300',
-  opinion: 'bg-fuchsia-500/20 text-fuchsia-300',
-  creative: 'bg-teal-500/20 text-teal-300',
-  community: 'bg-zinc-200/20 text-zinc-200',
+  'mutual-aid': 'bg-[color:rgba(102,87,0,0.2)] text-[#665700]',
+  garden: 'bg-[color:rgba(102,87,0,0.2)] text-[#665700]',
+  skills: 'bg-[color:rgba(124,65,60,0.2)] text-[#7c413c]',
+  events: 'bg-[color:rgba(124,65,60,0.2)] text-[#7c413c]',
+  relief: 'bg-[color:rgba(124,65,60,0.2)] text-[#7c413c]',
+  education: 'bg-[color:rgba(224,177,21,0.2)] text-[#e0b115]',
+  marketplace: 'bg-[color:rgba(124,65,60,0.2)] text-[#7c413c]',
+  governance: 'bg-[color:rgba(124,65,60,0.2)] text-[#7c413c]',
+  impact: 'bg-[color:rgba(124,65,60,0.2)] text-[#f6d4cb]',
+  stories: 'bg-[color:rgba(224,177,21,0.2)] text-[#e0b115]',
+  news: 'bg-[color:rgba(124,65,60,0.2)] text-[#7c413c]',
+  opinion: 'bg-[color:rgba(124,65,60,0.2)] text-[#7c413c]',
+  creative: 'bg-[color:rgba(102,87,0,0.2)] text-[#665700]',
+  community: 'bg-[color:rgba(246,212,203,0.2)] text-[#f6d4cb]',
 };
 
 function tagClass(tag: string): string {
-  return TAG_COLORS[tag] ?? 'bg-white/10 text-white/70';
+  return TAG_COLORS[tag] ?? 'bg-[color:rgba(246,212,203,0.1)] text-[color:rgba(246,212,203,0.7)]';
 }
 
 function prefersReducedMotion(): boolean {
@@ -327,7 +327,7 @@ function MiniLayoutPreview({
 
   const imgBlock = (
     <div
-      className="bg-white/40 rounded-[2px]"
+      className="bg-[color:rgba(246,212,203,0.4)] rounded-[2px]"
       style={{
         [isHorizontal ? 'width' : 'height']: `${ratio * 100}%`,
         [isHorizontal ? 'height' : 'width']: '100%',
@@ -336,7 +336,7 @@ function MiniLayoutPreview({
   );
   const contentBlock = (
     <div
-      className="bg-white/15 rounded-[2px]"
+      className="bg-[color:rgba(246,212,203,0.15)] rounded-[2px]"
       style={{
         [isHorizontal ? 'width' : 'height']: `${(1 - ratio) * 100}%`,
         [isHorizontal ? 'height' : 'width']: '100%',
@@ -351,7 +351,7 @@ function MiniLayoutPreview({
       className={`
         w-12 h-12 rounded border-2 p-0.5 flex transition-colors
         ${isHorizontal ? 'flex-row' : 'flex-col'}
-        ${selected ? 'border-white' : 'border-white/20 hover:border-white/50'}
+        ${selected ? 'border-[var(--color-foreground)]' : 'border-[color:rgba(246,212,203,0.2)] hover:border-[color:rgba(246,212,203,0.5)]'}
       `}
     >
       {imgFirst ? (
@@ -395,12 +395,12 @@ function CreatePostModal({ onClose }: { onClose: () => void }) {
       className="fixed inset-0 z-[60] flex items-center justify-center"
       onClick={(e) => { if (e.target === backdropRef.current) onClose(); }}
     >
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-      <div className="relative w-full max-w-md mx-4 rounded-xl bg-[#1a1a1a] border border-white/10 p-6 space-y-5">
+      <div className="absolute inset-0 bg-[color:rgba(30,2,39,0.7)] backdrop-blur-sm" />
+      <div className="relative w-full max-w-md mx-4 rounded-xl bg-[#1e0227] border border-[color:rgba(246,212,203,0.1)] p-6 space-y-5">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-white font-semibold text-lg">New Post</h2>
-          <button onClick={onClose} className="text-white/50 hover:text-white transition-colors">
+          <h2 className="text-[var(--color-foreground)] font-semibold text-lg">New Post</h2>
+          <button onClick={onClose} className="text-[color:rgba(246,212,203,0.5)] hover:text-[var(--color-foreground)] transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -411,17 +411,17 @@ function CreatePostModal({ onClose }: { onClose: () => void }) {
           onChange={(e) => setContent(e.target.value)}
           placeholder="What's happening in your community?"
           rows={4}
-          className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white text-sm placeholder:text-white/30 resize-none focus:outline-none focus:border-white/30"
+          className="w-full bg-[color:rgba(246,212,203,0.05)] border border-[color:rgba(246,212,203,0.1)] rounded-lg p-3 text-[var(--color-foreground)] text-sm placeholder:text-[color:rgba(246,212,203,0.3)] resize-none focus:outline-none focus:border-[color:rgba(246,212,203,0.3)]"
         />
 
         {/* Image upload placeholder */}
-        <div className="border-2 border-dashed border-white/20 rounded-lg p-4 text-center">
-          <p className="text-white/40 text-sm">Click to upload cover image</p>
+        <div className="border-2 border-dashed border-[color:rgba(246,212,203,0.2)] rounded-lg p-4 text-center">
+          <p className="text-[color:rgba(246,212,203,0.4)] text-sm">Click to upload cover image</p>
         </div>
 
         {/* Layout picker */}
         <div>
-          <p className="text-white/60 text-xs uppercase tracking-wider mb-2 font-mono">Image Layout</p>
+          <p className="text-[color:rgba(246,212,203,0.6)] text-xs uppercase tracking-wider mb-2 font-mono">Image Layout</p>
           <div className="grid grid-cols-4 gap-2">
             {positions.map((pos) =>
               sizes.map((sz) => (
@@ -440,7 +440,7 @@ function CreatePostModal({ onClose }: { onClose: () => void }) {
         {/* Submit */}
         <button
           type="button"
-          className="w-full py-2.5 rounded-lg bg-white text-black font-semibold text-sm hover:bg-white/90 transition-colors"
+          className="w-full py-2.5 rounded-lg bg-[var(--color-foreground)] text-[var(--color-background)] font-semibold text-sm hover:bg-[color:rgba(246,212,203,0.9)] transition-colors"
         >
           Post
         </button>
@@ -1110,7 +1110,7 @@ export function DraggableGallery({
                   role="button"
                   tabIndex={0}
                   aria-label={`Open ${item.post.title || item.post.author.pseudonym}`}
-                  className="absolute cursor-pointer overflow-hidden rounded-[1.6rem] border border-white/18 bg-[#05070c] shadow-[0_26px_80px_rgba(0,0,0,0.42)] outline-none focus-visible:ring-2 focus-visible:ring-[#f1d3a1] focus-visible:ring-offset-2 focus-visible:ring-offset-[#02050c]"
+                  className="absolute cursor-pointer overflow-hidden rounded-[1.6rem] border border-[color:rgba(246,212,203,0.18)] bg-[#1e0227] shadow-[0_26px_80px_rgba(30,2,39,0.42)] outline-none focus-visible:ring-2 focus-visible:ring-[#f6d4cb] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1e0227]"
                   style={{
                     width: ITEM_SIZE,
                     height: ITEM_SIZE,
@@ -1135,7 +1135,7 @@ export function DraggableGallery({
                           setBrokenImages((prev) => (prev[item.post.id] ? prev : { ...prev, [item.post.id]: true }));
                         }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/5" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[color:rgba(30,2,39,0.85)] via-[color:rgba(30,2,39,0.25)] to-[color:rgba(30,2,39,0.05)]" />
                     </>
                   )}
 
@@ -1143,43 +1143,43 @@ export function DraggableGallery({
                     <div
                       className="absolute inset-0"
                       style={{
-                        background: `${tileGradient(item.post)}, radial-gradient(circle at top left, rgba(255,255,255,0.18), transparent 55%)`,
+                        background: `${tileGradient(item.post)}, radial-gradient(circle at top left, rgba(246,212,203,0.18), transparent 55%)`,
                       }}
                     />
                   )}
 
-                  <div className="absolute inset-0 border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.09),transparent_36%,rgba(0,0,0,0.34))]" />
+                  <div className="absolute inset-0 border border-[color:rgba(246,212,203,0.08)] bg-[linear-gradient(180deg,rgba(246,212,203,0.09),transparent_36%,rgba(30,2,39,0.34))]" />
                   <div className="absolute inset-x-0 top-0 p-4">
-                    <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-[0.2em] text-white/78">
-                      <span className="max-w-[66%] truncate rounded-lg border border-white/16 bg-black/36 px-2.5 py-1">{tileEyebrow(item.post)}</span>
-                      <span className="rounded-lg border border-white/14 bg-black/34 px-2 py-1">{timeAgo(item.post.createdAt)}</span>
+                    <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-[0.2em] text-[color:rgba(246,212,203,0.78)]">
+                      <span className="max-w-[66%] truncate rounded-lg border border-[color:rgba(246,212,203,0.16)] bg-[color:rgba(30,2,39,0.36)] px-2.5 py-1">{tileEyebrow(item.post)}</span>
+                      <span className="rounded-lg border border-[color:rgba(246,212,203,0.14)] bg-[color:rgba(30,2,39,0.34)] px-2 py-1">{timeAgo(item.post.createdAt)}</span>
                     </div>
                   </div>
                   <div className="absolute inset-x-0 bottom-0 p-4">
-                    <div className="rounded-[1.1rem] border border-white/14 bg-[linear-gradient(180deg,rgba(4,8,14,0.72),rgba(3,7,12,0.9))] p-4 shadow-[0_20px_42px_-28px_rgba(0,0,0,0.98)] backdrop-blur-md">
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-white/52 line-clamp-1">
+                    <div className="rounded-[1.1rem] border border-[color:rgba(246,212,203,0.14)] bg-[linear-gradient(180deg,rgba(30,2,39,0.72),rgba(30,2,39,0.9))] p-4 shadow-[0_20px_42px_-28px_rgba(30,2,39,0.98)] backdrop-blur-md">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.52)] line-clamp-1">
                         {tileSignalLine(item.post)}
                       </p>
-                      <p className="text-[1.02rem] font-semibold leading-[1.08] text-white line-clamp-2">
+                      <p className="text-[1.02rem] font-semibold leading-[1.08] text-[var(--color-foreground)] line-clamp-2">
                         {item.post.title || item.post.author.pseudonym}
                       </p>
-                      <p className="mt-1.5 text-[12px] leading-relaxed text-white/78 line-clamp-3">
+                      <p className="mt-1.5 text-[12px] leading-relaxed text-[color:rgba(246,212,203,0.78)] line-clamp-3">
                         {item.post.content}
                       </p>
                       <div className="mt-3 flex items-center justify-between gap-2">
-                        <span className="max-w-[52%] truncate rounded-lg border border-white/12 bg-white/7 px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-white/66">
+                        <span className="max-w-[52%] truncate rounded-lg border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.07)] px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-[color:rgba(246,212,203,0.66)]">
                           {tilePlace(item.post)}
                         </span>
-                        <div className="flex items-center gap-2 text-[10px] text-white/70">
-                          <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/22 px-1.5 py-1 font-mono-data">
+                        <div className="flex items-center gap-2 text-[10px] text-[color:rgba(246,212,203,0.7)]">
+                          <span className="inline-flex items-center gap-1 rounded-md border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.22)] px-1.5 py-1 font-mono-data">
                             <Heart className="h-3 w-3" />
                             {item.post.likes}
                           </span>
-                          <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/22 px-1.5 py-1 font-mono-data">
+                          <span className="inline-flex items-center gap-1 rounded-md border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.22)] px-1.5 py-1 font-mono-data">
                             <MessageCircle className="h-3 w-3" />
                             {item.post.comments}
                           </span>
-                          <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/22 px-1.5 py-1 font-mono-data">
+                          <span className="inline-flex items-center gap-1 rounded-md border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.22)] px-1.5 py-1 font-mono-data">
                             <Share2 className="h-3 w-3" />
                             {item.post.shares}
                           </span>
@@ -1200,7 +1200,7 @@ export function DraggableGallery({
           className="absolute inset-0"
           style={{
             mixBlendMode: 'overlay',
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 20%, transparent 40%)',
+            background: 'linear-gradient(to bottom, rgba(30,2,39,0.9) 0%, rgba(30,2,39,0.5) 20%, transparent 40%)',
           }}
         />
       </div>
@@ -1208,8 +1208,8 @@ export function DraggableGallery({
       {/* Sort bar */}
       {showSortBar ? (
         <div className="pointer-events-none fixed left-4 top-[4.85rem] z-10 md:left-[17rem]">
-          <div className="pointer-events-auto inline-flex items-center gap-1 rounded-xl border border-white/14 bg-[linear-gradient(140deg,rgba(6,12,22,0.78),rgba(6,14,25,0.74))] px-1.5 py-1.5 backdrop-blur-xl shadow-[0_20px_48px_-28px_rgba(0,0,0,0.95)]">
-            <span className="hidden rounded-md px-2 text-[10px] uppercase tracking-[0.18em] text-white/48 md:inline">Flow</span>
+          <div className="pointer-events-auto inline-flex items-center gap-1 rounded-xl border border-[color:rgba(246,212,203,0.14)] bg-[linear-gradient(140deg,rgba(30,2,39,0.78),rgba(30,2,39,0.74))] px-1.5 py-1.5 backdrop-blur-xl shadow-[0_20px_48px_-28px_rgba(30,2,39,0.95)]">
+            <span className="hidden rounded-md px-2 text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.48)] md:inline">Flow</span>
             {SORT_OPTIONS.map(({ mode, label }) => (
               <button
                 key={mode}
@@ -1217,8 +1217,8 @@ export function DraggableGallery({
                 onClick={() => onSortChange(mode)}
                 className={`inline-flex min-h-9 items-center rounded-lg px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors ${
                   sortMode === mode
-                    ? 'border border-white/20 bg-white/14 text-white'
-                    : 'text-white/58 hover:bg-white/10 hover:text-white'
+                    ? 'border border-[color:rgba(246,212,203,0.2)] bg-[color:rgba(246,212,203,0.14)] text-[var(--color-foreground)]'
+                    : 'text-[color:rgba(246,212,203,0.58)] hover:bg-[color:rgba(246,212,203,0.1)] hover:text-[var(--color-foreground)]'
                 }`}
               >
                 {label}
@@ -1233,8 +1233,8 @@ export function DraggableGallery({
         className="fixed bottom-4 left-1/2 z-10 -translate-x-1/2"
         style={{ opacity: ready ? 1 : 0, transition: 'opacity 0.45s ease' }}
       >
-        <div className="inline-flex items-center gap-1 rounded-xl border border-white/14 bg-[linear-gradient(138deg,rgba(6,11,20,0.86),rgba(9,16,28,0.84))] px-1.5 py-1.5 backdrop-blur-xl shadow-[0_20px_52px_-28px_rgba(0,0,0,0.95)]">
-          <span className="inline-flex min-h-10 items-center rounded-lg border border-white/14 bg-white/92 px-3 text-[12px] font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+        <div className="inline-flex items-center gap-1 rounded-xl border border-[color:rgba(246,212,203,0.14)] bg-[linear-gradient(138deg,rgba(30,2,39,0.86),rgba(30,2,39,0.84))] px-1.5 py-1.5 backdrop-blur-xl shadow-[0_20px_52px_-28px_rgba(30,2,39,0.95)]">
+          <span className="inline-flex min-h-10 items-center rounded-lg border border-[color:rgba(246,212,203,0.14)] bg-[color:rgba(246,212,203,0.92)] px-3 text-[12px] font-semibold text-[#1e0227] shadow-[inset_0_1px_0_rgba(246,212,203,0.8)]">
             {Math.round(currentZoom * 100)}%
           </span>
 
@@ -1245,8 +1245,8 @@ export function DraggableGallery({
               onClick={() => setZoom(action.level)}
               className={`inline-flex min-h-10 items-center rounded-lg px-3 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${
                 currentZoom === action.level
-                  ? 'border border-white/16 bg-white/14 text-white'
-                  : 'text-white/60 hover:bg-white/10 hover:text-white'
+                  ? 'border border-[color:rgba(246,212,203,0.16)] bg-[color:rgba(246,212,203,0.14)] text-[var(--color-foreground)]'
+                  : 'text-[color:rgba(246,212,203,0.6)] hover:bg-[color:rgba(246,212,203,0.1)] hover:text-[var(--color-foreground)]'
               }`}
             >
               <span className="hidden sm:inline">{action.label}</span>
@@ -1257,7 +1257,7 @@ export function DraggableGallery({
           <button
             type="button"
             onClick={autoFitZoom}
-            className="inline-flex min-h-10 items-center rounded-lg px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+            className="inline-flex min-h-10 items-center rounded-lg px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:rgba(246,212,203,0.6)] transition-colors hover:bg-[color:rgba(246,212,203,0.1)] hover:text-[var(--color-foreground)]"
           >
             Fit
           </button>
@@ -1269,7 +1269,7 @@ export function DraggableGallery({
         <button
           type="button"
           onClick={() => setShowCreate(true)}
-          className="fixed bottom-5 right-5 z-10 flex h-12 w-12 items-center justify-center rounded-2xl border border-black/10 bg-white text-black shadow-lg transition-transform hover:scale-110"
+          className="fixed bottom-5 right-5 z-10 flex h-12 w-12 items-center justify-center rounded-2xl border border-[color:rgba(30,2,39,0.1)] bg-[var(--color-foreground)] text-[var(--color-background)] shadow-lg transition-transform hover:scale-110"
           aria-label="Create post"
         >
           <Plus className="w-6 h-6" />
@@ -1284,21 +1284,21 @@ export function DraggableGallery({
         onClick={closeDetail}
         style={{
           zIndex: 50,
-          background: 'rgba(2, 6, 14, 0.92)',
+          background: 'rgba(30,2,39,0.92)',
           pointerEvents: selectedPost ? 'auto' : 'none',
           visibility: selectedPost ? 'visible' : 'hidden',
         }}
       >
         {/* Image panel */}
         <div
-          className="relative flex min-h-[42vh] items-center justify-center overflow-hidden bg-[rgba(4,10,20,0.88)] px-4 py-6 lg:min-h-0 lg:w-[58vw] lg:flex-none lg:px-8 lg:py-8"
+          className="relative flex min-h-[42vh] items-center justify-center overflow-hidden bg-[rgba(30,2,39,0.88)] px-4 py-6 lg:min-h-0 lg:w-[58vw] lg:flex-none lg:px-8 lg:py-8"
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.03),rgba(2,6,14,0.28)_35%,rgba(2,6,14,0.68)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(246,212,203,0.08),transparent_36%),linear-gradient(180deg,rgba(246,212,203,0.03),rgba(30,2,39,0.28)_35%,rgba(30,2,39,0.68)_100%)]" />
           {selectedPost && detailImageFailed && (
             <div
               className="absolute inset-0 opacity-45"
               style={{
-                background: `${tileGradient(selectedPost)}, radial-gradient(circle at top left, rgba(255,255,255,0.16), transparent 42%)`,
+                background: `${tileGradient(selectedPost)}, radial-gradient(circle at top left, rgba(246,212,203,0.16), transparent 42%)`,
               }}
             />
           )}
@@ -1307,65 +1307,65 @@ export function DraggableGallery({
             ref={zoomTargetRef}
             id="gallery-zoom-target"
             onClick={(event) => event.stopPropagation()}
-            className="relative z-[3] h-full max-h-[72vh] w-full max-w-[min(92vw,760px)] overflow-hidden rounded-[1.75rem] border border-white/12 shadow-[0_35px_120px_rgba(0,0,0,0.55)] lg:max-h-[84vh]"
+            className="relative z-[3] h-full max-h-[72vh] w-full max-w-[min(92vw,760px)] overflow-hidden rounded-[1.75rem] border border-[color:rgba(246,212,203,0.12)] shadow-[0_35px_120px_rgba(30,2,39,0.55)] lg:max-h-[84vh]"
           />
         </div>
 
         {/* Content panel */}
         <div
-          className="relative flex min-h-[58vh] flex-1 flex-col justify-center overflow-y-auto bg-[rgba(5,9,18,0.9)] px-4 py-5 lg:min-h-0 lg:w-[42vw] lg:flex-none lg:px-8 lg:py-8"
+          className="relative flex min-h-[58vh] flex-1 flex-col justify-center overflow-y-auto bg-[rgba(30,2,39,0.9)] px-4 py-5 lg:min-h-0 lg:w-[42vw] lg:flex-none lg:px-8 lg:py-8"
         >
           {selectedPost && (
             <div className="flex min-h-full items-center">
               <div
-                className="w-full max-w-xl rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 shadow-[0_28px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:p-8"
+                className="w-full max-w-xl rounded-[2rem] border border-[color:rgba(246,212,203,0.1)] bg-[var(--color-foreground)]/[0.045] p-6 shadow-[0_28px_100px_rgba(30,2,39,0.45)] backdrop-blur-2xl lg:p-8"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="space-y-6">
                   <div className="space-y-3">
-                    <p data-detail-text className="text-[10px] font-mono uppercase tracking-[0.28em] text-white/42">
+                    <p data-detail-text className="text-[10px] font-mono uppercase tracking-[0.28em] text-[color:rgba(246,212,203,0.42)]">
                       {tileEyebrow(selectedPost)}
                     </p>
-                    <h1 data-detail-text className="text-3xl font-semibold leading-[0.98] text-white lg:text-[2.7rem]">
+                    <h1 data-detail-text className="text-3xl font-semibold leading-[0.98] text-[var(--color-foreground)] lg:text-[2.7rem]">
                       {selectedPost.title || selectedPost.author.pseudonym}
                     </h1>
-                    <div data-detail-text className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.18em] text-white/48">
+                    <div data-detail-text className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.48)]">
                       <span>{selectedPost.id.replace('post-', '#')}</span>
-                      <span className="h-1 w-1 rounded-full bg-white/22" />
+                      <span className="h-1 w-1 rounded-full bg-[color:rgba(246,212,203,0.22)]" />
                       <span>{timeAgo(selectedPost.createdAt)}</span>
                       {selectedPost.microcosm && (
                         <>
-                          <span className="h-1 w-1 rounded-full bg-white/22" />
+                          <span className="h-1 w-1 rounded-full bg-[color:rgba(246,212,203,0.22)]" />
                           <span>{selectedPost.microcosm}</span>
                         </>
                       )}
                     </div>
                     <div data-detail-text className="flex items-center gap-3 pt-1">
                       <span
-                        className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-white"
+                        className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-[var(--color-foreground)]"
                         style={{ backgroundColor: avatarColor(selectedPost.author.pseudonym) }}
                       >
                         {selectedPost.author.pseudonym.charAt(0)}
                       </span>
                       <div>
-                        <p className="text-sm font-medium text-white">{selectedPost.author.pseudonym}</p>
-                        <p className="text-xs capitalize text-white/48">{selectedPost.author.role}</p>
+                        <p className="text-sm font-medium text-[var(--color-foreground)]">{selectedPost.author.pseudonym}</p>
+                        <p className="text-xs capitalize text-[color:rgba(246,212,203,0.48)]">{selectedPost.author.role}</p>
                       </div>
                     </div>
                   </div>
 
-                  <p data-detail-text className="text-base leading-relaxed text-white/78 whitespace-pre-wrap lg:text-[1.02rem]">
+                  <p data-detail-text className="text-base leading-relaxed text-[color:rgba(246,212,203,0.78)] whitespace-pre-wrap lg:text-[1.02rem]">
                     {selectedPost.content}
                   </p>
 
                   <div data-detail-text className="flex flex-wrap gap-2">
-                    <span className="rounded-lg border border-white/12 bg-white/[0.05] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/72">
+                    <span className="rounded-lg border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.05)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.72)]">
                       {selectedPost.sourceName ? 'Trusted signal' : 'Community trace'}
                     </span>
-                    <span className="rounded-lg border border-white/12 bg-white/[0.05] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/72">
+                    <span className="rounded-lg border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.05)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.72)]">
                       {selectedPost.microcosm || 'Shared commons'}
                     </span>
-                    <span className="rounded-lg border border-white/12 bg-white/[0.05] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-white/72">
+                    <span className="rounded-lg border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.05)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.72)]">
                       {selectedPost.sourceName || selectedPost.author.pseudonym}
                     </span>
                   </div>
@@ -1383,31 +1383,31 @@ export function DraggableGallery({
                     </div>
                   )}
 
-                  <div data-detail-text className="grid grid-cols-2 gap-3 text-white/70 sm:grid-cols-4">
-                    <div className="rounded-2xl border border-white/8 bg-black/18 px-4 py-3">
-                      <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-white/38">Likes</p>
-                      <div className="flex items-center gap-2 text-sm text-white">
-                        <Heart className={`h-4 w-4 ${selectedPost.liked ? 'fill-red-500 text-red-500' : ''}`} />
+                  <div data-detail-text className="grid grid-cols-2 gap-3 text-[color:rgba(246,212,203,0.7)] sm:grid-cols-4">
+                    <div className="rounded-2xl border border-[color:rgba(246,212,203,0.08)] bg-[color:rgba(30,2,39,0.18)] px-4 py-3">
+                      <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-[color:rgba(246,212,203,0.38)]">Likes</p>
+                      <div className="flex items-center gap-2 text-sm text-[var(--color-foreground)]">
+                        <Heart className={`h-4 w-4 ${selectedPost.liked ? 'fill-[#7c413c] text-[#7c413c]' : ''}`} />
                         {selectedPost.likes}
                       </div>
                     </div>
-                    <div className="rounded-2xl border border-white/8 bg-black/18 px-4 py-3">
-                      <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-white/38">Comments</p>
-                      <div className="flex items-center gap-2 text-sm text-white">
+                    <div className="rounded-2xl border border-[color:rgba(246,212,203,0.08)] bg-[color:rgba(30,2,39,0.18)] px-4 py-3">
+                      <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-[color:rgba(246,212,203,0.38)]">Comments</p>
+                      <div className="flex items-center gap-2 text-sm text-[var(--color-foreground)]">
                         <MessageCircle className="h-4 w-4" />
                         {selectedPost.comments}
                       </div>
                     </div>
-                    <div className="rounded-2xl border border-white/8 bg-black/18 px-4 py-3">
-                      <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-white/38">Shares</p>
-                      <div className="flex items-center gap-2 text-sm text-white">
+                    <div className="rounded-2xl border border-[color:rgba(246,212,203,0.08)] bg-[color:rgba(30,2,39,0.18)] px-4 py-3">
+                      <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-[color:rgba(246,212,203,0.38)]">Shares</p>
+                      <div className="flex items-center gap-2 text-sm text-[var(--color-foreground)]">
                         <Share2 className="h-4 w-4" />
                         {selectedPost.shares}
                       </div>
                     </div>
-                    <div className="rounded-2xl border border-white/8 bg-black/18 px-4 py-3">
-                      <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-white/38">Place</p>
-                      <div className="flex items-center gap-2 text-sm text-white">
+                    <div className="rounded-2xl border border-[color:rgba(246,212,203,0.08)] bg-[color:rgba(30,2,39,0.18)] px-4 py-3">
+                      <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-[color:rgba(246,212,203,0.38)]">Place</p>
+                      <div className="flex items-center gap-2 text-sm text-[var(--color-foreground)]">
                         <MapPin className="h-4 w-4" />
                         {selectedPost.microcosm || 'Community'}
                       </div>
@@ -1420,12 +1420,12 @@ export function DraggableGallery({
                         href={selectedPost.sourceUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex w-fit items-center rounded-xl border border-white/16 bg-white/6 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-white/86 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
+                        className="inline-flex w-fit items-center rounded-xl border border-[color:rgba(246,212,203,0.16)] bg-[color:rgba(246,212,203,0.06)] px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.86)] transition-colors hover:border-[color:rgba(246,212,203,0.3)] hover:bg-[color:rgba(246,212,203,0.1)] hover:text-[var(--color-foreground)]"
                       >
                         Read Original Story
                       </a>
                     )}
-                    <span className="text-xs uppercase tracking-[0.16em] text-white/38">
+                    <span className="text-xs uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.38)]">
                       Published {timeAgo(selectedPost.createdAt)}
                     </span>
                   </div>

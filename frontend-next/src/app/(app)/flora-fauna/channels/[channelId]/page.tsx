@@ -73,7 +73,7 @@ export default function FloraFaunaChannelPage() {
       className="min-h-screen"
       style={{
         background:
-          'linear-gradient(180deg, rgba(224,235,227,0.55) 0%, rgba(250,249,247,1) 38%), var(--color-background)',
+          'linear-gradient(180deg, rgba(246,212,203,0.55) 0%, rgba(246,212,203,1) 38%), var(--color-background)',
       }}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-28 pb-20 space-y-8">
@@ -90,12 +90,12 @@ export default function FloraFaunaChannelPage() {
               <p className="mt-4 text-lg text-[var(--color-earth-medium)] leading-relaxed">
                 {channel.description}
               </p>
-              <p className="mt-5 rounded-[1.5rem] border border-[var(--color-border)] bg-white/80 px-5 py-5 text-[var(--color-earth-dark)] leading-relaxed">
+              <p className="mt-5 rounded-[1.5rem] border border-[var(--color-border)] bg-[color:rgba(246,212,203,0.8)] px-5 py-5 text-[var(--color-earth-dark)] leading-relaxed">
                 {channel.manifesto}
               </p>
             </div>
 
-            <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-white/75 px-5 py-5 min-w-[260px]">
+            <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-[color:rgba(246,212,203,0.75)] px-5 py-5 min-w-[260px]">
               <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[var(--color-earth-medium)]">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Operating Rules
@@ -146,7 +146,7 @@ export default function FloraFaunaChannelPage() {
                 href={manaraPath(`/memes/${meme.id}`)}
                 className="card-civic"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.96), rgba(244,247,243,0.92))',
+                  background: 'linear-gradient(135deg, rgba(246,212,203,0.96), rgba(246,212,203,0.92))',
                 }}
               >
                 <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-earth-medium)] mb-2">

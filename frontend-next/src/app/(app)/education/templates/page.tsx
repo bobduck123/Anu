@@ -180,7 +180,7 @@ export default function EducationTemplatesPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setSelectedCourse(course)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--color-primary)] text-white text-sm hover:opacity-90 transition-opacity"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--color-primary)] text-[var(--color-foreground)] text-sm hover:opacity-90 transition-opacity"
                   >
                     <BookOpen className="w-3.5 h-3.5" />
                     Open

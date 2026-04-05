@@ -97,7 +97,7 @@ function MembershipNotice({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <AnuChip tone={tone}>{label}</AnuChip>
-          <p className="mt-3 text-sm leading-6 text-slate-300/84">{children}</p>
+          <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">{children}</p>
         </div>
       </div>
     </AnuSurfacePanel>
@@ -237,7 +237,7 @@ export default function MembershipsPage() {
                   Transparent contribution trail
                 </AnuChip>
               </div>
-              <p className="mt-4 text-sm leading-6 text-slate-300/84">
+              <p className="mt-4 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">
                 Memberships are public to evaluate, but checkout and account state stay guarded.
                 This route should explain the covenant clearly before anyone commits.
               </p>
@@ -378,18 +378,18 @@ export default function MembershipsPage() {
                     </div>
 
                     <h2
-                      className="mt-6 text-3xl text-white"
+                      className="mt-6 text-3xl text-[var(--color-foreground)]"
                       style={{ fontFamily: 'var(--anu-type-display)' }}
                     >
                       {plan.name}
                     </h2>
 
                     <div className="mt-4 flex items-baseline gap-2">
-                      <span className="text-4xl font-semibold text-white font-mono-data">${price}</span>
-                      <span className="text-sm text-slate-400">per month</span>
+                      <span className="text-4xl font-semibold text-[var(--color-foreground)] font-mono-data">${price}</span>
+                      <span className="text-sm text-[color:rgba(246,212,203,0.64)]">per month</span>
                     </div>
 
-                    <div className="mt-6 space-y-3 text-sm text-slate-200/84">
+                    <div className="mt-6 space-y-3 text-sm text-[color:rgba(246,212,203,0.84)]">
                       <div className="flex items-center gap-2">
                         <Check className="h-4 w-4 flex-shrink-0" style={{ color: meta.accent }} />
                         <span>{plan.credit_grant_monthly} impact credits each month</span>
@@ -447,14 +447,14 @@ export default function MembershipsPage() {
             </div>
           ) : (
             <AnuSurfacePanel tone="soft" className="mt-8 text-center">
-              <p className="text-sm text-slate-300/82">No plans are configured yet. Check back soon.</p>
+              <p className="text-sm text-[color:rgba(246,212,203,0.82)]">No plans are configured yet. Check back soon.</p>
             </AnuSurfacePanel>
           )}
         </section>
 
         <AnuSurfacePanel tone="quiet" className="mt-10 text-center">
-          <p className="text-sm text-slate-300/82">
-            <strong className="text-white">Secure checkout.</strong> Stripe collects payment details off-platform,
+          <p className="text-sm text-[color:rgba(246,212,203,0.82)]">
+            <strong className="text-[var(--color-foreground)]">Secure checkout.</strong> Stripe collects payment details off-platform,
             and ANU stores only the resulting subscription state needed to operate the commons.
           </p>
         </AnuSurfacePanel>

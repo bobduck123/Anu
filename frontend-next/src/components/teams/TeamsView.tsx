@@ -29,7 +29,7 @@ function isCollectiveStreakPayload(value: unknown): value is CollectiveStreakPay
 }
 
 const chamberInputClass =
-  'w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-400';
+  'w-full rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-3 py-2 text-sm text-[var(--color-foreground)] placeholder:text-[color:rgba(246,212,203,0.64)]';
 
 export default function TeamsView() {
   const searchParams = useSearchParams();
@@ -226,7 +226,7 @@ export default function TeamsView() {
                 <AnuChip tone="signal">Local crew</AnuChip>
                 <AnuChip tone="muted">{microcosms.length} microcosms available</AnuChip>
               </div>
-              <p className="mt-4 text-sm leading-6 text-slate-300/84">
+              <p className="mt-4 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">
                 Team panels should feel like semi-autonomous chambers tied to a specific local place.
               </p>
             </AnuSurfacePanel>
@@ -246,11 +246,11 @@ export default function TeamsView() {
                 title="Team chambers unavailable"
                 message={loadError}
                 onRetry={() => window.location.reload()}
-                className="rounded-[28px] border border-[rgba(216,169,95,0.22)] bg-[rgba(18,20,37,0.7)] px-6"
+                className="rounded-[28px] border border-[rgba(224,177,21,0.22)] bg-[rgba(30,2,39,0.7)] px-6"
               />
             ) : null}
             {actionNotice ? (
-              <div className="rounded-2xl border border-[rgba(216,169,95,0.22)] bg-[rgba(216,169,95,0.08)] px-4 py-3 text-sm text-[#f4dbc2]">
+              <div className="rounded-2xl border border-[rgba(224,177,21,0.22)] bg-[rgba(224,177,21,0.08)] px-4 py-3 text-sm text-[#f6d4cb]">
                 {actionNotice}
               </div>
             ) : null}
@@ -298,7 +298,7 @@ export default function TeamsView() {
 
             <AnuChamberCard eyebrow="Available chambers" title="Browse teams">
               {loading ? (
-                <p className="text-sm leading-6 text-slate-300/82">Loading teams...</p>
+                <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">Loading teams...</p>
               ) : teams.length ? (
                 <div className="space-y-3">
                   {teams.map((team) => (
@@ -306,19 +306,19 @@ export default function TeamsView() {
                       key={team.id}
                       className={`rounded-xl border p-4 ${
                         team.id === selectedTeamId
-                          ? 'border-[rgba(141,116,221,0.36)] bg-[rgba(141,116,221,0.1)]'
-                          : 'border-white/10 bg-white/[0.04]'
+                          ? 'border-[rgba(246,212,203,0.36)] bg-[rgba(246,212,203,0.1)]'
+                          : 'border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)]'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="font-semibold text-white">{team.name}</p>
+                          <p className="font-semibold text-[var(--color-foreground)]">{team.name}</p>
                           {team.microcosm_name ? (
-                            <p className="mt-1 text-xs text-slate-400">
+                            <p className="mt-1 text-xs text-[color:rgba(246,212,203,0.64)]">
                               Microcosm: {team.microcosm_name}
                             </p>
                           ) : null}
-                          <p className="mt-2 text-sm text-slate-300/82">
+                          <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.82)]">
                             {team.description || 'No description yet.'}
                           </p>
                         </div>
@@ -338,7 +338,7 @@ export default function TeamsView() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm leading-6 text-slate-300/82">No teams yet. Create the first one.</p>
+                <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">No teams yet. Create the first one.</p>
               )}
             </AnuChamberCard>
           </div>
@@ -346,7 +346,7 @@ export default function TeamsView() {
           <div className="space-y-6">
             {!selectedTeam ? (
               <AnuChamberCard eyebrow="Selection" title="Choose a team chamber">
-                <p className="text-sm leading-6 text-slate-300/82">Select a team to see momentum, actions, and members.</p>
+                <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">Select a team to see momentum, actions, and members.</p>
               </AnuChamberCard>
             ) : (
               <>
@@ -379,22 +379,22 @@ export default function TeamsView() {
                   action={<AnuChip tone={selectedTeam.is_member ? 'signal' : 'muted'}>{selectedTeam.is_member ? 'Member' : 'Observer'}</AnuChip>}
                 >
                   {detailError ? (
-                    <div className="mb-5 rounded-2xl border border-[rgba(216,169,95,0.22)] bg-[rgba(216,169,95,0.08)] px-4 py-3 text-sm text-[#f4dbc2]">
+                    <div className="mb-5 rounded-2xl border border-[rgba(224,177,21,0.22)] bg-[rgba(224,177,21,0.08)] px-4 py-3 text-sm text-[#f6d4cb]">
                       {detailError}
                     </div>
                   ) : null}
                   <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
                     <div className="space-y-3">
-                      <p className="text-sm uppercase tracking-[0.16em] text-slate-400">Challenges</p>
+                      <p className="text-sm uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">Challenges</p>
                       {challenges.length ? (
                         challenges.map((challenge) => {
                           const pct = Math.min(100, Math.round((challenge.progress / challenge.target) * 100));
                           return (
-                            <div key={challenge.id} className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                            <div key={challenge.id} className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] p-4">
                               <div className="flex items-start justify-between gap-3">
                                 <div>
-                                  <p className="font-semibold text-white">{challenge.title}</p>
-                                  <p className="mt-1 text-sm text-slate-300/82">
+                                  <p className="font-semibold text-[var(--color-foreground)]">{challenge.title}</p>
+                                  <p className="mt-1 text-sm text-[color:rgba(246,212,203,0.82)]">
                                     {challenge.description}
                                   </p>
                                 </div>
@@ -402,35 +402,35 @@ export default function TeamsView() {
                                   {challenge.status}
                                 </AnuChip>
                               </div>
-                              <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
+                              <div className="mt-3 flex items-center justify-between text-xs text-[color:rgba(246,212,203,0.64)]">
                                 <span>{challenge.progress}/{challenge.target}</span>
                                 <span>+{challenge.reward_points} pts</span>
                               </div>
-                              <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+                              <div className="mt-2 h-2 overflow-hidden rounded-full bg-[color:rgba(246,212,203,0.1)]">
                                 <div
                                   className="h-full rounded-full"
-                                  style={{ width: `${pct}%`, background: 'rgba(141,116,221,0.92)' }}
+                                  style={{ width: `${pct}%`, background: 'rgba(246,212,203,0.92)' }}
                                 />
                               </div>
                             </div>
                           );
                         })
                       ) : (
-                        <p className="text-sm leading-6 text-slate-300/82">No challenges yet.</p>
+                        <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">No challenges yet.</p>
                       )}
                     </div>
 
                     <div className="space-y-3">
-                      <p className="text-sm uppercase tracking-[0.16em] text-slate-400">Members</p>
+                      <p className="text-sm uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">Members</p>
                       {members.length ? (
                         members.map((member) => (
-                          <div key={member.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
-                            <span className="text-sm text-white">{member.pseudonym}</span>
-                            <span className="text-xs capitalize text-slate-400">{member.role}</span>
+                          <div key={member.id} className="flex items-center justify-between rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-4 py-3">
+                            <span className="text-sm text-[var(--color-foreground)]">{member.pseudonym}</span>
+                            <span className="text-xs capitalize text-[color:rgba(246,212,203,0.64)]">{member.role}</span>
                           </div>
                         ))
                       ) : (
-                        <p className="text-sm leading-6 text-slate-300/82">No members yet.</p>
+                        <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">No members yet.</p>
                       )}
                     </div>
                   </div>
@@ -440,17 +440,17 @@ export default function TeamsView() {
                   {actions.length ? (
                     <div className="space-y-3">
                       {actions.map((action) => (
-                        <div key={action.id} className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                        <div key={action.id} className="rounded-xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] p-4">
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <p className="font-semibold text-white">{action.title}</p>
-                              <p className="mt-1 text-sm text-slate-300/82">
+                              <p className="font-semibold text-[var(--color-foreground)]">{action.title}</p>
+                              <p className="mt-1 text-sm text-[color:rgba(246,212,203,0.82)]">
                                 {action.description || 'No description yet.'}
                               </p>
                             </div>
                             <AnuChip tone="muted">{action.points} pts</AnuChip>
                           </div>
-                          <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
+                          <div className="mt-3 flex items-center justify-between text-xs text-[color:rgba(246,212,203,0.64)]">
                             <span>{action.completed_count} completions</span>
                             <AnuControlButton onClick={() => void handleCompleteAction(action.id)} tone="default">
                               Mark complete
@@ -460,7 +460,7 @@ export default function TeamsView() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm leading-6 text-slate-300/82">No team actions yet.</p>
+                    <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">No team actions yet.</p>
                   )}
 
                   <div className="mt-5 grid gap-3 md:grid-cols-[1fr_1fr_auto]">

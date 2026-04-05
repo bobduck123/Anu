@@ -30,49 +30,49 @@ const statusConfig = {
   submitted: {
     label: 'Submitted',
     color: 'rgb(var(--color-accent))',
-    bgColor: 'rgba(217, 119, 6, 0.1)',
+    bgColor: 'rgba(224,177,21,0.1)',
     icon: Hourglass,
     pulse: true,
   },
   pending: {
     label: 'Pending',
     color: 'rgb(var(--color-accent))',
-    bgColor: 'rgba(217, 119, 6, 0.1)',
+    bgColor: 'rgba(224,177,21,0.1)',
     icon: Hourglass,
     pulse: true,
   },
   under_review: {
     label: 'Under Review',
     color: 'rgb(var(--color-institutional))',
-    bgColor: 'rgba(30, 58, 95, 0.1)',
+    bgColor: 'rgba(30,2,39,0.1)',
     icon: Users,
     pulse: false,
   },
   approved: {
     label: 'Approved',
     color: 'rgb(var(--color-sage))',
-    bgColor: 'rgba(135, 168, 120, 0.1)',
+    bgColor: 'rgba(124,65,60,0.1)',
     icon: CheckCircle,
     pulse: false,
   },
   approved_under_cap: {
     label: 'Approved',
     color: 'rgb(var(--color-sage))',
-    bgColor: 'rgba(135, 168, 120, 0.1)',
+    bgColor: 'rgba(124,65,60,0.1)',
     icon: CheckCircle,
     pulse: false,
   },
   disbursed: {
     label: 'Disbursed',
     color: 'rgb(var(--color-forest))',
-    bgColor: 'rgba(45, 90, 61, 0.1)',
+    bgColor: 'rgba(124,65,60,0.1)',
     icon: CheckCircle,
     pulse: false,
   },
   escalated: {
     label: 'Escalated',
-    color: '#dc2626',
-    bgColor: 'rgba(220, 38, 38, 0.1)',
+    color: '#7c413c',
+    bgColor: 'rgba(124,65,60,0.1)',
     icon: AlertCircle,
     pulse: true,
   },
@@ -81,7 +81,7 @@ const statusConfig = {
 const urgencyConfig = {
   low: { label: 'Low', color: 'rgb(var(--color-sage))' },
   medium: { label: 'Medium', color: 'rgb(var(--color-accent))' },
-  high: { label: 'High', color: '#dc2626' },
+  high: { label: 'High', color: '#7c413c' },
 };
 
 export function ReliefRequestCard({
@@ -101,7 +101,7 @@ export function ReliefRequestCard({
   const statusInfo = statusConfig[status] ?? {
     label: 'Unknown',
     color: 'rgb(var(--color-earth-dark))',
-    bgColor: 'rgba(31, 41, 55, 0.08)',
+    bgColor: 'rgba(30,2,39,0.08)',
     icon: AlertCircle,
     pulse: false,
   };
@@ -139,7 +139,7 @@ export function ReliefRequestCard({
       {/* Header with ID and Status */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <span className="font-mono-data text-xs text-earth-medium bg-gray-100 px-2 py-1 rounded">
+          <span className="font-mono-data text-xs text-earth-medium bg-[#f6d4cb] px-2 py-1 rounded">
             #{anonId}
           </span>
           <span 
@@ -199,7 +199,7 @@ export function ReliefRequestCard({
       ) : null}
 
       {/* Footer Info */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-sm">
+      <div className="flex items-center justify-between pt-4 border-t border-[#f6d4cb] text-sm">
         <div className="flex items-center gap-1 text-earth-medium">
           <Clock className="w-3.5 h-3.5" />
           <span>Submitted {submittedAt}</span>
@@ -297,7 +297,7 @@ export function ReliefSection() {
               </p>
             )}
             {error && (
-              <p className="text-xs text-amber-600 mt-2">
+              <p className="text-xs text-[#665700] mt-2">
                 Live relief status is unavailable right now.
               </p>
             )}
@@ -323,9 +323,9 @@ export function ReliefSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
               <div key={i} className="card-civic animate-pulse">
-                <div className="h-20 bg-gray-200 rounded mb-4" />
-                <div className="h-8 bg-gray-200 rounded mb-2 w-3/4" />
-                <div className="h-4 bg-gray-200 rounded w-1/2" />
+                <div className="h-20 bg-[#f6d4cb] rounded mb-4" />
+                <div className="h-8 bg-[#f6d4cb] rounded mb-2 w-3/4" />
+                <div className="h-4 bg-[#f6d4cb] rounded w-1/2" />
               </div>
             ))}
           </div>
@@ -360,7 +360,7 @@ export function ReliefSection() {
         )}
 
         {/* Privacy Notice */}
-        <div className="mt-8 p-4 bg-white/50 rounded-lg border border-gray-200">
+        <div className="mt-8 p-4 bg-[color:rgba(246,212,203,0.5)] rounded-lg border border-[#f6d4cb]">
           <p className="text-sm text-earth-medium text-center">
             <strong>Privacy protected:</strong> All requests are anonymized. 
             Personal information is encrypted and only visible to assigned case workers.

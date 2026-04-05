@@ -121,11 +121,11 @@ export function HeroSection() {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `linear-gradient(to bottom, rgba(20, 28, 36, 0.78), rgba(20, 28, 36, 0.54)), radial-gradient(circle at top, rgba(243, 199, 123, 0.28), transparent 22%), url('data:image/svg+xml,${encodeURIComponent(`
+            backgroundImage: `linear-gradient(to bottom, rgba(30,2,39,0.78), rgba(30,2,39,0.54)), radial-gradient(circle at top, rgba(246,212,203,0.28), transparent 22%), url('data:image/svg+xml,${encodeURIComponent(`
               <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                    <circle cx="1" cy="1" r="1" fill="rgba(243,199,123,0.28)"/>
+                    <circle cx="1" cy="1" r="1" fill="rgba(246,212,203,0.28)"/>
                   </pattern>
                 </defs>
                 <rect width="100" height="100" fill="url(#grid)"/>
@@ -141,15 +141,15 @@ export function HeroSection() {
       {/* Content */}
       <div className="hero-content relative z-10 max-w-6xl mx-auto px-4 md:px-8 text-center">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm mb-8">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[color:rgba(246,212,203,0.1)] backdrop-blur-sm mb-8">
           <span className="w-2 h-2 rounded-full bg-[var(--color-beacon)] animate-pulse" />
-          <span className="text-white/80 text-sm font-medium">Beaconing mutual aid with accountable local stewardship</span>
+          <span className="text-[color:rgba(246,212,203,0.8)] text-sm font-medium">Beaconing mutual aid with accountable local stewardship</span>
         </div>
 
         {/* Main Heading - Word by word reveal */}
         <h1 
           ref={headingRef}
-          className="text-4xl md:text-6xl lg:text-7xl font-semibold text-white mb-6 leading-tight"
+          className="text-4xl md:text-6xl lg:text-7xl font-semibold text-[var(--color-foreground)] mb-6 leading-tight"
           style={{ fontFamily: 'var(--font-source-serif), Georgia, serif' }}
         >
           {'Beacon-led infrastructure'.split(' ').map((word, i) => (
@@ -172,7 +172,7 @@ export function HeroSection() {
         {/* Subtext */}
         <p 
           ref={subtextRef}
-          className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto mb-10 leading-relaxed"
+          className="text-lg md:text-xl text-[color:rgba(246,212,203,0.7)] max-w-2xl mx-auto mb-10 leading-relaxed"
         >
           {brand.beaconLine}
         </p>
@@ -181,14 +181,14 @@ export function HeroSection() {
         <div ref={ctaRef} className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
           <Link
             href="/memberships"
-            className="btn-pill bg-[var(--color-sage)] text-white hover:bg-[var(--color-forest)] w-full sm:w-auto"
+            className="btn-pill bg-[var(--color-sage)] text-[var(--color-foreground)] hover:bg-[var(--color-forest)] w-full sm:w-auto"
           >
             <Heart className="w-4 h-4 mr-2" />
             Join Manara
           </Link>
           <Link
             href="/transparency"
-            className="btn-pill bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm w-full sm:w-auto"
+            className="btn-pill bg-[color:rgba(246,212,203,0.1)] text-[var(--color-foreground)] hover:bg-[color:rgba(246,212,203,0.2)] backdrop-blur-sm w-full sm:w-auto"
           >
             <Shield className="w-4 h-4 mr-2" />
             View Transparency
@@ -201,16 +201,16 @@ export function HeroSection() {
           className="grid grid-cols-3 gap-8 max-w-lg mx-auto"
         >
           <div className="text-center">
-            <div className="text-2xl md:text-3xl font-semibold text-white mb-1">Auditable</div>
-            <div className="text-white/50 text-sm">Append-only ledgers</div>
+            <div className="text-2xl md:text-3xl font-semibold text-[var(--color-foreground)] mb-1">Auditable</div>
+            <div className="text-[color:rgba(246,212,203,0.5)] text-sm">Append-only ledgers</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl md:text-3xl font-semibold text-white mb-1">Local</div>
-            <div className="text-white/50 text-sm">Node-led stewardship</div>
+            <div className="text-2xl md:text-3xl font-semibold text-[var(--color-foreground)] mb-1">Local</div>
+            <div className="text-[color:rgba(246,212,203,0.5)] text-sm">Node-led stewardship</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl md:text-3xl font-semibold text-white mb-1">Private</div>
-            <div className="text-white/50 text-sm">Consent-based access</div>
+            <div className="text-2xl md:text-3xl font-semibold text-[var(--color-foreground)] mb-1">Private</div>
+            <div className="text-[color:rgba(246,212,203,0.5)] text-sm">Consent-based access</div>
           </div>
         </div>
       </div>
@@ -218,7 +218,7 @@ export function HeroSection() {
       {/* Scroll Indicator */}
       <button
         onClick={scrollToContent}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50 hover:text-white transition-colors focus-ring rounded-full p-2"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[color:rgba(246,212,203,0.5)] hover:text-[var(--color-foreground)] transition-colors focus-ring rounded-full p-2"
         aria-label="Scroll to content"
       >
         <ArrowDown className="w-6 h-6 animate-bounce" />

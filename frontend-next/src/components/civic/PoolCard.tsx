@@ -48,7 +48,7 @@ export function PoolCard({
   return (
     <Link 
       href={`/pools/${id}`}
-      className={`group block bg-white rounded-lg border-l-4 ${styles.border} p-5 hover-lift`}
+      className={`group block bg-[var(--color-foreground)] rounded-lg border-l-4 ${styles.border} p-5 hover-lift`}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">

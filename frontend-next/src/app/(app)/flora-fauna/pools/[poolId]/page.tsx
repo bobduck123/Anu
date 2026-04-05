@@ -72,7 +72,7 @@ export default function FloraFaunaPoolPage() {
       className="min-h-screen"
       style={{
         background:
-          'radial-gradient(circle at top right, rgba(30,58,95,0.16), transparent 25%), linear-gradient(180deg, rgba(250,249,247,1) 0%, rgba(240,244,247,1) 100%)',
+          'radial-gradient(circle at top right, rgba(30,2,39,0.16), transparent 25%), linear-gradient(180deg, rgba(246,212,203,1) 0%, rgba(246,212,203,1) 100%)',
       }}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-28 pb-20 space-y-8">
@@ -92,7 +92,7 @@ export default function FloraFaunaPoolPage() {
                 </p>
               </div>
 
-              <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-white/75 px-5 py-5 min-w-[280px]">
+              <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-[color:rgba(246,212,203,0.75)] px-5 py-5 min-w-[280px]">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--color-earth-medium)]">
@@ -145,7 +145,7 @@ export default function FloraFaunaPoolPage() {
 
             <div className="space-y-3">
               {pool.ledgerAccounts.map((account) => (
-                <div key={account.id} className="rounded-[1.25rem] border border-[var(--color-border)] bg-white/80 px-4 py-4">
+                <div key={account.id} className="rounded-[1.25rem] border border-[var(--color-border)] bg-[color:rgba(246,212,203,0.8)] px-4 py-4">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-semibold text-[var(--color-earth-dark)]">{account.name}</p>

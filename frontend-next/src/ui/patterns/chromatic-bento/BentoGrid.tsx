@@ -183,7 +183,7 @@ export function BentoStat({
         <div>
           <span className="text-2xl font-bold">{value}</span>
           {change && (
-            <span className={`text-xs ml-2 ${changePositive ? 'text-green-500' : 'text-red-400'}`}>
+            <span className={`text-xs ml-2 ${changePositive ? 'text-[#665700]' : 'text-[#7c413c]'}`}>
               {change}
             </span>
           )}
@@ -260,7 +260,7 @@ export function BentoImage({
       <div className="relative w-full h-full">
         <Image src={src} alt={alt} fill unoptimized sizes="100vw" className="w-full h-full object-cover" />
         {overlay && (
-          <div className="absolute inset-0 bg-black/30 flex items-end p-4">
+          <div className="absolute inset-0 bg-[color:rgba(30,2,39,0.3)] flex items-end p-4">
             {overlay}
           </div>
         )}

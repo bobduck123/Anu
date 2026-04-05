@@ -11,7 +11,7 @@ import {
 } from "@/ui-system/anu/surfacePrimitives";
 
 const fieldClass =
-  "mt-1.5 w-full rounded-2xl border border-white/12 bg-white/[0.03] px-3.5 py-3 text-sm text-white placeholder:text-slate-400/75 focus:border-[rgba(123,161,255,0.44)] focus:outline-none focus:ring-1 focus:ring-[rgba(123,161,255,0.24)]";
+  "mt-1.5 w-full rounded-2xl border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.03)] px-3.5 py-3 text-sm text-[var(--color-foreground)] placeholder:text-[color:rgba(246,212,203,0.75)] focus:border-[rgba(246,212,203,0.44)] focus:outline-none focus:ring-1 focus:ring-[rgba(246,212,203,0.24)]";
 
 export default function ReliefIntakeForm() {
   const urgencyOptions = ["low", "medium", "high"] as const;
@@ -71,7 +71,7 @@ export default function ReliefIntakeForm() {
       <form onSubmit={submit} className="mt-6 space-y-5">
         <div className="grid gap-5 md:grid-cols-2">
           <label className="block">
-            <span className="text-sm text-slate-300/82">Amount requested (cents)</span>
+            <span className="text-sm text-[color:rgba(246,212,203,0.82)]">Amount requested (cents)</span>
             <input
               type="number"
               value={amount}
@@ -81,7 +81,7 @@ export default function ReliefIntakeForm() {
           </label>
 
           <label className="block">
-            <span className="text-sm text-slate-300/82">Purpose</span>
+            <span className="text-sm text-[color:rgba(246,212,203,0.82)]">Purpose</span>
             <select
               value={purpose}
               onChange={(e) => setPurpose(e.target.value)}
@@ -97,7 +97,7 @@ export default function ReliefIntakeForm() {
         </div>
 
         <label className="block">
-          <span className="text-sm text-slate-300/82">Urgency</span>
+          <span className="text-sm text-[color:rgba(246,212,203,0.82)]">Urgency</span>
           <select
             value={urgency}
             onChange={(e) => {
@@ -115,7 +115,7 @@ export default function ReliefIntakeForm() {
         </label>
 
         <label className="block">
-          <span className="text-sm text-slate-300/82">Description</span>
+          <span className="text-sm text-[color:rgba(246,212,203,0.82)]">Description</span>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -125,7 +125,7 @@ export default function ReliefIntakeForm() {
         </label>
 
         <div className="grid gap-3 md:grid-cols-2">
-          <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm text-slate-200/86">
+          <label className="flex items-start gap-3 rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-4 py-4 text-sm text-[color:rgba(246,212,203,0.86)]">
             <input
               type="checkbox"
               checked={consentData}
@@ -134,7 +134,7 @@ export default function ReliefIntakeForm() {
             />
             <span>I consent to data processing for relief review.</span>
           </label>
-          <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm text-slate-200/86">
+          <label className="flex items-start gap-3 rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-4 py-4 text-sm text-[color:rgba(246,212,203,0.86)]">
             <input
               type="checkbox"
               checked={consentContact}
@@ -149,13 +149,13 @@ export default function ReliefIntakeForm() {
           <AnuControlButton type="submit" tone="active" disabled={submitting}>
             {submitting ? "Submitting..." : "Submit request"}
           </AnuControlButton>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[color:rgba(246,212,203,0.64)]">
             Queue position and next-step visibility appear after submission.
           </p>
         </div>
 
-        {status ? <p className="text-sm text-emerald-300">{status}</p> : null}
-        {error ? <p className="text-sm text-amber-300">{error}</p> : null}
+        {status ? <p className="text-sm text-[#665700]">{status}</p> : null}
+        {error ? <p className="text-sm text-[#e0b115]">{error}</p> : null}
       </form>
     </AnuSurfacePanel>
   );

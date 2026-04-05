@@ -75,7 +75,7 @@ export default function JoinMicrocosmPage() {
               <AnuChip tone={step === 'browse' ? 'signal' : 'muted'}>1. Choose</AnuChip>
               <AnuChip tone={step === 'confirm' ? 'accent' : 'muted'}>2. Confirm</AnuChip>
             </div>
-            <p className="mt-4 text-sm leading-6 text-slate-300/84">
+            <p className="mt-4 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">
               Select the local chamber first, then confirm membership once the place feels right.
             </p>
           </AnuSurfacePanel>
@@ -83,7 +83,7 @@ export default function JoinMicrocosmPage() {
       />
 
       {errorMessage ? (
-        <div className="mt-6 rounded-2xl border border-[rgba(216,169,95,0.22)] bg-[rgba(216,169,95,0.08)] px-4 py-3 text-sm text-[#f4dbc2]">
+        <div className="mt-6 rounded-2xl border border-[rgba(224,177,21,0.22)] bg-[rgba(224,177,21,0.08)] px-4 py-3 text-sm text-[#f6d4cb]">
           {errorMessage}
         </div>
       ) : null}

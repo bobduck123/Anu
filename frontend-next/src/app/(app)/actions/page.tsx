@@ -283,11 +283,11 @@ export default function ActionsPage() {
         ))
       ) : (
         <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
-          <div className="max-w-xl rounded-[2rem] border border-white/10 bg-black/20 px-6 py-8 backdrop-blur-md">
-            <p className="text-lg text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+          <div className="max-w-xl rounded-[2rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.2)] px-6 py-8 backdrop-blur-md">
+            <p className="text-lg text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
               No grounded actions match this pass.
             </p>
-            <p className="mt-3 text-sm leading-6 text-slate-300/78">
+            <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.78)]">
               Adjust the route filters or search terms to surface a different camp or parcel on the field.
             </p>
           </div>
@@ -337,8 +337,8 @@ export default function ActionsPage() {
       }
       secondary={
         <AnuSurfacePanel tone="quiet" className="px-5 py-5">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Field notes</p>
-          <div className="mt-4 space-y-3 text-sm leading-6 text-slate-200/82">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">Field notes</p>
+          <div className="mt-4 space-y-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
             <p>Type: {selectedAction.actionType || 'Community action'}</p>
             <p>
               Milestones:{' '}
@@ -374,8 +374,8 @@ export default function ActionsPage() {
   const utilityView =
     viewMode === 'map' ? (
       <AnuSurfacePanel tone="soft" className="px-5 py-5">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Map backup</p>
-        <p className="mt-3 text-sm leading-6 text-slate-300/82">
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">Map backup</p>
+        <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
           Geographic backup remains available when the field view is not the best operational tool.
         </p>
         <div className="mt-5">
@@ -384,8 +384,8 @@ export default function ActionsPage() {
       </AnuSurfacePanel>
     ) : viewMode === 'calendar' ? (
       <AnuSurfacePanel tone="soft" className="px-5 py-5">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Calendar backup</p>
-        <p className="mt-3 text-sm leading-6 text-slate-300/82">
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">Calendar backup</p>
+        <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
           Time-based planning remains available when sequencing and availability matter more than terrain.
         </p>
         <div className="mt-5">
@@ -396,8 +396,8 @@ export default function ActionsPage() {
       <AnuSurfacePanel tone="soft" className="px-5 py-5">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">List backup</p>
-            <p className="mt-3 text-sm leading-6 text-slate-300/82">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">List backup</p>
+            <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">
               Utility list mode remains available for straightforward scanning and task completion.
             </p>
           </div>
@@ -414,14 +414,14 @@ export default function ActionsPage() {
                 <div className="flex flex-col gap-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-[10px] uppercase tracking-[0.16em] text-slate-400">{getActionKind(action)}</p>
-                      <h3 className="mt-2 text-2xl text-white" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-[color:rgba(246,212,203,0.64)]">{getActionKind(action)}</p>
+                      <h3 className="mt-2 text-2xl text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
                         {action.title}
                       </h3>
                     </div>
                     <AnuChip tone="accent">{getBadge(action)}</AnuChip>
                   </div>
-                  <p className="text-sm leading-6 text-slate-300/82">{action.details}</p>
+                  <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{action.details}</p>
                   <div className="flex flex-wrap gap-2">
                     <AnuChip tone="muted">{formatDateRange(action)}</AnuChip>
                     <AnuChip tone="muted">{action.pointsAssigned} pts</AnuChip>
@@ -442,7 +442,7 @@ export default function ActionsPage() {
               </AnuSurfacePanel>
             ))
           ) : (
-            <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] px-5 py-6 text-sm text-slate-300/78 xl:col-span-2">
+            <div className="rounded-[2rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-5 py-6 text-sm text-[color:rgba(246,212,203,0.78)] xl:col-span-2">
               No actions match the current filters.
             </div>
           )}
@@ -502,8 +502,8 @@ export default function ActionsPage() {
               {notice ? (
                 <AnuSurfacePanel tone="quiet" className="px-4 py-3">
                   <div className="flex items-start gap-3">
-                    <AlertCircle className="mt-0.5 h-4 w-4 text-[#f3c489]" />
-                    <p className="text-sm leading-6 text-slate-200/82">{notice}</p>
+                    <AlertCircle className="mt-0.5 h-4 w-4 text-[#f6d4cb]" />
+                    <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{notice}</p>
                   </div>
                 </AnuSurfacePanel>
               ) : null}

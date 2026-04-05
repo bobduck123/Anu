@@ -62,10 +62,10 @@ export default function PrivacySettingsPage() {
               <input type="checkbox" checked={!!consents[key]} onChange={() => toggle(key)} />
             </label>
           ))}
-          <button onClick={save} className="bg-emerald-600 text-white px-4 py-2 rounded-lg w-fit">
+          <button onClick={save} className="bg-[#665700] text-[var(--color-foreground)] px-4 py-2 rounded-lg w-fit">
             Save
           </button>
-          {status && <p className="text-sm text-emerald-700">{status}</p>}
+          {status && <p className="text-sm text-[#665700]">{status}</p>}
         </div>
       </div>
     </div>
