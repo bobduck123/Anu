@@ -473,3 +473,34 @@ Validation:
 - Explicit assertions executed for degraded/fallback messaging and CTA visibility.
 - `npm run -s lint` passed on touched files.
 - `npm run -s typecheck` passed.
+
+## 21) Phase 5 — Batch 7 (Federation + institutional hardcopy fallback synchronization)
+
+Date: 2026-04-06
+Lens: Keep institutional operating routes writable/readable during outages while maintaining periodically refreshed hardcopy continuity.
+
+Updated files:
+- `frontend-next/src/app/(app)/governance/federation/page.tsx`
+- `frontend-next/src/app/(app)/governance/institutional/page.tsx`
+
+Changes delivered:
+- **Federation route:** replaced compute-only brittle posture with resilient hardcopy-backed snapshot flow.
+  - Added live snapshot sync + hardcopy snapshot fallback cache.
+  - Added automatic periodic re-sync (120s) so fallback snapshot can catch up to latest agreed federation state when services recover.
+  - Added fallback-aware mutual-aid submission queue (local pending replay surface) so operators can continue drafting coordination actions.
+  - Added source provenance and sync timestamp (`Live snapshot` / `Hardcopy snapshot` / `Baseline snapshot`).
+- **Institutional route:** replaced failure-only config management with hardcopy-backed continuity controls.
+  - Added live config sync + hardcopy config fallback cache.
+  - Added automatic periodic re-sync (120s) to keep fallback config aligned with latest institutional governance settings.
+  - Added fallback save behavior that persists config to hardcopy when live save fails.
+  - Added fallback observer queue so observer submissions remain visible and recoverable during outage.
+  - Added source provenance and sync timestamp (`Live config` / `Hardcopy config` / `Baseline config`).
+- **Continuity UX:** both routes include explicit degraded-state guidance + trust-route CTAs (`Open governance index`, `Open transparency`, `Open docs`).
+
+Validation:
+- Browser verification on:
+  - `/governance/federation`
+  - `/governance/institutional`
+- Explicit assertions executed for degraded/hardcopy continuity messaging and CTA visibility.
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.
