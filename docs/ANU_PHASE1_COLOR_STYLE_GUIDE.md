@@ -567,3 +567,38 @@ Validation:
 - Explicit assertions executed for updated copy and hover-bubble trigger visibility.
 - `npm run -s lint` passed on touched files.
 - `npm run -s typecheck` passed.
+
+## 24) Phase 6 — Batch 3 (Organizer on-ramp route + copy-clarity navigation pass)
+
+Date: 2026-04-06
+Lens: Add a clear user route into organizer work, reduce route-finding friction, and keep organizer entry copy concise.
+
+Updated files:
+- `frontend-next/src/app/(app)/organizer/on-ramp/page.tsx` (new)
+- `frontend-next/src/ui-system/layout/Header.tsx`
+- `frontend-next/src/ui-system/layout/Sidebar.tsx`
+- `frontend-next/src/ui-system/layout/pathwayGuidance.ts`
+- `frontend-next/src/app/(app)/actions/page.tsx`
+- `frontend-next/src/app/(app)/events/page.tsx`
+- `frontend-next/src/app/(app)/calendar/page.tsx`
+
+Changes delivered:
+- Added dedicated **user-facing organizer on-ramp route** at `/organizer/on-ramp`.
+  - Provides one clear entry point for guests, applicants, and active organizers.
+  - Uses concise copy and hover-bubble micro-help to avoid dense explanatory blocks.
+  - Preserves resilience language when organizer status services are unavailable:
+    - `Live organizer status is unavailable in this environment.`
+    - `Working now: organizer on-ramp remains available while status services recover.`
+- Added organizer-path discoverability in shared navigation surfaces:
+  - Header profile menu now includes **Organizer path**.
+  - Sidebar fieldwork section now links to `/organizer/on-ramp`.
+  - Pathway guidance now points to organizer path (instead of direct cockpit jump) in task/steward flows.
+- Updated organizer-entry CTAs in daily workflow routes:
+  - Actions/events/calendar organizer CTAs now route to `/organizer/on-ramp` for consistent user entry behavior.
+
+Validation:
+- Browser verification on:
+  - `/organizer/on-ramp`
+- Explicit assertions executed for route URL, heading, hover-bubble trigger, and sign-in continuation copy.
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.

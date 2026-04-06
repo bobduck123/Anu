@@ -209,7 +209,7 @@ export default function CalendarPage() {
                   tone: 'signal',
                 },
                 {
-                  href: '/organizer',
+                  href: '/organizer/on-ramp',
                   label: 'Organizer',
                   detail: 'Use organizer routes for operational follow-through, runs, and applied stewardship.',
                   icon: Clock,

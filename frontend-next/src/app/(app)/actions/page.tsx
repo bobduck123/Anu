@@ -561,7 +561,7 @@ export default function ActionsPage() {
                       Create action
                     </AnuControlButton>
                   ) : isAuthenticated ? (
-                    <AnuControlLink href="/organizer" tone="default" iconLeft={TentTree}>
+                    <AnuControlLink href="/organizer/on-ramp" tone="default" iconLeft={TentTree}>
                       Apply organizer path
                     </AnuControlLink>
                   ) : (

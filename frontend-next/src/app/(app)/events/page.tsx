@@ -676,7 +676,7 @@ export default function EventsPage() {
                   </AnuFilterGroup>
                 ) : isAuthenticated ? (
                   <AnuFilterGroup className="justify-end">
-                    <AnuControlLink href="/organizer" tone="default" iconLeft={TentTree}>
+                    <AnuControlLink href="/organizer/on-ramp" tone="default" iconLeft={TentTree}>
                       Apply organizer path
                     </AnuControlLink>
                   </AnuFilterGroup>

@@ -9,8 +9,6 @@ import {
   ChevronDown,
   LogOut,
   Menu,
-  ShieldCheck,
-  Sparkles,
   User,
 } from 'lucide-react';
 import ManaraMark from '@/components/branding/ManaraMark';
@@ -52,6 +50,7 @@ export function Header({
 
   const profileLinks = [
     { href: '/profile', label: 'Profile' },
+    { href: '/organizer/on-ramp', label: 'Organizer path' },
     { href: '/pledges', label: 'My Pledges' },
     { href: '/dashboard/savings', label: 'Savings' },
     { href: '/wallet/ledger', label: 'Wallet' },

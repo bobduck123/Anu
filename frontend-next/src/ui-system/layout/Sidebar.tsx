@@ -69,7 +69,7 @@ const navSections: NavSection[] = [
       { href: '/runs', label: 'Runs', icon: BarChart3 },
       { href: '/pledges', label: 'Pledges', icon: Heart, authRequired: true },
       { href: '/dashboard/savings', label: 'Savings', icon: BarChart3, authRequired: true },
-      { href: '/organizer', label: 'Organizer', icon: Shield, authRequired: true },
+      { href: '/organizer/on-ramp', label: 'Organizer Path', icon: Shield, authRequired: true },
     ],
   },
   {
