@@ -390,3 +390,30 @@ Validation:
 - Explicit assertions executed for fallback/degraded continuity copy and CTA visibility.
 - `npm run -s lint` passed on touched files.
 - `npm run -s typecheck` passed.
+
+## 18) Phase 5 — Batch 4 (Relief + governance collisions fallback continuity)
+
+Date: 2026-04-06
+Lens: Keep care-lane stewardship and conflict-review routes operational during service degradation.
+
+Updated files:
+- `frontend-next/src/app/(app)/relief/page.tsx`
+- `frontend-next/src/app/(app)/governance/collisions/page.tsx`
+
+Changes delivered:
+- **Governance collisions route:** replaced hard failure posture with usable fallback moderation flow.
+  - Added fallback collision checks + fallback manual reviews when live feeds are unavailable.
+  - Added degraded continuity banner and trust-route CTAs (`Open governance index`, `Open transparency`, `Open docs`).
+  - Preserved manual approve/reject interaction in fallback mode with local status updates.
+- **Relief route:** strengthened signed-in care continuity when request history feed fails.
+  - Added fallback request records for private queue visibility continuity.
+  - Added explicit “working now” notice with actionable links (`Open transparency`, `Open impact bridge`, `Open docs`).
+  - Adjusted route-state instrumentation to reflect fallback request lane posture while preserving private intake flow.
+
+Validation:
+- Browser verification on:
+  - `/governance/collisions`
+  - `/relief`
+- Explicit assertions executed for degraded/fallback continuity messaging and CTA visibility.
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.

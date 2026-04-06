@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import dynamicImport from 'next/dynamic';
 import Link from 'next/link';
-import { HeartHandshake, ShieldCheck, Sparkles, TentTree, Users, Wallet, Waypoints } from 'lucide-react';
+import { AlertCircle, HeartHandshake, ShieldCheck, TentTree, Users, Wallet, Waypoints } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import ReliefIntakeForm from '@/components/relief/ReliefIntakeForm';
 import { reliefApi, type ReliefRequestRecord } from '@/lib/api/endpoints';
@@ -66,6 +66,31 @@ const careStations = [
   },
 ] as const;
 
+const FALLBACK_RELIEF_REQUESTS: ReliefRequestRecord[] = [
+  {
+    id: 8801,
+    amount_requested_cents: 45000,
+    purpose: 'Emergency housing bridge',
+    urgency: 'high',
+    status: 'pending',
+    description: 'Temporary fallback sample while live case records sync.',
+    queue_position_estimate: 4,
+    city: 'Regional node',
+    country: 'AU',
+  },
+  {
+    id: 8802,
+    amount_requested_cents: 18000,
+    purpose: 'Medical transport support',
+    urgency: 'medium',
+    status: 'under_review',
+    description: 'Consent review lane remains active in fallback mode.',
+    queue_position_estimate: 7,
+    city: 'Regional node',
+    country: 'AU',
+  },
+];
+
 function moneyLabel(amountCents: number) {
   return `$${(amountCents / 100).toFixed(2)}`;
 }
@@ -74,6 +99,8 @@ export default function ReliefPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [requests, setRequests] = useState<ReliefRequestRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [degradedMode, setDegradedMode] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string>('intake');
 
   useEffect(() => {
@@ -81,20 +108,50 @@ export default function ReliefPage() {
       return;
     }
 
-    reliefApi
-      .myRequests()
-      .then(setRequests)
-      .catch((err) => setError(err.message || 'Failed to load requests'));
+    let active = true;
+
+    const loadRequests = async () => {
+      setError(null);
+      setNotice(null);
+      setDegradedMode(false);
+
+      try {
+        const rows = await reliefApi.myRequests();
+        if (!active) return;
+
+        setRequests(rows || []);
+      } catch (err) {
+        if (!active) return;
+
+        setError(err instanceof Error ? err.message : 'Relief request history is temporarily unavailable.');
+        setNotice(
+          'Working now: private intake and route guidance remain available while request history recovers.',
+        );
+        setDegradedMode(true);
+        setRequests(FALLBACK_RELIEF_REQUESTS);
+      }
+    };
+
+    void loadRequests();
+
+    return () => {
+      active = false;
+    };
   }, [authLoading, isAuthenticated]);
 
+  const effectiveRequests = useMemo(
+    () => (isAuthenticated ? requests : []),
+    [isAuthenticated, requests],
+  );
+
   const openRequests = useMemo(
-    () => requests.filter((request) => !['approved', 'rejected', 'disbursed'].includes(request.status)).length,
-    [requests],
+    () => effectiveRequests.filter((request) => !['approved', 'rejected', 'disbursed'].includes(request.status)).length,
+    [effectiveRequests],
   );
 
   const requestMarkers = useMemo(
     () =>
-      requests.slice(0, RELIEF_FIELD_POSITIONS.length).map((request, index) => ({
+      effectiveRequests.slice(0, RELIEF_FIELD_POSITIONS.length).map((request, index) => ({
         id: `request-${request.id ?? index}`,
         title: `Request #${request.id ?? index + 1}`,
         summary: `Purpose: ${request.purpose}`,
@@ -108,30 +165,19 @@ export default function ReliefPage() {
         style: RELIEF_FIELD_POSITIONS[index],
         request,
       })),
-    [requests],
+    [effectiveRequests],
   );
 
   const terrainMarkers = useMemo(
     () =>
-      requests
+      effectiveRequests
         .filter((request) => typeof request.lat === 'number' && typeof request.lng === 'number')
         .map((request) => ({ lat: request.lat as number, lng: request.lng as number })),
-    [requests],
+    [effectiveRequests],
   );
 
-  useEffect(() => {
-    if (!isAuthenticated || requestMarkers.length === 0) {
-      setSelectedKey((current) => current || 'intake');
-      return;
-    }
-
-    const visible = requestMarkers.some((marker) => marker.id === selectedKey);
-    if (!visible) {
-      setSelectedKey(requestMarkers[0]?.id ?? 'intake');
-    }
-  }, [isAuthenticated, requestMarkers, selectedKey]);
-
-  const selectedRequestMarker = requestMarkers.find((marker) => marker.id === selectedKey) ?? null;
+  const selectedRequestMarker =
+    requestMarkers.find((marker) => marker.id === selectedKey) ?? requestMarkers[0] ?? null;
   const selectedStation = careStations.find((station) => station.id === selectedKey) ?? careStations[0];
 
   const field = (
@@ -146,7 +192,7 @@ export default function ReliefPage() {
             summary={marker.summary}
             meta={marker.meta}
             badges={marker.badges}
-            active={selectedKey === marker.id}
+            active={selectedRequestMarker?.id === marker.id}
             style={marker.style}
             onSelect={() => setSelectedKey(marker.id)}
           />
@@ -160,7 +206,7 @@ export default function ReliefPage() {
             summary={station.summary}
             meta={station.meta}
             badges={station.badges}
-            active={selectedKey === station.id}
+            active={selectedStation.id === station.id}
             style={RELIEF_FIELD_POSITIONS[index]}
             onSelect={() => setSelectedKey(station.id)}
           />
@@ -269,11 +315,38 @@ export default function ReliefPage() {
 
   const utility = (
     <>
+      {isAuthenticated && (error || notice) ? (
+        <AnuSurfacePanel tone="quiet" className="p-5">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-4 w-4 text-[var(--color-foreground)]" />
+            <div className="min-w-0">
+              {error ? <p className="text-sm text-[var(--color-foreground)]">{error}</p> : null}
+              {notice ? <p className="mt-1 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{notice}</p> : null}
+              <div className="mt-3 flex flex-wrap gap-2">
+                <AnuActionLink href="/transparency" tone="ghost">
+                  Open transparency
+                </AnuActionLink>
+                <AnuActionLink href="/impact" tone="secondary">
+                  Open impact bridge
+                </AnuActionLink>
+                <AnuActionLink href="/docs" tone="ghost">
+                  Open docs
+                </AnuActionLink>
+              </div>
+            </div>
+          </div>
+        </AnuSurfacePanel>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-3">
         <AnuInstrumentationCard
           label="Requests visible"
-          value={isAuthenticated ? String(requests.length) : '--'}
-          detail="Signed-in members can track their requests privately."
+          value={isAuthenticated ? String(effectiveRequests.length) : '--'}
+          detail={
+            isAuthenticated && degradedMode
+              ? 'Fallback request records are shown while live case history sync recovers.'
+              : 'Signed-in members can track their requests privately.'
+          }
           icon={HeartHandshake}
           tone="signal"
         />
@@ -336,14 +409,16 @@ export default function ReliefPage() {
             </div>
           </div>
 
-          {error ? (
-            <AnuSurfacePanel tone="quiet" className="mt-5 p-5 text-[#e0b115]">
-              <p className="text-sm">{error}</p>
+          {degradedMode ? (
+            <AnuSurfacePanel tone="quiet" className="mt-5 p-5 text-[color:rgba(246,212,203,0.84)]">
+              <p className="text-sm">
+                Running in fallback mode: shown request entries are continuity placeholders until live request history is restored.
+              </p>
             </AnuSurfacePanel>
           ) : null}
 
           <div className="mt-5 space-y-3">
-            {requests.map((req) => (
+            {effectiveRequests.map((req) => (
               <AnuSurfacePanel key={req.id} tone="soft" className="p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
@@ -366,7 +441,7 @@ export default function ReliefPage() {
                 </div>
               </AnuSurfacePanel>
             ))}
-            {!requests.length ? (
+            {!effectiveRequests.length ? (
               <AnuSurfacePanel tone="quiet" className="p-5">
                 <p className="text-sm text-[color:rgba(246,212,203,0.82)]">No requests yet.</p>
               </AnuSurfacePanel>
@@ -420,7 +495,13 @@ export default function ReliefPage() {
               <div className="anu-earth-hud-line">
                 <span className="anu-earth-hud-key">Route state</span>
                 <span className="anu-earth-hud-rule" />
-                <span className="anu-earth-hud-value">{isAuthenticated ? `${requests.length} visible requests` : 'sign-in gated'}</span>
+                <span className="anu-earth-hud-value">
+                  {isAuthenticated
+                    ? degradedMode
+                      ? 'fallback request lane active'
+                      : `${effectiveRequests.length} visible requests`
+                    : 'sign-in gated'}
+                </span>
               </div>
             </div>
           }
