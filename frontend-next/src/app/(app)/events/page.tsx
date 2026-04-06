@@ -18,10 +18,13 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { api, Event, Venue } from '@/lib/api';
+import { buildAuthHref } from '@/lib/auth/returnTo';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   AnuActionLink,
   AnuChip,
   AnuControlButton,
+  AnuControlLink,
   AnuFilterBar,
   AnuFilterGroup,
   AnuFilterInput,
@@ -96,6 +99,9 @@ export default function EventsPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
+
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const authHref = useMemo(() => buildAuthHref('/events'), []);
 
   useEffect(() => {
     try {
@@ -216,6 +222,7 @@ export default function EventsPage() {
     () => events.reduce((sum, event) => sum + (event.attendees || 0), 0),
     [events],
   );
+  const isLiveEventSyncUnavailable = Boolean(notice) && events.length === 0 && venues.length === 0;
 
   const eventMarkers = useMemo(
     () =>
@@ -288,8 +295,17 @@ export default function EventsPage() {
                 No gatherings match the current route pass.
               </p>
               <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.78)]">
-                Adjust the city or date filters to surface a different gathering on the field.
+                {isLiveEventSyncUnavailable
+                  ? 'Live gatherings are unavailable. Continue through actions, relief, or impact while event sync recovers.'
+                  : 'Adjust the city or date filters to surface a different gathering on the field.'}
               </p>
+              {isLiveEventSyncUnavailable ? (
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  <AnuControlLink href="/actions" tone="default">Open actions</AnuControlLink>
+                  <AnuControlLink href="/relief" tone="default">Open relief</AnuControlLink>
+                  <AnuControlLink href="/impact" tone="default">Open impact</AnuControlLink>
+                </div>
+              ) : null}
             </div>
           </div>
         )
@@ -317,7 +333,9 @@ export default function EventsPage() {
               No markets are indexed yet.
             </p>
             <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.78)]">
-              Venue creation remains available as an operational backup.
+              {isLiveEventSyncUnavailable
+                ? 'Live venue indexing is unavailable. Continue through actions, relief, or impact while service recovers.'
+                : 'Venue creation remains available as an operational backup.'}
             </p>
           </div>
         </div>
@@ -488,7 +506,14 @@ export default function EventsPage() {
               ))
             ) : (
               <div className="rounded-[2rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-5 py-6 text-sm text-[color:rgba(246,212,203,0.78)] xl:col-span-2">
-                No events match the current filters.
+                <p>{isLiveEventSyncUnavailable ? 'No live gatherings are available right now.' : 'No events match the current filters.'}</p>
+                {isLiveEventSyncUnavailable ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <AnuControlLink href="/actions" tone="default">Open actions</AnuControlLink>
+                    <AnuControlLink href="/relief" tone="default">Open relief</AnuControlLink>
+                    <AnuControlLink href="/impact" tone="default">Open impact</AnuControlLink>
+                  </div>
+                ) : null}
               </div>
             )}
           </div>
@@ -520,7 +545,7 @@ export default function EventsPage() {
               ))
             ) : (
               <div className="rounded-[2rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-5 py-6 text-sm text-[color:rgba(246,212,203,0.78)] xl:col-span-2">
-                No venues are indexed yet.
+                {isLiveEventSyncUnavailable ? 'No live venues are available right now.' : 'No venues are indexed yet.'}
               </div>
             )}
           </div>
@@ -581,7 +606,17 @@ export default function EventsPage() {
                 <AnuSurfacePanel tone="quiet" className="px-4 py-3">
                   <div className="flex items-start gap-3">
                     <AlertCircle className="mt-0.5 h-4 w-4 text-[#f6d4cb]" />
-                    <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{notice}</p>
+                    <div className="min-w-0">
+                      <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{notice}</p>
+                      <p className="mt-1 text-xs text-[color:rgba(246,212,203,0.74)]">
+                        Working now: actions, relief, and impact routes remain available while event sync recovers.
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <AnuControlLink href="/actions" tone="default">Open actions</AnuControlLink>
+                        <AnuControlLink href="/relief" tone="default">Open relief</AnuControlLink>
+                        <AnuControlLink href="/impact" tone="default">Open impact</AnuControlLink>
+                      </div>
+                    </div>
                   </div>
                 </AnuSurfacePanel>
               ) : null}
@@ -626,7 +661,11 @@ export default function EventsPage() {
                   </AnuControlButton>
                 </AnuFilterGroup>
 
-                {isOrganizer ? (
+                {authLoading ? (
+                  <AnuFilterGroup className="justify-end">
+                    <AnuChip tone="muted">Checking session</AnuChip>
+                  </AnuFilterGroup>
+                ) : isOrganizer ? (
                   <AnuFilterGroup className="justify-end">
                     <AnuControlButton tone="active" iconLeft={Plus} onClick={() => setShowCreateEvent(true)}>
                       Create event
@@ -635,7 +674,19 @@ export default function EventsPage() {
                       Create venue
                     </AnuControlButton>
                   </AnuFilterGroup>
-                ) : null}
+                ) : isAuthenticated ? (
+                  <AnuFilterGroup className="justify-end">
+                    <AnuControlLink href="/organizer" tone="default" iconLeft={TentTree}>
+                      Apply organizer path
+                    </AnuControlLink>
+                  </AnuFilterGroup>
+                ) : (
+                  <AnuFilterGroup className="justify-end">
+                    <AnuControlLink href={authHref} tone="default" iconLeft={Plus}>
+                      Sign in to coordinate
+                    </AnuControlLink>
+                  </AnuFilterGroup>
+                )}
               </AnuFilterBar>
             </div>
           }

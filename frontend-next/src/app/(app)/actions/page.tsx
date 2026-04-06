@@ -20,10 +20,13 @@ import {
 } from 'lucide-react';
 import { api, Action } from '@/lib/api';
 import { getCoreApiBase } from '@/lib/runtime';
+import { buildAuthHref } from '@/lib/auth/returnTo';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   AnuActionLink,
   AnuChip,
   AnuControlButton,
+  AnuControlLink,
   AnuFilterBar,
   AnuFilterGroup,
   AnuFilterInput,
@@ -98,6 +101,9 @@ export default function ActionsPage() {
   const [isOrganizer, setIsOrganizer] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
+
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const authHref = useMemo(() => buildAuthHref('/actions'), []);
 
   const loadActions = useCallback(async () => {
     setLoading(true);
@@ -223,6 +229,10 @@ export default function ActionsPage() {
     () => filteredActions.reduce((sum, action) => sum + (action.completions || 0), 0),
     [filteredActions],
   );
+  const isLiveFeedUnavailable = Boolean(notice) && actions.length === 0;
+  const noActionFieldMessage = isLiveFeedUnavailable
+    ? 'Live action publication is unavailable. Continue through gatherings, relief, or impact while field sync recovers.'
+    : 'Adjust the route filters or search terms to surface a different camp or parcel on the field.';
 
   const mapMarkers = useMemo(
     () =>
@@ -288,8 +298,15 @@ export default function ActionsPage() {
               No grounded actions match this pass.
             </p>
             <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.78)]">
-              Adjust the route filters or search terms to surface a different camp or parcel on the field.
+              {noActionFieldMessage}
             </p>
+            {isLiveFeedUnavailable ? (
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <AnuControlLink href="/events" tone="default">Open gatherings</AnuControlLink>
+                <AnuControlLink href="/relief" tone="default">Open relief</AnuControlLink>
+                <AnuControlLink href="/impact" tone="default">Open impact</AnuControlLink>
+              </div>
+            ) : null}
           </div>
         </div>
       )}
@@ -443,7 +460,14 @@ export default function ActionsPage() {
             ))
           ) : (
             <div className="rounded-[2rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.03)] px-5 py-6 text-sm text-[color:rgba(246,212,203,0.78)] xl:col-span-2">
-              No actions match the current filters.
+              <p>{isLiveFeedUnavailable ? 'No live actions are available right now.' : 'No actions match the current filters.'}</p>
+              {isLiveFeedUnavailable ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <AnuControlLink href="/events" tone="default">Open gatherings</AnuControlLink>
+                  <AnuControlLink href="/relief" tone="default">Open relief</AnuControlLink>
+                  <AnuControlLink href="/impact" tone="default">Open impact</AnuControlLink>
+                </div>
+              ) : null}
             </div>
           )}
         </div>
@@ -503,7 +527,17 @@ export default function ActionsPage() {
                 <AnuSurfacePanel tone="quiet" className="px-4 py-3">
                   <div className="flex items-start gap-3">
                     <AlertCircle className="mt-0.5 h-4 w-4 text-[#f6d4cb]" />
-                    <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{notice}</p>
+                    <div className="min-w-0">
+                      <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{notice}</p>
+                      <p className="mt-1 text-xs text-[color:rgba(246,212,203,0.74)]">
+                        Working now: gatherings, relief, and impact routes remain available while action sync recovers.
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <AnuControlLink href="/events" tone="default">Open gatherings</AnuControlLink>
+                        <AnuControlLink href="/relief" tone="default">Open relief</AnuControlLink>
+                        <AnuControlLink href="/impact" tone="default">Open impact</AnuControlLink>
+                      </div>
+                    </div>
                   </div>
                 </AnuSurfacePanel>
               ) : null}
@@ -519,11 +553,22 @@ export default function ActionsPage() {
                   <AnuControlButton tone="default" iconLeft={RefreshCw} onClick={() => void loadActions()}>
                     Refresh field
                   </AnuControlButton>
-                  {isOrganizer ? (
+
+                  {authLoading ? (
+                    <AnuChip tone="muted">Checking session</AnuChip>
+                  ) : isOrganizer ? (
                     <AnuControlButton tone="active" iconLeft={Plus} onClick={() => setShowCreate(true)}>
                       Create action
                     </AnuControlButton>
-                  ) : null}
+                  ) : isAuthenticated ? (
+                    <AnuControlLink href="/organizer" tone="default" iconLeft={TentTree}>
+                      Apply organizer path
+                    </AnuControlLink>
+                  ) : (
+                    <AnuControlLink href={authHref} tone="default" iconLeft={Plus}>
+                      Sign in to coordinate
+                    </AnuControlLink>
+                  )}
                 </AnuFilterGroup>
 
                 <AnuFilterGroup className="justify-end">
