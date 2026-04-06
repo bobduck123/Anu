@@ -632,3 +632,47 @@ Validation:
 - `npm run -s lint` passed on touched files.
 - `npx next typegen` executed to refresh route/layout generated types after adding nested layout.
 - `npm run -s typecheck` passed.
+
+## 26) Phase 6 — Batch 5 (Organizer workflow copy clarity + progressive disclosure pass)
+
+Date: 2026-04-06
+Lens: Reduce cognitive load across organizer routes by shortening visible copy, adding hover micro-help, and moving secondary guidance into collapsible details.
+
+Updated files:
+- `frontend-next/src/app/(app)/organizer/page.tsx`
+- `frontend-next/src/app/(app)/organizer/intelligence/page.tsx`
+- `frontend-next/src/app/(app)/organizer/guilds/page.tsx`
+- `frontend-next/src/app/(app)/organizer/guilds/[guildId]/page.tsx`
+- `frontend-next/src/app/(app)/organizer/competency/page.tsx`
+- `frontend-next/src/app/(app)/organizer/runs/[id]/page.tsx`
+
+Changes delivered:
+- **Organizer console (`/organizer`)**
+  - Simplified hero and instrumentation copy to short scan-first language.
+  - Added hover bubble for route focus guidance and a collapsed advanced-controls block.
+  - Upgraded load behavior to partial-feed tolerance with explicit continuity messaging when one or more organizer feeds fail.
+  - Added concise continuity banner actions (`Organizer path`, `Open actions`, `Open events`).
+- **Organizer intelligence (`/organizer/intelligence`)**
+  - Reworked to resilient multi-feed loading with fallback snapshots for needs, competency, analytics, guild recommendations, and burnout advisory.
+  - Added concise continuity language and hover-bubble context.
+  - Collapsed detailed needs-signal list behind `<details>` to reduce default noise.
+- **Organizer guild routes (`/organizer/guilds`, `/organizer/guilds/[guildId]`)**
+  - Added concise route framing, hover-bubble hints, and continuity banners.
+  - Added fallback guild datasets/detail stubs when live directory/detail services are unavailable.
+  - Moved rotation editing to a collapsible `<details>` panel on guild detail for cleaner default view.
+- **Organizer competency (`/organizer/competency`)**
+  - Added concise competency summary framing with fallback profile continuity.
+  - Added hover-bubble context and collapsed evidence note.
+- **Organizer run detail (`/organizer/runs/[id]`)**
+  - Added concise route framing (`Run console`) with hover-bubble workflow cue.
+  - Added continuity banner and actions for load/action/receipt failures.
+  - Added collapsed status-transition guidance to reduce always-visible instruction load.
+
+Validation:
+- Browser verification on protected organizer routes (guest session):
+  - `/organizer/guilds` → redirects to `/organizer/on-ramp`
+  - `/organizer/competency` → redirects to `/organizer/on-ramp`
+  - `/organizer/runs/1` → redirects to `/organizer/on-ramp`
+- Explicit assertions executed for redirected URL + on-ramp heading visibility.
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.

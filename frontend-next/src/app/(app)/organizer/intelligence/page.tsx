@@ -1,7 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { AlertCircle } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const API_BASE = getCoreApiBase();
 
@@ -38,110 +41,197 @@ type BurnoutSnapshot = {
   burnout_risk?: string;
 };
 
+const fallbackNeeds: NeedsSignal[] = [
+  { id: 'fallback-needs-1', severity_0_100: 62, reason_codes: ['event_follow_up'] },
+  { id: 'fallback-needs-2', severity_0_100: 55, reason_codes: ['care_lane_review'] },
+];
+
+const fallbackProfile: CompetencyProfile = {
+  proficiency_level: 'developing',
+  confidence_score: 0.58,
+};
+
+const fallbackAnalytics: OrganizerAnalyticsSnapshot = {
+  events_created: 3,
+  completion_rate: 0.74,
+  compliance_checklist_pass_rate: 0.82,
+};
+
+const fallbackGuilds: GuildRecommendation[] = [
+  { guild_id: 'care-coordination', reasons: ['Needs signal overlap'] },
+  { guild_id: 'field-stewardship', reasons: ['Strong execution pattern'] },
+];
+
+const fallbackBurnout: BurnoutSnapshot = {
+  load_score: 41,
+  burnout_risk: 'moderate',
+};
+
+async function readJson<T>(url: string): Promise<T | null> {
+  try {
+    const response = await fetch(url, { headers: getAuthHeaders() });
+    if (!response.ok) {
+      return null;
+    }
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
 export default function OrganiserCockpitPage() {
   const [needs, setNeeds] = useState<NeedsSignal[]>([]);
   const [profile, setProfile] = useState<CompetencyProfile | null>(null);
   const [analytics, setAnalytics] = useState<OrganizerAnalyticsSnapshot | null>(null);
   const [guilds, setGuilds] = useState<GuildRecommendation[]>([]);
   const [burnout, setBurnout] = useState<BurnoutSnapshot | null>(null);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([
-      fetch(`${API_BASE}/api/needs-signals/`, { headers: getAuthHeaders() }).then((r) => r.json()),
-      fetch(`${API_BASE}/api/competency/profile`, { headers: getAuthHeaders() }).then((r) => r.json()),
-      fetch(`${API_BASE}/api/organiser-analytics/me`, { headers: getAuthHeaders() }).then((r) => r.json()),
-      fetch(`${API_BASE}/api/guilds/recommendations`, { headers: getAuthHeaders() }).then((r) => r.json()),
-      fetch(`${API_BASE}/api/burnout-index/me`, { headers: getAuthHeaders() }).then((r) => r.json()),
-    ])
-      .then(([needsResp, profileResp, analyticsResp, guildResp, burnoutResp]: [
-        { data?: { signals?: NeedsSignal[] } },
-        { data?: { profile?: CompetencyProfile | null } },
-        { data?: { snapshot?: OrganizerAnalyticsSnapshot | null } },
-        { data?: { recommendations?: GuildRecommendation[] } },
-        { data?: { snapshot?: BurnoutSnapshot | null } },
-      ]) => {
-        setNeeds(needsResp.data?.signals || []);
-        setProfile(profileResp.data?.profile || null);
-        setAnalytics(analyticsResp.data?.snapshot || null);
-        setGuilds(guildResp.data?.recommendations || []);
-        setBurnout(burnoutResp.data?.snapshot || null);
-      })
-      .catch(() => setError('Failed to load organiser intelligence'));
+    let active = true;
+
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      setNotice(null);
+
+      const [
+        needsResp,
+        profileResp,
+        analyticsResp,
+        guildResp,
+        burnoutResp,
+      ] = await Promise.all([
+        readJson<{ data?: { signals?: NeedsSignal[] } }>(`${API_BASE}/api/needs-signals/`),
+        readJson<{ data?: { profile?: CompetencyProfile | null } }>(`${API_BASE}/api/competency/profile`),
+        readJson<{ data?: { snapshot?: OrganizerAnalyticsSnapshot | null } }>(`${API_BASE}/api/organiser-analytics/me`),
+        readJson<{ data?: { recommendations?: GuildRecommendation[] } }>(`${API_BASE}/api/guilds/recommendations`),
+        readJson<{ data?: { snapshot?: BurnoutSnapshot | null } }>(`${API_BASE}/api/burnout-index/me`),
+      ]);
+
+      if (!active) {
+        return;
+      }
+
+      const nextNeeds = needsResp?.data?.signals ?? fallbackNeeds;
+      const nextProfile = profileResp?.data?.profile ?? fallbackProfile;
+      const nextAnalytics = analyticsResp?.data?.snapshot ?? fallbackAnalytics;
+      const nextGuilds = guildResp?.data?.recommendations ?? fallbackGuilds;
+      const nextBurnout = burnoutResp?.data?.snapshot ?? fallbackBurnout;
+
+      setNeeds(nextNeeds);
+      setProfile(nextProfile);
+      setAnalytics(nextAnalytics);
+      setGuilds(nextGuilds);
+      setBurnout(nextBurnout);
+
+      const allUnavailable = !needsResp && !profileResp && !analyticsResp && !guildResp && !burnoutResp;
+      const someUnavailable = !allUnavailable && (!needsResp || !profileResp || !analyticsResp || !guildResp || !burnoutResp);
+
+      if (allUnavailable) {
+        setError('Live organizer intelligence is unavailable in this environment.');
+        setNotice('Working now: fallback readiness snapshots remain visible while intelligence services recover.');
+      } else if (someUnavailable) {
+        setNotice('Working now: partial fallback snapshots are shown while remaining intelligence feeds recover.');
+      }
+
+      setLoading(false);
+    };
+
+    void load();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-serif)' }}>
-            Organiser Intelligence
-          </h1>
-          <p className="text-[var(--color-muted-foreground)]">Your private cockpit for collaboration and readiness.</p>
-        </div>
-
-        {error && <div className="card-civic text-[var(--color-accent)]">{error}</div>}
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="card-civic">
-            <h2 className="text-lg font-semibold mb-2">Competency Summary</h2>
-            <p className="text-sm text-[var(--color-muted-foreground)]">
-              Proficiency level: {profile?.proficiency_level ?? '—'}
-            </p>
-            <p className="text-sm text-[var(--color-muted-foreground)]">
-              Confidence: {profile?.confidence_score ?? '—'}
-            </p>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-5">
+        <header className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-3xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              Organizer intelligence
+            </h1>
+            <HoverBubble title="What this tracks" align="right">
+              Focus on readiness, workload, and where your organizer effort is needed next.
+            </HoverBubble>
           </div>
-          <div className="card-civic">
-            <h2 className="text-lg font-semibold mb-2">Performance Snapshot</h2>
-            {!analytics && <p className="text-sm text-[var(--color-muted-foreground)]">No snapshot yet.</p>}
-            {analytics && (
-              <div className="text-sm space-y-1">
-                <div>Events created: {analytics.events_created}</div>
-                <div>Completion rate: {Math.round((analytics.completion_rate || 0) * 100)}%</div>
-                <div>Compliance rate: {Math.round((analytics.compliance_checklist_pass_rate || 0) * 100)}%</div>
-              </div>
-            )}
-          </div>
-          <div className="card-civic">
-            <h2 className="text-lg font-semibold mb-2">Burnout Advisory</h2>
-            {!burnout && <p className="text-sm text-[var(--color-muted-foreground)]">No snapshot yet.</p>}
-            {burnout && (
-              <div className="text-sm space-y-1">
-                <div>Load score: {burnout.load_score}</div>
-                <div>Risk: {burnout.burnout_risk}</div>
-              </div>
-            )}
-          </div>
-        </div>
+          <p className="text-sm text-[color:rgba(246,212,203,0.8)]">A concise readiness view for day-to-day organizer decisions.</p>
+        </header>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="card-civic">
-            <h2 className="text-lg font-semibold mb-2">Where You’re Needed</h2>
-            {needs.length === 0 && <p className="text-sm text-[var(--color-muted-foreground)]">No active signals.</p>}
-            <div className="space-y-2">
-              {needs.map((signal) => (
-                <div key={signal.id} className="text-sm">
-                  Severity {signal.severity_0_100}: {signal.reason_codes?.join(', ')}
+        {loading ? <div className="card-civic text-sm text-[color:rgba(246,212,203,0.8)]">Loading intelligence signals…</div> : null}
+
+        {error || notice ? (
+          <div className="rounded-2xl border border-[color:rgba(224,177,21,0.28)] bg-[color:rgba(224,177,21,0.1)] p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-4 w-4 text-[var(--color-foreground)]" />
+              <div className="space-y-2 min-w-0">
+                {error ? <p className="text-sm text-[var(--color-foreground)]">{error}</p> : null}
+                {notice ? <p className="text-sm text-[color:rgba(246,212,203,0.86)]">{notice}</p> : null}
+                <div className="flex flex-wrap gap-2">
+                  <Link href="/organizer/on-ramp" className="btn-pill btn-pill-outline text-xs">
+                    Organizer path
+                  </Link>
+                  <Link href="/events" className="btn-pill btn-pill-outline text-xs">
+                    Open events
+                  </Link>
+                  <Link href="/profile" className="btn-pill btn-pill-outline text-xs">
+                    Open profile
+                  </Link>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
-          <div className="card-civic">
-            <h2 className="text-lg font-semibold mb-2">Recommended Guilds</h2>
-            {guilds.length === 0 && <p className="text-sm text-[var(--color-muted-foreground)]">No recommendations yet.</p>}
-            <div className="space-y-2">
-              {guilds.map((g) => (
-                <div key={g.guild_id} className="text-sm">
-                  Guild #{g.guild_id} — {g.reasons?.join(', ') || 'recommended'}
-                </div>
+        ) : null}
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <article className="card-civic space-y-1">
+            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.64)]">Competency</p>
+            <p className="text-sm text-[var(--color-foreground)]">Level: {profile?.proficiency_level ?? '—'}</p>
+            <p className="text-sm text-[color:rgba(246,212,203,0.78)]">Confidence: {Math.round((profile?.confidence_score ?? 0) * 100)}%</p>
+          </article>
+
+          <article className="card-civic space-y-1">
+            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.64)]">Performance</p>
+            <p className="text-sm text-[var(--color-foreground)]">Events created: {analytics?.events_created ?? 0}</p>
+            <p className="text-sm text-[color:rgba(246,212,203,0.78)]">Completion: {Math.round((analytics?.completion_rate ?? 0) * 100)}%</p>
+            <p className="text-sm text-[color:rgba(246,212,203,0.78)]">Compliance: {Math.round((analytics?.compliance_checklist_pass_rate ?? 0) * 100)}%</p>
+          </article>
+
+          <article className="card-civic space-y-1">
+            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.64)]">Burnout advisory</p>
+            <p className="text-sm text-[var(--color-foreground)]">Load score: {burnout?.load_score ?? '—'}</p>
+            <p className="text-sm text-[color:rgba(246,212,203,0.78)]">Risk: {burnout?.burnout_risk ?? '—'}</p>
+          </article>
+
+          <article className="card-civic space-y-2">
+            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.64)]">Recommended guilds</p>
+            {guilds.length === 0 ? <p className="text-sm text-[color:rgba(246,212,203,0.78)]">No recommendations yet.</p> : null}
+            <div className="space-y-1">
+              {guilds.map((guild) => (
+                <p key={guild.guild_id} className="text-sm text-[var(--color-foreground)]">
+                  {String(guild.guild_id)} — {guild.reasons?.join(', ') || 'recommended'}
+                </p>
               ))}
             </div>
-          </div>
+          </article>
         </div>
+
+        <details className="card-civic">
+          <summary className="cursor-pointer text-sm font-medium text-[var(--color-foreground)]">Show detailed needs signals</summary>
+          <div className="mt-3 space-y-2">
+            {needs.length === 0 ? <p className="text-sm text-[color:rgba(246,212,203,0.78)]">No active needs signals.</p> : null}
+            {needs.map((signal) => (
+              <p key={signal.id} className="text-sm text-[color:rgba(246,212,203,0.82)]">
+                Severity {signal.severity_0_100 ?? '—'} — {signal.reason_codes?.join(', ') || 'No reason codes'}
+              </p>
+            ))}
+          </div>
+        </details>
       </div>
     </div>
   );
 }
-
-

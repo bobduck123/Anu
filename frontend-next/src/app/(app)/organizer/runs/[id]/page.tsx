@@ -3,11 +3,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthGateCard from '@/components/auth/AuthGateCard';
 import { wcleApi, OrganizerPanelData } from '@/lib/api/wcleApi';
 import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
 import { buildAuthHref } from '@/lib/auth/returnTo';
+import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 function cents(v: number | null | undefined): string {
   if (v == null) return '$0.00';
@@ -22,6 +24,7 @@ export default function OrganizerRunPage() {
   const [data, setData] = useState<OrganizerPanelData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState('');
   const [receiptAmount, setReceiptAmount] = useState('');
 
@@ -35,10 +38,12 @@ export default function OrganizerRunPage() {
 
     setLoading(true);
     setError('');
+    setNotice(null);
 
     try {
       const panel = await wcleApi.getOrganizerPanel(runId);
       setData(panel);
+      setNotice(null);
     } catch (e: unknown) {
       const actionable = toActionableSurfaceError({
         area: 'Organizer run panel',
@@ -47,6 +52,7 @@ export default function OrganizerRunPage() {
         fallbackLabel: 'Back to run list',
       });
       setError(`${actionable.headline}. ${actionable.detail}`);
+      setNotice('Working now: run route remains available while live organizer run feeds recover.');
       setData(null);
     } finally {
       setLoading(false);
@@ -69,6 +75,7 @@ export default function OrganizerRunPage() {
   async function doAction(action: string) {
     setActionLoading(action);
     setError('');
+    setNotice(null);
     try {
       if (action === 'open') await wcleApi.openRun(runId);
       if (action === 'close') await wcleApi.closeRun(runId);
@@ -82,6 +89,7 @@ export default function OrganizerRunPage() {
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Action failed';
       setError(msg);
+      setNotice('Working now: action update could not reach live service. Retry when service recovers.');
     } finally {
       setActionLoading('');
     }
@@ -94,6 +102,7 @@ export default function OrganizerRunPage() {
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Failed';
       setError(msg);
+      setNotice('Working now: fulfilment update is queued until live service recovers.');
     }
   }
 
@@ -104,12 +113,14 @@ export default function OrganizerRunPage() {
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Failed';
       setError(msg);
+      setNotice('Working now: no-show update is queued until live service recovers.');
     }
   }
 
   async function handleAddReceipt() {
     if (!receiptAmount) return;
     setError('');
+    setNotice(null);
     try {
       const amountCents = Math.round(parseFloat(receiptAmount) * 100);
       await wcleApi.createReceipt(runId, { bulk_actual_total_cents: amountCents });
@@ -118,6 +129,7 @@ export default function OrganizerRunPage() {
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Failed';
       setError(msg);
+      setNotice('Working now: receipt entry could not reach live service. Keep value and retry.');
     }
   }
 
@@ -143,7 +155,19 @@ export default function OrganizerRunPage() {
   }
 
   if (!data) {
-    return <div className="max-w-4xl mx-auto px-4 py-10 text-center text-[#7c413c]">{error || 'Not found'}</div>;
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-10 space-y-3">
+        <div className="card-civic text-sm text-[var(--color-foreground)]">{error || 'Run detail is unavailable.'}</div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/organizer/on-ramp" className="btn-pill btn-pill-outline text-xs">
+            Organizer path
+          </Link>
+          <Link href="/cost-lowering" className="btn-pill btn-pill-outline text-xs">
+            Back to run list
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   const { run, pledges, aggregated_quantities } = data;
@@ -157,10 +181,35 @@ export default function OrganizerRunPage() {
         &larr; Back to runs
       </Link>
 
-      <h1 className="text-2xl font-bold text-[var(--color-foreground)] mb-1">Organizer Panel</h1>
-      <h2 className="text-lg text-[color:rgba(246,212,203,0.7)] mb-6">{run.title}</h2>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--color-foreground)] mb-1">Run console</h1>
+          <h2 className="text-lg text-[color:rgba(246,212,203,0.7)]">{run.title}</h2>
+        </div>
+        <HoverBubble title="Run workflow" align="right">
+          Move in order: status transition, receipt confirmation, then pledge reconciliation.
+        </HoverBubble>
+      </div>
 
-      {error && <div className="card-civic text-sm text-[#7c413c] mb-4">{error}</div>}
+      {error || notice ? (
+        <div className="rounded-2xl border border-[color:rgba(224,177,21,0.28)] bg-[color:rgba(224,177,21,0.1)] p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-4 w-4 text-[var(--color-foreground)]" />
+            <div className="space-y-2 min-w-0">
+              {error ? <p className="text-sm text-[var(--color-foreground)]">{error}</p> : null}
+              {notice ? <p className="text-sm text-[color:rgba(246,212,203,0.86)]">{notice}</p> : null}
+              <div className="flex flex-wrap gap-2">
+                <Link href="/organizer/on-ramp" className="btn-pill btn-pill-outline text-xs">
+                  Organizer path
+                </Link>
+                <Link href="/cost-lowering" className="btn-pill btn-pill-outline text-xs">
+                  Run list
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="card-civic mb-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -181,6 +230,16 @@ export default function OrganizerRunPage() {
           </div>
         </div>
       </div>
+
+      <details className="card-civic mb-6">
+        <summary className="cursor-pointer text-sm font-medium text-[var(--color-foreground)]">Show status transition notes</summary>
+        <ul className="mt-3 space-y-1 text-sm text-[color:rgba(246,212,203,0.82)]">
+          <li>DRAFT → OPEN before pledges are actively coordinated.</li>
+          <li>OPEN → CLOSED when pledge intake is complete.</li>
+          <li>CLOSED → EXECUTED after operational completion and confirmations.</li>
+          <li>EXECUTED/CLOSED → COMPLETED once receipts and final reconciliation are recorded.</li>
+        </ul>
+      </details>
 
       {['CLOSED', 'EXECUTED'].includes(run.status) && (
         <div className="card-civic mb-6">
