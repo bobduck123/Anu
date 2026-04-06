@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const API_BASE = getCoreApiBase();
 const INSTITUTIONAL_HARDCOPY_CACHE_KEY = 'governance-institutional-config-hardcopy-v1';
@@ -60,15 +61,11 @@ function computeConfigStamp(config: Config): string {
 }
 
 function readConfigHardcopy(): ConfigHardcopy | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
+  if (typeof window === 'undefined') return null;
 
   try {
     const raw = localStorage.getItem(INSTITUTIONAL_HARDCOPY_CACHE_KEY);
-    if (!raw) {
-      return null;
-    }
+    if (!raw) return null;
 
     const parsed = JSON.parse(raw) as ConfigHardcopy;
     if (!parsed?.config || typeof parsed.stamp !== 'string' || typeof parsed.syncedAt !== 'string') {
@@ -82,14 +79,12 @@ function readConfigHardcopy(): ConfigHardcopy | null {
 }
 
 function writeConfigHardcopy(payload: ConfigHardcopy) {
-  if (typeof window === 'undefined') {
-    return;
-  }
+  if (typeof window === 'undefined') return;
 
   try {
     localStorage.setItem(INSTITUTIONAL_HARDCOPY_CACHE_KEY, JSON.stringify(payload));
   } catch {
-    // Ignore storage write failures.
+    // Ignore cache write failures.
   }
 }
 
@@ -102,9 +97,16 @@ async function parseJsonSafe<T>(response: Response): Promise<T | null> {
 }
 
 function sourceLabel(source: 'live' | 'hardcopy' | 'baseline') {
-  if (source === 'live') return 'Live config';
-  if (source === 'hardcopy') return 'Hardcopy config';
-  return 'Baseline config';
+  if (source === 'live') return 'Live';
+  if (source === 'hardcopy') return 'Hardcopy';
+  return 'Baseline';
+}
+
+function formatSync(value: string | null) {
+  if (!value) return 'Awaiting first sync';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return 'Awaiting first sync';
+  return `Synced ${parsed.toLocaleString()}`;
 }
 
 export default function InstitutionalModePage() {
@@ -131,8 +133,8 @@ export default function InstitutionalModePage() {
       setDegradedMode(true);
       setNotice(
         reason === 'offline'
-          ? 'Live institutional config is unavailable. Running the last synced hardcopy config with automatic re-sync every 120 seconds.'
-          : 'No live institutional config returned. Running the last synced hardcopy config.',
+          ? 'Working now: using hardcopy config while live sync retries every 120s.'
+          : 'No live config returned. Using hardcopy config.',
       );
       return;
     }
@@ -141,7 +143,7 @@ export default function InstitutionalModePage() {
     setSource('baseline');
     setLastSyncAt(null);
     setDegradedMode(true);
-    setNotice('No synced institutional hardcopy exists yet. Using baseline config until live sync resumes.');
+    setNotice('Working now: baseline config is active until first sync succeeds.');
   }, []);
 
   const syncConfig = useCallback(
@@ -181,8 +183,8 @@ export default function InstitutionalModePage() {
         setDegradedMode(false);
         setError('');
 
-        if (!silent) {
-          setNotice(recovered ? 'Live institutional config restored. Hardcopy refreshed.' : 'Live institutional config loaded.');
+        if (!silent && (manual || recovered)) {
+          setNotice(recovered ? 'Live config restored. Hardcopy refreshed.' : 'Institutional config refreshed.');
         }
       } catch {
         if (!silent) {
@@ -227,7 +229,7 @@ export default function InstitutionalModePage() {
       writeConfigHardcopy({ config, stamp: computeConfigStamp(config), syncedAt });
       setSource('hardcopy');
       setLastSyncAt(syncedAt);
-      setNotice('Config saved in hardcopy fallback. It will re-sync live when institutional service recovers.');
+      setNotice('Working now: config saved to hardcopy fallback.');
       setSaving(false);
       return;
     }
@@ -252,15 +254,15 @@ export default function InstitutionalModePage() {
       setLastSyncAt(syncedAt);
       setDegradedMode(false);
       writeConfigHardcopy({ config: nextConfig, stamp: computeConfigStamp(nextConfig), syncedAt });
-      setNotice('Institutional config saved.');
+      setNotice('Config saved.');
     } catch {
       const syncedAt = new Date().toISOString();
       setDegradedMode(true);
       setSource('hardcopy');
       setLastSyncAt(syncedAt);
       writeConfigHardcopy({ config, stamp: computeConfigStamp(config), syncedAt });
-      setError('Live institutional config save is unavailable right now.');
-      setNotice('Working now: config has been retained in hardcopy fallback for replay once live services recover.');
+      setError('Live config save is unavailable right now.');
+      setNotice('Working now: config kept in hardcopy fallback for replay.');
     } finally {
       setSaving(false);
     }
@@ -287,7 +289,7 @@ export default function InstitutionalModePage() {
     if (degradedMode) {
       setPendingObservers((current) => [pendingEntry, ...current].slice(0, 10));
       setObserver({ name: '', organization: '', email: '' });
-      setNotice('Observer submission queued in fallback mode. It will remain visible for replay after reconnect.');
+      setNotice('Working now: observer entry queued locally for replay after reconnect.');
       setAddingObserver(false);
       return;
     }
@@ -303,16 +305,13 @@ export default function InstitutionalModePage() {
         throw new Error('observer-submit-failed');
       }
 
-      setPendingObservers((current) => [
-        { ...pendingEntry, statusFlag: 'submitted' as const },
-        ...current,
-      ].slice(0, 10));
+      setPendingObservers((current) => [{ ...pendingEntry, statusFlag: 'submitted' as const }, ...current].slice(0, 10));
       setObserver({ name: '', organization: '', email: '' });
       setNotice('Observer submitted.');
     } catch {
       setDegradedMode(true);
       setError('Live observer submission is unavailable right now.');
-      setNotice('Working now: observer submission has been queued locally for replay.');
+      setNotice('Working now: observer entry queued locally for replay after reconnect.');
       setPendingObservers((current) => [pendingEntry, ...current].slice(0, 10));
       setObserver({ name: '', organization: '', email: '' });
     } finally {
@@ -324,17 +323,20 @@ export default function InstitutionalModePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
-        <div className="text-center">
-          <h1 className="text-4xl font-semibold mb-2 text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-            Institutional Mode
-          </h1>
-          <p className="text-[color:rgba(246,212,203,0.82)]">Compliance-grade governance controls and observer access.</p>
-        </div>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-5">
+        <header className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-4xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              Institutional Config
+            </h1>
+            <HoverBubble title="Why this matters" align="right">
+              This keeps governance controls stable across outages via hardcopy sync.
+            </HoverBubble>
+          </div>
+          <p className="text-[color:rgba(246,212,203,0.82)]">Core governance controls and observer access.</p>
+        </header>
 
-        {loading ? (
-          <div className="card-civic text-sm text-[color:rgba(246,212,203,0.78)]">Loading institutional configuration…</div>
-        ) : null}
+        {loading ? <div className="card-civic text-sm text-[color:rgba(246,212,203,0.78)]">Loading institutional config…</div> : null}
 
         {error || notice ? (
           <div className="rounded-2xl border border-[color:rgba(224,177,21,0.28)] bg-[color:rgba(224,177,21,0.1)] p-4">
@@ -345,13 +347,13 @@ export default function InstitutionalModePage() {
                 {notice ? <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.86)]">{notice}</p> : null}
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Link href="/governance" className="btn-pill btn-pill-outline text-xs">
-                    Open governance index
+                    Governance index
                   </Link>
                   <Link href="/transparency" className="btn-pill btn-pill-outline text-xs">
-                    Open transparency
+                    Transparency
                   </Link>
                   <Link href="/docs" className="btn-pill btn-pill-outline text-xs">
-                    Open docs
+                    Docs
                   </Link>
                 </div>
               </div>
@@ -359,29 +361,32 @@ export default function InstitutionalModePage() {
           </div>
         ) : null}
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="card-civic space-y-1">
-            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Mode status</p>
+        <div className="grid gap-3 md:grid-cols-3">
+          <article className="card-civic space-y-1">
+            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Mode</p>
             <p className="text-2xl font-semibold text-[var(--color-foreground)]">{modeStatus}</p>
-          </div>
-          <div className="card-civic space-y-1">
-            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Quorum minimum</p>
+          </article>
+          <article className="card-civic space-y-1">
+            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Quorum</p>
             <p className="text-2xl font-semibold text-[var(--color-foreground)]">{config.quorum_min}</p>
-          </div>
-          <div className="card-civic space-y-1">
-            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Config source</p>
+          </article>
+          <article className="card-civic space-y-1">
+            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Source</p>
             <p className="text-2xl font-semibold text-[var(--color-foreground)]">{sourceLabel(source)}</p>
-            <p className="text-xs text-[color:rgba(246,212,203,0.62)]">
-              {lastSyncAt ? `Synced ${new Date(lastSyncAt).toLocaleString()}` : 'Awaiting first live sync'}
-            </p>
-          </div>
+            <p className="text-xs text-[color:rgba(246,212,203,0.62)]">{formatSync(lastSyncAt)}</p>
+          </article>
         </div>
 
-        <div className="card-civic space-y-4">
+        <section className="card-civic space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-              Configuration
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                Config toggles
+              </h2>
+              <HoverBubble title="Declutter mode" align="left">
+                Keep only key toggles visible. Details are in queued logs below.
+              </HoverBubble>
+            </div>
             <button
               className="btn-pill btn-pill-outline text-xs"
               onClick={() => void syncConfig({ manual: true })}
@@ -405,31 +410,25 @@ export default function InstitutionalModePage() {
               <input
                 type="checkbox"
                 checked={config.external_observer_enabled}
-                onChange={(event) =>
-                  setConfig((current) => ({ ...current, external_observer_enabled: event.target.checked }))
-                }
+                onChange={(event) => setConfig((current) => ({ ...current, external_observer_enabled: event.target.checked }))}
               />
-              External observer seat
+              Enable external observer seat
             </label>
             <label className="flex items-center gap-2 text-[var(--color-foreground)]">
               <input
                 type="checkbox"
                 checked={config.extended_audit_logging}
-                onChange={(event) =>
-                  setConfig((current) => ({ ...current, extended_audit_logging: event.target.checked }))
-                }
+                onChange={(event) => setConfig((current) => ({ ...current, extended_audit_logging: event.target.checked }))}
               />
-              Extended audit logging
+              Enable extended audit log
             </label>
             <label className="flex items-center gap-2 text-[var(--color-foreground)]">
               <input
                 type="checkbox"
                 checked={config.worm_audit_suggestion}
-                onChange={(event) =>
-                  setConfig((current) => ({ ...current, worm_audit_suggestion: event.target.checked }))
-                }
+                onChange={(event) => setConfig((current) => ({ ...current, worm_audit_suggestion: event.target.checked }))}
               />
-              WORM audit suggestion
+              Enable WORM audit hint
             </label>
           </div>
 
@@ -439,24 +438,25 @@ export default function InstitutionalModePage() {
               className="w-24 px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-foreground)]/[0.02] text-[var(--color-foreground)]"
               type="number"
               value={config.quorum_min}
-              onChange={(event) =>
-                setConfig((current) => ({
-                  ...current,
-                  quorum_min: Number(event.target.value) || 0,
-                }))
-              }
+              onChange={(event) => setConfig((current) => ({ ...current, quorum_min: Number(event.target.value) || 0 }))}
             />
           </div>
 
           <button className="btn-pill btn-pill-primary" onClick={() => void saveConfig()} disabled={saving}>
             {saving ? 'Saving…' : 'Save config'}
           </button>
-        </div>
+        </section>
 
-        <div className="card-civic space-y-3">
-          <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-            Add External Observer
-          </h2>
+        <section className="card-civic space-y-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              Add observer
+            </h2>
+            <HoverBubble title="Queue behavior" align="left">
+              If live submit fails, this observer entry is queued locally for replay.
+            </HoverBubble>
+          </div>
+
           <div className="grid md:grid-cols-3 gap-3">
             <input
               className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-foreground)]/[0.02] text-[var(--color-foreground)]"
@@ -477,24 +477,30 @@ export default function InstitutionalModePage() {
               onChange={(event) => setObserver((current) => ({ ...current, email: event.target.value }))}
             />
           </div>
+
           <button className="btn-pill btn-pill-secondary" onClick={() => void addObserver()} disabled={addingObserver}>
             {addingObserver ? 'Submitting…' : 'Add observer'}
           </button>
 
           {pendingObservers.length > 0 ? (
-            <div className="space-y-2">
-              {pendingObservers.map((entry) => (
-                <div key={entry.id} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-foreground)]/[0.02] p-3 text-sm">
-                  <span className="font-semibold text-[var(--color-foreground)]">{entry.name}</span>
-                  <span className="ml-2 text-[color:rgba(246,212,203,0.78)]">{entry.email}</span>
-                  <span className="ml-2 text-[color:rgba(246,212,203,0.65)]">
-                    {entry.statusFlag === 'pending_sync' ? 'pending sync' : 'submitted'} · {new Date(entry.queuedAt).toLocaleString()}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <details className="rounded-xl border border-[var(--color-border)] bg-[var(--color-foreground)]/[0.02] p-3" open>
+              <summary className="cursor-pointer text-sm text-[color:rgba(246,212,203,0.82)]">
+                Pending / recent observers ({pendingObservers.length})
+              </summary>
+              <div className="mt-3 space-y-2">
+                {pendingObservers.map((entry) => (
+                  <div key={entry.id} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-foreground)]/[0.02] p-2 text-sm">
+                    <span className="font-semibold text-[var(--color-foreground)]">{entry.name}</span>
+                    <span className="ml-2 text-[color:rgba(246,212,203,0.78)]">{entry.email}</span>
+                    <span className="ml-2 text-[color:rgba(246,212,203,0.65)]">
+                      {entry.statusFlag === 'pending_sync' ? 'pending sync' : 'submitted'} · {new Date(entry.queuedAt).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </details>
           ) : null}
-        </div>
+        </section>
       </div>
     </div>
   );

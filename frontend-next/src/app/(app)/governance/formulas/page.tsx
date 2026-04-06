@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const API_BASE = getCoreApiBase();
 const FORMULA_HARDCOPY_CACHE_KEY = 'governance-formula-ruleset-hardcopy-v1';
@@ -40,15 +41,11 @@ function computeFormulaStamp(definitions: FormulaDefinition[]): string {
 }
 
 function readFormulaHardcopy(): FormulaHardcopy | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
+  if (typeof window === 'undefined') return null;
 
   try {
     const raw = localStorage.getItem(FORMULA_HARDCOPY_CACHE_KEY);
-    if (!raw) {
-      return null;
-    }
+    if (!raw) return null;
 
     const parsed = JSON.parse(raw) as FormulaHardcopy;
     if (!Array.isArray(parsed.definitions) || typeof parsed.stamp !== 'string' || typeof parsed.syncedAt !== 'string') {
@@ -62,14 +59,12 @@ function readFormulaHardcopy(): FormulaHardcopy | null {
 }
 
 function writeFormulaHardcopy(payload: FormulaHardcopy) {
-  if (typeof window === 'undefined') {
-    return;
-  }
+  if (typeof window === 'undefined') return;
 
   try {
     localStorage.setItem(FORMULA_HARDCOPY_CACHE_KEY, JSON.stringify(payload));
   } catch {
-    // Ignore storage write failures.
+    // Ignore cache write failures.
   }
 }
 
@@ -82,9 +77,16 @@ async function parseJsonSafe<T>(response: Response): Promise<T | null> {
 }
 
 function sourceLabel(source: 'live' | 'hardcopy' | 'baseline') {
-  if (source === 'live') return 'Live rule set';
-  if (source === 'hardcopy') return 'Hardcopy rule set';
-  return 'Baseline rule set';
+  if (source === 'live') return 'Live';
+  if (source === 'hardcopy') return 'Hardcopy';
+  return 'Baseline';
+}
+
+function formatSync(value: string | null) {
+  if (!value) return 'Awaiting first sync';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return 'Awaiting first sync';
+  return `Synced ${parsed.toLocaleString()}`;
 }
 
 export default function FormulaRegistryPage() {
@@ -109,8 +111,8 @@ export default function FormulaRegistryPage() {
       setDegradedMode(true);
       setNotice(
         reason === 'offline'
-          ? 'Live formula service is unavailable. Running the last synced hardcopy rule set and auto-resyncing every 90 seconds.'
-          : 'No live formulas were returned. Running the last synced hardcopy rule set.',
+          ? 'Working now: using hardcopy formula rules while live sync retries every 90s.'
+          : 'No live formulas returned. Using hardcopy rule set.',
       );
       return;
     }
@@ -119,7 +121,7 @@ export default function FormulaRegistryPage() {
     setSource('baseline');
     setLastSyncAt(null);
     setDegradedMode(true);
-    setNotice('No synced hardcopy exists yet. Using baseline formulas until a live rule set can be synced.');
+    setNotice('Working now: baseline formula rules are active until first sync succeeds.');
   }, []);
 
   const syncDefinitions = useCallback(
@@ -159,8 +161,8 @@ export default function FormulaRegistryPage() {
         setDegradedMode(false);
         setError('');
 
-        if (!silent) {
-          setNotice(recovered ? 'Live formulas reconnected. Hardcopy rule set refreshed.' : 'Live formulas loaded.');
+        if (!silent && (manual || recovered)) {
+          setNotice(recovered ? 'Live formulas restored. Hardcopy refreshed.' : 'Formula rules refreshed.');
         }
       } catch {
         if (!silent) {
@@ -193,11 +195,16 @@ export default function FormulaRegistryPage() {
     setError('');
     setNotice(null);
 
+    if (!activation.key.trim()) {
+      setError('Formula key is required.');
+      return;
+    }
+
     let parsedParams: Record<string, unknown>;
     try {
       parsedParams = JSON.parse(activation.params || '{}') as Record<string, unknown>;
     } catch {
-      setError('Formula params must be valid JSON.');
+      setError('Params must be valid JSON.');
       return;
     }
 
@@ -218,12 +225,12 @@ export default function FormulaRegistryPage() {
         throw new Error('activate-failed');
       }
 
-      setNotice('Formula activation submitted. Syncing the current agreed rule set…');
+      setNotice('Activation submitted. Syncing latest rules…');
       await syncDefinitions({ silent: true });
     } catch {
       setDegradedMode(true);
-      setError('Live formula activation is unavailable right now.');
-      setNotice('Keep your activation draft and retry after auto-resync pulls the latest live rule set.');
+      setError('Live activation is unavailable right now.');
+      setNotice('Working now: keep your draft and retry after auto-sync.');
     } finally {
       setActivating(false);
     }
@@ -236,17 +243,20 @@ export default function FormulaRegistryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
-        <div className="text-center">
-          <h1 className="text-4xl font-semibold mb-2 text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-            Formula Registry
-          </h1>
-          <p className="text-[color:rgba(246,212,203,0.82)]">Governance-controlled formula versions and defaults.</p>
-        </div>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-5">
+        <header className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-4xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              Formula Rules
+            </h1>
+            <HoverBubble title="Why this matters" align="right">
+              This page always prefers live rules. During outage it uses synced hardcopy, then baseline.
+            </HoverBubble>
+          </div>
+          <p className="text-[color:rgba(246,212,203,0.82)]">Versioned formulas with live + hardcopy sync.</p>
+        </header>
 
-        {loading ? (
-          <div className="card-civic text-sm text-[color:rgba(246,212,203,0.78)]">Loading formula registry…</div>
-        ) : null}
+        {loading ? <div className="card-civic text-sm text-[color:rgba(246,212,203,0.78)]">Loading formula rules…</div> : null}
 
         {error || notice ? (
           <div className="rounded-2xl border border-[color:rgba(224,177,21,0.28)] bg-[color:rgba(224,177,21,0.1)] p-4">
@@ -257,13 +267,13 @@ export default function FormulaRegistryPage() {
                 {notice ? <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.86)]">{notice}</p> : null}
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Link href="/governance" className="btn-pill btn-pill-outline text-xs">
-                    Open governance index
+                    Governance index
                   </Link>
                   <Link href="/transparency" className="btn-pill btn-pill-outline text-xs">
-                    Open transparency
+                    Transparency
                   </Link>
                   <Link href="/docs" className="btn-pill btn-pill-outline text-xs">
-                    Open docs
+                    Docs
                   </Link>
                 </div>
               </div>
@@ -271,29 +281,32 @@ export default function FormulaRegistryPage() {
           </div>
         ) : null}
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="card-civic space-y-1">
-            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Definitions visible</p>
+        <div className="grid gap-3 md:grid-cols-3">
+          <article className="card-civic space-y-1">
+            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Rules</p>
             <p className="text-2xl font-semibold text-[var(--color-foreground)]">{definitions.length}</p>
-          </div>
-          <div className="card-civic space-y-1">
+          </article>
+          <article className="card-civic space-y-1">
             <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Latest version</p>
             <p className="text-2xl font-semibold text-[var(--color-foreground)]">v{latestVersion || 'n/a'}</p>
-          </div>
-          <div className="card-civic space-y-1">
-            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Rule source</p>
+          </article>
+          <article className="card-civic space-y-1">
+            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Source</p>
             <p className="text-2xl font-semibold text-[var(--color-foreground)]">{sourceLabel(source)}</p>
-            <p className="text-xs text-[color:rgba(246,212,203,0.62)]">
-              {lastSyncAt ? `Synced ${new Date(lastSyncAt).toLocaleString()}` : 'Awaiting first live sync'}
-            </p>
-          </div>
+            <p className="text-xs text-[color:rgba(246,212,203,0.62)]">{formatSync(lastSyncAt)}</p>
+          </article>
         </div>
 
-        <div className="card-civic space-y-3">
+        <section className="card-civic space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-              Formula Definitions
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                Current formulas
+              </h2>
+              <HoverBubble title="Declutter mode" align="left">
+                Hover for context. Main list shows only key + version for quick scanning.
+              </HoverBubble>
+            </div>
             <button
               className="btn-pill btn-pill-outline text-xs"
               onClick={() => void syncDefinitions({ manual: true })}
@@ -305,9 +318,9 @@ export default function FormulaRegistryPage() {
           </div>
 
           {definitions.length === 0 ? (
-            <p className="text-sm text-[color:rgba(246,212,203,0.72)]">No formulas found.</p>
+            <p className="text-sm text-[color:rgba(246,212,203,0.72)]">No formulas available.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="grid gap-2 md:grid-cols-2">
               {definitions.map((definition) => (
                 <div
                   key={`${definition.key}-${definition.version}`}
@@ -315,19 +328,27 @@ export default function FormulaRegistryPage() {
                 >
                   <span className="font-semibold text-[var(--color-foreground)]">{definition.key}</span>
                   <span className="ml-2 text-[color:rgba(246,212,203,0.76)]">v{definition.version}</span>
-                  {degradedMode ? (
-                    <span className="ml-3 text-xs text-[color:rgba(246,212,203,0.62)]">fallback hardcopy</span>
+                  {source === 'hardcopy' ? (
+                    <span className="ml-3 text-xs text-[color:rgba(246,212,203,0.62)]">hardcopy</span>
+                  ) : source === 'baseline' ? (
+                    <span className="ml-3 text-xs text-[color:rgba(246,212,203,0.62)]">baseline</span>
                   ) : null}
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </section>
 
-        <div className="card-civic space-y-3">
-          <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-            Activate Formula
-          </h2>
+        <section className="card-civic space-y-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              Activate formula
+            </h2>
+            <HoverBubble title="Safe input" align="left">
+              Params are optional. They must be valid JSON when provided.
+            </HoverBubble>
+          </div>
+
           <input
             className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-foreground)]/[0.02] text-[var(--color-foreground)]"
             placeholder="Formula key"
@@ -341,16 +362,21 @@ export default function FormulaRegistryPage() {
             value={activation.version}
             onChange={(event) => setActivation((current) => ({ ...current, version: Number(event.target.value) || 1 }))}
           />
-          <textarea
-            className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg font-mono-data bg-[var(--color-foreground)]/[0.02] text-[var(--color-foreground)]"
-            placeholder='{"cert_weight": 10.0}'
-            value={activation.params}
-            onChange={(event) => setActivation((current) => ({ ...current, params: event.target.value }))}
-          />
+
+          <details className="rounded-xl border border-[var(--color-border)] bg-[var(--color-foreground)]/[0.02] p-3">
+            <summary className="cursor-pointer text-sm text-[color:rgba(246,212,203,0.82)]">Advanced params (optional)</summary>
+            <textarea
+              className="mt-3 w-full px-3 py-2 border border-[var(--color-border)] rounded-lg font-mono-data bg-[var(--color-foreground)]/[0.02] text-[var(--color-foreground)]"
+              placeholder='{"cert_weight": 10.0}'
+              value={activation.params}
+              onChange={(event) => setActivation((current) => ({ ...current, params: event.target.value }))}
+            />
+          </details>
+
           <button className="btn-pill btn-pill-primary" onClick={() => void activateFormula()} disabled={activating}>
             {activating ? 'Activating…' : 'Activate'}
           </button>
-        </div>
+        </section>
       </div>
     </div>
   );

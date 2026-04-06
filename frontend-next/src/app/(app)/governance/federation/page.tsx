@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const API_BASE = getCoreApiBase();
 const FEDERATION_HARDCOPY_CACHE_KEY = 'governance-federation-snapshot-hardcopy-v1';
@@ -77,15 +78,11 @@ function computeSnapshotStamp(snapshot: FederationSnapshot): string {
 }
 
 function readSnapshotHardcopy(): FederationSnapshotHardcopy | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
+  if (typeof window === 'undefined') return null;
 
   try {
     const raw = localStorage.getItem(FEDERATION_HARDCOPY_CACHE_KEY);
-    if (!raw) {
-      return null;
-    }
+    if (!raw) return null;
 
     const parsed = JSON.parse(raw) as FederationSnapshotHardcopy;
     if (!parsed?.snapshot || typeof parsed.stamp !== 'string' || typeof parsed.syncedAt !== 'string') {
@@ -99,14 +96,12 @@ function readSnapshotHardcopy(): FederationSnapshotHardcopy | null {
 }
 
 function writeSnapshotHardcopy(payload: FederationSnapshotHardcopy) {
-  if (typeof window === 'undefined') {
-    return;
-  }
+  if (typeof window === 'undefined') return;
 
   try {
     localStorage.setItem(FEDERATION_HARDCOPY_CACHE_KEY, JSON.stringify(payload));
   } catch {
-    // Ignore storage write failures.
+    // Ignore cache write failures.
   }
 }
 
@@ -119,9 +114,16 @@ async function parseJsonSafe<T>(response: Response): Promise<T | null> {
 }
 
 function sourceLabel(source: 'live' | 'hardcopy' | 'baseline') {
-  if (source === 'live') return 'Live snapshot';
-  if (source === 'hardcopy') return 'Hardcopy snapshot';
-  return 'Baseline snapshot';
+  if (source === 'live') return 'Live';
+  if (source === 'hardcopy') return 'Hardcopy';
+  return 'Baseline';
+}
+
+function formatSync(value: string | null) {
+  if (!value) return 'Awaiting first sync';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return 'Awaiting first sync';
+  return `Synced ${parsed.toLocaleString()}`;
 }
 
 function formatCurrencyCents(value: number) {
@@ -151,8 +153,8 @@ export default function FederationDashboardPage() {
       setDegradedMode(true);
       setNotice(
         reason === 'offline'
-          ? 'Live federation feeds are unavailable. Running the last synced hardcopy snapshot with automatic re-sync every 120 seconds.'
-          : 'No live federation snapshot was returned. Running the last synced hardcopy snapshot.',
+          ? 'Working now: using hardcopy federation snapshot while live sync retries every 120s.'
+          : 'No live snapshot returned. Using hardcopy snapshot.',
       );
       return;
     }
@@ -161,7 +163,7 @@ export default function FederationDashboardPage() {
     setSource('baseline');
     setLastSyncAt(null);
     setDegradedMode(true);
-    setNotice('No synced federation hardcopy exists yet. Using baseline snapshot until live sync resumes.');
+    setNotice('Working now: baseline federation snapshot is active until first sync succeeds.');
   }, []);
 
   const syncSnapshot = useCallback(
@@ -204,8 +206,8 @@ export default function FederationDashboardPage() {
         setDegradedMode(false);
         setError('');
 
-        if (!silent) {
-          setNotice(recovered ? 'Live federation snapshot restored. Hardcopy refreshed.' : 'Live federation snapshot loaded.');
+        if (!silent && (manual || recovered)) {
+          setNotice(recovered ? 'Live federation snapshot restored. Hardcopy refreshed.' : 'Federation snapshot refreshed.');
         }
       } catch {
         if (!silent) {
@@ -239,12 +241,12 @@ export default function FederationDashboardPage() {
     setNotice(null);
 
     if (mutualAid.from_node_id <= 0 || mutualAid.to_node_id <= 0) {
-      setError('Node IDs must be positive numbers.');
+      setError('Node IDs must be positive.');
       return;
     }
 
     if (mutualAid.from_node_id === mutualAid.to_node_id) {
-      setError('From and to node IDs must be different.');
+      setError('From and to node IDs must differ.');
       return;
     }
 
@@ -259,7 +261,7 @@ export default function FederationDashboardPage() {
 
     if (degradedMode) {
       setPendingMutualAid((current) => [pendingRecord, ...current].slice(0, 8));
-      setNotice('Mutual aid flag queued in fallback mode. It will remain visible for replay once live services recover.');
+      setNotice('Working now: mutual aid flag queued locally for replay after reconnect.');
       setSubmittingMutualAid(false);
       return;
     }
@@ -275,16 +277,13 @@ export default function FederationDashboardPage() {
         throw new Error('mutual-aid-submit-failed');
       }
 
-      setPendingMutualAid((current) => [
-        { ...pendingRecord, statusFlag: 'submitted' as const },
-        ...current,
-      ].slice(0, 8));
+      setPendingMutualAid((current) => [{ ...pendingRecord, statusFlag: 'submitted' as const }, ...current].slice(0, 8));
       setNotice('Mutual aid flag submitted.');
       void syncSnapshot({ silent: true });
     } catch {
       setDegradedMode(true);
       setError('Live mutual aid submission is unavailable right now.');
-      setNotice('Working now: the mutual aid flag has been queued locally for replay after reconnection.');
+      setNotice('Working now: mutual aid flag queued locally for replay after reconnect.');
       setPendingMutualAid((current) => [pendingRecord, ...current].slice(0, 8));
     } finally {
       setSubmittingMutualAid(false);
@@ -298,17 +297,20 @@ export default function FederationDashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
-        <div className="text-center">
-          <h1 className="text-4xl font-semibold mb-2 text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-            Federation Metrics
-          </h1>
-          <p className="text-[color:rgba(246,212,203,0.82)]">Cross-node intelligence layer and mutual aid tracking.</p>
-        </div>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-5">
+        <header className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-4xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              Federation Snapshot
+            </h1>
+            <HoverBubble title="Why this matters" align="right">
+              This route shows one federation state. During outage it stays on the last synced hardcopy.
+            </HoverBubble>
+          </div>
+          <p className="text-[color:rgba(246,212,203,0.82)]">Cross-node state and mutual aid coordination.</p>
+        </header>
 
-        {loading ? (
-          <div className="card-civic text-sm text-[color:rgba(246,212,203,0.78)]">Loading federation snapshot…</div>
-        ) : null}
+        {loading ? <div className="card-civic text-sm text-[color:rgba(246,212,203,0.78)]">Loading federation snapshot…</div> : null}
 
         {error || notice ? (
           <div className="rounded-2xl border border-[color:rgba(224,177,21,0.28)] bg-[color:rgba(224,177,21,0.1)] p-4">
@@ -319,13 +321,13 @@ export default function FederationDashboardPage() {
                 {notice ? <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.86)]">{notice}</p> : null}
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Link href="/governance" className="btn-pill btn-pill-outline text-xs">
-                    Open governance index
+                    Governance index
                   </Link>
                   <Link href="/transparency" className="btn-pill btn-pill-outline text-xs">
-                    Open transparency
+                    Transparency
                   </Link>
                   <Link href="/docs" className="btn-pill btn-pill-outline text-xs">
-                    Open docs
+                    Docs
                   </Link>
                 </div>
               </div>
@@ -333,32 +335,37 @@ export default function FederationDashboardPage() {
           </div>
         ) : null}
 
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="card-civic space-y-1">
+        <div className="grid gap-3 md:grid-cols-4">
+          <article className="card-civic space-y-1">
             <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Nodes</p>
             <p className="text-2xl font-semibold text-[var(--color-foreground)]">{snapshot?.total_nodes ?? 'n/a'}</p>
-          </div>
-          <div className="card-civic space-y-1">
+          </article>
+          <article className="card-civic space-y-1">
             <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Treasury</p>
             <p className="text-2xl font-semibold text-[var(--color-foreground)]">
               {snapshot ? formatCurrencyCents(snapshot.total_treasury_cents) : 'n/a'}
             </p>
-          </div>
-          <div className="card-civic space-y-1">
+          </article>
+          <article className="card-civic space-y-1">
             <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Users</p>
             <p className="text-2xl font-semibold text-[var(--color-foreground)]">{snapshot?.total_users ?? 'n/a'}</p>
-          </div>
-          <div className="card-civic space-y-1">
-            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Sovereignty avg</p>
+          </article>
+          <article className="card-civic space-y-1">
+            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Sovereignty</p>
             <p className="text-2xl font-semibold text-[var(--color-foreground)]">{sovereigntyScore}</p>
-          </div>
+          </article>
         </div>
 
-        <div className="card-civic space-y-4">
+        <section className="card-civic space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-              Snapshot
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                Snapshot details
+              </h2>
+              <HoverBubble title="Declutter mode" align="left">
+                Extra protocol details stay in a collapsed panel to keep this view calm.
+              </HoverBubble>
+            </div>
             <button
               className="btn-pill btn-pill-outline text-xs"
               onClick={() => void syncSnapshot({ manual: true })}
@@ -370,9 +377,9 @@ export default function FederationDashboardPage() {
           </div>
 
           {!snapshot ? (
-            <p className="text-sm text-[color:rgba(246,212,203,0.72)]">No snapshot yet.</p>
+            <p className="text-sm text-[color:rgba(246,212,203,0.72)]">No snapshot available.</p>
           ) : (
-            <div className="grid md:grid-cols-3 gap-4 text-sm">
+            <div className="grid md:grid-cols-3 gap-3 text-sm">
               <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-foreground)]/[0.02] p-3">
                 Certified users: <span className="font-mono-data text-[var(--color-foreground)]">{snapshot.total_certified_users}</span>
               </div>
@@ -385,15 +392,33 @@ export default function FederationDashboardPage() {
             </div>
           )}
 
-          <p className="text-xs text-[color:rgba(246,212,203,0.64)]">
-            {lastSyncAt ? `Synced ${new Date(lastSyncAt).toLocaleString()}` : 'Awaiting first live sync'}
-          </p>
-        </div>
+          <p className="text-xs text-[color:rgba(246,212,203,0.64)]">{formatSync(lastSyncAt)}</p>
 
-        <div className="card-civic space-y-3">
-          <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-            Mutual Aid Flag
-          </h2>
+          {snapshot ? (
+            <details className="rounded-xl border border-[var(--color-border)] bg-[var(--color-foreground)]/[0.02] p-3">
+              <summary className="cursor-pointer text-sm text-[color:rgba(246,212,203,0.82)]">Protocol versions</summary>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 text-sm">
+                {Object.entries(snapshot.protocol_versions || {}).map(([key, value]) => (
+                  <div key={key} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-foreground)]/[0.02] px-3 py-2">
+                    <span className="text-[color:rgba(246,212,203,0.72)]">{key}</span>
+                    <span className="ml-2 text-[var(--color-foreground)] font-medium">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          ) : null}
+        </section>
+
+        <section className="card-civic space-y-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              Mutual aid flag
+            </h2>
+            <HoverBubble title="Queue behavior" align="left">
+              If live submission fails, the draft stays queued here for replay after reconnect.
+            </HoverBubble>
+          </div>
+
           <div className="grid md:grid-cols-3 gap-3">
             <input
               className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-foreground)]/[0.02] text-[var(--color-foreground)]"
@@ -430,57 +455,51 @@ export default function FederationDashboardPage() {
           </div>
 
           <button className="btn-pill btn-pill-secondary" onClick={() => void createMutualAid()} disabled={submittingMutualAid}>
-            {submittingMutualAid ? 'Submitting…' : 'Create mutual aid flag'}
+            {submittingMutualAid ? 'Submitting…' : 'Submit mutual aid'}
           </button>
 
           {pendingMutualAid.length > 0 ? (
-            <div className="space-y-2">
-              {pendingMutualAid.map((entry) => (
-                <div key={entry.id} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-foreground)]/[0.02] p-3 text-sm">
-                  Node {entry.from_node_id} → Node {entry.to_node_id} · {entry.status}
-                  <span className="ml-2 text-xs text-[color:rgba(246,212,203,0.65)]">
-                    {entry.statusFlag === 'pending_sync' ? 'pending sync' : 'submitted'} · {new Date(entry.createdAt).toLocaleString()}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <details className="rounded-xl border border-[var(--color-border)] bg-[var(--color-foreground)]/[0.02] p-3" open>
+              <summary className="cursor-pointer text-sm text-[color:rgba(246,212,203,0.82)]">
+                Pending / recent submissions ({pendingMutualAid.length})
+              </summary>
+              <div className="mt-3 space-y-2">
+                {pendingMutualAid.map((entry) => (
+                  <div key={entry.id} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-foreground)]/[0.02] p-2 text-sm">
+                    Node {entry.from_node_id} → Node {entry.to_node_id} · {entry.status}
+                    <span className="ml-2 text-xs text-[color:rgba(246,212,203,0.65)]">
+                      {entry.statusFlag === 'pending_sync' ? 'pending sync' : 'submitted'} · {new Date(entry.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </details>
           ) : null}
-        </div>
+        </section>
 
-        <div className="card-civic space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-              Silent Federation Nodes
-            </h2>
-            <span className="text-xs text-[color:rgba(246,212,203,0.64)]">Partner integration</span>
-          </div>
-          <p className="text-sm text-[color:rgba(246,212,203,0.8)]">
-            Partner products can embed our civic engine via reverse proxy or the widget SDK.
-          </p>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-[var(--color-foreground)]">Bridge identity</h3>
-              <code className="block text-xs p-3 rounded-lg bg-[var(--color-muted)]">POST /api/node/auth/bridge</code>
-              <h3 className="text-sm font-semibold text-[var(--color-foreground)]">Accrue / redeem benefits</h3>
-              <code className="block text-xs p-3 rounded-lg bg-[var(--color-muted)]">POST /api/node/benefits/accrue</code>
-              <code className="block text-xs p-3 rounded-lg bg-[var(--color-muted)]">POST /api/node/benefits/redeem</code>
+        <section className="card-civic space-y-3">
+          <details>
+            <summary className="cursor-pointer text-sm text-[color:rgba(246,212,203,0.82)]">Partner integration references</summary>
+            <div className="mt-3 grid md:grid-cols-2 gap-3 text-sm">
+              <div className="space-y-2">
+                <code className="block rounded-lg bg-[var(--color-muted)] p-3 text-xs">POST /api/node/auth/bridge</code>
+                <code className="block rounded-lg bg-[var(--color-muted)] p-3 text-xs">POST /api/node/benefits/accrue</code>
+                <code className="block rounded-lg bg-[var(--color-muted)] p-3 text-xs">POST /api/node/benefits/redeem</code>
+              </div>
+              <div className="space-y-2">
+                <p className="text-[color:rgba(246,212,203,0.75)]">Widget preview:</p>
+                <iframe
+                  className="w-full min-h-[180px] rounded-lg border border-[var(--color-border)]"
+                  src={`${API_BASE}/community?widget=benefits`}
+                  title="Federation widget preview"
+                />
+                <code className="block rounded-lg bg-[var(--color-muted)] p-3 text-xs">
+                  /community?widget=benefits&token=PARTNER_JWT&partner_user_id=abc123
+                </code>
+              </div>
             </div>
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-[var(--color-foreground)]">Widget preview</h3>
-              <p className="text-xs text-[color:rgba(246,212,203,0.72)]">
-                Use a partner token and partner_user_id query to render benefits balance.
-              </p>
-              <iframe
-                className="w-full min-h-[180px] rounded-lg border border-[var(--color-border)]"
-                src={`${API_BASE}/community?widget=benefits`}
-                title="Federation widget preview"
-              />
-              <code className="block text-xs p-3 rounded-lg bg-[var(--color-muted)]">
-                /community?widget=benefits&token=PARTNER_JWT&partner_user_id=abc123
-              </code>
-            </div>
-          </div>
-        </div>
+          </details>
+        </section>
       </div>
     </div>
   );

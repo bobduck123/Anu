@@ -504,3 +504,37 @@ Validation:
 - Explicit assertions executed for degraded/hardcopy continuity messaging and CTA visibility.
 - `npm run -s lint` passed on touched files.
 - `npm run -s typecheck` passed.
+
+## 22) Phase 6 — Batch 1 (Copy clarity + hover-bubble declutter pass)
+
+Date: 2026-04-06
+Lens: Reduce cognitive load by simplifying copy, moving secondary context into hover bubbles, and collapsing advanced details.
+
+Updated files:
+- `frontend-next/src/ui-system/primitives/HoverBubble.tsx`
+- `frontend-next/src/app/(app)/governance/formulas/page.tsx`
+- `frontend-next/src/app/(app)/governance/metrics-registry/page.tsx`
+- `frontend-next/src/app/(app)/governance/federation/page.tsx`
+- `frontend-next/src/app/(app)/governance/institutional/page.tsx`
+
+Changes delivered:
+- Introduced reusable **floating hover bubble** primitive for concise contextual help without adding always-visible copy weight.
+- Simplified route copy across all four governance surfaces:
+  - shorter headings/subheads
+  - shorter degraded/continuity notices
+  - concise CTA labels
+- Applied decluttering UI tactics:
+  - hover bubbles for “why this matters” and section guidance
+  - collapsed advanced/secondary content via `<details>` on dense sections
+  - reduced always-visible explanatory text while preserving critical trust signals.
+- Preserved hardcopy synchronization architecture from Phase 5 while making source/status language scan-friendly (`Live`, `Hardcopy`, `Baseline`).
+
+Validation:
+- Browser verification on:
+  - `/governance/formulas`
+  - `/governance/metrics-registry`
+  - `/governance/federation`
+  - `/governance/institutional`
+- Explicit assertions executed for route copy, degraded continuity messaging, and hover-bubble trigger visibility.
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const API_BASE = getCoreApiBase();
 const METRIC_HARDCOPY_CACHE_KEY = 'governance-metric-ruleset-hardcopy-v1';
@@ -41,15 +42,11 @@ function computeMetricStamp(metrics: MetricDefinition[]): string {
 }
 
 function readMetricHardcopy(): MetricHardcopy | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
+  if (typeof window === 'undefined') return null;
 
   try {
     const raw = localStorage.getItem(METRIC_HARDCOPY_CACHE_KEY);
-    if (!raw) {
-      return null;
-    }
+    if (!raw) return null;
 
     const parsed = JSON.parse(raw) as MetricHardcopy;
     if (!Array.isArray(parsed.metrics) || typeof parsed.stamp !== 'string' || typeof parsed.syncedAt !== 'string') {
@@ -63,14 +60,12 @@ function readMetricHardcopy(): MetricHardcopy | null {
 }
 
 function writeMetricHardcopy(payload: MetricHardcopy) {
-  if (typeof window === 'undefined') {
-    return;
-  }
+  if (typeof window === 'undefined') return;
 
   try {
     localStorage.setItem(METRIC_HARDCOPY_CACHE_KEY, JSON.stringify(payload));
   } catch {
-    // Ignore storage write failures.
+    // Ignore cache write failures.
   }
 }
 
@@ -83,9 +78,16 @@ async function parseJsonSafe<T>(response: Response): Promise<T | null> {
 }
 
 function sourceLabel(source: 'live' | 'hardcopy' | 'baseline') {
-  if (source === 'live') return 'Live rule set';
-  if (source === 'hardcopy') return 'Hardcopy rule set';
-  return 'Baseline rule set';
+  if (source === 'live') return 'Live';
+  if (source === 'hardcopy') return 'Hardcopy';
+  return 'Baseline';
+}
+
+function formatSync(value: string | null) {
+  if (!value) return 'Awaiting first sync';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return 'Awaiting first sync';
+  return `Synced ${parsed.toLocaleString()}`;
 }
 
 export default function MetricsRegistryPage() {
@@ -108,8 +110,8 @@ export default function MetricsRegistryPage() {
       setDegradedMode(true);
       setNotice(
         reason === 'offline'
-          ? 'Live metrics service is unavailable. Running the last synced hardcopy metric set and auto-resyncing every 90 seconds.'
-          : 'No live metrics were returned. Running the last synced hardcopy metric set.',
+          ? 'Working now: using hardcopy metrics while live sync retries every 90s.'
+          : 'No live metrics returned. Using hardcopy metric set.',
       );
       return;
     }
@@ -118,7 +120,7 @@ export default function MetricsRegistryPage() {
     setSource('baseline');
     setLastSyncAt(null);
     setDegradedMode(true);
-    setNotice('No synced metric hardcopy exists yet. Using baseline metrics until live sync becomes available.');
+    setNotice('Working now: baseline metrics are active until first sync succeeds.');
   }, []);
 
   const syncMetrics = useCallback(
@@ -158,8 +160,8 @@ export default function MetricsRegistryPage() {
         setDegradedMode(false);
         setError('');
 
-        if (!silent) {
-          setNotice(recovered ? 'Live metrics reconnected. Hardcopy metric set refreshed.' : 'Live metrics loaded.');
+        if (!silent && (manual || recovered)) {
+          setNotice(recovered ? 'Live metrics restored. Hardcopy refreshed.' : 'Metrics refreshed.');
         }
       } catch {
         if (!silent) {
@@ -195,17 +197,20 @@ export default function MetricsRegistryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
-        <div className="text-center">
-          <h1 className="text-4xl font-semibold mb-2 text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-            Metrics Registry
-          </h1>
-          <p className="text-[color:rgba(246,212,203,0.82)]">Versioned metrics with required primitives.</p>
-        </div>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-5">
+        <header className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-4xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+              Metric Rules
+            </h1>
+            <HoverBubble title="Why this matters" align="right">
+              Governance decisions should read from one ruleset source, even during outages.
+            </HoverBubble>
+          </div>
+          <p className="text-[color:rgba(246,212,203,0.82)]">Versioned metrics with live + hardcopy sync.</p>
+        </header>
 
-        {loading ? (
-          <div className="card-civic text-sm text-[color:rgba(246,212,203,0.78)]">Loading metrics registry…</div>
-        ) : null}
+        {loading ? <div className="card-civic text-sm text-[color:rgba(246,212,203,0.78)]">Loading metrics…</div> : null}
 
         {error || notice ? (
           <div className="rounded-2xl border border-[color:rgba(224,177,21,0.28)] bg-[color:rgba(224,177,21,0.1)] p-4">
@@ -216,13 +221,13 @@ export default function MetricsRegistryPage() {
                 {notice ? <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.86)]">{notice}</p> : null}
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Link href="/governance" className="btn-pill btn-pill-outline text-xs">
-                    Open governance index
+                    Governance index
                   </Link>
                   <Link href="/transparency" className="btn-pill btn-pill-outline text-xs">
-                    Open transparency
+                    Transparency
                   </Link>
                   <Link href="/docs" className="btn-pill btn-pill-outline text-xs">
-                    Open docs
+                    Docs
                   </Link>
                 </div>
               </div>
@@ -230,29 +235,32 @@ export default function MetricsRegistryPage() {
           </div>
         ) : null}
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="card-civic space-y-1">
-            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Metrics visible</p>
+        <div className="grid gap-3 md:grid-cols-3">
+          <article className="card-civic space-y-1">
+            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Metrics</p>
             <p className="text-2xl font-semibold text-[var(--color-foreground)]">{metrics.length}</p>
-          </div>
-          <div className="card-civic space-y-1">
+          </article>
+          <article className="card-civic space-y-1">
             <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Latest version</p>
             <p className="text-2xl font-semibold text-[var(--color-foreground)]">v{latestVersion || 'n/a'}</p>
-          </div>
-          <div className="card-civic space-y-1">
-            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Rule source</p>
+          </article>
+          <article className="card-civic space-y-1">
+            <p className="text-xs uppercase tracking-[0.15em] text-[color:rgba(246,212,203,0.66)]">Source</p>
             <p className="text-2xl font-semibold text-[var(--color-foreground)]">{sourceLabel(source)}</p>
-            <p className="text-xs text-[color:rgba(246,212,203,0.62)]">
-              {lastSyncAt ? `Synced ${new Date(lastSyncAt).toLocaleString()}` : 'Awaiting first live sync'}
-            </p>
-          </div>
+            <p className="text-xs text-[color:rgba(246,212,203,0.62)]">{formatSync(lastSyncAt)}</p>
+          </article>
         </div>
 
-        <div className="card-civic space-y-3">
+        <section className="card-civic space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-              Metric Definitions
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                Current metrics
+              </h2>
+              <HoverBubble title="Declutter mode" align="left">
+                Extra context is in hover bubbles. The table stays short for faster scanning.
+              </HoverBubble>
+            </div>
             <button
               className="btn-pill btn-pill-outline text-xs"
               onClick={() => void syncMetrics({ manual: true })}
@@ -264,7 +272,7 @@ export default function MetricsRegistryPage() {
           </div>
 
           {metrics.length === 0 ? (
-            <p className="text-sm text-[color:rgba(246,212,203,0.72)]">No metrics.</p>
+            <p className="text-sm text-[color:rgba(246,212,203,0.72)]">No metrics available.</p>
           ) : (
             <div className="space-y-2">
               {metrics.map((metric) => (
@@ -275,14 +283,16 @@ export default function MetricsRegistryPage() {
                   <span className="font-semibold text-[var(--color-foreground)]">{metric.key}</span>
                   <span className="ml-2 text-[color:rgba(246,212,203,0.76)]">v{metric.version}</span>
                   <span className="ml-2 text-[color:rgba(246,212,203,0.7)]">{metric.output_units || 'units n/a'}</span>
-                  {degradedMode ? (
-                    <span className="ml-3 text-xs text-[color:rgba(246,212,203,0.62)]">fallback hardcopy</span>
+                  {source === 'hardcopy' ? (
+                    <span className="ml-3 text-xs text-[color:rgba(246,212,203,0.62)]">hardcopy</span>
+                  ) : source === 'baseline' ? (
+                    <span className="ml-3 text-xs text-[color:rgba(246,212,203,0.62)]">baseline</span>
                   ) : null}
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </section>
       </div>
     </div>
   );
