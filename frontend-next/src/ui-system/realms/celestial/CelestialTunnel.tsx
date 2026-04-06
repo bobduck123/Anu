@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { CommunityCelestialIntent, CommunityCelestialIntentOption } from './communityCelestialPresentation';
 
 function joinClasses(...values: Array<string | false | null | undefined>) {
@@ -10,6 +11,8 @@ interface CelestialTunnelProps {
   onSelectIntent: (intent: CommunityCelestialIntent) => void;
   onEnter: () => void;
   loading?: boolean;
+  secondaryActionHref?: string;
+  secondaryActionLabel?: string;
 }
 
 export function CelestialTunnel({
@@ -18,6 +21,8 @@ export function CelestialTunnel({
   onSelectIntent,
   onEnter,
   loading = false,
+  secondaryActionHref,
+  secondaryActionLabel = 'Sign in to publish',
 }: CelestialTunnelProps) {
   const activeDefinition = intents.find((intent) => intent.id === activeIntent) ?? intents[0];
 
@@ -33,6 +38,9 @@ export function CelestialTunnel({
             <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:rgba(246,212,203,0.82)] md:text-base">
               Choose the kind of commons trace you are looking for first. The route uses that intent to open the starfield
               around the relevant region instead of dropping you into a flat feed.
+            </p>
+            <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.68)]">
+              Step 1: choose intent · Step 2: enter starfield
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -53,14 +61,25 @@ export function CelestialTunnel({
               ))}
             </div>
 
-            <button
-              type="button"
-              onClick={onEnter}
-              disabled={loading}
-              className="mt-6 inline-flex min-h-11 items-center rounded-full border border-[#f6d4cb]/26 bg-[linear-gradient(140deg,rgba(246,212,203,0.17),rgba(246,212,203,0.07))] px-5 text-sm font-semibold text-[#f6d4cb] transition hover:border-[#f6d4cb]/44 hover:bg-[rgba(246,212,203,0.2)] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? 'Preparing entry…' : 'Enter the starfield'}
-            </button>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={onEnter}
+                disabled={loading}
+                className="inline-flex min-h-11 items-center rounded-full border border-[#f6d4cb]/26 bg-[linear-gradient(140deg,rgba(246,212,203,0.17),rgba(246,212,203,0.07))] px-5 text-sm font-semibold text-[#f6d4cb] transition hover:border-[#f6d4cb]/44 hover:bg-[rgba(246,212,203,0.2)] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? 'Preparing entry…' : 'Enter the starfield'}
+              </button>
+
+              {secondaryActionHref ? (
+                <Link
+                  href={secondaryActionHref}
+                  className="inline-flex min-h-11 items-center rounded-full border border-[color:rgba(246,212,203,0.16)] bg-[color:rgba(30,2,39,0.42)] px-5 text-sm font-semibold text-[color:rgba(246,212,203,0.9)] transition hover:border-[color:rgba(246,212,203,0.3)] hover:bg-[color:rgba(246,212,203,0.08)] hover:text-[var(--color-foreground)]"
+                >
+                  {secondaryActionLabel}
+                </Link>
+              ) : null}
+            </div>
           </div>
 
           <div className="min-w-0 rounded-[1.6rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.22)] p-5">

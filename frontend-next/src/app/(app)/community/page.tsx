@@ -287,6 +287,7 @@ function CommunityPageContent() {
       ? 'Live community sources are unavailable, so the commons is presenting a deterministic local fallback.'
       : 'No public traces are published yet, so the commons remains inspectable through the seeded demo packet.';
   const showStarfield = surfaceMode === 'celestial';
+  const isPreEntryTunnel = showStarfield && !enteredStarfield;
   const chamberOpen = showStarfield && enteredStarfield && selectedNodeSurface === 'chamber' && Boolean(selectedPost);
 
   const topChrome = (
@@ -355,45 +356,59 @@ function CommunityPageContent() {
               </AnuFilterGroup>
 
               <AnuFilterGroup className="justify-end">
-                {COMMUNITY_SORT_OPTIONS.map((option) => (
-                  <AnuControlButton
-                    key={option.mode}
-                    onClick={() => setSortMode(option.mode)}
-                    tone={sortMode === option.mode ? 'active' : 'default'}
-                  >
-                    {option.label}
-                  </AnuControlButton>
-                ))}
-
-                {authLoading ? (
-                  <AnuControlButton disabled iconLeft={Loader2}>Session</AnuControlButton>
-                ) : isAuthenticated ? (
-                  <AnuControlButton onClick={openComposer} iconLeft={Plus} tone="active">
-                    Open composer
+                {isPreEntryTunnel ? (
+                  <AnuControlButton onClick={() => void loadFeed()} disabled={isLoading} iconLeft={RefreshCw}>
+                    Refresh
                   </AnuControlButton>
                 ) : (
-                  <AnuControlLink href={authHref} iconLeft={Plus}>
-                    Sign in to publish
-                  </AnuControlLink>
-                )}
+                  <>
+                    {COMMUNITY_SORT_OPTIONS.map((option) => (
+                      <AnuControlButton
+                        key={option.mode}
+                        onClick={() => setSortMode(option.mode)}
+                        tone={sortMode === option.mode ? 'active' : 'default'}
+                      >
+                        {option.label}
+                      </AnuControlButton>
+                    ))}
 
-                <AnuControlButton onClick={() => void loadFeed()} disabled={isLoading} iconLeft={RefreshCw}>
-                  Refresh
-                </AnuControlButton>
+                    {authLoading ? (
+                      <AnuControlButton disabled iconLeft={Loader2}>Session</AnuControlButton>
+                    ) : isAuthenticated ? (
+                      <AnuControlButton onClick={openComposer} iconLeft={Plus} tone="active">
+                        Open composer
+                      </AnuControlButton>
+                    ) : (
+                      <AnuControlLink href={authHref} iconLeft={Plus}>
+                        Sign in to publish
+                      </AnuControlLink>
+                    )}
+
+                    <AnuControlButton onClick={() => void loadFeed()} disabled={isLoading} iconLeft={RefreshCw}>
+                      Refresh
+                    </AnuControlButton>
+                  </>
+                )}
               </AnuFilterGroup>
             </AnuFilterBar>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              {COMMUNITY_CELESTIAL_INTENTS.map((intent) => (
-                <AnuControlButton
-                  key={intent.id}
-                  onClick={() => setActiveIntent(intent.id)}
-                  tone={activeIntent === intent.id ? 'active' : 'default'}
-                >
-                  {intent.label}
-                </AnuControlButton>
-              ))}
-            </div>
+            {isPreEntryTunnel ? (
+              <p className="mt-4 text-sm text-[color:rgba(246,212,203,0.82)]">
+                Choose intent chips in the carved entry panel to open the starfield around that region.
+              </p>
+            ) : (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {COMMUNITY_CELESTIAL_INTENTS.map((intent) => (
+                  <AnuControlButton
+                    key={intent.id}
+                    onClick={() => setActiveIntent(intent.id)}
+                    tone={activeIntent === intent.id ? 'active' : 'default'}
+                  >
+                    {intent.label}
+                  </AnuControlButton>
+                ))}
+              </div>
+            )}
 
             {warningMessage || loadError || trustedNewsMeta.stale || autoFallbackReason ? (
               <div className="mt-4 space-y-3">
@@ -421,6 +436,21 @@ function CommunityPageContent() {
                 {autoFallbackReason && !showStarfield ? (
                   <div className="rounded-2xl border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-4 py-3 text-sm text-[color:rgba(246,212,203,0.84)]">
                     {autoFallbackReason}
+                  </div>
+                ) : null}
+                {(loadError || warningMessage) ? (
+                  <div className="rounded-2xl border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(30,2,39,0.3)] px-4 py-3">
+                    <p className="text-xs uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.72)]">Working right now</p>
+                    <p className="mt-1 text-sm text-[color:rgba(246,212,203,0.86)]">
+                      Keep browsing via the read-only starfield or backup gallery, and use trust routes while live publication recovers.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <AnuControlLink href="/transparency" tone="default">Open transparency</AnuControlLink>
+                      <AnuControlLink href="/docs" tone="default">Open docs</AnuControlLink>
+                      {!authLoading && !isAuthenticated ? (
+                        <AnuControlLink href={authHref} tone="default">Open sign-in route</AnuControlLink>
+                      ) : null}
+                    </div>
                   </div>
                 ) : null}
               </div>
@@ -538,6 +568,8 @@ function CommunityPageContent() {
                 onSelectIntent={setActiveIntent}
                 onEnter={enterStarfield}
                 loading={isLoading}
+                secondaryActionHref={!authLoading && !isAuthenticated ? authHref : undefined}
+                secondaryActionLabel="Sign in before entry"
               />
             ) : undefined
           }

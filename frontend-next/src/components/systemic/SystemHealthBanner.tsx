@@ -193,7 +193,11 @@ export function SystemHealthBanner() {
 
   const statusHeading = 'Fallback mode active';
 
-  const statusDetail = `${issueCount} service signal${issueCount > 1 ? 's' : ''} need attention. Cultural routes remain available.`;
+  const statusDetail = `${issueCount} service signal${issueCount > 1 ? 's' : ''} need attention.`;
+
+  const workingNowDetail = impactIndicator.state !== 'online'
+    ? 'Working now: community browsing, docs, and transparency remain available while maps stays in fallback mode.'
+    : 'Working now: public routes remain available while degraded services recover.';
 
   if (!hasErrors) {
     return null;
@@ -202,11 +206,11 @@ export function SystemHealthBanner() {
   const cta = impactIndicator.state !== 'online'
     ? {
         href: '/education/maps',
-        label: 'Open maps fallback',
+        label: 'Open working maps route',
       }
     : {
         href: '/docs',
-        label: 'Open continuity routes',
+        label: 'Open working docs route',
       };
 
   return (
@@ -232,6 +236,7 @@ export function SystemHealthBanner() {
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] opacity-80">{statusHeading}</p>
             <p className="text-sm font-medium leading-snug md:text-[15px]">{statusDetail}</p>
+            <p className="mt-1 text-xs leading-5 text-[color:rgba(246,212,203,0.82)]">{workingNowDetail}</p>
           </div>
         </div>
 
@@ -278,6 +283,12 @@ export function SystemHealthBanner() {
               </span>
             ))}
           </div>
+
+          <p className="mt-2 text-xs leading-5 text-[color:rgba(246,212,203,0.82)]">
+            Best next step: {impactIndicator.state !== 'online'
+              ? 'use the maps fallback route or continue through docs/transparency while service probes recover.'
+              : 'continue through docs and public routes while backend probes stabilize.'}
+          </p>
 
           {lastCheckedAt ? (
             <p className="mt-2 text-xs opacity-80">Last checked {lastCheckedAt.toLocaleTimeString()}</p>

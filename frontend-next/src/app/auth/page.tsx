@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { ArrowRight, ShieldCheck, Sparkles, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -13,6 +12,7 @@ import {
 } from '@/lib/auth/returnTo';
 import { useTenant } from '@/ui-system/layout/TenantBrandWrapper';
 import { getThresholdState } from '@/lib/tenantSemantics';
+import { isSupabaseConfigured, SUPABASE_MISSING_MESSAGE } from '@/lib/supabase/config';
 import {
   AnuChip,
   AnuControlButton,
@@ -62,6 +62,15 @@ function AuthPageContent() {
   const nextHref = useMemo(() => resolvePostAuthReturnTo(rawReturnTo, '/profile'), [rawReturnTo]);
   const backHref = useMemo(() => (hasExplicitReturnTo ? sanitizeReturnTo(rawReturnTo, '/') : '/'), [hasExplicitReturnTo, rawReturnTo]);
   const thresholdState = useMemo(() => getThresholdState(null, false, tenant), [tenant]);
+  const supabaseConfigured = useMemo(() => isSupabaseConfigured(), []);
+  const authUnavailableMessage = useMemo(() => {
+    if (supabaseConfigured) {
+      return '';
+    }
+
+    return `${SUPABASE_MISSING_MESSAGE} Continue in read-only mode using public routes while auth is unavailable.`;
+  }, [supabaseConfigured]);
+  const authActionsDisabled = isLoading || Boolean(authUnavailableMessage);
 
   useEffect(() => {
     if (hasExplicitReturnTo) {
@@ -97,6 +106,10 @@ function AuthPageContent() {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Authentication failed';
+      if (message.includes(SUPABASE_MISSING_MESSAGE)) {
+        setError(authUnavailableMessage || SUPABASE_MISSING_MESSAGE);
+        return;
+      }
       setError(message);
     }
   };
@@ -184,6 +197,7 @@ function AuthPageContent() {
                   setError('');
                 }}
                 tone={isLogin ? 'active' : 'default'}
+                disabled={authActionsDisabled}
               >
                 Log in
               </AnuControlButton>
@@ -193,10 +207,23 @@ function AuthPageContent() {
                   setError('');
                 }}
                 tone={!isLogin ? 'active' : 'default'}
+                disabled={authActionsDisabled}
               >
                 Sign up
               </AnuControlButton>
             </div>
+
+            {authUnavailableMessage ? (
+              <div className="mt-6 rounded-xl border border-[color:rgba(224,177,21,0.24)] bg-[color:rgba(224,177,21,0.08)] px-4 py-3 text-sm text-[#f6d4cb]">
+                <p className="font-semibold">Auth temporarily unavailable in this environment</p>
+                <p className="mt-1 text-[color:rgba(246,212,203,0.88)]">{authUnavailableMessage}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <AnuControlLink href="/community" tone="default">Open community</AnuControlLink>
+                  <AnuControlLink href="/transparency" tone="default">Open transparency</AnuControlLink>
+                  <AnuControlLink href="/docs" tone="default">Read docs</AnuControlLink>
+                </div>
+              </div>
+            ) : null}
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div>
@@ -205,6 +232,7 @@ function AuthPageContent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className={authInputClass}
+                  disabled={authActionsDisabled}
                   placeholder="you@example.com"
                   type="email"
                   required
@@ -219,6 +247,7 @@ function AuthPageContent() {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       className={authInputClass}
+                      disabled={authActionsDisabled}
                       placeholder="Username (optional)"
                       type="text"
                       autoComplete="username"
@@ -230,6 +259,7 @@ function AuthPageContent() {
                       value={pseudonym}
                       onChange={(e) => setPseudonym(e.target.value)}
                       className={authInputClass}
+                      disabled={authActionsDisabled}
                       placeholder="Public name (optional)"
                       type="text"
                     />
@@ -242,6 +272,7 @@ function AuthPageContent() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className={authInputClass}
+                  disabled={authActionsDisabled}
                   placeholder="Password"
                   type="password"
                   required
@@ -256,6 +287,7 @@ function AuthPageContent() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className={authInputClass}
+                    disabled={authActionsDisabled}
                     placeholder="Confirm password"
                     type="password"
                     required
@@ -270,8 +302,14 @@ function AuthPageContent() {
               {success ? (
                 <div className="rounded-xl border border-[color:rgba(102,87,0,0.25)] bg-[color:rgba(102,87,0,0.10)] px-3 py-3 text-sm text-[#f6d4cb]">{success}</div>
               ) : null}
-              <AnuControlButton type="submit" disabled={isLoading} tone="active" className="w-full justify-center">
-                {isLoading ? 'Please wait...' : isLogin ? 'Login' : 'Create Account'}
+              <AnuControlButton type="submit" disabled={authActionsDisabled} tone="active" className="w-full justify-center">
+                {authUnavailableMessage
+                  ? 'Auth unavailable in this environment'
+                  : isLoading
+                    ? 'Please wait...'
+                    : isLogin
+                      ? 'Login'
+                      : 'Create Account'}
               </AnuControlButton>
             </form>
 
