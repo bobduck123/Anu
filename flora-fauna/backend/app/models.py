@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import event
 from itsdangerous.serializer import Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -10,6 +10,14 @@ from .time_utils import now_utc
 
 def utcnow():
     return now_utc()
+
+
+def to_naive_utc(value):
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value
+    return value.astimezone(timezone.utc).replace(tzinfo=None)
 
 
 class User(db.Model):
@@ -283,9 +291,24 @@ class Action(db.Model):
         actions = []
         if self.recurrence == 'none':
             return actions
-        interval = {'daily': timedelta(days=1), 'weekly': timedelta(weeks=1), 'monthly': timedelta(weeks=4)}.get(self.recurrence, timedelta(days=0))
-        current_date = self.end_date + interval
-        while current_date <= utcnow() + timedelta(days=365):  # Limit to 1 year
+
+        interval = {
+            'daily': timedelta(days=1),
+            'weekly': timedelta(weeks=1),
+            'monthly': timedelta(weeks=4),
+        }.get(self.recurrence, timedelta(days=0))
+
+        if interval <= timedelta(0):
+            return actions
+
+        end_date = to_naive_utc(self.end_date)
+        if end_date is None:
+            return actions
+
+        current_date = end_date + interval
+        horizon = utcnow() + timedelta(days=365)  # Limit to 1 year
+
+        while current_date <= horizon:
             new_action = Action(
                 title=self.title,
                 details=self.details,
@@ -300,7 +323,7 @@ class Action(db.Model):
                 city=self.city,
                 country=self.country,
                 start_date=current_date,
-                end_date=self.end_date,
+                end_date=end_date,
                 first_milestone=self.first_milestone,
                 second_milestone=self.second_milestone,
                 final_milestone=self.final_milestone,
