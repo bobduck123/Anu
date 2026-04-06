@@ -25,6 +25,7 @@ Primary references:
 - `VERIFY_PENDING` Default `cmd /c npm run -s test` still needs DB env normalization to include DB suites in one pass.
 - `CANDIDATE_READY` `verify-env-contract.py` + `smoke-core-runtime.py` passed locally.
 - `CANDIDATE_READY` `verify-runtime-contracts.py` passed on candidate with local core (`5000`) + impact (`5003`) services running.
+- `VERIFY_PENDING` Live production endpoint audit (2026-04-07): `4/5` contract endpoints pass; impact `/v1/health` is `404` on both direct and frontend rewrite paths.
 - `DONE` Frontend full CI matrix passed (`72` suites / `225` tests via `npm run -s test:ci`).
 
 ---
@@ -40,6 +41,14 @@ Primary references:
     - either set DB env in `npm test` path, or
     - codify dedicated verify commands as release gate and document that `npm test` is non-DB by default.
   - Target: zero ambiguity on required command for release sign-off.
+
+- [ ] `VERIFY_PENDING` Restore production `/v1/health` endpoint on impact-service and re-verify live contract checks.
+  - Repo fix prepared: `services/impact-service/vercel.json` now maps `/v1/health` -> `api/falak.ts`.
+  - Deploy impact-service from `main`.
+  - Re-run:
+    - `https://anu-impact-service.vercel.app/v1/health`
+    - `https://maanara.vercel.app/_impact/v1/health`
+  - Target: `200` with runtime-contract fields (`status`, `service`, `component`, `contract_version`, `timestamp`, `dependencies`).
 
 - [x] `CANDIDATE_READY` Bring candidate services up and rerun runtime contract verifier.
   - Required endpoints:
@@ -96,7 +105,7 @@ Primary references:
 
 ## 5) Exit Criteria For Desired State
 
-- [ ] All P0 blockers clear (`frontend test:ci`, canonical impact-service release test command, runtime contract verifier).
+- [ ] All P0 blockers clear (`frontend test:ci`, canonical impact-service release test command, runtime contract verifier, production `/v1/health` live).
 - [ ] Go-live board has no unresolved `VERIFY_PENDING` items that are code-verifiable on candidate/staging.
 - [ ] Remaining items are only explicit `ENV_PENDING`/`OPS_PENDING` with named owners and dates.
 - [ ] Realm plan evidence gates (A/B/C) are current and linked to reproducible commands/artifacts.
