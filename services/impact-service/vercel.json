@@ -18,6 +18,10 @@
   },
   "routes": [
     {
+      "src": "/v1/health",
+      "dest": "api/falak.ts"
+    },
+    {
       "src": "/v1/falak/health",
       "dest": "api/falak.ts"
     },

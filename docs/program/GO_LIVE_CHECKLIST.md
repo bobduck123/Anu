@@ -29,6 +29,9 @@ Scope: M0-M5 runtime contracts + ANU UI rollout
   - `python smoke-core-runtime.py`
 - `CANDIDATE_READY` Runtime contract verification passed on 2026-04-07 when core+impact were brought up locally:
   - `python scripts/verify-runtime-contracts.py`
+- `VERIFY_PENDING` Live production endpoint audit (2026-04-07) shows `4/5` contract endpoints healthy; impact `/v1/health` is returning `404` on both:
+  - `https://anu-impact-service.vercel.app/v1/health`
+  - `https://maanara.vercel.app/_impact/v1/health`
 - `DONE` Frontend full CI test matrix passed on 2026-04-07 (`npm run -s test:ci` in `frontend-next`: `72` suites, `225` tests).
 - `DONE` Focused frontend verification passed on 2026-04-07:
   - `src/test/celestialPacketAdapter.test.ts`
@@ -142,7 +145,8 @@ Scope: M0-M5 runtime contracts + ANU UI rollout
   - `/_impact/v1/falak/health`
   - `/_impact/v1/falak/readiness`
   - `/admin/runtime-health`
-- `VERIFY_PENDING` All production health checks pass after deploy.
+- `VERIFY_PENDING` Live check on 2026-04-07: core and Falak endpoints are healthy; impact `/v1/health` returned `404`.
+- `CANDIDATE_READY` Route fix is prepared in repo (`services/impact-service/vercel.json` maps `/v1/health` to `api/falak.ts`); redeploy impact-service and re-verify.
 
 ---
 
