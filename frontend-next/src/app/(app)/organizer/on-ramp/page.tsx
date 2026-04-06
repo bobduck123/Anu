@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Compass, Shield, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { api, OrganizerStatus } from '@/lib/api';
-import { buildAuthHref } from '@/lib/auth/returnTo';
+import { buildAuthHref, sanitizeReturnTo } from '@/lib/auth/returnTo';
 import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const FALLBACK_STATUS: OrganizerStatus = {
@@ -16,12 +17,29 @@ const FALLBACK_STATUS: OrganizerStatus = {
 
 export default function OrganizerOnRampPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
   const [status, setStatus] = useState<OrganizerStatus>(FALLBACK_STATUS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const authHref = useMemo(() => buildAuthHref('/organizer/on-ramp'), []);
+  const requestedNextRoute = useMemo(() => {
+    const rawNext = searchParams.get('next');
+    const safeNext = sanitizeReturnTo(rawNext, '/organizer');
+    if (safeNext.startsWith('/organizer/on-ramp')) {
+      return '/organizer';
+    }
+    return safeNext;
+  }, [searchParams]);
+
+  const onRampReturnTo = useMemo(() => {
+    if (requestedNextRoute !== '/organizer') {
+      return `/organizer/on-ramp?next=${encodeURIComponent(requestedNextRoute)}`;
+    }
+    return '/organizer/on-ramp';
+  }, [requestedNextRoute]);
+
+  const authHref = useMemo(() => buildAuthHref(onRampReturnTo), [onRampReturnTo]);
 
   useEffect(() => {
     if (authLoading) {
@@ -71,6 +89,8 @@ export default function OrganizerOnRampPage() {
     : status.hasApplied
       ? 'Organizer application in progress'
       : 'Organizer pathway is open';
+
+  const resumeLabel = requestedNextRoute === '/organizer' ? 'Organizer console' : 'Resume attempted route';
 
   return (
     <div className="min-h-screen bg-background">
@@ -127,6 +147,12 @@ export default function OrganizerOnRampPage() {
           </article>
         </div>
 
+        {requestedNextRoute !== '/organizer' ? (
+          <div className="card-civic text-xs text-[color:rgba(246,212,203,0.76)]">
+            Requested route preserved: <span className="font-mono text-[var(--color-foreground)]">{requestedNextRoute}</span>
+          </div>
+        ) : null}
+
         {!isAuthenticated ? (
           <section className="card-civic space-y-3">
             <h2 className="text-2xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
@@ -135,6 +161,11 @@ export default function OrganizerOnRampPage() {
             <p className="text-sm text-[color:rgba(246,212,203,0.82)]">
               You can browse the organizer pathway now. Sign in to apply or check your organizer status.
             </p>
+            {requestedNextRoute !== '/organizer' ? (
+              <p className="text-xs text-[color:rgba(246,212,203,0.72)]">
+                After sign-in, this route will return you to: <span className="font-mono">{requestedNextRoute}</span>
+              </p>
+            ) : null}
             <div className="flex flex-wrap gap-2">
               <Link href={authHref} className="btn-pill btn-pill-primary text-xs">
                 Sign in
@@ -160,12 +191,17 @@ export default function OrganizerOnRampPage() {
             {status.isOrganizer ? (
               <>
                 <p className="text-sm text-[color:rgba(246,212,203,0.82)]">
-                  You already have organizer access. Open your console or intelligence cockpit.
+                  You already have organizer access. Continue to your intended route or open organizer tools.
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Link href="/organizer" className="btn-pill btn-pill-primary text-xs">
-                    Organizer console
+                  <Link href={requestedNextRoute} className="btn-pill btn-pill-primary text-xs">
+                    {resumeLabel}
                   </Link>
+                  {requestedNextRoute !== '/organizer' ? (
+                    <Link href="/organizer" className="btn-pill btn-pill-outline text-xs">
+                      Organizer console
+                    </Link>
+                  ) : null}
                   <Link href="/organizer/intelligence" className="btn-pill btn-pill-outline text-xs">
                     Intelligence cockpit
                   </Link>

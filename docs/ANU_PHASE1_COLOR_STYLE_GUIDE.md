@@ -676,3 +676,34 @@ Validation:
 - Explicit assertions executed for redirected URL + on-ramp heading visibility.
 - `npm run -s lint` passed on touched files.
 - `npm run -s typecheck` passed.
+
+## 27) Phase 7 — Batch 1 (Intent-preserving organizer handoff)
+
+Date: 2026-04-06
+Lens: Preserve user intent during organizer access gating so users are returned to the exact organizer route they originally tried to open.
+
+Updated files:
+- `frontend-next/src/app/(app)/organizer/layout.tsx`
+- `frontend-next/src/app/(app)/organizer/on-ramp/page.tsx`
+
+Changes delivered:
+- **Organizer route guard now preserves target route intent** when redirecting to on-ramp.
+  - Redirects now include a safe `next` parameter (for example: `?next=/organizer/intelligence`).
+  - Guard CTA now opens on-ramp with the same preserved `next` route.
+- **Organizer on-ramp now reads/sanitizes preserved intent** and keeps it through sign-in handoff.
+  - Uses safe internal-path sanitization and prevents on-ramp self-loop values.
+  - Sign-in link now carries full return path continuity (`/auth?returnTo=/organizer/on-ramp?next=...`).
+- **Organizer-active experience now supports fast resume**.
+  - When organizer access is active, primary CTA can resume the originally requested organizer route instead of always sending users to `/organizer`.
+- **Copy clarity retained** with concise route-preservation cue:
+  - `Requested route preserved: /organizer/...`
+
+Validation:
+- Browser verification on:
+  - `/organizer/intelligence` as guest → redirected to `/organizer/on-ramp?next=%2Forganizer%2Fintelligence`
+- Explicit assertions executed for:
+  - redirected URL containing encoded `next` route
+  - preserved-route copy visibility on on-ramp
+- Verified sign-in anchor href includes preserved return intent payload.
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.

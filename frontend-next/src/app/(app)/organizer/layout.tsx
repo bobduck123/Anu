@@ -28,6 +28,8 @@ export default function OrganizerLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   const isOnRampRoute = pathname?.startsWith('/organizer/on-ramp') ?? false;
+  const nextOrganizerRoute = pathname && !isOnRampRoute ? pathname : '/organizer';
+  const onRampRedirectHref = `/organizer/on-ramp?next=${encodeURIComponent(nextOrganizerRoute)}`;
 
   const [accessState, setAccessState] = useState<AccessState>(isOnRampRoute ? 'allowed' : 'checking');
   const [accessPath, setAccessPath] = useState<string | null>(isOnRampRoute ? pathname ?? null : null);
@@ -46,7 +48,7 @@ export default function OrganizerLayout({ children }: { children: ReactNode }) {
         setNotice('Working now: redirecting to organizer path while access checks complete.');
         setAccessPath(null);
         setAccessState('blocked');
-        router.replace('/organizer/on-ramp');
+        router.replace(onRampRedirectHref);
         return;
       }
 
@@ -72,13 +74,13 @@ export default function OrganizerLayout({ children }: { children: ReactNode }) {
         setNotice('Organizer access is not active for this account yet.');
         setAccessPath(null);
         setAccessState('blocked');
-        router.replace('/organizer/on-ramp');
+        router.replace(onRampRedirectHref);
       } catch {
         if (!active) return;
         setNotice('Live organizer verification is unavailable. Redirecting to organizer path.');
         setAccessPath(null);
         setAccessState('blocked');
-        router.replace('/organizer/on-ramp');
+        router.replace(onRampRedirectHref);
       }
     };
 
@@ -87,7 +89,7 @@ export default function OrganizerLayout({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, [authLoading, isAuthenticated, isOnRampRoute, pathname, router, user?.role]);
+  }, [authLoading, isAuthenticated, isOnRampRoute, onRampRedirectHref, pathname, router, user?.role]);
 
   const hasRouteAccess = accessState === 'allowed' && accessPath === (pathname ?? null);
 
@@ -115,7 +117,7 @@ export default function OrganizerLayout({ children }: { children: ReactNode }) {
               <p className="text-sm text-[var(--color-foreground)]">Organizer routes require active organizer access.</p>
               {notice ? <p className="text-sm text-[color:rgba(246,212,203,0.86)]">{notice}</p> : null}
               <div className="flex flex-wrap gap-2">
-                <Link href="/organizer/on-ramp" className="btn-pill btn-pill-primary text-xs">
+                <Link href={onRampRedirectHref} className="btn-pill btn-pill-primary text-xs">
                   Open organizer path
                 </Link>
                 <Link href="/profile" className="btn-pill btn-pill-outline text-xs">
