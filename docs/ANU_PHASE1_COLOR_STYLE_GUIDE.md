@@ -336,3 +336,30 @@ Validation:
   - `/discover`
 - `npm run -s lint` passed on touched files.
 - `npm run -s typecheck` passed.
+
+## 16) Phase 5 — Batch 2 (Governance systemic + simulations fallback continuity)
+
+Date: 2026-04-06
+Lens: Degraded-mode continuity for steward operations routes.
+
+Updated files:
+- `frontend-next/src/app/(app)/governance/systemic/page.tsx`
+- `frontend-next/src/app/(app)/governance/simulations/page.tsx`
+
+Changes delivered:
+- **Systemic shock route:** replaced bare failure posture with operational fallback messaging + continuity CTAs.
+  - Added partial-feed detection and fallback telemetry placeholders.
+  - Added explicit “working now” guidance and direct links to governance index, transparency, and docs.
+  - Improved heading/data contrast hierarchy for dark shell readability.
+- **Governance simulations route:** introduced fallback scenario practice mode when live simulation APIs are unavailable.
+  - Added fallback scenarios + step sets.
+  - Added local impact estimation for run failures so simulation interaction remains usable.
+  - Added continuity messaging and trust-route CTAs (`Open governance index`, `Open transparency`, `Open docs`).
+
+Validation:
+- Browser verification on:
+  - `/governance/systemic`
+  - `/governance/simulations`
+- Explicit assertions executed for degraded/fallback messaging and CTA visibility.
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.
