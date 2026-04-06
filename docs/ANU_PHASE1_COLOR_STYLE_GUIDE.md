@@ -538,3 +538,32 @@ Validation:
 - Explicit assertions executed for route copy, degraded continuity messaging, and hover-bubble trigger visibility.
 - `npm run -s lint` passed on touched files.
 - `npm run -s typecheck` passed.
+
+## 23) Phase 6 — Batch 2 (Copy clarity + declutter pass for capital and competency)
+
+Date: 2026-04-06
+Lens: Reduce cognitive load on remaining governance operation surfaces with concise copy and progressive disclosure.
+
+Updated files:
+- `frontend-next/src/app/(app)/governance/capital/page.tsx`
+- `frontend-next/src/app/(app)/governance/competency/page.tsx`
+
+Changes delivered:
+- **Capital route (`/governance/capital`):**
+  - Simplified page framing and section copy to short scan-first language.
+  - Added hover-bubble contextual hints to shift secondary explanation off the primary reading path.
+  - Applied progressive disclosure (`<details>`) for full flag/snapshot detail so default view stays calm.
+  - Preserved fallback continuity with concise “working now” messaging during feed outages.
+- **Competency route (`/governance/competency`):**
+  - Simplified headings/labels and reduced visible prose in form/list sections.
+  - Added hover-bubble help and optional-description collapse to reduce form noise.
+  - Added fallback domain continuity + queued local draft behavior when live creation is unavailable.
+  - Added pending/recent draft disclosure block for operational transparency without overcrowding the main view.
+
+Validation:
+- Browser verification on:
+  - `/governance/capital`
+  - `/governance/competency`
+- Explicit assertions executed for updated copy and hover-bubble trigger visibility.
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.
