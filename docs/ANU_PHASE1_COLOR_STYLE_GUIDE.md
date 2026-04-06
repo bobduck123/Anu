@@ -444,3 +444,32 @@ Validation:
 - Explicit assertions executed for degraded/fallback continuity messaging and CTA visibility.
 - `npm run -s lint` passed on touched files.
 - `npm run -s typecheck` passed.
+
+## 20) Phase 5 — Batch 6 (Governance formulas + metrics hardcopy fallback synchronization)
+
+Date: 2026-04-06
+Lens: Ensure fallback governance registries are a periodically refreshed hardcopy of the latest user-agreed rule set.
+
+Updated files:
+- `frontend-next/src/app/(app)/governance/formulas/page.tsx`
+- `frontend-next/src/app/(app)/governance/metrics-registry/page.tsx`
+
+Changes delivered:
+- **Formula registry route:** upgraded fallback from static placeholder posture to synced hardcopy behavior.
+  - Added local hardcopy cache for formula definitions (last successful live ruleset sync).
+  - Added periodic auto-resync (90s) so fallback can update when live governance rules change.
+  - Added source provenance display (`Live rule set` / `Hardcopy rule set` / `Baseline rule set`) + sync timestamp.
+  - Kept activation flow usable with JSON validation and post-activation re-sync attempt.
+- **Metrics registry route:** mirrored the same hardcopy synchronization model.
+  - Added local hardcopy cache for metrics definitions (including version/unit signatures).
+  - Added periodic auto-resync (90s) to refresh fallback when governance metric rules evolve.
+  - Added source provenance + sync timestamp to keep fallback transparency explicit.
+- **Continuity UX:** both routes now include explicit degraded-state guidance and trust-route CTAs (`Open governance index`, `Open transparency`, `Open docs`).
+
+Validation:
+- Browser verification on:
+  - `/governance/formulas`
+  - `/governance/metrics-registry`
+- Explicit assertions executed for degraded/fallback messaging and CTA visibility.
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.
