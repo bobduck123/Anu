@@ -602,3 +602,33 @@ Validation:
 - Explicit assertions executed for route URL, heading, hover-bubble trigger, and sign-in continuation copy.
 - `npm run -s lint` passed on touched files.
 - `npm run -s typecheck` passed.
+
+## 25) Phase 6 — Batch 4 (Organizer route access enforcement via on-ramp redirect)
+
+Date: 2026-04-06
+Lens: Convert organizer access control from navigation-only guidance into route-level enforcement while keeping recovery copy clear.
+
+Updated files:
+- `frontend-next/src/app/(app)/organizer/layout.tsx` (new)
+
+Changes delivered:
+- Added nested organizer layout guard for `/organizer/**` routes.
+  - `/organizer/on-ramp` is intentionally bypassed so all users can reach the pathway entry page.
+  - Non-authenticated or non-organizer sessions are redirected to `/organizer/on-ramp`.
+  - Access is granted when either:
+    - role is organizer-class (`organizer`, `node_admin`, `platform_admin`, `board_member`, `treasury_guardian`), or
+    - organizer status API returns active organizer access.
+- Added concise continuity copy during guard transitions:
+  - `Checking organizer access…`
+  - `Working now: redirecting to organizer path while access checks complete.`
+- Preserved route resilience posture for verification outages:
+  - if live organizer verification cannot complete, route redirects to on-ramp instead of exposing organizer-only surfaces.
+
+Validation:
+- Browser verification on:
+  - `/organizer` → redirects to `/organizer/on-ramp`
+  - `/organizer/intelligence` → redirects to `/organizer/on-ramp`
+- Explicit assertions executed for redirected URL + on-ramp heading visibility.
+- `npm run -s lint` passed on touched files.
+- `npx next typegen` executed to refresh route/layout generated types after adding nested layout.
+- `npm run -s typecheck` passed.
