@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import dynamicImport from 'next/dynamic';
 import Link from 'next/link';
+import { AlertCircle } from 'lucide-react';
 import ViewToggle, { ViewMode } from '@/components/shared/ViewToggle';
 import { api, Action, Event, RecommendationResult, DiscoverFeed } from '@/lib/api';
+import { AnuActionLink } from '@/ui-system/anu/surfacePrimitives';
 import { BentoGrid, BentoCell, BentoHero, BentoStat, BentoList, BentoStyles } from '@/ui/patterns/chromatic-bento';
 
 const MapView = dynamicImport(() => import('@/components/shared/MapView'), { ssr: false });
@@ -13,6 +15,13 @@ const CalendarView = dynamicImport(() => import('@/components/shared/CalendarVie
 
 type Mode = 'actions' | 'events';
 type FilterMode = 'all' | 'online' | 'local';
+
+const discoverInputClass =
+  'w-full rounded-xl border border-[color:rgba(246,212,203,0.16)] bg-[color:rgba(246,212,203,0.06)] px-3 py-2 text-sm text-[var(--color-foreground)] placeholder:text-[color:rgba(246,212,203,0.62)]';
+
+function detailHref(item: Action | Event): string {
+  return '_id' in item ? `/actions/${item._id}` : `/events/${item.id}`;
+}
 
 export default function DiscoverPage() {
   const [mode, setMode] = useState<Mode>('actions');
@@ -24,31 +33,74 @@ export default function DiscoverPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [recommendations, setRecommendations] = useState<RecommendationResult<Action | Event> | null>(null);
   const [feed, setFeed] = useState<DiscoverFeed | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [degraded, setDegraded] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
+
     const load = async () => {
       setLoading(true);
-      try {
-        const [feedData, actionData, eventData] = await Promise.all([
-          api.engagement.getDiscoverFeed(),
-          api.actions.getAll(),
-          api.events.getAll(),
-        ]);
-        setFeed(feedData);
-        setActions(actionData.length ? actionData : feedData.top_actions);
-        setEvents(eventData.length ? eventData : feedData.upcoming_events);
-      } finally {
-        setLoading(false);
+      setNotice(null);
+      setDegraded(false);
+
+      const [feedResult, actionResult, eventResult] = await Promise.allSettled([
+        api.engagement.getDiscoverFeed(),
+        api.actions.getAll(),
+        api.events.getAll(),
+      ]);
+
+      if (!active) {
+        return;
       }
+
+      const feedData = feedResult.status === 'fulfilled' ? feedResult.value : null;
+      setFeed(feedData);
+
+      const fallbackActions = feedData?.top_actions || [];
+      const fallbackEvents = feedData?.upcoming_events || [];
+
+      const nextActions = actionResult.status === 'fulfilled' ? actionResult.value : fallbackActions;
+      const nextEvents = eventResult.status === 'fulfilled' ? eventResult.value : fallbackEvents;
+
+      setActions(nextActions);
+      setEvents(nextEvents);
+
+      const hasLiveIssue =
+        feedResult.status === 'rejected' ||
+        actionResult.status === 'rejected' ||
+        eventResult.status === 'rejected';
+
+      setDegraded(hasLiveIssue);
+
+      if (hasLiveIssue) {
+        setNotice(
+          'Live discovery feeds are partially unavailable. Working now: action/event browsing still runs with available sources while discovery sync recovers.',
+        );
+      } else if (nextActions.length < 1 && nextEvents.length < 1) {
+        setNotice(
+          'No published discover items are available yet. Explore community, education, and transparency while listings are prepared.',
+        );
+      }
+
+      setLoading(false);
     };
-    load();
+
+    void load();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
+    let active = true;
+
     const loadRecs = async () => {
       let lat: number | undefined;
       let lng: number | undefined;
+
       try {
         if (navigator.geolocation) {
           const position = await new Promise<GeolocationPosition>((resolve, reject) => {
@@ -61,15 +113,26 @@ export default function DiscoverPage() {
         lat = undefined;
         lng = undefined;
       }
+
       try {
         const recs = await api.engagement.getRecommendations({ type: mode, limit: 6, lat, lng });
-        setRecommendations(recs);
+        if (active) {
+          setRecommendations(recs);
+        }
       } catch {
+        if (!active) {
+          return;
+        }
         const fallbackItems = mode === 'actions' ? (feed?.top_actions || []) : (feed?.upcoming_events || []);
         setRecommendations({ type: mode, items: fallbackItems });
       }
     };
-    loadRecs();
+
+    void loadRecs();
+
+    return () => {
+      active = false;
+    };
   }, [mode, feed]);
 
   const filteredActions = useMemo(() => {
@@ -136,6 +199,8 @@ export default function DiscoverPage() {
     };
   });
 
+  const visibleItems = mode === 'actions' ? filteredActions : filteredEvents;
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -148,11 +213,35 @@ export default function DiscoverPage() {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
-          <h1 className="text-4xl font-bold mb-3" style={{ fontFamily: 'var(--font-serif)' }}>Discover</h1>
-          <p className="text-[var(--color-muted-foreground)] text-lg">
+          <h1 className="text-4xl font-semibold mb-3 text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+            Discover
+          </h1>
+          <p className="text-[color:rgba(246,212,203,0.82)] text-lg">
             Explore actions and events with a unified map, list, and calendar.
           </p>
         </motion.div>
+
+        {notice ? (
+          <div
+            className={`mb-8 rounded-2xl border p-4 ${
+              degraded
+                ? 'border-[color:rgba(224,177,21,0.32)] bg-[color:rgba(224,177,21,0.12)]'
+                : 'border-[color:rgba(246,212,203,0.16)] bg-[color:rgba(246,212,203,0.06)]'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-4 w-4 text-[var(--color-foreground)]" />
+              <div className="min-w-0">
+                <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.88)]">{notice}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <AnuActionLink href="/community" tone="secondary">Open community</AnuActionLink>
+                  <AnuActionLink href="/education" tone="ghost">Open education</AnuActionLink>
+                  <AnuActionLink href="/transparency" tone="ghost">Open transparency</AnuActionLink>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <div className="card-civic mb-8 flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -182,27 +271,25 @@ export default function DiscoverPage() {
               <input
                 type="text"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search by title or description"
-                className="w-full md:w-64 px-3 py-2 border border-[var(--color-border)] rounded-lg"
+                className={`${discoverInputClass} md:w-64`}
               />
-              {mode === 'events' && (
+              {mode === 'events' ? (
                 <input
                   type="date"
                   value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="px-3 py-2 border border-[var(--color-border)] rounded-lg"
+                  onChange={(event) => setDate(event.target.value)}
+                  className={discoverInputClass}
                 />
-              )}
+              ) : null}
               <ViewToggle current={viewMode} onChange={setViewMode} />
             </div>
           </div>
         </div>
 
-        {/* Bento dashboard layout */}
         <BentoStyles />
         <BentoGrid columns={12} rowHeight={110} gap={12} className="mb-10">
-          {/* Hero stat */}
           <BentoHero
             title="Discover"
             subtitle="Your personalized hub for community actions, events, and stories."
@@ -212,14 +299,12 @@ export default function DiscoverPage() {
             rowSpan={2}
           />
 
-          {/* Quick stats */}
           <BentoStat label="Actions" value={filteredActions.length} colSpan={5} rowSpan={1} stagger={1} />
           <BentoStat label="Events" value={filteredEvents.length} colSpan={5} rowSpan={1} stagger={2} />
 
-          {/* Recommendations */}
           {recommendations?.items?.length ? (
-            recommendations.items.slice(0, 3).map((item, i) => (
-              <BentoCell key={'_id' in item ? item._id : item.id} colSpan={4} rowSpan={2} stagger={3 + i}>
+            recommendations.items.slice(0, 3).map((item, index) => (
+              <BentoCell key={'_id' in item ? item._id : item.id} colSpan={4} rowSpan={2} stagger={3 + index}>
                 <div className="h-full flex flex-col justify-between">
                   <div>
                     <span className="text-xs font-medium uppercase tracking-wider text-[var(--color-primary)] opacity-70">Recommended</span>
@@ -228,10 +313,7 @@ export default function DiscoverPage() {
                       {'details' in item ? item.details : item.description}
                     </p>
                   </div>
-                  <Link
-                    href={mode === 'actions' ? `/actions/${'details' in item ? item._id : ''}` : `/events/${'id' in item ? item.id : ''}`}
-                    className="btn-pill btn-pill-outline text-sm mt-3 self-start"
-                  >
+                  <Link href={detailHref(item)} className="btn-pill btn-pill-outline text-sm mt-3 self-start">
                     View
                   </Link>
                 </div>
@@ -239,53 +321,54 @@ export default function DiscoverPage() {
             ))
           ) : (
             <BentoCell colSpan={12} rowSpan={1} stagger={3}>
-              <p className="text-[var(--color-muted-foreground)] text-sm text-center">No recommendations yet.</p>
+              <p className="text-[var(--color-muted-foreground)] text-sm text-center">
+                {degraded ? 'Recommendations are in fallback mode until live discovery sync recovers.' : 'No recommendations yet.'}
+              </p>
             </BentoCell>
           )}
 
-          {/* Feed sections */}
-          {feed && (
+          {feed ? (
             <>
               <BentoList
                 title="Active Microcosms"
-                items={feed.active_microcosms.slice(0, 4).map((m) => ({ label: m.name, value: m.description?.slice(0, 30) }))}
+                items={feed.active_microcosms.slice(0, 4).map((microcosm) => ({ label: microcosm.name, value: microcosm.description?.slice(0, 30) }))}
                 colSpan={4}
                 rowSpan={2}
                 stagger={6}
               />
               <BentoList
                 title="Highlighted Stories"
-                items={feed.highlighted_stories.slice(0, 4).map((s) => ({ label: s.title }))}
+                items={feed.highlighted_stories.slice(0, 4).map((story) => ({ label: story.title }))}
                 colSpan={4}
                 rowSpan={2}
                 stagger={7}
               />
               <BentoList
                 title="Insights & Articles"
-                items={feed.highlighted_articles.slice(0, 4).map((a) => ({ label: a.title }))}
+                items={feed.highlighted_articles.slice(0, 4).map((article) => ({ label: article.title }))}
                 colSpan={4}
                 rowSpan={2}
                 stagger={8}
               />
             </>
-          )}
+          ) : null}
         </BentoGrid>
 
-        {viewMode === 'map' && (
+        {viewMode === 'map' ? (
           <div className="mb-8">
             <MapView markers={mapMarkers} height="520px" />
           </div>
-        )}
+        ) : null}
 
-        {viewMode === 'calendar' && (
+        {viewMode === 'calendar' ? (
           <div className="mb-8 card-civic">
             <CalendarView events={calendarEvents} height="600px" />
           </div>
-        )}
+        ) : null}
 
-        {viewMode === 'list' && (
+        {viewMode === 'list' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(mode === 'actions' ? filteredActions : filteredEvents).map((item, index) => (
+            {visibleItems.map((item, index) => (
               <motion.div
                 key={'_id' in item ? item._id : item.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -293,31 +376,30 @@ export default function DiscoverPage() {
                 transition={{ duration: 0.4, delay: index * 0.03 }}
                 className="card-civic"
               >
-                <h3 className="text-lg font-semibold mb-2" style={{ fontFamily: 'var(--font-serif)' }}>{item.title}</h3>
+                <h3 className="text-lg font-semibold mb-2" style={{ fontFamily: 'var(--anu-type-display)' }}>
+                  {item.title}
+                </h3>
                 <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-3 mb-4">
                   {'details' in item ? item.details : item.description}
                 </p>
-                {'pointsAssigned' in item && (
-                  <div className="text-sm font-mono-data text-[var(--color-sage)] mb-3">
+                {'pointsAssigned' in item ? (
+                  <div className="text-sm font-mono-data text-[var(--color-institutional)] mb-3">
                     {item.pointsAssigned} pts
                   </div>
-                )}
-                <Link
-                  href={mode === 'actions' ? `/actions/${'details' in item ? item._id : ''}` : `/events/${'id' in item ? item.id : ''}`}
-                  className="btn-pill btn-pill-outline text-sm"
-                >
+                ) : null}
+                <Link href={detailHref(item)} className="btn-pill btn-pill-outline text-sm">
                   View Details
                 </Link>
               </motion.div>
             ))}
           </div>
-        )}
+        ) : null}
 
-        {(mode === 'actions' ? filteredActions : filteredEvents).length === 0 && (
+        {visibleItems.length < 1 ? (
           <div className="text-center py-12 text-[var(--color-muted-foreground)]">
             Nothing matches your filters yet.
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

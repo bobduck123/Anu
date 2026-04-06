@@ -316,3 +316,23 @@ Validation:
 - Explicit assertions executed for route URL + key fallback/continuity copy and CTA visibility.
 - `npm run -s lint` passed on touched files.
 - `npm run -s typecheck` passed.
+
+## 15) Phase 5 kickoff — Discovery route resilience and continuity
+
+Date: 2026-04-06
+Lens: Usability-first recovery behavior for cross-route discovery entry.
+
+Updated files:
+- `frontend-next/src/app/(app)/discover/page.tsx`
+
+Changes delivered:
+- Reworked discovery loading to use settled fetches and retain usable browsing when one or more live feeds are down.
+- Added explicit degraded-mode notice with continuity CTAs (`Open community`, `Open education`, `Open transparency`).
+- Removed silent failure posture by binding action/event lists to available live or feed fallback sources.
+- Improved discover form input legibility and kept list/map/calendar pathways available during backend outage.
+
+Validation:
+- Browser verification on:
+  - `/discover`
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.
