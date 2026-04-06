@@ -38,11 +38,52 @@ function ProgramCard({ program }: ProgramCardProps) {
   );
 }
 
+const FALLBACK_PROGRAMS: CurriculumProgram[] = [
+  {
+    program_id: 9101,
+    title: "Community Regeneration Foundations",
+    description:
+      "Starter pathway covering systems literacy, stewardship ethics, and grounded regeneration planning.",
+    region: "Global",
+    language_group: "Multilingual",
+    module_ids: [1, 2, 3],
+    module_count: 3,
+    topic_count: 12,
+    depth_tier_unlocked: 1,
+  },
+  {
+    program_id: 9102,
+    title: "Custodial Governance Practice",
+    description:
+      "Institutional decision practice with transparency checks and conflict-aware governance routines.",
+    region: "Regional",
+    language_group: "Commons",
+    module_ids: [4, 5],
+    module_count: 2,
+    topic_count: 8,
+    depth_tier_unlocked: 1,
+  },
+  {
+    program_id: 9103,
+    title: "Landscape Repair and Action Linkage",
+    description:
+      "Connect education milestones with real-world regeneration actions and measurable care outcomes.",
+    region: "Bioregional",
+    language_group: "Multilingual",
+    module_ids: [6, 7, 8],
+    module_count: 3,
+    topic_count: 10,
+    depth_tier_unlocked: 1,
+  },
+];
+
 export function EduHubDashboard() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [programs, setPrograms] = useState<CurriculumProgram[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [degradedMode, setDegradedMode] = useState(false);
   const authHref = useMemo(() => buildAuthHref("/education"), []);
   const actionableError = useMemo(
     () =>
@@ -59,22 +100,43 @@ export function EduHubDashboard() {
 
   useEffect(() => {
     let active = true;
-    educationStackApi
-      .listPrograms()
-      .then((response) => {
+
+    const loadPrograms = async () => {
+      setLoading(true);
+      setError(null);
+      setNotice(null);
+      setDegradedMode(false);
+
+      try {
+        const response = await educationStackApi.listPrograms();
         if (!active) return;
-        setPrograms(response.programs);
-      })
-      .catch((err) => {
-        if (active) {
-          setError(err instanceof Error ? err.message : "Unable to load education programs.");
+
+        if ((response.programs || []).length < 1) {
+          setPrograms(FALLBACK_PROGRAMS);
+          setDegradedMode(true);
+          setNotice("No live program records are published yet. Showing fallback learning pathways for continuity.");
+          return;
         }
-      })
-      .finally(() => {
+
+        setPrograms(response.programs);
+      } catch (err) {
+        if (!active) return;
+
+        setError(err instanceof Error ? err.message : "Unable to load education programs.");
+        setNotice(
+          "Working now: maps, curriculum layers, and regeneration pathways remain available while program services recover.",
+        );
+        setPrograms(FALLBACK_PROGRAMS);
+        setDegradedMode(true);
+      } finally {
         if (active) {
           setLoading(false);
         }
-      });
+      }
+    };
+
+    void loadPrograms();
+
     return () => {
       active = false;
     };
@@ -148,12 +210,39 @@ export function EduHubDashboard() {
       </header>
 
       {actionableError ? (
-        <div className="edu-card border-l-4 border-[var(--edu-accent)] bg-[rgba(246,212,203,0.1)] text-[var(--edu-foreground)]">
+        <div className="edu-card border-l-4 border-[var(--edu-accent)] bg-[rgba(246,212,203,0.1)] text-[var(--edu-foreground)] p-5">
           <p className="text-sm font-semibold text-[#f6d4cb]">{actionableError.headline}</p>
           <p className="mt-1 text-sm text-[var(--edu-foreground)]/80">{actionableError.detail}</p>
-          <Link href={actionableError.fallbackHref} className="mt-2 inline-flex text-sm font-medium text-[#f6d4cb] underline">
-            {actionableError.fallbackLabel}
-          </Link>
+          {notice ? <p className="mt-2 text-sm text-[var(--edu-foreground)]/80">{notice}</p> : null}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link href={actionableError.fallbackHref} className="btn-pill btn-pill-outline text-xs">
+              {actionableError.fallbackLabel}
+            </Link>
+            <Link href="/education/maps" className="btn-pill btn-pill-outline text-xs">
+              Open maps
+            </Link>
+            <Link href="/education/curriculum" className="btn-pill btn-pill-outline text-xs">
+              Continue curriculum
+            </Link>
+            <Link href="/education/regeneration" className="btn-pill btn-pill-outline text-xs">
+              Open regeneration
+            </Link>
+          </div>
+        </div>
+      ) : degradedMode && notice ? (
+        <div className="edu-card border-l-4 border-[var(--edu-accent)] bg-[rgba(246,212,203,0.08)] text-[var(--edu-foreground)] p-5">
+          <p className="text-sm text-[var(--edu-foreground)]/86">{notice}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link href="/education/maps" className="btn-pill btn-pill-outline text-xs">
+              Open maps
+            </Link>
+            <Link href="/education/curriculum" className="btn-pill btn-pill-outline text-xs">
+              Continue curriculum
+            </Link>
+            <Link href="/docs" className="btn-pill btn-pill-outline text-xs">
+              Open docs
+            </Link>
+          </div>
         </div>
       ) : null}
 
@@ -162,7 +251,9 @@ export function EduHubDashboard() {
           <div>
             <h2 className="text-2xl font-semibold">Program Catalog</h2>
             <p className="text-sm text-[var(--edu-foreground)]/70">
-              Public overview first. Structured learner interactions begin after sign-in.
+              {degradedMode
+                ? "Fallback catalog active. Working now: you can continue with maps, curriculum, and regeneration routes while live program feeds recover."
+                : "Public overview first. Structured learner interactions begin after sign-in."}
             </p>
           </div>
           <Link

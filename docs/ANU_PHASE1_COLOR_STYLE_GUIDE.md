@@ -363,3 +363,30 @@ Validation:
 - Explicit assertions executed for degraded/fallback messaging and CTA visibility.
 - `npm run -s lint` passed on touched files.
 - `npm run -s typecheck` passed.
+
+## 17) Phase 5 — Batch 3 (Model registry + education hub fallback continuity)
+
+Date: 2026-04-06
+Lens: Keep high-signal learning and governance registry routes usable during backend outage.
+
+Updated files:
+- `frontend-next/src/app/(app)/governance/model-registry/page.tsx`
+- `frontend-next/src/components/education/hub/EduHubDashboard.tsx`
+
+Changes delivered:
+- **Model registry route:** replaced dead-end archive sync failure with continuity-first fallback archive behavior.
+  - Added fallback registry model dataset when live `/api/model-registry/` is unavailable.
+  - Added degraded-mode continuity banner with direct CTAs (`Return to governance index`, `Cross-check public truth`, `Open doctrine`).
+  - Preserved archive traversal + manuscript chamber interaction in fallback mode.
+- **Education hub route:** prevented empty/ambiguous program catalog failure posture under feed outages.
+  - Added fallback education program cards when live program catalog cannot load.
+  - Added explicit “working now” continuity messaging for maps/curriculum/regeneration pathways.
+  - Expanded degraded-state actions with direct CTAs (`Open maps`, `Continue curriculum`, `Open regeneration`, `Open docs`).
+
+Validation:
+- Browser verification on:
+  - `/governance/model-registry`
+  - `/education`
+- Explicit assertions executed for fallback/degraded continuity copy and CTA visibility.
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.

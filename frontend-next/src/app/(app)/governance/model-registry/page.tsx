@@ -38,6 +38,69 @@ const getAuthHeaders = (): Record<string, string> => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+const FALLBACK_MODELS: ModelRegistryItem[] = [
+  {
+    key: 'commons_resilience_anchor',
+    version: 3,
+    description:
+      'Fallback resilience anchor model used to keep governance reading available while live registry sync is unavailable.',
+    required_inputs: ['liquidity_index', 'relief_backlog', 'network_stability'],
+    output_units: 'resilience score',
+    confidence_method: 'calibrated_interval',
+    uncertainty_format: 'bands',
+    fallback_mode: 'watch_mode',
+    complexity_bound: 'bounded_non_linear',
+    update_policy: 'weekly review',
+    requires_backtest: true,
+    requires_calibration: true,
+    cooling_period_days: 7,
+    param_schema: {
+      sensitivity: { type: 'number', min: 0, max: 1 },
+      stress_window_days: { type: 'integer', min: 1, max: 30 },
+    },
+  },
+  {
+    key: 'governance_friction_monitor',
+    version: 2,
+    description:
+      'Tracks pressure transfer between governance nodes to keep route-level coordination legible during service degradation.',
+    required_inputs: ['collision_events', 'decision_latency_hours'],
+    output_units: 'friction index',
+    confidence_method: 'percentile envelope',
+    uncertainty_format: 'range',
+    fallback_mode: 'manual_review_lane',
+    complexity_bound: 'piecewise_linear',
+    update_policy: 'biweekly review',
+    requires_backtest: false,
+    requires_calibration: true,
+    cooling_period_days: 14,
+    param_schema: {
+      escalation_weight: { type: 'number', min: 0, max: 5 },
+      civic_load_factor: { type: 'number', min: 0, max: 5 },
+    },
+  },
+  {
+    key: 'stewardship_capacity_projection',
+    version: 4,
+    description:
+      'Projects short-term stewardship capacity and reserve pressure so fallback operations can remain transparent.',
+    required_inputs: ['member_activity_rate', 'reserve_ratio', 'intake_delta'],
+    output_units: 'capacity ratio',
+    confidence_method: 'rolling confidence band',
+    uncertainty_format: 'confidence range',
+    fallback_mode: 'capacity_hold',
+    complexity_bound: 'bounded_growth_curve',
+    update_policy: 'daily review',
+    requires_backtest: true,
+    requires_calibration: false,
+    cooling_period_days: 3,
+    param_schema: {
+      reserve_buffer_floor: { type: 'number', min: 0, max: 1 },
+      relief_priority_weight: { type: 'number', min: 0, max: 10 },
+    },
+  },
+];
+
 function countByState(models: ReturnType<typeof presentRegistryModel>[]) {
   return models.reduce<Record<LabyrinthState, number>>(
     (counts, model) => {
@@ -76,6 +139,8 @@ export default function ModelRegistryPage() {
   const [models, setModels] = useState<ModelRegistryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [degradedMode, setDegradedMode] = useState(false);
   const [query, setQuery] = useState('');
   const [stateFilter, setStateFilter] = useState<'all' | LabyrinthState>('all');
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
@@ -85,6 +150,8 @@ export default function ModelRegistryPage() {
   const loadModels = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
+    setNotice(null);
+    setDegradedMode(false);
 
     try {
       const response = await fetch(`${API_BASE}/api/model-registry/`, {
@@ -92,23 +159,37 @@ export default function ModelRegistryPage() {
         signal,
       });
 
-      const data = (await response.json()) as {
-        data?: { models?: ModelRegistryItem[] };
-        error?: { message?: string };
-      };
-
-      if (!response.ok) {
-        throw new Error(data.error?.message ?? 'Failed to load model registry');
+      let data: { data?: { models?: ModelRegistryItem[] }; error?: { message?: string } } | null = null;
+      try {
+        data = (await response.json()) as { data?: { models?: ModelRegistryItem[] }; error?: { message?: string } };
+      } catch {
+        data = null;
       }
 
-      setModels(data.data?.models ?? []);
+      if (!response.ok) {
+        throw new Error(data?.error?.message ?? 'Failed to load model registry');
+      }
+
+      const liveModels = data?.data?.models ?? [];
+      if (liveModels.length < 1) {
+        setModels(FALLBACK_MODELS);
+        setDegradedMode(true);
+        setNotice('No live registry entries are published yet. Running fallback archive models for continuity.');
+        return;
+      }
+
+      setModels(liveModels);
     } catch (loadError) {
       if (loadError instanceof Error && loadError.name === 'AbortError') {
         return;
       }
 
-      setError(loadError instanceof Error ? loadError.message : 'Failed to load model registry');
-      setModels([]);
+      setError('Live model registry sync is unavailable in this environment.');
+      setNotice(
+        'Working now: archive walkthrough and manuscript previews remain available with fallback models while registry sync recovers.',
+      );
+      setDegradedMode(true);
+      setModels(FALLBACK_MODELS);
     } finally {
       setLoading(false);
     }
@@ -281,7 +362,11 @@ export default function ModelRegistryPage() {
       <EmbeddedInstrumentPanel
         label="Archive count"
         value={`${presentedModels.length} models`}
-        detail="All versioned institutional models returned by the live registry endpoint."
+        detail={
+          degradedMode
+            ? 'Fallback archive set loaded while live registry sync is unavailable.'
+            : 'All versioned institutional models returned by the live registry endpoint.'
+        }
       />
       <EmbeddedInstrumentPanel
         label="Live states"
@@ -361,6 +446,29 @@ export default function ModelRegistryPage() {
             </div>
           }
         >
+          {error || notice ? (
+            <div className="mb-4 rounded-2xl border border-[color:rgba(224,177,21,0.28)] bg-[color:rgba(224,177,21,0.1)] p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="mt-0.5 h-4 w-4 text-[var(--color-foreground)]" />
+                <div className="min-w-0">
+                  {error ? <p className="text-sm text-[var(--color-foreground)]">{error}</p> : null}
+                  {notice ? <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.86)]">{notice}</p> : null}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <AnuActionLink href="/governance" tone="secondary" iconLeft={Layers3}>
+                      Return to governance index
+                    </AnuActionLink>
+                    <AnuActionLink href="/transparency" tone="ghost" iconLeft={ShieldCheck}>
+                      Cross-check public truth
+                    </AnuActionLink>
+                    <AnuActionLink href="/docs" tone="ghost" iconLeft={Compass}>
+                      Open doctrine
+                    </AnuActionLink>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div className="anu-labyrinth-stage" aria-live="polite">
             <div className="anu-labyrinth-stage__floor" aria-hidden="true" />
             <div className="anu-labyrinth-stage__haze" aria-hidden="true" />
@@ -379,14 +487,6 @@ export default function ModelRegistryPage() {
                   }
                 />
               ))
-            ) : error ? (
-              <div className="anu-labyrinth-stage__message">
-                <AlertCircle className="h-5 w-5 text-[#f6d4cb]" />
-                <div>
-                  <p className="text-sm font-semibold text-[#f6d4cb]">Archive sync failed</p>
-                  <p className="mt-1 text-sm leading-6 text-[#f6d4cb]/80">{error}</p>
-                </div>
-              </div>
             ) : archiveMarkers.length > 0 ? (
               <>
                 {archiveMarkers.map((model) => (
