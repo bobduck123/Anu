@@ -83,9 +83,15 @@ export default function TransparencyPage() {
               <Activity className="h-5 w-5 text-[#f6d4cb]" />
               <div>
                 <p className="text-sm font-semibold text-[#f6d4cb]">Public transparency is temporarily degraded</p>
-                <p className="mt-1 text-sm leading-6 text-[#f6d4cb]/80">
-                  {error}
+                <p className="mt-1 text-sm leading-6 text-[#f6d4cb]/80">{error}</p>
+                <p className="mt-2 text-xs leading-6 text-[#f6d4cb]/76">
+                  Working now: docs, contact routing, and governance reading remain available while public ledger sync recovers.
                 </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <AnuActionLink href="/docs" tone="secondary" iconRight={ArrowRight}>Open docs</AnuActionLink>
+                  <AnuActionLink href="/contact" tone="ghost" iconRight={ArrowRight}>Route support</AnuActionLink>
+                  <AnuActionLink href="/memberships" tone="ghost" iconRight={ArrowRight}>Open memberships</AnuActionLink>
+                </div>
               </div>
             </div>
           ) : null}

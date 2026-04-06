@@ -116,7 +116,100 @@ export default function ProfilePage() {
       setIsLoading(false);
       return;
     }
-    void Promise.all([fetchProfileData(), fetchOrganizerStatus()]).finally(() => setIsLoading(false));
+
+    let cancelled = false;
+
+    const fallbackProfile = user
+      ? {
+          id: Number(user.id) || 0,
+          username: user.username,
+          pseudonym: user.pseudonym || user.username,
+          role: user.role,
+          points: user.points || 0,
+          level: user.level || 1,
+          points_to_level_up: 100,
+          node_id: user.nodeId ? Number(user.nodeId) : null,
+        }
+      : null;
+
+    const loadProfileSurface = async () => {
+      try {
+        const nextProfile = await api.users.me();
+        if (!cancelled) {
+          setProfile(nextProfile);
+        }
+      } catch {
+        if (!cancelled) {
+          setProfile(fallbackProfile);
+        }
+      }
+
+      try {
+        const nextTodos = await api.todos.getAll();
+        if (!cancelled) {
+          setTodos(nextTodos);
+        }
+      } catch {
+        // ignore todo fetch errors for fallback profile mode
+      }
+
+      try {
+        const nextNotifications = await api.notifications.getAll();
+        if (!cancelled) {
+          setNotifications(nextNotifications);
+        }
+      } catch {
+        // ignore notification fetch errors for fallback profile mode
+      }
+
+      try {
+        const nextChallenges = await api.engagement.getChallenges();
+        if (!cancelled) {
+          setChallenges(nextChallenges);
+        }
+      } catch {
+        // ignore challenge fetch errors for fallback profile mode
+      }
+
+      try {
+        const timeData = await timebankApi.list();
+        if (!cancelled) {
+          setTimeEntries(timeData.entries || []);
+        }
+      } catch {
+        // ignore timebank fetch errors for fallback profile mode
+      }
+
+      try {
+        const burnoutData = await burnoutApi.me();
+        if (!cancelled) {
+          setBurnout({ score: burnoutData.score, risk: burnoutData.risk });
+        }
+      } catch {
+        // ignore burnout fetch errors for fallback profile mode
+      }
+
+      try {
+        const nextOrganizerStatus = await api.organizer.getStatus();
+        if (!cancelled) {
+          setOrganizerStatus(nextOrganizerStatus);
+        }
+      } catch {
+        if (!cancelled) {
+          setOrganizerStatus({ hasApplied: false, isOrganizer: false, role: 'participant' });
+        }
+      }
+
+      if (!cancelled) {
+        setIsLoading(false);
+      }
+    };
+
+    void loadProfileSurface();
+
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, isAuthenticated, user]);
 
   useEffect(() => {
@@ -132,44 +225,6 @@ export default function ProfilePage() {
       void loadFeaturedBadges(profile);
     }
   }, [profile]);
-
-  const fetchProfileData = async () => {
-    const fallbackProfile = user
-      ? {
-          id: Number(user.id) || 0,
-          username: user.username,
-          pseudonym: user.pseudonym || user.username,
-          role: user.role,
-          points: user.points || 0,
-          level: user.level || 1,
-          points_to_level_up: 100,
-          node_id: user.nodeId ? Number(user.nodeId) : null,
-        }
-      : null;
-
-    try {
-      setProfile(await api.users.me());
-    } catch {
-      setProfile(fallbackProfile);
-    }
-    try {
-      setTodos(await api.todos.getAll());
-    } catch {}
-    try {
-      setNotifications(await api.notifications.getAll());
-    } catch {}
-    try {
-      setChallenges(await api.engagement.getChallenges());
-    } catch {}
-    try {
-      const timeData = await timebankApi.list();
-      setTimeEntries(timeData.entries || []);
-    } catch {}
-    try {
-      const burnoutData = await burnoutApi.me();
-      setBurnout({ score: burnoutData.score, risk: burnoutData.risk });
-    } catch {}
-  };
 
   const loadFeaturedBadges = async (currentUser: UserProfile) => {
     try {
@@ -294,9 +349,9 @@ export default function ProfilePage() {
       <AuthGateCard
         eyebrow="Profile Cockpit"
         title="Sign in to open your profile cockpit"
-        description="Your participant, contributor, or steward cockpit stays private to your account."
-        secondaryHref="/manara"
-        secondaryLabel="Open Manara"
+        description="Your participant, contributor, or steward cockpit stays private to your account. Working now: you can continue through community and transparency routes while private profile surfaces remain protected."
+        secondaryHref="/community"
+        secondaryLabel="Open community"
       />
     );
   }

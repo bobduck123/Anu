@@ -20,7 +20,7 @@ export default function PoolCards({ pools, linkBasePath = '/pools' }: PoolCardsP
   if (!pools?.length) {
     return (
       <div className="card-civic text-center py-10">
-        <p className="text-[var(--color-earth-medium)]">No pools available yet.</p>
+        <p className="text-[color:rgba(246,212,203,0.82)]">No pools available yet.</p>
       </div>
     );
   }
@@ -45,32 +45,32 @@ export default function PoolCards({ pools, linkBasePath = '/pools' }: PoolCardsP
                 {pool.category || 'pool'}
               </span>
               {linkBasePath && (
-                <ArrowRight className="w-4 h-4 text-[var(--color-earth-medium)] group-hover:text-[var(--color-institutional)] group-hover:translate-x-1 transition-all duration-300" />
+                <ArrowRight className="w-4 h-4 text-[color:rgba(246,212,203,0.64)] group-hover:text-[var(--color-institutional)] group-hover:translate-x-1 transition-all duration-300" />
               )}
             </div>
 
             <h3
-              className="font-semibold text-lg text-[var(--color-earth-dark)] mb-2"
-              style={{ fontFamily: 'var(--font-serif)' }}
+              className="font-semibold text-lg text-[var(--color-foreground)] mb-2"
+              style={{ fontFamily: 'var(--anu-type-display)' }}
             >
               {pool.name}
             </h3>
-            <p className="text-sm text-[var(--color-earth-medium)] line-clamp-2 mb-4">
+            <p className="text-sm text-[color:rgba(246,212,203,0.82)] line-clamp-2 mb-4">
               {pool.description || 'Shared community resources.'}
             </p>
 
             <div className="pt-4 border-t border-[var(--color-border)]">
               <div className="flex items-baseline justify-between">
                 <div>
-                  <p className="text-xs text-[var(--color-earth-medium)] mb-1">Current balance</p>
-                  <p className="text-2xl font-semibold text-[var(--color-earth-dark)] font-mono-data">
+                  <p className="text-xs text-[color:rgba(246,212,203,0.64)] mb-1">Current balance</p>
+                  <p className="text-2xl font-semibold text-[var(--color-foreground)] font-mono-data">
                     ${balance.toLocaleString()}
                   </p>
                 </div>
                 {target && (
                   <div className="text-right">
-                    <p className="text-xs text-[var(--color-earth-medium)] mb-1">Target</p>
-                    <p className="text-sm font-medium text-[var(--color-earth-medium)] font-mono-data">
+                    <p className="text-xs text-[color:rgba(246,212,203,0.64)] mb-1">Target</p>
+                    <p className="text-sm font-medium text-[color:rgba(246,212,203,0.82)] font-mono-data">
                       ${target.toLocaleString()}
                     </p>
                   </div>

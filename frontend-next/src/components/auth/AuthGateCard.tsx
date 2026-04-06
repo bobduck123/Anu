@@ -24,11 +24,11 @@ export default function AuthGateCard({
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="card-civic">
-        <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-earth-medium)] mb-3">{eyebrow}</p>
-        <h1 className="text-3xl font-semibold text-[var(--color-earth-dark)] mb-4" style={{ fontFamily: 'var(--font-serif)' }}>
+        <p className="text-xs uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.68)] mb-3">{eyebrow}</p>
+        <h1 className="text-3xl font-semibold text-[var(--color-foreground)] mb-4" style={{ fontFamily: 'var(--anu-type-display)' }}>
           {title}
         </h1>
-        <p className="text-[var(--color-earth-medium)] leading-relaxed mb-6">
+        <p className="text-[color:rgba(246,212,203,0.82)] leading-relaxed mb-6">
           {description}
         </p>
         <div className="flex flex-col sm:flex-row gap-3">

@@ -233,3 +233,86 @@ Status:
 Follow-up (post-Phase 1C):
 - Keep strict 5-color enforcement on UI surfaces.
 - Treat color datasets and internal tooling palettes as explicitly out-of-scope unless a future requirement changes that decision.
+
+---
+
+## 12) Phase 4 UX sweep — Batch A (Pools + Auth Gate consistency)
+
+Date: 2026-04-06
+Lens: Usability-first + visual consistency on core trust/impact routes.
+
+Updated files:
+- `frontend-next/src/app/(app)/pools/page.tsx`
+- `frontend-next/src/app/(app)/pools/[poolId]/page.tsx`
+- `frontend-next/src/components/impact/PoolCards.tsx`
+- `frontend-next/src/components/auth/AuthGateCard.tsx`
+
+Changes delivered:
+- Upgraded pools overview header/actions to ANU route language (bridge links to impact/transparency/memberships).
+- Removed legacy low-contrast `--color-earth-*` text usage from pools cards/summaries and aligned to foreground + approved alpha text tones.
+- Harmonized inflow/net-positive emphasis to institutional accent for clearer dark-surface contrast.
+- Updated pool-detail auth-gate and ledger UI typography/tone to ANU display + readable foreground hierarchy.
+- Kept fallback/degraded-state messaging explicit and actionable.
+
+Validation:
+- Browser verification on:
+  - `/pools`
+  - `/pools/1`
+- Explicit assertions executed for key headings/CTA text visibility and route correctness.
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.
+
+## 13) Phase 4 UX sweep — Batch B (Wallet + ledger auth-gate clarity)
+
+Date: 2026-04-06
+Lens: Usability-first + continuity messaging on private financial routes.
+
+Updated files:
+- `frontend-next/src/app/(app)/wallet/page.tsx`
+- `frontend-next/src/app/(app)/wallet/ledger/page.tsx`
+- `frontend-next/src/components/auth/AuthGateCard.tsx`
+
+Changes delivered:
+- Standardized wallet and wallet-ledger signed-out states to ANU foreground hierarchy for readability on dark shell.
+- Added clear continuity actions from wallet surface (`Open wallet ledger`, `Open marketplace`) for faster next-step orientation.
+- Improved degraded wallet messaging with explicit “working now” guidance while preserving route continuity.
+- Normalized positive/negative transaction color semantics to approved palette emphasis (`institutional` / `accent`).
+- Refactored wallet loading/data handling to avoid sync `setState` inside effect branch (lint hygiene improvement).
+
+Validation:
+- Browser verification on:
+  - `/wallet`
+  - `/wallet/ledger`
+- Explicit assertions executed for auth-gate headings and CTA labels.
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.
+
+## 14) Phase 4 UX sweep — Batch C (Profile + Marketplace + Transparency continuity)
+
+Date: 2026-04-06
+Lens: Usability-first degraded-mode resilience on member/trust/commerce routes.
+
+Updated files:
+- `frontend-next/src/app/(app)/profile/page.tsx`
+- `frontend-next/src/app/(app)/marketplace/page.tsx`
+- `frontend-next/src/app/(public)/transparency/page.tsx`
+- `frontend-next/src/app/globals.css` (labyrinth instrument contrast)
+
+Changes delivered:
+- **Profile (signed-out continuity):** clarified protected cockpit messaging and routed fallback CTA to community (`Open community`) instead of dead-end posture.
+- **Marketplace degraded-mode recovery:** replaced hard-stop error screen with usable fallback catalog and explicit recovery banner.
+  - Added starter listing fallback dataset when live service is unavailable.
+  - Preserved browsing/cart utility in fallback mode.
+  - Added “working now” continuity actions (`Open memberships`, `Open transparency`, `Open community`).
+  - Added clearer checkout-unavailable behavior in fallback mode.
+- **Transparency degraded-mode clarity:** expanded degraded notice with actionable continuity language and direct links (`Open docs`, `Route support`, `Open memberships`).
+- **Labyrinth stat legibility:** darkened `.anu-labyrinth-instrument` surfaces for materially better contrast in trust/registry sidecar metrics.
+
+Validation:
+- Browser verification on:
+  - `/profile`
+  - `/marketplace`
+  - `/transparency`
+- Explicit assertions executed for route URL + key fallback/continuity copy and CTA visibility.
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.

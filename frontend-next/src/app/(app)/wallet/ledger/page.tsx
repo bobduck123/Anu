@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import AuthGateCard from '@/components/auth/AuthGateCard';
 import { Wallet, CreditCard } from 'lucide-react';
 import { api, type LedgerEntry } from '@/lib/api';
-import { Card, CardTitle } from '@/ui-system/primitives/Card';
+import { Card } from '@/ui-system/primitives/Card';
 import { Table, type Column } from '@/ui-system/primitives/Table';
 import { LoadingState } from '@/ui-system/states/LoadingState';
 import { EmptyState } from '@/ui-system/states/EmptyState';
@@ -54,7 +54,7 @@ export default function WalletLedgerPage() {
       sortable: true,
       render: (r) => {
         const val = (r.amount_cents || 0) / 100;
-        const color = val >= 0 ? 'text-[var(--color-forest)]' : 'text-[var(--color-danger)]';
+        const color = val >= 0 ? 'text-[var(--color-institutional)]' : 'text-[var(--color-accent)]';
         return <span className={`font-mono-data ${color}`}>{val >= 0 ? '+' : ''}{val.toFixed(2)}</span>;
       },
     },
@@ -83,17 +83,19 @@ export default function WalletLedgerPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold mb-6" style={{ fontFamily: 'var(--font-serif)' }}>Wallet & Ledger</h1>
+      <h1 className="text-3xl font-semibold mb-6 text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+        Wallet & Ledger
+      </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         <Card padding="md">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-[var(--color-sage-light)]">
-              <CreditCard className="w-5 h-5 text-[var(--color-forest)]" />
+            <div className="p-2 rounded-lg bg-[var(--color-institutional-light)]">
+              <CreditCard className="w-5 h-5 text-[var(--color-institutional)]" />
             </div>
             <div>
-              <p className="text-xs text-[var(--color-muted-foreground)]">Credit Balance</p>
-              <p className="text-2xl font-bold font-mono-data">{balance}</p>
+              <p className="text-xs text-[color:rgba(246,212,203,0.64)]">Credit Balance</p>
+              <p className="text-2xl font-semibold font-mono-data text-[var(--color-foreground)]">{balance}</p>
             </div>
           </div>
         </Card>
@@ -103,8 +105,8 @@ export default function WalletLedgerPage() {
               <Wallet className="w-5 h-5 text-[var(--color-institutional)]" />
             </div>
             <div>
-              <p className="text-xs text-[var(--color-muted-foreground)]">Total Transactions</p>
-              <p className="text-2xl font-bold font-mono-data">{entries.length}</p>
+              <p className="text-xs text-[color:rgba(246,212,203,0.64)]">Total Transactions</p>
+              <p className="text-2xl font-semibold font-mono-data text-[var(--color-foreground)]">{entries.length}</p>
             </div>
           </div>
         </Card>
@@ -114,7 +116,9 @@ export default function WalletLedgerPage() {
         <EmptyState icon={Wallet} title="No transactions" description="Your transaction history will appear here." />
       ) : (
         <Card padding="md">
-          <CardTitle>Transaction History</CardTitle>
+          <h2 className="text-xl font-semibold text-[var(--color-foreground)]" style={{ fontFamily: 'var(--anu-type-display)' }}>
+            Transaction History
+          </h2>
           <div className="mt-4">
             <Table columns={columns} data={entries} rowKey={(r) => r.id} pageSize={20} />
           </div>

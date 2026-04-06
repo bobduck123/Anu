@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { transparencyApi, ImpactPool, TransparencySummary } from '@/lib/api/endpoints';
 import PoolCards from '@/components/impact/PoolCards';
+import { AnuActionLink } from '@/ui-system/anu/surfacePrimitives';
 import { Droplets, Loader2, Shield } from 'lucide-react';
 
 const toPoolCards = (summary: TransparencySummary): ImpactPool[] =>
@@ -84,42 +85,47 @@ export default function PoolsPage() {
             Transparency
           </span>
           <h1
-            className="text-3xl md:text-4xl font-semibold text-[var(--color-earth-dark)] mb-3"
-            style={{ fontFamily: 'var(--font-serif)' }}
+            className="text-3xl md:text-4xl font-semibold text-[var(--color-foreground)] mb-3"
+            style={{ fontFamily: 'var(--anu-type-display)' }}
           >
             Impact Pools
           </h1>
-          <p className="text-[var(--color-earth-medium)] max-w-xl">
+          <p className="max-w-2xl text-[color:rgba(246,212,203,0.84)] leading-7">
             See how membership contributions are stewarded. Every dollar is tracked
             on our append-only ledger.
           </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <AnuActionLink href="/impact" tone="secondary">Open impact bridge</AnuActionLink>
+            <AnuActionLink href="/transparency" tone="ghost">Open transparency</AnuActionLink>
+            <AnuActionLink href="/memberships" tone="ghost">Open memberships</AnuActionLink>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
           <div className="card-civic">
-            <p className="text-xs text-[var(--color-earth-medium)] mb-1">Total Balance</p>
-            <p className="text-2xl font-semibold text-[var(--color-earth-dark)] font-mono-data">
+            <p className="text-xs text-[color:rgba(246,212,203,0.64)] mb-1">Total Balance</p>
+            <p className="text-2xl font-semibold text-[var(--color-foreground)] font-mono-data">
               ${totalBalance.toLocaleString()}
             </p>
           </div>
           <div className="card-civic">
-            <p className="text-xs text-[var(--color-earth-medium)] mb-1">Active Pools</p>
-            <p className="text-2xl font-semibold text-[var(--color-earth-dark)] font-mono-data">
+            <p className="text-xs text-[color:rgba(246,212,203,0.64)] mb-1">Active Pools</p>
+            <p className="text-2xl font-semibold text-[var(--color-foreground)] font-mono-data">
               {pools.length}
             </p>
           </div>
           <div className="card-civic">
             <div className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-[var(--color-forest)]" />
-              <p className="text-xs text-[var(--color-earth-medium)]">Ledger Integrity</p>
+              <Shield className="w-3.5 h-3.5 text-[var(--color-institutional)]" />
+              <p className="text-xs text-[color:rgba(246,212,203,0.64)]">Ledger Integrity</p>
             </div>
-            <p className="text-2xl font-semibold text-[var(--color-forest)] mt-1">Append-only</p>
+            <p className="text-2xl font-semibold text-[var(--color-institutional)] mt-1">Append-only</p>
           </div>
         </div>
 
         {error && (
-          <div className="p-4 rounded-xl bg-[var(--color-accent-light)] border border-[var(--color-accent)] mb-8">
-            <p className="text-sm text-[var(--color-accent)]">
+          <div className="p-4 rounded-xl border border-[color:rgba(224,177,21,0.32)] bg-[color:rgba(224,177,21,0.12)] mb-8">
+            <p className="text-sm text-[var(--color-foreground)]">
               Public pool reporting is temporarily unavailable. {error}
             </p>
           </div>
@@ -127,7 +133,7 @@ export default function PoolsPage() {
 
         {!error && (
           <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)] mb-8">
-            <p className="text-sm text-[var(--color-earth-medium)]">
+            <p className="text-sm text-[color:rgba(246,212,203,0.82)]">
               Public visitors can review current balances here. Detailed pool dashboards and ledger filtering still require sign-in.
             </p>
           </div>
@@ -142,8 +148,8 @@ export default function PoolsPage() {
         )}
 
         <div className="mt-10 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-muted)]">
-          <p className="text-sm text-[var(--color-earth-medium)] text-center">
-            <strong>Transparent by design:</strong> All pool transactions are publicly
+          <p className="text-sm text-[color:rgba(246,212,203,0.82)] text-center">
+            <strong className="text-[var(--color-foreground)]">Transparent by design:</strong> All pool transactions are publicly
             viewable. Individual contributor identities remain anonymized.
           </p>
         </div>
