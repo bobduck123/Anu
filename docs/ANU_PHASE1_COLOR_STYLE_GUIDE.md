@@ -417,3 +417,30 @@ Validation:
 - Explicit assertions executed for degraded/fallback continuity messaging and CTA visibility.
 - `npm run -s lint` passed on touched files.
 - `npm run -s typecheck` passed.
+
+## 19) Phase 5 — Batch 5 (Governance sovereignty + needs fallback continuity)
+
+Date: 2026-04-06
+Lens: Keep institutional signal-reading routes operational even when live governance telemetry is unavailable.
+
+Updated files:
+- `frontend-next/src/app/(app)/governance/sovereignty/page.tsx`
+- `frontend-next/src/app/(app)/governance/needs/page.tsx`
+
+Changes delivered:
+- **Sovereignty index route:** replaced failure-only posture with continuity-first fallback index behavior.
+  - Added fallback sovereignty snapshot with component detail panel when live latest/compute services are unavailable.
+  - Added degraded-mode continuity messaging and direct trust-route CTAs (`Open governance index`, `Open transparency`, `Open docs`).
+  - Preserved compute interaction in fallback mode via local placeholder recompute behavior.
+- **Needs signals route:** replaced empty/error dead-end with actionable fallback signal preview.
+  - Added fallback needs signal dataset and severity summary metrics when live feed is unavailable.
+  - Added explicit “working now” continuity messaging and direct governance/trust CTAs.
+  - Preserved readable signal list structure with fallback indicators.
+
+Validation:
+- Browser verification on:
+  - `/governance/sovereignty`
+  - `/governance/needs`
+- Explicit assertions executed for degraded/fallback continuity messaging and CTA visibility.
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.
