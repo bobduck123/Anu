@@ -47,6 +47,16 @@ describe('realm registry', () => {
     expect(surface.immersiveCanvas).toBe(true);
   });
 
+  it('maps memetic routes to the celestial artifact mesh family', () => {
+    const surface = getRealmSurface('/flora-fauna');
+
+    expect(surface.realm).toBe('celestial');
+    expect(surface.strength).toBe('strong');
+    expect(surface.surfaceKind).toBe('starfield');
+    expect(surface.environmentTitle).toBe('Memetic artifact mesh');
+    expect(surface.fallbackMode).toBe('two-dimensional');
+  });
+
   it('keeps the universe on its separate immersive track', () => {
     const surface = getRealmSurface('/universe');
 

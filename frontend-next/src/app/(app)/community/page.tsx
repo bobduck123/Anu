@@ -35,7 +35,7 @@ import { DraggableGallery } from '@/ui/patterns/draggable-gallery';
 import { PostDetailModal } from '@/ui/patterns/draggable-gallery/PostDetailModal';
 import { CelestialNodeBubble } from '@/ui-system/realms/celestial/CelestialNodeBubble';
 import { CelestialStarfieldShell } from '@/ui-system/realms/celestial/CelestialStarfieldShell';
-import { CelestialTunnel } from '@/ui-system/realms/celestial/CelestialTunnel';
+import { CelestialEntryTunnel } from '@/ui-system/realms/celestial/CelestialEntryTunnel';
 import {
   COMMUNITY_CELESTIAL_INTENTS,
   communityPostIdFromStarId,
@@ -562,7 +562,7 @@ function CommunityPageContent() {
           bubble={bubble}
           tunnel={
             !enteredStarfield ? (
-              <CelestialTunnel
+              <CelestialEntryTunnel
                 intents={COMMUNITY_CELESTIAL_INTENTS}
                 activeIntent={activeIntent}
                 onSelectIntent={setActiveIntent}

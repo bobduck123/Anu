@@ -1,13 +1,52 @@
 # ANU Realm-To-Route Implementation Plan
 
 Date: 2026-03-23
-Status: Active planning document
+Status: Implementation-aligned program record (C3 complete; evidence refreshed 2026-04-07)
 Primary target: `frontend-next`
 Companion docs:
 - `docs/ANU_UI_IMPLEMENTATION_DOCTRINE_2026-03-22.md`
 - `docs/ANU_UI_EXECUTION_PLAN_2026-03-22.md`
 - `docs/ANU_UI_DETAILED_EXECUTION_PLAYBOOK_2026-03-22.md`
 - `docs/PARTIAL_CAPABILITY_UPLIFT_SPRINTS_2026-03-23.md`
+
+## 0. Current Program State (2026-04-07)
+
+Realm implementation is now materially complete across the planned L/E/C phases.
+
+Delivered status:
+- `L0-L2` delivered: realm registry, shell seam, Labyrinth proof and propagation are live.
+- `E0-E2` delivered: Earth field shell, actions/events proofs, and relief/impact bridge are live.
+- `C0-C3` delivered: celestial packet infrastructure, community + constellations proofs, and memetic/impact propagation into shared packet paths are live.
+
+Implementation alignment notes:
+- Planned celestial infrastructure files now exist:
+  - `src/components/maps/celestial/celestialPacketAdapter.ts`
+  - `src/components/maps/celestial/celestialArchetypes.ts`
+- Planned C1 tunnel/chamber files now exist:
+  - `src/ui-system/realms/celestial/CelestialEntryTunnel.tsx`
+  - `src/ui-system/realms/celestial/CelestialDetailChamber.tsx`
+- Existing C1/C2 starfield shell primitives are present and active:
+  - `src/ui-system/realms/celestial/CelestialStarfieldShell.tsx`
+  - `src/ui-system/realms/celestial/CelestialNodeBubble.tsx`
+  - `src/ui-system/realms/celestial/CelestialTunnel.tsx`
+- C3 memetic route family and path files are implemented:
+  - `src/app/(app)/flora-fauna/page.tsx`
+  - `src/app/(app)/flora-fauna/memes/[memeId]/page.tsx`
+  - `src/app/(app)/flora-fauna/channels/[channelId]/page.tsx`
+- C3 propagation is implemented through actual packet-builder exports (no separate adapter file):
+  - `buildImpactCelestialPacket(...)` in `src/components/maps/celestial/celestialPacketAdapter.ts`
+  - `buildMemeticCelestialPacket(...)` in `src/components/maps/celestial/celestialPacketAdapter.ts`
+- Shared universe ingestion now includes C3 packet families:
+  - `src/app/(app)/universe/page.tsx` imports both celestial packet builders
+  - `src/ui-system/realms/realmRegistry.ts` maps `/flora-fauna` to `celestial-memetics`
+
+Verification evidence snapshot (current candidate):
+- `src/test/celestialPacketAdapter.test.ts` passed
+- `src/test/realmRegistry.test.ts` passed
+- `src/test/constellationsPage.test.tsx` passed
+- `src/test/communityPage.test.tsx` passed
+- `cmd /c npm run -s typecheck` passed in `frontend-next`
+- `cmd /c npm run -s build` passed in `frontend-next`
 
 ## 1. Purpose
 
@@ -164,7 +203,10 @@ Celestial:
 - `CelestialStarfieldShell.tsx`
 - `CelestialNodeBubble.tsx`
 - `CelestialDetailChamber.tsx`
-- `CelestialFallbackToggle.tsx`
+- route-level fallback controls in:
+  - `src/app/(app)/community/page.tsx`
+  - `src/app/(app)/constellations/page.tsx`
+  - `src/ui-system/realms/celestial/communityCelestialPresentation.ts`
 
 ## 5.3 Shell integration seams
 
@@ -233,11 +275,13 @@ Responsibilities:
 
 ## 6.3 Add impact outcome uplink support
 
-Create:
-- `src/components/maps/celestial/impactOutcomeAdapter.ts`
+Implementation-aligned note:
+- impact outcome uplift is implemented in `src/components/maps/celestial/celestialPacketAdapter.ts` via `buildImpactCelestialPacket(...)`
+- no standalone `impactOutcomeAdapter.ts` exists in the current code path
 
-Update:
+Update targets:
 - `src/app/(app)/impact/page.tsx`
+- `src/app/(app)/universe/page.tsx`
 - relevant impact data adapters under `src/lib/api`
 
 Responsibilities:
@@ -697,8 +741,9 @@ This program succeeds when:
 
 ## 14. Immediate Next Move
 
-Begin with `PR 1` and `PR 2`:
-- establish the realm registry and shell seam
-- then convert `src/app/(app)/governance/model-registry/page.tsx` into the first Labyrinth proof
+The original bootstrapping move in this plan has been completed.
 
-That is the lowest-risk and highest-value path because the current model registry route is still structurally simple and can carry the first full realm conversion without destabilizing the broader community or universe stack.
+Current next move:
+- keep this document synchronized with code-level naming and file paths when realm primitives evolve
+- keep Gate A/B/C evidence current for each release candidate (tests + browser route checks + degradation proofs)
+- prioritize release/operations closure in `docs/program/GO_LIVE_CHECKLIST.md` so delivered realm behavior is proven in staging/production contexts

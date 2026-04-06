@@ -134,6 +134,21 @@ export const REALM_ROUTE_REGISTRY: RealmRouteEntry[] = [
     },
   },
   {
+    id: 'celestial-memetics',
+    prefixes: ['/flora-fauna'],
+    surface: {
+      realm: 'celestial',
+      strength: 'strong',
+      surfaceKind: 'starfield',
+      environmentTitle: 'Memetic artifact mesh',
+      entryPattern: 'carving',
+      supportsRealmTransition: true,
+      fallbackMode: 'two-dimensional',
+      hideSupportChrome: false,
+      immersiveCanvas: false,
+    },
+  },
+  {
     id: 'universe-track',
     prefixes: ['/universe'],
     surface: {
