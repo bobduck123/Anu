@@ -14,18 +14,22 @@ Scope: M0-M5 runtime contracts + ANU UI rollout
 
 ## Current Candidate Context
 
-- `CANDIDATE_READY` Local release candidate branch state: `main` is ahead of `origin/main` by 1 commit (`behind 0`).
+- `CANDIDATE_READY` Local release candidate branch state: `main` is ahead of `origin/main` by 2 commits (`behind 0`).
 - `CANDIDATE_READY` Phase-5 continuity commits are present locally and included in candidate scope.
 - `DONE` Frontend typecheck passed on 2026-04-07 (`cmd /c npm run -s typecheck` in `frontend-next`).
 - `DONE` Frontend production build passed on 2026-04-07 (`cmd /c npm run -s build` in `frontend-next`).
 - `DONE` Backend health tests passed on 2026-04-07 (`python -m pytest tests/test_health.py -q` in `flora-fauna/backend`).
 - `DONE` Impact-service typecheck passed on 2026-04-07 (`cmd /c npm run -s typecheck` in `services/impact-service`).
-- `ENV_PENDING` Impact-service full test pass depends on DB env (`DATABASE_URL` family) for integration suites.
+- `CANDIDATE_READY` Impact-service DB-backed integration suites passed on 2026-04-07 via:
+  - `cmd /c npm run -s falak:verify:local` (`tests/falak/falakDatabase.integration.test.ts`)
+  - `cmd /c npm run -s falak:sandbox:verify` (`tests/maps/falakMapSandbox.database.test.ts`)
+- `VERIFY_PENDING` Default `cmd /c npm run -s test` command still needs explicit DB env wiring to include DB suites in a single invocation.
 - `CANDIDATE_READY` Env contract + core smoke scripts passed locally on 2026-04-07:
   - `python verify-env-contract.py`
   - `python smoke-core-runtime.py`
-- `ENV_PENDING` Runtime contract script requires running core+impact services (`127.0.0.1:5000`, `127.0.0.1:5003`) and currently fails as unreachable.
-- `VERIFY_PENDING` Frontend full CI test matrix is not green (`11` failing tests across `9` files in `npm run -s test:ci`).
+- `CANDIDATE_READY` Runtime contract verification passed on 2026-04-07 when core+impact were brought up locally:
+  - `python scripts/verify-runtime-contracts.py`
+- `DONE` Frontend full CI test matrix passed on 2026-04-07 (`npm run -s test:ci` in `frontend-next`: `72` suites, `225` tests).
 - `DONE` Focused frontend verification passed on 2026-04-07:
   - `src/test/celestialPacketAdapter.test.ts`
   - `src/test/realmRegistry.test.ts`
@@ -86,7 +90,7 @@ Scope: M0-M5 runtime contracts + ANU UI rollout
   - `scripts/verify-runtime-contracts.py`
   - `scripts/smoke-core-runtime.py`
 - `CANDIDATE_READY` Env contract check passed on candidate host (`python verify-env-contract.py`).
-- `ENV_PENDING` Runtime contract check requires core+impact services to be running in target env (`python verify-runtime-contracts.py` currently unreachable).
+- `CANDIDATE_READY` Runtime contract check passed on candidate with local core+impact startup (`python verify-runtime-contracts.py`).
 - `CANDIDATE_READY` Core smoke passed on candidate host (`python smoke-core-runtime.py`).
 
 ### 2.5 Full Service Test Gates
@@ -95,8 +99,9 @@ Scope: M0-M5 runtime contracts + ANU UI rollout
 - `REPO_READY` Impact test suite exists (Falak/manara mode tests).
 - `DONE` Frontend typecheck passed on candidate (`frontend-next`).
 - `DONE` Backend tests passed for release cycle (`python -m pytest tests/test_health.py -q`).
-- `ENV_PENDING` Impact-service tests are partially blocked by missing DB env vars for integration suites (`16/18` suites pass without DB).
-- `VERIFY_PENDING` Frontend full CI test matrix pending green (`npm run -s test:ci` currently failing).
+- `CANDIDATE_READY` Impact-service DB-backed integration suites passed through dedicated local/sandbox verify scripts.
+- `VERIFY_PENDING` Unify DB env wiring so default `cmd /c npm run -s test` includes DB suites in one command.
+- `DONE` Frontend full CI test matrix passed for release cycle (`npm run -s test:ci`).
 - `DONE` Frontend production build passed for release cycle (`cmd /c npm run -s build`).
 
 ---
@@ -168,9 +173,9 @@ Scope: M0-M5 runtime contracts + ANU UI rollout
 
 - `DONE` Frontend typecheck completed on candidate.
 - `DONE` Frontend production build completed on candidate.
-- `ENV_PENDING` Impact typecheck + tests completed on candidate (typecheck done; DB-backed integration suites blocked by env).
+- `CANDIDATE_READY` Impact typecheck + DB-backed integration verification completed on candidate (default monolithic `npm test` command still needs DB env normalization).
 - `DONE` Backend health tests completed on candidate.
-- `ENV_PENDING` Runtime contract verifier completed on candidate env (requires running services on target ports).
+- `CANDIDATE_READY` Runtime contract verifier completed on candidate (core+impact running locally on required ports).
 - `OPS_PENDING` Tag release commit.
 - `OPS_PENDING` Deploy backend + impact first.
 - `OPS_PENDING` Deploy frontend after API origins are confirmed.

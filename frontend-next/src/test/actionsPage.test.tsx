@@ -15,6 +15,13 @@ vi.mock('@/lib/runtime', () => ({
   getCoreApiBase: () => 'https://core.example',
 }));
 
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({
+    isAuthenticated: false,
+    isLoading: false,
+  }),
+}));
+
 vi.mock('@/lib/api', () => ({
   api: {
     actions: {

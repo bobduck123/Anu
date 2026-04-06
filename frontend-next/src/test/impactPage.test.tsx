@@ -99,12 +99,14 @@ describe('ImpactHomePage', () => {
     getMicrocosmsMock.mockResolvedValue([]);
   });
 
-  it('shows connected public pathways around the impact workspace when signed out', () => {
+  it('shows connected public pathways around the impact workspace when signed out', async () => {
     render(<ImpactHomePage />);
 
-    expect(screen.getByText('Ground consequence before it rises.')).toBeInTheDocument();
-    expect(screen.getByText('Sign in for live pool, streak, and membership data')).toBeInTheDocument();
-    expect(screen.getByText('How to read this bridge before sign-in')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText(/Impact gathers grounded consequence before it rises upward\./i)).toBeInTheDocument(),
+    );
+    expect(screen.getByText(/Sign in for live pool, streak, and membership data/i)).toBeInTheDocument();
+    expect(screen.getByText(/How to read this bridge before sign-in/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Open memberships/i })).toHaveAttribute('href', '/memberships');
   });
 

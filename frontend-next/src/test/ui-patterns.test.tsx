@@ -189,8 +189,8 @@ describe('colorHarmony', () => {
 
   it('computes readable text color', async () => {
     const { readableText } = await import('@/ui/patterns/chromatic-bento/colorHarmony');
-    expect(readableText('#FFFFFF')).toBe('#1F2B2D');
-    expect(readableText('#000000')).toBe('#FFFFFF');
+    expect(readableText('#FFFFFF')).toBe('#1e0227');
+    expect(readableText('#000000')).toBe('#f6d4cb');
   });
 
   it('computes correct contrast ratio range', async () => {

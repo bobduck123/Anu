@@ -25,6 +25,13 @@ vi.mock('@/lib/api', () => ({
   },
 }));
 
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({
+    isAuthenticated: false,
+    isLoading: false,
+  }),
+}));
+
 vi.mock('@/components/shared/ViewToggle', () => ({
   default: () => <div>view-toggle</div>,
 }));

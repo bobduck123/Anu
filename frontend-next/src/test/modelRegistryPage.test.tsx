@@ -129,7 +129,9 @@ describe('ModelRegistryPage', () => {
 
     render(<ModelRegistryPage />);
 
-    await waitFor(() => expect(screen.getByText('Archive sync failed')).toBeInTheDocument());
-    expect(screen.getByText('Registry unavailable')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText('Live model registry sync is unavailable in this environment.')).toBeInTheDocument(),
+    );
+    expect(screen.getByText(/fallback models while registry sync recovers/i)).toBeInTheDocument();
   });
 });

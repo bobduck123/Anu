@@ -148,8 +148,7 @@ describe('EarthEntryPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/Universe packet unavailable\. Earth is running in fallback sky mode\./i)).toBeTruthy();
+      expect(screen.getByText(/Universe data is currently unreachable\. Earth continues in calm fallback sky mode\./i)).toBeTruthy();
     });
   });
 });
-

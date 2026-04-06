@@ -19,39 +19,36 @@ Primary references:
 - `DONE` Frontend typecheck/build passed on candidate.
 - `DONE` Backend health tests passed on candidate.
 - `DONE` Impact-service typecheck passed on candidate.
-- `ENV_PENDING` Impact-service full test pass requires DB env for integration suites.
+- `CANDIDATE_READY` Impact-service DB-backed integration suites passed via:
+  - `cmd /c npm run -s falak:verify:local`
+  - `cmd /c npm run -s falak:sandbox:verify`
+- `VERIFY_PENDING` Default `cmd /c npm run -s test` still needs DB env normalization to include DB suites in one pass.
 - `CANDIDATE_READY` `verify-env-contract.py` + `smoke-core-runtime.py` passed locally.
-- `ENV_PENDING` `verify-runtime-contracts.py` failed because core/impact services were not running on required ports.
-- `VERIFY_PENDING` Frontend full CI matrix is red (`11` failed tests across `9` files).
+- `CANDIDATE_READY` `verify-runtime-contracts.py` passed on candidate with local core (`5000`) + impact (`5003`) services running.
+- `DONE` Frontend full CI matrix passed (`72` suites / `225` tests via `npm run -s test:ci`).
 
 ---
 
 ## 1) P0 Release Blockers (Must Clear Before RC Sign-Off)
 
-- [ ] `VERIFY_PENDING` Fix frontend CI failures and restore `npm run -s test:ci` to green.
-  - `frontend-next/src/test/actionsPage.test.tsx` (`useAuth` provider assumptions)
-  - `frontend-next/src/test/eventsPage.test.tsx` (`useAuth` provider assumptions)
-  - `frontend-next/src/test/api.test.ts` (auth header expectation mismatch)
-  - `frontend-next/src/test/authPage.test.tsx` ("Login" vs current "Log in"/disabled state behavior)
-  - `frontend-next/src/test/curriculumLayerView.test.tsx` (suite-level `vi.mock` hoist issue)
-  - `frontend-next/src/test/earthEntry.test.tsx` (fallback copy expectation drift)
-  - `frontend-next/src/test/impactPage.test.tsx` (copy expectation drift)
-  - `frontend-next/src/test/modelRegistryPage.test.tsx` (error-copy expectation drift)
-  - `frontend-next/src/test/ui-patterns.test.tsx` (`readableText` expected color outdated)
+- [x] `DONE` Frontend CI failures fixed and `npm run -s test:ci` restored to green.
+  - Updated tests: `actionsPage`, `eventsPage`, `api`, `authPage`, `curriculumLayerView`, `earthEntry`, `impactPage`, `modelRegistryPage`, `ui-patterns`.
 
-- [ ] `ENV_PENDING` Resolve impact-service DB-backed integration gating, then rerun full suite.
-  - Configure one valid DB path (`DATABASE_URL` / `POSTGRES_PRISMA_URL` / `POSTGRES_URL` and `DIRECT_URL` where required).
-  - Re-run: `cmd /c npm run -s test` in `services/impact-service`.
-  - Target: `18/18` suites green.
+- [ ] `VERIFY_PENDING` Normalize impact-service test entrypoint so DB-backed suites run in the default command path.
+  - Keep dedicated DB verifications green (`falak:verify:local`, `falak:sandbox:verify`).
+  - Decide and implement one canonical release command:
+    - either set DB env in `npm test` path, or
+    - codify dedicated verify commands as release gate and document that `npm test` is non-DB by default.
+  - Target: zero ambiguity on required command for release sign-off.
 
-- [ ] `ENV_PENDING` Bring candidate/staging services up and rerun runtime contract verifier.
+- [x] `CANDIDATE_READY` Bring candidate services up and rerun runtime contract verifier.
   - Required endpoints:
     - `http://127.0.0.1:5000/health`
     - `http://127.0.0.1:5000/readiness`
     - `http://127.0.0.1:5003/v1/health`
     - `http://127.0.0.1:5003/v1/falak/health`
     - `http://127.0.0.1:5003/v1/falak/readiness`
-  - Re-run: `python scripts/verify-runtime-contracts.py`.
+  - Verified: `python scripts/verify-runtime-contracts.py` passed on 2026-04-07.
 
 ---
 
@@ -99,7 +96,7 @@ Primary references:
 
 ## 5) Exit Criteria For Desired State
 
-- [ ] All P0 blockers clear (`frontend test:ci`, impact full tests, runtime contract verifier).
+- [ ] All P0 blockers clear (`frontend test:ci`, canonical impact-service release test command, runtime contract verifier).
 - [ ] Go-live board has no unresolved `VERIFY_PENDING` items that are code-verifiable on candidate/staging.
 - [ ] Remaining items are only explicit `ENV_PENDING`/`OPS_PENDING` with named owners and dates.
 - [ ] Realm plan evidence gates (A/B/C) are current and linked to reproducible commands/artifacts.

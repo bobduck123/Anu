@@ -3,48 +3,52 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { CurriculumLayerView } from '@/components/education/CurriculumLayerView';
 
-const listProgramsMock = vi.fn();
-const getProgramMock = vi.fn();
-const listProgressMock = vi.fn();
-const listReflectionsMock = vi.fn();
-const upsertProgressMock = vi.fn();
-const submitReflectionMock = vi.fn();
+const authState = vi.hoisted(() => ({
+  authLoading: false,
+  authenticated: false,
+}));
 
-let authLoading = false;
-let authenticated = false;
+const educationStackMocks = vi.hoisted(() => ({
+  listProgramsMock: vi.fn(),
+  getProgramMock: vi.fn(),
+  listProgressMock: vi.fn(),
+  listReflectionsMock: vi.fn(),
+  upsertProgressMock: vi.fn(),
+  submitReflectionMock: vi.fn(),
+}));
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
-    isAuthenticated: authenticated,
-    isLoading: authLoading,
+    isAuthenticated: authState.authenticated,
+    isLoading: authState.authLoading,
   }),
 }));
 
 vi.mock('@/lib/api/educationStack', () => ({
   educationStackApi: {
-    listPrograms: listProgramsMock,
-    getProgram: getProgramMock,
-    listProgress: listProgressMock,
-    listReflections: listReflectionsMock,
-    upsertProgress: upsertProgressMock,
-    submitReflection: submitReflectionMock,
+    listPrograms: educationStackMocks.listProgramsMock,
+    getProgram: educationStackMocks.getProgramMock,
+    listProgress: educationStackMocks.listProgressMock,
+    listReflections: educationStackMocks.listReflectionsMock,
+    upsertProgress: educationStackMocks.upsertProgressMock,
+    submitReflection: educationStackMocks.submitReflectionMock,
   },
 }));
 
 describe('CurriculumLayerView', () => {
   beforeEach(() => {
-    authLoading = false;
-    authenticated = false;
-    listProgramsMock.mockReset();
-    getProgramMock.mockReset();
-    listProgressMock.mockReset();
-    listReflectionsMock.mockReset();
-    upsertProgressMock.mockReset();
-    submitReflectionMock.mockReset();
+    authState.authLoading = false;
+    authState.authenticated = false;
+    educationStackMocks.listProgramsMock.mockReset();
+    educationStackMocks.getProgramMock.mockReset();
+    educationStackMocks.listProgressMock.mockReset();
+    educationStackMocks.listReflectionsMock.mockReset();
+    educationStackMocks.upsertProgressMock.mockReset();
+    educationStackMocks.submitReflectionMock.mockReset();
   });
 
   it('renders progression scaffolding and module content in guest mode', async () => {
-    listProgramsMock.mockResolvedValueOnce({
+    educationStackMocks.listProgramsMock.mockResolvedValueOnce({
       programs: [
         {
           program_id: 1,
@@ -66,7 +70,7 @@ describe('CurriculumLayerView', () => {
       ],
     });
 
-    getProgramMock.mockResolvedValueOnce({
+    educationStackMocks.getProgramMock.mockResolvedValueOnce({
       program: {
         program_id: 1,
         title: 'Country Stewardship Pathway',
@@ -109,16 +113,17 @@ describe('CurriculumLayerView', () => {
 
     render(<CurriculumLayerView />);
 
-    await waitFor(() => expect(getProgramMock).toHaveBeenCalledWith(1));
+    await waitFor(() => expect(educationStackMocks.getProgramMock).toHaveBeenCalledWith(1));
 
     expect(screen.getByText(/progression with practical outcomes/i)).toBeInTheDocument();
     expect(screen.getByText(/custodial foundations/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /sign in to track/i })).toHaveAttribute('href', '/auth?returnTo=%2Feducation%2Fcurriculum');
+    expect(screen.getAllByRole('link', { name: /sign in to track/i }).some((link) =>
+      link.getAttribute('href') === '/auth?returnTo=%2Feducation%2Fcurriculum')).toBe(true);
     expect(screen.getByRole('link', { name: /regeneration actions/i })).toHaveAttribute('href', '/education/regeneration');
   });
 
   it('shows actionable fallback guidance when program loading fails', async () => {
-    listProgramsMock.mockRejectedValueOnce(new Error('service unavailable'));
+    educationStackMocks.listProgramsMock.mockRejectedValueOnce(new Error('service unavailable'));
 
     render(<CurriculumLayerView />);
 

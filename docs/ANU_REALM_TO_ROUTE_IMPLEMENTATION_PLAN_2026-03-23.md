@@ -45,6 +45,7 @@ Verification evidence snapshot (current candidate):
 - `src/test/realmRegistry.test.ts` passed
 - `src/test/constellationsPage.test.tsx` passed
 - `src/test/communityPage.test.tsx` passed
+- `npm run -s test:ci` passed in `frontend-next` (`72` suites / `225` tests)
 - `cmd /c npm run -s typecheck` passed in `frontend-next`
 - `cmd /c npm run -s build` passed in `frontend-next`
 
@@ -550,6 +551,9 @@ Definition of done:
 - list fallback remains safe for low-performance environments
 
 ## Phase C3: Memetic and impact celestial propagation
+
+Status:
+- `DONE` as of 2026-04-07 (implementation and packet-path propagation verified in current candidate).
 
 Goal:
 - complete the first non-education celestial mesh

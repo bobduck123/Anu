@@ -187,7 +187,7 @@ describe('api client', () => {
   });
 
   it('uses auth headers when completing actions', async () => {
-    localStorage.setItem('auth_token', 'token-123');
+    localStorage.setItem('auth_token', 'header.payload.signature');
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ success: true, newCompletions: 4 }),
@@ -201,7 +201,7 @@ describe('api client', () => {
       expect.objectContaining({
         method: 'POST',
         headers: expect.objectContaining({
-          Authorization: 'Bearer token-123',
+          Authorization: 'Bearer header.payload.signature',
         }),
       })
     );

@@ -25,6 +25,11 @@ vi.mock('@/contexts/AuthContext', () => ({
   }),
 }));
 
+vi.mock('@/lib/supabase/config', () => ({
+  isSupabaseConfigured: () => true,
+  SUPABASE_MISSING_MESSAGE: 'Supabase is not configured.',
+}));
+
 describe('AuthPage', () => {
   beforeEach(() => {
     pushMock.mockReset();
