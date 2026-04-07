@@ -24,7 +24,7 @@ Ownership + target dates for every open item are tracked in:
 
 ## Current Candidate Context
 
-- `CANDIDATE_READY` Local release candidate branch state: `main` is ahead of `origin/main` by 2 commits (`behind 0`).
+- `DONE` Release branch sync verified on 2026-04-07: `main` is aligned with `origin/main` (`ahead 0`, `behind 0`).
 - `CANDIDATE_READY` Phase-5 continuity commits are present locally and included in candidate scope.
 - `DONE` Frontend typecheck passed on 2026-04-07 (`cmd /c npm run -s typecheck` in `frontend-next`).
 - `DONE` Frontend production build passed on 2026-04-07 (`cmd /c npm run -s build` in `frontend-next`).
