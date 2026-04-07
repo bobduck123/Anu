@@ -92,20 +92,20 @@ function getTenantFromCookie(): Partial<TenantConfig> | null {
 }
 
 export function TenantBrandWrapper({ children }: { children: ReactNode }) {
-  const [config, setConfig] = useState<TenantConfig>(defaultConfig);
-  const [initialized, setInitialized] = useState(false);
+  const [config, setConfig] = useState<TenantConfig>(() => {
+    const cookieTenant = getTenantFromCookie();
+    return cookieTenant?.id
+      ? {
+          ...defaultConfig,
+          ...cookieTenant,
+        }
+      : defaultConfig;
+  });
 
   useEffect(() => {
-    // First, try to get tenant from middleware cookies (for white-label sites)
     const cookieTenant = getTenantFromCookie();
-    if (cookieTenant?.id) {
-      setConfig((prev) => ({
-        ...prev,
-        ...cookieTenant,
-      }));
-    }
 
-    // Then fetch full config from API
+    // Fetch full config from API (cookie context above still informs endpoint/headers).
     const apiBase = getCoreApiBase();
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     
