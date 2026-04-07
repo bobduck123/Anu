@@ -92,15 +92,21 @@ Open-item format:
 
 ## 3) P1 Realm Track Evidence Closure (Post-C3 Hygiene)
 
-- [ ] `VERIFY_PENDING` Gate B browser proofs captured for canonical realm routes: `[owner: O4] [target: 2026-04-09]`
+- [x] `DONE` Gate B browser proofs captured for canonical realm routes: `[owner: O4] [target: 2026-04-09]`
+  - evidence: `docs/program/REALM_GATE_B_C_BROWSER_EVIDENCE_2026-04-07.md`
   - Labyrinth: `/governance/model-registry`
   - Earth: `/actions`, `/events`, `/impact`
   - Celestial: `/community`, `/constellations`
-- [ ] `VERIFY_PENDING` Gate C degradation/accessibility evidence captured: `[owner: O4] [target: 2026-04-09]`
-  - Celestial auto fallback + manual 2D toggle
-  - Earth utility/list task continuity
-  - Labyrinth keyboard/reduced-motion legibility
-- [ ] `VERIFY_PENDING` Add/refresh tests specifically asserting C3 memetic route continuity: `[owner: O4] [target: 2026-04-09]`
+- [x] `DONE` Gate C degradation/accessibility evidence captured across browser proof + automated reduced-motion emulation checks: `[owner: O4] [target: 2026-04-09]`
+  - evidence: `docs/program/REALM_GATE_B_C_BROWSER_EVIDENCE_2026-04-07.md`
+  - Celestial manual 2D toggle + non-starfield inspectability verified
+  - Celestial reduced-motion auto-fallback emulation verified in tests:
+    - `src/test/communityPage.test.tsx`
+    - `src/test/constellationsPage.test.tsx`
+  - Earth utility/list continuity verified
+  - Labyrinth keyboard legibility verified
+- [x] `DONE` Add/refresh tests specifically asserting C3 memetic route continuity: `[owner: O4] [target: 2026-04-09]`
+  - `src/test/memeticRouteContinuity.test.ts`
   - `/flora-fauna`
   - `/flora-fauna/memes/[memeId]`
   - `/flora-fauna/channels/[channelId]`

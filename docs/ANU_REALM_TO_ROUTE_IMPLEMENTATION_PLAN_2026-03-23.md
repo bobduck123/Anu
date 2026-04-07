@@ -45,6 +45,10 @@ Verification evidence snapshot (current candidate):
 - `src/test/realmRegistry.test.ts` passed
 - `src/test/constellationsPage.test.tsx` passed
 - `src/test/communityPage.test.tsx` passed
+- `src/test/memeticRouteContinuity.test.ts` passed (explicit `/flora-fauna*` continuity coverage)
+- Reduced-motion fallback emulation checks passed in:
+  - `src/test/communityPage.test.tsx`
+  - `src/test/constellationsPage.test.tsx`
 - `npm run -s test:ci` passed in `frontend-next` (`72` suites / `225` tests)
 - `cmd /c npm run -s typecheck` passed in `frontend-next`
 - `cmd /c npm run -s build` passed in `frontend-next`

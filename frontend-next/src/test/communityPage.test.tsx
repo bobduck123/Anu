@@ -54,11 +54,24 @@ vi.mock('@/app/(app)/community/CommunityComposerModal', () => ({
 
 import CommunityPage from '@/app/(app)/community/page';
 
+const createMatchMedia = (matches: boolean): typeof window.matchMedia =>
+  vi.fn().mockImplementation((query: string) => ({
+    matches,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })) as typeof window.matchMedia;
+
 describe('CommunityPage', () => {
   beforeEach(() => {
     pushMock.mockReset();
     replaceMock.mockReset();
     loadCommunityUniverseDataMock.mockReset();
+    window.matchMedia = createMatchMedia(false);
   });
 
   it('uses the celestial field as the primary community surface and keeps the gallery as a backup path', async () => {
@@ -114,5 +127,54 @@ describe('CommunityPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open related gallery' }));
 
     expect(await screen.findByTestId('community-gallery')).toBeInTheDocument();
+  });
+
+  it('auto-falls back to the 2D backup on reduced-motion preference while allowing starfield re-entry', async () => {
+    window.matchMedia = createMatchMedia(true);
+
+    loadCommunityUniverseDataMock.mockResolvedValue({
+      posts: [
+        {
+          id: 'story-1',
+          title: 'Mutual aid round-up',
+          author: {
+            id: 1,
+            username: 'river-stone',
+            pseudonym: 'River Stone',
+            role: 'storyteller',
+          },
+          content: 'Local stewards delivered support packs across the neighborhood.',
+          coverImage: 'https://example.com/story.jpg',
+          layout: { imagePosition: 'top', imageSize: 50 },
+          likes: 12,
+          comments: 4,
+          shares: 3,
+          tags: ['mutual-aid', 'community'],
+          createdAt: '2026-03-20T00:00:00.000Z',
+          microcosm: 'Northside Gardens',
+        },
+      ],
+      warnings: [],
+      loadError: null,
+      degraded: false,
+      trustedNewsMeta: {
+        count: 1,
+        stale: false,
+        sourceNames: ['BBC News'],
+      },
+    });
+
+    render(<CommunityPage />);
+
+    await waitFor(() => expect(loadCommunityUniverseDataMock).toHaveBeenCalled());
+    expect(
+      await screen.findByText(
+        'Reduced-motion preference detected. The 2D gallery is active by default, but the celestial field remains available.',
+      ),
+    ).toBeInTheDocument();
+    expect(await screen.findByTestId('community-gallery')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Starfield' }));
+    expect(await screen.findByTestId('community-starfield')).toHaveTextContent('Manara Community Universe');
   });
 });

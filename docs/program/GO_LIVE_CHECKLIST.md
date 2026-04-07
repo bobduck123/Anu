@@ -50,6 +50,10 @@ Ownership + target dates for every open item are tracked in:
   - `src/test/realmRegistry.test.ts`
   - `src/test/constellationsPage.test.tsx`
   - `src/test/communityPage.test.tsx`
+  - `src/test/memeticRouteContinuity.test.ts`
+- `DONE` Reduced-motion auto-fallback emulation is now explicitly verified in focused frontend tests on 2026-04-07:
+  - `src/test/communityPage.test.tsx` (community route auto-fallback to 2D backup)
+  - `src/test/constellationsPage.test.tsx` (constellation route auto-fallback to list mode)
 
 ---
 
