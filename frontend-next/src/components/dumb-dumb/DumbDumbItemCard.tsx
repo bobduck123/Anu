@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, HeartHandshake } from 'lucide-react';
 import { Card } from '@/ui-system/primitives/Card';
@@ -35,7 +36,14 @@ export function DumbDumbItemCard({ item, href, onBuy, actionLabel = 'Fund this i
           className="flex h-16 w-16 items-center justify-center rounded-[1.6rem] border border-[rgba(30,2,39,0.12)] bg-[radial-gradient(circle_at_top,rgba(246,212,203,0.95),rgba(246,212,203,0.95))] text-3xl shadow-[inset_0_1px_0_rgba(246,212,203,0.8)]"
         >
           {item.image_url ? (
-            <img src={item.image_url} alt="" className="h-14 w-14 rounded-[1.15rem] object-cover" />
+            <Image
+              src={item.image_url}
+              alt=""
+              width={56}
+              height={56}
+              unoptimized
+              className="h-14 w-14 rounded-[1.15rem] object-cover"
+            />
           ) : (
             dumbDumbVisual(item)
           )}

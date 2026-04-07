@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight, HeartHandshake } from 'lucide-react';
 import type { DumbDumbItem, DumbDumbList } from '@/lib/api/dumbDumbApi';
@@ -53,11 +54,16 @@ function splitWishlistLabel(value: string): string[] {
 function renderWishlistFigure(item: DumbDumbItem) {
   if (item.image_url) {
     return (
-      <img
-        src={item.image_url}
-        alt={item.title}
-        className="mx-auto h-[220px] w-auto max-w-full object-contain drop-shadow-[0_24px_28px_rgba(30,2,39,0.18)] md:h-[260px]"
-      />
+      <div className="relative mx-auto h-[220px] w-full max-w-[320px] md:h-[260px]">
+        <Image
+          src={item.image_url}
+          alt={item.title}
+          fill
+          unoptimized
+          sizes="(min-width: 768px) 320px, 100vw"
+          className="object-contain drop-shadow-[0_24px_28px_rgba(30,2,39,0.18)]"
+        />
+      </div>
     );
   }
 

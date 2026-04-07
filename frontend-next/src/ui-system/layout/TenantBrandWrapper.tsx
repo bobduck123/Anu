@@ -127,7 +127,6 @@ export function TenantBrandWrapper({ children }: { children: ReactNode }) {
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!data) {
-          setInitialized(true);
           return;
         }
         const cfg = data.data || data;
@@ -147,10 +146,9 @@ export function TenantBrandWrapper({ children }: { children: ReactNode }) {
           isWhiteLabel: cfg.white_label?.enabled || cookieTenant?.isWhiteLabel || false,
           customCss: cfg.branding?.custom_css || cookieTenant?.customCss,
         });
-        setInitialized(true);
       })
       .catch(() => {
-        setInitialized(true);
+        // Keep cookie/default config when fetch fails.
       });
   }, []);
 
