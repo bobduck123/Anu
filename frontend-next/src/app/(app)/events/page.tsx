@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { api, Event, Venue } from '@/lib/api';
-import { buildAuthHref } from '@/lib/auth/returnTo';
+import { buildAuthHref, buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   AnuActionLink,
@@ -102,6 +102,7 @@ export default function EventsPage() {
 
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const authHref = useMemo(() => buildAuthHref('/events'), []);
+  const organizerPathHref = useMemo(() => buildOrganizerOnRampHref('/organizer'), []);
 
   useEffect(() => {
     try {
@@ -676,7 +677,7 @@ export default function EventsPage() {
                   </AnuFilterGroup>
                 ) : isAuthenticated ? (
                   <AnuFilterGroup className="justify-end">
-                    <AnuControlLink href="/organizer/on-ramp" tone="default" iconLeft={TentTree}>
+                    <AnuControlLink href={organizerPathHref} tone="default" iconLeft={TentTree}>
                       Apply organizer path
                     </AnuControlLink>
                   </AnuFilterGroup>

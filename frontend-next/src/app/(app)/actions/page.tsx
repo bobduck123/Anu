@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { api, Action } from '@/lib/api';
 import { getCoreApiBase } from '@/lib/runtime';
-import { buildAuthHref } from '@/lib/auth/returnTo';
+import { buildAuthHref, buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   AnuActionLink,
@@ -104,6 +104,7 @@ export default function ActionsPage() {
 
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const authHref = useMemo(() => buildAuthHref('/actions'), []);
+  const organizerPathHref = useMemo(() => buildOrganizerOnRampHref('/organizer'), []);
 
   const loadActions = useCallback(async () => {
     setLoading(true);
@@ -561,7 +562,7 @@ export default function ActionsPage() {
                       Create action
                     </AnuControlButton>
                   ) : isAuthenticated ? (
-                    <AnuControlLink href="/organizer/on-ramp" tone="default" iconLeft={TentTree}>
+                    <AnuControlLink href={organizerPathHref} tone="default" iconLeft={TentTree}>
                       Apply organizer path
                     </AnuControlLink>
                   ) : (

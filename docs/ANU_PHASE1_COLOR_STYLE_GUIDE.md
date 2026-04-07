@@ -707,3 +707,49 @@ Validation:
 - Verified sign-in anchor href includes preserved return intent payload.
 - `npm run -s lint` passed on touched files.
 - `npm run -s typecheck` passed.
+
+## 28) Phase 7 — Batch 2 (Shared organizer handoff link builder + route-wide propagation)
+
+Date: 2026-04-06
+Lens: Standardize organizer handoff link generation so all organizer entry points preserve safe intent consistently.
+
+Updated files:
+- `frontend-next/src/lib/auth/returnTo.ts`
+- `frontend-next/src/app/(app)/actions/page.tsx`
+- `frontend-next/src/app/(app)/events/page.tsx`
+- `frontend-next/src/app/(app)/calendar/page.tsx`
+- `frontend-next/src/app/(app)/organizer/layout.tsx`
+- `frontend-next/src/app/(app)/organizer/on-ramp/page.tsx`
+- `frontend-next/src/app/(app)/organizer/page.tsx`
+- `frontend-next/src/app/(app)/organizer/intelligence/page.tsx`
+- `frontend-next/src/app/(app)/organizer/guilds/page.tsx`
+- `frontend-next/src/app/(app)/organizer/guilds/[guildId]/page.tsx`
+- `frontend-next/src/app/(app)/organizer/competency/page.tsx`
+- `frontend-next/src/app/(app)/organizer/runs/[id]/page.tsx`
+- `frontend-next/src/ui-system/layout/Header.tsx`
+- `frontend-next/src/ui-system/layout/Sidebar.tsx`
+- `frontend-next/src/ui-system/layout/pathwayGuidance.ts`
+- `frontend-next/src/test/authReturnTo.test.ts`
+
+Changes delivered:
+- Added reusable helper `buildOrganizerOnRampHref(nextRoute)` in auth return helpers.
+  - Sanitizes next-route targets.
+  - Prevents on-ramp self-loop values.
+  - Emits stable encoded on-ramp URLs with `next` query.
+- Migrated organizer links across shell + journey surfaces to use shared helper:
+  - header profile link
+  - sidebar organizer path link
+  - pathway guidance organizer steps
+  - actions/events/calendar organizer-entry CTAs
+- Updated organizer route internals to preserve route-specific return intent when linking back to on-ramp from fallback/error states.
+- Refactored organizer guard and on-ramp to consume the shared helper for consistent encoded URL behavior.
+- Added/expanded unit coverage for organizer handoff helper behavior in auth return tests.
+
+Validation:
+- Browser verification on:
+  - `/organizer/intelligence` as guest → redirected to `/organizer/on-ramp?next=%2Forganizer%2Fintelligence`
+- Explicit assertions executed for preserved route cue visibility.
+- Verified sign-in link retains encoded return intent payload.
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.
+- `npx vitest run src/test/authReturnTo.test.ts` passed (7 tests).

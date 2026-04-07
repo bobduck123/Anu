@@ -31,6 +31,7 @@ import { useTenant } from './TenantBrandWrapper';
 import { ThemeToggle } from '../ThemeToggle';
 import { buildPathwayGuide, deriveNavigationMode, type NavigationMode } from './pathwayGuidance';
 import { hasSandboxAccessRole } from '@/ui-system/anu/SandboxAccessBoundary';
+import { buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
 
 interface NavItem {
   href: string;
@@ -69,7 +70,7 @@ const navSections: NavSection[] = [
       { href: '/runs', label: 'Runs', icon: BarChart3 },
       { href: '/pledges', label: 'Pledges', icon: Heart, authRequired: true },
       { href: '/dashboard/savings', label: 'Savings', icon: BarChart3, authRequired: true },
-      { href: '/organizer/on-ramp', label: 'Organizer Path', icon: Shield, authRequired: true },
+      { href: buildOrganizerOnRampHref('/organizer'), label: 'Organizer Path', icon: Shield, authRequired: true },
     ],
   },
   {

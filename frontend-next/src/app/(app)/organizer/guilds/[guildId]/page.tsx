@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
 import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const API_BASE = getCoreApiBase();
@@ -174,7 +175,7 @@ export default function GuildDetailPage() {
                 {error ? <p className="text-sm text-[var(--color-foreground)]">{error}</p> : null}
                 {notice ? <p className="text-sm text-[color:rgba(246,212,203,0.86)]">{notice}</p> : null}
                 <div className="flex flex-wrap gap-2">
-                  <Link href="/organizer/on-ramp" className="btn-pill btn-pill-outline text-xs">
+                  <Link href={buildOrganizerOnRampHref(`/organizer/guilds/${guildId}`)} className="btn-pill btn-pill-outline text-xs">
                     Organizer path
                   </Link>
                   <Link href="/organizer/intelligence" className="btn-pill btn-pill-outline text-xs">

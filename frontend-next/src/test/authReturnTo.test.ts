@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   buildAuthHref,
+  buildOrganizerOnRampHref,
   clearPendingReturnTo,
   readPendingReturnTo,
   resolvePostAuthReturnTo,
@@ -25,6 +26,15 @@ describe('auth returnTo helpers', () => {
 
   it('builds a stable auth href for valid internal routes', () => {
     expect(buildAuthHref('/runs/9')).toBe('/auth?returnTo=%2Fruns%2F9');
+  });
+
+  it('builds organizer on-ramp links with preserved next route', () => {
+    expect(buildOrganizerOnRampHref('/organizer/intelligence')).toBe('/organizer/on-ramp?next=%2Forganizer%2Fintelligence');
+  });
+
+  it('normalizes invalid organizer on-ramp next routes', () => {
+    expect(buildOrganizerOnRampHref('https://malicious.example/steal')).toBe('/organizer/on-ramp?next=%2Forganizer');
+    expect(buildOrganizerOnRampHref('/organizer/on-ramp?next=%2Forganizer')).toBe('/organizer/on-ramp?next=%2Forganizer');
   });
 
   it('uses pending returnTo when explicit returnTo is missing', () => {

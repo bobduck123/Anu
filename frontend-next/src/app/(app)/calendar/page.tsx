@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Calendar as CalIcon, Download, Clock } from 'lucide-react';
 import { apiFetch } from '@/lib/api/client';
 import { Card, CardTitle } from '@/ui-system/primitives/Card';
@@ -12,6 +12,7 @@ import { ShiftCard, type ShiftData } from '@/components/calendar/ShiftCard';
 import { AvailabilityEditor, type AvailabilitySlot } from '@/components/calendar/AvailabilityEditor';
 import { downloadICS } from '@/lib/calendar/icsExport';
 import { useTenant } from '@/ui-system/layout/TenantBrandWrapper';
+import { buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
 import { AnuProcessPanel, AnuRouteBridgePanel } from '@/ui-system/anu/coordinationPrimitives';
 import styles from './CalendarFloating.module.css';
 
@@ -68,6 +69,7 @@ export default function CalendarPage() {
   const now = new Date();
   const startStr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
   const endStr = new Date(now.getFullYear(), now.getMonth() + 2, 0).toISOString().slice(0, 10);
+  const organizerPathHref = useMemo(() => buildOrganizerOnRampHref('/organizer'), []);
 
   const loadData = useCallback(async () => {
     setError(null);
@@ -209,7 +211,7 @@ export default function CalendarPage() {
                   tone: 'signal',
                 },
                 {
-                  href: '/organizer/on-ramp',
+                  href: organizerPathHref,
                   label: 'Organizer',
                   detail: 'Use organizer routes for operational follow-through, runs, and applied stewardship.',
                   icon: Clock,

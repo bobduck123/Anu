@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
+import { buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
 
 const organizerAccessRoles = new Set([
   'organizer',
@@ -29,7 +30,7 @@ export default function OrganizerLayout({ children }: { children: ReactNode }) {
 
   const isOnRampRoute = pathname?.startsWith('/organizer/on-ramp') ?? false;
   const nextOrganizerRoute = pathname && !isOnRampRoute ? pathname : '/organizer';
-  const onRampRedirectHref = `/organizer/on-ramp?next=${encodeURIComponent(nextOrganizerRoute)}`;
+  const onRampRedirectHref = buildOrganizerOnRampHref(nextOrganizerRoute);
 
   const [accessState, setAccessState] = useState<AccessState>(isOnRampRoute ? 'allowed' : 'checking');
   const [accessPath, setAccessPath] = useState<string | null>(isOnRampRoute ? pathname ?? null : null);

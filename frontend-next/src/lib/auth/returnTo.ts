@@ -50,6 +50,14 @@ export function buildAuthHref(returnTo: string): string {
   return `/auth?${params.toString()}`;
 }
 
+export function buildOrganizerOnRampHref(nextRoute = '/organizer'): string {
+  const safeNext = sanitizeReturnTo(nextRoute, '/organizer');
+  const normalizedNext = safeNext.startsWith('/organizer/on-ramp') ? '/organizer' : safeNext;
+  const params = new URLSearchParams();
+  params.set('next', normalizedNext);
+  return `/organizer/on-ramp?${params.toString()}`;
+}
+
 export function savePendingReturnTo(returnTo: string): void {
   if (typeof window === 'undefined') {
     return;

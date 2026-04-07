@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Compass, Shield, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { api, OrganizerStatus } from '@/lib/api';
-import { buildAuthHref, sanitizeReturnTo } from '@/lib/auth/returnTo';
+import { buildAuthHref, buildOrganizerOnRampHref, sanitizeReturnTo } from '@/lib/auth/returnTo';
 import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const FALLBACK_STATUS: OrganizerStatus = {
@@ -32,12 +32,7 @@ export default function OrganizerOnRampPage() {
     return safeNext;
   }, [searchParams]);
 
-  const onRampReturnTo = useMemo(() => {
-    if (requestedNextRoute !== '/organizer') {
-      return `/organizer/on-ramp?next=${encodeURIComponent(requestedNextRoute)}`;
-    }
-    return '/organizer/on-ramp';
-  }, [requestedNextRoute]);
+  const onRampReturnTo = useMemo(() => buildOrganizerOnRampHref(requestedNextRoute), [requestedNextRoute]);
 
   const authHref = useMemo(() => buildAuthHref(onRampReturnTo), [onRampReturnTo]);
 

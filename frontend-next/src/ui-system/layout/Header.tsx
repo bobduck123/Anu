@@ -17,6 +17,7 @@ import { useTenant } from './TenantBrandWrapper';
 import { ThemeToggle } from '../ThemeToggle';
 import { getShellSignal } from './shellSignals';
 import { getTenantSemantics, getThresholdState } from '@/lib/tenantSemantics';
+import { buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
 import { getRealmSurface } from '@/ui-system/realms/realmRegistry';
 
 export interface HeaderProps {
@@ -50,7 +51,7 @@ export function Header({
 
   const profileLinks = [
     { href: '/profile', label: 'Profile' },
-    { href: '/organizer/on-ramp', label: 'Organizer path' },
+    { href: buildOrganizerOnRampHref('/organizer'), label: 'Organizer path' },
     { href: '/pledges', label: 'My Pledges' },
     { href: '/dashboard/savings', label: 'Savings' },
     { href: '/wallet/ledger', label: 'Wallet' },

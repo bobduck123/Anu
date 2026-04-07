@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import AuthGateCard from '@/components/auth/AuthGateCard';
 import { wcleApi, OrganizerPanelData } from '@/lib/api/wcleApi';
 import { toActionableSurfaceError } from '@/lib/ui/actionableErrors';
-import { buildAuthHref } from '@/lib/auth/returnTo';
+import { buildAuthHref, buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
 import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 function cents(v: number | null | undefined): string {
@@ -29,6 +29,10 @@ export default function OrganizerRunPage() {
   const [receiptAmount, setReceiptAmount] = useState('');
 
   const authHref = useMemo(() => buildAuthHref(`/organizer/runs/${runId}`), [runId]);
+  const organizerPathHref = useMemo(
+    () => buildOrganizerOnRampHref(runId ? `/organizer/runs/${runId}` : '/organizer/runs'),
+    [runId],
+  );
 
   const loadData = useCallback(async () => {
     if (!runId) {
@@ -159,7 +163,7 @@ export default function OrganizerRunPage() {
       <div className="max-w-4xl mx-auto px-4 py-10 space-y-3">
         <div className="card-civic text-sm text-[var(--color-foreground)]">{error || 'Run detail is unavailable.'}</div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/organizer/on-ramp" className="btn-pill btn-pill-outline text-xs">
+          <Link href={organizerPathHref} className="btn-pill btn-pill-outline text-xs">
             Organizer path
           </Link>
           <Link href="/cost-lowering" className="btn-pill btn-pill-outline text-xs">
@@ -199,7 +203,7 @@ export default function OrganizerRunPage() {
               {error ? <p className="text-sm text-[var(--color-foreground)]">{error}</p> : null}
               {notice ? <p className="text-sm text-[color:rgba(246,212,203,0.86)]">{notice}</p> : null}
               <div className="flex flex-wrap gap-2">
-                <Link href="/organizer/on-ramp" className="btn-pill btn-pill-outline text-xs">
+                <Link href={organizerPathHref} className="btn-pill btn-pill-outline text-xs">
                   Organizer path
                 </Link>
                 <Link href="/cost-lowering" className="btn-pill btn-pill-outline text-xs">

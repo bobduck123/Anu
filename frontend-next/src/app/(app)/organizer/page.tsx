@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Star, Trash2 } from 'lucide-react';
 import { api, Article, StoryPost, Action, Event } from '@/lib/api';
+import { buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
 import {
   AnuControlButton,
   AnuFilterBar,
@@ -29,6 +30,7 @@ export default function OrganizerConsole() {
   const [loading, setLoading] = useState(true);
   const [surfaceError, setSurfaceError] = useState<string | null>(null);
   const [surfaceNotice, setSurfaceNotice] = useState<string | null>(null);
+  const organizerPathHref = useMemo(() => buildOrganizerOnRampHref('/organizer'), []);
 
   useEffect(() => {
     let active = true;
@@ -223,7 +225,7 @@ export default function OrganizerConsole() {
                 {surfaceError ? <p className="text-sm text-[var(--color-foreground)]">{surfaceError}</p> : null}
                 {surfaceNotice ? <p className="text-sm text-[color:rgba(246,212,203,0.86)]">{surfaceNotice}</p> : null}
                 <div className="flex flex-wrap gap-2">
-                  <Link href="/organizer/on-ramp" className="btn-pill btn-pill-outline text-xs">
+                  <Link href={organizerPathHref} className="btn-pill btn-pill-outline text-xs">
                     Organizer path
                   </Link>
                   <Link href="/actions" className="btn-pill btn-pill-outline text-xs">

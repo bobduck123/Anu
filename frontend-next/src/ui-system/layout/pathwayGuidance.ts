@@ -1,4 +1,5 @@
 import { getRealmSurface } from '@/ui-system/realms/realmRegistry';
+import { buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
 
 export type NavigationMode = 'explore' | 'tasks' | 'all';
 
@@ -156,7 +157,7 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
       steps: [
         { href: '/actions', label: 'Open action board' },
         { href: '/events', label: 'Check event network' },
-        { href: '/organizer/on-ramp', label: 'Open organizer path', authRequired: true },
+        { href: buildOrganizerOnRampHref('/organizer'), label: 'Open organizer path', authRequired: true },
       ],
     };
   }
@@ -167,7 +168,7 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
       summary: 'Review institutional surfaces, then branch into operational or private work.',
       steps: [
         { href: '/profile', label: 'Open profile' },
-        { href: '/organizer/on-ramp', label: 'Open organizer path', authRequired: true },
+        { href: buildOrganizerOnRampHref('/organizer'), label: 'Open organizer path', authRequired: true },
         { href: '/sandbox/ui-lab', label: 'Review UI lab', authRequired: true },
       ],
     };
