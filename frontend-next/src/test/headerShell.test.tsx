@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { Header } from '@/ui-system/layout/Header';
 
 let currentPathname = '/sandbox/ui-lab';
-let authState = {
+const authState = {
   isAuthenticated: true,
   user: {
     role: 'organizer',

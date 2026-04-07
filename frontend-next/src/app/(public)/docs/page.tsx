@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, BookOpenText, Compass, FileSearch, LibraryBig, ScrollText, ShieldCheck } from 'lucide-react';
+import { ArrowRight, BookOpenText, Compass, LibraryBig, ScrollText, ShieldCheck } from 'lucide-react';
 import { AnuActionLink } from '@/ui-system/anu/surfacePrimitives';
 import { LabyrinthArchiveShell } from '@/ui-system/realms/labyrinth/LabyrinthArchiveShell';
 import { ObservatoryStatsRail } from '@/ui-system/realms/labyrinth/ObservatoryStatsRail';
