@@ -90,7 +90,17 @@ export default function AdminRuntimeHealthPage() {
   }
 
   useEffect(() => {
-    void refresh();
+    let cancelled = false;
+
+    queueMicrotask(() => {
+      if (!cancelled) {
+        void refresh();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
