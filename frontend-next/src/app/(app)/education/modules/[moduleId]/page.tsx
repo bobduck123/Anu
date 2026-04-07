@@ -17,32 +17,54 @@ export default function EducationModulePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!moduleId) {
-      setLoading(false);
-      setError('Module identifier is missing.');
-      return;
-    }
+    let cancelled = false;
 
-    setLoading(true);
-    setError(null);
+    queueMicrotask(() => {
+      if (cancelled) {
+        return;
+      }
 
-    api.education
-      .getModule(moduleId)
-      .then((data) => {
-        setModule(data.module);
-        setLessons(data.lessons || []);
-        setAssessment(data.assessment || null);
-      })
-      .catch((err) => {
-        const actionable = toActionableSurfaceError({
-          area: 'Education module',
-          rawMessage: err instanceof Error ? err.message : null,
-          fallbackHref: '/education',
-          fallbackLabel: 'Back to education hub',
+      if (!moduleId) {
+        setLoading(false);
+        setError('Module identifier is missing.');
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      api.education
+        .getModule(moduleId)
+        .then((data) => {
+          if (cancelled) {
+            return;
+          }
+          setModule(data.module);
+          setLessons(data.lessons || []);
+          setAssessment(data.assessment || null);
+        })
+        .catch((err) => {
+          if (cancelled) {
+            return;
+          }
+          const actionable = toActionableSurfaceError({
+            area: 'Education module',
+            rawMessage: err instanceof Error ? err.message : null,
+            fallbackHref: '/education',
+            fallbackLabel: 'Back to education hub',
+          });
+          setError(`${actionable.headline}. ${actionable.detail}`);
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoading(false);
+          }
         });
-        setError(`${actionable.headline}. ${actionable.detail}`);
-      })
-      .finally(() => setLoading(false));
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [moduleId]);
 
   const sequenceCount = lessons.length + (assessment ? 1 : 0);

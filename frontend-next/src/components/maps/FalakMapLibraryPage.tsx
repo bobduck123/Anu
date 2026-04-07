@@ -89,27 +89,38 @@ export function FalakMapLibraryPage() {
   }, [authLoading, isAuthenticated, loadMaps]);
 
   useEffect(() => {
-    if (authLoading || !isAuthenticated) {
-      setSessionStatus(null);
-      setSessionStatusError(null);
+    if (authLoading) {
       return;
     }
 
     let cancelled = false;
-    setSessionStatusError(null);
 
-    getFalakSessionStatus()
-      .then((status) => {
-        if (!cancelled) {
-          setSessionStatus(status);
-        }
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          setSessionStatus(null);
-          setSessionStatusError(error instanceof Error ? error.message : 'Unable to verify hosted Falak actor status.');
-        }
-      });
+    queueMicrotask(() => {
+      if (cancelled) {
+        return;
+      }
+
+      if (!isAuthenticated) {
+        setSessionStatus(null);
+        setSessionStatusError(null);
+        return;
+      }
+
+      setSessionStatusError(null);
+
+      getFalakSessionStatus()
+        .then((status) => {
+          if (!cancelled) {
+            setSessionStatus(status);
+          }
+        })
+        .catch((error) => {
+          if (!cancelled) {
+            setSessionStatus(null);
+            setSessionStatusError(error instanceof Error ? error.message : 'Unable to verify hosted Falak actor status.');
+          }
+        });
+    });
 
     return () => {
       cancelled = true;

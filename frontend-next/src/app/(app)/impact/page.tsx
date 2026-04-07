@@ -115,40 +115,63 @@ export default function ImpactHomePage() {
       return;
     }
 
-    if (!isAuthenticated) {
-      setLoading(false);
-      return;
-    }
+    let cancelled = false;
 
-    Promise.all([
-      membershipsApi.status(),
-      poolsApi.list(),
-      api.engagement.getCollaborative('node'),
-      api.engagement.getPoolMetrics(),
-      api.community.getMicrocosms().catch(() => [] as Microcosm[]),
-      api.engagement.getCollectiveStreaks('node'),
-      api.engagement.getCollectiveStreaks('microcosm'),
-      impactApi.summary().catch(() => null),
-    ])
-      .then(([statusData, poolsData, collabData, metrics, microData, nodeStreakData, microStreakData, summaryData]) => {
-        setStatus(statusData);
-        setPools(poolsData);
-        setCollaborative(collabData.challenges || []);
-        setCollabScopeName(collabData.scope_name || '');
-        setPoolMetrics(metrics);
-        setMicrocosms(microData);
-        setImpactSummary(toImpactSummaryData(summaryData));
-        if (isStreakCollectionPayload(microStreakData)) {
-          setMicroStreaks(microStreakData.streaks || []);
-        } else if (isCollectiveStreakPayload(microStreakData)) {
-          setMicroStreaks([microStreakData]);
-        } else {
-          setMicroStreaks([]);
-        }
-        setNodeStreak(isCollectiveStreakPayload(nodeStreakData) ? nodeStreakData : null);
-      })
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Failed to load impact data'))
-      .finally(() => setLoading(false));
+    queueMicrotask(() => {
+      if (cancelled) {
+        return;
+      }
+
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
+
+      Promise.all([
+        membershipsApi.status(),
+        poolsApi.list(),
+        api.engagement.getCollaborative('node'),
+        api.engagement.getPoolMetrics(),
+        api.community.getMicrocosms().catch(() => [] as Microcosm[]),
+        api.engagement.getCollectiveStreaks('node'),
+        api.engagement.getCollectiveStreaks('microcosm'),
+        impactApi.summary().catch(() => null),
+      ])
+        .then(([statusData, poolsData, collabData, metrics, microData, nodeStreakData, microStreakData, summaryData]) => {
+          if (cancelled) {
+            return;
+          }
+          setStatus(statusData);
+          setPools(poolsData);
+          setCollaborative(collabData.challenges || []);
+          setCollabScopeName(collabData.scope_name || '');
+          setPoolMetrics(metrics);
+          setMicrocosms(microData);
+          setImpactSummary(toImpactSummaryData(summaryData));
+          if (isStreakCollectionPayload(microStreakData)) {
+            setMicroStreaks(microStreakData.streaks || []);
+          } else if (isCollectiveStreakPayload(microStreakData)) {
+            setMicroStreaks([microStreakData]);
+          } else {
+            setMicroStreaks([]);
+          }
+          setNodeStreak(isCollectiveStreakPayload(nodeStreakData) ? nodeStreakData : null);
+        })
+        .catch((err: unknown) => {
+          if (!cancelled) {
+            setError(err instanceof Error ? err.message : 'Failed to load impact data');
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        });
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, isAuthenticated]);
 
   useEffect(() => {
@@ -175,14 +198,11 @@ export default function ImpactHomePage() {
     [impactSummary, poolMetrics, pools],
   );
 
-  useEffect(() => {
-    const visible = outcomeSignals.some((signal) => signal.id === selectedOutcomeId);
-    if (!visible) {
-      setSelectedOutcomeId(outcomeSignals[0]?.id ?? 'actions-completed');
-    }
-  }, [outcomeSignals, selectedOutcomeId]);
+  const activeOutcomeId = outcomeSignals.some((signal) => signal.id === selectedOutcomeId)
+    ? selectedOutcomeId
+    : outcomeSignals[0]?.id ?? 'actions-completed';
 
-  const selectedOutcome = outcomeSignals.find((signal) => signal.id === selectedOutcomeId) ?? outcomeSignals[0];
+  const selectedOutcome = outcomeSignals.find((signal) => signal.id === activeOutcomeId) ?? outcomeSignals[0];
   const actionsCompleted = impactSummary?.actions_completed ?? impactSummary?.completions ?? 0;
   const eventAttendance = impactSummary?.event_attendance ?? 0;
   const reliefPaid = impactSummary?.relief_paid_cents ?? 0;
@@ -212,7 +232,7 @@ export default function ImpactHomePage() {
           summary={signal.groundedDetail}
           meta={signal.groundedValue}
           badges={['Outcome', 'Bridge route']}
-          active={selectedOutcomeId === signal.id}
+          active={activeOutcomeId === signal.id}
           style={IMPACT_FIELD_POSITIONS[index]}
           onSelect={() => setSelectedOutcomeId(signal.id)}
         />

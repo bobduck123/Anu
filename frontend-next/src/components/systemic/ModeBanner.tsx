@@ -38,16 +38,36 @@ export function ModeBanner() {
       return;
     }
 
-    if (!isAuthenticated) {
-      setMode(null);
-      setError('');
-      return;
-    }
+    let cancelled = false;
 
-    fetch(`${API_BASE}/api/systemic/mode`, { headers: getAuthHeaders() })
-      .then((res) => res.json())
-      .then((data) => setMode(data.data || null))
-      .catch(() => setError('Failed to load system mode'));
+    queueMicrotask(() => {
+      if (cancelled) {
+        return;
+      }
+
+      if (!isAuthenticated) {
+        setMode(null);
+        setError('');
+        return;
+      }
+
+      fetch(`${API_BASE}/api/systemic/mode`, { headers: getAuthHeaders() })
+        .then((res) => res.json())
+        .then((data) => {
+          if (!cancelled) {
+            setMode(data.data || null);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setError('Failed to load system mode');
+          }
+        });
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [isAuthenticated, isLoading]);
 
   if (pathname?.startsWith('/wishlist/') || error || !mode || mode.mode === 'NORMAL') return null;

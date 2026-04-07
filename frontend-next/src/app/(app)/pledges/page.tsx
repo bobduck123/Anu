@@ -31,26 +31,49 @@ export default function PledgesPage() {
       return;
     }
 
-    if (!isAuthenticated) {
-      setLoading(false);
-      setPledges([]);
-      return;
-    }
+    let cancelled = false;
 
-    wcleApi
-      .myPledges()
-      .then(setPledges)
-      .catch((err) => {
-        const actionable = toActionableSurfaceError({
-          area: 'Pledges ledger',
-          rawMessage: err instanceof Error ? err.message : null,
-          fallbackHref: '/cost-lowering',
-          fallbackLabel: 'Back to run list',
-        });
-        setNotice(`${actionable.headline}. ${actionable.detail}`);
+    queueMicrotask(() => {
+      if (cancelled) {
+        return;
+      }
+
+      if (!isAuthenticated) {
+        setLoading(false);
         setPledges([]);
-      })
-      .finally(() => setLoading(false));
+        return;
+      }
+
+      wcleApi
+        .myPledges()
+        .then((nextPledges) => {
+          if (!cancelled) {
+            setPledges(nextPledges);
+          }
+        })
+        .catch((err) => {
+          if (cancelled) {
+            return;
+          }
+          const actionable = toActionableSurfaceError({
+            area: 'Pledges ledger',
+            rawMessage: err instanceof Error ? err.message : null,
+            fallbackHref: '/cost-lowering',
+            fallbackLabel: 'Back to run list',
+          });
+          setNotice(`${actionable.headline}. ${actionable.detail}`);
+          setPledges([]);
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        });
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, isAuthenticated]);
 
   async function handleCancel(pledgeId: number) {

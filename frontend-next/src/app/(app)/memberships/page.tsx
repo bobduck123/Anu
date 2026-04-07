@@ -109,7 +109,20 @@ export default function MembershipsPage() {
   const authHref = '/auth';
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
-  const [checkoutNotice, setCheckoutNotice] = useState<'success' | 'canceled' | null>(null);
+  const [checkoutNotice] = useState<'success' | 'canceled' | null>(() => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('success') === '1') {
+      return 'success';
+    }
+    if (searchParams.get('canceled') === '1') {
+      return 'canceled';
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [subscribing, setSubscribing] = useState<number | null>(null);
@@ -120,47 +133,61 @@ export default function MembershipsPage() {
     : false;
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || checkoutNotice === null) {
       return;
     }
 
     const url = new URL(window.location.href);
-    const isSuccess = url.searchParams.get('success') === '1';
-    const isCanceled = url.searchParams.get('canceled') === '1';
-
-    if (!isSuccess && !isCanceled) {
-      return;
-    }
-
-    setCheckoutNotice(isSuccess ? 'success' : 'canceled');
     url.searchParams.delete('success');
     url.searchParams.delete('canceled');
     const nextUrl = `${url.pathname}${url.search}${url.hash}`;
     window.history.replaceState({}, '', nextUrl);
-  }, []);
+  }, [checkoutNotice]);
 
   useEffect(() => {
     if (authLoading) {
       return;
     }
 
-    setLoading(true);
+    let cancelled = false;
 
-    Promise.all([
-      membershipsApi.listPlans(),
-      isAuthenticated ? membershipsApi.status() : Promise.resolve(FALLBACK_STATUS),
-    ])
-      .then(([planData, statusData]) => {
-        setPlans(planData.length ? planData : FALLBACK_PLANS);
-        setStatus(statusData || FALLBACK_STATUS);
-      })
-      .catch((err: unknown) => {
-        const message = err instanceof Error ? err.message : 'Failed to load memberships';
-        setError(message);
-        setPlans(FALLBACK_PLANS);
-        setStatus(FALLBACK_STATUS);
-      })
-      .finally(() => setLoading(false));
+    queueMicrotask(() => {
+      if (cancelled) {
+        return;
+      }
+
+      setLoading(true);
+
+      Promise.all([
+        membershipsApi.listPlans(),
+        isAuthenticated ? membershipsApi.status() : Promise.resolve(FALLBACK_STATUS),
+      ])
+        .then(([planData, statusData]) => {
+          if (cancelled) {
+            return;
+          }
+          setPlans(planData.length ? planData : FALLBACK_PLANS);
+          setStatus(statusData || FALLBACK_STATUS);
+        })
+        .catch((err: unknown) => {
+          if (cancelled) {
+            return;
+          }
+          const message = err instanceof Error ? err.message : 'Failed to load memberships';
+          setError(message);
+          setPlans(FALLBACK_PLANS);
+          setStatus(FALLBACK_STATUS);
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        });
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, isAuthenticated]);
 
   useEffect(() => {

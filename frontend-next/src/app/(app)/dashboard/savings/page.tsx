@@ -22,17 +22,37 @@ export default function SavingsDashboard() {
       return;
     }
 
-    if (!isAuthenticated) {
-      setLoading(false);
-      return;
-    }
+    let cancelled = false;
 
-    Promise.all([wcleApi.mySavings().catch(() => null), wcleApi.communitySavings().catch(() => null)])
-      .then(([summary, communitySummary]) => {
-        setSavings(summary);
-        setCommunity(communitySummary);
-      })
-      .finally(() => setLoading(false));
+    queueMicrotask(() => {
+      if (cancelled) {
+        return;
+      }
+
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+
+      Promise.all([wcleApi.mySavings().catch(() => null), wcleApi.communitySavings().catch(() => null)])
+        .then(([summary, communitySummary]) => {
+          if (!cancelled) {
+            setSavings(summary);
+            setCommunity(communitySummary);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        });
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, isAuthenticated]);
 
   const summary =

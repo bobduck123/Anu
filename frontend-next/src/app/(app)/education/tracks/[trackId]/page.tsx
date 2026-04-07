@@ -16,31 +16,53 @@ export default function EducationTrackPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!trackId) {
-      setLoading(false);
-      setError('Track identifier is missing.');
-      return;
-    }
+    let cancelled = false;
 
-    setLoading(true);
-    setError(null);
+    queueMicrotask(() => {
+      if (cancelled) {
+        return;
+      }
 
-    api.education
-      .getTrack(trackId)
-      .then((data) => {
-        setTrack(data.track);
-        setModules(data.modules || []);
-      })
-      .catch((err) => {
-        const actionable = toActionableSurfaceError({
-          area: 'Education track',
-          rawMessage: err instanceof Error ? err.message : null,
-          fallbackHref: '/education',
-          fallbackLabel: 'Back to education hub',
+      if (!trackId) {
+        setLoading(false);
+        setError('Track identifier is missing.');
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      api.education
+        .getTrack(trackId)
+        .then((data) => {
+          if (cancelled) {
+            return;
+          }
+          setTrack(data.track);
+          setModules(data.modules || []);
+        })
+        .catch((err) => {
+          if (cancelled) {
+            return;
+          }
+          const actionable = toActionableSurfaceError({
+            area: 'Education track',
+            rawMessage: err instanceof Error ? err.message : null,
+            fallbackHref: '/education',
+            fallbackLabel: 'Back to education hub',
+          });
+          setError(`${actionable.headline}. ${actionable.detail}`);
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoading(false);
+          }
         });
-        setError(`${actionable.headline}. ${actionable.detail}`);
-      })
-      .finally(() => setLoading(false));
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [trackId]);
 
   const pathwaySteps = useMemo(
