@@ -9,6 +9,16 @@ Primary references:
 - `docs/ANU_UI_DETAILED_EXECUTION_PLAYBOOK_2026-03-22.md`
 - `docs/PARTIAL_CAPABILITY_UPLIFT_SPRINTS_2026-03-23.md`
 
+## Owner Model (Max 4)
+
+- `O1` You (Release lead, final approvals, secrets, production launch control)
+- `O2` Agent-Platform (infra/database/runtime contracts/migrations)
+- `O3` Agent-Delivery (CI/CD/workflows/deploy sequencing/runbooks)
+- `O4` Agent-RealmQA (realm/browser proofs, doctrine/uplift evidence)
+
+Open-item format:
+- append `[owner: Ox] [target: YYYY-MM-DD]`
+
 ## 0) Current Baseline Snapshot
 
 - `DONE` C3 implementation path is present and wired:
@@ -37,7 +47,7 @@ Primary references:
 - [x] `DONE` Frontend CI failures fixed and `npm run -s test:ci` restored to green.
   - Updated tests: `actionsPage`, `eventsPage`, `api`, `authPage`, `curriculumLayerView`, `earthEntry`, `impactPage`, `modelRegistryPage`, `ui-patterns`.
 
-- [ ] `VERIFY_PENDING` Normalize impact-service test entrypoint so DB-backed suites run in the default command path.
+- [ ] `VERIFY_PENDING` Normalize impact-service test entrypoint so DB-backed suites run in the default command path. `[owner: O2] [target: 2026-04-08]`
   - Keep dedicated DB verifications green (`falak:verify:local`, `falak:sandbox:verify`).
   - Decide and implement one canonical release command:
     - either set DB env in `npm test` path, or
@@ -59,49 +69,49 @@ Primary references:
 
 ## 2) P0/P1 Release Operations Closure (Go-Live Checklist Completion)
 
-- [ ] `ENV_PENDING` Assign rollback owner(s) for frontend/backend/impact and DB backup window owner.
-- [ ] `ENV_PENDING` Confirm 3 Vercel projects + shared Postgres target + schema readiness (`public`, `falak`).
-- [ ] `ENV_PENDING` Set production env vars for all three projects from example templates.
-- [ ] `VERIFY_PENDING` Apply backend + Prisma migrations on target DB and verify app startup with real URLs.
-- [ ] `VERIFY_PENDING` Confirm all production health checks pass post-deploy (`/_core/*`, `/_impact/*`, `/admin/runtime-health`).
-- [ ] `VERIFY_PENDING` Confirm all M0-M5 GitHub workflows are green on release branch head.
-- [ ] `OPS_PENDING` Complete release-manager launch sequence (tag, deploy backend/impact, deploy frontend, re-check health, announce).
+- [ ] `ENV_PENDING` Assign rollback owner(s) for frontend/backend/impact and DB backup window owner. `[owner: O1] [target: 2026-04-08]`
+- [ ] `ENV_PENDING` Confirm 3 Vercel projects + shared Postgres target + schema readiness (`public`, `falak`). `[owner: O2] [target: 2026-04-08]`
+- [ ] `ENV_PENDING` Set production env vars for all three projects from example templates. `[owner: O1] [target: 2026-04-08]`
+- [ ] `VERIFY_PENDING` Apply backend + Prisma migrations on target DB and verify app startup with real URLs. `[owner: O2] [target: 2026-04-08]`
+- [ ] `VERIFY_PENDING` Confirm all production health checks pass post-deploy (`/_core/*`, `/_impact/*`, `/admin/runtime-health`). `[owner: O3] [target: 2026-04-08]`
+- [ ] `VERIFY_PENDING` Confirm all M0-M5 GitHub workflows are green on release branch head. `[owner: O3] [target: 2026-04-08]`
+- [ ] `OPS_PENDING` Complete release-manager launch sequence (tag, deploy backend/impact, deploy frontend, re-check health, announce). `[owner: O1] [target: 2026-04-08]`
 
 ---
 
 ## 3) P1 Realm Track Evidence Closure (Post-C3 Hygiene)
 
-- [ ] `VERIFY_PENDING` Gate B browser proofs captured for canonical realm routes:
+- [ ] `VERIFY_PENDING` Gate B browser proofs captured for canonical realm routes: `[owner: O4] [target: 2026-04-09]`
   - Labyrinth: `/governance/model-registry`
   - Earth: `/actions`, `/events`, `/impact`
   - Celestial: `/community`, `/constellations`
-- [ ] `VERIFY_PENDING` Gate C degradation/accessibility evidence captured:
+- [ ] `VERIFY_PENDING` Gate C degradation/accessibility evidence captured: `[owner: O4] [target: 2026-04-09]`
   - Celestial auto fallback + manual 2D toggle
   - Earth utility/list task continuity
   - Labyrinth keyboard/reduced-motion legibility
-- [ ] `VERIFY_PENDING` Add/refresh tests specifically asserting C3 memetic route continuity:
+- [ ] `VERIFY_PENDING` Add/refresh tests specifically asserting C3 memetic route continuity: `[owner: O4] [target: 2026-04-09]`
   - `/flora-fauna`
   - `/flora-fauna/memes/[memeId]`
   - `/flora-fauna/channels/[channelId]`
-- [ ] `CANDIDATE_READY` Keep naming reconciliation current when celestial primitives evolve (plan now aligned to packet-builder reality).
+- [ ] `CANDIDATE_READY` Keep naming reconciliation current when celestial primitives evolve (plan now aligned to packet-builder reality). `[owner: O4] [target: 2026-04-09]`
 
 ---
 
 ## 4) P1/P2 Doctrine + Uplift Alignment Tasks
 
-- [ ] `VERIFY_PENDING` Validate Workstream A outputs against execution-plan acceptance (lab route + pattern-bank manifest + source provenance completeness).
-- [ ] `VERIFY_PENDING` Close remaining Workstream D/F parity checks:
+- [ ] `VERIFY_PENDING` Validate Workstream A outputs against execution-plan acceptance (lab route + pattern-bank manifest + source provenance completeness). `[owner: O4] [target: 2026-04-10]`
+- [ ] `VERIFY_PENDING` Close remaining Workstream D/F parity checks: `[owner: O4] [target: 2026-04-10]`
   - subsystem chamber consistency (`profile`, microcosm-adjacent surfaces)
   - operational observatory readability/semantic hierarchy (`admin`, `governance`, `organizer`)
-- [ ] `VERIFY_PENDING` Execute and evidence Partial Capability Uplift Sprint 2 goals (public narrative/legibility spine across at least three routes).
-- [ ] `VERIFY_PENDING` Execute Sprint 3 tenant semantics/threshold clarity outcomes (manifest + entry/profile threshold language).
-- [ ] `VERIFY_PENDING` Execute Sprint 4 knowledge-to-action connectors (education/map detail to action/community/governance routes).
+- [ ] `VERIFY_PENDING` Execute and evidence Partial Capability Uplift Sprint 2 goals (public narrative/legibility spine across at least three routes). `[owner: O4] [target: 2026-04-10]`
+- [ ] `VERIFY_PENDING` Execute Sprint 3 tenant semantics/threshold clarity outcomes (manifest + entry/profile threshold language). `[owner: O4] [target: 2026-04-10]`
+- [ ] `VERIFY_PENDING` Execute Sprint 4 knowledge-to-action connectors (education/map detail to action/community/governance routes). `[owner: O4] [target: 2026-04-10]`
 
 ---
 
 ## 5) Exit Criteria For Desired State
 
-- [ ] All P0 blockers clear (`frontend test:ci`, canonical impact-service release test command, runtime contract verifier, production `/v1/health` live).
-- [ ] Go-live board has no unresolved `VERIFY_PENDING` items that are code-verifiable on candidate/staging.
-- [ ] Remaining items are only explicit `ENV_PENDING`/`OPS_PENDING` with named owners and dates.
-- [ ] Realm plan evidence gates (A/B/C) are current and linked to reproducible commands/artifacts.
+- [ ] All P0 blockers clear (`frontend test:ci`, canonical impact-service release test command, runtime contract verifier, production `/v1/health` live). `[owner: O1] [target: 2026-04-08]`
+- [ ] Go-live board has no unresolved `VERIFY_PENDING` items that are code-verifiable on candidate/staging. `[owner: O1] [target: 2026-04-10]`
+- [ ] Remaining items are only explicit `ENV_PENDING`/`OPS_PENDING` with named owners and dates. `[owner: O1] [target: 2026-04-10]`
+- [ ] Realm plan evidence gates (A/B/C) are current and linked to reproducible commands/artifacts. `[owner: O4] [target: 2026-04-10]`

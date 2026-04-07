@@ -12,6 +12,16 @@ Scope: M0-M5 runtime contracts + ANU UI rollout
 - `ENV_PENDING`: depends on hosted infra, secrets, DNS, or ownership assignment
 - `OPS_PENDING`: post-deploy or operational duty, not a pure code/repo task
 
+## Ownership Model (Max 4)
+
+- `O1` You (Release lead, approvals, secrets, launch control)
+- `O2` Agent-Platform (infra/database/runtime/migrations)
+- `O3` Agent-Delivery (CI/CD/deploy workflow/runbooks)
+- `O4` Agent-RealmQA (realm/browser/doctrine evidence)
+
+Ownership + target dates for every open item are tracked in:
+- `docs/program/COMPREHENSIVE_RELEASE_REALM_TODO_2026-04-07.md`
+
 ## Current Candidate Context
 
 - `CANDIDATE_READY` Local release candidate branch state: `main` is ahead of `origin/main` by 2 commits (`behind 0`).
