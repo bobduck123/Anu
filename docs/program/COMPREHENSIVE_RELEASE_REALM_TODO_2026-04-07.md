@@ -89,8 +89,8 @@ Open-item format:
     - `dumb_dumb_item`: `PRESENT`
     - `dumb_dumb_purchase`: `PRESENT`
 - [x] `DONE` Confirm production health checks pass post-deploy (`/_core/*`, `/_impact/*`, `/admin/runtime-health` contract paths). `[owner: O3] [target: 2026-04-08]`
-- [ ] `VERIFY_PENDING` Confirm all M0-M5 GitHub workflows are green on release branch head. `[owner: O3] [target: 2026-04-08]`
-  - note: unauthenticated GitHub Actions API calls against `bobduck123/Anu` returned `404`; verification requires authenticated repo access.
+- [x] `DONE` Confirm all M0-M5 GitHub workflows are green on release branch head. `[owner: O3] [target: 2026-04-08]`
+  - owner attestation captured on 2026-04-07 from authenticated GitHub checks UI.
 - [ ] `OPS_PENDING` Complete release-manager launch sequence (tag, announce, and capture final release notice). `[owner: O1] [target: 2026-04-08]`
   - deploy + health re-check steps are already evidenced as complete.
 

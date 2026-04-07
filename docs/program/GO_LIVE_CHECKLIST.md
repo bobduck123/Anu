@@ -201,8 +201,13 @@ Ownership + target dates for every open item are tracked in:
   - `.github/workflows/m3-chamber-rollout-gates.yml`
   - `.github/workflows/m4-community-rollout-gates.yml`
   - `.github/workflows/m5-trust-observatory-gates.yml`
-- `VERIFY_PENDING` All workflows green on the actual release branch head.
-- `CANDIDATE_READY` Public unauthenticated GitHub Actions API check could not enumerate workflows for `bobduck123/Anu` (HTTP `404`), so green status must be confirmed from authenticated repo controls (owner/agent with access).
+- `DONE` All workflows green on the actual release branch head (owner attestation on 2026-04-07 from authenticated GitHub checks UI) for:
+  - `m0-runtime-contracts`
+  - `m1-shell-lab-gates`
+  - `m2-primitive-consolidation-gates`
+  - `m3-chamber-rollout-gates`
+  - `m4-community-rollout-gates`
+  - `m5-trust-observatory-gates`
 
 ---
 
