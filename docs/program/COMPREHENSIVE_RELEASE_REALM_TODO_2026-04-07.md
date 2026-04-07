@@ -32,7 +32,9 @@ Open-item format:
 - `CANDIDATE_READY` Impact-service DB-backed integration suites passed via:
   - `cmd /c npm run -s falak:verify:local`
   - `cmd /c npm run -s falak:sandbox:verify`
-- `VERIFY_PENDING` Default `cmd /c npm run -s test` still needs DB env normalization to include DB suites in one pass.
+- `DONE` Canonical impact-service release test gate is implemented and verified:
+  - `cmd /c npm run -s test:release`
+  - includes `test:non-db` + `falak:verify:local` + `falak:sandbox:verify`
 - `CANDIDATE_READY` `verify-env-contract.py` + `smoke-core-runtime.py` passed locally.
 - `CANDIDATE_READY` `verify-runtime-contracts.py` passed on candidate with local core (`5000`) + impact (`5003`) services running.
 - `DONE` Live production endpoint audit (2026-04-07): runtime-contract endpoints passed on both direct and frontend rewrite paths (`5/5` required checks).
@@ -47,12 +49,11 @@ Open-item format:
 - [x] `DONE` Frontend CI failures fixed and `npm run -s test:ci` restored to green.
   - Updated tests: `actionsPage`, `eventsPage`, `api`, `authPage`, `curriculumLayerView`, `earthEntry`, `impactPage`, `modelRegistryPage`, `ui-patterns`.
 
-- [ ] `VERIFY_PENDING` Normalize impact-service test entrypoint so DB-backed suites run in the default command path. `[owner: O2] [target: 2026-04-08]`
-  - Keep dedicated DB verifications green (`falak:verify:local`, `falak:sandbox:verify`).
-  - Decide and implement one canonical release command:
-    - either set DB env in `npm test` path, or
-    - codify dedicated verify commands as release gate and document that `npm test` is non-DB by default.
-  - Target: zero ambiguity on required command for release sign-off.
+- [x] `DONE` Canonical impact-service release test entrypoint is normalized and verified. `[owner: O2] [target: 2026-04-08]`
+  - Implemented scripts in `services/impact-service/package.json`:
+    - `test:non-db`
+    - `test:release`
+  - Verified by running: `cmd /c npm run -s test:release`.
 
 - [x] `DONE` Production `/v1/health` endpoint and rewrite checks verified live (`200` with contract fields) on 2026-04-07.
 
@@ -69,13 +70,22 @@ Open-item format:
 
 ## 2) P0/P1 Release Operations Closure (Go-Live Checklist Completion)
 
-- [ ] `ENV_PENDING` Assign rollback owner(s) for frontend/backend/impact and DB backup window owner. `[owner: O1] [target: 2026-04-08]`
-- [ ] `ENV_PENDING` Confirm 3 Vercel projects + shared Postgres target + schema readiness (`public`, `falak`). `[owner: O2] [target: 2026-04-08]`
-- [ ] `ENV_PENDING` Set production env vars for all three projects from example templates. `[owner: O1] [target: 2026-04-08]`
-- [ ] `VERIFY_PENDING` Apply backend + Prisma migrations on target DB and verify app startup with real URLs. `[owner: O2] [target: 2026-04-08]`
-- [ ] `VERIFY_PENDING` Confirm all production health checks pass post-deploy (`/_core/*`, `/_impact/*`, `/admin/runtime-health`). `[owner: O3] [target: 2026-04-08]`
+- [x] `DONE` Assign rollback owner(s) for frontend/backend/impact and DB backup window owner. `[owner: O1] [target: 2026-04-08]`
+  - rollback owners: `O1` (release lead), execution support `O2`
+  - DB backup window: `2026-04-08 10:00-12:00` Australia/Sydney
+- [x] `DONE` Confirm 3 Vercel projects are live from `main`. `[owner: O2] [target: 2026-04-08]`
+  - frontend: `https://maanara.vercel.app`
+  - core: `https://anu-back-end.vercel.app`
+  - impact: `https://anu-impact-service.vercel.app`
+- [x] `DONE` Confirm impact schema/readiness (`falak`, migrations, PostGIS) from live readiness checks. `[owner: O2] [target: 2026-04-08]`
+  - `checks.falak_schema=ok`, `checks.migrations=ok`, `checks.postgis=ok`, `migration_failures=0`
+- [ ] `CANDIDATE_READY` Set production env vars for all three projects from example templates (direct secret inventory attestation still required from control plane). `[owner: O1] [target: 2026-04-08]`
+- [ ] `VERIFY_PENDING` Capture backend migration inventory/revision evidence from deployment control plane and verify startup with real URLs. `[owner: O2] [target: 2026-04-08]`
+- [x] `DONE` Confirm production health checks pass post-deploy (`/_core/*`, `/_impact/*`, `/admin/runtime-health` contract paths). `[owner: O3] [target: 2026-04-08]`
 - [ ] `VERIFY_PENDING` Confirm all M0-M5 GitHub workflows are green on release branch head. `[owner: O3] [target: 2026-04-08]`
-- [ ] `OPS_PENDING` Complete release-manager launch sequence (tag, deploy backend/impact, deploy frontend, re-check health, announce). `[owner: O1] [target: 2026-04-08]`
+  - note: unauthenticated GitHub Actions API calls against `bobduck123/Anu` returned `404`; verification requires authenticated repo access.
+- [ ] `OPS_PENDING` Complete release-manager launch sequence (tag, announce, and capture final release notice). `[owner: O1] [target: 2026-04-08]`
+  - deploy + health re-check steps are already evidenced as complete.
 
 ---
 
@@ -111,7 +121,7 @@ Open-item format:
 
 ## 5) Exit Criteria For Desired State
 
-- [ ] All P0 blockers clear (`frontend test:ci`, canonical impact-service release test command, runtime contract verifier, production `/v1/health` live). `[owner: O1] [target: 2026-04-08]`
+- [x] All P0 blockers clear (`frontend test:ci`, canonical impact-service release test command, runtime contract verifier, production `/v1/health` live). `[owner: O1] [target: 2026-04-08]`
 - [ ] Go-live board has no unresolved `VERIFY_PENDING` items that are code-verifiable on candidate/staging. `[owner: O1] [target: 2026-04-10]`
 - [ ] Remaining items are only explicit `ENV_PENDING`/`OPS_PENDING` with named owners and dates. `[owner: O1] [target: 2026-04-10]`
 - [ ] Realm plan evidence gates (A/B/C) are current and linked to reproducible commands/artifacts. `[owner: O4] [target: 2026-04-10]`

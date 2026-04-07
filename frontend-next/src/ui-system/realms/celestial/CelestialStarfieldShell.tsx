@@ -34,7 +34,7 @@ export function CelestialStarfieldShell({
       />
 
       {topChrome ? (
-        <div className="pointer-events-none absolute inset-x-3 top-4 z-10 flex justify-center md:left-[17rem] md:right-6">
+        <div className="pointer-events-none absolute inset-x-3 top-[4.5rem] z-10 flex justify-center md:left-[17rem] md:right-6">
           <div className="pointer-events-auto w-full max-w-6xl">{topChrome}</div>
         </div>
       ) : null}

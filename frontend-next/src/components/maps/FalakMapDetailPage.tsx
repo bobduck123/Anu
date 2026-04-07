@@ -65,7 +65,7 @@ export function FalakMapDetailPage({ topicKey }: FalakMapDetailPageProps) {
       .finally(() => {
         setLoading(false);
       });
-  }, [topicKey]);
+  }, [topicKey, isAuthenticated]);
 
   useEffect(() => {
     if (authLoading) {

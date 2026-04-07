@@ -33,7 +33,9 @@ Ownership + target dates for every open item are tracked in:
 - `CANDIDATE_READY` Impact-service DB-backed integration suites passed on 2026-04-07 via:
   - `cmd /c npm run -s falak:verify:local` (`tests/falak/falakDatabase.integration.test.ts`)
   - `cmd /c npm run -s falak:sandbox:verify` (`tests/maps/falakMapSandbox.database.test.ts`)
-- `VERIFY_PENDING` Default `cmd /c npm run -s test` command still needs explicit DB env wiring to include DB suites in a single invocation.
+- `DONE` Impact-service canonical release test command is now defined and verified on 2026-04-07:
+  - `cmd /c npm run -s test:release` in `services/impact-service`
+  - includes `test:non-db` + `falak:verify:local` + `falak:sandbox:verify`
 - `CANDIDATE_READY` Env contract + core smoke scripts passed locally on 2026-04-07:
   - `python verify-env-contract.py`
   - `python smoke-core-runtime.py`
@@ -56,20 +58,29 @@ Ownership + target dates for every open item are tracked in:
 - `CANDIDATE_READY` M0-M5 implementation is present on the local release candidate.
 - `DONE` `docs/program/M0_M5_CHANGE_SUMMARY.md` reviewed in current audit.
 - `DONE` `docs/program/M0_M5_AGGRESSIVE_MOCKDB_TEST_REPORT.md` reviewed in current audit.
-- `ENV_PENDING` Rollback owner assigned (backend + impact + frontend).
-- `ENV_PENDING` DB backup/restore runbook owner and invocation window confirmed.
+- `DONE` Rollback ownership assigned:
+  - `frontend`: `O1` (release lead)
+  - `backend`: `O1` (release lead)
+  - `impact`: `O1` (release lead)
+  - execution support: `O2` (Agent-Platform)
+- `DONE` DB backup/restore runbook ownership + window confirmed:
+  - owner: `O2` (Agent-Platform), approver: `O1`
+  - window: `2026-04-08 10:00-12:00` Australia/Sydney
 
 ---
 
 ## 1) Hosting Architecture Requirements
 
-- `ENV_PENDING` 3 Vercel projects created from same repo:
+- `DONE` 3 Vercel projects are live from the same repo branch (`main`), per owner attestation + live endpoint verification:
   - `frontend-next`
   - `flora-fauna/backend`
   - `services/impact-service`
-- `ENV_PENDING` 1 shared Postgres target (Supabase recommended) provisioned.
-- `ENV_PENDING` Required schemas confirmed on target (`public`, `falak`).
-- `ENV_PENDING` DNS and TLS active for frontend domain.
+- `CANDIDATE_READY` Shared production Postgres is active for core+impact runtime paths (live readiness checks show database `ok` on both services).
+- `DONE` Required impact-side schema readiness verified live:
+  - `falak` schema: `ok`
+  - migrations: `ok` (`migration_failures: 0`)
+  - PostGIS: `ok` (`postgis_version: 3.3.7`)
+- `DONE` DNS and TLS are active for frontend domain (`https://maanara.vercel.app` serving with valid HTTPS responses).
 
 ---
 
@@ -113,7 +124,7 @@ Ownership + target dates for every open item are tracked in:
 - `DONE` Frontend typecheck passed on candidate (`frontend-next`).
 - `DONE` Backend tests passed for release cycle (`python -m pytest tests/test_health.py -q`).
 - `CANDIDATE_READY` Impact-service DB-backed integration suites passed through dedicated local/sandbox verify scripts.
-- `VERIFY_PENDING` Unify DB env wiring so default `cmd /c npm run -s test` includes DB suites in one command.
+- `DONE` Impact-service release test gate is unified through `cmd /c npm run -s test:release` (verified 2026-04-07).
 - `DONE` Frontend full CI test matrix passed for release cycle (`npm run -s test:ci`).
 - `DONE` Frontend production build passed for release cycle (`cmd /c npm run -s build`).
 
@@ -123,9 +134,9 @@ Ownership + target dates for every open item are tracked in:
 
 ### 3.1 Vercel Project Setup
 
-- `ENV_PENDING` Project A: `frontend-next` (Node `24.x`).
-- `ENV_PENDING` Project B: `flora-fauna/backend` (Python `3.12`, `vercel_app.py` entry).
-- `ENV_PENDING` Project C: `services/impact-service` (Node `24.x`, API entrypoints).
+- `DONE` Project A live: `frontend-next` (`https://maanara.vercel.app`).
+- `DONE` Project B live: `flora-fauna/backend` (`https://anu-back-end.vercel.app`).
+- `DONE` Project C live: `services/impact-service` (`https://anu-impact-service.vercel.app`).
 
 ### 3.2 Required Environment Variables
 
@@ -133,18 +144,25 @@ Ownership + target dates for every open item are tracked in:
   - `frontend-next/vercel.env.example`
   - `flora-fauna/backend/vercel.env.example`
   - `services/impact-service/vercel.env.example`
-- `ENV_PENDING` Frontend critical keys set.
-- `ENV_PENDING` Backend critical keys set.
-- `ENV_PENDING` Impact critical keys set.
+- `CANDIDATE_READY` Frontend critical runtime keys are operational (live `/_core/*` and `/_impact/*` rewrites resolve correctly).
+- `CANDIDATE_READY` Backend critical runtime keys are operational (live `/health` + `/readiness` contract payloads healthy).
+- `CANDIDATE_READY` Impact critical runtime keys are operational (live `/v1/health`, `/v1/falak/health`, `/v1/falak/readiness` healthy).
 - `ENV_PENDING` Stripe launch decision and key policy finalized.
-- `ENV_PENDING` Falak dark-launch guard posture explicitly set for production.
+- `DONE` Falak dark-launch guard posture explicitly verified live:
+  - `route_guard_mode=enabled`
+  - `dark_launch=false`
+  - `map_route_guard_mode=enabled`
+  - `map_dark_launch=false`
 
 ### 3.3 Database and Migration Readiness
 
-- `ENV_PENDING` Postgres target extension/migration compatibility confirmed.
-- `VERIFY_PENDING` Backend migrations applied successfully on target.
-- `VERIFY_PENDING` Prisma migrations applied successfully on target.
-- `VERIFY_PENDING` App startup confirmed with real `DATABASE_URL` / `DIRECT_URL`.
+- `DONE` Impact Postgres extension/migration compatibility confirmed by live Falak readiness:
+  - `checks.postgis=ok`
+  - `checks.prisma=ok`
+  - `checks.migrations=ok`
+- `VERIFY_PENDING` Backend migration inventory and latest revision confirmation captured from deployment control plane.
+- `DONE` Impact migration/readiness checks confirmed live (`migrations=ok`, `falak_schema=ok`).
+- `CANDIDATE_READY` App startup with real database URLs is confirmed by live health/readiness success on core and impact production endpoints.
 
 ### 3.4 Production Health Checks
 
@@ -174,6 +192,7 @@ Ownership + target dates for every open item are tracked in:
   - `.github/workflows/m4-community-rollout-gates.yml`
   - `.github/workflows/m5-trust-observatory-gates.yml`
 - `VERIFY_PENDING` All workflows green on the actual release branch head.
+- `CANDIDATE_READY` Public unauthenticated GitHub Actions API check could not enumerate workflows for `bobduck123/Anu` (HTTP `404`), so green status must be confirmed from authenticated repo controls (owner/agent with access).
 
 ---
 
@@ -191,13 +210,15 @@ Ownership + target dates for every open item are tracked in:
 
 - `DONE` Frontend typecheck completed on candidate.
 - `DONE` Frontend production build completed on candidate.
-- `CANDIDATE_READY` Impact typecheck + DB-backed integration verification completed on candidate (default monolithic `npm test` command still needs DB env normalization).
+- `DONE` Impact typecheck + canonical release test gate completed on candidate:
+  - `cmd /c npm run -s typecheck`
+  - `cmd /c npm run -s test:release`
 - `DONE` Backend health tests completed on candidate.
 - `CANDIDATE_READY` Runtime contract verifier completed on candidate (core+impact running locally on required ports).
 - `OPS_PENDING` Tag release commit.
-- `OPS_PENDING` Deploy backend + impact first.
-- `OPS_PENDING` Deploy frontend after API origins are confirmed.
-- `OPS_PENDING` Re-run production health checks.
+- `CANDIDATE_READY` Backend + impact are deployed and serving live traffic (owner attestation + endpoint verification).
+- `CANDIDATE_READY` Frontend is deployed with API origins functioning via rewrites (`/_core/*`, `/_impact/*`).
+- `DONE` Production health checks re-run and recorded in `docs/program/PROD_GO_LIVE_EVIDENCE_2026-04-07.md`.
 - `OPS_PENDING` Announce go-live window complete.
 
 ---

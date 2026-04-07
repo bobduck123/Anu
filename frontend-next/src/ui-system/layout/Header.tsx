@@ -48,6 +48,7 @@ export function Header({
   );
   const isSteward = thresholdState.current.key === 'steward';
   const isSandboxRoute = pathname?.startsWith('/sandbox');
+  const isImmersiveRoute = realmSurface.immersiveCanvas;
 
   const profileLinks = [
     { href: '/profile', label: 'Profile' },
@@ -112,36 +113,42 @@ export function Header({
             </Link>
           </div>
 
-          <div className="hidden lg:flex min-w-0 flex-1 items-center justify-center px-3">
-            <div className="manara-glass-chip flex min-w-[min(100%,34rem)] items-center gap-3 border border-[color:rgba(246,212,203,0.12)] bg-[linear-gradient(120deg,rgba(246,212,203,0.08),rgba(246,212,203,0.02))] px-3.5 py-2 shadow-[inset_0_1px_0_rgba(246,212,203,0.08)]">
-              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#f6d4cb]/28 bg-[#1e0227]/78 text-[#f6d4cb]">
-                <SignalIcon className="h-4 w-4" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[color:rgba(246,212,203,0.82)]">{shellSignal.eyebrow}</p>
-                <div className="flex min-w-0 items-center gap-2">
-                  <span className="truncate text-sm font-semibold text-[var(--color-foreground)]">{shellSignal.label}</span>
-                  <span className="rounded-full border border-[#f6d4cb]/18 bg-[#f6d4cb]/8 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-[#f6d4cb]">
-                    {realmSurface.environmentTitle}
-                  </span>
-                  <span className="rounded-full border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.07)] px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.84)]">
-                    {thresholdState.current.label}
-                  </span>
-                  {isSandboxRoute ? (
-                    <span className="rounded-full border border-[#f6d4cb]/28 bg-[#f6d4cb]/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-[#f6d4cb]">
-                      Internal
+          {!isImmersiveRoute ? (
+            <div className="hidden lg:flex min-w-0 flex-1 items-center justify-center px-3">
+              <div className="manara-glass-chip flex min-w-[min(100%,34rem)] items-center gap-3 border border-[color:rgba(246,212,203,0.12)] bg-[linear-gradient(120deg,rgba(246,212,203,0.08),rgba(246,212,203,0.02))] px-3.5 py-2 shadow-[inset_0_1px_0_rgba(246,212,203,0.08)]">
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#f6d4cb]/28 bg-[#1e0227]/78 text-[#f6d4cb]">
+                  <SignalIcon className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[color:rgba(246,212,203,0.82)]">{shellSignal.eyebrow}</p>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="truncate text-sm font-semibold text-[var(--color-foreground)]">{shellSignal.label}</span>
+                    <span className="rounded-full border border-[#f6d4cb]/18 bg-[#f6d4cb]/8 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-[#f6d4cb]">
+                      {realmSurface.environmentTitle}
                     </span>
-                  ) : null}
+                    <span className="rounded-full border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.07)] px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.84)]">
+                      {thresholdState.current.label}
+                    </span>
+                    {isSandboxRoute ? (
+                      <span className="rounded-full border border-[#f6d4cb]/28 bg-[#f6d4cb]/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-[#f6d4cb]">
+                        Internal
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="truncate text-xs text-[color:rgba(246,212,203,0.72)]">{shellSignal.note}</p>
                 </div>
-                <p className="truncate text-xs text-[color:rgba(246,212,203,0.72)]">{shellSignal.note}</p>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="hidden lg:block flex-1" aria-hidden="true" />
+          )}
 
           <div className="flex items-center gap-2">
-            <div className="hidden xl:flex items-center rounded-full border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-3 py-1.5">
-              <span className="text-[10px] uppercase tracking-[0.22em] text-[#f6d4cb]/80">{doorwayLabel}</span>
-            </div>
+            {!isImmersiveRoute ? (
+              <div className="hidden xl:flex items-center rounded-full border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-3 py-1.5">
+                <span className="text-[10px] uppercase tracking-[0.22em] text-[#f6d4cb]/80">{doorwayLabel}</span>
+              </div>
+            ) : null}
 
             <div className="flex items-center gap-1.5 rounded-full border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(246,212,203,0.04)] px-1.5 py-1">
               <ThemeToggle />

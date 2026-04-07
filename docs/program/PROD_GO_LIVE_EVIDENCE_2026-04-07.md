@@ -92,3 +92,47 @@ Repository alignment:
 
 1. Keep runtime endpoint checks in first-hour launch watch (already defined in go-live checklist).
 2. Maintain this evidence file as the canonical production verification artifact for the release window.
+
+## 5) Non-Secret Production Env Verification
+
+Method:
+- Live contract/readiness payload inspection only (no secret values retrieved).
+
+Verified live on 2026-04-07:
+- Core readiness (`https://maanara.vercel.app/_core/readiness`)
+  - `status=ok`
+  - `dependencies.database=ok`
+- Impact health (`https://maanara.vercel.app/_impact/v1/health`)
+  - `status=ok`
+  - `dependencies.database=ok`
+- Impact Falak readiness (`https://maanara.vercel.app/_impact/v1/falak/readiness`)
+  - `checks.database=ok`
+  - `checks.postgis=ok`
+  - `checks.prisma=ok`
+  - `checks.falak_schema=ok`
+  - `checks.migrations=ok`
+  - `details.migration_failures=0`
+  - `details.postgis_version=3.3.7`
+- Runtime guard posture (`/v1/falak/health` and `/v1/falak/readiness`)
+  - `route_guard_mode=enabled`
+  - `dark_launch=false`
+  - `map_route_guard_mode=enabled`
+  - `map_dark_launch=false`
+  - `require_verified_actor=true`
+
+Interpretation:
+- Runtime environment is correctly wired for database-backed operation and Falak guard enforcement.
+- This is a non-secret operational verification; direct secret inventory remains control-plane ownership.
+
+## 6) Release Sequence Evidence Snapshot
+
+Completed and evidenced:
+- Backend and impact endpoints live and healthy.
+- Frontend live and rewriting correctly to both core and impact routes.
+- Production runtime-contract checks re-run successfully (`5/5` required paths).
+- Canonical impact release test gate executed locally on candidate host:
+  - `cmd /c npm run -s test:release`
+
+Remaining release-manager actions:
+- Tag release commit.
+- Publish final go-live announcement.

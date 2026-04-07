@@ -97,6 +97,7 @@ function CommunityPageContent() {
   const [enteredStarfield, setEnteredStarfield] = useState(false);
   const [selectedStarId, setSelectedStarId] = useState<string | null>(null);
   const [focusPostId, setFocusPostId] = useState<string | null>(null);
+  const [controlsExpanded, setControlsExpanded] = useState(true);
 
   const latestPostsRef = useRef<CommunityPost[]>([]);
 
@@ -244,6 +245,7 @@ function CommunityPageContent() {
   const enterStarfield = useCallback(() => {
     setEnteredStarfield(true);
     setSurfaceMode('celestial');
+    setControlsExpanded(true);
   }, []);
 
   const openBackupGallery = useCallback(() => {
@@ -251,11 +253,13 @@ function CommunityPageContent() {
       setFocusPostId(selectedPost.id);
     }
     setSurfaceMode('backup');
+    setControlsExpanded(true);
   }, [selectedPost]);
 
   const reopenStarfield = useCallback(() => {
     setSurfaceMode('celestial');
     setEnteredStarfield(true);
+    setControlsExpanded(true);
   }, []);
 
   if (!galleryEnabled) {
@@ -290,8 +294,15 @@ function CommunityPageContent() {
   const isPreEntryTunnel = showStarfield && !enteredStarfield;
   const chamberOpen = showStarfield && enteredStarfield && selectedNodeSurface === 'chamber' && Boolean(selectedPost);
 
-  const topChrome = (
+  const fullTopChrome = (
     <AnuSurfacePanel tone="quiet" className="p-4 text-[var(--color-foreground)]">
+      {showStarfield && enteredStarfield ? (
+        <div className="mb-3 flex justify-end">
+          <AnuControlButton tone="default" onClick={() => setControlsExpanded(false)}>
+            Hide controls
+          </AnuControlButton>
+        </div>
+      ) : null}
       <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
         <div className="min-w-0">
           <AnuSectionHeading
@@ -501,6 +512,33 @@ function CommunityPageContent() {
     </AnuSurfacePanel>
   );
 
+  const compactTopChrome = (
+    <AnuSurfacePanel tone="quiet" className="px-4 py-3 text-[var(--color-foreground)]">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <AnuChip tone={feedStateTone}>{feedStateLabel}</AnuChip>
+          <AnuChip tone="signal">Intent: {COMMUNITY_CELESTIAL_INTENTS.find((intent) => intent.id === activeIntent)?.label}</AnuChip>
+          {focusPostId ? <AnuChip tone="muted">Focused trace</AnuChip> : null}
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <AnuControlButton tone="active" onClick={() => setControlsExpanded(true)}>
+            Show controls
+          </AnuControlButton>
+          <AnuControlButton tone="default" onClick={openBackupGallery}>
+            2D backup
+          </AnuControlButton>
+        </div>
+      </div>
+
+      {warningMessage || loadError ? (
+        <p className="mt-3 text-xs text-[color:rgba(246,212,203,0.82)]">
+          {warningMessage || loadError}
+        </p>
+      ) : null}
+    </AnuSurfacePanel>
+  );
+
   const bottomChrome = (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.4rem] border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.3)] px-4 py-3 text-xs text-[color:rgba(246,212,203,0.84)] shadow-[0_20px_50px_-32px_rgba(30,2,39,0.95)] backdrop-blur-xl">
       <span>
@@ -557,8 +595,12 @@ function CommunityPageContent() {
           activeStarId={selectedStarId}
           visibleStarIds={visibleStarIds}
           onSelectStarId={setSelectedStarId}
-          topChrome={topChrome}
-          bottomChrome={enteredStarfield ? bottomChrome : null}
+          topChrome={
+            enteredStarfield && !controlsExpanded
+                ? compactTopChrome
+                : fullTopChrome
+          }
+          bottomChrome={enteredStarfield && controlsExpanded ? bottomChrome : null}
           bubble={bubble}
           tunnel={
             !enteredStarfield ? (
@@ -583,8 +625,8 @@ function CommunityPageContent() {
             showSortBar={false}
           />
 
-          <div className="pointer-events-none fixed left-3 right-3 top-4 z-[12] flex justify-center md:left-[17rem] md:right-6">
-            <div className="pointer-events-auto w-full max-w-6xl">{topChrome}</div>
+          <div className="pointer-events-none fixed left-3 right-3 top-[4.5rem] z-[12] flex justify-center md:left-[17rem] md:right-6">
+            <div className="pointer-events-auto w-full max-w-6xl">{fullTopChrome}</div>
           </div>
 
           <div className="pointer-events-none fixed bottom-5 left-4 right-4 z-[12] flex justify-center md:left-[17rem] md:right-6">
