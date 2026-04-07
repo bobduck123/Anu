@@ -151,6 +151,7 @@ Ownership + target dates for every open item are tracked in:
 - `CANDIDATE_READY` Frontend critical runtime keys are operational (live `/_core/*` and `/_impact/*` rewrites resolve correctly).
 - `CANDIDATE_READY` Backend critical runtime keys are operational (live `/health` + `/readiness` contract payloads healthy).
 - `CANDIDATE_READY` Impact critical runtime keys are operational (live `/v1/health`, `/v1/falak/health`, `/v1/falak/readiness` healthy).
+- `DONE` Control-plane env inventory attestation captured on 2026-04-07 via masked Vercel environment screenshots for all three production projects.
 - `ENV_PENDING` Stripe launch decision and key policy finalized.
 - `DONE` Falak dark-launch guard posture explicitly verified live:
   - `route_guard_mode=enabled`
@@ -164,7 +165,12 @@ Ownership + target dates for every open item are tracked in:
   - `checks.postgis=ok`
   - `checks.prisma=ok`
   - `checks.migrations=ok`
-- `VERIFY_PENDING` Backend migration inventory and latest revision confirmation captured from deployment control plane.
+- `DONE` Backend migration inventory and latest revision confirmation captured from deployment control plane.
+  - 2026-04-07 SQL-console probes captured DB context (`db=postgres`, `schema=public`, role `postgres`) and post-remediation verification confirms required backend migration objects are now present:
+    - `control_token_grant`
+    - `dumb_dumb_list`
+    - `dumb_dumb_item`
+    - `dumb_dumb_purchase`
 - `DONE` Impact migration/readiness checks confirmed live (`migrations=ok`, `falak_schema=ok`).
 - `CANDIDATE_READY` App startup with real database URLs is confirmed by live health/readiness success on core and impact production endpoints.
 

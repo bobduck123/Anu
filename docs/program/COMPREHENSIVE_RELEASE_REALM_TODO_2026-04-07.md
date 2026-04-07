@@ -24,7 +24,7 @@ Open-item format:
 - `DONE` C3 implementation path is present and wired:
   - `frontend-next/src/components/maps/celestial/celestialPacketAdapter.ts`
   - `frontend-next/src/components/maps/celestial/celestialArchetypes.ts`
-  - `frontend-next/src/ui-system/realms/realmRegistry.ts` (`/flora-fauna` -> `celestial-memetics`)
+  - `frontend-next/src/ui-system/realms/realmRegistry.ts` (`/anu` primary, with `/manara` + `/flora-fauna` aliases -> `celestial-memetics`)
   - `frontend-next/src/app/(app)/universe/page.tsx` imports impact + memetic celestial packet builders
 - `DONE` Release branch sync verified on 2026-04-07: `main` is aligned with `origin/main` (`ahead 0`, `behind 0`).
 - `DONE` Frontend typecheck/build passed on candidate.
@@ -80,8 +80,14 @@ Open-item format:
   - impact: `https://anu-impact-service.vercel.app`
 - [x] `DONE` Confirm impact schema/readiness (`falak`, migrations, PostGIS) from live readiness checks. `[owner: O2] [target: 2026-04-08]`
   - `checks.falak_schema=ok`, `checks.migrations=ok`, `checks.postgis=ok`, `migration_failures=0`
-- [ ] `CANDIDATE_READY` Set production env vars for all three projects from example templates (direct secret inventory attestation still required from control plane). `[owner: O1] [target: 2026-04-08]`
-- [ ] `VERIFY_PENDING` Capture backend migration inventory/revision evidence from deployment control plane and verify startup with real URLs. `[owner: O2] [target: 2026-04-08]`
+- [x] `DONE` Set production env vars for all three projects from example templates (control-plane attestation provided via masked Vercel screenshots on 2026-04-07). `[owner: O1] [target: 2026-04-08]`
+- [x] `DONE` Capture backend migration inventory/revision evidence from deployment control plane and verify startup with real URLs. `[owner: O2] [target: 2026-04-08]`
+  - 2026-04-07 control-plane SQL probe captured (`db=postgres`, `schema=public`, role `postgres`) plus table inventory.
+  - Post-remediation verification confirmed required backend migration objects are now present:
+    - `control_token_grant`: `PRESENT`
+    - `dumb_dumb_list`: `PRESENT`
+    - `dumb_dumb_item`: `PRESENT`
+    - `dumb_dumb_purchase`: `PRESENT`
 - [x] `DONE` Confirm production health checks pass post-deploy (`/_core/*`, `/_impact/*`, `/admin/runtime-health` contract paths). `[owner: O3] [target: 2026-04-08]`
 - [ ] `VERIFY_PENDING` Confirm all M0-M5 GitHub workflows are green on release branch head. `[owner: O3] [target: 2026-04-08]`
   - note: unauthenticated GitHub Actions API calls against `bobduck123/Anu` returned `404`; verification requires authenticated repo access.
@@ -107,9 +113,9 @@ Open-item format:
   - Labyrinth keyboard legibility verified
 - [x] `DONE` Add/refresh tests specifically asserting C3 memetic route continuity: `[owner: O4] [target: 2026-04-09]`
   - `src/test/memeticRouteContinuity.test.ts`
-  - `/flora-fauna`
-  - `/flora-fauna/memes/[memeId]`
-  - `/flora-fauna/channels/[channelId]`
+  - `/anu`
+  - `/anu/pools/[poolId]`
+  - `/anu/channels/[channelId]`
 - [ ] `CANDIDATE_READY` Keep naming reconciliation current when celestial primitives evolve (plan now aligned to packet-builder reality). `[owner: O4] [target: 2026-04-09]`
 
 ---
