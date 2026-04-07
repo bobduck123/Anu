@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRef, useState, type CSSProperties } from 'react';
 import styles from './ScrollSnapLanding.module.css';
@@ -167,16 +168,22 @@ export function ScrollSnapLanding() {
               <div className={styles.panelOverlay} />
 
               <div className={styles.fogLow} aria-hidden="true">
-                <img
+                <Image
                   src="https://demos.creative-tim.com/paper-kit-2/assets/img/fog-low.png"
                   alt=""
+                  width={640}
+                  height={180}
+                  unoptimized
                   loading="lazy"
                 />
               </div>
               <div className={`${styles.fogLow} ${styles.right}`} aria-hidden="true">
-                <img
+                <Image
                   src="https://demos.creative-tim.com/paper-kit-2/assets/img/fog-low.png"
                   alt=""
+                  width={640}
+                  height={180}
+                  unoptimized
                   loading="lazy"
                 />
               </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ExternalLink, ImagePlus, Loader2, Plus, Sparkles } from 'lucide-react';
@@ -445,9 +446,12 @@ export default function DumbDumbManagePage() {
               <div className="md:col-span-2 rounded-[1.5rem] border border-[rgba(30,2,39,0.12)] bg-[linear-gradient(180deg,rgba(246,212,203,0.98),rgba(246,212,203,0.94))] p-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted-foreground)]">Image preview</p>
                 <div className="mt-3 flex min-h-[220px] items-center justify-center rounded-[1.25rem] bg-[radial-gradient(circle_at_top,rgba(246,212,203,0.95),rgba(246,212,203,0.9))] p-4">
-                  <img
+                  <Image
                     src={itemForm.image_url}
                     alt={itemForm.title || 'Wishlist item preview'}
+                    width={480}
+                    height={240}
+                    unoptimized
                     className="max-h-[240px] w-auto max-w-full object-contain drop-shadow-[0_20px_20px_rgba(30,2,39,0.18)]"
                   />
                 </div>
