@@ -753,3 +753,44 @@ Validation:
 - `npm run -s lint` passed on touched files.
 - `npm run -s typecheck` passed.
 - `npx vitest run src/test/authReturnTo.test.ts` passed (7 tests).
+
+## 29) Phase 7 — Batch 3 (Organizer guard regression coverage + route-specific handoff hardening)
+
+Date: 2026-04-07
+Lens: Lock intent-preserving organizer access behavior with dedicated tests and ensure route-specific handoff links are consistent across organizer fallback surfaces.
+
+Updated files:
+- `frontend-next/src/test/organizerLayout.test.tsx` (new)
+- `frontend-next/src/test/organizerOnRampPage.test.tsx` (new)
+- `frontend-next/src/test/authReturnTo.test.ts`
+- `frontend-next/src/lib/auth/returnTo.ts`
+- `frontend-next/src/app/(app)/organizer/layout.tsx`
+- `frontend-next/src/app/(app)/organizer/on-ramp/page.tsx`
+- `frontend-next/src/app/(app)/organizer/page.tsx`
+- `frontend-next/src/app/(app)/organizer/intelligence/page.tsx`
+- `frontend-next/src/app/(app)/organizer/guilds/page.tsx`
+- `frontend-next/src/app/(app)/organizer/guilds/[guildId]/page.tsx`
+- `frontend-next/src/app/(app)/organizer/competency/page.tsx`
+- `frontend-next/src/app/(app)/organizer/runs/[id]/page.tsx`
+- `frontend-next/src/app/(app)/actions/page.tsx`
+- `frontend-next/src/app/(app)/events/page.tsx`
+- `frontend-next/src/app/(app)/calendar/page.tsx`
+- `frontend-next/src/ui-system/layout/Header.tsx`
+- `frontend-next/src/ui-system/layout/Sidebar.tsx`
+- `frontend-next/src/ui-system/layout/pathwayGuidance.ts`
+
+Changes delivered:
+- Added dedicated regression tests for organizer gate behavior:
+  - guest access to organizer routes redirects with encoded `next` intent
+  - organizer-role access passes through without redirect
+  - on-ramp route bypass remains intact
+- Added dedicated on-ramp tests for:
+  - preserved route copy and encoded sign-in handoff
+  - unsafe `next` value normalization to organizer default
+- Completed helper-based organizer handoff link adoption for organizer fallback/error links and common organizer-entry CTAs.
+- Ensured organizer handoff links can preserve route-specific intent (including dynamic guild/run detail paths).
+
+Validation:
+- `npm run -s lint` passed on touched files.
+- `npm run -s typecheck` passed.
+- `npx vitest run src/test/authReturnTo.test.ts src/test/organizerLayout.test.tsx src/test/organizerOnRampPage.test.tsx` passed (12 tests).
