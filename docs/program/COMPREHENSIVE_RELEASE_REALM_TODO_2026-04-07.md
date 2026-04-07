@@ -25,7 +25,9 @@ Primary references:
 - `VERIFY_PENDING` Default `cmd /c npm run -s test` still needs DB env normalization to include DB suites in one pass.
 - `CANDIDATE_READY` `verify-env-contract.py` + `smoke-core-runtime.py` passed locally.
 - `CANDIDATE_READY` `verify-runtime-contracts.py` passed on candidate with local core (`5000`) + impact (`5003`) services running.
-- `VERIFY_PENDING` Live production endpoint audit (2026-04-07): `4/5` contract endpoints pass; impact `/v1/health` is `404` on both direct and frontend rewrite paths.
+- `DONE` Live production endpoint audit (2026-04-07): runtime-contract endpoints passed on both direct and frontend rewrite paths (`5/5` required checks).
+- `CANDIDATE_READY` Earlier same-day transient `404` on impact `/v1/health` was cleared on re-check; latest verification is green.
+- `DONE` Evidence bundle updated: `docs/program/PROD_GO_LIVE_EVIDENCE_2026-04-07.md`.
 - `DONE` Frontend full CI matrix passed (`72` suites / `225` tests via `npm run -s test:ci`).
 
 ---
@@ -42,13 +44,7 @@ Primary references:
     - codify dedicated verify commands as release gate and document that `npm test` is non-DB by default.
   - Target: zero ambiguity on required command for release sign-off.
 
-- [ ] `VERIFY_PENDING` Restore production `/v1/health` endpoint on impact-service and re-verify live contract checks.
-  - Repo fix prepared: `services/impact-service/vercel.json` now maps `/v1/health` -> `api/falak.ts`.
-  - Deploy impact-service from `main`.
-  - Re-run:
-    - `https://anu-impact-service.vercel.app/v1/health`
-    - `https://maanara.vercel.app/_impact/v1/health`
-  - Target: `200` with runtime-contract fields (`status`, `service`, `component`, `contract_version`, `timestamp`, `dependencies`).
+- [x] `DONE` Production `/v1/health` endpoint and rewrite checks verified live (`200` with contract fields) on 2026-04-07.
 
 - [x] `CANDIDATE_READY` Bring candidate services up and rerun runtime contract verifier.
   - Required endpoints:
