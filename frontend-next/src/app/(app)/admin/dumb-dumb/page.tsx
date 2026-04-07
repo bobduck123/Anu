@@ -15,13 +15,37 @@ export default function AdminDumbDumbPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    dumbDumbApi
-      .adminPurchases(status || undefined)
-      .then(setRows)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Unable to load Dumb Dumb purchases.'))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+
+    queueMicrotask(() => {
+      if (cancelled) {
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+      dumbDumbApi
+        .adminPurchases(status || undefined)
+        .then((nextRows) => {
+          if (!cancelled) {
+            setRows(nextRows);
+          }
+        })
+        .catch((err) => {
+          if (!cancelled) {
+            setError(err instanceof Error ? err.message : 'Unable to load Dumb Dumb purchases.');
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        });
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [status]);
 
   const totals = useMemo(
