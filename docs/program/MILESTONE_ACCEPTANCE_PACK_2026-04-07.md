@@ -71,15 +71,18 @@ Each milestone requires:
 - sponsor disclosure tests,
 - public trust/disclosure screenshots.
 
-### Evidence snapshot (ANU-017/018/019 slice, 2026-04-14)
-- backend trust + sponsor slice: `python -m pytest -q tests/test_public_sponsor_disclosures.py tests/test_public_trust.py tests/test_public_connectors.py` (11 passed),
-- backend transparency compatibility: `python -m pytest -q tests/test_public_transparency.py` (2 passed),
-- frontend trust/sponsor slice: `npx vitest run src/test/transparencyPage.test.tsx src/test/archiveRecordPage.test.tsx src/test/sponsorDisclosurePanel.test.tsx src/test/archivePage.test.tsx` (4 files, 9 tests passed),
+### Evidence snapshot (ANU-017/018/019/021 slice, 2026-04-14)
+- backend trust + sponsor + transparency slice: `python -m pytest -q tests/test_public_sponsor_disclosures.py tests/test_public_trust.py tests/test_public_connectors.py tests/test_public_transparency.py` (13 passed),
+- frontend trust-center slice: `npx vitest run src/test/trustCenterPage.test.tsx src/test/transparencyPage.test.tsx src/test/archiveRecordPage.test.tsx src/test/sponsorDisclosurePanel.test.tsx src/test/archivePage.test.tsx` (5 files, 12 tests passed),
 - frontend typecheck: `npm run -s typecheck` (pass),
+- migration artifact:
+  - `flora-fauna/backend/migrations/versions/20260414_public_sponsor_disclosure.sql`,
 - implementation references:
   - `frontend-next/src/app/(public)/archive/page.tsx`
   - `frontend-next/src/app/(public)/archive/[record]/page.tsx`
   - `frontend-next/src/app/(public)/transparency/page.tsx`
+  - `frontend-next/src/app/(public)/trust/page.tsx`
+  - `frontend-next/src/components/trust/TrustCenterShell.tsx`
   - `frontend-next/src/components/transparency/SponsorDisclosurePanel.tsx`
   - `frontend-next/src/lib/api/publicSponsorDisclosures.ts`
   - `flora-fauna/backend/app/api/public_trust.py`
@@ -88,8 +91,8 @@ Each milestone requires:
   - `flora-fauna/backend/app/services/sponsor_disclosure_service.py`
 
 ### Remaining for broader M4 closure
-- trust center IA route expansion (`ANU-021+`) remains pending.
-- sponsor disclosure screenshots/live-capture artifact remains to be attached in release evidence pack.
+- trust-center expansion beyond foundation IA remains pending (`ANU-022+` scope).
+- sponsor disclosure screenshots/live-capture artifact remains to be attached in release evidence pack (pending operational evidence).
 
 ## M5 - Node Proof
 ### Required outcomes

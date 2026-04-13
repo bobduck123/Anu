@@ -5,6 +5,7 @@ This spec defines the executable M4 trust/archive substrate through:
 1. archive route skeletons (`ANU-017`),
 2. public trust report model/API (`ANU-018`),
 3. sponsor disclosure surface with non-distortion safeguards (`ANU-019`).
+4. trust center landing IA foundation (`ANU-021`).
 
 Out of scope:
 - sponsor marketplace/billing/ads systems,
@@ -16,6 +17,7 @@ Out of scope:
 - `/archive`
 - `/archive/[record]`
 - `/transparency`
+- `/trust`
 
 ## Public Trust Contract
 `PublicTrustReport` remains the canonical trust artifact.
@@ -75,6 +77,14 @@ Sponsor disclosures:
 - Sponsor disclosures must be visibly labeled as disclosures.
 - Sponsor disclosure panels must be separated from trust/editorial body content.
 - Archive and transparency surfaces must preserve trust canon while showing sponsorship context.
+- Trust center must keep trust reports, sponsor disclosures, and archive memory links as distinct IA sections.
+
+## Operational Migration Note
+Sponsor disclosure DB migration for non-sqlite environments is shipped in:
+- `flora-fauna/backend/migrations/versions/20260414_public_sponsor_disclosure.sql`
+
+Operational evidence still pending:
+- one sponsor disclosure screenshot/live-capture artifact for the milestone evidence pack.
 
 ## Implementation Reference (2026-04-14)
 Backend:
@@ -92,17 +102,20 @@ Frontend:
 - `frontend-next/src/lib/api/publicSponsorDisclosures.ts`
 - `frontend-next/src/components/archive/ArchiveRecordShell.tsx`
 - `frontend-next/src/components/transparency/SponsorDisclosurePanel.tsx`
+- `frontend-next/src/components/trust/TrustCenterShell.tsx`
 - `frontend-next/src/app/(public)/archive/page.tsx`
 - `frontend-next/src/app/(public)/archive/[record]/page.tsx`
 - `frontend-next/src/app/(public)/transparency/page.tsx`
+- `frontend-next/src/app/(public)/trust/page.tsx`
 - `frontend-next/src/test/archiveRecordPage.test.tsx`
 - `frontend-next/src/test/transparencyPage.test.tsx`
 - `frontend-next/src/test/sponsorDisclosurePanel.test.tsx`
+- `frontend-next/src/test/trustCenterPage.test.tsx`
 
 ## Validation Commands
 Backend:
 - `python -m pytest -q tests/test_public_sponsor_disclosures.py tests/test_public_trust.py tests/test_public_connectors.py tests/test_public_transparency.py`
 
 Frontend:
-- `npx vitest run src/test/transparencyPage.test.tsx src/test/archiveRecordPage.test.tsx src/test/sponsorDisclosurePanel.test.tsx src/test/archivePage.test.tsx`
+- `npx vitest run src/test/trustCenterPage.test.tsx src/test/transparencyPage.test.tsx src/test/archiveRecordPage.test.tsx src/test/sponsorDisclosurePanel.test.tsx src/test/archivePage.test.tsx`
 - `npm run -s typecheck`

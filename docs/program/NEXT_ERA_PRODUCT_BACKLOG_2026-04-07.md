@@ -426,6 +426,7 @@
 - `flora-fauna/backend/app/api/public_transparency.py`
 - `flora-fauna/backend/app/services/sponsor_disclosure_service.py`
 - `flora-fauna/backend/app/models.py`
+- `flora-fauna/backend/migrations/versions/20260414_public_sponsor_disclosure.sql`
 - `frontend-next/src/test/transparencyPage.test.tsx`
 - `frontend-next/src/test/archiveRecordPage.test.tsx`
 - `frontend-next/src/test/sponsorDisclosurePanel.test.tsx`
@@ -443,7 +444,7 @@
 - UI screenshots
 **Owner type:** Frontend + Backend + Doctrine
 **Milestone:** M4
-**Execution status (2026-04-14):** COMPLETE - sponsor disclosure contract and UI are implemented end-to-end with non-distortion safeguards and focused backend/frontend tests passing.
+**Execution status (2026-04-14):** COMPLETE - sponsor disclosure contract and UI are implemented end-to-end with non-distortion safeguards, DB migration script is landed, and focused backend/frontend tests pass; screenshot artifact is still pending operational capture.
 
 ## ANU-020
 **Title:** Isolation proof tests (cross-service)
@@ -492,6 +493,7 @@
 - trust center screenshots
 **Owner type:** Frontend / Trust
 **Milestone:** M4
+**Execution status (2026-04-14):** COMPLETE - `/trust` foundation route is live with separated trust/disclosure/archive IA sections and degraded-honesty behavior, covered by focused tests.
 
 ## ANU-022
 **Title:** Decision register publication path

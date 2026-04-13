@@ -1,62 +1,57 @@
-# M4 Completion Report - ANU-017, ANU-018, ANU-019
+# M4 Completion Report - ANU-017 to ANU-021 Foundation Slice
 
 Date: 2026-04-14  
-Scope: narrow M4 trust/archive start + sponsor disclosure safeguards
+Scope: trust/archive/sponsor foundation with trust-center landing IA
 
-## Completed in M4 Slice
+## Completed Tickets
 1. `ANU-017` Archive route skeleton
-- Canonical routes implemented:
-  - `/archive`
-  - `/archive/[record]`
-- Archive shells render provenance/trust/status/body/onward links and explicit degraded-honesty states.
+- `/archive` and `/archive/[record]` implemented as intentional public memory shells.
 
 2. `ANU-018` Public trust report model/API
-- Public trust contract implemented with canonical list/detail APIs:
-  - `GET /public/trust/reports`
-  - `GET /public/trust/reports/:report_ref`
-- Archive record UI consumes trust-report-shaped payloads with honest fallback behavior.
+- Canonical public trust report list/detail APIs implemented.
 
 3. `ANU-019` Sponsor disclosure surface + non-distortion safeguards
-- Public-safe sponsor disclosure contract implemented end-to-end:
-  - model: `PublicSponsorDisclosure`
-  - APIs:
-    - `GET /public/transparency/sponsor-disclosures`
-    - `GET /public/transparency/sponsor-disclosures/:disclosure_ref`
-- Disclosure UI added to transparency and archive trust-facing surfaces.
-- Disclosure rendering is explicitly separated from trust-report/editorial truth content.
-- Non-distortion tests verify sponsor metadata does not overwrite trust-report body or archive truth fields.
+- Public-safe sponsor disclosure model/API/UI implemented.
+- Non-distortion safeguards implemented and tested (sponsor metadata cannot override trust/archive truth content).
 
-## Evidence and Test Results
+4. `ANU-021` Trust center route foundation
+- New public trust landing route implemented at `/trust`.
+- IA sections are explicitly separated:
+  - latest trust reports,
+  - sponsor disclosures,
+  - archive/public memory links.
+- Degraded-honesty behavior implemented per data source.
+
+## ANU-019 Operational Closeout
+- Added non-sqlite migration script for sponsor disclosures:
+  - `flora-fauna/backend/migrations/versions/20260414_public_sponsor_disclosure.sql`
+- Verified DB-backed sponsor disclosure behavior through backend model/API tests.
+- Screenshot artifact status:
+  - one sponsor disclosure screenshot/live-capture artifact is still pending in this environment and remains an open operational evidence item.
+
+## Test Evidence
 Backend:
-- `python -m pytest -q tests/test_public_sponsor_disclosures.py tests/test_public_trust.py tests/test_public_connectors.py`
-- Result: `11 passed`
-
-- `python -m pytest -q tests/test_public_transparency.py`
-- Result: `2 passed`
+- `python -m pytest -q tests/test_public_sponsor_disclosures.py tests/test_public_trust.py tests/test_public_connectors.py tests/test_public_transparency.py`
+- Result: `13 passed`
 
 Frontend:
-- `npx vitest run src/test/transparencyPage.test.tsx src/test/archiveRecordPage.test.tsx src/test/sponsorDisclosurePanel.test.tsx src/test/archivePage.test.tsx`
-- Result: `4 files passed, 9 tests passed`
+- `npx vitest run src/test/trustCenterPage.test.tsx src/test/transparencyPage.test.tsx src/test/archiveRecordPage.test.tsx src/test/sponsorDisclosurePanel.test.tsx src/test/archivePage.test.tsx`
+- Result: `5 files passed, 12 tests passed`
 
 Type safety:
 - `npm run -s typecheck`
 - Result: pass
 
-## Implemented Non-Distortion Guarantees
-- Sponsor disclosure payloads are public-safe and explicitly labeled.
-- Sponsor disclosure metadata is rendered in separate disclosure panels.
-- Trust report body/sections remain canonical and unchanged by sponsor state.
-- Archive verification/provenance fields remain canonical and unchanged by sponsor state.
-- Disclosure feed absence/failure is surfaced with honest degraded messaging.
+## Deferred (Intentional)
+- full trust-center productization beyond foundational IA
+- deeper archive ingestion/search pipeline
+- sponsor marketplace/billing/campaign tooling
+- economy and ranking-engine expansion
+- broader M5 node proof package work
 
-## Deferred (Intentionally)
-- sponsor marketplace, pricing, billing, ad engine mechanics
-- ranking/discovery algorithm redesign
-- full trust-center expansion (`ANU-021+`)
-- full archive ingestion/search pipeline
-
-## M4 Slice Status
+## Status
 - `ANU-017`: complete
 - `ANU-018`: complete
-- `ANU-019`: complete
-- M4 opening trust/archive/sponsor slice is executable and evidenced; broader M4 items remain per backlog.
+- `ANU-019`: complete (implementation + migration closeout; screenshot evidence pending)
+- `ANU-021`: complete
+- M4 foundation slice is executable with focused tests and docs alignment.
