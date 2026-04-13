@@ -50,7 +50,7 @@ export default function ReliefQueueTable({ items, onVote }: ReliefQueueTableProp
               >
                 <td className="px-4 py-3">
                   <Link
-                    href={`/admin/relief/${requestId}`}
+                    href={`/control/relief/${requestId}`}
                     className="font-medium text-[var(--color-institutional)] hover:underline font-mono-data"
                   >
                     #{requestId}

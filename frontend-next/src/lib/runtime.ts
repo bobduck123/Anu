@@ -100,3 +100,23 @@ export function getMemeticsApiBase(options: BaseOptions = {}): string {
     options,
   );
 }
+
+export function getImpactApiOrigin(): string | null {
+  const explicit =
+    process.env.IMPACT_API_ORIGIN
+    || process.env.MEMETICS_API_ORIGIN
+    || '';
+  if (explicit.trim()) {
+    return trimTrailingSlash(explicit.trim());
+  }
+
+  const publicOrigin =
+    process.env.NEXT_PUBLIC_IMPACT_API_BASE
+    || process.env.NEXT_PUBLIC_MEMETICS_API_BASE
+    || '';
+  if (publicOrigin.trim().startsWith('http://') || publicOrigin.trim().startsWith('https://')) {
+    return trimTrailingSlash(publicOrigin.trim());
+  }
+
+  return null;
+}

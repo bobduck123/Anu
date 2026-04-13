@@ -13,15 +13,15 @@ function expectMemeticCelestialSurface(pathname: string) {
 }
 
 describe('C3 memetic route continuity', () => {
-  it('keeps /flora-fauna on the celestial memetic surface contract', () => {
-    expectMemeticCelestialSurface('/flora-fauna');
+  it('keeps /anu on the celestial memetic surface contract', () => {
+    expectMemeticCelestialSurface('/anu');
   });
 
-  it('keeps meme detail routes on the same memetic celestial contract', () => {
-    expectMemeticCelestialSurface('/flora-fauna/memes/meme-123');
+  it('keeps anu pool detail routes on the same memetic celestial contract', () => {
+    expectMemeticCelestialSurface('/anu/pools/pool-123');
   });
 
-  it('keeps channel detail routes on the same memetic celestial contract', () => {
-    expectMemeticCelestialSurface('/flora-fauna/channels/channel-42');
+  it('keeps anu channel detail routes on the same memetic celestial contract', () => {
+    expectMemeticCelestialSurface('/anu/channels/channel-42');
   });
 });

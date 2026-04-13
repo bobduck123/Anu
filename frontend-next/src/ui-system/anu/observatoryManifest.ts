@@ -71,7 +71,7 @@ export const ANU_OBSERVATORY_MODULES: readonly AnuObservatoryModule[] = [
   {
     id: 'admin-runtime-health',
     title: 'Runtime contract diagnostics',
-    route: '/admin/runtime-health',
+    route: '/control/runtime-health',
     class: 'observatory',
     purpose: 'Operational contract verification for core and impact runtimes.',
     notes: 'Operational scan route with clear pass/fail and latency truth.',

@@ -38,5 +38,6 @@ describe('ReliefQueueTable', () => {
     expect(screen.getByText('rent')).toBeTruthy();
     expect(screen.getByText('high')).toBeTruthy();
     expect(screen.getByText('$125')).toBeTruthy();
+    expect(screen.getByRole('link', { name: '#12' })).toHaveAttribute('href', '/control/relief/12');
   });
 });

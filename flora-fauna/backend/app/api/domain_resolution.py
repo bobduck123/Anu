@@ -8,18 +8,36 @@ This module provides endpoints for:
 """
 
 from functools import wraps
+import json
 import os
 import requests
 from flask import Blueprint, jsonify, request
 
 from ..extensions import db
 from ..models import Node, NodeDomain, NodeConfig
+from ..schemas import DomainResolutionResponseSchema
 from ..security.alpha import alpha_jwt_required
 from ..security.policy import get_current_user
 
 domain_resolution_bp = Blueprint('domain_resolution', __name__)
 
 DOMAIN_ADMIN_ROLES = {'admin', 'node_admin', 'platform_admin'}
+DOMAIN_RESOLUTION_CONTRACT_VERSION = "2026-04-10"
+domain_resolution_response_schema = DomainResolutionResponseSchema()
+
+
+def _coerce_node_config_json(raw):
+    if isinstance(raw, dict):
+        return raw
+    if raw is None:
+        return {}
+    if isinstance(raw, str):
+        try:
+            parsed = json.loads(raw)
+        except (TypeError, ValueError):
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+    return {}
 
 
 def _require_authenticated_user():
@@ -99,27 +117,38 @@ def resolve_domain():
     
     # Get node configuration for branding
     node_config = NodeConfig.query.filter_by(node_id=node.id).first()
-    config_json = node_config.config_json if node_config else {}
+    config_json = _coerce_node_config_json(node_config.config_json if node_config else {})
     
     # Extract brand configuration
-    brand_config = config_json.get('branding', {})
-    is_white_label = config_json.get('white_label', {}).get('enabled', False)
-    
-    response_data = {
+    brand_config = config_json.get('branding', {}) or {}
+    white_label_enabled = bool(config_json.get('white_label', {}).get('enabled', False))
+    semantic_key = config_json.get('semantic_key')
+    if semantic_key is not None:
+        semantic_key = str(semantic_key).strip() or None
+
+    brand = {
+        'primary_color': brand_config.get('primary_color'),
+        'secondary_color': brand_config.get('secondary_color'),
+        'accent_color': brand_config.get('accent_color'),
+        'logo_url': brand_config.get('logo_url'),
+        'favicon_url': brand_config.get('favicon_url'),
+        'custom_css': brand_config.get('custom_css'),
+    }
+
+    response_data = domain_resolution_response_schema.dump({
+        'contract_version': DOMAIN_RESOLUTION_CONTRACT_VERSION,
         'node_id': node.id,
         'node_slug': node.slug,
         'node_name': node.name,
-        'is_white_label': is_white_label,
+        'semantic_key': semantic_key,
+        'white_label': white_label_enabled,
+        'brand': brand,
         'domain': domain,
         'tls_ready': node_domain.tls_ready,
-        'brand_config': {
-            'primary_color': brand_config.get('primary_color'),
-            'secondary_color': brand_config.get('secondary_color'),
-            'logo_url': brand_config.get('logo_url'),
-            'favicon_url': brand_config.get('favicon_url'),
-            'custom_css': brand_config.get('custom_css'),
-        } if brand_config else None,
-    }
+        # Backward-compatible aliases
+        'is_white_label': white_label_enabled,
+        'brand_config': brand,
+    })
     
     # Add cache headers for edge caching
     response = jsonify(response_data)

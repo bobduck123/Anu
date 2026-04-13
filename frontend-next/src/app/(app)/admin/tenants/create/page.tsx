@@ -62,7 +62,7 @@ export default function CreateTenantPage() {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      await apiFetch('/api/admin/tenants', {
+      await apiFetch('/api/control/core/api/admin/tenants', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -90,7 +90,7 @@ export default function CreateTenantPage() {
           title="Tenant Provisioned!"
           message={`${name} has been created successfully.`}
           actionLabel="View Tenants"
-          onAction={() => router.push('/admin/tenants')}
+          onAction={() => router.push('/control/tenants')}
         />
       </div>
     );
@@ -99,7 +99,7 @@ export default function CreateTenantPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => router.push('/admin/tenants')}
+        onClick={() => router.push('/control/tenants')}
         className="inline-flex items-center gap-1 text-sm text-[var(--color-primary)] hover:underline mb-6"
       >
         <ArrowLeft className="w-4 h-4" /> Back to Tenants

@@ -21,7 +21,8 @@ export function falakContextFields(context: RequestContext): Record<string, unkn
     actorId: context.actor?.id ?? null,
     actorExternalAuthId: context.actor?.externalAuthId ?? null,
     actorResolutionSource: context.actorResolution.source,
-    actorVerified: context.actorResolution.isVerified
+    actorVerified: context.actorResolution.isVerified,
+    actorTokenAudience: context.actorResolution.tokenAudience
   };
 }
 

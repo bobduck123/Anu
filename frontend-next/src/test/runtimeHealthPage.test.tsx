@@ -12,7 +12,7 @@ describe('AdminRuntimeHealthPage', () => {
   it('renders runtime diagnostics with endpoint pass/fail status', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
-      if (url.includes('/_core/health')) {
+      if (url.includes('/api/control/core/health')) {
         return new Response(JSON.stringify({ status: 'ok' }), { status: 200, statusText: 'OK' });
       }
       return new Response(JSON.stringify({ status: 'down' }), {
@@ -27,6 +27,10 @@ describe('AdminRuntimeHealthPage', () => {
     expect(await screen.findByText('Runtime health contract')).toBeInTheDocument();
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/control/core/health',
+      expect.objectContaining({ method: 'GET', credentials: 'include', cache: 'no-store' }),
+    );
     expect(screen.getByText('/_core/health')).toBeInTheDocument();
     expect(screen.getByText('/_core/readiness')).toBeInTheDocument();
     expect(screen.getAllByText(/PASS|FAIL/).length).toBeGreaterThan(0);

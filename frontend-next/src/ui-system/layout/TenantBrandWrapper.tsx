@@ -22,6 +22,23 @@ export interface TenantConfig {
   customCss?: string;
 }
 
+interface PublicNodeConfigDto {
+  node_id: number;
+  node_slug: string;
+  node_name: string;
+  semantic_key?: string | null;
+  white_label: boolean;
+  brand?: {
+    primary_color?: string | null;
+    secondary_color?: string | null;
+    accent_color?: string | null;
+    logo_url?: string | null;
+    favicon_url?: string | null;
+    custom_css?: string | null;
+  };
+  modules?: Record<string, boolean>;
+}
+
 const defaultConfig: TenantConfig = {
   id: null,
   semanticKey: brand.semanticKey,
@@ -47,13 +64,12 @@ const defaultConfig: TenantConfig = {
 const TenantContext = createContext<TenantConfig>(defaultConfig);
 
 /**
- * Parse tenant context from middleware-set cookies/headers.
- * This allows Server Components to pass tenant info to client.
+ * Parse optional tenant hints from middleware-set cookies.
+ * Note: middleware writes httpOnly cookies by default, so this is best-effort only.
  */
 function getTenantFromCookie(): Partial<TenantConfig> | null {
   if (typeof document === 'undefined') return null;
-  
-  // Try to get tenant brand config from cookie set by middleware
+
   try {
     const cookies = document.cookie.split(';').reduce((acc, cookie) => {
       const [key, value] = cookie.trim().split('=');
@@ -67,17 +83,17 @@ function getTenantFromCookie(): Partial<TenantConfig> | null {
         id: parseInt(cookies.tenant_id) || null,
         semanticKey: cookies.tenant_semantic_key || brand.semanticKey,
         slug: cookies.tenant_slug || '',
-        name: cookies.tenant_name || brand.name,
+        name: decodeURIComponent(cookies.tenant_name || '') || brand.name,
         isWhiteLabel: cookies.tenant_white_label === 'true',
-        primaryColor: brandConfig.primary_color,
-        secondaryColor: brandConfig.secondary_color,
-        logo: brandConfig.logo_url,
-        favicon: brandConfig.favicon_url,
-        customCss: brandConfig.custom_css,
+        primaryColor: brandConfig.primary_color ?? brandConfig.primaryColor,
+        secondaryColor: brandConfig.secondary_color ?? brandConfig.secondaryColor,
+        accentColor: brandConfig.accent_color ?? brandConfig.accentColor,
+        logo: brandConfig.logo_url ?? brandConfig.logoUrl,
+        favicon: brandConfig.favicon_url ?? brandConfig.faviconUrl,
+        customCss: brandConfig.custom_css ?? brandConfig.customCss,
       };
     }
     
-    // Fallback: just tenant ID from cookie
     if (cookies.tenant_id) {
       return {
         id: parseInt(cookies.tenant_id) || null,
@@ -89,6 +105,29 @@ function getTenantFromCookie(): Partial<TenantConfig> | null {
   }
   
   return null;
+}
+
+function mapPublicNodeConfigToTenantConfig(
+  dto: Partial<PublicNodeConfigDto>,
+  fallback: Partial<TenantConfig>,
+): TenantConfig {
+  const brandConfig = dto.brand || {};
+  return {
+    ...defaultConfig,
+    ...fallback,
+    id: dto.node_id ?? fallback.id ?? null,
+    semanticKey: dto.semantic_key || fallback.semanticKey || brand.semanticKey,
+    slug: dto.node_slug || fallback.slug || '',
+    name: dto.node_name || fallback.name || defaultConfig.name,
+    logo: brandConfig.logo_url || fallback.logo || '',
+    favicon: brandConfig.favicon_url || fallback.favicon,
+    primaryColor: brandConfig.primary_color || fallback.primaryColor || defaultConfig.primaryColor,
+    secondaryColor: brandConfig.secondary_color || fallback.secondaryColor,
+    accentColor: brandConfig.accent_color || fallback.accentColor || defaultConfig.accentColor,
+    modules: dto.modules || fallback.modules || defaultConfig.modules,
+    isWhiteLabel: Boolean(dto.white_label ?? fallback.isWhiteLabel ?? false),
+    customCss: brandConfig.custom_css || fallback.customCss,
+  };
 }
 
 export function TenantBrandWrapper({ children }: { children: ReactNode }) {
@@ -104,48 +143,20 @@ export function TenantBrandWrapper({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const cookieTenant = getTenantFromCookie();
-
-    // Fetch full config from API (cookie context above still informs endpoint/headers).
     const apiBase = getCoreApiBase();
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-    
-    // Build request with tenant context
-    const headers: Record<string, string> = {
-      'Accept': 'application/json',
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    // If we have a tenant ID from cookie, include it in the request
-    const tenantId = cookieTenant?.id;
-    const endpoint = tenantId 
-      ? `${apiBase}/api/nodes/${tenantId}/config`
-      : `${apiBase}/api/nodes/current/config`;
+    const endpoint = `${apiBase}/api/public/nodes/current/config`;
 
-    fetch(endpoint, { headers })
+    fetch(endpoint, {
+      headers: { Accept: 'application/json' },
+      credentials: 'include',
+    })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!data) {
           return;
         }
-        const cfg = data.data || data;
-        setConfig({
-          id: cfg.node_id || cfg.id || tenantId || null,
-          semanticKey: cfg.semantic_key || cookieTenant?.semanticKey || brand.semanticKey,
-          slug: cfg.slug || cookieTenant?.slug || '',
-          name: cfg.name || cookieTenant?.name || defaultConfig.name,
-          logo: cfg.logo || cfg.branding?.logo || cfg.branding?.logo_url || cookieTenant?.logo || '',
-          favicon: cfg.branding?.favicon_url || cookieTenant?.favicon,
-          primaryColor: cfg.branding?.primary_color || cfg.primary_color || cookieTenant?.primaryColor || defaultConfig.primaryColor,
-          secondaryColor: cfg.branding?.secondary_color || cookieTenant?.secondaryColor,
-          accentColor: cfg.branding?.accent_color,
-          modules: cfg.modules || defaultConfig.modules,
-          dataPolicy: cfg.data_policy ?? 0,
-          calendarMode: cfg.calendar?.mode,
-          isWhiteLabel: cfg.white_label?.enabled || cookieTenant?.isWhiteLabel || false,
-          customCss: cfg.branding?.custom_css || cookieTenant?.customCss,
-        });
+        const cfg = (data.data || data) as Partial<PublicNodeConfigDto>;
+        setConfig(mapPublicNodeConfigToTenantConfig(cfg, cookieTenant || {}));
       })
       .catch(() => {
         // Keep cookie/default config when fetch fails.
@@ -177,14 +188,16 @@ export function TenantBrandWrapper({ children }: { children: ReactNode }) {
     }
     
     // Apply custom CSS if provided
+    let styleEl = document.getElementById('tenant-custom-css');
     if (config.customCss) {
-      let styleEl = document.getElementById('tenant-custom-css');
       if (!styleEl) {
         styleEl = document.createElement('style');
         styleEl.id = 'tenant-custom-css';
         document.head.appendChild(styleEl);
       }
       styleEl.textContent = config.customCss;
+    } else if (styleEl) {
+      styleEl.remove();
     }
     
     // Update favicon for white-label sites

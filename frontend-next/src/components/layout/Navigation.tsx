@@ -43,7 +43,7 @@ const navStructure = {
     { href: '/governance/metrics-registry', label: 'Metrics', icon: BarChart3 },
     { href: '/governance/model-registry', label: 'Models', icon: BarChart3 },
     { href: '/governance/competency', label: 'Competency Admin', icon: GraduationCap },
-    { href: '/admin/education', label: 'Education Admin', icon: GraduationCap },
+    { href: '/control/education', label: 'Education Admin', icon: GraduationCap },
     { href: '/governance/needs', label: 'Needs', icon: Eye },
     { href: '/governance/collisions', label: 'Collisions', icon: Eye },
     { href: '/governance/sovereignty', label: 'Sovereignty', icon: Eye },
@@ -52,8 +52,8 @@ const navStructure = {
     { href: '/governance/systemic/simulations', label: 'Systemic Sim', icon: Shield },
     { href: '/governance/federation', label: 'Federation', icon: MapPin },
     { href: '/governance/institutional', label: 'Institutional', icon: Shield },
-    { href: '/admin/constellations', label: 'Constellation Alerts', icon: Shield },
-    { href: '/admin/crisis-sim', label: 'Crisis Sim', icon: Shield },
+    { href: '/control/constellations', label: 'Constellation Alerts', icon: Shield },
+    { href: '/control/crisis-sim', label: 'Crisis Sim', icon: Shield },
   ],
 };
 

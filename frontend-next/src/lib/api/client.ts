@@ -47,6 +47,10 @@ const INVALID_LEGACY_TOKEN_VALUES = new Set([
   '[object Object]',
 ]);
 
+function isLegacyTokenFallbackEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_ALLOW_LEGACY_AUTH_TOKEN_FALLBACK === 'true';
+}
+
 function looksLikeJwt(token: string): boolean {
   const parts = token.split('.');
   return parts.length === 3 && parts.every((part) => part.length > 0);
@@ -69,8 +73,31 @@ function readLegacyTokenFromStorage(): string | null {
   return token;
 }
 
-const getAuthHeaders = async (): Promise<Record<string, string>> => {
-  if (typeof window === 'undefined') return {};
+function normalizeHeaders(headers: HeadersInit | undefined): Record<string, string> {
+  if (!headers) {
+    return {};
+  }
+
+  if (headers instanceof Headers) {
+    return Object.fromEntries(headers.entries());
+  }
+
+  if (Array.isArray(headers)) {
+    return Object.fromEntries(headers);
+  }
+
+  return { ...headers };
+}
+
+export async function getParticipantAuthHeaders(
+  options: { allowLegacyTokenFallback?: boolean } = {},
+): Promise<Record<string, string>> {
+  if (typeof window === 'undefined') {
+    return {};
+  }
+
+  const allowLegacyTokenFallback =
+    options.allowLegacyTokenFallback ?? isLegacyTokenFallbackEnabled();
 
   try {
     const supabase = createSupabaseClient();
@@ -84,38 +111,55 @@ const getAuthHeaders = async (): Promise<Record<string, string>> => {
       return { Authorization: `Bearer ${accessToken}` };
     }
 
-    // Hosted Supabase auth should be the source of truth. If there is no active
-    // session, do not send a stale legacy token from localStorage.
     if (isSupabaseConfigured()) {
       localStorage.removeItem('auth_token');
-      if (error) {
-        console.warn('Supabase session is unavailable for API requests; skipping auth header.', error);
-      }
       return {};
     }
 
-    if (error) {
-      console.warn('Unable to read Supabase session token for API requests. Falling back to local token cache.', error);
+    if (error && !allowLegacyTokenFallback) {
+      return {};
     }
   } catch (error) {
     if (isSupabaseConfigurationError(error)) {
       throw error;
     }
-    console.warn('Unable to resolve Supabase session token for API requests. Falling back to local token cache.', error);
+    if (!allowLegacyTokenFallback) {
+      return {};
+    }
+  }
+
+  if (!allowLegacyTokenFallback) {
+    return {};
   }
 
   const token = readLegacyTokenFromStorage();
   return token ? { Authorization: `Bearer ${token}` } : {};
-};
+}
+
+export async function buildParticipantRequestHeaders(options: {
+  headers?: HeadersInit;
+  includeContentType?: boolean;
+  allowLegacyTokenFallback?: boolean;
+} = {}): Promise<Record<string, string>> {
+  const participantAuthHeaders = await getParticipantAuthHeaders({
+    allowLegacyTokenFallback: options.allowLegacyTokenFallback,
+  });
+  const userHeaders = normalizeHeaders(options.headers);
+
+  return {
+    ...(options.includeContentType === false ? {} : { 'Content-Type': 'application/json' }),
+    ...participantAuthHeaders,
+    ...userHeaders,
+  };
+}
 
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(await getAuthHeaders()),
-      ...(options.headers || {}),
-    },
+    headers: await buildParticipantRequestHeaders({
+      headers: options.headers,
+      includeContentType: true,
+    }),
   });
 
   const payload = await res.json().catch(() => null);
@@ -145,11 +189,10 @@ export async function apiFetchWithMeta<T>(
 ): Promise<ApiFetchMetaResult<T>> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(await getAuthHeaders()),
-      ...(options.headers || {}),
-    },
+    headers: await buildParticipantRequestHeaders({
+      headers: options.headers,
+      includeContentType: true,
+    }),
   });
 
   const etag = res.headers.get('ETag') || undefined;

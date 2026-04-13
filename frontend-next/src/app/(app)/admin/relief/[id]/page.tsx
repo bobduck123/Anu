@@ -71,7 +71,7 @@ export default function ReliefDetailPage() {
     return (
       <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
         <div className="max-w-4xl mx-auto px-4 md:px-8 pt-28 pb-20">
-          <Link href="/admin/relief" className="inline-flex items-center gap-2 text-sm text-[var(--color-institutional)] mb-6">
+          <Link href="/control/relief" className="inline-flex items-center gap-2 text-sm text-[var(--color-institutional)] mb-6">
             <ArrowLeft className="w-4 h-4" />
             Back to Queue
           </Link>
@@ -90,7 +90,7 @@ export default function ReliefDetailPage() {
     <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
       <div className="max-w-4xl mx-auto px-4 md:px-8 pt-28 pb-20">
         {/* Back link */}
-        <Link href="/admin/relief" className="inline-flex items-center gap-2 text-sm text-[var(--color-institutional)] hover:gap-3 transition-all mb-8">
+        <Link href="/control/relief" className="inline-flex items-center gap-2 text-sm text-[var(--color-institutional)] hover:gap-3 transition-all mb-8">
           <ArrowLeft className="w-4 h-4" />
           Back to Queue
         </Link>

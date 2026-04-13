@@ -1,4 +1,5 @@
 import { brand } from '@/lib/brand';
+import { buildParticipantRequestHeaders } from '@/lib/api/client';
 import { getMemeticsApiBase } from '@/lib/runtime';
 
 const MEMETICS_API_BASE = getMemeticsApiBase();
@@ -16,19 +17,6 @@ export class FloraFaunaApiError extends Error {
 
 export interface FloraFaunaRequestOptions {
   signal?: AbortSignal;
-}
-
-function getAuthHeaders(): Record<string, string> {
-  if (typeof window === 'undefined') {
-    return {};
-  }
-
-  try {
-    const token = localStorage.getItem('auth_token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  } catch {
-    return {};
-  }
 }
 
 async function buildApiError(response: Response): Promise<FloraFaunaApiError> {
@@ -61,9 +49,16 @@ async function fetchJson<T>(
   options: RequestInit & {
     fallback?: T;
     fallbackStatuses?: number[];
+    auth?: 'none' | 'participant';
   } = {},
 ): Promise<T> {
-  const { fallback, fallbackStatuses = [], headers, ...requestOptions } = options;
+  const { fallback, fallbackStatuses = [], headers, auth = 'none', ...requestOptions } = options;
+  const participantHeaders =
+    auth === 'participant'
+      ? await buildParticipantRequestHeaders({
+          includeContentType: false,
+        })
+      : {};
 
   try {
     const res = await fetch(`${MEMETICS_API_BASE}${path}`, {
@@ -71,6 +66,7 @@ async function fetchJson<T>(
       headers: {
         Accept: 'application/json',
         ...(requestOptions.body ? { 'Content-Type': 'application/json' } : {}),
+        ...participantHeaders,
         ...(headers || {}),
       },
       cache: 'no-store',
@@ -361,7 +357,7 @@ export const floraFaunaApi = {
       `/api/manara/revenue-events?limit=${limit}`,
       {
         signal: options.signal,
-        headers: getAuthHeaders(),
+        auth: 'participant',
       },
     ),
   listAllocationRequests: (limit = 50, poolId?: string, options: FloraFaunaRequestOptions = {}) =>
@@ -369,7 +365,7 @@ export const floraFaunaApi = {
       `/api/manara/allocations?limit=${limit}${poolId ? `&poolId=${encodeURIComponent(poolId)}` : ''}`,
       {
         signal: options.signal,
-        headers: getAuthHeaders(),
+        auth: 'participant',
       },
     ),
   listModerationCases: (limit = 50, status?: string, options: FloraFaunaRequestOptions = {}) =>
@@ -377,7 +373,7 @@ export const floraFaunaApi = {
       `/api/manara/moderation/cases?limit=${limit}${status ? `&status=${encodeURIComponent(status)}` : ''}`,
       {
         signal: options.signal,
-        headers: getAuthHeaders(),
+        auth: 'participant',
       },
     ),
 };

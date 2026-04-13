@@ -1,5 +1,5 @@
 import { FalakRuntimeConfig } from '../config/falakRuntimeConfig';
-import { FalakActorResolutionSource, FalakGuardedRouteAccess, ResolvedActor } from '../domain/types';
+import { FalakActorResolutionSource, FalakGuardedRouteAccess, FalakTokenAudience, ResolvedActor } from '../domain/types';
 
 export interface FalakRouteAccessInput {
   access: FalakGuardedRouteAccess;
@@ -8,13 +8,20 @@ export interface FalakRouteAccessInput {
   actorResolution: {
     source: FalakActorResolutionSource;
     isVerified: boolean;
+    tokenAudience: FalakTokenAudience;
   };
 }
 
 export interface FalakRouteAccessDecision {
   allowed: boolean;
   statusCode?: number;
-  code?: 'FALAK_DISABLED' | 'FALAK_FORBIDDEN' | 'VERIFIED_ACTOR_REQUIRED' | 'TENANT_NOT_ALLOWED' | 'ACTOR_NOT_ALLOWED';
+  code?:
+    | 'FALAK_DISABLED'
+    | 'FALAK_FORBIDDEN'
+    | 'VERIFIED_ACTOR_REQUIRED'
+    | 'TENANT_NOT_ALLOWED'
+    | 'ACTOR_NOT_ALLOWED'
+    | 'CONTROL_AUDIENCE_REQUIRED';
   message?: string;
 }
 
@@ -41,11 +48,35 @@ function requirePrivilegedActor(config: FalakRuntimeConfig, input: FalakRouteAcc
       return deny(401, 'VERIFIED_ACTOR_REQUIRED', 'Verified actor identity is required for privileged Falak routes');
     }
 
+    if (
+      input.access === 'privileged' &&
+      input.actorResolution.source === 'verified_auth' &&
+      input.actorResolution.tokenAudience !== 'control'
+    ) {
+      return deny(
+        403,
+        'CONTROL_AUDIENCE_REQUIRED',
+        'Control audience token is required for privileged Falak routes',
+      );
+    }
+
     return { allowed: true };
   }
 
   if (!input.actor) {
     return deny(403, 'FALAK_FORBIDDEN', 'Falak privileged routes require an actor context');
+  }
+
+  if (
+    input.access === 'privileged' &&
+    input.actorResolution.source === 'verified_auth' &&
+    input.actorResolution.tokenAudience !== 'control'
+  ) {
+    return deny(
+      403,
+      'CONTROL_AUDIENCE_REQUIRED',
+      'Control audience token is required for privileged Falak routes',
+    );
   }
 
   return { allowed: true };

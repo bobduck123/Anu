@@ -9,6 +9,7 @@ interface JwtSubjectObject {
 }
 
 export type JwtClaims = Record<string, unknown>;
+export type JwtTokenAudience = 'public' | 'control' | 'unknown';
 
 export interface JwtUserPrincipal {
   username: string | null;
@@ -44,6 +45,50 @@ function extractSubjectObject(claims: JwtClaims): JwtSubjectObject | null {
   }
 
   return subject as JwtSubjectObject;
+}
+
+function subjectHint(claims: JwtClaims): string | null {
+  return typeof claims.sub === 'string' ? claims.sub.trim().toLowerCase() : null;
+}
+
+function normalizeAudienceClaim(claims: JwtClaims): string[] {
+  const aud = claims.aud;
+  if (typeof aud === 'string') {
+    return [aud.trim().toLowerCase()].filter(Boolean);
+  }
+  if (Array.isArray(aud)) {
+    return aud
+      .map((value) => (typeof value === 'string' ? value.trim().toLowerCase() : ''))
+      .filter(Boolean);
+  }
+  return [];
+}
+
+export function classifyJwtAudience(claims: JwtClaims): JwtTokenAudience {
+  const tokenUse = typeof claims.token_use === 'string' ? claims.token_use.trim().toLowerCase() : '';
+  const audiences = normalizeAudienceClaim(claims);
+  const subject = subjectHint(claims);
+
+  if (
+    tokenUse === 'control' ||
+    audiences.includes('control') ||
+    audiences.includes('control_plane') ||
+    audiences.includes('control-plane') ||
+    (subject !== null && subject.startsWith('control::'))
+  ) {
+    return 'control';
+  }
+
+  if (
+    tokenUse === 'public' ||
+    tokenUse === 'participant' ||
+    audiences.includes('public') ||
+    audiences.includes('participant')
+  ) {
+    return 'public';
+  }
+
+  return 'unknown';
 }
 
 function tokenSecrets(): string[] {

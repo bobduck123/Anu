@@ -39,6 +39,7 @@ describe('Falak actor identity', () => {
       actorResolution: expect.objectContaining({
         source: 'verified_auth',
         isVerified: true,
+        tokenAudience: 'public',
         authenticatedIdentity: 'anu-admin'
       })
     });
@@ -68,6 +69,7 @@ describe('Falak actor identity', () => {
       actorResolution: expect.objectContaining({
         source: 'trusted_header_override',
         isVerified: false,
+        tokenAudience: 'none',
         authenticatedIdentity: 'anu-admin',
         requestedActorId: 'anu-admin'
       })

@@ -524,6 +524,7 @@ class Node(db.Model):
     is_default = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=utcnow)
     users = db.relationship('User', backref='node', lazy=True)
+    service_bindings = db.relationship('NodeServiceBinding', backref='node', lazy=True)
 
 
 class NodeDomain(db.Model):
@@ -547,6 +548,27 @@ class NodeConfig(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     node_id = db.Column(db.Integer, db.ForeignKey('node.id'), nullable=False)
     config_json = db.Column(db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+
+class NodeServiceBinding(db.Model):
+    __table_args__ = (
+        db.UniqueConstraint('node_id', 'service_name', name='uq_node_service_binding_node_service'),
+        db.UniqueConstraint('service_name', 'service_tenant_id', name='uq_node_service_binding_service_tenant_id'),
+        db.UniqueConstraint('service_name', 'service_tenant_slug', name='uq_node_service_binding_service_tenant_slug'),
+        db.Index('ix_node_service_binding_node_slug', 'node_slug'),
+        db.Index('ix_node_service_binding_service_name', 'service_name'),
+        db.Index('ix_node_service_binding_node_id', 'node_id'),
+    )
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey('node.id'), nullable=False)
+    node_slug = db.Column(db.String(120), nullable=False)
+    service_name = db.Column(db.String(80), nullable=False)
+    service_tenant_id = db.Column(db.String(120), nullable=False)
+    service_tenant_slug = db.Column(db.String(120), nullable=True)
+    status = db.Column(db.String(40), default='active')
+    last_verified_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=utcnow)
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 

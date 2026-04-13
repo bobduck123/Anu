@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateSupabaseSession } from '@/lib/supabase/middleware';
 import { getCoreApiOrigin } from '@/lib/runtime';
+import {
+  evaluateControlRouteAccess,
+  getControlPlaneHostsFromEnv,
+  isControlRoutePath,
+  normalizeHostname,
+} from '@/lib/auth/controlSession';
 
 /**
  * Multi-tenant white-label middleware for domain-based tenant resolution
@@ -22,11 +28,15 @@ interface TenantInfo {
   nodeId: number;
   nodeSlug: string;
   nodeName: string;
-  isWhiteLabel: boolean;
-  brandConfig?: {
+  semanticKey?: string;
+  whiteLabel: boolean;
+  brand: {
     primaryColor?: string;
+    secondaryColor?: string;
+    accentColor?: string;
     logoUrl?: string;
     faviconUrl?: string;
+    customCss?: string;
   };
 }
 
@@ -105,8 +115,16 @@ async function resolveTenantFromDomain(
       nodeId: data.node_id,
       nodeSlug: data.node_slug || '',
       nodeName: data.node_name || '',
-      isWhiteLabel: data.is_white_label || false,
-      brandConfig: data.brand_config,
+      semanticKey: data.semantic_key || '',
+      whiteLabel: data.white_label ?? data.is_white_label ?? false,
+      brand: {
+        primaryColor: data.brand?.primary_color ?? data.brand_config?.primary_color,
+        secondaryColor: data.brand?.secondary_color ?? data.brand_config?.secondary_color,
+        accentColor: data.brand?.accent_color ?? data.brand_config?.accent_color,
+        logoUrl: data.brand?.logo_url ?? data.brand_config?.logo_url,
+        faviconUrl: data.brand?.favicon_url ?? data.brand_config?.favicon_url,
+        customCss: data.brand?.custom_css ?? data.brand_config?.custom_css,
+      },
     };
 
     // Update cache
@@ -127,8 +145,11 @@ async function resolveTenantFromDomain(
 
 export async function proxy(request: NextRequest) {
   const requestHost = request.headers.get('host') || request.nextUrl.host;
-  const hostname = request.nextUrl.hostname || requestHost.split(':')[0];
+  const hostname = normalizeHostname(request.nextUrl.hostname || requestHost);
   const pathname = request.nextUrl.pathname;
+  const controlPlaneHosts = getControlPlaneHostsFromEnv();
+  const controlAccess = evaluateControlRouteAccess(hostname, controlPlaneHosts);
+  const isControlRoute = isControlRoutePath(pathname);
 
   // Skip middleware for static files and API routes
   if (
@@ -142,6 +163,19 @@ export async function proxy(request: NextRequest) {
 
   // Update Supabase session first (refreshes auth tokens)
   const { supabaseResponse } = await updateSupabaseSession(request);
+
+  // Control routes are host-gated and should bypass tenant-domain resolution.
+  if (isControlRoute) {
+    supabaseResponse.headers.set('x-control-route', 'true');
+    supabaseResponse.headers.set('x-control-host-allowed', String(controlAccess.allowed));
+    return supabaseResponse;
+  }
+
+  // Control-plane hosts should also bypass tenant-domain resolution for non-control paths.
+  if (controlAccess.allowed) {
+    supabaseResponse.headers.set('x-control-host', 'true');
+    return supabaseResponse;
+  }
 
   // Skip tenant resolution for platform domains and Vercel preview deployments
   if (isPlatformDomain(hostname) || isVercelPreviewDomain(hostname) || isLocalDevelopmentHostname(hostname)) {
@@ -169,22 +203,53 @@ export async function proxy(request: NextRequest) {
   response.headers.set('x-tenant-id', String(tenantInfo.nodeId));
   response.headers.set('x-tenant-slug', tenantInfo.nodeSlug);
   response.headers.set('x-tenant-name', tenantInfo.nodeName);
-  response.headers.set('x-tenant-white-label', String(tenantInfo.isWhiteLabel));
+  response.headers.set('x-tenant-white-label', String(tenantInfo.whiteLabel));
+  response.headers.set('x-tenant-semantic-key', tenantInfo.semanticKey || '');
 
   // Set brand config as JSON header for theming
-  if (tenantInfo.brandConfig) {
-    response.headers.set(
-      'x-tenant-brand',
-      JSON.stringify(tenantInfo.brandConfig)
-    );
-  }
+  response.headers.set('x-tenant-brand', JSON.stringify(tenantInfo.brand));
 
-  // Set cookie for client-side access (HTTP-only for security)
+  // Set tenant cookies used by branding and context helpers.
   response.cookies.set('tenant_id', String(tenantInfo.nodeId), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 60 * 60 * 24, // 24 hours
+    path: '/',
+  });
+  response.cookies.set('tenant_slug', tenantInfo.nodeSlug, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24,
+    path: '/',
+  });
+  response.cookies.set('tenant_name', encodeURIComponent(tenantInfo.nodeName), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24,
+    path: '/',
+  });
+  response.cookies.set('tenant_white_label', String(tenantInfo.whiteLabel), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24,
+    path: '/',
+  });
+  response.cookies.set('tenant_semantic_key', tenantInfo.semanticKey || '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24,
+    path: '/',
+  });
+  response.cookies.set('tenant_brand', encodeURIComponent(JSON.stringify(tenantInfo.brand)), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24,
     path: '/',
   });
 

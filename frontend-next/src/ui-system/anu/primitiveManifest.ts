@@ -36,7 +36,7 @@ export const ANU_PRIMITIVE_MANIFEST: readonly AnuPrimitiveManifestEntry[] = [
     category: 'section-header',
     component: 'AnuSectionHeading',
     variants: ['default'],
-    adoptedRoutes: ['/contact', '/memberships', '/admin/tenants', '/education/admin'],
+    adoptedRoutes: ['/contact', '/memberships', '/control/tenants', '/education/admin'],
     notes: 'Standard heading hierarchy for section breaks and local action context.',
   },
   {

@@ -1,12 +1,20 @@
 import { FastifyRequest } from 'fastify';
 import jwt from 'jsonwebtoken';
-import { extractIdentityCandidates as extractJwtIdentityCandidates, verifyJwtClaims } from '../../auth/jwt';
+import {
+  classifyJwtAudience,
+  extractIdentityCandidates as extractJwtIdentityCandidates,
+  verifyJwtClaims,
+} from '../../auth/jwt';
 import { errors } from '../../utils/errors';
 import { FalakRuntimeConfig } from '../config/falakRuntimeConfig';
 import { FalakRepository, RequestContext } from '../domain/types';
 
-function extractIdentityCandidates(token: string): string[] {
-  return extractJwtIdentityCandidates(verifyJwtClaims(token));
+function resolveJwtTokenContext(token: string): { identities: string[]; tokenAudience: RequestContext['actorResolution']['tokenAudience'] } {
+  const claims = verifyJwtClaims(token);
+  return {
+    identities: extractJwtIdentityCandidates(claims),
+    tokenAudience: classifyJwtAudience(claims),
+  };
 }
 
 function requestedActorId(request: FastifyRequest): string | null {
@@ -30,8 +38,11 @@ export async function resolveActorIdentity(
     }
 
     let identities: string[];
+    let tokenAudience: RequestContext['actorResolution']['tokenAudience'];
     try {
-      identities = extractIdentityCandidates(token);
+      const tokenContext = resolveJwtTokenContext(token);
+      identities = tokenContext.identities;
+      tokenAudience = tokenContext.tokenAudience;
     } catch (error) {
       const message =
         error instanceof jwt.TokenExpiredError
@@ -55,6 +66,7 @@ export async function resolveActorIdentity(
         actorResolution: {
           source: 'verified_auth',
           isVerified: true,
+          tokenAudience,
           authenticatedIdentity: identity,
           requestedActorId: requestedActorOverride
         }
@@ -72,6 +84,7 @@ export async function resolveActorIdentity(
         actorResolution: {
           source: 'trusted_header_override',
           isVerified: false,
+          tokenAudience: 'none',
           authenticatedIdentity: null,
           requestedActorId: requestedActorOverride
         }
@@ -85,6 +98,7 @@ export async function resolveActorIdentity(
         actorResolution: {
           source: 'trusted_header_override',
           isVerified: false,
+          tokenAudience: 'none',
           authenticatedIdentity: requestedActorOverride,
           requestedActorId: requestedActorOverride
         }
@@ -97,6 +111,7 @@ export async function resolveActorIdentity(
     actorResolution: {
       source: 'none',
       isVerified: false,
+      tokenAudience: 'none',
       authenticatedIdentity: null,
       requestedActorId: requestedActorOverride
     }

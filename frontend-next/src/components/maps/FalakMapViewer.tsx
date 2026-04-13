@@ -831,7 +831,7 @@ export function FalakMapViewer({
               </div>
               {showAdminLink && adminTopicKey ? (
                 <Link
-                  href={`/admin/maps?topic=${encodeURIComponent(adminTopicKey)}`}
+                  href={`/control/maps?topic=${encodeURIComponent(adminTopicKey)}`}
                   className="inline-flex items-center gap-2 rounded-lg border border-[#1e0227] px-3 py-2 text-xs font-medium text-[color:rgba(246,212,203,0.84)] transition hover:border-[#7c413c] hover:text-[#7c413c]"
                 >
                   Open admin tools

@@ -26,6 +26,7 @@ import {
   EventWriteResult,
   FalakLedgerCategory,
   FalakRepository,
+  FalakTenantRecord,
   GraphRecord,
   JsonObject,
   LedgerEntryRecord,
@@ -50,6 +51,8 @@ interface TenantRow {
   id: string;
   slug: string;
   name: string;
+  backend_node_slug: string | null;
+  backend_node_id: number | null;
 }
 
 interface ActorRow {
@@ -367,6 +370,21 @@ function mapLedgerRow(row: LedgerRow): LedgerEntryRecord {
   };
 }
 
+function mapTenantRow(row: TenantRow): FalakTenantRecord {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    backendNodeSlug: row.backend_node_slug,
+    backendNodeId: row.backend_node_id ?? null
+  };
+}
+
+function isMissingBackendNodeBindingColumnError(error: unknown): boolean {
+  const message = String(error ?? '').toLowerCase();
+  return message.includes('backend_node_slug') || message.includes('backend_node_id');
+}
+
 function mapContributionRow(row: ContributionRow): ContributionRecord {
   return {
     id: row.id,
@@ -468,14 +486,74 @@ export class PrismaFalakRepository implements FalakRepository {
     return execute(this.prisma);
   }
 
-  async findTenantById(tenantId: string): Promise<TenantRow | null> {
-    const rows = await this.withTenantSession(tenantId, (db) => db.$queryRaw<TenantRow[]>(Prisma.sql`
-      SELECT id, slug, name
-      FROM falak.tenants
-      WHERE id = ${tenantId}::uuid
-      LIMIT 1
-    `));
-    return rows[0] ?? null;
+  async findTenantById(tenantId: string): Promise<FalakTenantRecord | null> {
+    try {
+      const rows = await this.withTenantSession(tenantId, (db) => db.$queryRaw<TenantRow[]>(Prisma.sql`
+        SELECT id, slug, name, backend_node_slug, backend_node_id
+        FROM falak.tenants
+        WHERE id = ${tenantId}::uuid
+        LIMIT 1
+      `));
+      return rows[0] ? mapTenantRow(rows[0]) : null;
+    } catch (error) {
+      if (!isMissingBackendNodeBindingColumnError(error)) {
+        throw error;
+      }
+
+      const legacyRows = await this.withTenantSession(tenantId, (db) => db.$queryRaw<Array<{
+        id: string;
+        slug: string;
+        name: string;
+      }>>(Prisma.sql`
+        SELECT id, slug, name
+        FROM falak.tenants
+        WHERE id = ${tenantId}::uuid
+        LIMIT 1
+      `));
+      const row = legacyRows[0];
+      if (!row) {
+        return null;
+      }
+      return {
+        id: row.id,
+        slug: row.slug,
+        name: row.name,
+        backendNodeSlug: null,
+        backendNodeId: null
+      };
+    }
+  }
+
+  async verifyTenantNodeBinding(tenantId: string, backendNodeSlug: string): Promise<FalakTenantRecord> {
+    const normalizedSlug = backendNodeSlug.trim().toLowerCase();
+    if (!normalizedSlug) {
+      throw errors.badRequest(
+        'Backend node slug is required to verify tenant binding',
+        'BACKEND_NODE_SLUG_REQUIRED'
+      );
+    }
+
+    const tenant = await this.findTenantById(tenantId);
+    if (!tenant) {
+      throw errors.notFound('Tenant not found', 'TENANT_NOT_FOUND');
+    }
+
+    const boundNodeSlug = tenant.backendNodeSlug?.trim().toLowerCase() ?? null;
+    if (!boundNodeSlug) {
+      throw errors.conflict(
+        'Falak tenant is missing backend node binding metadata',
+        'TENANT_BACKEND_NODE_BINDING_MISSING'
+      );
+    }
+
+    if (boundNodeSlug !== normalizedSlug) {
+      throw errors.forbidden(
+        'Falak tenant binding does not match the requested backend node slug',
+        'TENANT_BACKEND_NODE_BINDING_MISMATCH'
+      );
+    }
+
+    return tenant;
   }
 
   async findActorById(tenantId: string, actorId: string): Promise<ResolvedActor | null> {

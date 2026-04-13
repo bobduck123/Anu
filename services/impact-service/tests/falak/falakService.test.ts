@@ -67,7 +67,9 @@ function signFalakToken(externalAuthId: string): string {
       sub: {
         username: externalAuthId,
         role: 'operator'
-      }
+      },
+      aud: 'control',
+      token_use: 'control'
     },
     process.env.JWT_SECRET_KEY ?? 'falak-test-secret'
   );
@@ -285,7 +287,8 @@ describe('Falak route guard config', () => {
       },
       actorResolution: {
         source: 'verified_auth',
-        isVerified: true
+        isVerified: true,
+        tokenAudience: 'control'
       }
     });
 

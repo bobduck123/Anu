@@ -395,6 +395,7 @@ export async function registerFalakRoutes(
     let actorResolution: ActorResolutionContext = {
       source: 'none' as const,
       isVerified: false,
+      tokenAudience: 'none',
       authenticatedIdentity: null,
       requestedActorId: typeof request.headers['x-actor-id'] === 'string'
         ? request.headers['x-actor-id']
@@ -421,6 +422,7 @@ export async function registerFalakRoutes(
           actorResolution: {
             source: actorResolution.source,
             isVerified: actorResolution.isVerified,
+            tokenAudience: actorResolution.tokenAudience,
           }
         },
         runtime.runtimeConfig.mapRouteGuardMode,
@@ -469,6 +471,7 @@ export async function registerFalakRoutes(
       actor_resolution: {
         source: actorResolution.source,
         verified: actorResolution.isVerified,
+        token_audience: actorResolution.tokenAudience,
         authenticated_identity: actorResolution.authenticatedIdentity,
         requested_actor_id: actorResolution.requestedActorId,
       },

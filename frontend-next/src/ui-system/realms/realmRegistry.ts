@@ -135,7 +135,7 @@ export const REALM_ROUTE_REGISTRY: RealmRouteEntry[] = [
   },
   {
     id: 'celestial-memetics',
-    prefixes: ['/flora-fauna'],
+    prefixes: ['/anu', '/manara', '/flora-fauna'],
     surface: {
       realm: 'celestial',
       strength: 'strong',

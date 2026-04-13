@@ -3,24 +3,18 @@
  * Handles memberships, pools, credits, and ledger endpoints.
  */
 
+import { buildParticipantRequestHeaders } from '@/lib/api/client';
 import { getImpactApiBase } from '@/lib/runtime';
 
 const IMPACT_API_BASE = getImpactApiBase();
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
 async function impactFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${IMPACT_API_BASE}${path}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-      ...(options.headers || {}),
-    },
+    headers: await buildParticipantRequestHeaders({
+      headers: options.headers,
+      includeContentType: true,
+    }),
   });
 
   const payload = await res.json().catch(() => null);

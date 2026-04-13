@@ -81,7 +81,7 @@ export function FalakMapDraftPage() {
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href={`/admin/maps?topic=${encodeURIComponent(createdMap.definition.topicKey)}`}
+              href={`/control/maps?topic=${encodeURIComponent(createdMap.definition.topicKey)}`}
               className="inline-flex items-center gap-2 rounded-full border border-[#1e0227] px-4 py-2 transition hover:border-[#7c413c] hover:text-[#7c413c]"
             >
               Open admin tools

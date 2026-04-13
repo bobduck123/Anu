@@ -5,6 +5,76 @@ from datetime import time as dt_time
 import bleach
 
 
+class DomainResolutionBrandSchema(Schema):
+    primary_color = fields.String(allow_none=True)
+    secondary_color = fields.String(allow_none=True)
+    accent_color = fields.String(allow_none=True)
+    logo_url = fields.String(allow_none=True)
+    favicon_url = fields.String(allow_none=True)
+    custom_css = fields.String(allow_none=True)
+
+
+class DomainResolutionResponseSchema(Schema):
+    contract_version = fields.String(required=True)
+    node_id = fields.Integer(required=True)
+    node_slug = fields.String(required=True)
+    node_name = fields.String(required=True)
+    semantic_key = fields.String(allow_none=True)
+    white_label = fields.Boolean(required=True)
+    brand = fields.Nested(DomainResolutionBrandSchema, required=True)
+    domain = fields.String(required=True)
+    tls_ready = fields.Boolean(required=True)
+    # Backward-compatibility keys for existing clients.
+    is_white_label = fields.Boolean(required=True)
+    brand_config = fields.Nested(DomainResolutionBrandSchema, required=True)
+
+
+class PublicNodeConfigBrandSchema(Schema):
+    # Keep branding keys aligned with domain resolution and frontend tenant wrappers.
+    primary_color = fields.String(allow_none=True)
+    secondary_color = fields.String(allow_none=True)
+    accent_color = fields.String(allow_none=True)
+    logo_url = fields.String(allow_none=True)
+    favicon_url = fields.String(allow_none=True)
+    custom_css = fields.String(allow_none=True)
+
+
+class PublicNodeConfigResponseSchema(Schema):
+    # Canonical public-safe node config contract for /api/public/nodes/*/config.
+    contract_version = fields.String(required=True)
+    node_id = fields.Integer(required=True)
+    node_slug = fields.String(required=True)
+    node_name = fields.String(required=True)
+    semantic_key = fields.String(allow_none=True)
+    white_label = fields.Boolean(required=True)
+    brand = fields.Nested(PublicNodeConfigBrandSchema, required=True)
+    modules = fields.Dict(required=True)
+    status = fields.String(required=True)
+    is_default = fields.Boolean(required=True)
+    domain = fields.String(allow_none=True)
+    tls_ready = fields.Boolean(allow_none=True)
+
+
+class NodeServiceBindingSchema(Schema):
+    id = fields.Integer(required=True)
+    node_id = fields.Integer(required=True)
+    node_slug = fields.String(required=True)
+    service_name = fields.String(required=True)
+    service_tenant_id = fields.String(required=True)
+    service_tenant_slug = fields.String(allow_none=True)
+    status = fields.String(required=True)
+    last_verified_at = fields.DateTime(allow_none=True)
+    created_at = fields.DateTime(required=True)
+    updated_at = fields.DateTime(required=True)
+
+
+class NodeServiceBindingVerifySchema(Schema):
+    node_slug = fields.String(required=True, validate=validate.Length(min=2, max=120))
+    service_name = fields.String(required=True, validate=validate.Length(min=2, max=80))
+    service_tenant_id = fields.String(required=True, validate=validate.Length(min=2, max=120))
+    service_tenant_slug = fields.String(allow_none=True, validate=validate.Length(max=120))
+
+
 class LenientTimeField(fields.Time):
     """Time field that also accepts HH:MM (without seconds)."""
 

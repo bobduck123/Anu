@@ -47,8 +47,8 @@ describe('realm registry', () => {
     expect(surface.immersiveCanvas).toBe(true);
   });
 
-  it('maps memetic routes to the celestial artifact mesh family', () => {
-    const surface = getRealmSurface('/flora-fauna');
+  it('maps anu routes to the celestial artifact mesh family', () => {
+    const surface = getRealmSurface('/anu');
 
     expect(surface.realm).toBe('celestial');
     expect(surface.strength).toBe('strong');

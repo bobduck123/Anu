@@ -18,6 +18,8 @@ const describeIfDatabase =
 interface LiveFixture {
   tenantId: string;
   otherTenantId: string;
+  backendNodeSlug: string;
+  otherBackendNodeSlug: string;
   actorIds: {
     admin: string;
     governor: string;
@@ -42,17 +44,30 @@ interface LiveFixture {
 }
 
 describeIfDatabase('Falak database invariants', () => {
-  const prisma = createPrismaClient();
-  const repository = new PrismaFalakRepository(prisma);
-  const policyEngine = new PolicyEngine(repository);
-  const fanoutPublisher = new NoopFanoutPublisher();
-  const mutationPipeline = new MutationPipeline(repository, policyEngine, fanoutPublisher);
-  const service = new FalakService(repository, policyEngine, mutationPipeline);
-  const eventWorkflowService = new EventWorkflowService(repository, policyEngine, fanoutPublisher);
-  const contributionWorkflowService = new ContributionWorkflowService(repository, policyEngine, fanoutPublisher);
-  const allocationWorkflowService = new AllocationWorkflowService(repository, policyEngine, fanoutPublisher);
-  const impactQueryService = new ImpactQueryService(repository);
+  let prisma!: ReturnType<typeof createPrismaClient>;
+  let repository!: PrismaFalakRepository;
+  let policyEngine!: PolicyEngine;
+  let fanoutPublisher!: NoopFanoutPublisher;
+  let mutationPipeline!: MutationPipeline;
+  let service!: FalakService;
+  let eventWorkflowService!: EventWorkflowService;
+  let contributionWorkflowService!: ContributionWorkflowService;
+  let allocationWorkflowService!: AllocationWorkflowService;
+  let impactQueryService!: ImpactQueryService;
   const createdTenantIds: string[] = [];
+
+  beforeAll(() => {
+    prisma = createPrismaClient();
+    repository = new PrismaFalakRepository(prisma);
+    policyEngine = new PolicyEngine(repository);
+    fanoutPublisher = new NoopFanoutPublisher();
+    mutationPipeline = new MutationPipeline(repository, policyEngine, fanoutPublisher);
+    service = new FalakService(repository, policyEngine, mutationPipeline);
+    eventWorkflowService = new EventWorkflowService(repository, policyEngine, fanoutPublisher);
+    contributionWorkflowService = new ContributionWorkflowService(repository, policyEngine, fanoutPublisher);
+    allocationWorkflowService = new AllocationWorkflowService(repository, policyEngine, fanoutPublisher);
+    impactQueryService = new ImpactQueryService(repository);
+  });
 
   function makeContext(args: {
     tenantId: string;
@@ -83,6 +98,7 @@ describeIfDatabase('Falak database invariants', () => {
       actorResolution: {
         source: args.actorId ? 'verified_auth' : 'none',
         isVerified: args.actorId !== null,
+        tokenAudience: args.actorId ? 'control' : 'none',
         authenticatedIdentity: null,
         requestedActorId: null
       },
@@ -99,6 +115,8 @@ describeIfDatabase('Falak database invariants', () => {
   async function createFixture(): Promise<LiveFixture> {
     const tenantId = randomUUID();
     const otherTenantId = randomUUID();
+    const backendNodeSlug = `backend-node-${tenantId.slice(0, 8)}`;
+    const otherBackendNodeSlug = `backend-node-${otherTenantId.slice(0, 8)}`;
     const adminId = randomUUID();
     const governorId = randomUUID();
     const viewerId = randomUUID();
@@ -108,10 +126,10 @@ describeIfDatabase('Falak database invariants', () => {
 
     await prisma.$transaction(async (tx) => {
       await tx.$executeRaw(Prisma.sql`
-        INSERT INTO falak.tenants (id, slug, name)
+        INSERT INTO falak.tenants (id, slug, name, backend_node_slug, backend_node_id)
         VALUES
-          (${tenantId}::uuid, ${`falak-test-${tenantId}`}, 'Falak Integration Tenant'),
-          (${otherTenantId}::uuid, ${`falak-test-${otherTenantId}`}, 'Falak Integration Partner Tenant')
+          (${tenantId}::uuid, ${`falak-test-${tenantId}`}, 'Falak Integration Tenant', ${backendNodeSlug}, 1001),
+          (${otherTenantId}::uuid, ${`falak-test-${otherTenantId}`}, 'Falak Integration Partner Tenant', ${otherBackendNodeSlug}, 1002)
       `);
 
       await tx.$executeRaw(Prisma.sql`
@@ -401,6 +419,8 @@ describeIfDatabase('Falak database invariants', () => {
     return {
       tenantId,
       otherTenantId,
+      backendNodeSlug,
+      otherBackendNodeSlug,
       actorIds: {
         admin: adminId,
         governor: governorId,
@@ -472,6 +492,21 @@ describeIfDatabase('Falak database invariants', () => {
         `);
       })
     ).rejects.toThrow(/append-only/i);
+  });
+
+  test('verifies tenant binding against backend node slug and rejects mismatches', async () => {
+    const fixture = await createFixture();
+
+    const verified = await repository.verifyTenantNodeBinding(fixture.tenantId, fixture.backendNodeSlug);
+    expect(verified.backendNodeSlug).toBe(fixture.backendNodeSlug);
+    expect(verified.backendNodeId).toBe(1001);
+
+    await expect(
+      repository.verifyTenantNodeBinding(fixture.tenantId, fixture.otherBackendNodeSlug)
+    ).rejects.toMatchObject({
+      statusCode: 403,
+      code: 'TENANT_BACKEND_NODE_BINDING_MISMATCH'
+    });
   });
 
   test('rejects ledger updates and deletes because ledger entries are immutable', async () => {

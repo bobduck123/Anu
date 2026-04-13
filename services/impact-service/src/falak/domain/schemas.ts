@@ -23,6 +23,14 @@ export const ledgerCategorySchema = z.enum([
   'publication'
 ]);
 
+export const tenantBindingSchema = z.object({
+  id: uuidSchema,
+  slug: z.string().min(1),
+  name: z.string().min(1),
+  backend_node_slug: z.string().min(1).nullable(),
+  backend_node_id: z.number().int().positive().nullable()
+});
+
 export const geometrySchema = z.object({
   type: z.string(),
 }).catchall(jsonValueSchema);
@@ -294,6 +302,7 @@ export const falakSessionStatusSchema = z.object({
   actor_resolution: z.object({
     source: z.enum(['none', 'verified_auth', 'trusted_header_override']),
     verified: z.boolean(),
+    token_audience: z.enum(['none', 'public', 'control', 'unknown']),
     authenticated_identity: z.string().nullable(),
     requested_actor_id: z.string().nullable()
   }),

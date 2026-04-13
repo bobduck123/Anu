@@ -369,6 +369,7 @@ def _init_talisman(app):
 def _register_blueprints(app):
     """Register all application blueprints."""
     from .auth import auth as auth_blueprint
+    from .api.public_nodes import public_nodes_bp
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
     
     from .routes import routes
@@ -382,8 +383,9 @@ def _register_blueprints(app):
     
     from .federation_portal import community_bp
     app.register_blueprint(community_bp)
-    
+
     app.register_blueprint(health_bp)
+    app.register_blueprint(public_nodes_bp)
 
 
 def _register_error_handlers(app):

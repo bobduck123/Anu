@@ -59,10 +59,10 @@ export function FalakMapSandboxHome() {
                 <p className="mt-1 text-sm text-[#1e0227]">Request a missing topic and persist a real draft universe.</p>
               </Link>
               <Link
-                href="/admin/maps"
+                href="/control/maps"
                 className="rounded-[1.25rem] border border-[#f6d4cb] bg-[#f6d4cb] p-4 transition hover:border-[#7c413c] hover:bg-[#7c413c]"
               >
-                <p className="font-semibold text-[#1e0227]">/admin/maps</p>
+                <p className="font-semibold text-[#1e0227]">/control/maps</p>
                 <p className="mt-1 text-sm text-[#1e0227]">Admin editor for taxonomy, stars, relations, and layout snapshots.</p>
               </Link>
               <div className="rounded-[1.25rem] border border-[#f6d4cb] bg-[#f6d4cb] p-4">
@@ -135,7 +135,7 @@ export function FalakMapSandboxHome() {
             <ul className="mt-4 space-y-3 text-sm text-[#1e0227]">
               <li className="rounded-[1rem] bg-[#f6d4cb] px-4 py-3">1. Open a seeded universe and inspect the 3D scene.</li>
               <li className="rounded-[1rem] bg-[#f6d4cb] px-4 py-3">2. Generate a missing draft via `/education/maps/new`.</li>
-              <li className="rounded-[1rem] bg-[#f6d4cb] px-4 py-3">3. Edit category, star, and relation data in `/admin/maps`.</li>
+              <li className="rounded-[1rem] bg-[#f6d4cb] px-4 py-3">3. Edit category, star, and relation data in `/control/maps`.</li>
               <li className="rounded-[1rem] bg-[#f6d4cb] px-4 py-3">4. Rerun layout and restore a prior snapshot.</li>
             </ul>
             <Link

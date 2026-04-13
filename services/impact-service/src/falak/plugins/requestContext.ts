@@ -96,6 +96,7 @@ export function buildRequestContextHook(
       ...falakContextFields(request.falakContext),
       requestedActorId: actorResolution.requestedActorId,
       authenticatedIdentity: actorResolution.authenticatedIdentity,
+      tokenAudience: actorResolution.tokenAudience,
       trustXActorId: runtimeConfig.trustXActorId
     });
 

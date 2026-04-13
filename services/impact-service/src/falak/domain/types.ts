@@ -26,6 +26,7 @@ export type AllocationProposalStatus = 'pending' | 'executed' | 'rejected';
 export type FalakRouteGuardMode = 'disabled' | 'admin_only' | 'tenant_allowlist' | 'enabled';
 export type FalakGuardedRouteAccess = 'public' | 'privileged';
 export type FalakActorResolutionSource = 'none' | 'verified_auth' | 'trusted_header_override';
+export type FalakTokenAudience = 'none' | 'public' | 'control' | 'unknown';
 
 export interface GeometryValue {
   type: string;
@@ -38,6 +39,14 @@ export interface ActorRoleAssignment {
   id: string;
   roleName: string;
   regionNodeId: string | null;
+}
+
+export interface FalakTenantRecord {
+  id: string;
+  slug: string;
+  name: string;
+  backendNodeSlug: string | null;
+  backendNodeId: number | null;
 }
 
 export interface ResolvedActor {
@@ -53,6 +62,7 @@ export interface ResolvedActor {
 export interface ActorResolutionContext {
   source: FalakActorResolutionSource;
   isVerified: boolean;
+  tokenAudience: FalakTokenAudience;
   authenticatedIdentity: string | null;
   requestedActorId: string | null;
 }
@@ -486,7 +496,8 @@ export interface EventImpactRecord {
 
 export interface FalakRepository {
   transaction<T>(tenantId: string, execute: (repository: FalakRepository) => Promise<T>): Promise<T>;
-  findTenantById(tenantId: string): Promise<{ id: string; slug: string; name: string } | null>;
+  findTenantById(tenantId: string): Promise<FalakTenantRecord | null>;
+  verifyTenantNodeBinding(tenantId: string, backendNodeSlug: string): Promise<FalakTenantRecord>;
   findActorById(tenantId: string, actorId: string): Promise<ResolvedActor | null>;
   findActorByIdentity(tenantId: string, identity: string): Promise<ResolvedActor | null>;
   listPolicies(tenantId: string, resourceType: string, action: string): Promise<PolicyRecord[]>;

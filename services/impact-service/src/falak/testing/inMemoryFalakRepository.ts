@@ -22,6 +22,7 @@ import {
   EventWriteResult,
   FalakLedgerCategory,
   FalakRepository,
+  FalakTenantRecord,
   GraphRecord,
   JsonObject,
   LedgerEntryRecord,
@@ -42,11 +43,7 @@ import {
 import { errors } from '../../utils/errors';
 import { hasRestrictedReadAccess } from '../domain/access';
 
-interface TenantState {
-  id: string;
-  slug: string;
-  name: string;
-}
+interface TenantState extends FalakTenantRecord {}
 
 interface AuditState extends AuditWriteInput {
   id: string;
@@ -172,6 +169,32 @@ export class InMemoryFalakRepository implements FalakRepository {
 
   async findTenantById(tenantId: string): Promise<TenantState | null> {
     return this.state.tenants.get(tenantId) ?? null;
+  }
+
+  async verifyTenantNodeBinding(tenantId: string, backendNodeSlug: string): Promise<TenantState> {
+    const normalizedSlug = backendNodeSlug.trim().toLowerCase();
+    if (!normalizedSlug) {
+      throw errors.badRequest('Backend node slug is required to verify tenant binding', 'BACKEND_NODE_SLUG_REQUIRED');
+    }
+
+    const tenant = await this.findTenantById(tenantId);
+    if (!tenant) {
+      throw errors.notFound('Tenant not found', 'TENANT_NOT_FOUND');
+    }
+
+    const boundNodeSlug = tenant.backendNodeSlug?.trim().toLowerCase() ?? null;
+    if (!boundNodeSlug) {
+      throw errors.conflict('Falak tenant is missing backend node binding metadata', 'TENANT_BACKEND_NODE_BINDING_MISSING');
+    }
+
+    if (boundNodeSlug !== normalizedSlug) {
+      throw errors.forbidden(
+        'Falak tenant binding does not match the requested backend node slug',
+        'TENANT_BACKEND_NODE_BINDING_MISMATCH'
+      );
+    }
+
+    return tenant;
   }
 
   async findActorById(tenantId: string, actorId: string): Promise<ResolvedActor | null> {
@@ -843,6 +866,7 @@ export class InMemoryFalakRepository implements FalakRepository {
         actorResolution: {
           source: 'none',
           isVerified: false,
+          tokenAudience: 'none',
           authenticatedIdentity: null,
           requestedActorId: null
         },
@@ -1179,12 +1203,16 @@ export function createSeededFalakRepository(): {
   repository.state.tenants.set(tenantId, {
     id: tenantId,
     slug: 'anu-beta',
-    name: 'ANU Beta'
+    name: 'ANU Beta',
+    backendNodeSlug: 'au-nsw-sydney',
+    backendNodeId: 1
   });
   repository.state.tenants.set(otherTenantId, {
     id: otherTenantId,
     slug: 'partner-beta',
-    name: 'Partner Beta'
+    name: 'Partner Beta',
+    backendNodeSlug: 'au-vic-melbourne',
+    backendNodeId: 2
   });
 
   const admin: ResolvedActor = {
@@ -1615,6 +1643,7 @@ export function createSeededFalakRepository(): {
     actorResolution: {
       source: actor ? 'verified_auth' : 'none',
       isVerified: actor !== null,
+      tokenAudience: actor ? 'control' : 'none',
       authenticatedIdentity: actor?.externalAuthId ?? actor?.email ?? null,
       requestedActorId: null
     },

@@ -39,6 +39,8 @@ function signFalakToken(externalAuthId: string): string {
         username: externalAuthId,
         role: 'operator',
       },
+      aud: 'control',
+      token_use: 'control',
     },
     process.env.JWT_SECRET_KEY ?? 'falak-test-secret',
   );
@@ -160,6 +162,7 @@ describe('Falak session route', () => {
         actor_resolution: {
           source: 'verified_auth',
           verified: true,
+          token_audience: 'control',
           authenticated_identity: 'anu-admin',
         },
         map_access: {
@@ -191,6 +194,7 @@ describe('Falak session route', () => {
         actor_resolution: {
           source: 'verified_auth',
           verified: true,
+          token_audience: 'control',
           authenticated_identity: 'anu-curator',
         },
         map_access: {

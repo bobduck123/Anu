@@ -176,7 +176,7 @@ export function FalakMapLibraryPage() {
                   Sandbox home
                 </Link>
                 <Link
-                  href="/admin/maps"
+                  href="/control/maps"
                   className="inline-flex items-center gap-2 rounded-full border border-[#1e0227] px-4 py-2 transition hover:border-[#7c413c] hover:text-[#7c413c]"
                 >
                   <GitBranch className="h-4 w-4" />
@@ -311,7 +311,7 @@ export function FalakMapLibraryPage() {
                         </Link>
                         {!fallbackActive ? (
                           <Link
-                            href={`/admin/maps?topic=${encodeURIComponent(map.topicKey)}`}
+                            href={`/control/maps?topic=${encodeURIComponent(map.topicKey)}`}
                             className="inline-flex items-center justify-center rounded-full border border-[#f6d4cb] px-4 py-2 font-medium text-[#1e0227] transition hover:border-[#7c413c] hover:text-[#7c413c]"
                           >
                             Admin edit

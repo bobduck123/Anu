@@ -55,7 +55,7 @@ export default function AdminDumbDumbPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <Link href="/admin/ledger" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-institutional)] transition-colors hover:text-[var(--color-forest)]">
+      <Link href="/control/ledger" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-institutional)] transition-colors hover:text-[var(--color-forest)]">
         <ArrowLeft className="h-4 w-4" />
         Back to ledger
       </Link>

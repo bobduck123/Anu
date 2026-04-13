@@ -19,6 +19,30 @@ from ..models import Node, NodeConfig, NodeDomain, User
 admin_tenants_bp = Blueprint("admin_tenants", __name__, url_prefix="/admin/tenants")
 
 
+def _coerce_node_config_json(raw):
+    """
+    Normalize legacy string-backed config_json values to dicts.
+    NodeConfig.config_json is a JSON column and should always be object-shaped.
+    """
+    if isinstance(raw, dict):
+        return raw
+    if raw is None:
+        return {}
+    if isinstance(raw, str):
+        try:
+            parsed = json.loads(raw)
+        except (TypeError, ValueError):
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+    return {}
+
+
+def _get_node_config_payload(cfg):
+    if not cfg:
+        return {}
+    return _coerce_node_config_json(cfg.config_json)
+
+
 def _require_platform_admin():
     username = get_jwt_identity()
     user = User.query.filter_by(username=username).first()
@@ -65,15 +89,14 @@ def create_tenant():
     db.session.add(node)
     db.session.flush()
 
-    # Create config if model exists
+    # Create config as object JSON (never stringified JSON text)
     try:
-        import json
         config_data = {
             "modules": data.get("modules", {}),
             "data_policy": data.get("data_policy", 0),
             "branding": data.get("branding", {}),
         }
-        cfg = NodeConfig(node_id=node.id, config_json=json.dumps(config_data))
+        cfg = NodeConfig(node_id=node.id, config_json=config_data)
         db.session.add(cfg)
     except Exception:
         pass
@@ -93,14 +116,13 @@ def update_modules(node_id):
     if not node:
         return error("NOT_FOUND", "Node not found", 404)
     data = request.get_json(silent=True) or {}
-    import json
     cfg = NodeConfig.query.filter_by(node_id=node_id).first()
     if cfg:
-        existing = json.loads(cfg.config_json) if cfg.config_json else {}
+        existing = _get_node_config_payload(cfg)
         existing["modules"] = data.get("modules", existing.get("modules", {}))
-        cfg.config_json = json.dumps(existing)
+        cfg.config_json = existing
     else:
-        cfg = NodeConfig(node_id=node_id, config_json=json.dumps({"modules": data.get("modules", {})}))
+        cfg = NodeConfig(node_id=node_id, config_json={"modules": data.get("modules", {})})
         db.session.add(cfg)
     db.session.commit()
     return ok({"message": "Modules updated"})
@@ -118,11 +140,11 @@ def update_branding(node_id):
     data = request.get_json(silent=True) or {}
     cfg = NodeConfig.query.filter_by(node_id=node_id).first()
     if cfg:
-        existing = json.loads(cfg.config_json) if cfg.config_json else {}
+        existing = _get_node_config_payload(cfg)
         existing["branding"] = data.get("branding", existing.get("branding", {}))
-        cfg.config_json = json.dumps(existing)
+        cfg.config_json = existing
     else:
-        cfg = NodeConfig(node_id=node_id, config_json=json.dumps({"branding": data.get("branding", {})}))
+        cfg = NodeConfig(node_id=node_id, config_json={"branding": data.get("branding", {})})
         db.session.add(cfg)
     db.session.commit()
     return ok({"message": "Branding updated"})
@@ -191,7 +213,7 @@ def provision_tenant():
         "white_label": data.get("white_label", {"enabled": False}),
         "calendar": data.get("calendar", {"mode": "events"}),
     }
-    cfg = NodeConfig(node_id=node.id, config_json=json.dumps(config_data))
+    cfg = NodeConfig(node_id=node.id, config_json=config_data)
     db.session.add(cfg)
     
     # Provision domains
@@ -298,7 +320,7 @@ def get_tenant(node_id):
         return error("NOT_FOUND", "Node not found", 404)
     
     cfg = NodeConfig.query.filter_by(node_id=node_id).first()
-    config_data = json.loads(cfg.config_json) if cfg and cfg.config_json else {}
+    config_data = _get_node_config_payload(cfg)
     
     domains = NodeDomain.query.filter_by(node_id=node_id).all()
     member_count = User.query.filter_by(node_id=node_id).count()
@@ -345,16 +367,16 @@ def update_white_label(node_id):
     
     cfg = NodeConfig.query.filter_by(node_id=node_id).first()
     if cfg:
-        existing = json.loads(cfg.config_json) if cfg.config_json else {}
+        existing = _get_node_config_payload(cfg)
         existing["white_label"] = {
             **existing.get("white_label", {}),
             **data.get("white_label", {}),
         }
-        cfg.config_json = json.dumps(existing)
+        cfg.config_json = existing
     else:
         cfg = NodeConfig(
             node_id=node_id,
-            config_json=json.dumps({"white_label": data.get("white_label", {"enabled": True})})
+            config_json={"white_label": data.get("white_label", {"enabled": True})}
         )
         db.session.add(cfg)
     

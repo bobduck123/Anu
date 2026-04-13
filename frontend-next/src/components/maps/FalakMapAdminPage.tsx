@@ -631,7 +631,7 @@ export function FalakMapAdminPage({ initialTopicKey = '' }: FalakMapAdminPagePro
                 onChange={(event) => {
                   const topicKey = event.target.value;
                   setSelectedTopic(topicKey);
-                  router.replace(`/admin/maps?topic=${encodeURIComponent(topicKey)}`);
+                  router.replace(`/control/maps?topic=${encodeURIComponent(topicKey)}`);
                 }}
                 className="w-full rounded-[1.25rem] border border-[#f6d4cb] bg-[#f6d4cb] px-4 py-3 text-sm text-[#1e0227] outline-none"
               >

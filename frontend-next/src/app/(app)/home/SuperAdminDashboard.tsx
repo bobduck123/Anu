@@ -13,7 +13,7 @@ export default function SuperAdminDashboard() {
           <h1 className="text-3xl font-bold" style={{ fontFamily: 'var(--font-serif)' }}>Platform Administration</h1>
           <p className="text-[var(--color-muted-foreground)] mt-1">System-wide overview and provisioning.</p>
         </div>
-        <Link href="/admin/tenants/create">
+        <Link href="/control/tenants/create">
           <Button variant="primary" icon={Plus}>Provision Tenant</Button>
         </Link>
       </div>
@@ -68,7 +68,7 @@ export default function SuperAdminDashboard() {
       <CardTitle>Quick Actions</CardTitle>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card padding="md" hover>
-          <Link href="/admin/tenants" className="flex items-center gap-3">
+          <Link href="/control/tenants" className="flex items-center gap-3">
             <Globe className="w-6 h-6 text-[var(--color-institutional)]" />
             <div>
               <p className="font-semibold">All Tenants</p>
@@ -86,7 +86,7 @@ export default function SuperAdminDashboard() {
           </Link>
         </Card>
         <Card padding="md" hover>
-          <Link href="/admin/ledger" className="flex items-center gap-3">
+          <Link href="/control/ledger" className="flex items-center gap-3">
             <Database className="w-6 h-6 text-[var(--color-accent)]" />
             <div>
               <p className="font-semibold">Global Ledger</p>

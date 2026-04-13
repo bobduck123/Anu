@@ -81,7 +81,7 @@ export default function TenantAdminDashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card padding="md" hover>
-          <Link href="/admin/tenants" className="flex items-center gap-3">
+          <Link href="/control/tenants" className="flex items-center gap-3">
             <Shield className="w-6 h-6 text-[var(--color-forest)]" />
             <div>
               <p className="font-semibold">Tenant Config</p>
@@ -90,7 +90,7 @@ export default function TenantAdminDashboard() {
           </Link>
         </Card>
         <Card padding="md" hover>
-          <Link href="/admin/relief" className="flex items-center gap-3">
+          <Link href="/control/relief" className="flex items-center gap-3">
             <Users className="w-6 h-6 text-[var(--color-institutional)]" />
             <div>
               <p className="font-semibold">Relief Queue</p>
@@ -99,7 +99,7 @@ export default function TenantAdminDashboard() {
           </Link>
         </Card>
         <Card padding="md" hover>
-          <Link href="/admin/ledger" className="flex items-center gap-3">
+          <Link href="/control/ledger" className="flex items-center gap-3">
             <BarChart3 className="w-6 h-6 text-[var(--color-accent)]" />
             <div>
               <p className="font-semibold">Ledger Explorer</p>
