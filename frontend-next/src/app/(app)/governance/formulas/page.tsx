@@ -4,17 +4,15 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const API_BASE = getCoreApiBase();
 const FORMULA_HARDCOPY_CACHE_KEY = 'governance-formula-ruleset-hardcopy-v1';
 const AUTO_RESYNC_MS = 90_000;
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 type FormulaDefinition = {
   key: string;
@@ -131,7 +129,7 @@ export default function FormulaRegistryPage() {
       }
 
       try {
-        const response = await fetch(`${API_BASE}/api/formulas/`, { headers: getAuthHeaders() });
+        const response = await fetch(`${API_BASE}/api/formulas/`, { headers: await getAuthHeaders() });
 
         if (!response.ok) {
           throw new Error('formula-registry-unavailable');
@@ -213,7 +211,7 @@ export default function FormulaRegistryPage() {
     try {
       const response = await fetch(`${API_BASE}/api/formulas/activate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({
           key: activation.key,
           version: activation.version,
@@ -381,3 +379,7 @@ export default function FormulaRegistryPage() {
     </div>
   );
 }
+
+
+
+

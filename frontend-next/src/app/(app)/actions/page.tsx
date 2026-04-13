@@ -19,6 +19,7 @@ import {
   Waypoints,
 } from 'lucide-react';
 import { api, Action } from '@/lib/api';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 import { getCoreApiBase } from '@/lib/runtime';
 import { buildAuthHref, buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
 import { useAuth } from '@/contexts/AuthContext';
@@ -203,12 +204,10 @@ export default function ActionsPage() {
 
   const handleCreateAction = useCallback(
     async (formData: FormData) => {
-      const rawToken = localStorage.getItem('auth_token');
-      const token = rawToken?.trim();
-      const isJwt = Boolean(token && token.split('.').length === 3);
+      const authHeaders = await getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
       const response = await fetch(`${API_BASE}/api/actions`, {
         method: 'POST',
-        headers: isJwt && token ? { Authorization: `Bearer ${token}` } : {},
+        headers: authHeaders,
         body: formData,
       });
 

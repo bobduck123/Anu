@@ -4,14 +4,12 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 
 const API_BASE = getCoreApiBase();
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 type CollisionCheck = {
   event_id: number | string;
@@ -78,8 +76,8 @@ export default function CollisionReviewPage() {
 
     try {
       const [checksRes, reviewsRes] = await Promise.allSettled([
-        fetch(`${API_BASE}/api/collisions/checks`, { headers: getAuthHeaders() }),
-        fetch(`${API_BASE}/api/collisions/reviews`, { headers: getAuthHeaders() }),
+        fetch(`${API_BASE}/api/collisions/checks`, { headers: await getAuthHeaders() }),
+        fetch(`${API_BASE}/api/collisions/reviews`, { headers: await getAuthHeaders() }),
       ]);
 
       let nextChecks: CollisionCheck[] = [];
@@ -139,7 +137,7 @@ export default function CollisionReviewPage() {
     try {
       const response = await fetch(`${API_BASE}/api/collisions/reviews/${id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({ status }),
       });
 
@@ -285,3 +283,7 @@ export default function CollisionReviewPage() {
     </div>
   );
 }
+
+
+
+

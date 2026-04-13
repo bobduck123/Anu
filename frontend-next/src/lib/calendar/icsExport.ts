@@ -1,13 +1,14 @@
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 
 export async function downloadICS(start?: string, end?: string) {
   const params = new URLSearchParams();
   if (start) params.set('start', start);
   if (end) params.set('end', end);
   const apiBase = getCoreApiBase();
-  const token = localStorage.getItem('auth_token');
+  const authHeaders = await getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
   const res = await fetch(`${apiBase}/api/calendar/export.ics?${params}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    headers: authHeaders,
   });
   if (!res.ok) throw new Error('Failed to export calendar');
   const blob = await res.blob();

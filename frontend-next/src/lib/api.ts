@@ -1,37 +1,10 @@
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 import { getCoreApiBase } from '@/lib/runtime';
 
 const API_BASE = getCoreApiBase();
 
-const INVALID_LEGACY_TOKEN_VALUES = new Set(['', 'null', 'undefined', '[object Object]']);
-
-function looksLikeJwt(token: string): boolean {
-  const parts = token.split('.');
-  return parts.length === 3 && parts.every((part) => part.length > 0);
-}
-
-// Helper function to get auth headers
-const getAuthHeaders = (): Record<string, string> => {
-  // Only access localStorage on the client side
-  if (typeof window === 'undefined') return {};
-  try {
-    const rawToken = localStorage.getItem('auth_token');
-    const token = rawToken?.trim();
-    if (!token || INVALID_LEGACY_TOKEN_VALUES.has(token)) {
-      localStorage.removeItem('auth_token');
-      return {};
-    }
-
-    if (!looksLikeJwt(token)) {
-      console.warn('[api] Dropping malformed auth_token from localStorage.');
-      localStorage.removeItem('auth_token');
-      return {};
-    }
-
-    return { Authorization: `Bearer ${token}` };
-  } catch {
-    return {};
-  }
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 const getErrorMessage = async (res: Response, fallback: string): Promise<string> => {
   const payload = await res.json().catch(() => null);
@@ -776,7 +749,7 @@ export const api = {
     },
     getChallenges: async (): Promise<Challenge[]> => {
       const res = await fetch(`${API_BASE}/api/engagement/challenges`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 404 || res.status >= 500) {
@@ -971,7 +944,7 @@ export const api = {
     create: async (payload: { title: string; content: string; media_url?: string }): Promise<StoryPost> => {
       const res = await fetch(`${API_BASE}/api/stories`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
@@ -988,7 +961,7 @@ export const api = {
     react: async (postId: number, reaction: 'clap' | 'heart' | 'spark'): Promise<{ post_id: number; reactions: Record<string, number> }> => {
       const res = await fetch(`${API_BASE}/api/stories/${postId}/react`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({ reaction }),
       });
       if (!res.ok) {
@@ -1016,7 +989,7 @@ export const api = {
     delete: async (postId: number): Promise<void> => {
       const res = await fetch(`${API_BASE}/api/stories/${postId}`, {
         method: 'DELETE',
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 401 || res.status === 403 || res.status === 404 || res.status >= 500) {
@@ -1029,7 +1002,7 @@ export const api = {
     feature: async (postId: number, featured: boolean): Promise<StoryPost> => {
       const res = await fetch(`${API_BASE}/api/stories/${postId}/feature`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({ featured }),
       });
       if (!res.ok) {
@@ -1055,7 +1028,7 @@ export const api = {
     list: async (microcosmId?: number): Promise<TeamSummary[]> => {
       const query = microcosmId ? `?microcosm_id=${microcosmId}` : '';
       const res = await fetch(`${API_BASE}/api/teams${query}`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 404 || res.status >= 500) {
@@ -1071,7 +1044,7 @@ export const api = {
     create: async (payload: { name: string; description?: string; microcosm_id?: number | null }): Promise<TeamSummary> => {
       const res = await fetch(`${API_BASE}/api/teams`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
@@ -1097,7 +1070,7 @@ export const api = {
     join: async (teamId: number): Promise<boolean> => {
       const res = await fetch(`${API_BASE}/api/teams/${teamId}/join`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 401 || res.status === 403 || res.status === 404 || res.status >= 500) {
@@ -1110,7 +1083,7 @@ export const api = {
     },
     members: async (teamId: number): Promise<TeamMember[]> => {
       const res = await fetch(`${API_BASE}/api/teams/${teamId}/members`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 404 || res.status >= 500) {
@@ -1125,7 +1098,7 @@ export const api = {
     },
     challenges: async (teamId: number): Promise<TeamChallenge[]> => {
       const res = await fetch(`${API_BASE}/api/teams/${teamId}/challenges`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 404 || res.status >= 500) {
@@ -1140,7 +1113,7 @@ export const api = {
     },
     actions: async (teamId: number): Promise<TeamAction[]> => {
       const res = await fetch(`${API_BASE}/api/teams/${teamId}/actions`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 404 || res.status >= 500) {
@@ -1156,7 +1129,7 @@ export const api = {
     createAction: async (teamId: number, payload: { title: string; description?: string; due_date?: string; points?: number }): Promise<TeamAction> => {
       const res = await fetch(`${API_BASE}/api/teams/${teamId}/actions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
@@ -1181,7 +1154,7 @@ export const api = {
     completeAction: async (teamId: number, actionId: number): Promise<boolean> => {
       const res = await fetch(`${API_BASE}/api/teams/${teamId}/actions/${actionId}/complete`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 401 || res.status === 403 || res.status === 404 || res.status >= 500) {
@@ -1196,7 +1169,7 @@ export const api = {
   credits: {
     balance: async (): Promise<CreditSummary> => {
       const res = await fetch(`${API_BASE}/api/credits/balance`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 404 || res.status >= 500) {
@@ -1210,7 +1183,7 @@ export const api = {
     },
     history: async (limit = 50): Promise<CreditTx[]> => {
       const res = await fetch(`${API_BASE}/api/credits/history?limit=${limit}`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 404 || res.status >= 500) {
@@ -1264,7 +1237,7 @@ export const api = {
     },
     getCertifications: async (): Promise<CertificationRecord[]> => {
       const res = await fetch(`${API_BASE}/api/education/certifications`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 404 || res.status >= 500) {
@@ -1296,7 +1269,7 @@ export const api = {
     },
     getCompetencyProfile: async (): Promise<CompetencyProfile> => {
       const res = await fetch(`${API_BASE}/api/education/competency-profile`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) throw new Error('Failed to fetch competency profile');
       const data = await res.json();
@@ -1313,7 +1286,7 @@ export const api = {
     issueCertificate: async (moduleId: number, publicVisible = false): Promise<{ certificate_uid: string; module_id: number; issued_at?: string; status: string }> => {
       const res = await fetch(`${API_BASE}/api/education/certifications/issue`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({ module_id: moduleId, public_visible: publicVisible }),
       });
       if (!res.ok) throw new Error('Failed to issue certificate');
@@ -1329,13 +1302,13 @@ export const api = {
   },
   capital: {
     getHeatmap: async (): Promise<{ snapshots: CapitalSnapshot[]; flags: CapitalStressFlag[] }> => {
-      const res = await fetch(`${API_BASE}/api/capital/heatmap`, { headers: getAuthHeaders() });
+      const res = await fetch(`${API_BASE}/api/capital/heatmap`, { headers: await getAuthHeaders() });
       if (!res.ok) throw new Error('Failed to fetch capital heatmap');
       const data = await res.json();
       return data.data || data;
     },
     getResilience: async (): Promise<CapitalResilience> => {
-      const res = await fetch(`${API_BASE}/api/capital/resilience`, { headers: getAuthHeaders() });
+      const res = await fetch(`${API_BASE}/api/capital/resilience`, { headers: await getAuthHeaders() });
       if (!res.ok) throw new Error('Failed to fetch resilience index');
       const data = await res.json();
       return data.data || data;
@@ -1345,7 +1318,7 @@ export const api = {
     ): Promise<Record<string, unknown>> => {
       const res = await fetch(`${API_BASE}/api/capital/simulate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Failed to simulate treasury');
@@ -1390,7 +1363,7 @@ export const api = {
     complete: async (packId: number): Promise<{ completed: boolean; reward_points: number }> => {
       const res = await fetch(`${API_BASE}/api/packs/${packId}/complete`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         console.warn('Pack completion failed, using fallback');
@@ -1410,7 +1383,7 @@ export const api = {
     },
     getById: async (actionId: string): Promise<Action> => {
       const res = await fetch(`${API_BASE}/api/actions/${actionId}`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) throw new Error('Failed to fetch action');
       const data = await res.json() as ActionResponse;
@@ -1419,7 +1392,7 @@ export const api = {
     complete: async (actionId: string): Promise<{ success: boolean; newCompletions: number }> => {
       const res = await fetch(`${API_BASE}/complete_action/${actionId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
       });
       if (!res.ok) {
         console.warn('Complete action failed or unavailable, simulating success for alpha testing');
@@ -1431,7 +1404,7 @@ export const api = {
     delete: async (actionId: string): Promise<void> => {
       const res = await fetch(`${API_BASE}/api/actions/${actionId}`, {
         method: 'DELETE',
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 401 || res.status === 403 || res.status === 404 || res.status >= 500) {
@@ -1457,7 +1430,7 @@ export const api = {
     addProof: async (actionId: string, payload: { before_url?: string; after_url?: string; proof_url?: string }): Promise<ActionProof> => {
       const res = await fetch(`${API_BASE}/api/actions/${actionId}/proofs`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
@@ -1493,7 +1466,7 @@ export const api = {
     addMetric: async (actionId: string, payload: { label: string; value: number; unit?: string }): Promise<ActionImpactMetric> => {
       const res = await fetch(`${API_BASE}/api/actions/${actionId}/metrics`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
@@ -1571,7 +1544,7 @@ export const api = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
+          ...(await getAuthHeaders())
         },
         body: JSON.stringify({
           title: article.title,
@@ -1621,7 +1594,7 @@ export const api = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
+          ...(await getAuthHeaders())
         },
         body: JSON.stringify({ content }),
       });
@@ -1650,7 +1623,7 @@ export const api = {
     deleteArticle: async (articleId: string): Promise<void> => {
       const res = await fetch(`${API_BASE}/api/articles/${articleId}`, {
         method: 'DELETE',
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 401 || res.status === 403 || res.status === 404 || res.status >= 500) {
@@ -1663,7 +1636,7 @@ export const api = {
     featureArticle: async (articleId: string, featured: boolean): Promise<Article> => {
       const res = await fetch(`${API_BASE}/api/articles/${articleId}/feature`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({ featured }),
       });
       if (!res.ok) {
@@ -1706,7 +1679,7 @@ export const api = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
+          ...(await getAuthHeaders())
         },
         body: JSON.stringify({ option }),
       });
@@ -1730,7 +1703,7 @@ export const api = {
     getMicrocosms: async (): Promise<Microcosm[]> => {
       const res = await fetch(`${API_BASE}/api/microcosms`, {
         headers: {
-          ...getAuthHeaders(),
+          ...(await getAuthHeaders()),
         },
       });
       if (!res.ok) throw new Error('Failed to fetch microcosms');
@@ -1767,7 +1740,7 @@ export const api = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
+          ...(await getAuthHeaders())
         },
         body: JSON.stringify(product),
       });
@@ -1810,7 +1783,7 @@ export const api = {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...getAuthHeaders()
+            ...(await getAuthHeaders())
           },
           body: JSON.stringify(application),
         });
@@ -1845,14 +1818,14 @@ export const api = {
       try {
         const res = await fetch(`${API_BASE}/api/auth/organizer-application-status`, {
           method: 'GET',
-          headers: getAuthHeaders(),
+          headers: await getAuthHeaders(),
         });
 
         if (!res.ok) {
           if (res.status === 404) {
             const alt = await fetch(`${API_BASE}/auth/organizer-application-status`, {
               method: 'GET',
-              headers: getAuthHeaders(),
+              headers: await getAuthHeaders(),
             });
             if (alt.ok) return alt.json();
           }
@@ -1901,7 +1874,7 @@ export const api = {
     attend: async (eventId: string): Promise<Event> => {
       const res = await fetch(`${API_BASE}/api/events/${eventId}/attend`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
       });
       if (!res.ok) throw new Error('Failed to attend event');
       const event = await res.json() as EventResponse;
@@ -1915,7 +1888,7 @@ export const api = {
     }): Promise<Event> => {
       const res = await fetch(`${API_BASE}/api/events`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify(event),
       });
       if (res.status === 409) {
@@ -1923,7 +1896,7 @@ export const api = {
         if (body?.acknowledgement_required) {
           const retry = await fetch(`${API_BASE}/api/events`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+            headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
             body: JSON.stringify({ ...event, collision_acknowledged: true }),
           });
           if (!retry.ok) throw new Error('Failed to create event');
@@ -1938,7 +1911,7 @@ export const api = {
     delete: async (eventId: string): Promise<void> => {
       const res = await fetch(`${API_BASE}/api/events/${eventId}`, {
         method: 'DELETE',
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 401 || res.status === 403 || res.status === 404 || res.status >= 500) {
@@ -1961,7 +1934,7 @@ export const api = {
     }): Promise<Venue> => {
       const res = await fetch(`${API_BASE}/api/venues`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify(venue),
       });
       if (!res.ok) throw new Error('Failed to create venue');
@@ -1970,7 +1943,7 @@ export const api = {
     delete: async (id: string): Promise<void> => {
       const res = await fetch(`${API_BASE}/api/venues/${id}`, {
         method: 'DELETE',
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) throw new Error('Failed to delete venue');
     },
@@ -1978,7 +1951,7 @@ export const api = {
   users: {
     me: async (): Promise<UserProfile> => {
       const res = await fetch(`${API_BASE}/api/users/me`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) throw new Error('Failed to fetch profile');
       return res.json();
@@ -1996,7 +1969,7 @@ export const api = {
   messages: {
     getAll: async (): Promise<MessageResponse[]> => {
       const res = await fetch(`${API_BASE}/api/messages`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 401 || res.status === 403 || res.status === 404 || res.status >= 500) {
@@ -2010,7 +1983,7 @@ export const api = {
     send: async (receiverId: number, content: string): Promise<void> => {
       const res = await fetch(`${API_BASE}/api/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({ receiver_id: receiverId, content }),
       });
       if (!res.ok) {
@@ -2025,7 +1998,7 @@ export const api = {
   todos: {
     getAll: async (): Promise<TodoResponse[]> => {
       const res = await fetch(`${API_BASE}/api/todos`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 401 || res.status === 403 || res.status === 404 || res.status >= 500) {
@@ -2041,7 +2014,7 @@ export const api = {
     addAction: async (actionId: string, title: string): Promise<void> => {
       const res = await fetch(`${API_BASE}/api/add_to_todo/${actionId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({ title }),
       });
       if (!res.ok) {
@@ -2053,7 +2026,7 @@ export const api = {
   notifications: {
     getAll: async (): Promise<NotificationResponse[]> => {
       const res = await fetch(`${API_BASE}/api/notifications`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         if (res.status === 401 || res.status === 403 || res.status === 404 || res.status >= 500) {
@@ -2068,7 +2041,7 @@ export const api = {
   ledger: {
     getEntries: async (page = 1, limit = 50): Promise<LedgerResponse> => {
       const res = await fetch(`${API_BASE}/api/ledger?page=${page}&limit=${limit}`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
       });
       if (!res.ok) {
         console.warn('Ledger API not available, returning empty list for beta testing');
@@ -2086,3 +2059,4 @@ export const api = {
     },
   },
 };
+

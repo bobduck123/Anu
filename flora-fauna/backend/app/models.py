@@ -4888,6 +4888,276 @@ class WorldSigningKey(db.Model):
     created_at = db.Column(db.DateTime, default=utcnow)
 
 
+class JourneyConnector(db.Model):
+    __tablename__ = "journey_connector"
+    __table_args__ = (
+        db.UniqueConstraint("slug", name="uq_journey_connector_slug"),
+        db.Index("ix_journey_connector_node_slug", "node_slug"),
+        db.Index("ix_journey_connector_journey_slug", "journey_slug"),
+        db.Index("ix_journey_connector_active", "is_active"),
+        db.Index("ix_journey_connector_order", "display_order"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    journey_slug = db.Column(db.String(160), nullable=False)
+    node_id = db.Column(db.Integer, db.ForeignKey("node.id"), nullable=True)
+    slug = db.Column(db.String(180), nullable=False)
+    source_type = db.Column(db.String(80), nullable=False)
+    source_id = db.Column(db.String(180), nullable=False)
+    source_route = db.Column(db.String(220), nullable=False)
+    target_type = db.Column(db.String(80), nullable=False)
+    target_route = db.Column(db.String(220), nullable=False)
+    target_slug = db.Column(db.String(180), nullable=True)
+    target_id = db.Column(db.String(180), nullable=True)
+    threshold_required = db.Column(db.String(40), nullable=False)
+    node_slug = db.Column(db.String(120), nullable=False)
+    label = db.Column(db.String(220), nullable=False)
+    summary = db.Column(db.Text, nullable=False)
+    provenance_mode = db.Column(db.String(40), nullable=False)
+    archive_handoff_mode = db.Column(db.String(60), nullable=False)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    display_order = db.Column(db.Integer, nullable=False, default=0)
+    metadata_json = db.Column(db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "journey_slug": self.journey_slug,
+            "node_id": self.node_id,
+            "slug": self.slug,
+            "source_type": self.source_type,
+            "source_id": self.source_id,
+            "source_route": self.source_route,
+            "target_type": self.target_type,
+            "target_route": self.target_route,
+            "target_slug": self.target_slug,
+            "target_id": self.target_id,
+            "threshold_required": self.threshold_required,
+            "node_slug": self.node_slug,
+            "label": self.label,
+            "summary": self.summary,
+            "provenance_mode": self.provenance_mode,
+            "archive_handoff_mode": self.archive_handoff_mode,
+            "is_active": self.is_active,
+            "display_order": self.display_order,
+            "metadata": self.metadata_json or {},
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+class PublicArchiveRecord(db.Model):
+    __tablename__ = "public_archive_record"
+    __table_args__ = (
+        db.UniqueConstraint("slug", name="uq_public_archive_record_slug"),
+        db.Index("ix_public_archive_record_node_slug", "node_slug"),
+        db.Index("ix_public_archive_record_type", "record_type"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    slug = db.Column(db.String(180), nullable=False)
+    record_type = db.Column(db.String(80), nullable=False)
+    title = db.Column(db.String(220), nullable=False)
+    summary = db.Column(db.Text, nullable=False)
+    node_slug = db.Column(db.String(120), nullable=False)
+    visibility_class = db.Column(db.String(40), nullable=False, default="public")
+    verification_status = db.Column(db.String(40), nullable=False, default="verified-summary")
+    last_verified_at = db.Column(db.DateTime, nullable=True)
+    source_route = db.Column(db.String(220), nullable=False)
+    provenance_summary = db.Column(db.Text, nullable=False)
+    sponsor_context = db.Column(db.String(320), nullable=True)
+    redaction_note = db.Column(db.String(320), nullable=True)
+    metadata_json = db.Column(db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "slug": self.slug,
+            "record_type": self.record_type,
+            "title": self.title,
+            "summary": self.summary,
+            "node_slug": self.node_slug,
+            "visibility_class": self.visibility_class,
+            "verification_status": self.verification_status,
+            "last_verified_at": self.last_verified_at.isoformat() if self.last_verified_at else None,
+            "source_route": self.source_route,
+            "provenance_summary": self.provenance_summary,
+            "sponsor_context": self.sponsor_context,
+            "redaction_note": self.redaction_note,
+            "metadata": self.metadata_json or {},
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+class PublicTrustReport(db.Model):
+    __tablename__ = "public_trust_report"
+    __table_args__ = (
+        db.UniqueConstraint("slug", name="uq_public_trust_report_slug"),
+        db.Index("ix_public_trust_report_node_slug", "node_slug"),
+        db.Index("ix_public_trust_report_kind", "report_kind"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    slug = db.Column(db.String(180), nullable=False)
+    title = db.Column(db.String(220), nullable=False)
+    summary = db.Column(db.Text, nullable=False)
+    report_kind = db.Column(db.String(80), nullable=False)
+    node_slug = db.Column(db.String(120), nullable=False)
+    published_at = db.Column(db.DateTime, default=utcnow)
+    verification_status = db.Column(db.String(40), nullable=False, default="verified-summary")
+    provenance_summary = db.Column(db.Text, nullable=False)
+    archive_record_id = db.Column(db.Integer, db.ForeignKey("public_archive_record.id"), nullable=True)
+    sponsor_disclosure_ref = db.Column(db.String(220), nullable=True)
+    metadata_json = db.Column(db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    def to_dict(self):
+        metadata = self.metadata_json or {}
+        sections = metadata.get("sections")
+        if not isinstance(sections, list):
+            sections = []
+
+        body = metadata.get("body")
+        if not isinstance(body, str) or not body.strip():
+            body = self.summary
+
+        effective_at = metadata.get("effective_at")
+        if effective_at is None:
+            effective_at = self.published_at.isoformat() if self.published_at else None
+
+        return {
+            "id": self.id,
+            "slug": self.slug,
+            "title": self.title,
+            "summary": self.summary,
+            "report_kind": self.report_kind,
+            "report_type": self.report_kind,
+            "node_slug": self.node_slug,
+            "related_node_slug": self.node_slug,
+            "published_at": self.published_at.isoformat() if self.published_at else None,
+            "effective_at": effective_at,
+            "verification_status": self.verification_status,
+            "status": metadata.get("status") or self.verification_status,
+            "provenance_summary": self.provenance_summary,
+            "source_notes": metadata.get("source_notes") or self.provenance_summary,
+            "freshness_hint": metadata.get("freshness_hint"),
+            "public_visibility": bool(metadata.get("public_visibility", True)),
+            "jurisdiction": metadata.get("jurisdiction"),
+            "body": body,
+            "sections": sections,
+            "archive_record_id": self.archive_record_id,
+            "sponsor_disclosure_ref": self.sponsor_disclosure_ref,
+            "metadata": metadata,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+class PublicSponsorDisclosure(db.Model):
+    __tablename__ = "public_sponsor_disclosure"
+    __table_args__ = (
+        db.UniqueConstraint("slug", name="uq_public_sponsor_disclosure_slug"),
+        db.Index("ix_public_sponsor_disclosure_surface", "sponsored_surface"),
+        db.Index("ix_public_sponsor_disclosure_report_slug", "trust_report_slug"),
+        db.Index("ix_public_sponsor_disclosure_archive_slug", "archive_record_slug"),
+        db.Index("ix_public_sponsor_disclosure_active", "is_active"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    slug = db.Column(db.String(180), nullable=False)
+    sponsor_name = db.Column(db.String(180), nullable=False)
+    sponsor_type = db.Column(db.String(80), nullable=True)
+    sponsored_surface = db.Column(db.String(220), nullable=False)
+    placement_type = db.Column(db.String(80), nullable=False)
+    disclosure_label = db.Column(db.String(140), nullable=False, default="Sponsored support disclosure")
+    public_note = db.Column(db.String(320), nullable=False)
+    disclosure_text = db.Column(db.Text, nullable=False)
+    active_from = db.Column(db.DateTime, nullable=True)
+    active_until = db.Column(db.DateTime, nullable=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    trust_report_slug = db.Column(db.String(180), nullable=True)
+    archive_record_slug = db.Column(db.String(180), nullable=True)
+    metadata_json = db.Column(db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    def is_currently_active(self, reference_time: datetime | None = None) -> bool:
+        if not self.is_active:
+            return False
+
+        now = reference_time or utcnow()
+        if self.active_from and now < self.active_from:
+            return False
+        if self.active_until and now > self.active_until:
+            return False
+        return True
+
+    def to_dict(self, reference_time: datetime | None = None):
+        return {
+            "id": self.id,
+            "slug": self.slug,
+            "sponsor_name": self.sponsor_name,
+            "sponsor_type": self.sponsor_type,
+            "sponsored_surface": self.sponsored_surface,
+            "placement_type": self.placement_type,
+            "disclosure_label": self.disclosure_label,
+            "public_note": self.public_note,
+            "disclosure_text": self.disclosure_text,
+            "active_from": self.active_from.isoformat() if self.active_from else None,
+            "active_until": self.active_until.isoformat() if self.active_until else None,
+            "is_active": bool(self.is_active),
+            "is_currently_active": self.is_currently_active(reference_time=reference_time),
+            "trust_report_slug": self.trust_report_slug,
+            "archive_record_slug": self.archive_record_slug,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+class JourneyTransitionProof(db.Model):
+    __tablename__ = "journey_transition_proof"
+    __table_args__ = (
+        db.Index("ix_journey_transition_proof_connector", "connector_id"),
+        db.Index("ix_journey_transition_proof_node_slug", "node_slug"),
+        db.Index("ix_journey_transition_proof_occurred_at", "occurred_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    connector_id = db.Column(db.Integer, db.ForeignKey("journey_connector.id"), nullable=False)
+    actor_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    node_slug = db.Column(db.String(120), nullable=False)
+    source_route = db.Column(db.String(220), nullable=False)
+    target_route = db.Column(db.String(220), nullable=False)
+    transition_kind = db.Column(db.String(80), nullable=False)
+    provenance_snapshot = db.Column(db.JSON, nullable=False, default=dict)
+    occurred_at = db.Column(db.DateTime, default=utcnow)
+    result_state = db.Column(db.String(80), nullable=False, default="recorded")
+    archive_record_id = db.Column(db.Integer, db.ForeignKey("public_archive_record.id"), nullable=True)
+    metadata_json = db.Column(db.JSON, nullable=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "connector_id": self.connector_id,
+            "actor_id": self.actor_id,
+            "node_slug": self.node_slug,
+            "source_route": self.source_route,
+            "target_route": self.target_route,
+            "transition_kind": self.transition_kind,
+            "provenance_snapshot": self.provenance_snapshot or {},
+            "occurred_at": self.occurred_at.isoformat() if self.occurred_at else None,
+            "result_state": self.result_state,
+            "archive_record_id": self.archive_record_id,
+            "metadata": self.metadata_json or {},
+        }
+
+
 @event.listens_for(AuditLog, "before_update")
 def _audit_log_no_update(mapper, connection, target):
     raise ValueError("AuditLog is append-only; updates are not allowed.")

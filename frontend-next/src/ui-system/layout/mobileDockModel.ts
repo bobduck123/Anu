@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import { BookOpen, Compass, FlaskConical, House, Map, Shield, Sparkles, Target, User } from 'lucide-react';
+import { INTERNAL_ROUTE_CANON, resolveCanonicalRoute } from '@/ui-system/anu/routePurposeRegistry';
 import { getRealmSurface } from '@/ui-system/realms/realmRegistry';
 
 export interface MobileDockLink {
@@ -22,33 +23,35 @@ export function getMobileDockLinks(
   hasStewardAccess: boolean,
 ): MobileDockLink[] {
   const doorwayLink = buildDoorwayLink(isAuthenticated);
-  const realmSurface = getRealmSurface(pathname);
+  const canonicalPath = resolveCanonicalRoute(pathname);
+  const realmSurface = getRealmSurface(canonicalPath);
 
-  if (pathname?.startsWith('/sandbox') && hasStewardAccess) {
+  if ((canonicalPath?.startsWith('/sandbox') || canonicalPath?.startsWith(INTERNAL_ROUTE_CANON.lab)) && hasStewardAccess) {
     return [
       { href: '/home', label: 'Home', icon: House },
-      { href: '/sandbox/ui-lab', label: 'UI Lab', icon: FlaskConical },
+      { href: INTERNAL_ROUTE_CANON.lab, label: 'UI Lab', icon: FlaskConical },
       { href: '/sandbox/maps', label: 'Maps', icon: Map },
       doorwayLink,
     ];
   }
 
   if (
-    pathname?.startsWith('/governance/model-registry') ||
-    pathname?.startsWith('/transparency') ||
-    pathname?.startsWith('/memberships') ||
-    pathname?.startsWith('/docs') ||
-    pathname?.startsWith('/contact')
+    canonicalPath?.startsWith('/governance/model-registry')
+    || canonicalPath?.startsWith('/transparency')
+    || canonicalPath?.startsWith('/archive')
+    || canonicalPath?.startsWith('/memberships')
+    || canonicalPath?.startsWith('/docs')
+    || canonicalPath?.startsWith('/contact')
   ) {
     return [
       { href: '/home', label: 'Home', icon: House },
       { href: '/transparency', label: 'Trust', icon: Shield },
-      { href: '/docs', label: 'Docs', icon: BookOpen },
+      { href: '/archive', label: 'Archive', icon: BookOpen },
       doorwayLink,
     ];
   }
 
-  if (pathname?.startsWith('/education')) {
+  if (canonicalPath?.startsWith('/education')) {
     return [
       { href: '/education', label: 'Learn', icon: BookOpen },
       { href: '/universe', label: 'Universe', icon: Compass },
@@ -66,7 +69,7 @@ export function getMobileDockLinks(
     ];
   }
 
-  if (pathname?.startsWith('/manara') || pathname?.startsWith('/flora-fauna')) {
+  if (canonicalPath?.startsWith('/manara') || canonicalPath?.startsWith('/flora-fauna')) {
     return [
       { href: '/manara', label: 'Signals', icon: Sparkles },
       { href: '/community', label: 'Commons', icon: Compass },
@@ -75,7 +78,12 @@ export function getMobileDockLinks(
     ];
   }
 
-  if (realmSurface.realm === 'earth' || pathname?.startsWith('/cost-lowering') || pathname?.startsWith('/runs') || pathname?.startsWith('/pledges')) {
+  if (
+    realmSurface.realm === 'earth'
+    || canonicalPath?.startsWith('/cost-lowering')
+    || canonicalPath?.startsWith('/runs')
+    || canonicalPath?.startsWith('/pledges')
+  ) {
     return [
       { href: '/home', label: 'Home', icon: House },
       { href: '/actions', label: 'Actions', icon: Target },

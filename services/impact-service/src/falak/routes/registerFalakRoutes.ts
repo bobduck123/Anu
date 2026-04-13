@@ -25,6 +25,8 @@ import {
   graphQuerySchema,
   graphSchema,
   healthResponseSchema,
+  journeyConnectorProjectionSchema,
+  journeyPathParamsSchema,
   ledgerEntrySchema,
   listEventsQuerySchema,
   listLedgerQuerySchema,
@@ -70,6 +72,7 @@ import {
   presentEvent,
   presentEventWorkflow,
   presentGraph,
+  presentJourneyConnectorProjection,
   presentLedgerEntry,
   presentNode,
   presentNodesList,
@@ -620,6 +623,22 @@ export async function registerFalakRoutes(
       const context = requireFalakContext(request);
       const balance = await workflows.impactQueryService.getPoolBalance(context, request.params.poolId);
       return presentPoolBalance(balance);
+    });
+
+    publicApi.get('/falak/journeys/:journeySlug/connectors', {
+      schema: {
+        tags: ['Journeys'],
+        summary: 'Get flagship connector projection',
+        params: journeyPathParamsSchema,
+        response: {
+          200: journeyConnectorProjectionSchema,
+          404: errorResponseSchema,
+        }
+      }
+    }, async (request) => {
+      const context = requireFalakContext(request);
+      const projection = await workflows.impactQueryService.getJourneyConnectorProjection(context, request.params.journeySlug);
+      return presentJourneyConnectorProjection(projection);
     });
   }, { prefix: '/v1' });
 

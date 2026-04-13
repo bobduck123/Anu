@@ -75,6 +75,186 @@ class NodeServiceBindingVerifySchema(Schema):
     service_tenant_slug = fields.String(allow_none=True, validate=validate.Length(max=120))
 
 
+class JourneyConnectorSchema(Schema):
+    id = fields.Integer(required=True)
+    journey_slug = fields.String(required=True)
+    node_id = fields.Integer(allow_none=True)
+    slug = fields.String(required=True)
+    source_type = fields.String(required=True)
+    source_id = fields.String(required=True)
+    source_route = fields.String(required=True)
+    target_type = fields.String(required=True)
+    target_route = fields.String(required=True)
+    target_slug = fields.String(allow_none=True)
+    target_id = fields.String(allow_none=True)
+    threshold_required = fields.String(required=True)
+    node_slug = fields.String(required=True)
+    label = fields.String(required=True)
+    summary = fields.String(required=True)
+    provenance_mode = fields.String(required=True)
+    archive_handoff_mode = fields.String(required=True)
+    is_active = fields.Boolean(required=True)
+    display_order = fields.Integer(required=True)
+    metadata = fields.Dict(load_default=dict)
+    created_at = fields.String(allow_none=True)
+    updated_at = fields.String(allow_none=True)
+
+
+class JourneyTransitionProofSchema(Schema):
+    id = fields.Integer(required=True)
+    connector_id = fields.Integer(required=True)
+    actor_id = fields.Integer(allow_none=True)
+    node_slug = fields.String(required=True)
+    source_route = fields.String(required=True)
+    target_route = fields.String(required=True)
+    transition_kind = fields.String(required=True)
+    provenance_snapshot = fields.Dict(required=True)
+    occurred_at = fields.String(allow_none=True)
+    result_state = fields.String(required=True)
+    archive_record_id = fields.Integer(allow_none=True)
+    metadata = fields.Dict(load_default=dict)
+
+
+class ConnectorSourceSchema(Schema):
+    type = fields.String(required=True)
+    route = fields.String(required=True)
+    label = fields.String(required=True)
+
+
+class ConnectorThresholdContextSchema(Schema):
+    active_thresholds = fields.List(fields.String(), required=True)
+    default_threshold = fields.String(required=True)
+
+
+class ConnectorProvenanceSummarySchema(Schema):
+    source_label = fields.String(required=True)
+    verification_posture = fields.String(required=True)
+    freshness = fields.String(required=True)
+    proof_count = fields.Integer(required=True)
+
+
+class ConnectorArchiveHandoffSchema(Schema):
+    slug = fields.String(required=True)
+    route = fields.String(required=True)
+    record_route = fields.String(required=True)
+    title = fields.String(required=True)
+    report_slug = fields.String(required=True)
+    report_route = fields.String(required=True)
+
+
+class ConnectorDegradedHonestySchema(Schema):
+    is_degraded = fields.Boolean(required=True)
+    reason = fields.String(allow_none=True)
+    fallback = fields.String(allow_none=True)
+
+
+class ConnectorNodeScopeSchema(Schema):
+    slug = fields.String(required=True)
+    name = fields.String(required=True)
+
+
+class PublicConnectorPayloadSchema(Schema):
+    journey_slug = fields.String(required=True)
+    source = fields.Nested(ConnectorSourceSchema, required=True)
+    connectors = fields.List(fields.Nested(JourneyConnectorSchema), required=True)
+    active_connectors = fields.List(fields.Nested(JourneyConnectorSchema), required=True)
+    threshold_context = fields.Nested(ConnectorThresholdContextSchema, required=True)
+    provenance_summary = fields.Nested(ConnectorProvenanceSummarySchema, required=True)
+    archive_handoff = fields.Nested(ConnectorArchiveHandoffSchema, required=True)
+    degraded_honesty = fields.Nested(ConnectorDegradedHonestySchema, required=True)
+    node_scope = fields.Nested(ConnectorNodeScopeSchema, required=True)
+
+
+class PublicJourneySummarySchema(Schema):
+    slug = fields.String(required=True)
+    label = fields.String(required=True)
+    transition_proofs = fields.List(fields.Nested(JourneyTransitionProofSchema), required=True)
+
+
+class PublicJourneyPayloadSchema(PublicConnectorPayloadSchema):
+    journey = fields.Nested(PublicJourneySummarySchema, required=True)
+
+
+class PublicArchiveHandoffPayloadSchema(Schema):
+    archive_record = fields.Dict(required=True)
+    trust_report = fields.Dict(allow_none=True)
+    deep_links = fields.Dict(required=True)
+
+
+class PublicTrustReportPayloadSchema(Schema):
+    report = fields.Dict(required=True)
+    archive_record = fields.Dict(allow_none=True)
+    degraded_honesty = fields.Nested(ConnectorDegradedHonestySchema, required=True)
+
+
+class PublicTrustReportSummarySchema(Schema):
+    id = fields.Integer(required=True)
+    slug = fields.String(required=True)
+    title = fields.String(required=True)
+    summary = fields.String(required=True)
+    report_type = fields.String(required=True)
+    status = fields.String(required=True)
+    node_slug = fields.String(required=True)
+    jurisdiction = fields.String(allow_none=True)
+    published_at = fields.String(allow_none=True)
+    effective_at = fields.String(allow_none=True)
+    source_notes = fields.String(required=True)
+    freshness_hint = fields.String(allow_none=True)
+    public_visibility = fields.Boolean(required=True)
+    record_route = fields.String(allow_none=True)
+
+
+class PublicTrustReportDetailSchema(PublicTrustReportSummarySchema):
+    body = fields.String(required=True)
+    sections = fields.List(fields.Dict(), required=True)
+    provenance_summary = fields.String(required=True)
+    archive_record_id = fields.Integer(allow_none=True)
+    sponsor_disclosure_ref = fields.String(allow_none=True)
+
+
+class PublicTrustReportListPayloadSchema(Schema):
+    reports = fields.List(fields.Nested(PublicTrustReportSummarySchema), required=True)
+    degraded_honesty = fields.Nested(ConnectorDegradedHonestySchema, required=True)
+
+
+class PublicTrustReportDetailPayloadSchema(Schema):
+    report = fields.Nested(PublicTrustReportDetailSchema, required=True)
+    archive_record = fields.Dict(allow_none=True)
+    degraded_honesty = fields.Nested(ConnectorDegradedHonestySchema, required=True)
+
+
+class PublicSponsorDisclosureSchema(Schema):
+    id = fields.Integer(required=True)
+    slug = fields.String(required=True)
+    sponsor_name = fields.String(required=True)
+    sponsor_type = fields.String(allow_none=True)
+    sponsored_surface = fields.String(required=True)
+    placement_type = fields.String(required=True)
+    disclosure_label = fields.String(required=True)
+    public_note = fields.String(required=True)
+    disclosure_text = fields.String(required=True)
+    active_from = fields.String(allow_none=True)
+    active_until = fields.String(allow_none=True)
+    is_active = fields.Boolean(required=True)
+    is_currently_active = fields.Boolean(required=True)
+    trust_report_slug = fields.String(allow_none=True)
+    archive_record_slug = fields.String(allow_none=True)
+    related_routes = fields.Dict(required=True)
+    created_at = fields.String(allow_none=True)
+    updated_at = fields.String(allow_none=True)
+
+
+class PublicSponsorDisclosureListPayloadSchema(Schema):
+    disclosures = fields.List(fields.Nested(PublicSponsorDisclosureSchema), required=True)
+    disclosure_state = fields.String(required=True)
+    degraded_honesty = fields.Nested(ConnectorDegradedHonestySchema, required=True)
+
+
+class PublicSponsorDisclosureDetailPayloadSchema(Schema):
+    disclosure = fields.Nested(PublicSponsorDisclosureSchema, allow_none=True)
+    degraded_honesty = fields.Nested(ConnectorDegradedHonestySchema, required=True)
+
+
 class LenientTimeField(fields.Time):
     """Time field that also accepts HH:MM (without seconds)."""
 

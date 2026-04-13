@@ -1018,6 +1018,85 @@ describe('Falak ANU feature slice', () => {
   });
 });
 
+describe('Falak journey connector projection', () => {
+  test('returns an archive-reachable connector chain with no dead-end touched routes', async () => {
+    const { impactQueryService, publicContext } = buildFixture();
+
+    const projection = await impactQueryService.getJourneyConnectorProjection(
+      publicContext,
+      'knowledge-action-community-governance-archive',
+    );
+
+    expect(projection.connectors.length).toBeGreaterThanOrEqual(8);
+    expect(projection.archiveHandoff.route).toBe('/archive');
+
+    const outgoing = new Map<string, Set<string>>();
+    const touched = new Set<string>();
+    for (const connector of projection.connectors) {
+      touched.add(connector.sourceRoute);
+      touched.add(connector.targetRoute);
+      if (!outgoing.has(connector.sourceRoute)) {
+        outgoing.set(connector.sourceRoute, new Set<string>());
+      }
+      outgoing.get(connector.sourceRoute)!.add(connector.targetRoute);
+    }
+
+    const deadEnds = [...touched].filter((route) => route !== '/archive' && !outgoing.has(route));
+    expect(deadEnds).toEqual([]);
+
+    const queue = [projection.sourceRoute];
+    const visited = new Set<string>();
+    let reachedArchive = false;
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (visited.has(current)) {
+        continue;
+      }
+      visited.add(current);
+      if (current === '/archive') {
+        reachedArchive = true;
+        break;
+      }
+      const nextRoutes = outgoing.get(current);
+      if (!nextRoutes) {
+        continue;
+      }
+      for (const nextRoute of nextRoutes) {
+        if (!visited.has(nextRoute)) {
+          queue.push(nextRoute);
+        }
+      }
+    }
+
+    expect(reachedArchive).toBe(true);
+    expect(projection.projectionMode).toBe('source-backed');
+    expect(projection.degradedHonesty.isDegraded).toBe(false);
+  });
+
+  test('exposes connector projection over public Falak HTTP route', async () => {
+    await withGuardedHttpFixture({}, async ({ app, adminContext }) => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/v1/falak/journeys/knowledge-action-community-governance-archive/connectors',
+        headers: {
+          'x-tenant-id': adminContext.tenantId,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toMatchObject({
+        journey_slug: 'knowledge-action-community-governance-archive',
+        archive_handoff: {
+          route: '/archive',
+        },
+        degraded_honesty: {
+          is_degraded: false,
+        },
+      });
+    });
+  });
+});
+
 describe('Falak HTTP access planes', () => {
   test('keeps authenticated callers on the public plane for public routes', async () => {
     await withGuardedHttpFixture({}, async ({ app, adminContext, nodeIds }) => {

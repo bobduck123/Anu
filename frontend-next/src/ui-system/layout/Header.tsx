@@ -18,6 +18,7 @@ import { ThemeToggle } from '../ThemeToggle';
 import { getShellSignal } from './shellSignals';
 import { getTenantSemantics, getThresholdState } from '@/lib/tenantSemantics';
 import { buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
+import { INTERNAL_ROUTE_CANON } from '@/ui-system/anu/routePurposeRegistry';
 import { getRealmSurface } from '@/ui-system/realms/realmRegistry';
 
 export interface HeaderProps {
@@ -47,7 +48,7 @@ export function Header({
     [isAuthenticated, tenant, user?.role],
   );
   const isSteward = thresholdState.current.key === 'steward';
-  const isSandboxRoute = pathname?.startsWith('/sandbox');
+  const isSandboxRoute = pathname?.startsWith('/sandbox') || pathname?.startsWith(INTERNAL_ROUTE_CANON.lab);
   const isImmersiveRoute = realmSurface.immersiveCanvas;
 
   const profileLinks = [
@@ -62,7 +63,7 @@ export function Header({
           { href: '/organizer/intelligence', label: 'Cockpit' },
           { href: '/dumb-dumb/manage', label: 'Dumb Dumb Studio' },
           { href: '/memberships', label: 'Memberships' },
-          { href: '/sandbox/ui-lab', label: 'UI Lab' },
+          { href: INTERNAL_ROUTE_CANON.lab, label: 'UI Lab' },
         ]
       : []),
   ];

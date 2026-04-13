@@ -1,4 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const getParticipantAuthHeadersMock = vi.fn();
+
+vi.mock('@/lib/api/client', () => ({
+  getParticipantAuthHeaders: (...args: unknown[]) => getParticipantAuthHeadersMock(...args),
+}));
+
 import { api } from '@/lib/api';
 
 const mockFetch = vi.fn();
@@ -6,6 +13,8 @@ const mockFetch = vi.fn();
 describe('api client', () => {
   beforeEach(() => {
     mockFetch.mockReset();
+    getParticipantAuthHeadersMock.mockReset();
+    getParticipantAuthHeadersMock.mockResolvedValue({});
     Object.defineProperty(globalThis, 'fetch', {
       configurable: true,
       value: mockFetch,
@@ -187,7 +196,7 @@ describe('api client', () => {
   });
 
   it('uses auth headers when completing actions', async () => {
-    localStorage.setItem('auth_token', 'header.payload.signature');
+    getParticipantAuthHeadersMock.mockResolvedValueOnce({ Authorization: 'Bearer supabase-token' });
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ success: true, newCompletions: 4 }),
@@ -201,10 +210,11 @@ describe('api client', () => {
       expect.objectContaining({
         method: 'POST',
         headers: expect.objectContaining({
-          Authorization: 'Bearer header.payload.signature',
+          Authorization: 'Bearer supabase-token',
         }),
       })
     );
+    expect(getParticipantAuthHeadersMock).toHaveBeenCalledWith({ allowLegacyTokenFallback: false });
   });
 
   it('falls back to mock comment when API fails', async () => {

@@ -1,5 +1,6 @@
-import { getRealmSurface } from '@/ui-system/realms/realmRegistry';
 import { buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
+import { INTERNAL_ROUTE_CANON, getRoutePurpose, resolveCanonicalRoute } from '@/ui-system/anu/routePurposeRegistry';
+import { getRealmSurface } from '@/ui-system/realms/realmRegistry';
 
 export type NavigationMode = 'explore' | 'tasks' | 'all';
 
@@ -15,25 +16,54 @@ export interface PathwayGuide {
   steps: PathwayStep[];
 }
 
+function buildFallbackGuideFromPurpose(pathname: string): PathwayGuide | null {
+  const routePurpose = getRoutePurpose(pathname);
+  if (!routePurpose) {
+    return null;
+  }
+
+  const fallbackSteps = routePurpose.adjacentRoutes
+    .filter((href) => href.startsWith('/'))
+    .slice(0, 3)
+    .map((href) => ({ href, label: `Open ${href.replace('/', '') || 'route'}` }));
+
+  if (!fallbackSteps.length) {
+    return null;
+  }
+
+  return {
+    title: `${routePurpose.thresholdLabel} pathway`,
+    summary: `${routePurpose.purpose} ${routePurpose.degradedMode}`,
+    steps: fallbackSteps,
+  };
+}
+
 export function deriveNavigationMode(pathname: string | null): NavigationMode {
-  if (!pathname) {
+  const canonicalPath = resolveCanonicalRoute(pathname);
+
+  if (!canonicalPath) {
     return 'explore';
   }
 
-  const realmSurface = getRealmSurface(pathname);
+  const routePurpose = getRoutePurpose(canonicalPath);
+  if (routePurpose?.plane === 'control') {
+    return 'tasks';
+  }
+
+  const realmSurface = getRealmSurface(canonicalPath);
 
   if (realmSurface.realm === 'earth' || realmSurface.realm === 'labyrinth') {
     return 'tasks';
   }
 
   if (
-    pathname.startsWith('/cost-lowering')
-    || pathname.startsWith('/runs')
-    || pathname.startsWith('/pledges')
-    || pathname.startsWith('/dashboard/savings')
-    || pathname.startsWith('/organizer')
-    || pathname.startsWith('/admin')
-    || pathname.startsWith('/governance')
+    canonicalPath.startsWith('/cost-lowering')
+    || canonicalPath.startsWith('/runs')
+    || canonicalPath.startsWith('/pledges')
+    || canonicalPath.startsWith('/dashboard/savings')
+    || canonicalPath.startsWith('/organizer')
+    || canonicalPath.startsWith('/admin')
+    || canonicalPath.startsWith('/governance')
   ) {
     return 'tasks';
   }
@@ -42,7 +72,9 @@ export function deriveNavigationMode(pathname: string | null): NavigationMode {
 }
 
 export function buildPathwayGuide(pathname: string | null): PathwayGuide {
-  if (!pathname) {
+  const canonicalPath = resolveCanonicalRoute(pathname);
+
+  if (!canonicalPath) {
     return {
       title: 'Explore first',
       summary: 'Open a pathway, then move naturally into tasks.',
@@ -54,7 +86,7 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
     };
   }
 
-  if (pathname.startsWith('/education')) {
+  if (canonicalPath.startsWith('/education')) {
     return {
       title: 'Learning to action',
       summary: 'Explore context, then progress into practical steps.',
@@ -66,7 +98,7 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
     };
   }
 
-  if (pathname.startsWith('/community')) {
+  if (canonicalPath.startsWith('/community')) {
     return {
       title: 'Community flow',
       summary: 'Enter through the celestial chart, browse the starfield, then fall back to the gallery only when deeper inspection is needed.',
@@ -78,7 +110,7 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
     };
   }
 
-  if (pathname.startsWith('/constellations')) {
+  if (canonicalPath.startsWith('/constellations')) {
     return {
       title: 'Celestial traversal',
       summary: 'Browse clustered structures first, then descend into the signal or record that needs attention.',
@@ -90,19 +122,19 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
     };
   }
 
-  if (pathname.startsWith('/sandbox')) {
+  if (canonicalPath.startsWith('/sandbox') || canonicalPath.startsWith(INTERNAL_ROUTE_CANON.lab)) {
     return {
       title: 'Sandbox review',
       summary: 'Inspect adapted patterns first, then validate route behavior and map surfaces.',
       steps: [
-        { href: '/sandbox/ui-lab', label: 'Review UI lab', authRequired: true },
+        { href: INTERNAL_ROUTE_CANON.lab, label: 'Review UI lab', authRequired: true },
         { href: '/sandbox/maps', label: 'Check maps sandbox', authRequired: true },
         { href: '/home', label: 'Return to steward home', authRequired: true },
       ],
     };
   }
 
-  if (pathname.startsWith('/cost-lowering') || pathname.startsWith('/runs') || pathname.startsWith('/pledges')) {
+  if (canonicalPath.startsWith('/cost-lowering') || canonicalPath.startsWith('/runs') || canonicalPath.startsWith('/pledges')) {
     return {
       title: 'Cost-lowering flow',
       summary: 'Explore runs first, then commit and track outcomes.',
@@ -114,7 +146,7 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
     };
   }
 
-  if (pathname.startsWith('/governance/model-registry')) {
+  if (canonicalPath.startsWith('/governance/model-registry')) {
     return {
       title: 'Archive descent',
       summary: 'Enter the archive, inspect state-bearing models, then descend into manuscript chambers for detail.',
@@ -126,7 +158,7 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
     };
   }
 
-  if (pathname.startsWith('/relief')) {
+  if (canonicalPath.startsWith('/relief')) {
     return {
       title: 'Grounded care flow',
       summary: 'Open private intake first, then follow trust and impact routes around the care lane.',
@@ -138,7 +170,7 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
     };
   }
 
-  if (pathname.startsWith('/impact')) {
+  if (canonicalPath.startsWith('/impact')) {
     return {
       title: 'Earth to sky bridge',
       summary: 'Read grounded contribution and participation first, then follow the outcomes that rise into the wider commons.',
@@ -150,7 +182,7 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
     };
   }
 
-  if (pathname.startsWith('/events') || pathname.startsWith('/actions')) {
+  if (canonicalPath.startsWith('/events') || canonicalPath.startsWith('/actions')) {
     return {
       title: 'Field operations',
       summary: 'Explore campaigns and events, then shift to execution.',
@@ -162,19 +194,24 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
     };
   }
 
-  if (pathname.startsWith('/admin') || pathname.startsWith('/governance') || pathname.startsWith('/profile')) {
+  if (canonicalPath.startsWith('/admin') || canonicalPath.startsWith('/governance') || canonicalPath.startsWith('/profile')) {
     return {
       title: 'Steward systems',
       summary: 'Review institutional surfaces, then branch into operational or private work.',
       steps: [
         { href: '/profile', label: 'Open profile' },
         { href: buildOrganizerOnRampHref('/organizer'), label: 'Open organizer path', authRequired: true },
-        { href: '/sandbox/ui-lab', label: 'Review UI lab', authRequired: true },
+        { href: INTERNAL_ROUTE_CANON.lab, label: 'Review UI lab', authRequired: true },
       ],
     };
   }
 
-  const realmSurface = getRealmSurface(pathname);
+  const routeFallback = buildFallbackGuideFromPurpose(canonicalPath);
+  if (routeFallback) {
+    return routeFallback;
+  }
+
+  const realmSurface = getRealmSurface(canonicalPath);
 
   if (realmSurface.realm === 'earth') {
     return {

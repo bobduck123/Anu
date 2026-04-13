@@ -5,16 +5,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 import { buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
 import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const API_BASE = getCoreApiBase();
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 type GuildMember = {
   user_id: number | string;
@@ -74,7 +72,7 @@ export default function GuildDetailPage() {
       setNotice(null);
 
       try {
-        const response = await fetch(`${API_BASE}/api/guilds/${guildId}`, { headers: getAuthHeaders() });
+        const response = await fetch(`${API_BASE}/api/guilds/${guildId}`, { headers: await getAuthHeaders() });
         if (!response.ok) {
           throw new Error('request_failed');
         }
@@ -106,7 +104,7 @@ export default function GuildDetailPage() {
     try {
       const response = await fetch(`${API_BASE}/api/guilds/${guildId}/join`, {
         method: 'POST',
-        headers: { ...getAuthHeaders() },
+        headers: { ...(await getAuthHeaders()) },
       });
 
       if (!response.ok) {
@@ -129,7 +127,7 @@ export default function GuildDetailPage() {
     try {
       const response = await fetch(`${API_BASE}/api/guilds/${guildId}/rotations`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({
           role_name: rotation.role_name,
           current_user_id: rotation.current_user_id ? Number(rotation.current_user_id) : null,
@@ -241,3 +239,7 @@ export default function GuildDetailPage() {
     </div>
   );
 }
+
+
+
+

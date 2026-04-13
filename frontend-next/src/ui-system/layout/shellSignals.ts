@@ -1,5 +1,6 @@
 import { Compass, FlaskConical, GraduationCap, LayoutGrid, ShieldCheck, Sparkles, Target, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { INTERNAL_ROUTE_CANON, resolveCanonicalRoute } from '@/ui-system/anu/routePurposeRegistry';
 import { getRealmSurface } from '@/ui-system/realms/realmRegistry';
 
 export interface ShellSignal {
@@ -10,9 +11,10 @@ export interface ShellSignal {
 }
 
 export function getShellSignal(pathname: string | null): ShellSignal {
-  const realmSurface = getRealmSurface(pathname);
+  const canonicalPath = resolveCanonicalRoute(pathname);
+  const realmSurface = getRealmSurface(canonicalPath);
 
-  if (!pathname) {
+  if (!canonicalPath) {
     return {
       eyebrow: 'Commons route',
       label: 'Cultural commons',
@@ -21,7 +23,7 @@ export function getShellSignal(pathname: string | null): ShellSignal {
     };
   }
 
-  if (pathname.startsWith('/community')) {
+  if (canonicalPath.startsWith('/community')) {
     return {
       eyebrow: 'Commons route',
       label: 'Community mesh',
@@ -30,7 +32,7 @@ export function getShellSignal(pathname: string | null): ShellSignal {
     };
   }
 
-  if (pathname.startsWith('/constellations')) {
+  if (canonicalPath.startsWith('/constellations')) {
     return {
       eyebrow: 'Sky route',
       label: 'Constellation field',
@@ -39,7 +41,7 @@ export function getShellSignal(pathname: string | null): ShellSignal {
     };
   }
 
-  if (pathname.startsWith('/education')) {
+  if (canonicalPath.startsWith('/education')) {
     return {
       eyebrow: 'Learning route',
       label: 'Learning pathways',
@@ -48,7 +50,7 @@ export function getShellSignal(pathname: string | null): ShellSignal {
     };
   }
 
-  if (pathname.startsWith('/governance/model-registry')) {
+  if (canonicalPath.startsWith('/governance/model-registry')) {
     return {
       eyebrow: 'Registry route',
       label: 'Model archive',
@@ -57,7 +59,7 @@ export function getShellSignal(pathname: string | null): ShellSignal {
     };
   }
 
-  if (pathname.startsWith('/sandbox')) {
+  if (canonicalPath.startsWith('/sandbox') || canonicalPath.startsWith(INTERNAL_ROUTE_CANON.lab)) {
     return {
       eyebrow: 'Internal route',
       label: 'Sandbox and lab',
@@ -66,7 +68,7 @@ export function getShellSignal(pathname: string | null): ShellSignal {
     };
   }
 
-  if (pathname.startsWith('/universe')) {
+  if (canonicalPath.startsWith('/universe')) {
     return {
       eyebrow: 'Universe route',
       label: 'Shared universe',
@@ -75,7 +77,7 @@ export function getShellSignal(pathname: string | null): ShellSignal {
     };
   }
 
-  if (pathname.startsWith('/transparency') || pathname.startsWith('/docs') || pathname.startsWith('/contact')) {
+  if (canonicalPath.startsWith('/transparency') || canonicalPath.startsWith('/docs') || canonicalPath.startsWith('/contact')) {
     return {
       eyebrow: 'Trust route',
       label: 'Trust surfaces',
@@ -84,9 +86,7 @@ export function getShellSignal(pathname: string | null): ShellSignal {
     };
   }
 
-  if (
-    pathname.startsWith('/auth')
-  ) {
+  if (canonicalPath.startsWith('/auth')) {
     return {
       eyebrow: 'Threshold route',
       label: 'Entry doorway',
@@ -95,7 +95,7 @@ export function getShellSignal(pathname: string | null): ShellSignal {
     };
   }
 
-  if (pathname.startsWith('/impact')) {
+  if (canonicalPath.startsWith('/impact')) {
     return {
       eyebrow: 'Bridge route',
       label: 'Impact bridge',
@@ -104,7 +104,7 @@ export function getShellSignal(pathname: string | null): ShellSignal {
     };
   }
 
-  if (pathname.startsWith('/relief')) {
+  if (canonicalPath.startsWith('/relief')) {
     return {
       eyebrow: 'Care route',
       label: 'Grounded care',
@@ -114,12 +114,12 @@ export function getShellSignal(pathname: string | null): ShellSignal {
   }
 
   if (
-    pathname.startsWith('/actions') ||
-    pathname.startsWith('/events') ||
-    pathname.startsWith('/cost-lowering') ||
-    pathname.startsWith('/runs') ||
-    pathname.startsWith('/pledges') ||
-    pathname.startsWith('/organizer')
+    canonicalPath.startsWith('/actions')
+    || canonicalPath.startsWith('/events')
+    || canonicalPath.startsWith('/cost-lowering')
+    || canonicalPath.startsWith('/runs')
+    || canonicalPath.startsWith('/pledges')
+    || canonicalPath.startsWith('/organizer')
   ) {
     return {
       eyebrow: 'Field route',
@@ -129,7 +129,7 @@ export function getShellSignal(pathname: string | null): ShellSignal {
     };
   }
 
-  if (pathname.startsWith('/memberships')) {
+  if (canonicalPath.startsWith('/memberships')) {
     return {
       eyebrow: 'Contribution route',
       label: 'Contribution covenant',
@@ -138,7 +138,7 @@ export function getShellSignal(pathname: string | null): ShellSignal {
     };
   }
 
-  if (pathname.startsWith('/profile')) {
+  if (canonicalPath.startsWith('/profile')) {
     return {
       eyebrow: 'Member route',
       label: 'Profile cockpit',
@@ -147,10 +147,7 @@ export function getShellSignal(pathname: string | null): ShellSignal {
     };
   }
 
-  if (
-    pathname.startsWith('/admin') ||
-    pathname.startsWith('/governance')
-  ) {
+  if (canonicalPath.startsWith('/admin') || canonicalPath.startsWith('/governance')) {
     return {
       eyebrow: 'Steward route',
       label: 'Steward systems',
@@ -159,7 +156,7 @@ export function getShellSignal(pathname: string | null): ShellSignal {
     };
   }
 
-  if (pathname.startsWith('/manara')) {
+  if (canonicalPath.startsWith('/manara')) {
     return {
       eyebrow: 'Signal route',
       label: 'Signal field',

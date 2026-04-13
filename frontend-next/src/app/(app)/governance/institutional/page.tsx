@@ -4,17 +4,15 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const API_BASE = getCoreApiBase();
 const INSTITUTIONAL_HARDCOPY_CACHE_KEY = 'governance-institutional-config-hardcopy-v1';
 const AUTO_RESYNC_MS = 120_000;
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 type Config = {
   enabled: boolean;
@@ -153,7 +151,7 @@ export default function InstitutionalModePage() {
       }
 
       try {
-        const response = await fetch(`${API_BASE}/api/institutional/config`, { headers: getAuthHeaders() });
+        const response = await fetch(`${API_BASE}/api/institutional/config`, { headers: await getAuthHeaders() });
 
         if (!response.ok) {
           throw new Error('institutional-config-unavailable');
@@ -237,7 +235,7 @@ export default function InstitutionalModePage() {
     try {
       const response = await fetch(`${API_BASE}/api/institutional/config`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify(config),
       });
 
@@ -297,7 +295,7 @@ export default function InstitutionalModePage() {
     try {
       const response = await fetch(`${API_BASE}/api/institutional/observers`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify(observer),
       });
 
@@ -505,3 +503,7 @@ export default function InstitutionalModePage() {
     </div>
   );
 }
+
+
+
+

@@ -4,17 +4,15 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const API_BASE = getCoreApiBase();
 const FEDERATION_HARDCOPY_CACHE_KEY = 'governance-federation-snapshot-hardcopy-v1';
 const AUTO_RESYNC_MS = 120_000;
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 type FederationSnapshot = {
   total_nodes: number;
@@ -175,7 +173,7 @@ export default function FederationDashboardPage() {
       try {
         const response = await fetch(`${API_BASE}/api/federation/metrics`, {
           method: 'POST',
-          headers: { ...getAuthHeaders() },
+          headers: { ...(await getAuthHeaders()) },
         });
 
         if (!response.ok) {
@@ -269,7 +267,7 @@ export default function FederationDashboardPage() {
     try {
       const response = await fetch(`${API_BASE}/api/federation/mutual-aid`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify(mutualAid),
       });
 
@@ -504,3 +502,7 @@ export default function FederationDashboardPage() {
     </div>
   );
 }
+
+
+
+

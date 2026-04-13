@@ -379,7 +379,13 @@ def _register_blueprints(app):
     app.register_blueprint(api_bp)
     
     from .api.public import public_bp
+    from .api.public_connectors import public_connectors_bp
+    from .api.public_transparency import public_transparency_bp
+    from .api.public_trust import public_trust_bp
     app.register_blueprint(public_bp)
+    app.register_blueprint(public_connectors_bp)
+    app.register_blueprint(public_transparency_bp)
+    app.register_blueprint(public_trust_bp)
     
     from .federation_portal import community_bp
     app.register_blueprint(community_bp)

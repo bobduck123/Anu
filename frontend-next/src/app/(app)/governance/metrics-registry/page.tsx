@@ -4,17 +4,15 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const API_BASE = getCoreApiBase();
 const METRIC_HARDCOPY_CACHE_KEY = 'governance-metric-ruleset-hardcopy-v1';
 const AUTO_RESYNC_MS = 90_000;
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 type MetricDefinition = {
   key: string;
@@ -130,7 +128,7 @@ export default function MetricsRegistryPage() {
       }
 
       try {
-        const response = await fetch(`${API_BASE}/api/metrics-registry/`, { headers: getAuthHeaders() });
+        const response = await fetch(`${API_BASE}/api/metrics-registry/`, { headers: await getAuthHeaders() });
 
         if (!response.ok) {
           throw new Error('metrics-registry-unavailable');
@@ -297,3 +295,7 @@ export default function MetricsRegistryPage() {
     </div>
   );
 }
+
+
+
+

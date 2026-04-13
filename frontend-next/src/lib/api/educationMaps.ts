@@ -1,6 +1,6 @@
 import { getImpactApiBase } from '@/lib/runtime';
 import { getFalakRequestTenantId, isFalakMapSandbox } from '@/lib/maps/sandbox';
-import { createClient as createSupabaseClient } from '@/lib/supabase/client';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 import { isSupabaseConfigurationError } from '@/lib/supabase/config';
 import { universePresentationTerms } from '@/components/maps/universe/presentationTerms';
 
@@ -282,30 +282,7 @@ export interface EducationMapEdgePatch {
 }
 
 async function authHeaders(): Promise<Record<string, string>> {
-  if (typeof window === 'undefined') {
-    return {};
-  }
-
-  try {
-    const supabase = createSupabaseClient();
-    const { data, error } = await supabase.auth.getSession();
-    if (error) {
-      throw error;
-    }
-
-    const accessToken = data.session?.access_token?.trim();
-    if (accessToken) {
-      return { Authorization: `Bearer ${accessToken}` };
-    }
-  } catch (error) {
-    if (isSupabaseConfigurationError(error)) {
-      throw error;
-    }
-    console.warn('Unable to read Supabase session for education maps auth, falling back to legacy auth token.', error);
-  }
-
-  const legacyToken = localStorage.getItem('auth_token')?.trim();
-  return legacyToken ? { Authorization: `Bearer ${legacyToken}` } : {};
+  return getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 }
 
 const FALLBACK_ERROR_CODES = new Set([

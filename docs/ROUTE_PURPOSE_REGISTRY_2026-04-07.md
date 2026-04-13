@@ -39,3 +39,23 @@ No flagship route is valid without this contract.
 4. Control routes are not public realm routes and must remain control-host only.
 5. This document and the code registry must remain synchronized.
 6. If a route’s purpose changes materially, update this registry before implementing broad UI changes.
+
+## Code Canon (M2 execution update — 2026-04-13)
+Authoritative implementation file:
+- `frontend-next/src/ui-system/anu/routePurposeRegistry.ts`
+
+Verification tests:
+- `frontend-next/src/test/routePurposeRegistry.test.ts`
+- `frontend-next/src/test/routeMetadataParity.test.ts`
+- `frontend-next/src/test/routeCanonDocsSync.test.ts`
+
+Synchronization rule:
+- Any route addition/removal in this document must be mirrored in `ROUTE_PURPOSE_REGISTRY` and parity tests in the same change.
+
+## Internal Lab Canon (resolved 2026-04-13)
+- Canonical internal lab route: `/lab`
+- Legacy alias route: `/sandbox/ui-lab` (`legacy-redirect` compatibility path)
+
+Scope note:
+- `/lab` is **not** part of the flagship public/participant/control route-purpose table above.
+- `/lab` remains an internal steward lab surface with explicit alias modeling in code.

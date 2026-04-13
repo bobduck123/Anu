@@ -1,5 +1,6 @@
 import { ArrowUpRight, Beaker, FlaskConical, Map, ShieldCheck } from 'lucide-react';
 import { ANU_PATTERN_EXPERIMENTS } from '@/ui-system/anu/patternBank';
+import { INTERNAL_ROUTE_CANON } from '@/ui-system/anu/routePurposeRegistry';
 import { SandboxAccessBoundary } from '@/ui-system/anu/SandboxAccessBoundary';
 import { AnuActionLink, AnuHeroMetric, AnuHeroMetricsRail, AnuPageHero, AnuSurfacePanel } from '@/ui-system/anu/surfacePrimitives';
 
@@ -13,7 +14,7 @@ export default function SandboxIndexPage() {
           description="Sandbox routes hold adapted ANU experiments and live-supporting internal surfaces. They are explicitly not public production showcase pages."
           actions={
             <>
-              <AnuActionLink href="/sandbox/ui-lab" tone="primary" iconLeft={FlaskConical} iconRight={ArrowUpRight}>
+              <AnuActionLink href={INTERNAL_ROUTE_CANON.lab} tone="primary" iconLeft={FlaskConical} iconRight={ArrowUpRight}>
                 Open UI lab
               </AnuActionLink>
               <AnuActionLink href="/sandbox/maps" tone="secondary" iconLeft={Map} iconRight={ArrowUpRight}>
@@ -56,7 +57,7 @@ export default function SandboxIndexPage() {
             </p>
             <p className="text-sm text-[color:rgba(246,212,203,0.78)]">{ANU_PATTERN_EXPERIMENTS.length} active experiments.</p>
             <div className="mt-auto">
-              <AnuActionLink href="/sandbox/ui-lab" tone="primary" iconLeft={ShieldCheck} iconRight={ArrowUpRight}>
+              <AnuActionLink href={INTERNAL_ROUTE_CANON.lab} tone="primary" iconLeft={ShieldCheck} iconRight={ArrowUpRight}>
                 Open UI lab
               </AnuActionLink>
             </div>

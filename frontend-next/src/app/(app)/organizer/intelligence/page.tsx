@@ -4,16 +4,14 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 import { buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
 import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const API_BASE = getCoreApiBase();
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 type NeedsSignal = {
   id: number | string;
@@ -70,7 +68,7 @@ const fallbackBurnout: BurnoutSnapshot = {
 
 async function readJson<T>(url: string): Promise<T | null> {
   try {
-    const response = await fetch(url, { headers: getAuthHeaders() });
+    const response = await fetch(url, { headers: await getAuthHeaders() });
     if (!response.ok) {
       return null;
     }
@@ -236,3 +234,7 @@ export default function OrganiserCockpitPage() {
     </div>
   );
 }
+
+
+
+

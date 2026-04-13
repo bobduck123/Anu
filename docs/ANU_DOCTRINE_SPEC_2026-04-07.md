@@ -92,6 +92,7 @@ It must therefore behave as:
 - `/education`
 - `/universe`
 - `/profile`
+- `/lab` (canonical internal lab surface)
 - route bridges and transition surfaces
 
 **Use**
@@ -100,6 +101,10 @@ It must therefore behave as:
 
 **Not for**
 - becoming the generic dashboard center of gravity.
+
+**Internal lab canon note (2026-04-13)**
+- `/lab` is canonical.
+- `/sandbox/ui-lab` is retained only as a legacy redirect alias.
 
 ### Control
 **Meaning**
@@ -268,6 +273,19 @@ The following states are doctrinally invalid:
 5. Control actions must never be exposed as standard browser-side public interactions.
 6. Node-scoped branding must resolve from canonical node contracts, not guessed cookies or route hacks.
 7. Connector substrate must be real code, not only copy or page links.
+
+## Canonical Registry Implementations (M2 update — 2026-04-13)
+- Route purpose canon: `frontend-next/src/ui-system/anu/routePurposeRegistry.ts`
+- Threshold canon: `frontend-next/src/ui-system/anu/thresholdRegistry.ts`
+- Pathway consumer (safe adoption layer): `frontend-next/src/ui-system/layout/pathwayGuidance.ts`
+- Shell signal + mobile dock canonicalization consumers:
+  - `frontend-next/src/ui-system/layout/shellSignals.ts`
+  - `frontend-next/src/ui-system/layout/mobileDockModel.ts`
+- Parity tests:
+  - `frontend-next/src/test/routePurposeRegistry.test.ts`
+  - `frontend-next/src/test/thresholdRegistry.test.ts`
+  - `frontend-next/src/test/routeMetadataParity.test.ts`
+  - `frontend-next/src/test/routeCanonDocsSync.test.ts`
 
 ## Review Rule
 Any change that materially alters:

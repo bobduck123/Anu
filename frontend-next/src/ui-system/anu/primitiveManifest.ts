@@ -1,3 +1,5 @@
+import { FLAGSHIP_ROUTE_CANON, INTERNAL_ROUTE_CANON, resolveCanonicalRoute } from './routePurposeRegistry';
+
 export type AnuPrimitiveCategory =
   | 'hero-frame'
   | 'section-header'
@@ -27,7 +29,7 @@ export const ANU_PRIMITIVE_MANIFEST: readonly AnuPrimitiveManifestEntry[] = [
     category: 'hero-frame',
     component: 'AnuPageHero',
     variants: ['with-aside', 'no-aside'],
-    adoptedRoutes: ['/home', '/auth', '/sandbox', '/contact', '/memberships', '/organizer'],
+    adoptedRoutes: ['/home', '/auth', '/sandbox', INTERNAL_ROUTE_CANON.lab, '/contact', '/memberships', '/organizer'],
     notes: 'Keeps top-of-route anatomy consistent while preserving route-specific voice and copy.',
   },
   {
@@ -36,7 +38,7 @@ export const ANU_PRIMITIVE_MANIFEST: readonly AnuPrimitiveManifestEntry[] = [
     category: 'section-header',
     component: 'AnuSectionHeading',
     variants: ['default'],
-    adoptedRoutes: ['/contact', '/memberships', '/control/tenants', '/education/admin'],
+    adoptedRoutes: ['/contact', '/memberships', FLAGSHIP_ROUTE_CANON.controlTenants, '/education/admin'],
     notes: 'Standard heading hierarchy for section breaks and local action context.',
   },
   {
@@ -45,7 +47,7 @@ export const ANU_PRIMITIVE_MANIFEST: readonly AnuPrimitiveManifestEntry[] = [
     category: 'cta',
     component: 'AnuActionLink',
     variants: ['primary'],
-    adoptedRoutes: ['/home', '/sandbox', '/contact', '/docs', '/transparency'],
+    adoptedRoutes: ['/home', '/sandbox', INTERNAL_ROUTE_CANON.lab, '/contact', '/docs', FLAGSHIP_ROUTE_CANON.transparency],
     notes: 'Institutional primary action posture for route entry and next-step transitions.',
   },
   {
@@ -54,7 +56,7 @@ export const ANU_PRIMITIVE_MANIFEST: readonly AnuPrimitiveManifestEntry[] = [
     category: 'cta',
     component: 'AnuActionLink',
     variants: ['secondary', 'ghost'],
-    adoptedRoutes: ['/home', '/sandbox', '/contact', '/relief', '/transparency'],
+    adoptedRoutes: ['/home', '/sandbox', INTERNAL_ROUTE_CANON.lab, '/contact', '/relief', FLAGSHIP_ROUTE_CANON.transparency],
     notes: 'Secondary progression links and contextual alternatives without visual collapse.',
   },
   {
@@ -63,7 +65,17 @@ export const ANU_PRIMITIVE_MANIFEST: readonly AnuPrimitiveManifestEntry[] = [
     category: 'panel',
     component: 'AnuSurfacePanel',
     variants: ['shell', 'soft', 'quiet'],
-    adoptedRoutes: ['/home', '/auth', '/sandbox', '/contact', '/actions', '/events', '/organizer', '/memberships'],
+    adoptedRoutes: [
+      '/home',
+      '/auth',
+      '/sandbox',
+      INTERNAL_ROUTE_CANON.lab,
+      '/contact',
+      FLAGSHIP_ROUTE_CANON.actions,
+      FLAGSHIP_ROUTE_CANON.events,
+      '/organizer',
+      '/memberships',
+    ],
     notes: 'Shared panel language for shell, route sections, and utility surfaces.',
   },
   {
@@ -81,7 +93,7 @@ export const ANU_PRIMITIVE_MANIFEST: readonly AnuPrimitiveManifestEntry[] = [
     category: 'filter',
     component: 'AnuFilterBar + AnuControlButton',
     variants: ['default', 'active', 'warning'],
-    adoptedRoutes: ['/actions', '/events', '/organizer', '/education/admin'],
+    adoptedRoutes: [FLAGSHIP_ROUTE_CANON.actions, FLAGSHIP_ROUTE_CANON.events, '/organizer', '/education/admin'],
     notes: 'Tool-like control surfaces for dense route state changes.',
   },
   {
@@ -90,7 +102,7 @@ export const ANU_PRIMITIVE_MANIFEST: readonly AnuPrimitiveManifestEntry[] = [
     category: 'instrumentation',
     component: 'AnuInstrumentationCard',
     variants: ['steady', 'signal', 'warning'],
-    adoptedRoutes: ['/contact', '/impact', '/runtime-health'],
+    adoptedRoutes: ['/contact', FLAGSHIP_ROUTE_CANON.impact, FLAGSHIP_ROUTE_CANON.controlRuntimeHealth],
     notes: 'Operational signal blocks for measurable runtime and route health context.',
   },
   {
@@ -105,7 +117,11 @@ export const ANU_PRIMITIVE_MANIFEST: readonly AnuPrimitiveManifestEntry[] = [
 ] as const;
 
 export function getPrimitiveAdoptionSummary() {
-  const uniqueRoutes = new Set(ANU_PRIMITIVE_MANIFEST.flatMap((entry) => entry.adoptedRoutes));
+  const canonicalRoutes = ANU_PRIMITIVE_MANIFEST.flatMap((entry) =>
+    entry.adoptedRoutes.map((route) => resolveCanonicalRoute(route) ?? route),
+  );
+  const uniqueRoutes = new Set(canonicalRoutes);
+
   return {
     family_count: ANU_PRIMITIVE_MANIFEST.length,
     unique_adopted_route_count: uniqueRoutes.size,

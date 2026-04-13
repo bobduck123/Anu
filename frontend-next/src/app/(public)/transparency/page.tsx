@@ -3,6 +3,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, ArrowRight, FileSearch, ReceiptText, ShieldCheck } from 'lucide-react';
 import { transparencyApi, TransparencySummary } from '@/lib/api/endpoints';
+import {
+  fetchPublicSponsorDisclosures,
+  type PublicSponsorDisclosureFeed,
+} from '@/lib/api/publicSponsorDisclosures';
+import { SponsorDisclosurePanel } from '@/components/transparency/SponsorDisclosurePanel';
 import { AnuActionLink } from '@/ui-system/anu/surfacePrimitives';
 import { LabyrinthArchiveShell } from '@/ui-system/realms/labyrinth/LabyrinthArchiveShell';
 import { ObservatoryStatsRail } from '@/ui-system/realms/labyrinth/ObservatoryStatsRail';
@@ -14,16 +19,46 @@ function money(cents: number): string {
 export default function TransparencyPage() {
   const [data, setData] = useState<TransparencySummary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sponsorFeed, setSponsorFeed] = useState<PublicSponsorDisclosureFeed | null>(null);
 
   useEffect(() => {
+    let isCancelled = false;
+
     transparencyApi
       .nodeSummary()
-      .then(setData)
-      .catch((err) => setError(err.message || 'Failed to load transparency data'));
+      .then((payload) => {
+        if (!isCancelled) {
+          setData(payload);
+        }
+      })
+      .catch((err) => {
+        if (!isCancelled) {
+          setError(err.message || 'Failed to load transparency data');
+        }
+      });
+
+    fetchPublicSponsorDisclosures({ surface: '/transparency', limit: 6 }).then((payload) => {
+      if (!isCancelled) {
+        setSponsorFeed(payload);
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   const receipts = useMemo(() => data?.receipts?.slice(0, 5) ?? [], [data]);
   const contractState = error ? 'Degraded' : data ? 'Live' : 'Syncing';
+  const disclosureFeed = sponsorFeed ?? {
+    disclosures: [],
+    disclosureState: 'degraded' as const,
+    degradedHonesty: {
+      isDegraded: true,
+      reason: 'sponsor_disclosure_loading',
+      fallback: 'Loading sponsor disclosure contract.',
+    },
+  };
 
   return (
     <div className="min-h-screen px-4 pb-20 pt-20 md:px-8">
@@ -255,6 +290,13 @@ export default function TransparencyPage() {
               </section>
             </div>
           ) : null}
+
+          <SponsorDisclosurePanel
+            disclosures={disclosureFeed.disclosures}
+            disclosureState={disclosureFeed.disclosureState}
+            degradedHonesty={disclosureFeed.degradedHonesty}
+            contextLabel="the transparency route"
+          />
         </LabyrinthArchiveShell>
       </div>
     </div>

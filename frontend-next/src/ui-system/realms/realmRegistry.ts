@@ -45,7 +45,7 @@ export const REALM_ROUTE_REGISTRY: RealmRouteEntry[] = [
   },
   {
     id: 'labyrinth-threshold',
-    prefixes: ['/governance', '/transparency', '/docs'],
+    prefixes: ['/governance', '/transparency', '/archive', '/docs'],
     surface: {
       realm: 'labyrinth',
       strength: 'subtle',

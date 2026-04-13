@@ -4,15 +4,13 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const API_BASE = getCoreApiBase();
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 type CompetencyDomain = {
   id: number | string;
@@ -73,7 +71,7 @@ export default function CompetencyAdminPage() {
     setDegradedMode(false);
 
     try {
-      const response = await fetch(`${API_BASE}/api/competency/domains`, { headers: getAuthHeaders() });
+      const response = await fetch(`${API_BASE}/api/competency/domains`, { headers: await getAuthHeaders() });
       if (!response.ok) {
         throw new Error('domains unavailable');
       }
@@ -136,7 +134,7 @@ export default function CompetencyAdminPage() {
     try {
       const response = await fetch(`${API_BASE}/api/competency/domains`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({ name, description }),
       });
 
@@ -303,3 +301,7 @@ export default function CompetencyAdminPage() {
     </div>
   );
 }
+
+
+
+

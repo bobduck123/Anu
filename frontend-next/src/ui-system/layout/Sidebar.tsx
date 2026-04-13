@@ -29,7 +29,9 @@ import ManaraMark from '@/components/branding/ManaraMark';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from './TenantBrandWrapper';
 import { ThemeToggle } from '../ThemeToggle';
+import { INTERNAL_ROUTE_CANON } from '@/ui-system/anu/routePurposeRegistry';
 import { buildPathwayGuide, deriveNavigationMode, type NavigationMode } from './pathwayGuidance';
+import { JourneyConnectorRail } from './JourneyConnectorRail';
 import { hasSandboxAccessRole } from '@/ui-system/anu/SandboxAccessBoundary';
 import { buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
 
@@ -78,6 +80,7 @@ const navSections: NavSection[] = [
     mode: 'trust',
     items: [
       { href: '/transparency', label: 'Transparency', icon: Eye },
+      { href: '/archive', label: 'Archive', icon: LayoutGrid },
       { href: '/memberships', label: 'Memberships', icon: Heart },
       { href: '/docs', label: 'Docs', icon: LayoutGrid },
       { href: '/contact', label: 'Contact', icon: MapPin },
@@ -367,12 +370,14 @@ export function Sidebar({
         </div>
       </div>
 
+      <JourneyConnectorRail sourceRoute={pathname} onNavigate={closePanel} />
+
       {isSteward ? (
         <div className="rounded-xl border border-[#f6d4cb]/18 bg-[linear-gradient(145deg,rgba(246,212,203,0.06),rgba(246,212,203,0.03))] p-2.5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#f6d4cb]/84">Internal lab</p>
           <p className="mt-1 text-xs text-[color:rgba(246,212,203,0.82)]">Pattern-bank review and sandbox validation for steward roles.</p>
           <Link
-            href="/sandbox/ui-lab"
+            href={INTERNAL_ROUTE_CANON.lab}
             onClick={closePanel}
             className="mt-2 inline-flex w-full items-center justify-between rounded-lg border border-[color:rgba(246,212,203,0.1)] bg-[color:rgba(30,2,39,0.2)] px-2.5 py-2 text-xs text-[color:rgba(246,212,203,0.88)] transition-colors hover:border-[color:rgba(246,212,203,0.24)] hover:bg-[color:rgba(246,212,203,0.1)]"
           >

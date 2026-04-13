@@ -1,26 +1,28 @@
-# M3 Queue — Subsystem Chamber Rollout
+# M3 Queue — Connector Substrate Rollout
 
 Status legend:
 - `DONE` completed in this implementation pass
-- `DEFERRED` planned for next pass
+- `DEFERRED` intentionally postponed outside M3 scope
 
 ## Queue
 
 | ID | Task | Owner | Status | Evidence |
 |---|---|---|---|---|
-| A3-001 | Define subsystem chamber protocol manifest (modules + rules) | FE/ARCH | DONE | `frontend-next/src/ui-system/anu/chamberManifest.ts` |
-| A3-002 | Publish chamber protocol API contract for SDK/runtime consumers | FE/API | DONE | `frontend-next/src/app/api/sdk/chamber-metadata/route.ts` |
-| A3-003 | Extend shell metadata contract with chamber coverage and module metadata | FE/DATA | DONE | `frontend-next/src/ui-system/shell/shellMetadata.ts` |
-| A3-004 | Add explicit realm registry surface for private chamber routes | FE | DONE | `frontend-next/src/ui-system/realms/realmRegistry.ts` (`private-chambers`) |
-| A3-005 | Consolidate chamber metric layout primitive for profile/team/microcosm routes | FE | DONE | `frontend-next/src/ui-system/anu/surfacePrimitives.tsx` (`AnuChamberMetricsRail`) |
-| A3-006 | Adopt chamber metric primitive across chamber routes | FE | DONE | `frontend-next/src/app/(app)/profile/page.tsx`, `frontend-next/src/components/teams/TeamsView.tsx`, `frontend-next/src/app/(app)/community/microcosms/[id]/page.tsx` |
-| A3-007 | Add M3 contract and chamber-route tests | FE/SECQA | DONE | `frontend-next/src/test/chamberManifest.test.ts`, `frontend-next/src/test/chamberMetadataApiRoute.test.ts`, updates in `realmRegistryShellMetadata.test.ts`, `shellMetadataApiRoute.test.ts`, `anuSurfacePrimitives.test.tsx` |
-| A3-008 | Add M3 chamber rollout CI gate workflow | PLAT | DONE | `.github/workflows/m3-chamber-rollout-gates.yml` |
+| C3-001 | Define canonical flagship connector journey contract (knowledge → action/event → community → governance/transparency → archive) | ARCH | DONE | `docs/CONNECTOR_ARCHITECTURE_SPEC_2026-04-07.md`, `frontend-next/src/ui-system/anu/journeyConnectorRegistry.ts` |
+| C3-002 | Implement backend connector persistence models (`JourneyConnector`, `JourneyTransitionProof`) | BE | DONE | `flora-fauna/backend/app/models.py` |
+| C3-003 | Implement backend public connector APIs (`/public/connectors`, `/public/journeys/:slug`, `/public/archive-handoffs/:slug`, `/public/trust/reports/:id`) | BE/API | DONE | `flora-fauna/backend/app/api/public.py`, `flora-fauna/backend/tests/test_public_connectors.py` |
+| C3-004 | Add trust/archive public models for connector handoff (`PublicArchiveRecord`, `PublicTrustReport`) | BE | DONE | `flora-fauna/backend/app/models.py`, `flora-fauna/backend/app/api/public.py` |
+| C3-005 | Add impact-service connector projection endpoint and service shaping | IMPACT | DONE | `services/impact-service/src/falak/services/impactQueryService.ts`, `services/impact-service/src/falak/routes/registerFalakRoutes.ts` |
+| C3-006 | Add frontend connector registry + SDK API route + shell metadata connector manifest | FE | DONE | `frontend-next/src/ui-system/anu/journeyConnectorRegistry.ts`, `frontend-next/src/app/api/sdk/journey-connectors/route.ts`, `frontend-next/src/ui-system/shell/shellMetadata.ts` |
+| C3-007 | Render connector rail from API payload in shared shell surface | FE | DONE | `frontend-next/src/ui-system/layout/JourneyConnectorRail.tsx`, `frontend-next/src/ui-system/layout/Sidebar.tsx` |
+| C3-008 | Ensure archive endpoint route exists and is deep-linkable (`/archive`, `/archive/[record]`) | FE | DONE | `frontend-next/src/app/(public)/archive/page.tsx`, `frontend-next/src/app/(public)/archive/[record]/page.tsx` |
+| C3-009 | Add chain and dead-end prevention tests across backend/frontend/impact-service | SECQA | DONE | `flora-fauna/backend/tests/test_public_connectors.py`, `frontend-next/src/test/journeyConnectorRegistry.test.ts`, `services/impact-service/tests/falak/falakService.test.ts` |
+| C3-010 | Extend connector payloads to tenant-authored dynamic journey editing | ARCH | DEFERRED | Out of M3 scope; requires governance workflow and control-plane editor |
 
 ## Completion criteria
 
-- chamber modules and protocol rules are explicit and machine-readable
-- shell metadata includes chamber coverage evidence
-- private chamber routes are first-class in realm registry mapping
-- at least 3 chamber routes share an upgraded chamber primitive
-- M3 chamber checks are enforced in CI
+- flagship journey has an executable connector contract in backend + frontend + impact-service
+- connector payloads include threshold and provenance posture
+- consequential governance/transparency transitions include archive handoff references
+- touched journey routes are not dead ends before archive terminal
+- tests verify journey reachability and typed payload shape

@@ -97,3 +97,20 @@ An `Operator` may be platform-wide or node-scoped depending on control-plane pol
 If a route’s threshold changes, both of the following must be updated together:
 - `docs/THRESHOLD_LANGUAGE_SPEC_2026-04-07.md`
 - `frontend-next/src/ui-system/anu/thresholdRegistry.ts`
+
+## Code Canon (M2 execution update — 2026-04-13)
+Authoritative implementation file:
+- `frontend-next/src/ui-system/anu/thresholdRegistry.ts`
+
+Verification tests:
+- `frontend-next/src/test/thresholdRegistry.test.ts`
+- `frontend-next/src/test/routeMetadataParity.test.ts`
+- `frontend-next/src/test/routeCanonDocsSync.test.ts`
+
+Synchronization rule:
+- Any threshold mapping change must update this spec and the threshold registry in one PR.
+
+## Internal Lab Threshold Note (resolved 2026-04-13)
+- Canonical internal lab route `/lab` is treated as a steward-only internal surface.
+- Effective threshold for `/lab` (and legacy alias `/sandbox/ui-lab`) is `STEWARD`.
+- This is modeled explicitly in `thresholdRegistry.ts` as a non-flagship route threshold override.

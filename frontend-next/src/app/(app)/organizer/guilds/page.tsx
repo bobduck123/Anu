@@ -4,16 +4,14 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { AlertCircle, ArrowRight } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 import { buildOrganizerOnRampHref } from '@/lib/auth/returnTo';
 import { HoverBubble } from '@/ui-system/primitives/HoverBubble';
 
 const API_BASE = getCoreApiBase();
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 type GuildSummary = {
   id: number | string;
@@ -58,7 +56,7 @@ export default function GuildDirectoryPage() {
       setNotice(null);
 
       try {
-        const response = await fetch(`${API_BASE}/api/guilds/`, { headers: getAuthHeaders() });
+        const response = await fetch(`${API_BASE}/api/guilds/`, { headers: await getAuthHeaders() });
         if (!response.ok) {
           throw new Error('request_failed');
         }
@@ -146,3 +144,7 @@ export default function GuildDirectoryPage() {
     </div>
   );
 }
+
+
+
+

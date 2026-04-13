@@ -43,16 +43,18 @@ describe('Header shell signaling', () => {
     expect(screen.getByText('Internal lab')).toBeInTheDocument();
     expect(screen.getAllByText('Steward threshold').length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole('button', { name: /Open profile menu/i }));
-    expect(screen.getByRole('link', { name: 'UI Lab' })).toHaveAttribute('href', '/sandbox/ui-lab');
+    expect(screen.getByRole('link', { name: 'UI Lab' })).toHaveAttribute('href', '/lab');
   });
 
   it('uses community route signaling outside sandbox', () => {
     currentPathname = '/community';
 
-    render(<Header onMenuToggle={vi.fn()} />);
+    const { container } = render(<Header onMenuToggle={vi.fn()} />);
 
-    expect(screen.getByText('Community mesh')).toBeInTheDocument();
-    expect(screen.getByText('Celestial weave')).toBeInTheDocument();
+    expect(screen.queryByText('Community mesh')).not.toBeInTheDocument();
+    const header = container.querySelector('header');
+    expect(header).toHaveAttribute('data-realm', 'celestial');
+    expect(header).toHaveAttribute('data-realm-strength', 'strong');
   });
 
   it('shows archive route identity for model registry routes', () => {

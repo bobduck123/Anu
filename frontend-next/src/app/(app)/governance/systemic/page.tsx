@@ -4,14 +4,12 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 
 const API_BASE = getCoreApiBase();
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 type ModeData = {
   mode: string;
@@ -81,9 +79,9 @@ export default function SystemicShockPage() {
 
       try {
         const [modeRes, resRes, digestRes] = await Promise.all([
-          fetch(`${API_BASE}/api/systemic/mode`, { headers: getAuthHeaders() }),
-          fetch(`${API_BASE}/api/systemic/resilience`, { headers: getAuthHeaders() }),
-          fetch(`${API_BASE}/api/systemic/digest`, { headers: getAuthHeaders() }),
+          fetch(`${API_BASE}/api/systemic/mode`, { headers: await getAuthHeaders() }),
+          fetch(`${API_BASE}/api/systemic/resilience`, { headers: await getAuthHeaders() }),
+          fetch(`${API_BASE}/api/systemic/digest`, { headers: await getAuthHeaders() }),
         ]);
 
         let hasIssue = false;
@@ -258,3 +256,7 @@ export default function SystemicShockPage() {
     </div>
   );
 }
+
+
+
+

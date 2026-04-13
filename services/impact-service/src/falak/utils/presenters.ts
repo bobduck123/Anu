@@ -9,6 +9,7 @@ import {
   EventRecord,
   EventWorkflowRecord,
   GraphRecord,
+  JourneyConnectorProjectionRecord,
   LedgerEntryRecord,
   ListNodesResult,
   NodeRecord,
@@ -206,6 +207,41 @@ export function presentGraph(graph: GraphRecord) {
     depth: graph.depth,
     nodes: graph.nodes.map(presentNode),
     edges: graph.edges.map(presentEdge)
+  };
+}
+
+export function presentJourneyConnectorProjection(record: JourneyConnectorProjectionRecord) {
+  return {
+    journey_slug: record.journeySlug,
+    source_route: record.sourceRoute,
+    connectors: record.connectors.map((connector) => ({
+      id: connector.id,
+      source_route: connector.sourceRoute,
+      target_route: connector.targetRoute,
+      threshold_required: connector.thresholdRequired,
+      provenance_mode: connector.provenanceMode,
+      archive_handoff_mode: connector.archiveHandoffMode,
+      summary: connector.summary
+    })),
+    projection_mode: record.projectionMode,
+    degraded_honesty: {
+      is_degraded: record.degradedHonesty.isDegraded,
+      reason: record.degradedHonesty.reason
+    },
+    node_scope: {
+      tenant_id: record.nodeScope.tenantId,
+      tenant_slug: record.nodeScope.tenantSlug
+    },
+    archive_handoff: {
+      route: record.archiveHandoff.route,
+      record_route: record.archiveHandoff.recordRoute,
+      report_route: record.archiveHandoff.reportRoute
+    },
+    event_impact_context: {
+      event_node_id: record.eventImpactContext.eventNodeId,
+      contribution_count: record.eventImpactContext.contributionCount,
+      pooled_currencies: record.eventImpactContext.pooledCurrencies
+    }
   };
 }
 

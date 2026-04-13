@@ -5,13 +5,13 @@ describe('mobile dock model', () => {
   it('returns sandbox steward links for internal routes', () => {
     const links = getMobileDockLinks('/sandbox/ui-lab', true, true);
 
-    expect(links.map((link) => link.href)).toEqual(['/home', '/sandbox/ui-lab', '/sandbox/maps', '/profile']);
+    expect(links.map((link) => link.href)).toEqual(['/home', '/lab', '/sandbox/maps', '/profile']);
   });
 
   it('returns trust links for transparency routes', () => {
     const links = getMobileDockLinks('/transparency', false, false);
 
-    expect(links.map((link) => link.href)).toEqual(['/home', '/transparency', '/docs', '/auth']);
+    expect(links.map((link) => link.href)).toEqual(['/home', '/transparency', '/archive', '/auth']);
   });
 
   it('returns celestial links for constellation routes', () => {

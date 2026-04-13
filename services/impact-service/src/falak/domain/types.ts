@@ -494,6 +494,43 @@ export interface EventImpactRecord {
   nearbyNodes: NodeRecord[];
 }
 
+export type JourneyConnectorProvenanceMode = 'source-backed' | 'verified-summary' | 'degraded-honesty';
+
+export interface JourneyConnectorProjectionStep {
+  id: string;
+  sourceRoute: string;
+  targetRoute: string;
+  thresholdRequired: string;
+  provenanceMode: JourneyConnectorProvenanceMode;
+  archiveHandoffMode: 'none' | 'optional' | 'required';
+  summary: string;
+}
+
+export interface JourneyConnectorProjectionRecord {
+  journeySlug: string;
+  sourceRoute: string;
+  connectors: JourneyConnectorProjectionStep[];
+  projectionMode: JourneyConnectorProvenanceMode;
+  degradedHonesty: {
+    isDegraded: boolean;
+    reason: string | null;
+  };
+  nodeScope: {
+    tenantId: string;
+    tenantSlug: string | null;
+  };
+  archiveHandoff: {
+    route: string;
+    recordRoute: string;
+    reportRoute: string;
+  };
+  eventImpactContext: {
+    eventNodeId: string | null;
+    contributionCount: number;
+    pooledCurrencies: CurrencyAmount[];
+  };
+}
+
 export interface FalakRepository {
   transaction<T>(tenantId: string, execute: (repository: FalakRepository) => Promise<T>): Promise<T>;
   findTenantById(tenantId: string): Promise<FalakTenantRecord | null>;

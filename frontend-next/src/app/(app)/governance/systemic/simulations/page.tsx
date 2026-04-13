@@ -2,14 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 
 const API_BASE = getCoreApiBase();
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 type SystemicSimulationRun = {
   id: number | string;
@@ -22,15 +20,18 @@ export default function SystemicSimulationsPage() {
   const [runs, setRuns] = useState<SystemicSimulationRun[]>([]);
   const [error, setError] = useState('');
 
-  const loadRuns = () => {
-    fetch(`${API_BASE}/api/systemic/simulations`, { headers: getAuthHeaders() })
-      .then((res) => res.json())
-      .then((data: { data?: { runs?: SystemicSimulationRun[] } }) => setRuns(data.data?.runs || []))
-      .catch(() => setError('Failed to load simulations'));
+  const loadRuns = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/systemic/simulations`, { headers: await getAuthHeaders() });
+      const data = (await res.json()) as { data?: { runs?: SystemicSimulationRun[] } };
+      setRuns(data.data?.runs || []);
+    } catch {
+      setError('Failed to load simulations');
+    }
   };
 
   useEffect(() => {
-    loadRuns();
+    void loadRuns();
   }, []);
 
   const runSimulation = async () => {
@@ -49,14 +50,14 @@ export default function SystemicSimulationsPage() {
     };
     const res = await fetch(`${API_BASE}/api/systemic/simulations/run`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
       body: JSON.stringify(payload),
     });
     if (!res.ok) {
       setError('Failed to run simulation');
       return;
     }
-    loadRuns();
+    void loadRuns();
   };
 
   return (
@@ -100,3 +101,7 @@ export default function SystemicSimulationsPage() {
     </div>
   );
 }
+
+
+
+

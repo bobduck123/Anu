@@ -4,14 +4,12 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 
 const API_BASE = getCoreApiBase();
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 type ModeResponse = {
   mode: string;
@@ -40,7 +38,7 @@ export function ModeBanner() {
 
     let cancelled = false;
 
-    queueMicrotask(() => {
+    queueMicrotask(async () => {
       if (cancelled) {
         return;
       }
@@ -51,7 +49,7 @@ export function ModeBanner() {
         return;
       }
 
-      fetch(`${API_BASE}/api/systemic/mode`, { headers: getAuthHeaders() })
+      fetch(`${API_BASE}/api/systemic/mode`, { headers: await getAuthHeaders() })
         .then((res) => res.json())
         .then((data) => {
           if (!cancelled) {
@@ -90,3 +88,7 @@ export function ModeBanner() {
     </div>
   );
 }
+
+
+
+

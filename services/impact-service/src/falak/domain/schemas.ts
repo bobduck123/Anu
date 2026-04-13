@@ -203,6 +203,43 @@ export const eventImpactSchema = z.object({
   nearby_nodes: z.array(nodeSchema)
 });
 
+const connectorProvenanceModeSchema = z.enum(['source-backed', 'verified-summary', 'degraded-honesty']);
+
+export const journeyConnectorStepSchema = z.object({
+  id: z.string().min(1),
+  source_route: z.string().min(1),
+  target_route: z.string().min(1),
+  threshold_required: z.string().min(1),
+  provenance_mode: connectorProvenanceModeSchema,
+  archive_handoff_mode: z.enum(['none', 'optional', 'required']),
+  summary: z.string().min(1)
+});
+
+export const journeyConnectorProjectionSchema = z.object({
+  journey_slug: z.string().min(3),
+  source_route: z.string().min(1),
+  connectors: z.array(journeyConnectorStepSchema),
+  projection_mode: connectorProvenanceModeSchema,
+  degraded_honesty: z.object({
+    is_degraded: z.boolean(),
+    reason: z.string().nullable()
+  }),
+  node_scope: z.object({
+    tenant_id: uuidSchema,
+    tenant_slug: z.string().nullable()
+  }),
+  archive_handoff: z.object({
+    route: z.string().min(1),
+    record_route: z.string().min(1),
+    report_route: z.string().min(1)
+  }),
+  event_impact_context: z.object({
+    event_node_id: uuidSchema.nullable(),
+    contribution_count: z.number().int().nonnegative(),
+    pooled_currencies: z.array(currencyAmountSchema)
+  })
+});
+
 export const graphSchema = z.object({
   root_node_id: uuidSchema,
   depth: z.number().int().min(1).max(3),
@@ -428,6 +465,10 @@ export const approvalPathParamsSchema = z.object({
 
 export const eventImpactPathParamsSchema = z.object({
   eventId: uuidSchema
+});
+
+export const journeyPathParamsSchema = z.object({
+  journeySlug: z.string().min(3).max(160)
 });
 
 export const listNodesQuerySchema = z.object({

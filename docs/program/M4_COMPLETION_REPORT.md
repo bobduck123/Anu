@@ -1,72 +1,62 @@
-# M4 Completion Report — Community Commons Rollout
+# M4 Completion Report - ANU-017, ANU-018, ANU-019
 
-Date: 2026-04-01
-Contract version: `m4.2026-04-01`
+Date: 2026-04-14  
+Scope: narrow M4 trust/archive start + sponsor disclosure safeguards
 
-## Completed work
+## Completed in M4 Slice
+1. `ANU-017` Archive route skeleton
+- Canonical routes implemented:
+  - `/archive`
+  - `/archive/[record]`
+- Archive shells render provenance/trust/status/body/onward links and explicit degraded-honesty states.
 
-1. Implemented community commons protocol manifest (`ANU_COMMUNITY_MODULES` + rules):
-   - commons browse frame
-   - status language
-   - filter/control bar
-   - gallery backup path
-   - composer chamber
+2. `ANU-018` Public trust report model/API
+- Public trust contract implemented with canonical list/detail APIs:
+  - `GET /public/trust/reports`
+  - `GET /public/trust/reports/:report_ref`
+- Archive record UI consumes trust-report-shaped payloads with honest fallback behavior.
 
-2. Added community commons metadata API:
-   - `GET /api/sdk/community-commons-metadata`
-   - returns modules, protocol rules, and route coverage summary
+3. `ANU-019` Sponsor disclosure surface + non-distortion safeguards
+- Public-safe sponsor disclosure contract implemented end-to-end:
+  - model: `PublicSponsorDisclosure`
+  - APIs:
+    - `GET /public/transparency/sponsor-disclosures`
+    - `GET /public/transparency/sponsor-disclosures/:disclosure_ref`
+- Disclosure UI added to transparency and archive trust-facing surfaces.
+- Disclosure rendering is explicitly separated from trust-report/editorial truth content.
+- Non-distortion tests verify sponsor metadata does not overwrite trust-report body or archive truth fields.
 
-3. Upgraded shell metadata contract from M3 to M4:
-   - shell metadata now includes a `community` block with module/rule/coverage evidence
+## Evidence and Test Results
+Backend:
+- `python -m pytest -q tests/test_public_sponsor_disclosures.py tests/test_public_trust.py tests/test_public_connectors.py`
+- Result: `11 passed`
 
-4. Added reusable community status primitive:
-   - `AnuCommonsStatusRail`
+- `python -m pytest -q tests/test_public_transparency.py`
+- Result: `2 passed`
 
-5. Applied status primitive in community top browse frame:
-   - consolidated one-off status cards into shared primitive usage
-   - preserved explicit publication truth labels (live/cached/demo/fallback)
+Frontend:
+- `npx vitest run src/test/transparencyPage.test.tsx src/test/archiveRecordPage.test.tsx src/test/sponsorDisclosurePanel.test.tsx src/test/archivePage.test.tsx`
+- Result: `4 files passed, 9 tests passed`
 
-6. Added M4 tests:
-   - community manifest validation
-   - community metadata API validation
-   - shell metadata M4 integration validation
-   - primitive rendering validation for commons status rail
-   - community route and composer behavior smoke coverage
+Type safety:
+- `npm run -s typecheck`
+- Result: pass
 
-7. Added M4 CI workflow gate:
-   - typecheck + targeted M1–M4 contract/community/chamber test matrix
+## Implemented Non-Distortion Guarantees
+- Sponsor disclosure payloads are public-safe and explicitly labeled.
+- Sponsor disclosure metadata is rendered in separate disclosure panels.
+- Trust report body/sections remain canonical and unchanged by sponsor state.
+- Archive verification/provenance fields remain canonical and unchanged by sponsor state.
+- Disclosure feed absence/failure is surfaced with honest degraded messaging.
 
-## Artifacts
+## Deferred (Intentionally)
+- sponsor marketplace, pricing, billing, ad engine mechanics
+- ranking/discovery algorithm redesign
+- full trust-center expansion (`ANU-021+`)
+- full archive ingestion/search pipeline
 
-- `frontend-next/src/ui-system/anu/communityManifest.ts`
-- `frontend-next/src/app/api/sdk/community-commons-metadata/route.ts`
-- `frontend-next/src/ui-system/shell/shellMetadata.ts`
-- `frontend-next/src/ui-system/anu/surfacePrimitives.tsx`
-- `frontend-next/src/app/(app)/community/page.tsx`
-- `frontend-next/src/test/communityManifest.test.ts`
-- `frontend-next/src/test/communityCommonsMetadataApiRoute.test.ts`
-- `frontend-next/src/test/shellMetadataApiRoute.test.ts`
-- `frontend-next/src/test/anuSurfacePrimitives.test.tsx`
-- `.github/workflows/m4-community-rollout-gates.yml`
-- `docs/program/M4_QUEUE.md`
-
-## Validation commands
-
-```bash
-cd frontend-next
-npm run typecheck
-npx vitest run src/test/anuUiLab.test.tsx src/test/anuSurfacePrimitives.test.tsx src/test/primitiveManifest.test.ts src/test/chamberManifest.test.ts src/test/communityManifest.test.ts src/test/realmRegistryShellMetadata.test.ts src/test/shellMetadataApiRoute.test.ts src/test/shellPrimitivesApiRoute.test.ts src/test/chamberMetadataApiRoute.test.ts src/test/communityCommonsMetadataApiRoute.test.ts src/test/communityPage.test.tsx src/test/communityComposerModal.test.tsx src/test/profilePage.test.tsx src/test/teamsView.test.tsx src/test/microcosmDetailPage.test.tsx src/test/joinMicrocosmPage.test.tsx
-npm run build
-```
-
-## Results summary
-
-- TypeScript typecheck: PASS
-- Vitest suite: PASS (16 files, 28 tests)
-- Next build: PASS
-- M4 route verification in build output includes:
-  - `/api/sdk/community-commons-metadata`
-  - `/api/sdk/chamber-metadata`
-  - `/api/sdk/shell-metadata`
-  - `/api/sdk/shell-primitives`
-  - community routes (`/community`, `/community/microcosms/[id]`, `/community/microcosms/join`)
+## M4 Slice Status
+- `ANU-017`: complete
+- `ANU-018`: complete
+- `ANU-019`: complete
+- M4 opening trust/archive/sponsor slice is executable and evidenced; broader M4 items remain per backlog.

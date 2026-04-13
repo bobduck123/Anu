@@ -110,10 +110,10 @@ Owns:
 
 ## Public APIs
 ### Required endpoints
-- `GET /api/public/connectors`
-- `GET /api/public/journeys/:slug`
-- `GET /api/public/archive-handoffs/:slug` (optional initial convenience endpoint)
-- `GET /api/public/trust/reports/:id` (for archive/trust linked connector surfaces)
+- `GET /public/connectors` (legacy compatibility alias target: `/api/public/connectors`)
+- `GET /public/journeys/:slug`
+- `GET /public/archive-handoffs/:slug`
+- `GET /public/trust/reports/:id` (for archive/trust linked connector surfaces)
 
 ### Required behaviour
 1. Return stable typed payloads.
@@ -185,3 +185,26 @@ The following are connector failures:
 - a connector with no provenance posture,
 - archive handoff omitted from consequential journeys,
 - hand-authored adjacency that drifts from connector payload truth.
+
+## Implementation Reference (2026-04-13)
+Canonical implementation now exists across all three layers:
+
+- Backend persistence + APIs:
+  - `flora-fauna/backend/app/models.py`
+  - `flora-fauna/backend/app/services/connector_service.py`
+  - `flora-fauna/backend/app/api/public_connectors.py`
+  - `flora-fauna/backend/app/schemas.py`
+  - `flora-fauna/backend/tests/test_public_connectors.py`
+- Impact-service projection:
+  - `services/impact-service/src/falak/services/impactQueryService.ts`
+  - `services/impact-service/src/falak/routes/registerFalakRoutes.ts`
+  - `services/impact-service/tests/falak/falakService.test.ts`
+- Frontend rail contract + shell integration:
+  - `frontend-next/src/ui-system/anu/journeyConnectorRegistry.ts`
+  - `frontend-next/src/app/api/sdk/journey-connectors/route.ts`
+  - `frontend-next/src/ui-system/layout/JourneyConnectorRail.tsx`
+  - `frontend-next/src/ui-system/shell/shellMetadata.ts`
+  - backend-first SDK fetch with canonical registry fallback and explicit degraded honesty
+
+Flagship journey slug:
+- `knowledge-action-community-governance-archive`

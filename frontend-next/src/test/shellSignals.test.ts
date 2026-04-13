@@ -8,6 +8,12 @@ describe('shell signal model', () => {
     expect(signal.label).toBe('Sandbox and lab');
   });
 
+  it('maps canonical /lab route to internal lab signaling', () => {
+    const signal = getShellSignal('/lab');
+    expect(signal.eyebrow).toBe('Internal route');
+    expect(signal.label).toBe('Sandbox and lab');
+  });
+
   it('maps community routes to commons signaling', () => {
     const signal = getShellSignal('/community');
     expect(signal.label).toBe('Community mesh');

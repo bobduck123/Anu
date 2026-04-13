@@ -169,7 +169,7 @@ describe('educationMaps client', () => {
     ).toBe(true);
   });
 
-  it('falls back to the legacy auth token when no Supabase session is available', async () => {
+  it('does not use legacy auth_token fallback when no Supabase session is available', async () => {
     delete process.env.NEXT_PUBLIC_FALAK_MODE;
     localStorage.setItem('auth_token', 'legacy-token');
 
@@ -185,7 +185,7 @@ describe('educationMaps client', () => {
     const [, options] = fetchMock.mock.calls[0] as [string, RequestInit];
     const headers = options.headers as Record<string, string>;
 
-    expect(headers.Authorization).toBe('Bearer legacy-token');
+    expect(headers.Authorization).toBeUndefined();
   });
 
   it('surfaces a structured Falak dark-launch error that can trigger fallback', async () => {

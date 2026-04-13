@@ -49,7 +49,7 @@ describe('MobileDock', () => {
 
     render(<MobileDock />);
 
-    expect(screen.getByRole('link', { name: /ui lab/i })).toHaveAttribute('href', '/sandbox/ui-lab');
+    expect(screen.getByRole('link', { name: /ui lab/i })).toHaveAttribute('href', '/lab');
     expect(screen.getByRole('link', { name: /maps/i })).toHaveAttribute('href', '/sandbox/maps');
     expect(screen.getByText(/sandbox and lab/i)).toBeInTheDocument();
   });

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 
 const API_BASE = getCoreApiBase();
 
@@ -26,11 +27,8 @@ type SimulationImpact = {
   risk_level?: string;
 };
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 const FALLBACK_SCENARIOS: Scenario[] = [
   {
@@ -144,7 +142,7 @@ export default function GovernanceSimulationsPage() {
       setDegraded(false);
 
       try {
-        const response = await fetch(`${API_BASE}/api/governance-simulations/`, { headers: getAuthHeaders() });
+        const response = await fetch(`${API_BASE}/api/governance-simulations/`, { headers: await getAuthHeaders() });
         if (!response.ok) {
           throw new Error('Live simulations unavailable');
         }
@@ -195,7 +193,7 @@ export default function GovernanceSimulationsPage() {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/api/governance-simulations/${scenario.id}`, { headers: getAuthHeaders() });
+      const response = await fetch(`${API_BASE}/api/governance-simulations/${scenario.id}`, { headers: await getAuthHeaders() });
       if (!response.ok) {
         throw new Error('Live scenario step feed unavailable');
       }
@@ -239,7 +237,7 @@ export default function GovernanceSimulationsPage() {
     try {
       const response = await fetch(`${API_BASE}/api/governance-simulations/${selected.id}/run`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({ decisions: orderedDecisionValues }),
       });
 
@@ -360,3 +358,7 @@ export default function GovernanceSimulationsPage() {
     </div>
   );
 }
+
+
+
+

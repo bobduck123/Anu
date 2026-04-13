@@ -28,6 +28,15 @@ describe('pathway guidance model', () => {
     const guide = buildPathwayGuide('/sandbox/ui-lab');
     expect(guide.title).toBe('Sandbox review');
     expect(guide.steps.map((step) => step.href)).toContain('/sandbox/maps');
+    expect(guide.steps.map((step) => step.href)).toContain('/lab');
+  });
+
+  it('treats legacy and canonical lab paths equivalently in guidance output', () => {
+    const legacy = buildPathwayGuide('/sandbox/ui-lab');
+    const canonical = buildPathwayGuide('/lab');
+
+    expect(legacy.title).toBe(canonical.title);
+    expect(legacy.steps.map((step) => step.href)).toEqual(canonical.steps.map((step) => step.href));
   });
 
   it('treats governance routes as operational mode', () => {

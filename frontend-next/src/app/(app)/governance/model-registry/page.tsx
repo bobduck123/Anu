@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { AlertCircle, Compass, Layers3, RefreshCw, Search, ShieldCheck } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 import { AnuActionLink } from '@/ui-system/anu/surfacePrimitives';
 import { LabyrinthArchiveShell } from '@/ui-system/realms/labyrinth/LabyrinthArchiveShell';
 import { ArchiveMarker } from '@/ui-system/realms/labyrinth/ArchiveMarker';
@@ -29,14 +30,8 @@ const STATE_FILTERS: Array<{ key: 'all' | LabyrinthState; label: string }> = [
 
 const ARCHIVE_COLUMNS = 4;
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') {
-    return {};
-  }
-
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 const FALLBACK_MODELS: ModelRegistryItem[] = [
   {
@@ -155,7 +150,7 @@ export default function ModelRegistryPage() {
 
     try {
       const response = await fetch(`${API_BASE}/api/model-registry/`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
         signal,
       });
 
@@ -685,3 +680,7 @@ export default function ModelRegistryPage() {
     </div>
   );
 }
+
+
+
+

@@ -4,14 +4,12 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 
 const API_BASE = getCoreApiBase();
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 type NeedsSignal = {
   id: number | string;
@@ -62,7 +60,7 @@ export default function NeedsSignalsPage() {
       setDegradedMode(false);
 
       try {
-        const response = await fetch(`${API_BASE}/api/needs-signals/`, { headers: getAuthHeaders() });
+        const response = await fetch(`${API_BASE}/api/needs-signals/`, { headers: await getAuthHeaders() });
         if (!response.ok) {
           throw new Error('needs service unavailable');
         }
@@ -187,3 +185,7 @@ export default function NeedsSignalsPage() {
     </div>
   );
 }
+
+
+
+

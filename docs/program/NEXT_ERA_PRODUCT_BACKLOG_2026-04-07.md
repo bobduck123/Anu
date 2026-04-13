@@ -282,6 +282,7 @@
 - registry snapshot
 **Owner type:** Frontend + Architecture
 **Milestone:** M2
+**Execution status (2026-04-13):** COMPLETE — executable route canon is implemented, guidance consumers are wired, parity tests are active.
 
 ## ANU-013
 **Title:** Threshold registry implementation
@@ -303,6 +304,7 @@
 - route screenshots with threshold labels
 **Owner type:** Frontend + Doctrine
 **Milestone:** M2
+**Execution status (2026-04-13):** COMPLETE — executable threshold canon is implemented, route/plane/realm lookups are available, and parity tests are active.
 
 ## ANU-014
 **Title:** Connector schema and service foundation
@@ -372,8 +374,9 @@
 **Why it exists:** Institutional memory needs canonical product routes.
 **Exact repo location:**
 - `frontend-next/src/app/(public)/archive/page.tsx`
-- `frontend-next/src/app/(public)/archive/[id]/page.tsx`
+- `frontend-next/src/app/(public)/archive/[record]/page.tsx`
 - `frontend-next/src/test/archivePage.test.tsx`
+- `frontend-next/src/test/archiveRecordPage.test.tsx`
 **Implementation notes:**
 1. Add archive index and detail skeleton.
 2. Include canonical fields: record id, source route, visibility class, last verified.
@@ -387,6 +390,7 @@
 - archive screenshots
 **Owner type:** Frontend / Trust
 **Milestone:** M4
+**Execution status (2026-04-14):** COMPLETE - canonical `/archive` and `/archive/[record]` shells are live with degraded honesty and trust/provenance sections, backed by focused route tests.
 
 ## ANU-018
 **Title:** Public trust report model/API
@@ -394,7 +398,8 @@
 **Exact repo location:**
 - `flora-fauna/backend/app/models.py`
 - `flora-fauna/backend/app/api/public_trust.py`
-- `flora-fauna/backend/tests/test_public_trust_reports.py`
+- `flora-fauna/backend/app/services/trust_report_service.py`
+- `flora-fauna/backend/tests/test_public_trust.py`
 **Implementation notes:**
 1. Add trust report model with provenance and archive linkage fields.
 2. Add public trust report endpoints.
@@ -408,20 +413,27 @@
 - response sample
 **Owner type:** Backend / Trust
 **Milestone:** M4
+**Execution status (2026-04-14):** COMPLETE - public trust report list/detail APIs are live with explicit degraded honesty and archive linkage, covered by backend tests.
 
 ## ANU-019
 **Title:** Sponsor disclosure surface implementation
 **Why it exists:** Sponsorship transparency must be visible and doctrine-compliant without ordering distortion.
 **Exact repo location:**
 - `frontend-next/src/app/(public)/transparency/page.tsx`
-- `frontend-next/src/app/(public)/trust/page.tsx`
-- `flora-fauna/backend/app/api/public_trust.py`
+- `frontend-next/src/app/(public)/archive/[record]/page.tsx`
+- `frontend-next/src/components/transparency/SponsorDisclosurePanel.tsx`
+- `frontend-next/src/lib/api/publicSponsorDisclosures.ts`
+- `flora-fauna/backend/app/api/public_transparency.py`
+- `flora-fauna/backend/app/services/sponsor_disclosure_service.py`
+- `flora-fauna/backend/app/models.py`
 - `frontend-next/src/test/transparencyPage.test.tsx`
-- `flora-fauna/backend/tests/test_sponsor_disclosure.py`
+- `frontend-next/src/test/archiveRecordPage.test.tsx`
+- `frontend-next/src/test/sponsorDisclosurePanel.test.tsx`
+- `flora-fauna/backend/tests/test_public_sponsor_disclosures.py`
 **Implementation notes:**
-1. Add disclosure modules in trust/transparency surfaces only.
-2. Include explicit labels and source details.
-3. Add tests proving no base ordering distortion.
+1. Add public-safe disclosure model and `/public/transparency/sponsor-disclosures` list/detail APIs.
+2. Render disclosure modules in transparency + archive trust-facing surfaces with explicit labels.
+3. Add tests proving sponsor metadata does not overwrite trust-report/archive truth content.
 **Dependencies:** ANU-018
 **Acceptance criteria:**
 1. Sponsor disclosures are visible and queryable.
@@ -431,6 +443,7 @@
 - UI screenshots
 **Owner type:** Frontend + Backend + Doctrine
 **Milestone:** M4
+**Execution status (2026-04-14):** COMPLETE - sponsor disclosure contract and UI are implemented end-to-end with non-distortion safeguards and focused backend/frontend tests passing.
 
 ## ANU-020
 **Title:** Isolation proof tests (cross-service)
@@ -559,3 +572,25 @@
 - review sign-off
 **Owner type:** Architecture / Delivery
 **Milestone:** M5
+
+## ANU-026
+**Title:** Remaining frontend legacy token-reader cleanup (post-educationMaps)
+**Why it exists:** `educationMaps.ts` now uses canonical participant auth posture, but other legacy `localStorage` token readers still exist and should be removed safely in one narrow follow-up.
+**Exact repo location:**
+- `frontend-next/src/lib/api.ts`
+- `frontend-next/src/lib/calendar/icsExport.ts`
+- governance/organizer pages that still read `auth_token` directly
+**Implementation notes:**
+1. Replace remaining direct token reads with canonical client posture helpers.
+2. Preserve existing public-vs-control separation.
+3. Do not widen into route migrations or auth provider redesign.
+**Dependencies:** ANU-009, ANU-010
+**Acceptance criteria:**
+1. No direct browser-side `auth_token` reads remain in active frontend codepaths.
+2. Tests prove no regression for participant/public flows.
+**Evidence required:**
+- grep proof for removed direct reads in scoped files
+- vitest output for affected clients/routes
+**Owner type:** Frontend
+**Milestone:** M4
+**Execution status (2026-04-14):** COMPLETE — scoped frontend `auth_token` readers were removed in `lib/api.ts`, `icsExport`, and remaining governance/organizer/systemic pages; auth now flows through canonical shared client helpers with focused tests passing.

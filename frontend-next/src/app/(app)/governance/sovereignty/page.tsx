@@ -4,14 +4,12 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { getCoreApiBase } from '@/lib/runtime';
+import { getParticipantAuthHeaders } from '@/lib/api/client';
 
 const API_BASE = getCoreApiBase();
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const getAuthHeaders = async (): Promise<Record<string, string>> =>
+  getParticipantAuthHeaders({ allowLegacyTokenFallback: false });
 
 type IndexRecord = {
   index_value: number;
@@ -59,7 +57,7 @@ export default function SovereigntyIndexPage() {
     setDegradedMode(false);
 
     try {
-      const response = await fetch(`${API_BASE}/api/sovereignty-index/latest`, { headers: getAuthHeaders() });
+      const response = await fetch(`${API_BASE}/api/sovereignty-index/latest`, { headers: await getAuthHeaders() });
       if (!response.ok) {
         throw new Error('latest index unavailable');
       }
@@ -112,7 +110,7 @@ export default function SovereigntyIndexPage() {
     try {
       const response = await fetch(`${API_BASE}/api/sovereignty-index/compute`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({}),
       });
 
@@ -219,3 +217,7 @@ export default function SovereigntyIndexPage() {
     </div>
   );
 }
+
+
+
+

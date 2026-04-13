@@ -78,3 +78,54 @@ npm run build
   - `/api/sdk/shell-primitives`
   - `/lab`
   - `/sandbox/ui-lab` (legacy route retained as redirect page)
+
+## Addendum — Executable Canon Rollout Closure (2026-04-13)
+
+Additional M2 canon-hardening work completed:
+
+1. Route canon hardened as executable source of truth:
+   - `frontend-next/src/ui-system/anu/routePurposeRegistry.ts`
+   - explicit flagship canon constants
+   - explicit alias registry
+2. Threshold canon hardened as executable source of truth:
+   - `frontend-next/src/ui-system/anu/thresholdRegistry.ts`
+   - route/plane/realm threshold lookup helpers
+3. Guidance and shell consumers aligned to canonical route resolution:
+   - `frontend-next/src/ui-system/layout/pathwayGuidance.ts`
+   - `frontend-next/src/ui-system/layout/shellSignals.ts`
+   - `frontend-next/src/ui-system/layout/mobileDockModel.ts`
+   - `frontend-next/src/ui-system/layout/Header.tsx`
+   - `frontend-next/src/ui-system/layout/Sidebar.tsx`
+4. Manifest parity tightened:
+   - `frontend-next/src/ui-system/anu/primitiveManifest.ts`
+   - `frontend-next/src/ui-system/anu/observatoryManifest.ts`
+   - `frontend-next/src/ui-system/shell/shellMetadata.ts`
+
+### Canon decision finalized: `/lab`
+- `/lab` is the canonical internal lab route.
+- `/sandbox/ui-lab` is retained strictly as a legacy redirect alias.
+- `/lab` is intentionally non-flagship and does not enter the flagship route-purpose table.
+
+### Verification evidence (canon rollout)
+- `src/test/routePurposeRegistry.test.ts`
+- `src/test/thresholdRegistry.test.ts`
+- `src/test/routeMetadataParity.test.ts`
+- `src/test/pathwayGuidance.test.ts`
+- `src/test/routeCanonDocsSync.test.ts`
+- `src/test/shellMetadataApiRoute.test.ts`
+- `src/test/shellSignals.test.ts`
+- `src/test/mobileDockModel.test.ts`
+- `src/test/mobileDock.test.tsx`
+- `src/test/headerShell.test.tsx`
+- frontend typecheck (`npm run -s typecheck`)
+
+Documentation sync completed:
+- `docs/ROUTE_PURPOSE_REGISTRY_2026-04-07.md`
+- `docs/THRESHOLD_LANGUAGE_SPEC_2026-04-07.md`
+- `docs/ANU_DOCTRINE_SPEC_2026-04-07.md`
+- `docs/program/MILESTONE_ACCEPTANCE_PACK_2026-04-07.md`
+- `docs/program/NEXT_ERA_PRODUCT_BACKLOG_2026-04-07.md`
+
+Deferred to M3 (not in M2 scope):
+- connector schema/service/API/UI implementation
+- connector persistence and journey wiring

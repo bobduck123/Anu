@@ -9,7 +9,12 @@ from email.utils import parsedate_to_datetime
 import requests
 from flask import Blueprint, current_app, request
 
-from ..models import ImpactPool, ImpactLedgerEntry, ReliefRequest, db
+from ..models import (
+    ImpactPool,
+    ImpactLedgerEntry,
+    ReliefRequest,
+    db,
+)
 from ..services.node_service import resolve_node
 from .utils import ok, error
 from ..extensions import limiter
@@ -57,7 +62,6 @@ _TRUSTED_COMMUNITY_NEWS_CACHE = {
 }
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
 _WHITESPACE_RE = re.compile(r"\s+")
-
 
 def _community_news_sources_payload():
     return [
@@ -407,3 +411,5 @@ def trusted_community_news():
             "stale": bool(payload["stale"]),
         }
     )
+
+

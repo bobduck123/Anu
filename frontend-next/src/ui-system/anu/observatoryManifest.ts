@@ -1,3 +1,5 @@
+import { FLAGSHIP_ROUTE_CANON } from './routePurposeRegistry';
+
 export type AnuObservatorySurface =
   | 'trust-transparency'
   | 'trust-docs'
@@ -23,7 +25,7 @@ export const ANU_OBSERVATORY_MODULES: readonly AnuObservatoryModule[] = [
   {
     id: 'trust-transparency',
     title: 'Transparency truth surface',
-    route: '/transparency',
+    route: FLAGSHIP_ROUTE_CANON.transparency,
     class: 'trust',
     purpose: 'Public truth route for pool totals, receipts, and relief-capacity signals.',
     notes: 'Model route for trust reporting with explicit degraded-mode language.',
@@ -71,7 +73,7 @@ export const ANU_OBSERVATORY_MODULES: readonly AnuObservatoryModule[] = [
   {
     id: 'admin-runtime-health',
     title: 'Runtime contract diagnostics',
-    route: '/control/runtime-health',
+    route: FLAGSHIP_ROUTE_CANON.controlRuntimeHealth,
     class: 'observatory',
     purpose: 'Operational contract verification for core and impact runtimes.',
     notes: 'Operational scan route with clear pass/fail and latency truth.',

@@ -1,80 +1,86 @@
-# M3 Completion Report — Subsystem Chamber Rollout
+# M3 Completion Report - Connector Substrate Rollout
 
-Date: 2026-04-01
-Contract version: `m3.2026-04-01`
+Date: 2026-04-14
+Contract version: `m3.2026-04-14`
 
 ## Completed work
 
-1. Implemented chamber protocol manifest (`ANU_CHAMBER_MODULES` + rules) for private subsystem surfaces:
-   - profile cockpit
-   - inbox stack
-   - organizer pathway
-   - team chambers
-   - microcosm entry
-   - microcosm detail
+1. Backend connector substrate is now explicit and modular:
+   - persistence models in `models.py` (`JourneyConnector`, `JourneyTransitionProof`, `PublicArchiveRecord`, `PublicTrustReport`)
+   - canonical service in `app/services/connector_service.py`
+   - dedicated connector API surface in `app/api/public_connectors.py`
+   - connector payload schemas in `app/schemas.py`
 
-2. Added chamber metadata API contract:
-   - `GET /api/sdk/chamber-metadata`
-   - returns chamber modules, protocol rules, and route coverage summary
+2. Backend public connector APIs are active through the dedicated boundary:
+   - `GET /public/connectors`
+   - `GET /public/journeys/:slug`
+   - `GET /public/archive-handoffs/:slug`
+   - `GET /public/trust/reports/:id`
 
-3. Upgraded shell metadata contract from M2 to M3:
-   - shell metadata now includes a `chambers` block with module counts, rule counts, and module records
+3. Frontend connector SDK route now prefers backend connector payloads and falls back safely:
+   - `/api/sdk/journey-connectors` calls backend `/public/connectors`
+   - if backend context is unavailable, it returns canonical registry payload with explicit degraded honesty
 
-4. Extended realm routing model for chamber surfaces:
-   - introduced `private-chambers` realm route entry
-   - scoped prefixes: `/profile`, `/teams`, `/community/microcosms`
+4. Connector rail UI renders provenance/trust posture and non-dead-end handoffs:
+   - next route transitions
+   - threshold cue
+   - provenance/source/freshness cue
+   - degraded honesty cue
+   - archive handoff + canonical knowledge source fallback link
 
-5. Added reusable chamber metric layout primitive:
-   - `AnuChamberMetricsRail`
+5. Impact-service M3 connector projection surface remains passing and aligned:
+   - `getJourneyConnectorProjection(...)`
+   - `GET /v1/falak/journeys/:journeySlug/connectors`
 
-6. Adopted chamber metric primitive across private/local chamber routes:
-   - `/profile`
-   - `/teams`
-   - `/community/microcosms/[id]`
+6. Tiny in-scope auth posture cleanup shipped during M3 implementation:
+   - removed `educationMaps.ts` direct `auth_token` legacy fallback
+   - maps auth now uses canonical `getParticipantAuthHeaders({ allowLegacyTokenFallback: false })`
 
-7. Added M3 test coverage:
-   - chamber manifest validation
-   - chamber metadata API validation
-   - shell metadata + realm registry updates
-   - primitive rendering coverage + chamber route behavior smoke tests
+## Artifact summary
 
-8. Added M3 CI workflow gate:
-   - typecheck + targeted chamber/system contract tests
+- `flora-fauna/backend/app/api/public_connectors.py`
+- `flora-fauna/backend/app/services/connector_service.py`
+- `flora-fauna/backend/app/schemas.py`
+- `flora-fauna/backend/app/api/public.py` (connector routes removed from mixed public module)
+- `flora-fauna/backend/app/__init__.py` (connector blueprint registration)
+- `flora-fauna/backend/tests/test_public_connectors.py`
+- `frontend-next/src/app/api/sdk/journey-connectors/route.ts`
+- `frontend-next/src/ui-system/anu/journeyConnectorRegistry.ts`
+- `frontend-next/src/ui-system/layout/JourneyConnectorRail.tsx`
+- `frontend-next/src/test/journeyConnectorsApiRoute.test.ts`
+- `frontend-next/src/test/journeyConnectorRail.test.tsx`
+- `frontend-next/src/lib/api/educationMaps.ts`
+- `frontend-next/src/test/educationMaps.test.ts`
 
-## Artifacts
-
-- `frontend-next/src/ui-system/anu/chamberManifest.ts`
-- `frontend-next/src/app/api/sdk/chamber-metadata/route.ts`
-- `frontend-next/src/ui-system/shell/shellMetadata.ts`
-- `frontend-next/src/ui-system/realms/realmRegistry.ts`
-- `frontend-next/src/ui-system/anu/surfacePrimitives.tsx`
-- `frontend-next/src/app/(app)/profile/page.tsx`
-- `frontend-next/src/components/teams/TeamsView.tsx`
-- `frontend-next/src/app/(app)/community/microcosms/[id]/page.tsx`
-- `frontend-next/src/test/chamberManifest.test.ts`
-- `frontend-next/src/test/chamberMetadataApiRoute.test.ts`
-- `frontend-next/src/test/realmRegistryShellMetadata.test.ts`
-- `frontend-next/src/test/shellMetadataApiRoute.test.ts`
-- `frontend-next/src/test/anuSurfacePrimitives.test.tsx`
-- `.github/workflows/m3-chamber-rollout-gates.yml`
-- `docs/program/M3_QUEUE.md`
-
-## Validation commands
+## Validation commands and results
 
 ```bash
-cd frontend-next
-npm run typecheck
-npx vitest run src/test/anuUiLab.test.tsx src/test/anuSurfacePrimitives.test.tsx src/test/realmRegistryShellMetadata.test.ts src/test/shellMetadataApiRoute.test.ts src/test/shellPrimitivesApiRoute.test.ts src/test/primitiveManifest.test.ts src/test/chamberManifest.test.ts src/test/chamberMetadataApiRoute.test.ts src/test/profilePage.test.tsx src/test/teamsView.test.tsx src/test/microcosmDetailPage.test.tsx src/test/joinMicrocosmPage.test.tsx
-npm run build
+# backend
+cd flora-fauna/backend
+python -m pytest -q tests/test_public_connectors.py
+python -m pytest -q tests/test_public_transparency.py tests/test_public_community_news.py
+
+# frontend
+cd ../../frontend-next
+npx vitest run src/test/journeyConnectorRegistry.test.ts src/test/journeyConnectorsApiRoute.test.ts src/test/journeyConnectorRail.test.tsx src/test/educationMaps.test.ts src/test/connectorDocsSync.test.ts
+npm run -s typecheck
+
+# impact-service
+cd ../services/impact-service
+npm run -s test:non-db -- tests/falak/falakService.test.ts
+npm run -s typecheck
 ```
 
-## Results summary
+- Backend connector suite: **PASS** (`5 passed`)
+- Backend public transparency/news suites: **PASS** (`3 passed`)
+- Frontend connector + auth-touch suites: **PASS** (`5 files, 31 tests passed`)
+- Frontend typecheck: **PASS**
+- Impact-service non-db suite: **PASS** (`17 suites, 58 tests passed`)
+- Impact-service typecheck: **PASS**
 
-- TypeScript typecheck: PASS
-- Vitest suite: PASS (12 files, 22 tests)
-- Next build: PASS
-- M3 route verification in build output includes:
-  - `/api/sdk/chamber-metadata`
-  - `/api/sdk/shell-metadata`
-  - `/api/sdk/shell-primitives`
-  - chamber routes (`/profile`, `/teams`, `/community/microcosms/[id]`, `/community/microcosms/join`)
+## Deferred scope
+
+- No expansion into economy implementation.
+- No expansion into node rollout.
+- No Falak policy engine rewrite.
+- No M3 broad archive/trust subsystem expansion beyond connector handoff foundation.
