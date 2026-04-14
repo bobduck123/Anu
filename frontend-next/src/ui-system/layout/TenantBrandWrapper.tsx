@@ -3,6 +3,14 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { brand } from '@/lib/brand';
 import { getCoreApiBase } from '@/lib/runtime';
+import {
+  buildDefaultPublicSiteManifest,
+  DEFAULT_SITE_RESOLUTION_META,
+  normalizePublicSiteManifest,
+  normalizePublicSiteResolutionMeta,
+  type PublicSiteManifest,
+  type PublicSiteResolutionMeta,
+} from '@/lib/publicSiteManifest';
 import { getTenantCSSVars, type TenantThemeOverride } from '../theme';
 
 export interface TenantConfig {
@@ -20,6 +28,8 @@ export interface TenantConfig {
   calendarMode?: 'shifts' | 'events' | 'booking';
   isWhiteLabel: boolean;
   customCss?: string;
+  siteManifest: PublicSiteManifest;
+  siteResolution: PublicSiteResolutionMeta;
 }
 
 interface PublicNodeConfigDto {
@@ -37,7 +47,14 @@ interface PublicNodeConfigDto {
     custom_css?: string | null;
   };
   modules?: Record<string, boolean>;
+  site_manifest?: unknown;
+  site_resolution?: unknown;
 }
+
+const defaultSiteManifest = buildDefaultPublicSiteManifest({
+  siteKey: brand.semanticKey,
+  siteName: brand.name,
+});
 
 const defaultConfig: TenantConfig = {
   id: null,
@@ -59,6 +76,8 @@ const defaultConfig: TenantConfig = {
   },
   dataPolicy: 0,
   isWhiteLabel: false,
+  siteManifest: defaultSiteManifest,
+  siteResolution: DEFAULT_SITE_RESOLUTION_META,
 };
 
 const TenantContext = createContext<TenantConfig>(defaultConfig);
@@ -79,6 +98,22 @@ function getTenantFromCookie(): Partial<TenantConfig> | null {
     
     if (cookies.tenant_brand) {
       const brandConfig = JSON.parse(decodeURIComponent(cookies.tenant_brand));
+      const siteManifest = cookies.tenant_site_manifest
+        ? normalizePublicSiteManifest(
+          JSON.parse(decodeURIComponent(cookies.tenant_site_manifest)),
+          buildDefaultPublicSiteManifest({
+            tenantId: parseInt(cookies.tenant_id) || null,
+            siteKey: cookies.tenant_slug || brand.semanticKey,
+            siteName: decodeURIComponent(cookies.tenant_name || '') || brand.name,
+            logoUrl: brandConfig.logo_url ?? brandConfig.logoUrl ?? null,
+            faviconUrl: brandConfig.favicon_url ?? brandConfig.faviconUrl ?? null,
+            primaryColor: brandConfig.primary_color ?? brandConfig.primaryColor ?? null,
+            secondaryColor: brandConfig.secondary_color ?? brandConfig.secondaryColor ?? null,
+            accentColor: brandConfig.accent_color ?? brandConfig.accentColor ?? null,
+            customCss: brandConfig.custom_css ?? brandConfig.customCss ?? null,
+          }),
+        )
+        : defaultSiteManifest;
       return {
         id: parseInt(cookies.tenant_id) || null,
         semanticKey: cookies.tenant_semantic_key || brand.semanticKey,
@@ -91,6 +126,8 @@ function getTenantFromCookie(): Partial<TenantConfig> | null {
         logo: brandConfig.logo_url ?? brandConfig.logoUrl,
         favicon: brandConfig.favicon_url ?? brandConfig.faviconUrl,
         customCss: brandConfig.custom_css ?? brandConfig.customCss,
+        siteManifest,
+        siteResolution: DEFAULT_SITE_RESOLUTION_META,
       };
     }
     
@@ -98,6 +135,8 @@ function getTenantFromCookie(): Partial<TenantConfig> | null {
       return {
         id: parseInt(cookies.tenant_id) || null,
         semanticKey: cookies.tenant_semantic_key || brand.semanticKey,
+        siteManifest: defaultSiteManifest,
+        siteResolution: DEFAULT_SITE_RESOLUTION_META,
       };
     }
   } catch {
@@ -112,6 +151,23 @@ function mapPublicNodeConfigToTenantConfig(
   fallback: Partial<TenantConfig>,
 ): TenantConfig {
   const brandConfig = dto.brand || {};
+  const fallbackSiteManifest =
+    fallback.siteManifest
+    || buildDefaultPublicSiteManifest({
+      tenantId: dto.node_id ?? fallback.id ?? null,
+      siteKey: dto.node_slug ?? fallback.slug ?? undefined,
+      siteName: dto.node_name ?? fallback.name ?? undefined,
+      logoUrl: (brandConfig.logo_url as string | null | undefined) ?? fallback.logo ?? null,
+      faviconUrl: (brandConfig.favicon_url as string | null | undefined) ?? fallback.favicon ?? null,
+      primaryColor: (brandConfig.primary_color as string | null | undefined) ?? fallback.primaryColor ?? null,
+      secondaryColor: (brandConfig.secondary_color as string | null | undefined) ?? fallback.secondaryColor ?? null,
+      accentColor: (brandConfig.accent_color as string | null | undefined) ?? fallback.accentColor ?? null,
+      customCss: (brandConfig.custom_css as string | null | undefined) ?? fallback.customCss ?? null,
+    });
+
+  const siteManifest = normalizePublicSiteManifest(dto.site_manifest, fallbackSiteManifest);
+  const siteResolution = normalizePublicSiteResolutionMeta(dto.site_resolution);
+
   return {
     ...defaultConfig,
     ...fallback,
@@ -127,6 +183,8 @@ function mapPublicNodeConfigToTenantConfig(
     modules: dto.modules || fallback.modules || defaultConfig.modules,
     isWhiteLabel: Boolean(dto.white_label ?? fallback.isWhiteLabel ?? false),
     customCss: brandConfig.custom_css || fallback.customCss,
+    siteManifest,
+    siteResolution,
   };
 }
 

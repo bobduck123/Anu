@@ -119,23 +119,25 @@ Control may be *rendered* by `frontend-next`, but it must be *authorized* and *p
 ## Logging / Audit Separation
 ### Mandatory log fields across all services
 - `plane`
-- `route_family`
-- `host`
-- `trace_id`
+- `service_name` (or app/service identifier)
+- `event_name`
+- `level`
+- `timestamp`
+- `request_id` or `correlation_id` where available
 
 ### Additional required fields
 **Frontend**
-- `node_slug`
-- `control_session`
+- `host` and route context for control proxy events
+- no browser-side secret/session/token payloads in emitted context
 
 **Backend**
-- `control_audience`
-- `node_slug`
-- `actor_id`
+- public/control route context (route/method/filter scope)
+- actor/action context for control audit events
+- no token/secret/session payload fields in emitted context
 
 **Impact-service**
 - `tenant_slug`
-- `backend_node_slug`
+- `falak_execution_plane`
 - `actor_id`
 
 ### Audit rule
@@ -223,13 +225,19 @@ Every control mutation must record:
 - reject public tokens for privileged Falak operations,
 - add plane logging.
 
+### Step 6 — Roll out plane-aware envelope contract
+- add canonical `PlaneLogContract` helpers with explicit plane validation in all three services,
+- emit `plane=public` for public route events, `plane=control` for control proxy/audit events, and `plane=impact` for Falak telemetry,
+- redact sensitive fields before emission (`authorization`, token/session/secret-like keys),
+- reject unsupported plane values explicitly (no silent omission).
+
 ## Proof Required For Sign-Off
 1. Public host denies `/control/*`.
 2. Control host renders `/control/tenants` and `/control/runtime-health`.
 3. Browser never holds control secret.
 4. Control proxy only forwards to allowlisted privileged routes.
 5. Privileged Falak routes reject public tokens and accept control audience posture.
-6. Logs include `plane`, `route_family`, `host`, and `trace_id`.
+6. Logs include `plane`, `service_name`, `event_name`, `level`, `timestamp`, and request/correlation id where available.
 7. Rollback notes exist for route migration and control host gating.
 
 ## Rollback Posture

@@ -42,6 +42,10 @@ interface BackendConnectorPayload {
     reason: string | null;
     fallback?: string | null;
   };
+  node_scope?: {
+    slug?: string | null;
+    name?: string | null;
+  };
 }
 
 function toVisibilityCue(thresholdRequired: JourneyConnectorEntry['thresholdRequired']): JourneyConnectorEntry['visibilityCue'] {
@@ -86,13 +90,25 @@ function normalizeBackendPayload(payload: BackendConnectorPayload): JourneyConne
       reason: payload.degraded_honesty.reason,
       fallbackNote: payload.degraded_honesty.fallback ?? null,
     },
+    nodeScope: {
+      slug: payload.node_scope?.slug ?? null,
+      name: payload.node_scope?.name ?? null,
+    },
   };
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const sourceRoute = searchParams.get('source') ?? searchParams.get('source_route');
-  const query = sourceRoute ? `?source_route=${encodeURIComponent(sourceRoute)}` : '';
+  const nodeSlug = searchParams.get('node');
+  const params = new URLSearchParams();
+  if (sourceRoute) {
+    params.set('source_route', sourceRoute);
+  }
+  if (nodeSlug) {
+    params.set('node', nodeSlug);
+  }
+  const query = params.toString() ? `?${params.toString()}` : '';
   const backendBase = getCoreApiBase({ server: true });
 
   try {
@@ -121,6 +137,10 @@ export async function GET(request: Request) {
     reason: 'backend_connector_payload_unavailable',
     fallbackNote:
       'Live connector context is temporarily unavailable. Showing canonical registry path so the journey remains navigable.',
+  };
+  fallbackPayload.nodeScope = {
+    slug: nodeSlug,
+    name: null,
   };
 
   return NextResponse.json({

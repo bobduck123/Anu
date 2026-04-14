@@ -67,6 +67,26 @@ export interface PublicArchiveHandoffResult {
   };
 }
 
+export interface PublicDecisionSummary {
+  decisionId: string;
+  title: string;
+  decisionStatement: string;
+  whyItMatters: string;
+  owner: string;
+  dueDate: string | null;
+  currentStatus: string;
+  recordRoute: string;
+  archiveRecordSlug: string;
+  publicationScope: string;
+  sourceLabel: string;
+  summary: string;
+}
+
+export interface PublicDecisionSummaryResult {
+  decision: PublicDecisionSummary | null;
+  degradedHonesty: ArchiveDegradedHonesty;
+}
+
 interface OkEnvelope<T> {
   ok: boolean;
   data: T;
@@ -134,6 +154,24 @@ function toArchiveRecord(value: unknown): PublicArchiveRecord {
 
 function getPublicApiBase(): string {
   return getCoreApiBase({ server: true });
+}
+
+function toDecisionSummary(value: unknown): PublicDecisionSummary {
+  const row = (value ?? {}) as Record<string, unknown>;
+  return {
+    decisionId: String(row.decision_id ?? ''),
+    title: String(row.title ?? ''),
+    decisionStatement: String(row.decision_statement ?? ''),
+    whyItMatters: String(row.why_it_matters ?? ''),
+    owner: String(row.owner ?? ''),
+    dueDate: row.due_date ? String(row.due_date) : null,
+    currentStatus: String(row.current_status ?? ''),
+    recordRoute: String(row.record_route ?? ''),
+    archiveRecordSlug: String(row.archive_record_slug ?? ''),
+    publicationScope: String(row.publication_scope ?? ''),
+    sourceLabel: String(row.source_label ?? ''),
+    summary: String(row.summary ?? ''),
+  };
 }
 
 export async function fetchPublicTrustReports(limit: number = 12): Promise<PublicTrustReportListResult> {
@@ -257,5 +295,51 @@ export async function fetchPublicArchiveHandoff(recordSlug: string): Promise<Pub
     };
   } catch {
     return null;
+  }
+}
+
+export async function fetchPublicDecisionSummary(decisionRef: string): Promise<PublicDecisionSummaryResult> {
+  const base = getPublicApiBase();
+  try {
+    const res = await fetch(`${base}/public/trust/decisions/${encodeURIComponent(decisionRef)}`, { cache: 'no-store' });
+    if (!res.ok) {
+      return {
+        decision: null,
+        degradedHonesty: {
+          isDegraded: true,
+          reason: `decision_summary_http_${res.status}`,
+          fallback: 'No public-safe decision summary is published for this record.',
+        },
+      };
+    }
+
+    const payload = (await res.json()) as OkEnvelope<{
+      decision: unknown;
+      degraded_honesty: unknown;
+    }>;
+    if (!payload?.ok || !payload.data?.decision) {
+      return {
+        decision: null,
+        degradedHonesty: {
+          isDegraded: true,
+          reason: 'decision_summary_contract_error',
+          fallback: 'Decision summary payload is unavailable.',
+        },
+      };
+    }
+
+    return {
+      decision: toDecisionSummary(payload.data.decision),
+      degradedHonesty: toDegradedHonesty(payload.data.degraded_honesty),
+    };
+  } catch {
+    return {
+      decision: null,
+      degradedHonesty: {
+        isDegraded: true,
+        reason: 'decision_summary_fetch_failed',
+        fallback: 'Decision summary could not be loaded.',
+      },
+    };
   }
 }

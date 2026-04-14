@@ -6,6 +6,9 @@ const { createClientMock, getCoreApiOriginMock, getImpactApiOriginMock } = vi.ho
   getCoreApiOriginMock: vi.fn(),
   getImpactApiOriginMock: vi.fn(),
 }));
+const { emitPlaneLogMock } = vi.hoisted(() => ({
+  emitPlaneLogMock: vi.fn(),
+}));
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: createClientMock,
@@ -14,6 +17,9 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('@/lib/runtime', () => ({
   getCoreApiOrigin: getCoreApiOriginMock,
   getImpactApiOrigin: getImpactApiOriginMock,
+}));
+vi.mock('@/lib/observability/planeLog', () => ({
+  emitPlaneLog: emitPlaneLogMock,
 }));
 
 import { GET } from '@/app/api/control/[...path]/route';
@@ -80,6 +86,12 @@ describe('control proxy route', () => {
     expect(payload.error.code).toBe('control_host_required');
     expect(createClientMock).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(emitPlaneLogMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        plane: 'control',
+        eventName: 'control_proxy_host_rejected',
+      }),
+    );
   });
 
   it('requires a valid control session', async () => {

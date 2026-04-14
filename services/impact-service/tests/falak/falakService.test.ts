@@ -1086,11 +1086,34 @@ describe('Falak journey connector projection', () => {
       expect(response.statusCode).toBe(200);
       expect(response.json()).toMatchObject({
         journey_slug: 'knowledge-action-community-governance-archive',
+        node_scope: {
+          tenant_id: adminContext.tenantId,
+          tenant_slug: adminContext.tenantSlug,
+        },
         archive_handoff: {
           route: '/archive',
         },
         degraded_honesty: {
           is_degraded: false,
+        },
+      });
+    });
+  });
+
+  test('keeps journey projection tenant-scoped when another tenant requests the same flagship slug', async () => {
+    await withGuardedHttpFixture({}, async ({ app, otherTenantId }) => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/v1/falak/journeys/knowledge-action-community-governance-archive/connectors',
+        headers: {
+          'x-tenant-id': otherTenantId,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toMatchObject({
+        node_scope: {
+          tenant_id: otherTenantId,
         },
       });
     });

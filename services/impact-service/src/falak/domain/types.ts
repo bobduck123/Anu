@@ -27,6 +27,8 @@ export type FalakRouteGuardMode = 'disabled' | 'admin_only' | 'tenant_allowlist'
 export type FalakGuardedRouteAccess = 'public' | 'privileged';
 export type FalakActorResolutionSource = 'none' | 'verified_auth' | 'trusted_header_override';
 export type FalakTokenAudience = 'none' | 'public' | 'control' | 'unknown';
+export type PlaneLogContractPlane = 'public' | 'control' | 'impact';
+export type PlaneLogContractLevel = 'debug' | 'info' | 'warn' | 'error';
 
 export interface GeometryValue {
   type: string;
@@ -83,6 +85,17 @@ export interface RequestContext {
   routeGuard: RouteGuardContext;
   ipAddress: string | null;
   userAgent: string | null;
+}
+
+export interface PlaneLogContractEnvelope {
+  plane: PlaneLogContractPlane;
+  service_name: string;
+  event_name: string;
+  level: PlaneLogContractLevel;
+  timestamp: string;
+  request_id: string | null;
+  correlation_id: string | null;
+  context?: JsonObject;
 }
 
 export interface NodeRecord {

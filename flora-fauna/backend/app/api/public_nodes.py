@@ -12,6 +12,7 @@ from flask import Blueprint, g, jsonify, request
 from ..models import Node, NodeConfig, NodeDomain
 from ..schemas import PublicNodeConfigResponseSchema
 from ..services.node_service import resolve_node_from_request
+from ..services.public_site_service import build_public_site_manifest_for_node
 
 public_nodes_bp = Blueprint("public_nodes", __name__, url_prefix="/api/public/nodes")
 
@@ -95,7 +96,7 @@ def _normalized_modules(config_json: dict):
     return modules if isinstance(modules, dict) else {}
 
 
-def _build_public_node_config(node, config_json: dict, domain_record=None):
+def _build_public_node_config(node, config_json: dict, domain_record=None, site_resolution=None):
     payload = {
         "contract_version": PUBLIC_NODE_CONFIG_CONTRACT_VERSION,
         "node_id": node.id,
@@ -109,6 +110,12 @@ def _build_public_node_config(node, config_json: dict, domain_record=None):
         "is_default": bool(getattr(node, "is_default", False)),
         "domain": domain_record.domain if domain_record else None,
         "tls_ready": bool(domain_record.tls_ready) if domain_record else None,
+        "site_manifest": build_public_site_manifest_for_node(
+            node=node,
+            config_json=config_json,
+            resolved_host=domain_record.domain if domain_record else None,
+        ),
+        "site_resolution": site_resolution,
     }
     return public_node_config_schema.dump(payload)
 
@@ -141,7 +148,30 @@ def get_current_node_config():
         host_record = None
 
     domain_record = host_record or _primary_active_domain_for_node(node.id)
-    return jsonify(_build_public_node_config(node, config_json, domain_record))
+    if host_record:
+        resolution_status = "resolved"
+        resolved = True
+        fallback_note = None
+    elif not host:
+        resolution_status = "fallback_missing_host"
+        resolved = False
+        fallback_note = "Host header not available; default tenant manifest is shown."
+    elif bool(getattr(node, "is_default", False)):
+        resolution_status = "resolved_platform_host"
+        resolved = True
+        fallback_note = None
+    else:
+        resolution_status = "fallback_unknown_host"
+        resolved = False
+        fallback_note = f"Host '{host}' is not mapped to this tenant; default tenant manifest is shown."
+
+    site_resolution = {
+        "resolved": resolved,
+        "resolution_status": resolution_status,
+        "fallback_note": fallback_note,
+        "host": host or None,
+    }
+    return jsonify(_build_public_node_config(node, config_json, domain_record, site_resolution))
 
 
 @public_nodes_bp.route("/<string:slug>/config", methods=["GET"])
@@ -155,4 +185,10 @@ def get_node_config_by_slug(slug):
     config_json = _coerce_node_config_json(cfg.config_json if cfg else {})
     domain_record = _primary_active_domain_for_node(node.id)
 
-    return jsonify(_build_public_node_config(node, config_json, domain_record))
+    site_resolution = {
+        "resolved": False,
+        "resolution_status": "slug_lookup",
+        "fallback_note": "Node config was resolved by slug lookup, not host binding.",
+        "host": None,
+    }
+    return jsonify(_build_public_node_config(node, config_json, domain_record, site_resolution))

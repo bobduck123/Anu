@@ -30,6 +30,13 @@ interface TenantInfo {
   nodeName: string;
   semanticKey?: string;
   whiteLabel: boolean;
+  siteManifest?: Record<string, unknown>;
+  siteResolution?: {
+    resolved: boolean;
+    resolutionStatus: string;
+    fallbackNote: string | null;
+    host: string | null;
+  };
   brand: {
     primaryColor?: string;
     secondaryColor?: string;
@@ -117,6 +124,13 @@ async function resolveTenantFromDomain(
       nodeName: data.node_name || '',
       semanticKey: data.semantic_key || '',
       whiteLabel: data.white_label ?? data.is_white_label ?? false,
+      siteManifest: data.site_manifest || undefined,
+      siteResolution: {
+        resolved: data.site_resolution?.resolved ?? true,
+        resolutionStatus: data.site_resolution?.resolution_status ?? 'resolved',
+        fallbackNote: data.site_resolution?.fallback_note ?? null,
+        host: data.site_resolution?.host ?? hostname,
+      },
       brand: {
         primaryColor: data.brand?.primary_color ?? data.brand_config?.primary_color,
         secondaryColor: data.brand?.secondary_color ?? data.brand_config?.secondary_color,
@@ -140,6 +154,28 @@ async function resolveTenantFromDomain(
       console.warn(prefix, error instanceof Error ? error.message : error);
     }
     return null;
+  }
+}
+
+function clearTenantContextCookies(response: NextResponse) {
+  const cookieKeys = [
+    'tenant_id',
+    'tenant_slug',
+    'tenant_name',
+    'tenant_white_label',
+    'tenant_semantic_key',
+    'tenant_brand',
+    'tenant_site_manifest',
+  ];
+
+  for (const key of cookieKeys) {
+    response.cookies.set(key, '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    });
   }
 }
 
@@ -192,8 +228,10 @@ export async function proxy(request: NextRequest) {
   const tenantInfo = await resolveTenantFromDomain(hostname, apiBase);
 
   if (!tenantInfo) {
-    // Domain not configured - redirect to main platform
-    return NextResponse.redirect(new URL('https://anu.eco', request.url));
+    // Unknown custom hosts should degrade to platform shell with explicit fallback context.
+    supabaseResponse.headers.set('x-tenant-site-resolution', 'fallback_unknown_host');
+    clearTenantContextCookies(supabaseResponse);
+    return supabaseResponse;
   }
 
   // Use the Supabase response (preserves cookies) and add tenant headers
@@ -205,6 +243,8 @@ export async function proxy(request: NextRequest) {
   response.headers.set('x-tenant-name', tenantInfo.nodeName);
   response.headers.set('x-tenant-white-label', String(tenantInfo.whiteLabel));
   response.headers.set('x-tenant-semantic-key', tenantInfo.semanticKey || '');
+  response.headers.set('x-tenant-site-resolution', tenantInfo.siteResolution?.resolutionStatus || 'resolved');
+  response.headers.set('x-tenant-site-key', String(tenantInfo.siteManifest?.site_key || ''));
 
   // Set brand config as JSON header for theming
   response.headers.set('x-tenant-brand', JSON.stringify(tenantInfo.brand));
@@ -252,6 +292,15 @@ export async function proxy(request: NextRequest) {
     maxAge: 60 * 60 * 24,
     path: '/',
   });
+  if (tenantInfo.siteManifest) {
+    response.cookies.set('tenant_site_manifest', encodeURIComponent(JSON.stringify(tenantInfo.siteManifest)), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24,
+      path: '/',
+    });
+  }
 
   return response;
 }

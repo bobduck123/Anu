@@ -30,7 +30,9 @@ def get_public_connectors():
     node_param = request.args.get("node")
 
     try:
-        node = resolve_node(node_param)
+        node = resolve_node(node_param) if node_param else None
+        if node_param and not node:
+            return error("not_found", "Node not found", 404)
         payload = ensure_flagship_journey_payload(source_route=source_route or "", node_override=node)
         if not payload:
             return error("not_found", "Node not found", 404)
@@ -49,7 +51,9 @@ def get_public_journey(slug: str):
     node_param = request.args.get("node")
 
     try:
-        node = resolve_node(node_param)
+        node = resolve_node(node_param) if node_param else None
+        if node_param and not node:
+            return error("not_found", "Node not found", 404)
         payload = build_public_journey_payload(slug, source_route=source_route or "", node_override=node)
         if not payload:
             return error("not_found", "Journey not found", 404)

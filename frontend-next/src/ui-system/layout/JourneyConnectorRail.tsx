@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, FileCheck2 } from 'lucide-react';
 import type { JourneyConnectorRailPayload } from '@/ui-system/anu/journeyConnectorRegistry';
+import { useTenant } from '@/ui-system/layout/TenantBrandWrapper';
 
 interface JourneyConnectorRailProps {
   sourceRoute: string | null;
@@ -12,10 +13,18 @@ interface JourneyConnectorRailProps {
 
 export function JourneyConnectorRail({ sourceRoute, onNavigate }: JourneyConnectorRailProps) {
   const [payload, setPayload] = useState<JourneyConnectorRailPayload | null>(null);
+  const tenant = useTenant();
 
   useEffect(() => {
     const controller = new AbortController();
-    const query = sourceRoute ? `?source=${encodeURIComponent(sourceRoute)}` : '';
+    const params = new URLSearchParams();
+    if (sourceRoute) {
+      params.set('source', sourceRoute);
+    }
+    if (tenant.slug) {
+      params.set('node', tenant.slug);
+    }
+    const query = params.toString() ? `?${params.toString()}` : '';
 
     fetch(`/api/sdk/journey-connectors${query}`, {
       method: 'GET',
@@ -39,7 +48,7 @@ export function JourneyConnectorRail({ sourceRoute, onNavigate }: JourneyConnect
       });
 
     return () => controller.abort();
-  }, [sourceRoute]);
+  }, [sourceRoute, tenant.slug]);
 
   const activeConnectors = useMemo(() => payload?.activeConnectors ?? [], [payload]);
 

@@ -39,6 +39,36 @@ describe('proxy tenant contract', () => {
             node_name: 'Sydney Node',
             semantic_key: 'sydney-alpha',
             white_label: true,
+            site_resolution: {
+              resolved: true,
+              resolution_status: 'resolved',
+              fallback_note: null,
+              host: 'impact.example.com',
+            },
+            site_manifest: {
+              tenant_id: 7,
+              site_key: 'sydney-public',
+              site_name: 'Sydney Public Commons',
+              tagline: 'Sydney public routes on ANU rails.',
+              brand_assets: {
+                logo_url: 'https://cdn.example/logo.svg',
+                favicon_url: 'https://cdn.example/favicon.ico',
+              },
+              theme_tokens: {
+                primary_color: '#112233',
+                accent_color: '#445566',
+              },
+              nav_items: [
+                { label: 'Trust', href: '/trust' },
+              ],
+              enabled_public_modules: ['trust', 'archive'],
+              footer_links: [{ label: 'Privacy', href: '/privacy' }],
+              legal_links: { privacy: '/privacy', terms: '/terms', code_of_conduct: '/code-of-conduct' },
+              trust_links: { trust_center: '/trust', transparency: '/transparency', archive: '/archive' },
+              contact: { email: 'hello@example.com', public_contact_url: '/contact', location_label: 'Sydney' },
+              canonical_domains: ['impact.example.com'],
+              preview_host: 'sydney.preview.anu.eco',
+            },
             brand: {
               primary_color: '#112233',
               accent_color: '#445566',
@@ -63,6 +93,8 @@ describe('proxy tenant contract', () => {
     expect(response.headers.get('x-tenant-name')).toBe('Sydney Node');
     expect(response.headers.get('x-tenant-white-label')).toBe('true');
     expect(response.headers.get('x-tenant-semantic-key')).toBe('sydney-alpha');
+    expect(response.headers.get('x-tenant-site-resolution')).toBe('resolved');
+    expect(response.headers.get('x-tenant-site-key')).toBe('sydney-public');
 
     expect(response.cookies.get('tenant_id')?.value).toBe('7');
     expect(response.cookies.get('tenant_slug')?.value).toBe('au-nsw-sydney');
@@ -76,5 +108,42 @@ describe('proxy tenant contract', () => {
     expect(parsedBrand.primaryColor).toBe('#112233');
     expect(parsedBrand.accentColor).toBe('#445566');
     expect(parsedBrand.logoUrl).toBe('https://cdn.example/logo.svg');
+
+    const siteManifestCookie = response.cookies.get('tenant_site_manifest')?.value;
+    expect(siteManifestCookie).toBeTruthy();
+    const parsedSiteManifest = JSON.parse(decodeURIComponent(siteManifestCookie || '{}')) as Record<string, unknown>;
+    expect(parsedSiteManifest.site_key).toBe('sydney-public');
+    expect(parsedSiteManifest.site_name).toBe('Sydney Public Commons');
+  });
+
+  it('falls back safely on unknown custom hosts instead of redirecting', async () => {
+    const supabaseResponse = NextResponse.next();
+
+    vi.mocked(updateSupabaseSession).mockResolvedValue({
+      supabaseResponse,
+      user: null,
+    });
+    vi.mocked(getCoreApiOrigin).mockReturnValue('https://core.example.com');
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({ error: 'Domain not configured' }),
+          {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        ),
+      ),
+    );
+
+    const request = new NextRequest('https://unknown-tenant.example/community', {
+      headers: { host: 'unknown-tenant.example' },
+    });
+    const response = await proxy(request);
+
+    expect(response.headers.get('x-tenant-site-resolution')).toBe('fallback_unknown_host');
+    expect(response.headers.get('location')).toBeNull();
   });
 });

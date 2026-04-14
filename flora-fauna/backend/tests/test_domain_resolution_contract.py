@@ -34,7 +34,7 @@ def test_domain_resolution_returns_stable_public_contract_from_legacy_string_con
         db.session.add(
             NodeConfig(
                 node_id=node.id,
-                config_json='{"semantic_key":"sydney-alpha","white_label":{"enabled":true},"branding":{"primary_color":"#112233","accent_color":"#445566","logo_url":"https://cdn.example/logo.svg"}}',
+                config_json='{"semantic_key":"sydney-alpha","white_label":{"enabled":true},"branding":{"primary_color":"#112233","accent_color":"#445566","logo_url":"https://cdn.example/logo.svg"},"public_site_manifest":{"site_key":"sydney-public","site_name":"Sydney Public Commons","tagline":"Sydney commons hosted on ANU rails.","nav_items":[{"label":"Trust","href":"/trust"},{"label":"Control Leak Attempt","href":"/control/tenants"}]}}',
             )
         )
         db.session.commit()
@@ -53,6 +53,10 @@ def test_domain_resolution_returns_stable_public_contract_from_legacy_string_con
     assert payload["brand"]["primary_color"] == "#112233"
     assert payload["brand"]["accent_color"] == "#445566"
     assert payload["brand"]["logo_url"] == "https://cdn.example/logo.svg"
+    assert payload["site_manifest"]["site_key"] == "sydney-public"
+    assert payload["site_manifest"]["site_name"] == "Sydney Public Commons"
+    assert payload["site_manifest"]["tenant_id"] == payload["node_id"]
+    assert all(item["href"] != "/control/tenants" for item in payload["site_manifest"]["nav_items"])
 
     # Backward-compatible aliases remain for existing clients.
     assert payload["is_white_label"] is True

@@ -8,13 +8,14 @@ Provides endpoints for:
 - Provisioning complete white-label deployments
 """
 
-from flask import Blueprint, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask import Blueprint, request, current_app
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 import json
 
 from .utils import ok, error
 from ..extensions import db
 from ..models import Node, NodeConfig, NodeDomain, User
+from ..security.policy import get_current_user
 
 admin_tenants_bp = Blueprint("admin_tenants", __name__, url_prefix="/admin/tenants")
 
@@ -51,13 +52,67 @@ def _require_platform_admin():
     return user, None
 
 
+def _parse_node_ids(raw_value):
+    if raw_value is None:
+        return set()
+    values = raw_value if isinstance(raw_value, (list, tuple, set)) else [raw_value]
+    parsed = set()
+    for value in values:
+        try:
+            candidate = int(value)
+        except (TypeError, ValueError):
+            continue
+        if candidate > 0:
+            parsed.add(candidate)
+    return parsed
+
+
+def _resolve_tenant_access_scope():
+    user = get_current_user()
+    if not user:
+        return None, error("UNAUTHORIZED", "Authentication required", 401)
+
+    claims = get_jwt() or {}
+    if str(claims.get("token_use") or "").strip().lower() != "control":
+        return None, error("FORBIDDEN", "Control token required", 403)
+
+    role = str(claims.get("role") or user.role or "").strip().lower()
+    allowed_control_roles = {
+        str(value).strip().lower()
+        for value in (current_app.config.get("CONTROL_PLANE_ALLOWED_ROLES") or [])
+        if str(value).strip()
+    }
+    if not allowed_control_roles:
+        allowed_control_roles = {"platform_admin", "node_admin"}
+
+    if role not in allowed_control_roles:
+        return None, error("FORBIDDEN", "Control role required", 403)
+
+    if role == "platform_admin":
+        return None, None
+
+    allowed = set()
+    allowed.update(_parse_node_ids(user.node_id))
+    allowed.update(_parse_node_ids(claims.get("node_id")))
+    allowed.update(_parse_node_ids(claims.get("managed_node_ids")))
+
+    return allowed, None
+
+
 @admin_tenants_bp.route("", methods=["GET"])
 @jwt_required()
 def list_tenants():
-    user, err = _require_platform_admin()
+    allowed_node_ids, err = _resolve_tenant_access_scope()
     if err:
         return err
-    nodes = Node.query.order_by(Node.id).all()
+
+    query = Node.query.order_by(Node.id)
+    if allowed_node_ids is not None:
+        if not allowed_node_ids:
+            return ok([])
+        query = query.filter(Node.id.in_(sorted(allowed_node_ids)))
+
+    nodes = query.all()
     payload = []
     for n in nodes:
         d = n.to_dict() if hasattr(n, "to_dict") else {"id": n.id, "name": n.name}

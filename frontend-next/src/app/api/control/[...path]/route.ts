@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createSupabaseServerClient } from '@/lib/supabase/server';
 import { getCoreApiOrigin, getImpactApiOrigin } from '@/lib/runtime';
+import { emitPlaneLog } from '@/lib/observability/planeLog';
 import {
   evaluateControlRouteAccess,
   getControlPlaneHostsFromEnv,
@@ -86,6 +87,22 @@ type ControlSession = {
   role: string;
   publicAccessToken: string;
 };
+
+function logControlProxyEvent(
+  traceIdValue: string,
+  eventName: string,
+  level: 'debug' | 'info' | 'warn' | 'error' = 'info',
+  context?: Record<string, unknown>,
+) {
+  emitPlaneLog({
+    plane: 'control',
+    serviceName: 'frontend-next',
+    eventName,
+    level,
+    correlationId: traceIdValue,
+    context,
+  });
+}
 
 function traceId(): string {
   return `anu06_${crypto.randomUUID()}`;
@@ -210,6 +227,10 @@ async function forwardControlRequest(
 ): Promise<NextResponse> {
   const coreOrigin = getCoreApiOrigin();
   if (rule.requiresPrivilegedAuth && !coreOrigin) {
+    logControlProxyEvent(traceIdValue, 'control_proxy_core_origin_missing', 'error', {
+      routeFamily: rule.routeFamily,
+      target: rule.target,
+    });
     return jsonError(503, 'control_core_origin_missing', 'Control core origin is not configured.', traceIdValue);
   }
 
@@ -217,6 +238,11 @@ async function forwardControlRequest(
   if (rule.requiresPrivilegedAuth) {
     controlAccessToken = await mintControlToken(coreOrigin as string, controlSession.publicAccessToken, traceIdValue);
     if (!controlAccessToken) {
+      logControlProxyEvent(traceIdValue, 'control_proxy_privileged_token_denied', 'warn', {
+        routeFamily: rule.routeFamily,
+        target: rule.target,
+        actorRole: controlSession.role,
+      });
       return jsonError(403, 'control_token_denied', 'Unable to establish privileged control session.', traceIdValue);
     }
   }
@@ -258,6 +284,11 @@ async function forwardControlRequest(
 
   if (!upstreamResponse.ok) {
     const upstreamPayload = await upstreamResponse.json().catch(() => null);
+    logControlProxyEvent(traceIdValue, 'control_proxy_upstream_error', 'warn', {
+      routeFamily: rule.routeFamily,
+      target: rule.target,
+      upstreamStatus: upstreamResponse.status,
+    });
     return jsonError(
       upstreamResponse.status,
       'upstream_control_error',
@@ -279,6 +310,12 @@ async function forwardControlRequest(
   }
 
   const payload = await upstreamResponse.arrayBuffer();
+  logControlProxyEvent(traceIdValue, 'control_proxy_forward_success', 'info', {
+    routeFamily: rule.routeFamily,
+    target: rule.target,
+    upstreamStatus: upstreamResponse.status,
+    actorRole: controlSession.role,
+  });
   return new NextResponse(payload.byteLength ? payload : null, {
     status: upstreamResponse.status,
     headers: responseHeaders,
@@ -291,6 +328,11 @@ async function handle(request: NextRequest, context: RouteContext): Promise<Next
 
   const controlAccess = evaluateControlRouteAccess(requestHostname, getControlPlaneHostsFromEnv());
   if (!controlAccess.allowed) {
+    logControlProxyEvent(traceIdValue, 'control_proxy_host_rejected', 'warn', {
+      host: requestHostname,
+      pathname: request.nextUrl.pathname,
+      method: request.method,
+    });
     return jsonError(403, 'control_host_required', 'Control proxy is only available on control hosts.', traceIdValue);
   }
 
@@ -302,28 +344,50 @@ async function handle(request: NextRequest, context: RouteContext): Promise<Next
       controlSessionResult.reason === 'insufficient_role'
         ? 'Control role is required for this proxy route.'
         : 'A valid control session is required.';
+    logControlProxyEvent(traceIdValue, 'control_proxy_session_rejected', 'warn', {
+      reason: controlSessionResult.reason ?? 'missing_session',
+      host: requestHostname,
+      pathname: request.nextUrl.pathname,
+    });
     return jsonError(status, code, message, traceIdValue);
   }
 
   const pathParts = await getPathParts(context);
   if (pathParts.length < 2) {
+    logControlProxyEvent(traceIdValue, 'control_proxy_route_incomplete', 'warn', {
+      pathname: request.nextUrl.pathname,
+      method: request.method,
+    });
     return jsonError(404, 'control_route_not_found', 'Control proxy route is incomplete.', traceIdValue);
   }
 
   const [targetRaw, ...upstreamParts] = pathParts;
   const target = (targetRaw || '').toLowerCase() as ProxyTarget;
   if (target !== 'core' && target !== 'impact') {
+    logControlProxyEvent(traceIdValue, 'control_proxy_target_rejected', 'warn', {
+      target: targetRaw,
+      pathname: request.nextUrl.pathname,
+    });
     return jsonError(404, 'control_target_not_supported', 'Control proxy target is not supported.', traceIdValue);
   }
 
   const upstreamPath = `/${upstreamParts.join('/')}`;
   const rule = resolveRule(target, request.method, upstreamPath);
   if (!rule) {
+    logControlProxyEvent(traceIdValue, 'control_proxy_route_not_allowlisted', 'warn', {
+      target,
+      method: request.method,
+      upstreamPath,
+    });
     return jsonError(404, 'control_route_not_allowlisted', 'Route is not allowlisted for control proxy forwarding.', traceIdValue);
   }
 
   const targetOrigin = resolveTargetOrigin(target);
   if (!targetOrigin) {
+    logControlProxyEvent(traceIdValue, 'control_proxy_origin_missing', 'error', {
+      target,
+      routeFamily: rule.routeFamily,
+    });
     return jsonError(503, 'control_upstream_origin_missing', 'Upstream origin is not configured for this control target.', traceIdValue);
   }
 
@@ -332,6 +396,11 @@ async function handle(request: NextRequest, context: RouteContext): Promise<Next
   try {
     return await forwardControlRequest(request, upstreamUrl, rule, controlSessionResult.session, traceIdValue, requestHostname);
   } catch {
+    logControlProxyEvent(traceIdValue, 'control_proxy_upstream_unreachable', 'error', {
+      routeFamily: rule.routeFamily,
+      target,
+      upstreamUrl,
+    });
     return jsonError(502, 'control_upstream_unreachable', 'Control proxy could not reach upstream service.', traceIdValue, {
       route_family: rule.routeFamily,
       target,

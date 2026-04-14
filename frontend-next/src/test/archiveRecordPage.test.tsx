@@ -84,6 +84,14 @@ describe('Archive record route', () => {
     fetchMock.mockResolvedValueOnce(
       new Response(
         JSON.stringify({
+          ok: false,
+        }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
           ok: true,
           data: {
             disclosures: [
@@ -195,6 +203,35 @@ describe('Archive record route', () => {
         JSON.stringify({
           ok: true,
           data: {
+            decision: {
+              decision_id: 'D001',
+              title: 'Control host/domain',
+              decision_statement: 'Confirm canonical control host/domain for privileged surfaces.',
+              why_it_matters: 'Needed for host gating proof.',
+              owner: 'Founder + Ops',
+              due_date: '2026-04-14',
+              current_status: 'Open (default active)',
+              record_route: '/archive/governance-memory-note',
+              archive_record_slug: 'governance-memory-note',
+              publication_scope: 'public_summary',
+              source_label: 'Decision register (public-safe projection)',
+              summary: 'Confirm canonical control host/domain for privileged surfaces.',
+            },
+            degraded_honesty: {
+              is_degraded: false,
+              reason: null,
+              fallback: null,
+            },
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          ok: true,
+          data: {
             disclosures: [],
             disclosure_state: 'none_published',
             degraded_honesty: {
@@ -214,6 +251,9 @@ describe('Archive record route', () => {
     expect(screen.getByText(/Trust appendix body from governance packet/i)).toBeInTheDocument();
     expect(screen.getByText(/Governance publication packet/i)).toBeInTheDocument();
     expect(screen.getByText(/No active sponsor disclosures are published for this surface at this time/i)).toBeInTheDocument();
+    expect(screen.getByText(/Decision register context/i)).toBeInTheDocument();
+    expect(screen.getByText(/D001: Control host\/domain/i)).toBeInTheDocument();
+    expect(screen.getByText(/public-safe decision summary/i)).toBeInTheDocument();
   });
 
   it('renders explicit degraded state when neither trust detail nor archive handoff exists', async () => {

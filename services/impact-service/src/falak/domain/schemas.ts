@@ -22,6 +22,18 @@ export const ledgerCategorySchema = z.enum([
   'security',
   'publication'
 ]);
+export const planeLogPlaneSchema = z.enum(['public', 'control', 'impact']);
+export const planeLogLevelSchema = z.enum(['debug', 'info', 'warn', 'error']);
+export const planeLogEnvelopeSchema = z.object({
+  plane: planeLogPlaneSchema,
+  service_name: z.string().min(1),
+  event_name: z.string().min(1),
+  level: planeLogLevelSchema,
+  timestamp: isoDateTimeSchema,
+  request_id: z.string().nullable(),
+  correlation_id: z.string().nullable(),
+  context: jsonObjectSchema.optional()
+});
 
 export const tenantBindingSchema = z.object({
   id: uuidSchema,

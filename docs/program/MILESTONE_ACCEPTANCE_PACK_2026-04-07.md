@@ -63,7 +63,10 @@ Each milestone requires:
 - archive skeleton routes,
 - public trust report model/API,
 - sponsor disclosure surface,
-- non-distortion enforcement.
+- non-distortion enforcement,
+- canonical archive index summary feed,
+- deterministic archive pagination contract + UI controls,
+- minimal public-safe archive query refinement.
 
 ### Required proof
 - archive route tests,
@@ -90,9 +93,70 @@ Each milestone requires:
   - `flora-fauna/backend/app/services/trust_report_service.py`
   - `flora-fauna/backend/app/services/sponsor_disclosure_service.py`
 
+### Evidence snapshot (archive index + canonical summary feed slice, 2026-04-14)
+- backend archive summary slice: `python -m pytest -q tests/test_public_archive.py tests/test_public_trust.py tests/test_public_sponsor_disclosures.py` (9 passed),
+- frontend archive index slice: `npx vitest run src/test/archivePage.test.tsx src/test/archiveRecordPage.test.tsx` (2 files, 6 tests passed),
+- frontend typecheck: `npm run -s typecheck` (pass),
+- implementation references:
+  - `flora-fauna/backend/app/api/public_archive.py`
+  - `flora-fauna/backend/app/services/archive_service.py`
+  - `flora-fauna/backend/tests/test_public_archive.py`
+  - `flora-fauna/backend/app/schemas.py`
+  - `frontend-next/src/lib/api/publicArchive.ts`
+  - `frontend-next/src/app/(public)/archive/page.tsx`
+  - `frontend-next/src/components/archive/ArchiveShell.tsx`
+  - `frontend-next/src/test/archivePage.test.tsx`
+
+### Evidence snapshot (ANU-027 deterministic pagination follow-up, 2026-04-14)
+- backend archive pagination slice: `python -m pytest -q tests/test_public_archive.py tests/test_public_trust.py tests/test_public_sponsor_disclosures.py` (10 passed),
+- frontend archive pagination slice: `npx vitest run src/test/archivePage.test.tsx src/test/archiveRecordPage.test.tsx` (2 files, 7 tests passed),
+- frontend typecheck: `npm run -s typecheck` (pass),
+- implementation references:
+  - `flora-fauna/backend/app/services/archive_service.py`
+  - `flora-fauna/backend/app/api/public_archive.py`
+  - `flora-fauna/backend/app/schemas.py`
+  - `flora-fauna/backend/tests/test_public_archive.py`
+  - `frontend-next/src/lib/api/publicArchive.ts`
+  - `frontend-next/src/app/(public)/archive/page.tsx`
+  - `frontend-next/src/components/archive/ArchiveShell.tsx`
+  - `frontend-next/src/test/archivePage.test.tsx`
+
+### Evidence snapshot (ANU-028 title-prefix refinement, 2026-04-14)
+- backend archive refinement slice: `python -m pytest -q tests/test_public_archive.py tests/test_public_trust.py tests/test_public_sponsor_disclosures.py` (11 passed),
+- frontend archive refinement slice: `npx vitest run src/test/archivePage.test.tsx src/test/archiveRecordPage.test.tsx` (2 files, 7 tests passed),
+- frontend typecheck: `npm run -s typecheck` (pass),
+- implementation references:
+  - `flora-fauna/backend/app/services/archive_service.py`
+  - `flora-fauna/backend/app/api/public_archive.py`
+  - `flora-fauna/backend/app/schemas.py`
+  - `flora-fauna/backend/tests/test_public_archive.py`
+  - `frontend-next/src/lib/api/publicArchive.ts`
+  - `frontend-next/src/app/(public)/archive/page.tsx`
+  - `frontend-next/src/components/archive/ArchiveShell.tsx`
+  - `frontend-next/src/test/archivePage.test.tsx`
+
+### Evidence snapshot (ANU-022 decision register publication path, 2026-04-14)
+- backend decision publication slice:
+  - `python -m pytest -q -p no:cacheprovider -p no:tmpdir tests/test_public_decisions.py tests/test_public_archive.py tests/test_public_trust.py` (12 passed in sandbox run),
+- frontend decision-link archive slice:
+  - `npx vitest run src/test/archivePage.test.tsx src/test/archiveRecordPage.test.tsx` (2 files, 7 tests passed),
+- frontend typecheck:
+  - `npm run -s typecheck` (pass),
+- implementation references:
+  - `flora-fauna/backend/app/services/decision_register_service.py`
+  - `flora-fauna/backend/app/api/public_trust.py`
+  - `flora-fauna/backend/app/services/archive_service.py`
+  - `flora-fauna/backend/app/schemas.py`
+  - `flora-fauna/backend/tests/test_public_decisions.py`
+  - `frontend-next/src/lib/api/publicTrust.ts`
+  - `frontend-next/src/components/archive/ArchiveRecordShell.tsx`
+  - `frontend-next/src/components/archive/ArchiveShell.tsx`
+  - `frontend-next/src/app/(public)/archive/[record]/page.tsx`
+  - `frontend-next/src/test/archiveRecordPage.test.tsx`
+
 ### Remaining for broader M4 closure
 - trust-center expansion beyond foundation IA remains pending (`ANU-022+` scope).
-- sponsor disclosure screenshots/live-capture artifact remains to be attached in release evidence pack (pending operational evidence).
+- sponsor disclosure rendering proof captured; additional optional captures can still be attached for release packaging.
 
 ## M5 - Node Proof
 ### Required outcomes
@@ -106,3 +170,137 @@ Each milestone requires:
 - cross-tenant denial tests,
 - public host vs control host proof,
 - node-scoped flagship journey proof.
+
+### Evidence snapshot (ANU-WL-001 white-label public foundation, 2026-04-14)
+- backend host-resolution + manifest contract:
+  - `python -m pytest -q tests/test_domain_resolution_contract.py tests/test_node_config_contract.py tests/test_public_site_manifest.py` (15 passed),
+- frontend host-aware manifest consumption + public shell:
+  - `npx vitest run src/test/proxyTenantContract.test.ts src/test/tenantBrandContract.test.tsx src/test/publicSiteManifestRail.test.tsx` (3 files, 7 tests passed),
+- frontend typecheck:
+  - `npm run -s typecheck` (pass),
+- implementation references:
+  - `flora-fauna/backend/app/services/public_site_service.py`
+  - `flora-fauna/backend/app/api/public_sites.py`
+  - `flora-fauna/backend/app/api/domain_resolution.py`
+  - `flora-fauna/backend/app/api/public_nodes.py`
+  - `flora-fauna/backend/tests/test_public_site_manifest.py`
+  - `frontend-next/src/lib/publicSiteManifest.ts`
+  - `frontend-next/src/ui-system/layout/TenantBrandWrapper.tsx`
+  - `frontend-next/src/components/public/PublicSiteManifestRail.tsx`
+  - `frontend-next/src/proxy.ts`
+  - `frontend-next/src/test/proxyTenantContract.test.ts`
+  - `frontend-next/src/test/tenantBrandContract.test.tsx`
+  - `frontend-next/src/test/publicSiteManifestRail.test.tsx`
+
+### Evidence snapshot (ANU-WL-002 control-host manifest authoring, 2026-04-14)
+- backend control-plane authoring + validation/immutability contract:
+  - `python -m pytest -q tests/test_control_public_site_manifest_authoring.py tests/test_public_site_manifest.py tests/test_domain_resolution_contract.py tests/test_node_config_contract.py` (20 passed),
+- frontend control-host editor rendering + validation honesty:
+  - `npx vitest run src/test/controlManifestAuthoringPage.test.tsx src/test/controlProxyRoute.test.ts src/test/adminTenantsPage.test.tsx` (3 files, 8 tests passed),
+- frontend typecheck:
+  - `npm run -s typecheck` (pass),
+- implementation references:
+  - `flora-fauna/backend/app/services/public_site_authoring_service.py`
+  - `flora-fauna/backend/app/api/cultural_control.py`
+  - `flora-fauna/backend/app/security/control_plane.py`
+  - `flora-fauna/backend/app/schemas.py`
+  - `flora-fauna/backend/tests/test_control_public_site_manifest_authoring.py`
+  - `frontend-next/src/app/(control)/control/tenants/[nodeId]/manifest/page.tsx`
+  - `frontend-next/src/lib/api/controlClient.ts`
+  - `frontend-next/src/app/(control)/control/tenants/page.tsx`
+  - `frontend-next/src/test/controlManifestAuthoringPage.test.tsx`
+
+### Evidence snapshot (ANU-WL-003 optimistic concurrency for manifest authoring, 2026-04-14)
+- backend revision-token concurrency contract:
+  - `python -m pytest -q tests/test_control_public_site_manifest_authoring.py tests/test_public_site_manifest.py tests/test_domain_resolution_contract.py tests/test_node_config_contract.py` (pass),
+- frontend stale-write conflict messaging:
+  - `npx vitest run src/test/controlManifestAuthoringPage.test.tsx src/test/controlProxyRoute.test.ts src/test/adminTenantsPage.test.tsx` (pass),
+- frontend typecheck:
+  - `npm run -s typecheck` (pass),
+- implementation references:
+  - `flora-fauna/backend/app/services/public_site_authoring_service.py`
+  - `flora-fauna/backend/app/api/cultural_control.py`
+  - `flora-fauna/backend/app/schemas.py`
+  - `flora-fauna/backend/tests/test_control_public_site_manifest_authoring.py`
+  - `frontend-next/src/lib/api/controlClient.ts`
+  - `frontend-next/src/app/(control)/control/tenants/[nodeId]/manifest/page.tsx`
+  - `frontend-next/src/test/controlManifestAuthoringPage.test.tsx`
+
+### Evidence snapshot (ANU-WL-004 draft/publish separation for manifests, 2026-04-14)
+- backend draft-vs-published + explicit publish contract:
+  - `python -m pytest -q tests/test_control_public_site_manifest_authoring.py` (pass),
+- frontend draft preview + explicit publish action + stale publish honesty:
+  - `npx vitest run src/test/controlManifestAuthoringPage.test.tsx src/test/controlProxyRoute.test.ts src/test/adminTenantsPage.test.tsx` (pass),
+- frontend typecheck:
+  - `npm run -s typecheck` (pass),
+- implementation references:
+  - `flora-fauna/backend/app/services/public_site_authoring_service.py`
+  - `flora-fauna/backend/app/api/cultural_control.py`
+  - `flora-fauna/backend/app/schemas.py`
+  - `flora-fauna/backend/tests/test_control_public_site_manifest_authoring.py`
+  - `frontend-next/src/lib/api/controlClient.ts`
+  - `frontend-next/src/app/(control)/control/tenants/[nodeId]/manifest/page.tsx`
+  - `frontend-next/src/test/controlManifestAuthoringPage.test.tsx`
+
+### Evidence snapshot (ANU-WL-005 published-state freshness metadata, 2026-04-14)
+- backend published metadata contract:
+  - `python -m pytest -q tests/test_control_public_site_manifest_authoring.py` (pass),
+- frontend live-status/freshness rendering:
+  - `npx vitest run src/test/controlManifestAuthoringPage.test.tsx src/test/controlProxyRoute.test.ts src/test/adminTenantsPage.test.tsx` (pass),
+- frontend typecheck:
+  - `npm run -s typecheck` (pass),
+- implementation references:
+  - `flora-fauna/backend/app/services/public_site_authoring_service.py`
+  - `flora-fauna/backend/app/api/cultural_control.py`
+  - `flora-fauna/backend/tests/test_control_public_site_manifest_authoring.py`
+  - `frontend-next/src/lib/api/controlClient.ts`
+  - `frontend-next/src/app/(control)/control/tenants/[nodeId]/manifest/page.tsx`
+  - `frontend-next/src/test/controlManifestAuthoringPage.test.tsx`
+
+### Evidence snapshot (ANU-020 cross-service isolation proof, 2026-04-14)
+- backend cross-service/node isolation proof suite:
+  - `python -m pytest -q tests/test_node_isolation.py tests/test_domain_resolution.py tests/test_public_connectors.py tests/test_node_service_binding.py` (15 passed),
+- impact-service tenant binding + journey node-scope proof suite:
+  - `npm run -s test:non-db -- tests/falak/falakTenantBinding.test.ts tests/falak/falakService.test.ts` (pass),
+- frontend control-host/tenant-brand/flagship-journey proof suite:
+  - `npx vitest run src/test/tenantBrandContract.test.tsx src/test/controlPlaneHostRouting.test.tsx src/test/flagshipJourney.test.tsx src/test/journeyConnectorsApiRoute.test.ts src/test/journeyConnectorRegistry.test.ts` (5 files, 16 tests passed),
+- frontend typecheck:
+  - `npm run -s typecheck` (pass),
+- implementation references:
+  - `flora-fauna/backend/app/services/connector_service.py`
+  - `flora-fauna/backend/app/api/public_connectors.py`
+  - `flora-fauna/backend/tests/test_node_isolation.py`
+  - `flora-fauna/backend/tests/test_domain_resolution.py`
+  - `services/impact-service/tests/falak/falakTenantBinding.test.ts`
+  - `services/impact-service/tests/falak/falakService.test.ts`
+  - `frontend-next/src/app/api/sdk/journey-connectors/route.ts`
+  - `frontend-next/src/ui-system/anu/journeyConnectorRegistry.ts`
+  - `frontend-next/src/ui-system/layout/JourneyConnectorRail.tsx`
+  - `frontend-next/src/test/flagshipJourney.test.tsx`
+  - `frontend-next/src/test/controlPlaneHostRouting.test.tsx`
+  - `frontend-next/src/test/tenantBrandContract.test.tsx`
+
+### Evidence snapshot (ANU-023 plane-aware log contract rollout, 2026-04-14)
+- backend public/control plane-log contract suite:
+  - `python -m pytest -q -p no:cacheprovider -p no:tmpdir tests/test_plane_log_contract.py tests/test_public_trust.py tests/test_public_archive.py` (13 passed),
+- frontend public/control plane-log suite:
+  - `npx vitest run src/test/controlProxyRoute.test.ts src/test/publicArchiveLogging.test.ts src/test/planeLog.test.ts src/test/archivePage.test.tsx src/test/archiveRecordPage.test.tsx` (5 files, 16 tests passed),
+  - `npm run -s typecheck` (pass),
+- impact-service impact-plane telemetry suite:
+  - `npm run -s test:non-db -- tests/falak/falakTelemetryPlaneLog.test.ts` (pass, non-db suite green),
+  - `npm run -s typecheck` (pass),
+- implementation references:
+  - `flora-fauna/backend/app/security/plane_log.py`
+  - `flora-fauna/backend/app/api/public_archive.py`
+  - `flora-fauna/backend/app/api/public_trust.py`
+  - `flora-fauna/backend/app/security/control_plane.py`
+  - `frontend-next/src/lib/observability/planeLog.ts`
+  - `frontend-next/src/app/api/control/[...path]/route.ts`
+  - `frontend-next/src/lib/api/publicArchive.ts`
+  - `services/impact-service/src/falak/observability/planeLog.ts`
+  - `services/impact-service/src/falak/observability/falakTelemetry.ts`
+  - `services/impact-service/tests/falak/falakTelemetryPlaneLog.test.ts`
+
+### Remaining M5 evidence items
+- hosted screenshot artifact for public-host vs control-host isolation (`/control/*`) is still operational-evidence pending.
+- hosted recording artifact for flagship journey walk-through is still operational-evidence pending.

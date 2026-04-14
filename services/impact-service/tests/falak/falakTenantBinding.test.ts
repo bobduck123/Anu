@@ -13,6 +13,12 @@ describe('Falak tenant binding', () => {
     expect(verified.backendNodeSlug).toBe('au-nsw-sydney');
   });
 
+  test('normalizes backend node slug verification input before binding checks', async () => {
+    const { repository, tenantId } = createSeededFalakRepository();
+    const verified = await repository.verifyTenantNodeBinding(tenantId, '  AU-NSW-SYDNEY  ');
+    expect(verified.backendNodeSlug).toBe('au-nsw-sydney');
+  });
+
   test('rejects backend node slug mismatches and cross-tenant slug reuse', async () => {
     const { repository, tenantId, otherTenantId } = createSeededFalakRepository();
 

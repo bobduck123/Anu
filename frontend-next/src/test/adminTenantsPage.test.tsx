@@ -42,4 +42,30 @@ describe('TenantsListPage', () => {
     expect(screen.getByText('Northern Commons')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /provision tenant/i })).toHaveAttribute('href', '/control/tenants/create');
   });
+
+  it('only exposes tenant manifest actions for tenants returned by control scope', async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify([
+          {
+            id: 7,
+            name: 'Scoped Tenant',
+            slug: 'scoped-tenant',
+            status: 'active',
+            member_count: 9,
+            created_at: '2026-03-21T00:00:00.000Z',
+          },
+        ]),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ));
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<TenantsListPage />);
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    expect(screen.getByText('Scoped Tenant')).toBeInTheDocument();
+    expect(screen.queryByText('Unscoped Tenant')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Edit public manifest' })).toHaveAttribute('href', '/control/tenants/7/manifest');
+  });
 });

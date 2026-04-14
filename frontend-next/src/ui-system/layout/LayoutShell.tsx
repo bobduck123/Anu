@@ -6,6 +6,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { SystemHealthBanner } from '@/components/systemic/SystemHealthBanner';
+import { PublicSiteManifestRail } from '@/components/public/PublicSiteManifestRail';
 import { PathwayGuideBar } from './PathwayGuideBar';
 import { MobileDock } from './MobileDock';
 import { getRealmSurface } from '@/ui-system/realms/realmRegistry';
@@ -60,6 +61,7 @@ export function LayoutShell({ children }: { children: ReactNode }) {
 
         {!hideSupportChrome ? (
           <div className="relative z-20 px-3 pt-3 md:px-8 md:pt-5">
+            <PublicSiteManifestRail />
             <SystemHealthBanner />
             <PathwayGuideBar />
           </div>

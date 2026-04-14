@@ -2,6 +2,7 @@ import { ArchiveRecordShell } from '@/components/archive/ArchiveRecordShell';
 import { fetchPublicSponsorDisclosures, type PublicSponsorDisclosureFeed } from '@/lib/api/publicSponsorDisclosures';
 import {
   fetchPublicArchiveHandoff,
+  fetchPublicDecisionSummary,
   fetchPublicTrustReportDetail,
   type ArchiveDegradedHonesty,
 } from '@/lib/api/publicTrust';
@@ -20,6 +21,7 @@ export default async function ArchiveRecordPage({ params }: { params: { record: 
 
   const trustDetail = await fetchPublicTrustReportDetail(recordRef);
   if (trustDetail.report) {
+    const decisionSummaryResult = await fetchPublicDecisionSummary(trustDetail.archiveRecord?.slug ?? recordRef);
     const sponsorFeed = await fetchPublicSponsorDisclosures({
       surface: '/archive',
       report: trustDetail.report.slug,
@@ -34,12 +36,14 @@ export default async function ArchiveRecordPage({ params }: { params: { record: 
         archiveRecord={trustDetail.archiveRecord}
         degradedHonesty={trustDetail.degradedHonesty}
         sponsorFeed={sponsorFeed}
+        decisionSummary={decisionSummaryResult.decision}
       />
     );
   }
 
   const handoff = await fetchPublicArchiveHandoff(recordRef);
   if (handoff) {
+    const decisionSummaryResult = await fetchPublicDecisionSummary(handoff.archiveRecord.slug);
     const degradedHonesty: ArchiveDegradedHonesty = {
       isDegraded: handoff.trustReport == null,
       reason: handoff.trustReport == null ? 'archive_record_without_trust_report' : null,
@@ -60,6 +64,7 @@ export default async function ArchiveRecordPage({ params }: { params: { record: 
           archive: handoff.archiveRecord.slug,
           limit: 5,
         })}
+        decisionSummary={decisionSummaryResult.decision}
       />
     );
   }
@@ -70,6 +75,7 @@ export default async function ArchiveRecordPage({ params }: { params: { record: 
       report={null}
       archiveRecord={null}
       sponsorFeed={fallbackSponsorFeed}
+      decisionSummary={null}
       degradedHonesty={{
         isDegraded: true,
         reason: 'archive_record_not_found',

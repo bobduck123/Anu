@@ -1,6 +1,6 @@
 import re
 
-from marshmallow import Schema, fields, validate, validates, validates_schema, ValidationError, pre_load
+from marshmallow import Schema, fields, validate, validates, validates_schema, ValidationError, pre_load, RAISE
 from datetime import time as dt_time
 import bleach
 
@@ -24,6 +24,8 @@ class DomainResolutionResponseSchema(Schema):
     brand = fields.Nested(DomainResolutionBrandSchema, required=True)
     domain = fields.String(required=True)
     tls_ready = fields.Boolean(required=True)
+    site_manifest = fields.Nested("PublicSiteManifestSchema", allow_none=True)
+    site_resolution = fields.Nested("PublicSiteResolutionMetaSchema", allow_none=True)
     # Backward-compatibility keys for existing clients.
     is_white_label = fields.Boolean(required=True)
     brand_config = fields.Nested(DomainResolutionBrandSchema, required=True)
@@ -37,6 +39,138 @@ class PublicNodeConfigBrandSchema(Schema):
     logo_url = fields.String(allow_none=True)
     favicon_url = fields.String(allow_none=True)
     custom_css = fields.String(allow_none=True)
+
+
+class PublicSiteManifestBrandAssetsSchema(Schema):
+    logo_url = fields.String(allow_none=True)
+    favicon_url = fields.String(allow_none=True)
+    wordmark_url = fields.String(allow_none=True)
+
+
+class PublicSiteManifestThemeTokensSchema(Schema):
+    primary_color = fields.String(allow_none=True)
+    secondary_color = fields.String(allow_none=True)
+    accent_color = fields.String(allow_none=True)
+    custom_css = fields.String(allow_none=True)
+
+
+class PublicSiteManifestNavItemSchema(Schema):
+    label = fields.String(required=True)
+    href = fields.String(required=True)
+    module = fields.String(allow_none=True)
+
+
+class PublicSiteManifestLinkSchema(Schema):
+    label = fields.String(required=True)
+    href = fields.String(required=True)
+
+
+class PublicSiteManifestContactSchema(Schema):
+    email = fields.String(allow_none=True)
+    public_contact_url = fields.String(required=True)
+    location_label = fields.String(allow_none=True)
+
+
+class PublicSiteManifestAuthoringThemeTokensSchema(Schema):
+    class Meta:
+        unknown = RAISE
+
+    primary_color = fields.String(required=False, allow_none=True)
+    secondary_color = fields.String(required=False, allow_none=True)
+    accent_color = fields.String(required=False, allow_none=True)
+
+
+class PublicSiteManifestAuthoringNavItemSchema(Schema):
+    class Meta:
+        unknown = RAISE
+
+    label = fields.String(required=True)
+    href = fields.String(required=True)
+    module = fields.String(required=False, allow_none=True)
+
+
+class PublicSiteManifestAuthoringLinkSchema(Schema):
+    class Meta:
+        unknown = RAISE
+
+    label = fields.String(required=True)
+    href = fields.String(required=True)
+
+
+class PublicSiteManifestAuthoringLegalLinksSchema(Schema):
+    class Meta:
+        unknown = RAISE
+
+    privacy = fields.String(required=False)
+    terms = fields.String(required=False)
+    code_of_conduct = fields.String(required=False)
+
+
+class PublicSiteManifestAuthoringTrustLinksSchema(Schema):
+    class Meta:
+        unknown = RAISE
+
+    trust_center = fields.String(required=False)
+    transparency = fields.String(required=False)
+    archive = fields.String(required=False)
+
+
+class PublicSiteManifestAuthoringContactSchema(Schema):
+    class Meta:
+        unknown = RAISE
+
+    email = fields.String(required=False, allow_none=True)
+    public_contact_url = fields.String(required=False)
+    location_label = fields.String(required=False, allow_none=True)
+
+
+class PublicSiteManifestAuthoringUpdateSchema(Schema):
+    class Meta:
+        unknown = RAISE
+
+    revision_token = fields.String(required=True, validate=validate.Length(min=8, max=120))
+    site_name = fields.String(required=False)
+    tagline = fields.String(required=False)
+    logo_asset_ref = fields.String(required=False, allow_none=True)
+    favicon_asset_ref = fields.String(required=False, allow_none=True)
+    theme_tokens = fields.Nested(PublicSiteManifestAuthoringThemeTokensSchema, required=False)
+    nav_items = fields.List(fields.Nested(PublicSiteManifestAuthoringNavItemSchema), required=False)
+    enabled_modules = fields.List(fields.String(), required=False)
+    footer_links = fields.List(fields.Nested(PublicSiteManifestAuthoringLinkSchema), required=False)
+    legal_links = fields.Nested(PublicSiteManifestAuthoringLegalLinksSchema, required=False)
+    trust_links = fields.Nested(PublicSiteManifestAuthoringTrustLinksSchema, required=False)
+    contact = fields.Nested(PublicSiteManifestAuthoringContactSchema, required=False)
+
+
+class PublicSiteManifestAuthoringPublishSchema(Schema):
+    class Meta:
+        unknown = RAISE
+
+    revision_token = fields.String(required=True, validate=validate.Length(min=8, max=120))
+
+
+class PublicSiteManifestSchema(Schema):
+    tenant_id = fields.Integer(required=True)
+    site_key = fields.String(required=True)
+    site_name = fields.String(required=True)
+    tagline = fields.String(required=True)
+    brand_assets = fields.Nested(PublicSiteManifestBrandAssetsSchema, required=True)
+    theme_tokens = fields.Nested(PublicSiteManifestThemeTokensSchema, required=True)
+    nav_items = fields.List(fields.Nested(PublicSiteManifestNavItemSchema), required=True)
+    enabled_public_modules = fields.List(fields.String(), required=True)
+    footer_links = fields.List(fields.Nested(PublicSiteManifestLinkSchema), required=True)
+    legal_links = fields.Dict(keys=fields.String(), values=fields.String(), required=True)
+    trust_links = fields.Dict(keys=fields.String(), values=fields.String(), required=True)
+    contact = fields.Nested(PublicSiteManifestContactSchema, required=True)
+    canonical_domains = fields.List(fields.String(), required=True)
+    preview_host = fields.String(allow_none=True)
+
+
+class PublicSiteResolutionMetaSchema(Schema):
+    resolved = fields.Boolean(required=True)
+    resolution_status = fields.String(required=True)
+    fallback_note = fields.String(allow_none=True)
+    host = fields.String(allow_none=True)
 
 
 class PublicNodeConfigResponseSchema(Schema):
@@ -53,6 +187,20 @@ class PublicNodeConfigResponseSchema(Schema):
     is_default = fields.Boolean(required=True)
     domain = fields.String(allow_none=True)
     tls_ready = fields.Boolean(allow_none=True)
+    site_manifest = fields.Nested(PublicSiteManifestSchema, allow_none=True)
+    site_resolution = fields.Nested(PublicSiteResolutionMetaSchema, allow_none=True)
+
+
+class PublicSiteResolutionResponseSchema(Schema):
+    contract_version = fields.String(required=True)
+    host = fields.String(allow_none=True)
+    resolved = fields.Boolean(required=True)
+    resolution_status = fields.String(required=True)
+    fallback_note = fields.String(allow_none=True)
+    node_id = fields.Integer(required=True)
+    node_slug = fields.String(required=True)
+    node_name = fields.String(required=True)
+    site_manifest = fields.Nested(PublicSiteManifestSchema, required=True)
 
 
 class NodeServiceBindingSchema(Schema):
@@ -181,6 +329,59 @@ class PublicArchiveHandoffPayloadSchema(Schema):
     deep_links = fields.Dict(required=True)
 
 
+class PublicArchiveSummaryRecordSchema(Schema):
+    record_ref = fields.String(required=True)
+    slug = fields.String(required=True)
+    title = fields.String(required=True)
+    record_type = fields.String(required=True)
+    summary = fields.String(required=True)
+    provenance_label = fields.String(required=True)
+    source_label = fields.String(required=True)
+    source_route = fields.String(required=True)
+    verification_status = fields.String(required=True)
+    status = fields.String(required=True)
+    published_at = fields.String(allow_none=True)
+    effective_at = fields.String(allow_none=True)
+    freshness_hint = fields.String(allow_none=True)
+    related_trust_report_slug = fields.String(allow_none=True)
+    related_trust_report_route = fields.String(allow_none=True)
+    related_decision_id = fields.String(allow_none=True)
+    related_decision_route = fields.String(allow_none=True)
+    related_route = fields.String(allow_none=True)
+    record_route = fields.String(required=True)
+    is_trust_linked = fields.Boolean(required=True)
+    is_decision_linked = fields.Boolean(required=True)
+
+
+class PublicArchiveSummaryPaginationSchema(Schema):
+    model = fields.String(required=True)
+    page = fields.Integer(required=True)
+    page_size = fields.Integer(required=True)
+    total_records = fields.Integer(required=True)
+    total_pages = fields.Integer(required=True)
+    has_more = fields.Boolean(required=True)
+    has_previous = fields.Boolean(required=True)
+    next_page = fields.Integer(allow_none=True)
+    previous_page = fields.Integer(allow_none=True)
+    ordering = fields.List(fields.String(), required=True)
+
+
+class PublicArchiveAppliedFiltersSchema(Schema):
+    record_type = fields.String(allow_none=True)
+    title_prefix = fields.String(allow_none=True)
+    node_slug = fields.String(allow_none=True)
+
+
+class PublicArchiveSummaryListPayloadSchema(Schema):
+    records = fields.List(fields.Nested(PublicArchiveSummaryRecordSchema), required=True)
+    pagination = fields.Nested(PublicArchiveSummaryPaginationSchema, required=True)
+    available_record_types = fields.List(fields.String(), required=True)
+    applied_filters = fields.Nested(PublicArchiveAppliedFiltersSchema, required=True)
+    applied_record_type_filter = fields.String(allow_none=True)
+    applied_title_prefix_filter = fields.String(allow_none=True)
+    degraded_honesty = fields.Nested(ConnectorDegradedHonestySchema, required=True)
+
+
 class PublicTrustReportPayloadSchema(Schema):
     report = fields.Dict(required=True)
     archive_record = fields.Dict(allow_none=True)
@@ -220,6 +421,31 @@ class PublicTrustReportListPayloadSchema(Schema):
 class PublicTrustReportDetailPayloadSchema(Schema):
     report = fields.Nested(PublicTrustReportDetailSchema, required=True)
     archive_record = fields.Dict(allow_none=True)
+    degraded_honesty = fields.Nested(ConnectorDegradedHonestySchema, required=True)
+
+
+class PublicDecisionSummarySchema(Schema):
+    decision_id = fields.String(required=True)
+    title = fields.String(required=True)
+    decision_statement = fields.String(required=True)
+    why_it_matters = fields.String(required=True)
+    owner = fields.String(required=True)
+    due_date = fields.String(allow_none=True)
+    current_status = fields.String(required=True)
+    record_route = fields.String(required=True)
+    archive_record_slug = fields.String(required=True)
+    publication_scope = fields.String(required=True)
+    source_label = fields.String(required=True)
+    summary = fields.String(required=True)
+
+
+class PublicDecisionSummaryListPayloadSchema(Schema):
+    decisions = fields.List(fields.Nested(PublicDecisionSummarySchema), required=True)
+    degraded_honesty = fields.Nested(ConnectorDegradedHonestySchema, required=True)
+
+
+class PublicDecisionSummaryDetailPayloadSchema(Schema):
+    decision = fields.Nested(PublicDecisionSummarySchema, required=True)
     degraded_honesty = fields.Nested(ConnectorDegradedHonestySchema, required=True)
 
 
@@ -660,3 +886,14 @@ class DumbDumbAnalyticsSchema(Schema):
     entity_id = fields.String(allow_none=True, load_default=None, validate=validate.Length(max=120))
     entity_type = fields.String(allow_none=True, load_default="dumb_dumb", validate=validate.Length(max=80))
     props = fields.Dict(load_default=dict)
+
+
+class PlaneAwareLogEnvelopeSchema(Schema):
+    plane = fields.String(required=True, validate=validate.OneOf(["public", "control", "impact"]))
+    service_name = fields.String(required=True, validate=validate.Length(min=1, max=120))
+    event_name = fields.String(required=True, validate=validate.Length(min=1, max=160))
+    level = fields.String(required=True, validate=validate.OneOf(["debug", "info", "warning", "warn", "error"]))
+    timestamp = fields.String(required=True, validate=validate.Length(min=10, max=80))
+    request_id = fields.String(allow_none=True, validate=validate.Length(max=120))
+    correlation_id = fields.String(allow_none=True, validate=validate.Length(max=120))
+    context = fields.Dict(keys=fields.String(), allow_none=True)

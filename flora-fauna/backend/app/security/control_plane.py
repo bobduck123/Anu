@@ -12,6 +12,7 @@ from flask_jwt_extended import get_jwt, verify_jwt_in_request
 
 from ..extensions import db
 from ..models import ControlAuditEvent, ControlTokenGrant
+from .plane_log import emit_plane_log
 from .policy import get_current_user
 from ..time_utils import now_utc
 from .observability import observe_control_auth_failure
@@ -39,6 +40,8 @@ ALL_CONTROL_SCOPES = {
     "coordination:manage",
     "audit:read",
     "audit:export",
+    "sites:manifest:read",
+    "sites:manifest:write",
 }
 
 
@@ -147,6 +150,18 @@ def _allowed_control_roles() -> set[str]:
 def _control_error(message: str, status: int = 403):
     reason = (message or "unknown").strip().lower().replace(" ", "_")[:80]
     observe_control_auth_failure(reason=reason)
+    emit_plane_log(
+        plane="control",
+        event_name="control_auth_failed",
+        level="warning",
+        context={
+            "reason": reason,
+            "status": status,
+            "route": request.path,
+            "method": request.method,
+            "host": _host_from_request(),
+        },
+    )
     return jsonify({
         "ok": False,
         "error": {"code": "control_plane_forbidden", "message": message},
@@ -391,4 +406,20 @@ def log_control_event(
     )
     db.session.add(event)
     db.session.commit()
+    emit_plane_log(
+        plane="control",
+        event_name="control_audit_event_recorded",
+        level="info",
+        context={
+            "action": action,
+            "actor_id": actor_id,
+            "target_type": target_type,
+            "target_id": target_id,
+            "method": request.method,
+            "route": request.path,
+            "chain_index": chain_index,
+            "event_id": event.id,
+            "payload_keys": sorted(payload_obj.keys()),
+        },
+    )
     return event

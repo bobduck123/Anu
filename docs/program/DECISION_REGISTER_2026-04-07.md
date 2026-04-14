@@ -17,3 +17,12 @@ Only unresolved decisions with immediate implementation impact are listed here.
 1. Decision changes must be updated here before broad implementation fan-out.
 2. If a decision changes after merge, affected milestones must include migration or rollback notes.
 3. No “to be decided later” work may bypass this register if it affects security, isolation, or public trust posture.
+
+## Public Summary Publication Rule (ANU-022)
+1. Decision-register rows are docs-first by default and remain non-public unless explicitly published.
+2. A decision becomes publicly queryable only when a matching public archive record exists:
+   - `record_type = governance-decision-summary`
+   - `visibility_class = public`
+   - `metadata_json.decision_id = <Decision ID>`
+3. Public decision API payloads expose summary-safe fields only and link back to canonical `/archive/<record>` routes.
+4. Restricted decision detail remains docs-only until explicitly published through the archive linkage above.

@@ -16,6 +16,7 @@ from flask import Blueprint, jsonify, request
 from ..extensions import db
 from ..models import Node, NodeDomain, NodeConfig
 from ..schemas import DomainResolutionResponseSchema
+from ..services.public_site_service import build_public_site_manifest_for_node
 from ..security.alpha import alpha_jwt_required
 from ..security.policy import get_current_user
 
@@ -143,6 +144,17 @@ def resolve_domain():
         'semantic_key': semantic_key,
         'white_label': white_label_enabled,
         'brand': brand,
+        'site_manifest': build_public_site_manifest_for_node(
+            node=node,
+            config_json=config_json,
+            resolved_host=domain,
+        ),
+        'site_resolution': {
+            'resolved': True,
+            'resolution_status': 'resolved',
+            'fallback_note': None,
+            'host': domain,
+        },
         'domain': domain,
         'tls_ready': node_domain.tls_ready,
         # Backward-compatible aliases

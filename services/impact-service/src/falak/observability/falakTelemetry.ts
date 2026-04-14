@@ -1,5 +1,5 @@
-import logger from '../../utils/logger';
 import { RequestContext } from '../domain/types';
+import { emitPlaneLog } from './planeLog';
 
 export type FalakLogCategory =
   | 'falak.route_guard'
@@ -14,15 +14,15 @@ export type FalakLogCategory =
 
 export function falakContextFields(context: RequestContext): Record<string, unknown> {
   return {
-    traceId: context.traceId,
-    tenantId: context.tenantId,
-    tenantSlug: context.tenantSlug,
-    plane: context.plane,
-    actorId: context.actor?.id ?? null,
-    actorExternalAuthId: context.actor?.externalAuthId ?? null,
-    actorResolutionSource: context.actorResolution.source,
-    actorVerified: context.actorResolution.isVerified,
-    actorTokenAudience: context.actorResolution.tokenAudience
+    trace_id: context.traceId,
+    tenant_id: context.tenantId,
+    tenant_slug: context.tenantSlug,
+    falak_execution_plane: context.plane,
+    actor_id: context.actor?.id ?? null,
+    actor_external_auth_id: context.actor?.externalAuthId ?? null,
+    actor_resolution_source: context.actorResolution.source,
+    actor_verified: context.actorResolution.isVerified,
+    actor_token_audience: context.actorResolution.tokenAudience
   };
 }
 
@@ -31,11 +31,18 @@ export function logFalak(
   payload: Record<string, unknown>,
   level: 'debug' | 'info' | 'warn' | 'error' = 'info'
 ): void {
-  logger[level](
-    {
-      ...payload,
-      category
-    },
-    category
-  );
+  const traceIdFromPayload = typeof payload.trace_id === 'string'
+    ? payload.trace_id
+    : typeof payload.traceId === 'string'
+      ? payload.traceId
+      : null;
+
+  emitPlaneLog({
+    plane: 'impact',
+    serviceName: 'impact-service',
+    eventName: category,
+    level,
+    correlationId: traceIdFromPayload,
+    context: payload,
+  });
 }

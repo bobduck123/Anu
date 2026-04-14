@@ -65,6 +65,13 @@ export async function controlFetchJson<T>(
   return (await response.json()) as T;
 }
 
+function unwrapData<T>(payload: T | { data: T }): T {
+  if (payload && typeof payload === 'object' && 'data' in (payload as Record<string, unknown>)) {
+    return (payload as { data: T }).data;
+  }
+  return payload as T;
+}
+
 export interface ControlTenantNode {
   id: number;
   name: string;
@@ -74,8 +81,94 @@ export interface ControlTenantNode {
   created_at?: string;
 }
 
+export interface ManifestAuthoringNavItem {
+  label: string;
+  href: string;
+  module?: string | null;
+}
+
+export interface ManifestAuthoringLink {
+  label: string;
+  href: string;
+}
+
+export interface ControlSiteManifestAuthoringPayload {
+  node_id: number;
+  node_slug: string;
+  revision_token: string;
+  published_revision_token?: string;
+  published_at?: string | null;
+  published_by?: string | null;
+  authoring: {
+    site_name?: string;
+    tagline?: string;
+    logo_asset_ref?: string | null;
+    favicon_asset_ref?: string | null;
+    theme_tokens?: {
+      primary_color?: string | null;
+      secondary_color?: string | null;
+      accent_color?: string | null;
+    };
+    nav_items?: ManifestAuthoringNavItem[];
+    enabled_modules?: string[];
+    footer_links?: ManifestAuthoringLink[];
+    legal_links?: Record<string, string>;
+    trust_links?: Record<string, string>;
+    contact?: {
+      email?: string | null;
+      public_contact_url?: string;
+      location_label?: string | null;
+    };
+  };
+  read_only: {
+    site_key: string;
+    canonical_domains: string[];
+    preview_host: string | null;
+  };
+  site_manifest: Record<string, unknown>;
+  published_site_manifest?: Record<string, unknown>;
+  audit?: Record<string, unknown>;
+}
+
+export type ControlSiteManifestAuthoringUpdate = Partial<ControlSiteManifestAuthoringPayload['authoring']>;
+
 export function listControlTenants() {
-  return controlFetchJson<ControlTenantNode[]>('core/api/admin/tenants');
+  return controlFetchJson<ControlTenantNode[] | { data: ControlTenantNode[] }>('core/api/admin/tenants').then((payload) =>
+    unwrapData<ControlTenantNode[]>(payload),
+  );
+}
+
+export function getControlSiteManifestAuthoring(nodeId: number) {
+  return controlFetchJson<ControlSiteManifestAuthoringPayload | { data: ControlSiteManifestAuthoringPayload }>(
+    `core/control/sites/${nodeId}/manifest-authoring`,
+  ).then((payload) => unwrapData<ControlSiteManifestAuthoringPayload>(payload));
+}
+
+export function updateControlSiteManifestAuthoring(
+  nodeId: number,
+  revisionToken: string,
+  payload: ControlSiteManifestAuthoringUpdate,
+) {
+  return controlFetchJson<ControlSiteManifestAuthoringPayload | { data: ControlSiteManifestAuthoringPayload }>(
+    `core/control/sites/${nodeId}/manifest-authoring`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({
+        revision_token: revisionToken,
+        ...payload,
+      }),
+    },
+  ).then((responsePayload) => unwrapData<ControlSiteManifestAuthoringPayload>(responsePayload));
+}
+
+export function publishControlSiteManifestAuthoring(nodeId: number, revisionToken: string) {
+  return controlFetchJson<ControlSiteManifestAuthoringPayload | { data: ControlSiteManifestAuthoringPayload }>(
+    `core/control/sites/${nodeId}/manifest-authoring/publish`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ revision_token: revisionToken }),
+    },
+  ).then((responsePayload) => unwrapData<ControlSiteManifestAuthoringPayload>(responsePayload));
 }
 
 export function createControlTenant(payload: Record<string, unknown>) {

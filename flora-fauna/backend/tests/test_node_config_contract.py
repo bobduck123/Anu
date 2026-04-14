@@ -86,6 +86,15 @@ def test_public_node_config_current_resolves_from_request_context():
                         "logo_url": "https://cdn.example/logo.svg",
                     },
                     "modules": {"impact": True, "community": True},
+                    "public_site_manifest": {
+                        "site_key": "sydney-public",
+                        "site_name": "Sydney Public Commons",
+                        "tagline": "Sydney public surfaces on ANU rails.",
+                        "nav_items": [
+                            {"label": "Community", "href": "/community"},
+                            {"label": "Control Leak Attempt", "href": "/control/tenants"},
+                        ],
+                    },
                     "admin_secret": {"token": "must-not-leak"},
                 },
             )
@@ -107,6 +116,9 @@ def test_public_node_config_current_resolves_from_request_context():
     assert payload["modules"]["impact"] is True
     assert payload["domain"] == "config.current.example"
     assert payload["tls_ready"] is True
+    assert payload["site_manifest"]["site_key"] == "sydney-public"
+    assert payload["site_manifest"]["site_name"] == "Sydney Public Commons"
+    assert all(item["href"] != "/control/tenants" for item in payload["site_manifest"]["nav_items"])
     assert isinstance(payload["modules"], dict)
     assert "admin_secret" not in payload
     assert "brand_config" not in payload
@@ -179,6 +191,8 @@ def test_public_node_config_slug_resolution_coerces_legacy_string_config():
     assert payload["white_label"] is True
     assert payload["brand"]["primary_color"] == "#0A0B0C"
     assert payload["modules"]["education"] is True
+    assert payload["site_manifest"]["tenant_id"] == payload["node_id"]
+    assert payload["site_manifest"]["site_key"] == "legacy-config-node"
 
 
 def test_public_node_config_slug_resolution_not_found_for_unknown_slug():

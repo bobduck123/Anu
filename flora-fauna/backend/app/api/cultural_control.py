@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 
 from flask import Blueprint, current_app, request
+from flask_jwt_extended import get_jwt
+from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 
 from ..extensions import db
@@ -19,6 +21,15 @@ from ..security.control_plane import control_plane_required, log_control_event
 from ..security.idempotency import idempotent_control_write
 from ..security.policy import get_current_user
 from ..time_utils import now_utc
+from ..schemas import PublicSiteManifestAuthoringPublishSchema, PublicSiteManifestAuthoringUpdateSchema
+from ..services.public_site_authoring_service import (
+    PublicSiteManifestAuthoringConflictError,
+    PublicSiteManifestAuthoringNotFoundError,
+    PublicSiteManifestAuthoringValidationError,
+    get_public_site_manifest_authoring_payload,
+    publish_public_site_manifest_authoring_draft,
+    update_public_site_manifest_authoring,
+)
 from ..services.cultural_intel import (
     claim_next_connector_pull_job,
     connector_pull_queue_stats,
@@ -50,6 +61,8 @@ cultural_control_bp = Blueprint("cultural_control", __name__, url_prefix="/contr
 
 
 SAFE_ID_PATTERN = re.compile(r"^[a-zA-Z0-9._:-]{1,120}$")
+MANIFEST_AUTHORING_UPDATE_SCHEMA = PublicSiteManifestAuthoringUpdateSchema()
+MANIFEST_AUTHORING_PUBLISH_SCHEMA = PublicSiteManifestAuthoringPublishSchema()
 
 
 def _is_safe_id(value: str) -> bool:
@@ -80,10 +93,197 @@ def _safe_float(value, *, minimum: float | None = None, maximum: float | None = 
     return parsed
 
 
+def _parse_node_id_candidates(raw_value) -> set[int]:
+    if raw_value is None:
+        return set()
+    values = raw_value if isinstance(raw_value, (list, tuple, set)) else [raw_value]
+    parsed: set[int] = set()
+    for value in values:
+        try:
+            candidate = int(value)
+        except (TypeError, ValueError):
+            continue
+        if candidate > 0:
+            parsed.add(candidate)
+    return parsed
+
+
+def _allowed_manifest_node_ids_for_request() -> set[int] | None:
+    user = get_current_user()
+    claims = get_jwt() or {}
+
+    role = str(claims.get("role") or getattr(user, "role", "") or "").strip().lower()
+    if role == "platform_admin":
+        return None
+
+    allowed: set[int] = set()
+    allowed.update(_parse_node_id_candidates(getattr(user, "node_id", None)))
+    allowed.update(_parse_node_id_candidates(claims.get("node_id")))
+    allowed.update(_parse_node_id_candidates(claims.get("managed_node_ids")))
+    return allowed
+
+
+def _require_manifest_node_scope(node_id: int):
+    allowed = _allowed_manifest_node_ids_for_request()
+    if allowed is None:
+        return None
+    if node_id in allowed:
+        return None
+    return error(
+        "tenant_scope_forbidden",
+        "Cross-tenant manifest access is not allowed for this operator.",
+        403,
+        details={
+            "requested_node_id": node_id,
+            "allowed_node_ids": sorted(allowed),
+        },
+    )
+
+
 @cultural_control_bp.route("/connectors", methods=["GET"])
 @control_plane_required(scopes=["connectors:read"])
 def list_control_connectors():
     return ok(list_connectors())
+
+
+@cultural_control_bp.route("/sites/<int:node_id>/manifest-authoring", methods=["GET"])
+@control_plane_required(scopes=["sites:manifest:read"])
+def get_control_site_manifest_authoring(node_id: int):
+    scope_error = _require_manifest_node_scope(node_id)
+    if scope_error:
+        return scope_error
+    try:
+        payload = get_public_site_manifest_authoring_payload(node_id=node_id)
+    except PublicSiteManifestAuthoringNotFoundError:
+        return error("not_found", "Tenant node not found", 404)
+    return ok(payload)
+
+
+@cultural_control_bp.route("/sites/<int:node_id>/manifest-authoring", methods=["PATCH"])
+@control_plane_required(scopes=["sites:manifest:write"])
+@idempotent_control_write()
+def update_control_site_manifest_authoring(node_id: int):
+    scope_error = _require_manifest_node_scope(node_id)
+    if scope_error:
+        return scope_error
+    user = get_current_user()
+    incoming = request.get_json(silent=True)
+    if not isinstance(incoming, dict):
+        return error("validation_error", "Manifest authoring payload must be a JSON object", 400)
+
+    try:
+        loaded_payload = MANIFEST_AUTHORING_UPDATE_SCHEMA.load(incoming)
+    except ValidationError as exc:
+        return error(
+            "validation_error",
+            "Manifest authoring payload is invalid",
+            400,
+            details=exc.messages,
+        )
+
+    revision_token = str(loaded_payload.pop("revision_token", "")).strip()
+    if not revision_token:
+        return error(
+            "validation_error",
+            "revision_token is required",
+            400,
+            details={"revision_token": ["This field is required."]},
+        )
+
+    try:
+        payload = update_public_site_manifest_authoring(
+            node_id=node_id,
+            patch_payload=loaded_payload,
+            expected_revision_token=revision_token,
+        )
+        db.session.commit()
+    except PublicSiteManifestAuthoringNotFoundError:
+        db.session.rollback()
+        return error("not_found", "Tenant node not found", 404)
+    except PublicSiteManifestAuthoringValidationError as exc:
+        db.session.rollback()
+        return error("validation_error", exc.message, 400, details=exc.details)
+    except PublicSiteManifestAuthoringConflictError as exc:
+        db.session.rollback()
+        return error(
+            "manifest_authoring_revision_conflict",
+            exc.message,
+            409,
+            details={
+                "latest_revision_token": exc.latest_revision_token,
+                "latest_payload": exc.latest_payload,
+                "conflict_message": exc.message,
+            },
+        )
+
+    log_control_event(
+        action="public_site_manifest_authoring_updated",
+        actor_id=user.id if user else None,
+        target_type="node",
+        target_id=str(node_id),
+        payload=payload.get("audit") or {},
+    )
+    return ok(payload)
+
+
+@cultural_control_bp.route("/sites/<int:node_id>/manifest-authoring/publish", methods=["POST"])
+@control_plane_required(scopes=["sites:manifest:write"])
+@idempotent_control_write()
+def publish_control_site_manifest_authoring(node_id: int):
+    scope_error = _require_manifest_node_scope(node_id)
+    if scope_error:
+        return scope_error
+    user = get_current_user()
+    incoming = request.get_json(silent=True)
+    if not isinstance(incoming, dict):
+        return error("validation_error", "Publish payload must be a JSON object", 400)
+
+    try:
+        publish_payload = MANIFEST_AUTHORING_PUBLISH_SCHEMA.load(incoming)
+    except ValidationError as exc:
+        return error("validation_error", "Publish payload is invalid", 400, details=exc.messages)
+
+    revision_token = str(publish_payload.get("revision_token") or "").strip()
+    if not revision_token:
+        return error(
+            "validation_error",
+            "revision_token is required",
+            400,
+            details={"revision_token": ["This field is required."]},
+        )
+
+    try:
+        payload = publish_public_site_manifest_authoring_draft(
+            node_id=node_id,
+            expected_revision_token=revision_token,
+            actor_id=user.id if user else None,
+            actor_username=getattr(user, "username", None) if user else None,
+        )
+        db.session.commit()
+    except PublicSiteManifestAuthoringNotFoundError:
+        db.session.rollback()
+        return error("not_found", "Tenant node not found", 404)
+    except PublicSiteManifestAuthoringConflictError as exc:
+        db.session.rollback()
+        return error(
+            "manifest_publish_revision_conflict",
+            exc.message,
+            409,
+            details={
+                "latest_revision_token": exc.latest_revision_token,
+                "latest_payload": exc.latest_payload,
+                "conflict_message": exc.message,
+            },
+        )
+
+    log_control_event(
+        action="public_site_manifest_published",
+        actor_id=user.id if user else None,
+        target_type="node",
+        target_id=str(node_id),
+        payload=payload.get("audit") or {},
+    )
+    return ok(payload)
 
 
 @cultural_control_bp.route("/connectors/register", methods=["POST"])

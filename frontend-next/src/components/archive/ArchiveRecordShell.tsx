@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type {
   ArchiveDegradedHonesty,
   PublicArchiveRecord,
+  PublicDecisionSummary,
   PublicTrustReportDetail,
 } from '@/lib/api/publicTrust';
 import type { PublicSponsorDisclosureFeed } from '@/lib/api/publicSponsorDisclosures';
@@ -15,6 +16,7 @@ interface ArchiveRecordShellProps {
   archiveRecord: PublicArchiveRecord | null;
   degradedHonesty: ArchiveDegradedHonesty;
   sponsorFeed: PublicSponsorDisclosureFeed;
+  decisionSummary: PublicDecisionSummary | null;
 }
 
 function formatDate(value: string | null): string {
@@ -28,7 +30,14 @@ function formatDate(value: string | null): string {
   return date.toLocaleString();
 }
 
-export function ArchiveRecordShell({ recordRef, report, archiveRecord, degradedHonesty, sponsorFeed }: ArchiveRecordShellProps) {
+export function ArchiveRecordShell({
+  recordRef,
+  report,
+  archiveRecord,
+  degradedHonesty,
+  sponsorFeed,
+  decisionSummary,
+}: ArchiveRecordShellProps) {
   const routePurpose = getRoutePurpose('/archive');
   const thresholdKey = getThresholdForRoute('/archive');
   const threshold = getThresholdDefinition(thresholdKey);
@@ -94,6 +103,25 @@ export function ArchiveRecordShell({ recordRef, report, archiveRecord, degradedH
         contextLabel="this archive record"
       />
 
+      {decisionSummary ? (
+        <section id="decision-summary" className="card-civic space-y-3">
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted-foreground)]">Decision register context</p>
+          <div className="rounded-xl border border-[var(--color-border)] p-4 text-sm">
+            <p className="font-medium">{decisionSummary.decisionId}: {decisionSummary.title}</p>
+            <p className="mt-2 text-[var(--color-muted-foreground)]">{decisionSummary.summary}</p>
+            <div className="mt-3 grid gap-2 text-xs text-[var(--color-muted-foreground)] md:grid-cols-2">
+              <p>Owner: {decisionSummary.owner}</p>
+              <p>Due date: {decisionSummary.dueDate ?? 'Not set'}</p>
+              <p>Status: {decisionSummary.currentStatus}</p>
+              <p>Scope: {decisionSummary.publicationScope}</p>
+            </div>
+            <p className="mt-3 text-xs text-[var(--color-muted-foreground)]">
+              This is a public-safe decision summary. Restricted decision detail remains docs-only until explicitly published.
+            </p>
+          </div>
+        </section>
+      ) : null}
+
       <section className="card-civic space-y-3">
         <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted-foreground)]">Summary and body</p>
         <article className="rounded-xl border border-[var(--color-border)] p-4 text-sm leading-7 text-[var(--color-foreground)]">
@@ -122,6 +150,11 @@ export function ArchiveRecordShell({ recordRef, report, archiveRecord, degradedH
           <Link href={report ? `/transparency?report=${encodeURIComponent(report.slug)}` : '/transparency'} className="btn-pill btn-pill-primary text-sm">
             Open transparency context
           </Link>
+          {decisionSummary ? (
+            <Link href="#decision-summary" className="btn-pill btn-pill-secondary text-sm">
+              Open decision summary
+            </Link>
+          ) : null}
           <Link href="/governance/model-registry" className="btn-pill btn-pill-secondary text-sm">Model registry route</Link>
         </div>
       </section>

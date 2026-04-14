@@ -41,4 +41,21 @@ describe('control plane host routing', () => {
     expect(screen.getByRole('link', { name: 'Tenants' })).toHaveAttribute('href', '/control/tenants');
     expect(screen.getByRole('link', { name: 'Runtime Health' })).toHaveAttribute('href', '/control/runtime-health');
   });
+
+  it('prioritizes forwarded host over raw host for control-route isolation', async () => {
+    headersMock.mockResolvedValue(
+      new Headers({
+        host: 'control.anu.eco',
+        'x-forwarded-host': 'app.anu.eco',
+      }),
+    );
+
+    const ui = await ControlLayout({
+      children: <div>control-content</div>,
+    });
+    render(ui);
+
+    expect(screen.getByText('Control routes are isolated to control hosts.')).toBeInTheDocument();
+    expect(screen.queryByText('control-content')).not.toBeInTheDocument();
+  });
 });

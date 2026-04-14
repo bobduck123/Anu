@@ -38,6 +38,10 @@ export interface JourneyConnectorRailPayload {
     reason: string | null;
     fallbackNote?: string | null;
   };
+  nodeScope: {
+    slug: string | null;
+    name: string | null;
+  };
 }
 
 export const FLAGSHIP_JOURNEY_SLUG = 'knowledge-action-community-governance-archive';
@@ -190,6 +194,10 @@ export function buildJourneyConnectorRailPayload(pathname: string | null): Journ
         activeConnectors.length === 0 && sourceRoute !== '/archive'
           ? 'Connector data is partial for this route. Continue from the canonical knowledge source to follow the flagship journey.'
           : null,
+    },
+    nodeScope: {
+      slug: null,
+      name: null,
     },
   };
 }

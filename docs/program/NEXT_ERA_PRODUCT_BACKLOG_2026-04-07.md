@@ -390,7 +390,7 @@
 - archive screenshots
 **Owner type:** Frontend / Trust
 **Milestone:** M4
-**Execution status (2026-04-14):** COMPLETE - canonical `/archive` and `/archive/[record]` shells are live with degraded honesty and trust/provenance sections, backed by focused route tests.
+**Execution status (2026-04-14):** COMPLETE - canonical `/archive` and `/archive/[record]` are live, and `/archive` now consumes canonical backend archive summary records (`/public/archive/records`) with type-filter IA, trust/provenance/freshness cues, degraded/empty honesty, and focused route tests.
 
 ## ANU-018
 **Title:** Public trust report model/API
@@ -444,7 +444,7 @@
 - UI screenshots
 **Owner type:** Frontend + Backend + Doctrine
 **Milestone:** M4
-**Execution status (2026-04-14):** COMPLETE - sponsor disclosure contract and UI are implemented end-to-end with non-distortion safeguards, DB migration script is landed, and focused backend/frontend tests pass; screenshot artifact is still pending operational capture.
+**Execution status (2026-04-14):** COMPLETE - sponsor disclosure contract and UI are implemented end-to-end with non-distortion safeguards, DB migration script is landed, focused backend/frontend tests pass, and sponsor rendering proof has been captured.
 
 ## ANU-020
 **Title:** Isolation proof tests (cross-service)
@@ -472,6 +472,7 @@
 - flagship journey recording
 **Owner type:** Cross-service Platform + Frontend + Impact
 **Milestone:** M5
+**Execution status (2026-04-14):** COMPLETE - cross-service isolation proof suite is now explicit in backend/frontend/impact tests, control-host and host-resolution isolation assertions are in place, and flagship journey payloads are node-scoped with deterministic tenant-safe slugs.
 
 ## ANU-021
 **Title:** Trust center route foundation
@@ -515,10 +516,11 @@
 - archive screenshot
 **Owner type:** Backend + Frontend + Architecture
 **Milestone:** M4
+**Execution status (2026-04-14):** COMPLETE - public-safe decision summaries are now exposed via `/public/trust/decisions`, restricted decisions remain docs-only unless archive-linked for publication, and archive routes now carry stable decision summary links.
 
 ## ANU-023
 **Title:** Plane-aware log contract rollout
-**Why it exists:** Observability must distinguish public, participant, and control activity coherently across services.
+**Why it exists:** Observability must distinguish public-plane, control-plane, and impact-plane activity coherently across services.
 **Exact repo location:**
 - `frontend-next/src/lib/api/controlClient.ts`
 - `flora-fauna/backend/app/logging/*`
@@ -535,6 +537,7 @@
 - operator proof
 **Owner type:** Platform + Backend + Impact
 **Milestone:** M1
+**Execution status (2026-04-14):** COMPLETE - canonical plane-log envelopes are now emitted across scoped backend public/control paths, frontend public/control paths, and impact Falak telemetry with explicit plane validation, request/correlation IDs where available, and sensitive-field redaction.
 
 ## ANU-024
 **Title:** Milestone proof automation scaffolding
@@ -596,3 +599,222 @@
 **Owner type:** Frontend
 **Milestone:** M4
 **Execution status (2026-04-14):** COMPLETE — scoped frontend `auth_token` readers were removed in `lib/api.ts`, `icsExport`, and remaining governance/organizer/systemic pages; auth now flows through canonical shared client helpers with focused tests passing.
+
+## ANU-027
+**Title:** Archive index pagination + minimal query refinement
+**Why it exists:** `/archive` now has a canonical summary feed and type IA, but larger public memory volumes need lightweight pagination and query refinement without widening into full search ingestion.
+**Exact repo location:**
+- `flora-fauna/backend/app/api/public_archive.py`
+- `flora-fauna/backend/app/services/archive_service.py`
+- `frontend-next/src/lib/api/publicArchive.ts`
+- `frontend-next/src/app/(public)/archive/page.tsx`
+- `frontend-next/src/components/archive/ArchiveShell.tsx`
+**Implementation notes:**
+1. Add offset/cursor pagination contract for archive summaries.
+2. Keep type filter semantics stable.
+3. Add one minimal query refinement control (e.g., title prefix) only if public-safe and cheap.
+**Dependencies:** ANU-017, ANU-018, ANU-021
+**Acceptance criteria:**
+1. Archive index can paginate deterministically.
+2. Non-distortion posture remains intact.
+3. No widening into full-text ingestion/search platform.
+**Evidence required:**
+- backend/frontend test output
+- one archive pagination proof capture
+**Owner type:** Backend + Frontend
+**Milestone:** M5
+**Execution status (2026-04-14):** COMPLETE (pagination scope) - `/public/archive/records` now uses deterministic offset pagination with explicit ordering (`updated_at desc`, `id desc`) and pagination metadata; `/archive` now supports previous/next controls that preserve active filters.
+
+## ANU-028
+**Title:** Archive minimal query refinement (post-pagination)
+**Why it exists:** ANU-027 delivered deterministic pagination; lightweight query refinement beyond type filters is still deferred.
+**Exact repo location:**
+- `flora-fauna/backend/app/api/public_archive.py`
+- `flora-fauna/backend/app/services/archive_service.py`
+- `frontend-next/src/lib/api/publicArchive.ts`
+- `frontend-next/src/app/(public)/archive/page.tsx`
+- `frontend-next/src/components/archive/ArchiveShell.tsx`
+**Implementation notes:**
+1. Add one narrow public-safe query input (for example, title prefix).
+2. Keep deterministic pagination ordering unchanged.
+3. Do not widen into full-text search or ingestion orchestration.
+**Dependencies:** ANU-027
+**Acceptance criteria:**
+1. Query refinement and pagination coexist deterministically.
+2. Non-distortion posture remains intact.
+3. Degraded/empty honesty remains explicit.
+**Evidence required:**
+- backend/frontend test output
+- one query + pagination response example
+**Owner type:** Backend + Frontend
+**Milestone:** M5
+**Execution status (2026-04-14):** COMPLETE - `title_prefix` query refinement is implemented end-to-end with case-insensitive prefix-only matching, deterministic pagination coexistence, canonical applied filter echoes (`applied_record_type_filter`, `applied_title_prefix_filter`), minimal `/archive` input wiring, and focused tests.
+
+## ANU-029
+**Title:** Archive query-normalization and guardrail hardening
+**Why it exists:** ANU-028 added title-prefix refinement; additional guardrails (length caps/normalization telemetry) can be added without widening into search platform work.
+**Exact repo location:**
+- `flora-fauna/backend/app/api/public_archive.py`
+- `flora-fauna/backend/app/services/archive_service.py`
+- `frontend-next/src/lib/api/publicArchive.ts`
+- `frontend-next/src/app/(public)/archive/page.tsx`
+**Implementation notes:**
+1. Add narrow title-prefix input constraints (length and whitespace normalization policy).
+2. Keep deterministic ordering and pagination contract unchanged.
+3. Do not add multi-field search, ranking, or fuzzy logic.
+**Dependencies:** ANU-028
+**Acceptance criteria:**
+1. Prefix guardrails are explicit and tested.
+2. Existing archive pagination/filter behavior remains stable.
+**Evidence required:**
+- backend/frontend test output
+- one request/response example showing guardrail behavior
+**Owner type:** Backend + Frontend
+**Milestone:** M5
+
+## ANU-WL-001
+**Title:** Platform-hosted white-label public front-end foundation (Mudyin exemplar)
+**Why it exists:** Partner-branded public hosting needs one canonical host-resolution and site-manifest substrate without frontend forking or tenant code injection.
+**Exact repo location:**
+- `flora-fauna/backend/app/services/public_site_service.py`
+- `flora-fauna/backend/app/api/public_sites.py`
+- `flora-fauna/backend/app/api/domain_resolution.py`
+- `flora-fauna/backend/app/api/public_nodes.py`
+- `flora-fauna/backend/app/schemas.py`
+- `frontend-next/src/lib/publicSiteManifest.ts`
+- `frontend-next/src/ui-system/layout/TenantBrandWrapper.tsx`
+- `frontend-next/src/components/public/PublicSiteManifestRail.tsx`
+- `frontend-next/src/proxy.ts`
+- tests under backend/frontend for host resolution + manifest rendering
+**Implementation notes:**
+1. Canonical `PublicSiteManifest` contract is defined and enforced.
+2. Deterministic host resolution is executable (`/api/public/sites/resolve`).
+3. Existing domain/node contracts now include `site_manifest`.
+4. Public shell rendering is manifest-driven with public-safe nav/link sanitization.
+5. Unknown hosts fall back with explicit resolution posture.
+**Dependencies:** ANU-001, ANU-002, ANU-003, ANU-004
+**Acceptance criteria:**
+1. Host resolves deterministically to tenant/site manifest.
+2. Unknown host fallback is explicit and safe.
+3. Public shell consumes manifest branding/nav/legal data.
+4. No control-plane links leak into public shell nav/footer.
+**Evidence required:**
+- backend + frontend test output
+- one host-resolution payload example
+- one public-shell rendering proof
+**Owner type:** Backend + Frontend + Platform
+**Milestone:** M5
+**Execution status (2026-04-14):** COMPLETE - canonical host-based public site manifest substrate is live, Mudyin exemplar manifest path is in place, and focused host-resolution/isolation/rendering tests pass.
+
+## ANU-WL-002
+**Title:** White-label manifest admin authoring path (control-plane scoped)
+**Why it exists:** ANU-WL-001 established runtime contracts, but steward/operator authoring UX for safe manifest updates is still manual.
+**Exact repo location:**
+- `flora-fauna/backend/app/services/public_site_authoring_service.py`
+- `flora-fauna/backend/app/api/cultural_control.py`
+- `flora-fauna/backend/app/security/control_plane.py`
+- `flora-fauna/backend/app/schemas.py`
+- `flora-fauna/backend/tests/test_control_public_site_manifest_authoring.py`
+- `frontend-next/src/app/(control)/control/tenants/[nodeId]/manifest/page.tsx`
+- `frontend-next/src/lib/api/controlClient.ts`
+- `frontend-next/src/app/(control)/control/tenants/page.tsx`
+- `frontend-next/src/test/controlManifestAuthoringPage.test.tsx`
+**Implementation notes:**
+1. Add control-host-only authoring flow for `public_site_manifest` fields.
+2. Keep allowlisted public-safe fields only.
+3. Preserve control proxy + audit posture.
+**Dependencies:** ANU-WL-001
+**Acceptance criteria:**
+1. Operators can edit manifest fields via control-plane flow.
+2. Changes propagate to public shell without code changes.
+**Evidence required:**
+- control-host test output
+- manifest update proof
+**Owner type:** Frontend + Backend + Platform
+**Milestone:** M5+
+**Execution status (2026-04-14):** COMPLETE - control-host-only manifest authoring endpoint and UI are live with strict allowlist validation, normalization, immutable read-only field protection, audit-safe change records, and focused backend/frontend tests passing.
+
+## ANU-WL-003
+**Title:** Optimistic concurrency for control manifest authoring
+**Why it exists:** WL-002 allows safe authoring updates, but stale operator forms can still overwrite newer saved state without revision checks.
+**Exact repo location:**
+- `flora-fauna/backend/app/services/public_site_authoring_service.py`
+- `flora-fauna/backend/app/api/cultural_control.py`
+- `flora-fauna/backend/app/schemas.py`
+- `flora-fauna/backend/tests/test_control_public_site_manifest_authoring.py`
+- `frontend-next/src/lib/api/controlClient.ts`
+- `frontend-next/src/app/(control)/control/tenants/[nodeId]/manifest/page.tsx`
+- `frontend-next/src/test/controlManifestAuthoringPage.test.tsx`
+**Implementation notes:**
+1. GET returns deterministic authoring-scoped `revision_token`.
+2. PATCH requires matching `revision_token` and rejects stale writes with `409`.
+3. Conflict responses include machine code + latest payload + latest token.
+4. UI submits revision token and handles stale-write conflicts honestly (no false save success).
+**Dependencies:** ANU-WL-002
+**Acceptance criteria:**
+1. Matching revision token updates succeed.
+2. Stale revisions return `409` with latest payload/token.
+3. Operator UI surfaces stale-write state and refreshes to latest saved values.
+**Evidence required:**
+- backend + frontend focused test output
+- conflict response payload example
+**Owner type:** Frontend + Backend + Platform
+**Milestone:** M5+
+**Execution status (2026-04-14):** COMPLETE - manifest authoring now enforces deterministic revision-token optimistic concurrency with conflict-safe UI messaging and focused tests.
+
+## ANU-WL-004
+**Title:** Draft/publish separation for public site manifests
+**Why it exists:** WL-003 protects draft writes from stale edits, but draft edits still need explicit publish intent before affecting live public shell rendering.
+**Exact repo location:**
+- `flora-fauna/backend/app/services/public_site_authoring_service.py`
+- `flora-fauna/backend/app/api/cultural_control.py`
+- `flora-fauna/backend/app/schemas.py`
+- `flora-fauna/backend/tests/test_control_public_site_manifest_authoring.py`
+- `frontend-next/src/lib/api/controlClient.ts`
+- `frontend-next/src/app/(control)/control/tenants/[nodeId]/manifest/page.tsx`
+- `frontend-next/src/test/controlManifestAuthoringPage.test.tsx`
+**Implementation notes:**
+1. Authoring PATCH writes draft state only.
+2. Public host resolution continues to read published state only.
+3. Add explicit publish endpoint and control UI publish action.
+4. Keep publish guarded by draft revision token; reject stale publish attempts honestly.
+5. Expose draft preview vs published snapshot in control plane only.
+**Dependencies:** ANU-WL-003
+**Acceptance criteria:**
+1. Draft edits do not mutate live public shell until publish.
+2. Publish updates live shell only on explicit action.
+3. Stale publish conflicts return honest `409` details.
+4. UI stays minimal: edit draft, preview draft, publish draft.
+**Evidence required:**
+- backend + frontend focused tests
+- one draft-vs-published behavior proof
+**Owner type:** Frontend + Backend + Platform
+**Milestone:** M5+
+**Execution status (2026-04-14):** COMPLETE - draft/published split is live with explicit publish action, preview-safe control rendering, stale-publish guards, and focused tests.
+
+## ANU-WL-005
+**Title:** Published-state freshness metadata for control manifest authoring
+**Why it exists:** WL-004 separates draft/published state, but operators still need immediate visibility of what is live, when it was published, and by whom.
+**Exact repo location:**
+- `flora-fauna/backend/app/services/public_site_authoring_service.py`
+- `flora-fauna/backend/app/api/cultural_control.py`
+- `flora-fauna/backend/tests/test_control_public_site_manifest_authoring.py`
+- `frontend-next/src/lib/api/controlClient.ts`
+- `frontend-next/src/app/(control)/control/tenants/[nodeId]/manifest/page.tsx`
+- `frontend-next/src/test/controlManifestAuthoringPage.test.tsx`
+**Implementation notes:**
+1. Extend control read payload with `published_at`, `published_by`, and `published_revision_token`.
+2. Source metadata only from explicit publish path (server-derived actor/time).
+3. Keep metadata stable across draft edits until next publish.
+4. Add minimal operator status block showing `Live` vs `Draft ahead of live`.
+**Dependencies:** ANU-WL-004
+**Acceptance criteria:**
+1. Publish metadata appears after publish and remains stable until republish.
+2. UI renders live status honestly and distinguishes in-sync vs draft-ahead states.
+3. Existing publish and stale conflict behavior remains intact.
+**Evidence required:**
+- focused backend/frontend tests
+- one control UI freshness status proof
+**Owner type:** Frontend + Backend + Platform
+**Milestone:** M5+
+**Execution status (2026-04-14):** COMPLETE - control manifest payload now includes last-publish metadata and UI freshness cues with focused tests passing.

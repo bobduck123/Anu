@@ -67,7 +67,14 @@ export default function ControlTenantsPage() {
       key: 'name',
       label: 'Name',
       sortable: true,
-      render: (row) => <span className="font-medium text-[var(--color-foreground)]">{row.name}</span>,
+      render: (row) => (
+        <div className="flex flex-col gap-1">
+          <span className="font-medium text-[var(--color-foreground)]">{row.name}</span>
+          <AnuControlLink href={`/control/tenants/${row.id}/manifest`} tone="default" className="text-[11px]">
+            Edit public manifest
+          </AnuControlLink>
+        </div>
+      ),
     },
     { key: 'slug', label: 'Slug' },
     {

@@ -380,10 +380,14 @@ def _register_blueprints(app):
     
     from .api.public import public_bp
     from .api.public_connectors import public_connectors_bp
+    from .api.public_archive import public_archive_bp
+    from .api.public_sites import public_sites_bp
     from .api.public_transparency import public_transparency_bp
     from .api.public_trust import public_trust_bp
     app.register_blueprint(public_bp)
     app.register_blueprint(public_connectors_bp)
+    app.register_blueprint(public_archive_bp)
+    app.register_blueprint(public_sites_bp)
     app.register_blueprint(public_transparency_bp)
     app.register_blueprint(public_trust_bp)
     

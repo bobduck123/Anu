@@ -11,6 +11,21 @@ CONNECTOR_DEFAULT_MAP_SLUG = "weaving-futures-atlas"
 CONNECTOR_JOURNEY_LABEL = "Knowledge -> action/event -> community -> governance/transparency -> archive"
 
 
+def _normalized_slug_fragment(value: str | None, *, fallback: str) -> str:
+    raw = str(value or "").strip().lower()
+    cleaned = "".join(ch if ch.isalnum() or ch in {"-", "_"} else "-" for ch in raw)
+    while "--" in cleaned:
+        cleaned = cleaned.replace("--", "-")
+    cleaned = cleaned.strip("-_")
+    return cleaned or fallback
+
+
+def _node_scoped_slug(node_slug: str, base_slug: str) -> str:
+    node_fragment = _normalized_slug_fragment(node_slug, fallback="default-node")
+    base_fragment = _normalized_slug_fragment(base_slug, fallback="connector")
+    return f"{node_fragment}--{base_fragment}"
+
+
 def _route_starts_with(pathname: str, route: str) -> bool:
     return pathname == route or pathname.startswith(f"{route}/")
 
@@ -169,10 +184,10 @@ def _journey_connector_blueprint(knowledge_source_route: str, map_slug: str, arc
 
 
 def _ensure_archive_and_trust_records(node_slug: str, journey_slug: str) -> tuple[PublicArchiveRecord, PublicTrustReport]:
-    archive_slug = f"{journey_slug}-record"
-    trust_slug = f"{journey_slug}-trust-report"
+    archive_slug = _node_scoped_slug(node_slug, f"{journey_slug}-record")
+    trust_slug = _node_scoped_slug(node_slug, f"{journey_slug}-trust-report")
 
-    archive_record = PublicArchiveRecord.query.filter_by(slug=archive_slug).first()
+    archive_record = PublicArchiveRecord.query.filter_by(slug=archive_slug, node_slug=node_slug).first()
     if not archive_record:
         archive_record = PublicArchiveRecord(
             slug=archive_slug,
@@ -194,7 +209,7 @@ def _ensure_archive_and_trust_records(node_slug: str, journey_slug: str) -> tupl
         db.session.add(archive_record)
         db.session.flush()
 
-    trust_report = PublicTrustReport.query.filter_by(slug=trust_slug).first()
+    trust_report = PublicTrustReport.query.filter_by(slug=trust_slug, node_slug=node_slug).first()
     if not trust_report:
         trust_report = PublicTrustReport(
             slug=trust_slug,
@@ -226,19 +241,38 @@ def _upsert_journey_connectors(node, journey_slug: str, source_route: str, map_s
         map_slug=map_slug,
         archive_record_slug=archive_record_slug,
     )
-    expected_slugs = {entry["slug"] for entry in blueprint}
+    expected_slugs = {
+        _node_scoped_slug(node.slug, f"{journey_slug}--{entry['slug']}")
+        for entry in blueprint
+    }
 
     existing_rows = JourneyConnector.query.filter_by(node_slug=node.slug, journey_slug=journey_slug).all()
     by_slug = {row.slug: row for row in existing_rows}
 
     for entry in blueprint:
-        row = by_slug.get(entry["slug"])
+        canonical_slug = entry["slug"]
+        scoped_slug = _node_scoped_slug(node.slug, f"{journey_slug}--{canonical_slug}")
+        row = by_slug.get(scoped_slug) or by_slug.get(canonical_slug)
+
+        if row is None:
+            row = next(
+                (
+                    candidate
+                    for candidate in existing_rows
+                    if (
+                        isinstance(candidate.metadata_json, dict)
+                        and str(candidate.metadata_json.get("canonical_slug") or "").strip() == canonical_slug
+                    )
+                ),
+                None,
+            )
+
         if row is None:
             row = JourneyConnector(
                 journey_slug=journey_slug,
                 node_id=node.id,
                 node_slug=node.slug,
-                slug=entry["slug"],
+                slug=scoped_slug,
                 source_type=entry["source_type"],
                 source_id=entry["source_id"],
                 source_route=entry["source_route"],
@@ -253,13 +287,14 @@ def _upsert_journey_connectors(node, journey_slug: str, source_route: str, map_s
                 archive_handoff_mode=entry["archive_handoff_mode"],
                 is_active=True,
                 display_order=entry["display_order"],
-                metadata_json={"journey_slug": journey_slug},
+                metadata_json={"journey_slug": journey_slug, "canonical_slug": canonical_slug},
             )
             db.session.add(row)
             continue
 
         row.node_id = node.id
         row.node_slug = node.slug
+        row.slug = scoped_slug
         row.source_type = entry["source_type"]
         row.source_id = entry["source_id"]
         row.source_route = entry["source_route"]
@@ -274,6 +309,12 @@ def _upsert_journey_connectors(node, journey_slug: str, source_route: str, map_s
         row.archive_handoff_mode = entry["archive_handoff_mode"]
         row.display_order = entry["display_order"]
         row.is_active = True
+        metadata = row.metadata_json if isinstance(row.metadata_json, dict) else {}
+        row.metadata_json = {
+            **metadata,
+            "journey_slug": journey_slug,
+            "canonical_slug": canonical_slug,
+        }
 
     for row in existing_rows:
         if row.slug not in expected_slugs:
