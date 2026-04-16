@@ -88,6 +88,10 @@ Archive pagination model:
 Archive query refinement model:
 - `ANU-028` adds one optional public-safe refinement input: `title_prefix`.
 - Matching is case-insensitive prefix-only on archive record title.
+- `ANU-029` hardens `title_prefix` normalization guardrails:
+  - leading/trailing whitespace is trimmed,
+  - internal whitespace runs collapse to one ASCII space,
+  - normalized prefix is capped to 80 characters.
 - No fuzzy matching, ranking, or multi-field search behavior is permitted in this slice.
 
 ## Sponsor Disclosure Contract

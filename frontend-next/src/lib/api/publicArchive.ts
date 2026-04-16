@@ -55,6 +55,9 @@ export interface PublicArchiveSummaryFeed {
   degradedHonesty: ArchiveDegradedHonesty;
 }
 
+export const ARCHIVE_TITLE_PREFIX_MAX_LENGTH = 80;
+const ARCHIVE_TITLE_PREFIX_WHITESPACE_RE = /\s+/g;
+
 interface OkEnvelope<T> {
   ok: boolean;
   data: T;
@@ -128,6 +131,17 @@ function buildBaseUrl(): string {
   return getCoreApiBase({ server: typeof window === 'undefined' });
 }
 
+export function normalizeArchiveTitlePrefix(input: string | null | undefined): string | null {
+  if (typeof input !== 'string') {
+    return null;
+  }
+  const normalized = input.trim().replace(ARCHIVE_TITLE_PREFIX_WHITESPACE_RE, ' ');
+  if (!normalized) {
+    return null;
+  }
+  return normalized.slice(0, ARCHIVE_TITLE_PREFIX_MAX_LENGTH);
+}
+
 function buildQuery(params: { page?: number; pageSize?: number; recordType?: string; titlePrefix?: string; node?: string }): string {
   const search = new URLSearchParams();
   if (typeof params.page === 'number') {
@@ -139,8 +153,9 @@ function buildQuery(params: { page?: number; pageSize?: number; recordType?: str
   if (params.recordType) {
     search.set('type', params.recordType);
   }
-  if (params.titlePrefix) {
-    search.set('title_prefix', params.titlePrefix);
+  const normalizedTitlePrefix = normalizeArchiveTitlePrefix(params.titlePrefix);
+  if (normalizedTitlePrefix) {
+    search.set('title_prefix', normalizedTitlePrefix);
   }
   if (params.node) {
     search.set('node', params.node);
@@ -188,8 +203,9 @@ export async function fetchPublicArchiveSummaries(params: {
 } = {}): Promise<PublicArchiveSummaryFeed> {
   const safePage = Math.max(1, params.page ?? 1);
   const safePageSize = Math.max(1, Math.min(params.pageSize ?? 12, 100));
+  const normalizedTitlePrefix = normalizeArchiveTitlePrefix(params.titlePrefix);
   const base = buildBaseUrl();
-  const query = buildQuery({ ...params, page: safePage, pageSize: safePageSize });
+  const query = buildQuery({ ...params, page: safePage, pageSize: safePageSize, titlePrefix: normalizedTitlePrefix ?? undefined });
 
   try {
     const res = await fetch(`${base}/public/archive/records${query}`, { cache: 'no-store' });
@@ -200,7 +216,7 @@ export async function fetchPublicArchiveSummaries(params: {
         page: safePage,
         pageSize: safePageSize,
         recordType: params.recordType ?? null,
-        titlePrefix: params.titlePrefix ?? null,
+        titlePrefix: normalizedTitlePrefix,
         node: params.node ?? null,
         requestId: responseRequestId,
       });
@@ -210,11 +226,11 @@ export async function fetchPublicArchiveSummaries(params: {
         availableRecordTypes: [],
         appliedFilters: {
           recordType: params.recordType ?? null,
-          titlePrefix: params.titlePrefix ?? null,
+          titlePrefix: normalizedTitlePrefix,
           nodeSlug: params.node ?? null,
         },
         appliedRecordTypeFilter: params.recordType ?? null,
-        appliedTitlePrefixFilter: params.titlePrefix ?? null,
+        appliedTitlePrefixFilter: normalizedTitlePrefix,
         degradedHonesty: {
           isDegraded: true,
           reason: `archive_summary_http_${res.status}`,
@@ -238,7 +254,7 @@ export async function fetchPublicArchiveSummaries(params: {
         page: safePage,
         pageSize: safePageSize,
         recordType: params.recordType ?? null,
-        titlePrefix: params.titlePrefix ?? null,
+        titlePrefix: normalizedTitlePrefix,
         node: params.node ?? null,
         requestId: responseRequestId,
       });
@@ -248,11 +264,11 @@ export async function fetchPublicArchiveSummaries(params: {
         availableRecordTypes: [],
         appliedFilters: {
           recordType: params.recordType ?? null,
-          titlePrefix: params.titlePrefix ?? null,
+          titlePrefix: normalizedTitlePrefix,
           nodeSlug: params.node ?? null,
         },
         appliedRecordTypeFilter: params.recordType ?? null,
-        appliedTitlePrefixFilter: params.titlePrefix ?? null,
+        appliedTitlePrefixFilter: normalizedTitlePrefix,
         degradedHonesty: {
           isDegraded: true,
           reason: 'archive_summary_contract_error',
@@ -288,7 +304,7 @@ export async function fetchPublicArchiveSummaries(params: {
       page: safePage,
       pageSize: safePageSize,
       recordType: params.recordType ?? null,
-      titlePrefix: params.titlePrefix ?? null,
+      titlePrefix: normalizedTitlePrefix,
       node: params.node ?? null,
     });
     return {
@@ -297,11 +313,11 @@ export async function fetchPublicArchiveSummaries(params: {
       availableRecordTypes: [],
       appliedFilters: {
         recordType: params.recordType ?? null,
-        titlePrefix: params.titlePrefix ?? null,
+        titlePrefix: normalizedTitlePrefix,
         nodeSlug: params.node ?? null,
       },
       appliedRecordTypeFilter: params.recordType ?? null,
-      appliedTitlePrefixFilter: params.titlePrefix ?? null,
+      appliedTitlePrefixFilter: normalizedTitlePrefix,
       degradedHonesty: {
         isDegraded: true,
         reason: 'archive_summary_fetch_failed',

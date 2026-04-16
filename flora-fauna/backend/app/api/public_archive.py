@@ -46,6 +46,7 @@ def list_public_archive_records_route():
             page=page,
             page_size=page_size,
         )
+        normalized_title_prefix = payload.get("applied_title_prefix_filter")
         emit_plane_log(
             plane="public",
             event_name="public_archive_records_listed",
@@ -55,6 +56,8 @@ def list_public_archive_records_route():
                 "record_count": len(payload.get("records") or []),
                 "record_type_filter": record_type,
                 "title_prefix_filter": title_prefix,
+                "title_prefix_filter_normalized": normalized_title_prefix,
+                "title_prefix_filter_guardrail_applied": normalized_title_prefix != title_prefix,
                 "page": page,
                 "page_size": page_size,
                 "node_slug": node.slug if node else None,

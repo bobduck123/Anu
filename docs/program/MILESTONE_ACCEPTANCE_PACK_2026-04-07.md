@@ -135,6 +135,33 @@ Each milestone requires:
   - `frontend-next/src/components/archive/ArchiveShell.tsx`
   - `frontend-next/src/test/archivePage.test.tsx`
 
+### Evidence snapshot (ANU-029 query-normalization guardrail hardening, 2026-04-16)
+- backend guardrail slice:
+  - `python -m pytest -q tests/test_public_archive.py` (8 passed),
+- frontend guardrail slice:
+  - `npx vitest run src/test/archivePage.test.tsx` (1 file, 6 tests passed),
+- implementation references:
+  - `flora-fauna/backend/app/services/archive_service.py`
+  - `flora-fauna/backend/app/api/public_archive.py`
+  - `flora-fauna/backend/tests/test_public_archive.py`
+  - `frontend-next/src/lib/api/publicArchive.ts`
+  - `frontend-next/src/app/(public)/archive/page.tsx`
+  - `frontend-next/src/test/archivePage.test.tsx`
+- request/response guardrail example:
+```http
+GET /public/archive/records?title_prefix=%20%20Alpha%20%20%20Trust%20%20&page=1&page_size=5
+```
+```json
+{
+  "data": {
+    "applied_title_prefix_filter": "Alpha Trust",
+    "applied_filters": {
+      "title_prefix": "Alpha Trust"
+    }
+  }
+}
+```
+
 ### Evidence snapshot (ANU-022 decision register publication path, 2026-04-14)
 - backend decision publication slice:
   - `python -m pytest -q -p no:cacheprovider -p no:tmpdir tests/test_public_decisions.py tests/test_public_archive.py tests/test_public_trust.py` (12 passed in sandbox run),
@@ -257,6 +284,95 @@ Each milestone requires:
   - `frontend-next/src/app/(control)/control/tenants/[nodeId]/manifest/page.tsx`
   - `frontend-next/src/test/controlManifestAuthoringPage.test.tsx`
 
+### Evidence snapshot (ANU-WL-007 authoritative delegated scope issuance, 2026-04-14)
+- backend token issuance + delegated scope enforcement:
+  - `python -m pytest -q tests/test_control_token_managed_node_scope.py tests/test_control_public_site_manifest_authoring.py` (pass),
+- frontend scoped tenant/action visibility contract:
+  - `npx vitest run src/test/controlManifestAuthoringPage.test.tsx src/test/controlProxyRoute.test.ts src/test/adminTenantsPage.test.tsx` (pass),
+- frontend typecheck:
+  - `npm run -s typecheck` (pass),
+- implementation references:
+  - `flora-fauna/backend/app/security/control_tenant_scope.py`
+  - `flora-fauna/backend/app/auth.py`
+  - `flora-fauna/backend/app/api/cultural_control.py`
+  - `flora-fauna/backend/app/api/admin_tenants.py`
+  - `flora-fauna/backend/tests/test_control_token_managed_node_scope.py`
+
+### Evidence snapshot (ANU-WL-008 platform-admin assignment management, 2026-04-15)
+- backend assignment-management + scope compatibility suite:
+  - `python -m pytest -q -p no:cacheprovider -p no:tmpdir tests/test_control_operator_assignments_api.py tests/test_control_token_managed_node_scope.py tests/test_control_public_site_manifest_authoring.py` (19 passed),
+- implementation references:
+  - `flora-fauna/backend/app/api/cultural_control.py`
+  - `flora-fauna/backend/app/services/control_operator_assignment_service.py`
+  - `flora-fauna/backend/app/security/control_tenant_scope.py`
+  - `flora-fauna/backend/app/security/control_plane.py`
+  - `flora-fauna/backend/tests/test_control_operator_assignments_api.py`
+- scope note:
+  - assignment storage remains in `NodeConfig.config_json.control_operator_assignments`; WL-007 token issuance and runtime scope intersection continue to use persisted assignment state.
+
+### Evidence snapshot (ANU-WL-009 control-host assignment UI, 2026-04-15)
+- frontend control-host assignment-management UI suite:
+  - `npx vitest run src/test/adminTenantsPage.test.tsx src/test/controlManifestAuthoringPage.test.tsx` (2 files, 10 tests passed),
+  - `npm run -s typecheck` (pass),
+- implementation references:
+  - `frontend-next/src/app/(control)/control/tenants/page.tsx`
+  - `frontend-next/src/lib/api/controlClient.ts`
+  - `frontend-next/src/test/adminTenantsPage.test.tsx`
+- scope note:
+  - UI consumes WL-008 assignment endpoints only and remains hidden for non-platform operators (`platform_admin_required` response path).
+
+### Evidence snapshot (ANU-WL-010 control-host domain/publication ops, 2026-04-15)
+- backend domain-binding + host-resolution compatibility suite:
+  - `python -m pytest -q -p no:cacheprovider -p no:tmpdir tests/test_control_site_domain_bindings_api.py tests/test_public_site_manifest.py` (10 passed),
+- frontend control-host domain-binding UI suite:
+  - `npx vitest run src/test/controlManifestAuthoringPage.test.tsx src/test/adminTenantsPage.test.tsx` (2 files, 14 tests passed),
+  - `npm run -s typecheck` (pass),
+- implementation references:
+  - `flora-fauna/backend/app/services/control_site_domain_service.py`
+  - `flora-fauna/backend/app/api/cultural_control.py`
+  - `flora-fauna/backend/app/security/control_plane.py`
+  - `flora-fauna/backend/app/schemas.py`
+  - `flora-fauna/backend/tests/test_control_site_domain_bindings_api.py`
+  - `frontend-next/src/lib/api/controlClient.ts`
+  - `frontend-next/src/app/(control)/control/tenants/[nodeId]/manifest/page.tsx`
+  - `frontend-next/src/test/controlManifestAuthoringPage.test.tsx`
+- scope note:
+  - Domain bindings remain a narrow platform-admin control slice (no DNS automation, no certificate UI, no broad domain console).
+
+### Evidence snapshot (ANU-WL-011 control-host publish-readiness preflight, 2026-04-15)
+- backend publish-readiness + domain/manifest compatibility suite:
+  - `python -m pytest -q -p no:cacheprovider -p no:tmpdir tests/test_control_site_publish_readiness_api.py tests/test_control_site_domain_bindings_api.py tests/test_control_public_site_manifest_authoring.py tests/test_public_site_manifest.py` (24 passed),
+- frontend control-host manifest readiness rendering suite:
+  - `npx vitest run src/test/controlManifestAuthoringPage.test.tsx src/test/adminTenantsPage.test.tsx` (2 files, 15 tests passed),
+  - `npm run -s typecheck` (pass),
+- implementation references:
+  - `flora-fauna/backend/app/services/control_site_publish_readiness_service.py`
+  - `flora-fauna/backend/app/api/cultural_control.py`
+  - `flora-fauna/backend/tests/test_control_site_publish_readiness_api.py`
+  - `frontend-next/src/lib/api/controlClient.ts`
+  - `frontend-next/src/app/(control)/control/tenants/[nodeId]/manifest/page.tsx`
+  - `frontend-next/src/test/controlManifestAuthoringPage.test.tsx`
+- scope note:
+  - Readiness is a narrow deterministic preflight contract (`ready`, `blocking_issues`, `warnings`) and does not add DNS/provider automation or workflow-engine approvals.
+
+### Evidence snapshot (ANU-WL-012 platform-admin node bootstrap, 2026-04-15)
+- backend bootstrap + compatibility suite:
+  - `python -m pytest -q -p no:cacheprovider -p no:tmpdir tests/test_control_site_bootstrap_api.py tests/test_control_operator_assignments_api.py tests/test_control_site_domain_bindings_api.py tests/test_control_site_publish_readiness_api.py tests/test_control_public_site_manifest_authoring.py` (33 passed),
+- frontend control-host bootstrap UI suite:
+  - `npx vitest run src/test/adminTenantsPage.test.tsx src/test/controlManifestAuthoringPage.test.tsx` (2 files, 18 tests passed),
+  - `npm run -s typecheck` (pass),
+- implementation references:
+  - `flora-fauna/backend/app/services/control_site_bootstrap_service.py`
+  - `flora-fauna/backend/app/api/cultural_control.py`
+  - `flora-fauna/backend/app/schemas.py`
+  - `flora-fauna/backend/app/security/control_plane.py`
+  - `flora-fauna/backend/tests/test_control_site_bootstrap_api.py`
+  - `frontend-next/src/lib/api/controlClient.ts`
+  - `frontend-next/src/app/(control)/control/tenants/page.tsx`
+  - `frontend-next/src/test/adminTenantsPage.test.tsx`
+- scope note:
+  - Bootstrap remains a narrow platform-admin control slice with deterministic validation/conflict behavior and no workflow engine, CMS, RBAC redesign, or DNS automation.
+
 ### Evidence snapshot (ANU-020 cross-service isolation proof, 2026-04-14)
 - backend cross-service/node isolation proof suite:
   - `python -m pytest -q tests/test_node_isolation.py tests/test_domain_resolution.py tests/test_public_connectors.py tests/test_node_service_binding.py` (15 passed),
@@ -301,6 +417,22 @@ Each milestone requires:
   - `services/impact-service/src/falak/observability/falakTelemetry.ts`
   - `services/impact-service/tests/falak/falakTelemetryPlaneLog.test.ts`
 
+### Evidence snapshot (ANU-024 milestone proof automation scaffolding, 2026-04-14)
+- scaffold contract tests:
+  - `python -m unittest scripts.tests.test_capture_milestone_evidence -v` (5 tests passed),
+- generated artifact bundle:
+  - `docs/program/evidence/anu-024/20260414T041025Z/evidence.json`
+  - `docs/program/evidence/anu-024/20260414T041025Z/evidence.md`
+- implementation references:
+  - `scripts/capture_milestone_evidence.py`
+  - `scripts/tests/test_capture_milestone_evidence.py`
+  - `docs/program/EVIDENCE_AUTOMATION_SPEC_2026-04-14.md`
+- workflow safety note:
+  - automation captures observed results and inferred status only; milestone acceptance conclusions remain human-authored.
+
 ### Remaining M5 evidence items
 - hosted screenshot artifact for public-host vs control-host isolation (`/control/*`) is still operational-evidence pending.
 - hosted recording artifact for flagship journey walk-through is still operational-evidence pending.
+
+
+

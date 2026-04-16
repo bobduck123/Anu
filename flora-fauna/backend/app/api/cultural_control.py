@@ -18,10 +18,16 @@ from ..models import (
     ControlAuditEvent,
 )
 from ..security.control_plane import control_plane_required, log_control_event
+from ..security.control_tenant_scope import resolve_effective_control_managed_node_ids
 from ..security.idempotency import idempotent_control_write
 from ..security.policy import get_current_user
 from ..time_utils import now_utc
-from ..schemas import PublicSiteManifestAuthoringPublishSchema, PublicSiteManifestAuthoringUpdateSchema
+from ..schemas import (
+    ControlSiteBootstrapCreateSchema,
+    ControlSiteDomainBindingsUpdateSchema,
+    PublicSiteManifestAuthoringPublishSchema,
+    PublicSiteManifestAuthoringUpdateSchema,
+)
 from ..services.public_site_authoring_service import (
     PublicSiteManifestAuthoringConflictError,
     PublicSiteManifestAuthoringNotFoundError,
@@ -29,6 +35,29 @@ from ..services.public_site_authoring_service import (
     get_public_site_manifest_authoring_payload,
     publish_public_site_manifest_authoring_draft,
     update_public_site_manifest_authoring,
+)
+from ..services.control_operator_assignment_service import (
+    ControlOperatorAssignmentNotFoundError,
+    ControlOperatorAssignmentValidationError,
+    assign_control_operator_username,
+    get_control_operator_assignments,
+    unassign_control_operator_username,
+)
+from ..services.control_site_domain_service import (
+    ControlSiteDomainConflictError,
+    ControlSiteDomainNotFoundError,
+    ControlSiteDomainValidationError,
+    get_control_site_domain_bindings,
+    update_control_site_domain_bindings,
+)
+from ..services.control_site_publish_readiness_service import (
+    ControlSitePublishReadinessNotFoundError,
+    evaluate_control_site_publish_readiness,
+)
+from ..services.control_site_bootstrap_service import (
+    ControlSiteBootstrapConflictError,
+    ControlSiteBootstrapValidationError,
+    create_control_site_bootstrap,
 )
 from ..services.cultural_intel import (
     claim_next_connector_pull_job,
@@ -63,6 +92,8 @@ cultural_control_bp = Blueprint("cultural_control", __name__, url_prefix="/contr
 SAFE_ID_PATTERN = re.compile(r"^[a-zA-Z0-9._:-]{1,120}$")
 MANIFEST_AUTHORING_UPDATE_SCHEMA = PublicSiteManifestAuthoringUpdateSchema()
 MANIFEST_AUTHORING_PUBLISH_SCHEMA = PublicSiteManifestAuthoringPublishSchema()
+SITE_DOMAIN_BINDINGS_UPDATE_SCHEMA = ControlSiteDomainBindingsUpdateSchema()
+SITE_BOOTSTRAP_CREATE_SCHEMA = ControlSiteBootstrapCreateSchema()
 
 
 def _is_safe_id(value: str) -> bool:
@@ -93,34 +124,10 @@ def _safe_float(value, *, minimum: float | None = None, maximum: float | None = 
     return parsed
 
 
-def _parse_node_id_candidates(raw_value) -> set[int]:
-    if raw_value is None:
-        return set()
-    values = raw_value if isinstance(raw_value, (list, tuple, set)) else [raw_value]
-    parsed: set[int] = set()
-    for value in values:
-        try:
-            candidate = int(value)
-        except (TypeError, ValueError):
-            continue
-        if candidate > 0:
-            parsed.add(candidate)
-    return parsed
-
-
 def _allowed_manifest_node_ids_for_request() -> set[int] | None:
     user = get_current_user()
     claims = get_jwt() or {}
-
-    role = str(claims.get("role") or getattr(user, "role", "") or "").strip().lower()
-    if role == "platform_admin":
-        return None
-
-    allowed: set[int] = set()
-    allowed.update(_parse_node_id_candidates(getattr(user, "node_id", None)))
-    allowed.update(_parse_node_id_candidates(claims.get("node_id")))
-    allowed.update(_parse_node_id_candidates(claims.get("managed_node_ids")))
-    return allowed
+    return resolve_effective_control_managed_node_ids(user=user, claims=claims)
 
 
 def _require_manifest_node_scope(node_id: int):
@@ -140,10 +147,263 @@ def _require_manifest_node_scope(node_id: int):
     )
 
 
+def _require_platform_admin_for_operator_assignments():
+    user = get_current_user()
+    claims = get_jwt() or {}
+    role = str(claims.get("role") or getattr(user, "role", "") or "").strip().lower()
+    if role != "platform_admin":
+        return error(
+            "platform_admin_required",
+            "Platform admin role is required for operator assignment management.",
+            403,
+        )
+    return None
+
+
+def _require_platform_admin_for_site_domains():
+    user = get_current_user()
+    claims = get_jwt() or {}
+    role = str(claims.get("role") or getattr(user, "role", "") or "").strip().lower()
+    if role != "platform_admin":
+        return error(
+            "platform_admin_required",
+            "Platform admin role is required for domain binding management.",
+            403,
+        )
+    return None
+
+
+def _require_platform_admin_for_publish_readiness():
+    user = get_current_user()
+    claims = get_jwt() or {}
+    role = str(claims.get("role") or getattr(user, "role", "") or "").strip().lower()
+    if role != "platform_admin":
+        return error(
+            "platform_admin_required",
+            "Platform admin role is required for publish readiness checks.",
+            403,
+        )
+    return None
+
+
+def _require_platform_admin_for_site_bootstrap():
+    user = get_current_user()
+    claims = get_jwt() or {}
+    role = str(claims.get("role") or getattr(user, "role", "") or "").strip().lower()
+    if role != "platform_admin":
+        return error(
+            "platform_admin_required",
+            "Platform admin role is required for node bootstrap.",
+            403,
+        )
+    return None
+
+
 @cultural_control_bp.route("/connectors", methods=["GET"])
 @control_plane_required(scopes=["connectors:read"])
 def list_control_connectors():
     return ok(list_connectors())
+
+
+@cultural_control_bp.route("/sites/bootstrap", methods=["POST"])
+@control_plane_required(scopes=["sites:bootstrap:write"])
+@idempotent_control_write()
+def create_control_site_bootstrap_route():
+    role_error = _require_platform_admin_for_site_bootstrap()
+    if role_error:
+        return role_error
+
+    user = get_current_user()
+    incoming = request.get_json(silent=True)
+    if not isinstance(incoming, dict):
+        return error("validation_error", "Bootstrap payload must be a JSON object", 400)
+
+    try:
+        loaded_payload = SITE_BOOTSTRAP_CREATE_SCHEMA.load(incoming)
+    except ValidationError as exc:
+        return error("validation_error", "Bootstrap payload is invalid", 400, details=exc.messages)
+
+    try:
+        payload = create_control_site_bootstrap(**loaded_payload)
+        db.session.commit()
+    except ControlSiteBootstrapValidationError as exc:
+        db.session.rollback()
+        return error("validation_error", exc.message, 400, details=exc.details or {})
+    except ControlSiteBootstrapConflictError as exc:
+        db.session.rollback()
+        error_code = "domain_binding_conflict" if (exc.details or {}).get("conflicting_domains") else "identifier_conflict"
+        return error(error_code, exc.message, 409, details=exc.details or {})
+    except ControlSiteDomainConflictError as exc:
+        db.session.rollback()
+        return error("domain_binding_conflict", exc.message, 409, details=exc.details)
+
+    log_control_event(
+        action="control_site_bootstrap_created",
+        actor_id=user.id if user else None,
+        target_type="node",
+        target_id=str(payload.get("node", {}).get("id")),
+        payload=payload.get("audit") or {},
+    )
+    return ok(payload, status=201)
+
+
+@cultural_control_bp.route("/sites/<int:node_id>/operator-assignments", methods=["GET"])
+@control_plane_required(scopes=["sites:operator-assignments:read"])
+def get_control_site_operator_assignments(node_id: int):
+    role_error = _require_platform_admin_for_operator_assignments()
+    if role_error:
+        return role_error
+
+    try:
+        payload = get_control_operator_assignments(node_id=node_id)
+    except ControlOperatorAssignmentNotFoundError:
+        return error("not_found", "Tenant node not found", 404)
+    return ok(payload)
+
+
+@cultural_control_bp.route("/sites/<int:node_id>/operator-assignments", methods=["POST"])
+@control_plane_required(scopes=["sites:operator-assignments:write"])
+@idempotent_control_write()
+def assign_control_site_operator_assignment(node_id: int):
+    role_error = _require_platform_admin_for_operator_assignments()
+    if role_error:
+        return role_error
+
+    user = get_current_user()
+    incoming = request.get_json(silent=True)
+    if not isinstance(incoming, dict):
+        return error("validation_error", "Operator assignment payload must be a JSON object", 400)
+
+    try:
+        payload = assign_control_operator_username(
+            node_id=node_id,
+            requested_username=str(incoming.get("username") or ""),
+        )
+        db.session.commit()
+    except ControlOperatorAssignmentNotFoundError:
+        db.session.rollback()
+        return error("not_found", "Tenant node not found", 404)
+    except ControlOperatorAssignmentValidationError as exc:
+        db.session.rollback()
+        return error("validation_error", exc.message, 400, details=exc.details)
+
+    log_control_event(
+        action="control_operator_assignment_assigned",
+        actor_id=user.id if user else None,
+        target_type="node",
+        target_id=str(node_id),
+        payload=payload.get("mutation") or {},
+    )
+    return ok(payload)
+
+
+@cultural_control_bp.route("/sites/<int:node_id>/operator-assignments/<string:username>", methods=["DELETE"])
+@control_plane_required(scopes=["sites:operator-assignments:write"])
+@idempotent_control_write()
+def unassign_control_site_operator_assignment(node_id: int, username: str):
+    role_error = _require_platform_admin_for_operator_assignments()
+    if role_error:
+        return role_error
+
+    user = get_current_user()
+    try:
+        payload = unassign_control_operator_username(
+            node_id=node_id,
+            requested_username=username,
+        )
+        db.session.commit()
+    except ControlOperatorAssignmentNotFoundError:
+        db.session.rollback()
+        return error("not_found", "Tenant node not found", 404)
+    except ControlOperatorAssignmentValidationError as exc:
+        db.session.rollback()
+        return error("validation_error", exc.message, 400, details=exc.details)
+
+    log_control_event(
+        action="control_operator_assignment_unassigned",
+        actor_id=user.id if user else None,
+        target_type="node",
+        target_id=str(node_id),
+        payload=payload.get("mutation") or {},
+    )
+    return ok(payload)
+
+
+@cultural_control_bp.route("/sites/<int:node_id>/domain-bindings", methods=["GET"])
+@control_plane_required(scopes=["sites:domains:read"])
+def get_control_site_domain_bindings_route(node_id: int):
+    role_error = _require_platform_admin_for_site_domains()
+    if role_error:
+        return role_error
+
+    try:
+        payload = get_control_site_domain_bindings(node_id=node_id)
+    except ControlSiteDomainNotFoundError:
+        return error("not_found", "Tenant node not found", 404)
+    return ok(payload)
+
+
+@cultural_control_bp.route("/sites/<int:node_id>/domain-bindings", methods=["PUT"])
+@control_plane_required(scopes=["sites:domains:write"])
+@idempotent_control_write()
+def update_control_site_domain_bindings_route(node_id: int):
+    role_error = _require_platform_admin_for_site_domains()
+    if role_error:
+        return role_error
+
+    user = get_current_user()
+    incoming = request.get_json(silent=True)
+    if not isinstance(incoming, dict):
+        return error("validation_error", "Domain binding payload must be a JSON object", 400)
+
+    try:
+        loaded_payload = SITE_DOMAIN_BINDINGS_UPDATE_SCHEMA.load(incoming)
+    except ValidationError as exc:
+        return error(
+            "validation_error",
+            "Domain binding payload is invalid",
+            400,
+            details=exc.messages,
+        )
+
+    try:
+        payload = update_control_site_domain_bindings(
+            node_id=node_id,
+            canonical_domains=loaded_payload.get("canonical_domains"),
+        )
+        db.session.commit()
+    except ControlSiteDomainNotFoundError:
+        db.session.rollback()
+        return error("not_found", "Tenant node not found", 404)
+    except ControlSiteDomainValidationError as exc:
+        db.session.rollback()
+        return error("validation_error", exc.message, 400, details=exc.details)
+    except ControlSiteDomainConflictError as exc:
+        db.session.rollback()
+        return error("domain_binding_conflict", exc.message, 409, details=exc.details)
+
+    log_control_event(
+        action="control_site_domain_bindings_updated",
+        actor_id=user.id if user else None,
+        target_type="node",
+        target_id=str(node_id),
+        payload=payload.get("mutation") or {},
+    )
+    return ok(payload)
+
+
+@cultural_control_bp.route("/sites/<int:node_id>/publish-readiness", methods=["GET"])
+@control_plane_required(scopes=["sites:publish-readiness:read"])
+def get_control_site_publish_readiness_route(node_id: int):
+    role_error = _require_platform_admin_for_publish_readiness()
+    if role_error:
+        return role_error
+
+    try:
+        payload = evaluate_control_site_publish_readiness(node_id=node_id)
+    except ControlSitePublishReadinessNotFoundError:
+        return error("not_found", "Tenant node not found", 404)
+    return ok(payload)
 
 
 @cultural_control_bp.route("/sites/<int:node_id>/manifest-authoring", methods=["GET"])

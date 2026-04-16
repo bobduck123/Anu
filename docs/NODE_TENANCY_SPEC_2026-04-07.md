@@ -146,6 +146,114 @@ Required behavior:
 3. Metadata stays stable until a subsequent publish action.
 4. Public host rendering contract remains unchanged.
 
+### Required delegated scope issuance contract (ANU-WL-007)
+Control-token tenant scope claims for delegated operators must be derived from persisted assignment state.
+
+Persisted assignment source of truth:
+1. `User.node_id` (primary tenant assignment)
+2. `NodeConfig.config_json.control_operator_assignments` (tenant-level delegated assignment list)
+
+Required behavior:
+1. `POST /auth/control-token` for non-platform operators derives `node_id`/`managed_node_ids` from persisted assignment state only.
+2. Request payload fields such as `managed_node_ids` do not widen token scope.
+3. Platform admin behavior remains global and unchanged.
+4. Manifest scope checks continue honoring control claims while rejecting cross-tenant access outside persisted assignments.
+
+### Required operator-assignment management contract (ANU-WL-008)
+Persisted delegated assignments must be operable through a narrow platform-admin control API without RBAC redesign.
+
+Control-plane endpoints:
+- `GET /api/control/sites/:node_id/operator-assignments`
+- `POST /api/control/sites/:node_id/operator-assignments`
+- `DELETE /api/control/sites/:node_id/operator-assignments/:username`
+
+Required behavior:
+1. Only `platform_admin` may mutate tenant operator assignments.
+2. Assignment persistence remains in `NodeConfig.config_json.control_operator_assignments`.
+3. Operator usernames are normalized server-side before comparison/persistence.
+4. Assign and unassign operations are idempotent with explicit mutation result fields.
+5. Control-token issuance and runtime tenant-scope enforcement continue reading the same persisted source of truth.
+6. Assignment mutations are audit-logged with safe structured mutation metadata.
+
+### Required control-host operator-assignment UI contract (ANU-WL-009)
+Operator assignment management must be operationally usable through a narrow platform-admin control surface without expanding into a permission console.
+
+Control-host UI behavior:
+1. Render assignment-management controls only when WL-008 assignment endpoints allow platform-admin access.
+2. Support only:
+   - reading current assignments,
+   - assigning one username,
+   - unassigning one username.
+3. Use WL-008 endpoints only; no direct config JSON editing.
+4. Preserve idempotent semantics visibly (`already assigned` / `not currently assigned`).
+5. Normalize displayed and submitted usernames consistently with server-side normalization.
+6. Hide assignment-management UI for non-platform operators.
+7. Surface backend validation and availability errors honestly.
+
+### Required control-host published-domain operations contract (ANU-WL-010)
+White-label launchability requires a narrow platform-admin control path for published host/domain bindings.
+
+Control-plane endpoint contract:
+- `GET /api/control/sites/:node_id/domain-bindings`
+- `PUT /api/control/sites/:node_id/domain-bindings`
+
+Required behavior:
+1. Only `platform_admin` can read or mutate this path.
+2. Payload supports reading and updating canonical published domain bindings only.
+3. Domain inputs are normalized server-side and validated as hostnames.
+4. Invalid domain values are rejected explicitly (`validation_error`).
+5. Domain overlap across different tenant nodes is rejected explicitly (`domain_binding_conflict`).
+6. Public host resolution must consume updated published binding state.
+7. Unknown-host fallback posture remains explicit and unchanged.
+8. Scope remains narrow: no DNS automation, no certificate UI, no broad domain-management console.
+
+### Required control-host publish-readiness preflight contract (ANU-WL-011)
+White-label launchability requires an explicit preflight readiness check before public publish operations.
+
+Control-plane endpoint contract:
+- `GET /api/control/sites/:node_id/publish-readiness`
+
+Required behavior:
+1. Only `platform_admin` can access this path.
+2. Readiness evaluation is deterministic and narrow.
+3. Response returns explicit structured fields:
+   - `ready` (`boolean`)
+   - `blocking_issues[]`
+   - `warnings[]`
+4. Blocking checks must include:
+   - canonical domain binding present,
+   - published manifest present,
+   - required legal links present in published state,
+   - required trust links present in published state.
+5. Warning checks remain non-blocking and explicit (for example `tls_ready=false` on a canonical domain).
+6. Control-host manifest UI renders blocking issues and warnings separately with honest operator guidance.
+7. Scope remains narrow: no DNS/provider automation, no certificate provisioning UI, no workflow-engine expansion.
+
+### Required control-host node bootstrap contract (ANU-WL-012)
+White-label onboarding requires a narrow platform-admin bootstrap path for creating a new tenant node with a minimal launch scaffold.
+
+Control-plane endpoint contract:
+- `POST /api/control/sites/bootstrap`
+
+Required behavior:
+1. Only `platform_admin` may access this path.
+2. Payload accepts only the minimum bootstrap fields:
+   - node identity (`node_name`, optional `node_slug`),
+   - initial manifest identity (`site_name`, optional `site_key`, optional `tagline`),
+   - optional `canonical_domains`,
+   - optional `operator_usernames`.
+3. Unknown fields are rejected through schema validation.
+4. Identifier conflicts (`node_slug`, `site_key`) are rejected explicitly (`identifier_conflict`).
+5. Domain overlap conflicts are rejected explicitly (`domain_binding_conflict`).
+6. Bootstrap writes are audit-safe and include structured mutation metadata.
+7. Created nodes are immediately compatible with existing WL flows:
+   - manifest authoring,
+   - domain binding management,
+   - operator assignment management,
+   - publish-readiness checks,
+   - public site resolution once published.
+8. Scope remains narrow: no workflow engine, no CMS/page-builder expansion, no DNS/provider automation, no RBAC redesign.
+
 ## Control Node Contract
 Privileged node administration must move under:
 - `/control/tenants`

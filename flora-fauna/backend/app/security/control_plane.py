@@ -42,6 +42,12 @@ ALL_CONTROL_SCOPES = {
     "audit:export",
     "sites:manifest:read",
     "sites:manifest:write",
+    "sites:domains:read",
+    "sites:domains:write",
+    "sites:publish-readiness:read",
+    "sites:operator-assignments:read",
+    "sites:operator-assignments:write",
+    "sites:bootstrap:write",
 }
 
 

@@ -192,6 +192,99 @@ describe('Archive index route', () => {
     );
   });
 
+  it('normalizes title-prefix whitespace before backend query and preserves normalized echo in UI', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          ok: true,
+          data: {
+            records: [],
+            pagination: {
+              model: 'offset',
+              page: 1,
+              page_size: 12,
+              total_records: 0,
+              total_pages: 0,
+              has_more: false,
+              has_previous: false,
+              next_page: null,
+              previous_page: null,
+              ordering: ['updated_at:desc', 'id:desc'],
+            },
+            available_record_types: ['public-trust-report'],
+            applied_filters: {
+              record_type: null,
+              title_prefix: 'Alpha Trust',
+              node_slug: null,
+            },
+            applied_record_type_filter: null,
+            applied_title_prefix_filter: 'Alpha Trust',
+            degraded_honesty: {
+              is_degraded: true,
+              reason: 'no_public_archive_records_for_title_prefix',
+              fallback: "No public archive records are published for title prefix 'Alpha Trust' in this scope yet.",
+            },
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+
+    render(await ArchiveIndexPage({ searchParams: Promise.resolve({ title_prefix: '  Alpha   Trust  ' }) }));
+
+    const requestUrl = new URL(String(fetchMock.mock.calls[0]?.[0] ?? 'https://core.example/public/archive/records'));
+    expect(requestUrl.searchParams.get('title_prefix')).toBe('Alpha Trust');
+    expect(screen.getByDisplayValue('Alpha Trust')).toBeInTheDocument();
+  });
+
+  it('caps overlong title-prefix before backend query', async () => {
+    const overlongPrefix = 'A'.repeat(120);
+    const cappedPrefix = 'A'.repeat(80);
+
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          ok: true,
+          data: {
+            records: [],
+            pagination: {
+              model: 'offset',
+              page: 1,
+              page_size: 12,
+              total_records: 0,
+              total_pages: 0,
+              has_more: false,
+              has_previous: false,
+              next_page: null,
+              previous_page: null,
+              ordering: ['updated_at:desc', 'id:desc'],
+            },
+            available_record_types: ['public-trust-report'],
+            applied_filters: {
+              record_type: null,
+              title_prefix: cappedPrefix,
+              node_slug: null,
+            },
+            applied_record_type_filter: null,
+            applied_title_prefix_filter: cappedPrefix,
+            degraded_honesty: {
+              is_degraded: true,
+              reason: 'no_public_archive_records_for_title_prefix',
+              fallback: "No public archive records are published for title prefix 'AAAAAAAA' in this scope yet.",
+            },
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+
+    render(await ArchiveIndexPage({ searchParams: Promise.resolve({ title_prefix: overlongPrefix }) }));
+
+    const requestUrl = new URL(String(fetchMock.mock.calls[0]?.[0] ?? 'https://core.example/public/archive/records'));
+    expect(requestUrl.searchParams.get('title_prefix')).toBe(cappedPrefix);
+    expect(requestUrl.searchParams.get('title_prefix')?.length).toBe(80);
+  });
+
   it('renders honest degraded state when archive summary feed cannot be loaded', async () => {
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ ok: false }), { status: 503, headers: { 'Content-Type': 'application/json' } }),

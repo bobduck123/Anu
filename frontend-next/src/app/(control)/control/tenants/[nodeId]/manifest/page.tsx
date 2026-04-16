@@ -5,9 +5,15 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   ControlApiError,
+  getControlSiteDomainBindings,
   getControlSiteManifestAuthoring,
+  getControlSitePublishReadiness,
+  normalizeControlCanonicalDomain,
   publishControlSiteManifestAuthoring,
+  type ControlSiteDomainBindingsPayload,
+  type ControlSitePublishReadinessPayload,
   updateControlSiteManifestAuthoring,
+  updateControlSiteDomainBindings,
   type ControlSiteManifestAuthoringPayload,
   type ManifestAuthoringLink,
   type ManifestAuthoringNavItem,
@@ -35,6 +41,17 @@ export default function TenantManifestAuthoringPage() {
   const [publishNotice, setPublishNotice] = useState<string | null>(null);
   const [validationDetails, setValidationDetails] = useState<Record<string, unknown> | null>(null);
   const [payload, setPayload] = useState<ControlSiteManifestAuthoringPayload | null>(null);
+  const [domainBindingsPayload, setDomainBindingsPayload] = useState<ControlSiteDomainBindingsPayload | null>(null);
+  const [domainPanelVisibility, setDomainPanelVisibility] = useState<'unknown' | 'visible' | 'hidden'>('unknown');
+  const [domainLoading, setDomainLoading] = useState(false);
+  const [domainSaving, setDomainSaving] = useState(false);
+  const [domainError, setDomainError] = useState<string | null>(null);
+  const [domainMessage, setDomainMessage] = useState<string | null>(null);
+  const [domainInput, setDomainInput] = useState('');
+  const [publishReadinessPayload, setPublishReadinessPayload] = useState<ControlSitePublishReadinessPayload | null>(null);
+  const [readinessPanelVisibility, setReadinessPanelVisibility] = useState<'unknown' | 'visible' | 'hidden'>('unknown');
+  const [readinessLoading, setReadinessLoading] = useState(false);
+  const [readinessError, setReadinessError] = useState<string | null>(null);
 
   const [siteName, setSiteName] = useState('');
   const [tagline, setTagline] = useState('');
@@ -99,6 +116,109 @@ export default function TenantManifestAuthoringPage() {
         setError(err instanceof Error ? err.message : 'Failed to load manifest authoring payload.');
       } finally {
         if (active) setLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [nodeId]);
+
+  useEffect(() => {
+    if (!Number.isFinite(nodeId) || nodeId <= 0) {
+      return;
+    }
+
+    let active = true;
+    setReadinessLoading(true);
+    setReadinessError(null);
+
+    (async () => {
+      try {
+        const readinessPayload = await getControlSitePublishReadiness(nodeId);
+        if (!active) {
+          return;
+        }
+        setPublishReadinessPayload(readinessPayload);
+        setReadinessPanelVisibility('visible');
+      } catch (err) {
+        if (!active) {
+          return;
+        }
+        if (err instanceof ControlApiError && err.code === 'platform_admin_required') {
+          setReadinessPanelVisibility('hidden');
+          return;
+        }
+        setReadinessPanelVisibility('visible');
+        setReadinessError(err instanceof Error ? err.message : 'Failed to load publish readiness.');
+      } finally {
+        if (active) {
+          setReadinessLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [nodeId]);
+
+  async function refreshPublishReadiness() {
+    if (!Number.isFinite(nodeId) || nodeId <= 0) {
+      return;
+    }
+
+    setReadinessLoading(true);
+    setReadinessError(null);
+    try {
+      const readinessPayload = await getControlSitePublishReadiness(nodeId);
+      setPublishReadinessPayload(readinessPayload);
+      setReadinessPanelVisibility('visible');
+    } catch (err) {
+      if (err instanceof ControlApiError && err.code === 'platform_admin_required') {
+        setReadinessPanelVisibility('hidden');
+        return;
+      }
+      setReadinessPanelVisibility('visible');
+      setReadinessError(err instanceof Error ? err.message : 'Failed to refresh publish readiness.');
+    } finally {
+      setReadinessLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!Number.isFinite(nodeId) || nodeId <= 0) {
+      return;
+    }
+
+    let active = true;
+    setDomainLoading(true);
+    setDomainError(null);
+    setDomainMessage(null);
+
+    (async () => {
+      try {
+        const domainPayload = await getControlSiteDomainBindings(nodeId);
+        if (!active) {
+          return;
+        }
+        setDomainBindingsPayload(domainPayload);
+        setDomainInput((domainPayload.canonical_domains || []).join('\n'));
+        setDomainPanelVisibility('visible');
+      } catch (err) {
+        if (!active) {
+          return;
+        }
+        if (err instanceof ControlApiError && err.code === 'platform_admin_required') {
+          setDomainPanelVisibility('hidden');
+          return;
+        }
+        setDomainPanelVisibility('visible');
+        setDomainError(err instanceof Error ? err.message : 'Failed to load domain bindings.');
+      } finally {
+        if (active) {
+          setDomainLoading(false);
+        }
       }
     })();
 
@@ -211,6 +331,7 @@ export default function TenantManifestAuthoringPage() {
       const updated = await publishControlSiteManifestAuthoring(nodeId, payload.revision_token);
       applyPayloadToForm(updated);
       setPublishNotice('Draft published to public shell.');
+      await refreshPublishReadiness();
     } catch (err) {
       if (err instanceof ControlApiError) {
         if (err.status === 409 && err.code === 'manifest_publish_revision_conflict') {
@@ -235,6 +356,42 @@ export default function TenantManifestAuthoringPage() {
       }
     } finally {
       setPublishing(false);
+    }
+  }
+
+  async function handleDomainBindingsSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!Number.isFinite(nodeId) || nodeId <= 0) {
+      return;
+    }
+
+    const normalizedDomains = domainInput
+      .split(/[\n,]/)
+      .map((item) => normalizeControlCanonicalDomain(item))
+      .filter(Boolean);
+
+    setDomainSaving(true);
+    setDomainError(null);
+    setDomainMessage(null);
+
+    try {
+      const updated = await updateControlSiteDomainBindings(nodeId, normalizedDomains);
+      setDomainBindingsPayload(updated);
+      setDomainInput((updated.canonical_domains || []).join('\n'));
+      if (updated.mutation?.idempotent_noop) {
+        setDomainMessage('Domain bindings already match the saved published state.');
+      } else {
+        setDomainMessage('Published domain bindings updated.');
+      }
+      await refreshPublishReadiness();
+    } catch (err) {
+      if (err instanceof ControlApiError) {
+        setDomainError(err.message);
+        return;
+      }
+      setDomainError(err instanceof Error ? err.message : 'Failed to update domain bindings.');
+    } finally {
+      setDomainSaving(false);
     }
   }
 
@@ -272,6 +429,101 @@ export default function TenantManifestAuthoringPage() {
         <p className="text-xs text-[color:rgba(246,212,203,0.8)]">Published at: {payload?.published_at || 'Not published yet'}</p>
         <p className="text-xs text-[color:rgba(246,212,203,0.8)]">Published by: {payload?.published_by || 'Unknown'}</p>
       </section>
+
+      {readinessPanelVisibility === 'visible' ? (
+        <section className="rounded-xl border border-[color:rgba(246,212,203,0.2)] p-4">
+          <p className="text-xs uppercase tracking-[0.12em] text-[color:rgba(246,212,203,0.66)]">Publish readiness</p>
+          <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.86)]">
+            Preflight checks cover domain binding, published manifest presence, and required trust/legal links.
+          </p>
+
+          {readinessLoading ? (
+            <p className="mt-3 text-sm text-[color:rgba(246,212,203,0.8)]">Evaluating publish readiness...</p>
+          ) : null}
+
+          {!readinessLoading && publishReadinessPayload ? (
+            <div className="mt-3 space-y-3 text-sm">
+              <p className={publishReadinessPayload.ready ? 'text-emerald-300' : 'text-amber-200'}>
+                {publishReadinessPayload.ready ? 'Ready for public launch preflight.' : 'Not ready for public launch preflight.'}
+              </p>
+
+              <div>
+                <p className="text-xs uppercase tracking-[0.12em] text-[color:rgba(246,212,203,0.66)]">Blocking issues</p>
+                {publishReadinessPayload.blocking_issues.length === 0 ? (
+                  <p className="mt-1 text-[color:rgba(246,212,203,0.82)]">None</p>
+                ) : (
+                  <ul className="mt-1 list-disc pl-4 text-red-200">
+                    {publishReadinessPayload.blocking_issues.map((issue) => (
+                      <li key={`blocking-${issue.code}`}>{issue.message}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div>
+                <p className="text-xs uppercase tracking-[0.12em] text-[color:rgba(246,212,203,0.66)]">Warnings</p>
+                {publishReadinessPayload.warnings.length === 0 ? (
+                  <p className="mt-1 text-[color:rgba(246,212,203,0.82)]">None</p>
+                ) : (
+                  <ul className="mt-1 list-disc pl-4 text-amber-200">
+                    {publishReadinessPayload.warnings.map((warning) => (
+                      <li key={`warning-${warning.code}`}>{warning.message}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {readinessError ? <p className="mt-3 text-sm text-red-300">{readinessError}</p> : null}
+        </section>
+      ) : null}
+
+      {domainPanelVisibility === 'visible' ? (
+        <section className="rounded-xl border border-[color:rgba(246,212,203,0.2)] p-4">
+          <p className="text-xs uppercase tracking-[0.12em] text-[color:rgba(246,212,203,0.66)]">Platform-admin domain bindings</p>
+          <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.86)]">
+            Update canonical public host/domain bindings used by published site resolution.
+          </p>
+
+          {domainLoading ? <p className="mt-3 text-sm text-[color:rgba(246,212,203,0.8)]">Loading domain bindings...</p> : null}
+
+          <form className="mt-3 space-y-3" onSubmit={handleDomainBindingsSubmit}>
+            <label className="block text-sm">
+              Canonical domains (one per line)
+              <textarea
+                aria-label="Canonical domains"
+                className="mt-1 min-h-[110px] w-full rounded border px-3 py-2 text-sm text-black"
+                value={domainInput}
+                onChange={(event) => setDomainInput(event.target.value)}
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={domainSaving || domainLoading}
+              className="rounded border border-[color:rgba(246,212,203,0.3)] px-4 py-2 text-sm disabled:opacity-60"
+            >
+              {domainSaving ? 'Saving domains...' : 'Save domain bindings'}
+            </button>
+          </form>
+
+          <div className="mt-3 rounded border border-[color:rgba(246,212,203,0.2)] p-3 text-xs text-[color:rgba(246,212,203,0.82)]">
+            <p className="font-medium uppercase tracking-[0.12em] text-[color:rgba(246,212,203,0.66)]">Current published bindings</p>
+            {(domainBindingsPayload?.canonical_domains || []).length === 0 ? (
+              <p className="mt-2">No canonical domains are currently bound.</p>
+            ) : (
+              <ul className="mt-2 list-disc pl-4">
+                {(domainBindingsPayload?.canonical_domains || []).map((domain) => (
+                  <li key={domain}>{domain}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {domainMessage ? <p className="mt-3 text-sm text-emerald-300">{domainMessage}</p> : null}
+          {domainError ? <p className="mt-3 text-sm text-red-300">{domainError}</p> : null}
+        </section>
+      ) : null}
 
       <div className="grid gap-3 md:grid-cols-2">
         <section className="rounded-xl border border-[color:rgba(246,212,203,0.2)] p-4">

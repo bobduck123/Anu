@@ -541,24 +541,29 @@
 
 ## ANU-024
 **Title:** Milestone proof automation scaffolding
-**Why it exists:** M1–M5 sign-off should not depend on ad hoc evidence gathering.
+**Why it exists:** M1-M5 sign-off should not depend on ad hoc evidence gathering.
 **Exact repo location:**
+- `scripts/capture_milestone_evidence.py`
+- `scripts/tests/test_capture_milestone_evidence.py`
+- `docs/program/EVIDENCE_AUTOMATION_SPEC_2026-04-14.md`
 - `docs/program/MILESTONE_ACCEPTANCE_PACK_2026-04-07.md`
-- `docs/program/MILESTONE_EVIDENCE_TEMPLATE_2026-04-07.md`
-- `.github/workflows/*`
+- `docs/program/M5_COMPLETION_REPORT.md`
+- `docs/program/evidence/anu-024/*`
 **Implementation notes:**
-1. Add repeatable proof checklist structure.
-2. Extend existing workflows only where safe.
-3. Do not rename M0–M5 workflow files.
+1. Add a workflow-safe evidence capture script that writes timestamp/build-id-distinguished bundles.
+2. Emit both `evidence.json` and `evidence.md` with explicit observed/inferred/human narrative separation.
+3. Keep milestone completion conclusions human-authored and out of automation scope.
+4. Do not rename M0-M5 workflow files.
 **Dependencies:** ANU-001 through ANU-023 as applicable
 **Acceptance criteria:**
 1. Milestone proof pack can be populated consistently.
 2. Workflow references remain stable.
 **Evidence required:**
-- updated docs
-- workflow diff summary
+- focused test output for evidence capture contract
+- one generated ANU-024 evidence bundle path
 **Owner type:** Platform / Delivery
 **Milestone:** M5
+**Execution status (2026-04-14):** COMPLETE - evidence automation scaffold is live via `scripts/capture_milestone_evidence.py`, focused contract tests are passing, and ANU-024 bundle artifacts are generated under `docs/program/evidence/anu-024/` without auto-writing milestone conclusions.
 
 ## ANU-025
 **Title:** M1 PR-group definition and rollout plan
@@ -671,6 +676,7 @@
 - one request/response example showing guardrail behavior
 **Owner type:** Backend + Frontend
 **Milestone:** M5
+**Execution status (2026-04-16):** COMPLETE - title-prefix guardrails are now explicit and enforced end-to-end (whitespace normalization + 80-char cap), with deterministic pagination/filter behavior unchanged, focused backend/frontend tests, and docs/evidence updates.
 
 ## ANU-WL-001
 **Title:** Platform-hosted white-label public front-end foundation (Mudyin exemplar)
@@ -818,3 +824,189 @@
 **Owner type:** Frontend + Backend + Platform
 **Milestone:** M5+
 **Execution status (2026-04-14):** COMPLETE - control manifest payload now includes last-publish metadata and UI freshness cues with focused tests passing.
+
+## ANU-WL-007
+**Title:** Authoritative delegated tenant scope claims at control-token issuance
+**Why it exists:** WL-006 introduced tenant-scoped enforcement, but delegated multi-tenant operators need claims minted from persisted assignment state rather than caller-provided payloads.
+**Exact repo location:**
+- `flora-fauna/backend/app/security/control_tenant_scope.py`
+- `flora-fauna/backend/app/auth.py`
+- `flora-fauna/backend/app/api/cultural_control.py`
+- `flora-fauna/backend/app/api/admin_tenants.py`
+- `flora-fauna/backend/tests/test_control_token_managed_node_scope.py`
+- `flora-fauna/backend/tests/test_control_public_site_manifest_authoring.py`
+**Implementation notes:**
+1. Resolve delegated operator assignments from persisted backend state (`User.node_id` + `NodeConfig` assignment metadata).
+2. Mint non-platform control tokens with authoritative `node_id` and `managed_node_ids` (for multi-tenant assignments).
+3. Ignore incoming `managed_node_ids` payload attempts during token issuance.
+4. Intersect runtime claim scope with persisted assignments to reject forged widening.
+**Dependencies:** ANU-WL-006
+**Acceptance criteria:**
+1. Single-tenant delegated operators receive one authorized tenant scope.
+2. Multi-tenant delegated operators receive exactly assigned `managed_node_ids`.
+3. Unassigned tenant access remains forbidden.
+4. Platform admin remains global.
+5. Forged/absent managed-node claims do not widen access.
+**Evidence required:**
+- focused backend tests proving issued claims and downstream scope behavior
+- focused frontend control visibility regression pass
+**Owner type:** Backend + Platform
+**Milestone:** M5+
+**Execution status (2026-04-14):** COMPLETE - control-token issuance now emits authoritative delegated tenant claims from persisted assignments with forged-claim widening blocked by runtime intersection.
+
+## ANU-WL-008
+**Title:** Platform-admin operator assignment management API
+**Why it exists:** WL-007 established persisted delegated assignment as source of truth, but platform admins still needed a narrow operational control path to assign and unassign tenant operators without RBAC redesign.
+**Exact repo location:**
+- `flora-fauna/backend/app/api/cultural_control.py`
+- `flora-fauna/backend/app/services/control_operator_assignment_service.py`
+- `flora-fauna/backend/app/security/control_tenant_scope.py`
+- `flora-fauna/backend/app/security/control_plane.py`
+- `flora-fauna/backend/tests/test_control_operator_assignments_api.py`
+- `flora-fauna/backend/tests/test_control_token_managed_node_scope.py`
+- `flora-fauna/backend/tests/test_control_public_site_manifest_authoring.py`
+**Implementation notes:**
+1. Add platform-admin-only control endpoints for assignment read/assign/unassign under `/api/control/sites/:node_id/operator-assignments`.
+2. Persist assignment updates in `NodeConfig.config_json.control_operator_assignments` and keep legacy mirrors aligned.
+3. Normalize operator usernames server-side before comparison/persistence.
+4. Keep assignment/unassignment idempotent with explicit mutation metadata (`applied`, `idempotent_noop`).
+5. Preserve WL-007 token issuance and runtime scope intersection behavior against the same persisted assignment source of truth.
+**Dependencies:** ANU-WL-007
+**Acceptance criteria:**
+1. Platform admin can read, assign, and unassign tenant operator usernames.
+2. Duplicate assignment and repeated unassignment are idempotent and explicit.
+3. Non-platform operators cannot mutate assignments.
+4. Token issuance and runtime scope enforcement stay consistent after assignment changes.
+**Evidence required:**
+- focused backend API + scope compatibility test output
+- one assignment mutation payload example showing normalization and idempotent flags
+**Owner type:** Backend + Platform
+**Milestone:** M5+
+**Execution status (2026-04-15):** COMPLETE - platform-admin assignment management API is live with normalized/idempotent behavior, audit-safe mutation logging, and WL-007 compatibility verified in focused tests.
+
+## ANU-WL-009
+**Title:** Control-host operator assignment management UI
+**Why it exists:** WL-008 made delegated assignment operable at API level, but platform admins still need a narrow control-host UI to read/assign/unassign without broad permission-console expansion.
+**Exact repo location:**
+- `frontend-next/src/app/(control)/control/tenants/page.tsx`
+- `frontend-next/src/lib/api/controlClient.ts`
+- `frontend-next/src/test/adminTenantsPage.test.tsx`
+**Implementation notes:**
+1. Add a minimal platform-admin assignment panel in `/control/tenants`.
+2. Use WL-008 endpoints only for list/assign/unassign operations.
+3. Hide panel for non-platform operators (`platform_admin_required` path).
+4. Keep idempotent outcomes explicit and honest.
+5. Keep username handling normalized in line with server behavior.
+**Dependencies:** ANU-WL-008
+**Acceptance criteria:**
+1. Platform admin can load assignments and perform assign/unassign from control host UI.
+2. Non-platform operators do not get assignment-management UI.
+3. Duplicate assign/unassign no-op states are rendered honestly.
+4. Error states are surfaced honestly without control-plane leakage.
+**Evidence required:**
+- focused frontend test output
+- typecheck output
+**Owner type:** Frontend + Platform
+**Milestone:** M5+
+**Execution status (2026-04-15):** COMPLETE - minimal control-host assignment UI is live, integrated with WL-008 endpoints, and covered by focused frontend tests for platform-admin visibility, idempotent messaging, and honest error states.
+
+## ANU-WL-010
+**Title:** Minimal control-host domain/publication ops for white-label nodes
+**Why it exists:** WL-001 through WL-009 established manifest/runtime and delegated operator rails, but white-label launchability still required an operable platform-admin path to update canonical published domain bindings.
+**Exact repo location:**
+- `flora-fauna/backend/app/services/control_site_domain_service.py`
+- `flora-fauna/backend/app/api/cultural_control.py`
+- `flora-fauna/backend/app/security/control_plane.py`
+- `flora-fauna/backend/app/schemas.py`
+- `flora-fauna/backend/tests/test_control_site_domain_bindings_api.py`
+- `frontend-next/src/lib/api/controlClient.ts`
+- `frontend-next/src/app/(control)/control/tenants/[nodeId]/manifest/page.tsx`
+- `frontend-next/src/test/controlManifestAuthoringPage.test.tsx`
+**Implementation notes:**
+1. Add platform-admin-only control endpoints for domain binding read/update under `/api/control/sites/:node_id/domain-bindings`.
+2. Validate and normalize domain values server-side.
+3. Reject cross-tenant overlap with explicit conflict responses.
+4. Keep unknown-host fallback posture unchanged.
+5. Add minimal control-host UI fields for reading/updating canonical domains only.
+**Dependencies:** ANU-WL-001, ANU-WL-008, ANU-WL-009
+**Acceptance criteria:**
+1. Platform admin can read and update canonical domain bindings.
+2. Invalid domain input is rejected honestly.
+3. Duplicate/conflicting domain assignment is rejected explicitly.
+4. Host resolution reflects updated binding state.
+5. Non-platform operators cannot use domain-management path.
+**Evidence required:**
+- focused backend/frontend tests
+- typecheck output
+**Owner type:** Backend + Frontend + Platform
+**Milestone:** M5+
+**Execution status (2026-04-15):** COMPLETE - minimal platform-admin domain/publication ops are live end-to-end with strict validation/conflict handling, host-resolution compatibility, and focused backend/frontend test coverage.
+
+## ANU-WL-011
+**Title:** Minimal control-host publish-readiness preflight for white-label nodes
+**Why it exists:** WL-001 through WL-010 established manifest/domain/operator rails, but operators still needed an explicit deterministic launch-readiness check to prevent obviously incomplete public launches.
+**Exact repo location:**
+- `flora-fauna/backend/app/services/control_site_publish_readiness_service.py`
+- `flora-fauna/backend/app/api/cultural_control.py`
+- `flora-fauna/backend/app/security/control_plane.py`
+- `flora-fauna/backend/tests/test_control_site_publish_readiness_api.py`
+- `frontend-next/src/lib/api/controlClient.ts`
+- `frontend-next/src/app/(control)/control/tenants/[nodeId]/manifest/page.tsx`
+- `frontend-next/src/test/controlManifestAuthoringPage.test.tsx`
+**Implementation notes:**
+1. Add platform-admin-only readiness endpoint at `/api/control/sites/:node_id/publish-readiness`.
+2. Evaluate required preflight state deterministically:
+   - canonical domain binding present,
+   - published manifest present,
+   - required trust/legal links present in published manifest.
+3. Return structured readiness payload with `ready`, `blocking_issues`, and `warnings`.
+4. Keep warning-only signals non-blocking (for example `tls_ready=false`).
+5. Render readiness panel in control-host manifest page with honest blocked/warning/operator guidance.
+**Dependencies:** ANU-WL-001, ANU-WL-004, ANU-WL-010
+**Acceptance criteria:**
+1. `ready=true` when required published state is complete.
+2. Missing domain, manifest, or required trust/legal links produce explicit blocking issues.
+3. Warning vs blocker semantics are represented honestly.
+4. Control-host/platform-admin enforcement remains intact.
+5. Control UI renders readiness state clearly/truthfully.
+**Evidence required:**
+- focused backend/frontend tests
+- typecheck output
+**Owner type:** Backend + Frontend + Platform
+**Milestone:** M5+
+**Execution status (2026-04-15):** COMPLETE - minimal publish-readiness preflight is live end-to-end with deterministic checks, explicit blocker/warning contract, platform-admin enforcement, control-host UI integration, and focused backend/frontend test coverage.
+
+## ANU-WL-012
+**Title:** Minimal platform-admin white-label node bootstrap flow
+**Why it exists:** WL-001 through WL-011 established manifest/domain/operator/readiness rails, but platform admins still needed a narrow operable path to bootstrap new partner nodes with a minimal launch scaffold.
+**Exact repo location:**
+- `flora-fauna/backend/app/services/control_site_bootstrap_service.py`
+- `flora-fauna/backend/app/api/cultural_control.py`
+- `flora-fauna/backend/app/schemas.py`
+- `flora-fauna/backend/app/security/control_plane.py`
+- `flora-fauna/backend/tests/test_control_site_bootstrap_api.py`
+- `frontend-next/src/lib/api/controlClient.ts`
+- `frontend-next/src/app/(control)/control/tenants/page.tsx`
+- `frontend-next/src/test/adminTenantsPage.test.tsx`
+**Implementation notes:**
+1. Add platform-admin-only bootstrap endpoint at `/api/control/sites/bootstrap`.
+2. Accept only minimal bootstrap payload fields for node identity, initial manifest scaffold, optional canonical domains, and optional initial operator usernames.
+3. Reject identifier conflicts and domain overlaps explicitly.
+4. Persist optional operator assignments through canonical WL-008 assignment path.
+5. Keep node bootstrap immediately compatible with manifest/domain/assignment/readiness flows.
+6. Provide minimal control-host form (no wizard, no bulk import, no permission-console expansion).
+**Dependencies:** ANU-WL-008, ANU-WL-010, ANU-WL-011
+**Acceptance criteria:**
+1. Platform admin can create node with minimal valid bootstrap payload.
+2. Duplicate/conflicting node identity is rejected.
+3. Duplicate/conflicting canonical domain is rejected.
+4. Optional initial operator assignments persist correctly.
+5. New node works with existing manifest/domain/publish-readiness flows.
+6. Non-platform operators cannot access bootstrap path.
+**Evidence required:**
+- focused backend/frontend test output
+- typecheck output
+**Owner type:** Backend + Frontend + Platform
+**Milestone:** M5+
+**Execution status (2026-04-15):** COMPLETE - minimal platform-admin node bootstrap is live end-to-end with strict allowlisted payload validation, explicit conflict handling, immediate WL flow compatibility, and focused backend/frontend test coverage.
+

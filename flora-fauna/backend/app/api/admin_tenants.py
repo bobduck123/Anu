@@ -16,6 +16,7 @@ from .utils import ok, error
 from ..extensions import db
 from ..models import Node, NodeConfig, NodeDomain, User
 from ..security.policy import get_current_user
+from ..security.control_tenant_scope import resolve_effective_control_managed_node_ids
 
 admin_tenants_bp = Blueprint("admin_tenants", __name__, url_prefix="/admin/tenants")
 
@@ -52,21 +53,6 @@ def _require_platform_admin():
     return user, None
 
 
-def _parse_node_ids(raw_value):
-    if raw_value is None:
-        return set()
-    values = raw_value if isinstance(raw_value, (list, tuple, set)) else [raw_value]
-    parsed = set()
-    for value in values:
-        try:
-            candidate = int(value)
-        except (TypeError, ValueError):
-            continue
-        if candidate > 0:
-            parsed.add(candidate)
-    return parsed
-
-
 def _resolve_tenant_access_scope():
     user = get_current_user()
     if not user:
@@ -88,14 +74,7 @@ def _resolve_tenant_access_scope():
     if role not in allowed_control_roles:
         return None, error("FORBIDDEN", "Control role required", 403)
 
-    if role == "platform_admin":
-        return None, None
-
-    allowed = set()
-    allowed.update(_parse_node_ids(user.node_id))
-    allowed.update(_parse_node_ids(claims.get("node_id")))
-    allowed.update(_parse_node_ids(claims.get("managed_node_ids")))
-
+    allowed = resolve_effective_control_managed_node_ids(user=user, claims=claims)
     return allowed, None
 
 

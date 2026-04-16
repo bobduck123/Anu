@@ -194,6 +194,90 @@ def test_public_archive_summary_title_prefix_filter_is_case_insensitive_and_dete
     assert payload["pagination"]["total_records"] == 2
 
 
+def test_public_archive_summary_title_prefix_guardrails_normalize_whitespace_and_drop_blank():
+    app = _build_app()
+
+    from manara_backend_app.extensions import db
+    from manara_backend_app.models import Node, PublicArchiveRecord
+
+    with app.app_context():
+        node = Node(name="Prefix Guardrail Node", slug="prefix-guardrail-node", status="active")
+        db.session.add(node)
+        db.session.flush()
+
+        _add_archive_record(
+            db=db,
+            PublicArchiveRecord=PublicArchiveRecord,
+            slug="alpha-trust-guardrail",
+            record_type="public-trust-report",
+            node_slug=node.slug,
+            updated_at=datetime(2026, 4, 14, 12, 5, 0),
+            title="Alpha Trust Guardrail",
+        )
+        db.session.commit()
+
+    client = app.test_client()
+
+    normalized = client.get(
+        "/public/archive/records?title_prefix=%20%20Alpha%20%20%20Trust%20%20&page=1&page_size=5"
+    ).get_json()["data"]
+    assert [row["slug"] for row in normalized["records"]] == ["alpha-trust-guardrail"]
+    assert normalized["applied_title_prefix_filter"] == "Alpha Trust"
+    assert normalized["applied_filters"]["title_prefix"] == "Alpha Trust"
+
+    blank = client.get(
+        "/public/archive/records?title_prefix=%20%20%20&page=1&page_size=5"
+    ).get_json()["data"]
+    assert blank["applied_title_prefix_filter"] is None
+    assert blank["applied_filters"]["title_prefix"] is None
+    assert blank["pagination"]["total_records"] == 1
+
+
+def test_public_archive_summary_title_prefix_guardrail_caps_length_deterministically():
+    app = _build_app()
+
+    from manara_backend_app.extensions import db
+    from manara_backend_app.models import Node, PublicArchiveRecord
+
+    with app.app_context():
+        node = Node(name="Prefix Cap Node", slug="prefix-cap-node", status="active")
+        db.session.add(node)
+        db.session.flush()
+
+        capped_prefix = "A" * 80
+        _add_archive_record(
+            db=db,
+            PublicArchiveRecord=PublicArchiveRecord,
+            slug="prefix-cap-match",
+            record_type="public-trust-report",
+            node_slug=node.slug,
+            updated_at=datetime(2026, 4, 14, 12, 10, 0),
+            title=f"{capped_prefix} canonical title",
+        )
+        _add_archive_record(
+            db=db,
+            PublicArchiveRecord=PublicArchiveRecord,
+            slug="prefix-cap-nonmatch",
+            record_type="public-trust-report",
+            node_slug=node.slug,
+            updated_at=datetime(2026, 4, 14, 12, 9, 0),
+            title=f"{'A' * 79}B non-matching title",
+        )
+        db.session.commit()
+
+    client = app.test_client()
+
+    overlong_prefix = "A" * 120
+    payload = client.get(
+        f"/public/archive/records?title_prefix={overlong_prefix}&page=1&page_size=5"
+    ).get_json()["data"]
+
+    assert payload["applied_title_prefix_filter"] == "A" * 80
+    assert payload["applied_filters"]["title_prefix"] == "A" * 80
+    assert [row["slug"] for row in payload["records"]] == ["prefix-cap-match"]
+    assert payload["pagination"]["total_records"] == 1
+
+
 def test_public_archive_summary_pagination_type_and_title_prefix_filters_coexist():
     app = _build_app()
 

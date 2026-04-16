@@ -215,6 +215,216 @@ npm run build
 - No approval/workflow engine.
 - No CMS/page-builder expansion.
 
+## ANU-WL-007 Authoritative Delegated Scope Issuance Slice (2026-04-14)
+
+### Scope landed
+1. Control-token issuance now derives delegated tenant scope from persisted assignment state only.
+2. Non-platform control tokens include `node_id` and `managed_node_ids` (for multi-tenant assignments) from authoritative backend records.
+3. Runtime scope checks for manifest and control tenant listing now intersect token claims with persisted assignments to prevent forged claim widening.
+4. Existing control host/audience/token_use/MFA posture and WL-006 manifest scope behavior remain intact.
+
+### Persisted assignment source of truth
+- `User.node_id`
+- `NodeConfig.config_json.control_operator_assignments`
+
+### Key implementation references
+- `flora-fauna/backend/app/security/control_tenant_scope.py`
+- `flora-fauna/backend/app/auth.py`
+- `flora-fauna/backend/app/api/cultural_control.py`
+- `flora-fauna/backend/app/api/admin_tenants.py`
+- `flora-fauna/backend/tests/test_control_token_managed_node_scope.py`
+
+### Validation snapshot
+- Backend:
+  - `python -m pytest -q tests/test_control_token_managed_node_scope.py tests/test_control_public_site_manifest_authoring.py` (pass)
+- Frontend:
+  - `npx vitest run src/test/controlManifestAuthoringPage.test.tsx src/test/controlProxyRoute.test.ts src/test/adminTenantsPage.test.tsx` (pass)
+  - `npm run -s typecheck` (pass)
+
+### Deferred
+- No RBAC redesign.
+- No per-action permission matrix.
+- No permission-management console.
+
+## ANU-WL-008 Platform-Admin Operator Assignment Management Slice (2026-04-15)
+
+### Scope landed
+1. Added a minimal platform-admin-only control API for tenant operator assignment management:
+   - `GET /api/control/sites/:node_id/operator-assignments`
+   - `POST /api/control/sites/:node_id/operator-assignments`
+   - `DELETE /api/control/sites/:node_id/operator-assignments/:username`
+2. Assignment state remains persisted in existing `NodeConfig.config_json.control_operator_assignments` with legacy mirrors kept aligned.
+3. Username normalization is now server-side canonical in both assignment persistence and scope-resolution matching.
+4. Assignment and unassignment operations are idempotent with explicit mutation metadata (`applied`, `idempotent_noop`).
+5. Assignment mutations are audit-logged via control audit events.
+
+### Key implementation references
+- `flora-fauna/backend/app/api/cultural_control.py`
+- `flora-fauna/backend/app/services/control_operator_assignment_service.py`
+- `flora-fauna/backend/app/security/control_tenant_scope.py`
+- `flora-fauna/backend/app/security/control_plane.py`
+- `flora-fauna/backend/tests/test_control_operator_assignments_api.py`
+- `flora-fauna/backend/tests/test_control_token_managed_node_scope.py`
+- `flora-fauna/backend/tests/test_control_public_site_manifest_authoring.py`
+
+### Validation snapshot
+- Backend:
+  - `python -m pytest -q -p no:cacheprovider -p no:tmpdir tests/test_control_operator_assignments_api.py tests/test_control_token_managed_node_scope.py tests/test_control_public_site_manifest_authoring.py`
+  - Result: `19 passed`.
+
+### Deferred
+- No RBAC redesign.
+- No permission-management console or role editor UI expansion.
+- No per-action permission matrix.
+
+## ANU-WL-009 Control-Host Operator Assignment UI Slice (2026-04-15)
+
+### Scope landed
+1. Added a minimal control-host platform-admin assignment panel inside the canonical tenants control route.
+2. UI consumes WL-008 endpoints only for read/assign/unassign flows.
+3. Assignment panel is hidden for non-platform operators when the backend returns `platform_admin_required`.
+4. Idempotent mutation outcomes are shown explicitly (`already assigned`, `not currently assigned`).
+5. Username input handling is normalized to lowercase/trim semantics consistent with server behavior.
+
+### Key implementation references
+- `frontend-next/src/app/(control)/control/tenants/page.tsx`
+- `frontend-next/src/lib/api/controlClient.ts`
+- `frontend-next/src/test/adminTenantsPage.test.tsx`
+
+### Validation snapshot
+- Frontend:
+  - `npx vitest run src/test/adminTenantsPage.test.tsx src/test/controlManifestAuthoringPage.test.tsx`
+  - Result: `2 files passed, 10 tests passed`.
+  - `npm run -s typecheck`
+  - Result: pass.
+
+### Deferred
+- No permission-management console expansion.
+- No user directory/search/autocomplete.
+- No RBAC redesign or per-action permission matrix.
+
+## ANU-WL-010 Control-Host Domain/Publication Operations Slice (2026-04-15)
+
+### Scope landed
+1. Added minimal platform-admin-only control API for tenant published domain bindings:
+   - `GET /api/control/sites/:node_id/domain-bindings`
+   - `PUT /api/control/sites/:node_id/domain-bindings`
+2. Added strict domain validation/normalization and explicit conflict rejection for cross-tenant overlap.
+3. Preserved published host-resolution compatibility by updating canonical binding state used by `/api/public/sites/resolve`.
+4. Added minimal control-host UI in tenant manifest route for reading/updating canonical domains.
+5. Domain-management UI is hidden for non-platform operators via explicit backend platform-admin enforcement.
+
+### Key implementation references
+- `flora-fauna/backend/app/services/control_site_domain_service.py`
+- `flora-fauna/backend/app/api/cultural_control.py`
+- `flora-fauna/backend/app/security/control_plane.py`
+- `flora-fauna/backend/app/schemas.py`
+- `flora-fauna/backend/tests/test_control_site_domain_bindings_api.py`
+- `frontend-next/src/lib/api/controlClient.ts`
+- `frontend-next/src/app/(control)/control/tenants/[nodeId]/manifest/page.tsx`
+- `frontend-next/src/test/controlManifestAuthoringPage.test.tsx`
+
+### Validation snapshot
+- Backend:
+  - `python -m pytest -q -p no:cacheprovider -p no:tmpdir tests/test_control_site_domain_bindings_api.py tests/test_public_site_manifest.py`
+  - Result: `10 passed`.
+- Frontend:
+  - `npx vitest run src/test/controlManifestAuthoringPage.test.tsx src/test/adminTenantsPage.test.tsx`
+  - Result: `2 files passed, 14 tests passed`.
+  - `npm run -s typecheck`
+  - Result: pass.
+
+### Deferred
+- No DNS provider automation.
+- No certificate management UI.
+- No broad domain-management console.
+
+## ANU-WL-011 Control-Host Publish-Readiness Preflight Slice (2026-04-15)
+
+### Scope landed
+1. Added minimal platform-admin-only control readiness endpoint for white-label node launch preflight:
+   - `GET /api/control/sites/:node_id/publish-readiness`
+2. Added deterministic readiness service checks for:
+   - canonical active domain binding present,
+   - published manifest present,
+   - required legal links present in published manifest,
+   - required trust links present in published manifest.
+3. Added explicit structured result contract:
+   - `ready`
+   - `blocking_issues[]`
+   - `warnings[]`
+   - `checks` summary booleans.
+4. Added warning-vs-blocker distinction with non-blocking TLS warning (`domain_tls_not_ready`).
+5. Integrated readiness rendering into the control-host tenant manifest page with honest loading/error/blocked guidance.
+6. Preserved platform-admin enforcement and control-host boundary posture.
+
+### Key implementation references
+- `flora-fauna/backend/app/services/control_site_publish_readiness_service.py`
+- `flora-fauna/backend/app/api/cultural_control.py`
+- `flora-fauna/backend/app/security/control_plane.py`
+- `flora-fauna/backend/tests/test_control_site_publish_readiness_api.py`
+- `frontend-next/src/lib/api/controlClient.ts`
+- `frontend-next/src/app/(control)/control/tenants/[nodeId]/manifest/page.tsx`
+- `frontend-next/src/test/controlManifestAuthoringPage.test.tsx`
+
+### Validation snapshot
+- Backend:
+  - `python -m pytest -q -p no:cacheprovider -p no:tmpdir tests/test_control_site_publish_readiness_api.py tests/test_control_site_domain_bindings_api.py tests/test_control_public_site_manifest_authoring.py tests/test_public_site_manifest.py`
+  - Result: `24 passed`.
+- Frontend:
+  - `npx vitest run src/test/controlManifestAuthoringPage.test.tsx src/test/adminTenantsPage.test.tsx`
+  - Result: `2 files passed, 15 tests passed`.
+  - `npm run -s typecheck`
+  - Result: pass.
+
+### Deferred
+- No DNS/provider automation.
+- No TLS/certificate provisioning workflow.
+- No publish approval workflow engine; this slice is read-only preflight evaluation.
+
+## ANU-WL-012 Platform-Admin Node Bootstrap Slice (2026-04-15)
+
+### Scope landed
+1. Added minimal platform-admin-only bootstrap API:
+   - `POST /api/control/sites/bootstrap`
+2. Added strict bootstrap validation for a narrow allowlisted payload:
+   - `node_name`, optional `node_slug`,
+   - `site_name`, optional `site_key`, optional `tagline`,
+   - optional `canonical_domains`,
+   - optional `operator_usernames`.
+3. Added explicit conflict handling:
+   - identifier conflicts for `node_slug`/`site_key` (`identifier_conflict`),
+   - canonical domain overlap conflicts (`domain_binding_conflict`).
+4. Bootstrap now creates a minimal manifest scaffold immediately compatible with WL-002/WL-010/WL-011 flows.
+5. Optional initial operator assignments are persisted through the canonical WL-008 assignment path.
+6. Added minimal control-host bootstrap UI in tenant control surface (platform-admin-only visibility).
+
+### Key implementation references
+- `flora-fauna/backend/app/services/control_site_bootstrap_service.py`
+- `flora-fauna/backend/app/api/cultural_control.py`
+- `flora-fauna/backend/app/schemas.py`
+- `flora-fauna/backend/app/security/control_plane.py`
+- `flora-fauna/backend/tests/test_control_site_bootstrap_api.py`
+- `frontend-next/src/lib/api/controlClient.ts`
+- `frontend-next/src/app/(control)/control/tenants/page.tsx`
+- `frontend-next/src/test/adminTenantsPage.test.tsx`
+
+### Validation snapshot
+- Backend:
+  - `python -m pytest -q -p no:cacheprovider -p no:tmpdir tests/test_control_site_bootstrap_api.py tests/test_control_operator_assignments_api.py tests/test_control_site_domain_bindings_api.py tests/test_control_site_publish_readiness_api.py tests/test_control_public_site_manifest_authoring.py`
+  - Result: `33 passed`.
+- Frontend:
+  - `npx vitest run src/test/adminTenantsPage.test.tsx src/test/controlManifestAuthoringPage.test.tsx`
+  - Result: `2 files passed, 18 tests passed`.
+  - `npm run -s typecheck`
+  - Result: pass.
+
+### Deferred
+- No onboarding workflow engine or approvals.
+- No CMS/page-builder workflow.
+- No DNS/provider automation.
+- No RBAC redesign or permission-console expansion.
+
 ## ANU-020 Cross-Service Isolation Proof Slice (2026-04-14)
 
 ### Scope landed
@@ -300,3 +510,39 @@ npm run build
 ### Deferred
 - No observability vendor/platform migration.
 - No metrics/tracing platform redesign beyond minimum ANU-023 log envelope contract.
+
+## ANU-024 Milestone Proof Automation Scaffolding (2026-04-14)
+
+### Scope landed
+1. Added workflow-safe evidence capture script:
+   - `scripts/capture_milestone_evidence.py`
+2. Script now emits dual artifacts per bundle:
+   - machine-readable `evidence.json`
+   - human-readable `evidence.md`
+3. Added contract-focused tests for:
+   - deterministic bundle generation
+   - failed command honesty
+   - append-only bundle path behavior
+   - non-overwrite of milestone conclusion docs
+4. Added explicit spec doc:
+   - `docs/program/EVIDENCE_AUTOMATION_SPEC_2026-04-14.md`
+
+### Validation snapshot
+- `python -m unittest scripts.tests.test_capture_milestone_evidence -v`
+  - Result: 5 tests passed.
+- Generated evidence bundle:
+  - `docs/program/evidence/anu-024/20260414T041025Z/evidence.json`
+  - `docs/program/evidence/anu-024/20260414T041025Z/evidence.md`
+
+### Workflow-safety posture
+- Automation captures observations and inferred status only.
+- Milestone completion conclusions remain human-authored.
+- Existing M0-M5 workflow file names remain unchanged.
+
+### Deferred
+- No workflow engine or auto-approval logic.
+- No automatic milestone conclusion writing.
+- No CI/CD architecture redesign.
+
+
+

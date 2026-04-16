@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from math import ceil
+import re
 from typing import Any
 
 from sqlalchemy import func
 
 from ..models import PublicArchiveRecord, PublicTrustReport
+
+ARCHIVE_TITLE_PREFIX_MAX_LENGTH = 80
+_WHITESPACE_RE = re.compile(r"\s+")
 
 
 def _to_iso(value) -> str | None:
@@ -144,8 +148,10 @@ def _build_pagination_payload(*, page: int, page_size: int, total_records: int) 
 def _normalize_title_prefix(value: str | None) -> str | None:
     if value is None:
         return None
-    normalized = value.strip()
-    return normalized or None
+    normalized = _WHITESPACE_RE.sub(" ", value.strip())
+    if not normalized:
+        return None
+    return normalized[:ARCHIVE_TITLE_PREFIX_MAX_LENGTH]
 
 
 def _escape_like_pattern(value: str) -> str:

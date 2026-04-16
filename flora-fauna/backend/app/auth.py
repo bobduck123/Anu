@@ -21,6 +21,7 @@ from .security.control_plane import (
     record_control_token_grant,
     revoke_control_token_grant,
 )
+from .security.control_tenant_scope import resolve_persisted_control_managed_node_ids
 
 
 auth = Blueprint('auth', __name__)
@@ -192,8 +193,18 @@ def issue_control_token():
         "token_use": "control",
         "scp": scopes,
         "requires_mfa": True,
-        "node_id": user.node_id,
     }
+
+    if user.role == "platform_admin":
+        claims["node_id"] = user.node_id
+    else:
+        managed_node_ids = sorted(resolve_persisted_control_managed_node_ids(user))
+        if managed_node_ids:
+            claims["node_id"] = int(user.node_id) if isinstance(user.node_id, int) and user.node_id in managed_node_ids else managed_node_ids[0]
+            if len(managed_node_ids) > 1:
+                claims["managed_node_ids"] = managed_node_ids
+        else:
+            claims["node_id"] = user.node_id
     ttl_minutes = int(current_app.config.get("CONTROL_ACCESS_TOKEN_EXPIRES_MINUTES", 15) or 15)
     access_token = create_access_token(
         identity=f"control::{user.username}",

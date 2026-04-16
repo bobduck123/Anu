@@ -149,6 +149,26 @@ class PublicSiteManifestAuthoringPublishSchema(Schema):
     revision_token = fields.String(required=True, validate=validate.Length(min=8, max=120))
 
 
+class ControlSiteDomainBindingsUpdateSchema(Schema):
+    class Meta:
+        unknown = RAISE
+
+    canonical_domains = fields.List(fields.String(), required=True)
+
+
+class ControlSiteBootstrapCreateSchema(Schema):
+    class Meta:
+        unknown = RAISE
+
+    node_name = fields.String(required=True, validate=validate.Length(min=2, max=120))
+    node_slug = fields.String(required=False, allow_none=True, validate=validate.Length(min=2, max=160))
+    site_name = fields.String(required=True, validate=validate.Length(min=2, max=120))
+    site_key = fields.String(required=False, allow_none=True, validate=validate.Length(min=2, max=160))
+    tagline = fields.String(required=False, allow_none=True, validate=validate.Length(max=240))
+    canonical_domains = fields.List(fields.String(), required=False, load_default=list)
+    operator_usernames = fields.List(fields.String(), required=False, load_default=list)
+
+
 class PublicSiteManifestSchema(Schema):
     tenant_id = fields.Integer(required=True)
     site_key = fields.String(required=True)

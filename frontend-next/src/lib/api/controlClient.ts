@@ -178,6 +178,49 @@ export function createControlTenant(payload: Record<string, unknown>) {
   });
 }
 
+export interface ControlSiteBootstrapInput {
+  node_name: string;
+  node_slug?: string;
+  site_name: string;
+  site_key?: string;
+  tagline?: string;
+  canonical_domains?: string[];
+  operator_usernames?: string[];
+}
+
+export interface ControlSiteBootstrapPayload {
+  node: {
+    id: number;
+    name: string;
+    slug: string;
+    status: string;
+  };
+  site_manifest: {
+    site_key: string;
+    site_name: string;
+    tagline: string;
+    canonical_domains: string[];
+    preview_host?: string | null;
+  };
+  domain_bindings: {
+    canonical_domains: string[];
+    count: number;
+  };
+  operator_assignments: {
+    usernames: string[];
+    user_ids: number[];
+    count: number;
+  };
+  audit?: Record<string, unknown>;
+}
+
+export function createControlSiteBootstrap(payload: ControlSiteBootstrapInput) {
+  return controlFetchJson<ControlSiteBootstrapPayload | { data: ControlSiteBootstrapPayload }>('core/control/sites/bootstrap', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }).then((responsePayload) => unwrapData<ControlSiteBootstrapPayload>(responsePayload));
+}
+
 export interface ControlRuntimeEndpointProbe {
   endpoint: string;
   proxyPath: string;
@@ -241,4 +284,121 @@ export async function probeControlRuntimeContracts(): Promise<ControlRuntimeProb
   }
 
   return results;
+}
+
+export interface ControlOperatorAssignmentsPayload {
+  node_id: number;
+  assignments: {
+    usernames: string[];
+    user_ids: number[];
+    count: number;
+  };
+  mutation?: {
+    action: 'assign' | 'unassign';
+    requested_username: string;
+    normalized_username: string;
+    operator_user_id: number | null;
+    applied: boolean;
+    idempotent_noop: boolean;
+  };
+}
+
+export interface ControlSiteDomainBinding {
+  domain: string;
+  status: string;
+  tls_ready: boolean;
+  created_at: string | null;
+}
+
+export interface ControlSiteDomainBindingsPayload {
+  node_id: number;
+  node_slug: string;
+  canonical_domains: string[];
+  domain_bindings: ControlSiteDomainBinding[];
+  mutation?: {
+    applied: boolean;
+    added_domains: string[];
+    removed_domains: string[];
+    normalized_domains: string[];
+    idempotent_noop: boolean;
+  };
+}
+
+export interface ControlSitePublishReadinessIssue {
+  code: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+export interface ControlSitePublishReadinessPayload {
+  node_id: number;
+  node_slug: string;
+  ready: boolean;
+  blocking_issues: ControlSitePublishReadinessIssue[];
+  warnings: ControlSitePublishReadinessIssue[];
+  checks: {
+    canonical_domain_binding_present: boolean;
+    published_manifest_present: boolean;
+    required_legal_links_present: boolean;
+    required_trust_links_present: boolean;
+  };
+}
+
+export function normalizeControlOperatorUsername(input: string): string {
+  return input.trim().toLowerCase();
+}
+
+export function getControlSiteOperatorAssignments(nodeId: number) {
+  return controlFetchJson<ControlOperatorAssignmentsPayload | { data: ControlOperatorAssignmentsPayload }>(
+    `core/control/sites/${nodeId}/operator-assignments`,
+  ).then((payload) => unwrapData<ControlOperatorAssignmentsPayload>(payload));
+}
+
+export function assignControlSiteOperatorUsername(nodeId: number, username: string) {
+  return controlFetchJson<ControlOperatorAssignmentsPayload | { data: ControlOperatorAssignmentsPayload }>(
+    `core/control/sites/${nodeId}/operator-assignments`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        username: normalizeControlOperatorUsername(username),
+      }),
+    },
+  ).then((payload) => unwrapData<ControlOperatorAssignmentsPayload>(payload));
+}
+
+export function unassignControlSiteOperatorUsername(nodeId: number, username: string) {
+  return controlFetchJson<ControlOperatorAssignmentsPayload | { data: ControlOperatorAssignmentsPayload }>(
+    `core/control/sites/${nodeId}/operator-assignments/${encodeURIComponent(normalizeControlOperatorUsername(username))}`,
+    {
+      method: 'DELETE',
+    },
+  ).then((payload) => unwrapData<ControlOperatorAssignmentsPayload>(payload));
+}
+
+export function normalizeControlCanonicalDomain(input: string): string {
+  return input.trim().toLowerCase().replace(/\.$/, '');
+}
+
+export function getControlSiteDomainBindings(nodeId: number) {
+  return controlFetchJson<ControlSiteDomainBindingsPayload | { data: ControlSiteDomainBindingsPayload }>(
+    `core/control/sites/${nodeId}/domain-bindings`,
+  ).then((payload) => unwrapData<ControlSiteDomainBindingsPayload>(payload));
+}
+
+export function updateControlSiteDomainBindings(nodeId: number, canonicalDomains: string[]) {
+  return controlFetchJson<ControlSiteDomainBindingsPayload | { data: ControlSiteDomainBindingsPayload }>(
+    `core/control/sites/${nodeId}/domain-bindings`,
+    {
+      method: 'PUT',
+      body: JSON.stringify({
+        canonical_domains: canonicalDomains.map(normalizeControlCanonicalDomain).filter(Boolean),
+      }),
+    },
+  ).then((payload) => unwrapData<ControlSiteDomainBindingsPayload>(payload));
+}
+
+export function getControlSitePublishReadiness(nodeId: number) {
+  return controlFetchJson<ControlSitePublishReadinessPayload | { data: ControlSitePublishReadinessPayload }>(
+    `core/control/sites/${nodeId}/publish-readiness`,
+  ).then((payload) => unwrapData<ControlSitePublishReadinessPayload>(payload));
 }

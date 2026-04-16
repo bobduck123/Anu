@@ -1,7 +1,7 @@
-# M4 Completion Report - ANU-017 to ANU-022 + Archive Index + ANU-027/028 Refinement
+# M4 Completion Report - ANU-017 to ANU-022 + Archive Index + ANU-027/028/029 Refinement
 
 Date: 2026-04-14  
-Scope: trust/archive/sponsor foundation with trust-center landing IA, canonical archive index summary feed, deterministic archive pagination, and minimal query refinement
+Scope: trust/archive/sponsor foundation with trust-center landing IA, canonical archive index summary feed, deterministic archive pagination, minimal query refinement, and query-normalization guardrail hardening
 
 ## Completed Tickets
 1. `ANU-017` Archive route skeleton
@@ -41,13 +41,21 @@ Scope: trust/archive/sponsor foundation with trust-center landing IA, canonical 
 - Existing deterministic ordering, pagination, type filters, and degraded-honesty behavior remain intact.
 - `/archive` now includes one minimal title-prefix input that coexists with pagination and type filter controls.
 
-8. `ANU-022` Decision register publication path
+8. `ANU-029` Archive query-normalization and guardrail hardening
+- Hardened `title_prefix` guardrails without widening query scope:
+  - trim outer whitespace,
+  - collapse internal whitespace runs to one space,
+  - cap normalized prefix length to 80 characters.
+- Added explicit normalization telemetry fields in public archive list plane-log context.
+- Preserved deterministic ordering, pagination model, and type-filter behavior unchanged.
+
+9. `ANU-022` Decision register publication path
 - Added public-safe decision summary API under `/public/trust/decisions` and `/public/trust/decisions/:decision_ref`.
 - Decision summaries are exposed only when archive-linked publication metadata exists (`governance-decision-summary` + `metadata_json.decision_id`), keeping restricted decisions docs-only.
 - Added stable archive linkage from decision summaries (`record_route`) and archive summaries (`related_decision_route`).
 - Updated archive detail rendering to show decision summaries as a separate trust/record context panel.
 
-9. `ANU-023` Plane-aware logging contract rollout (M4/M5 cross-slice)
+10. `ANU-023` Plane-aware logging contract rollout (M4/M5 cross-slice)
 - Public trust/archive APIs and frontend archive surfaces now emit canonical plane-aware log envelopes (`plane`, `service_name/serviceName`, `event_name/eventName`, `level`, `timestamp`, request/correlation id when available).
 - Control proxy and control audit paths now emit `plane=control` events with audit-safe context only.
 - Impact Falak telemetry now emits `plane=impact` with explicit `falak_execution_plane` context and sensitive-field redaction.
@@ -63,6 +71,8 @@ Scope: trust/archive/sponsor foundation with trust-center landing IA, canonical 
 Backend:
 - `python -m pytest -q tests/test_public_archive.py tests/test_public_trust.py tests/test_public_decisions.py tests/test_public_sponsor_disclosures.py`
 - Result: `14 passed`
+- `python -m pytest -q tests/test_public_archive.py`
+- Result: `8 passed` (includes ANU-029 title-prefix guardrail cases)
 - `python -m pytest -q -p no:cacheprovider -p no:tmpdir tests/test_public_decisions.py tests/test_public_archive.py tests/test_public_trust.py`
 - Result: `12 passed` (sandbox run for ANU-022 evidence)
 
@@ -94,4 +104,5 @@ Type safety:
 - Archive index summary feed slice: complete
 - `ANU-027`: complete (deterministic pagination contract + minimal `/archive` controls)
 - `ANU-028`: complete (title-prefix refinement on backend + minimal frontend input passthrough)
+- `ANU-029`: complete (title-prefix normalization guardrails + focused tests + docs/evidence updates)
 - M4 trust/archive foundation + index slice is executable with focused tests and docs alignment.
