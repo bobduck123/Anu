@@ -154,6 +154,12 @@ def _build_markdown(
     human_notes: list[str],
     inferred: dict[str, Any],
     launch_smoke_summary: dict[str, Any] | None,
+    hosted_preflight_summary: dict[str, Any] | None,
+    hosted_launch_smoke_summary: dict[str, Any] | None,
+    hosted_route_diagnosis_summary: dict[str, Any] | None,
+    attachments_manifest: dict[str, Any] | None,
+    attachment_validation_summary: dict[str, Any] | None,
+    operator_runbook_artifact: str | None,
 ) -> str:
     lines: list[str] = []
     lines.append(f"# Evidence Bundle: {milestone_or_slice}")
@@ -194,6 +200,74 @@ def _build_markdown(
         lines.append("- artifact: `launch_smoke.json`")
         lines.append("- artifact: `launch_smoke.md`")
         lines.append("- launch_readiness_claim: `not-set-by-automation`")
+        lines.append("")
+    if hosted_preflight_summary:
+        preflight_counts = _coerce_object(hosted_preflight_summary.get("summary"))
+        lines.append("## Hosted Preflight")
+        lines.append("")
+        lines.append(f"- valid_for_execution: `{preflight_counts.get('valid_for_execution')}`")
+        lines.append(f"- valid: `{preflight_counts.get('valid', 0)}`")
+        lines.append(f"- invalid: `{preflight_counts.get('invalid', 0)}`")
+        lines.append(f"- missing: `{preflight_counts.get('missing', 0)}`")
+        lines.append(f"- skipped_by_mode: `{preflight_counts.get('skipped_by_mode', 0)}`")
+        lines.append("- artifact: `hosted_preflight.json`")
+        lines.append("- artifact: `hosted_preflight.md`")
+        lines.append("")
+    if hosted_launch_smoke_summary:
+        hosted_counts = _coerce_object(hosted_launch_smoke_summary.get("summary"))
+        lines.append("## Hosted Launch Smoke (Release-Candidate Layer)")
+        lines.append("")
+        lines.append(f"- checks_total: `{hosted_counts.get('total', 0)}`")
+        lines.append(f"- passed: `{hosted_counts.get('passed', 0)}`")
+        lines.append(f"- failed: `{hosted_counts.get('failed', 0)}`")
+        lines.append(f"- skipped: `{hosted_counts.get('skipped', 0)}`")
+        lines.append("- artifact: `hosted_launch_smoke.json`")
+        lines.append("- artifact: `hosted_launch_smoke.md`")
+        lines.append("- launch_readiness_claim: `not-set-by-automation`")
+        lines.append("")
+    if hosted_route_diagnosis_summary:
+        diagnosis_counts = _coerce_object(hosted_route_diagnosis_summary.get("summary"))
+        public_surface_state = _coerce_object(diagnosis_counts.get("public_surface_state"))
+        lines.append("## Hosted Public Route Diagnosis")
+        lines.append("")
+        lines.append(f"- checks_total: `{diagnosis_counts.get('total', 0)}`")
+        lines.append(f"- passed: `{diagnosis_counts.get('passed', 0)}`")
+        lines.append(f"- failed: `{diagnosis_counts.get('failed', 0)}`")
+        lines.append(f"- skipped: `{diagnosis_counts.get('skipped', 0)}`")
+        lines.append(f"- public_surface_state: `{public_surface_state.get('status')}`")
+        lines.append(
+            f"- degraded_reason_categories: `{json.dumps(public_surface_state.get('degraded_reason_categories') or [])}`"
+        )
+        lines.append("- artifact: `hosted_route_diagnosis.json`")
+        lines.append("- artifact: `hosted_route_diagnosis.md`")
+        lines.append("- launch_readiness_claim: `not-set-by-automation`")
+        lines.append("")
+    if attachments_manifest:
+        summary = _coerce_object(attachments_manifest.get("summary"))
+        lines.append("## Hosted Attachments")
+        lines.append("")
+        lines.append("- manifest: `attachments.json`")
+        lines.append("- convention_dir: `attachments/`")
+        lines.append(f"- screenshots: `{summary.get('screenshots_count', 0)}`")
+        lines.append(f"- recordings: `{summary.get('recordings_count', 0)}`")
+        lines.append("")
+    if attachment_validation_summary:
+        validation_counts = _coerce_object(attachment_validation_summary.get("summary"))
+        operator_notes = _coerce_object(attachment_validation_summary.get("operator_notes"))
+        lines.append("## Attachment Validation")
+        lines.append("")
+        lines.append(f"- valid: `{validation_counts.get('valid', 0)}`")
+        lines.append(f"- invalid: `{validation_counts.get('invalid', 0)}`")
+        lines.append(f"- missing: `{validation_counts.get('missing', 0)}`")
+        lines.append(f"- operator_notes_status: `{operator_notes.get('status')}`")
+        lines.append(f"- operator_notes_count: `{operator_notes.get('notes_count', 0)}`")
+        lines.append("- artifact: `attachment_validation.json`")
+        lines.append("- artifact: `attachment_validation.md`")
+        lines.append("")
+    if operator_runbook_artifact:
+        lines.append("## Operator Runbook")
+        lines.append("")
+        lines.append(f"- artifact: `{operator_runbook_artifact}`")
         lines.append("")
     lines.append("## Changed Files (Observed/Provided)")
     lines.append("")
@@ -252,6 +326,218 @@ def _default_launch_smoke_runner(
     return summary, render_launch_smoke_markdown(summary)
 
 
+def _default_hosted_launch_smoke_runner(
+    *,
+    generated_at: str,
+    public_base_url: str,
+    public_host_for_resolution: str | None,
+    archive_record_slug: str | None,
+    control_base_url: str | None,
+    control_site_id: str | int | None,
+    control_auth_header: str | None,
+    control_plane_secret_header: str | None,
+    include_control_checks: bool,
+    include_bootstrap_mutation: bool,
+    timeout_seconds: int,
+) -> tuple[dict[str, Any], str]:
+    from launch_rc_hosted_smoke import render_hosted_launch_smoke_markdown, run_hosted_launch_smoke
+
+    summary = run_hosted_launch_smoke(
+        generated_at=generated_at,
+        public_base_url=public_base_url,
+        public_host_for_resolution=public_host_for_resolution,
+        archive_record_slug=archive_record_slug,
+        control_base_url=control_base_url,
+        control_site_id=control_site_id,
+        control_auth_header=control_auth_header,
+        control_plane_secret_header=control_plane_secret_header,
+        include_control_checks=include_control_checks,
+        include_bootstrap_mutation=include_bootstrap_mutation,
+        timeout_seconds=timeout_seconds,
+    )
+    return summary, render_hosted_launch_smoke_markdown(summary)
+
+
+def _default_hosted_preflight_runner(
+    *,
+    generated_at: str,
+    include_control_checks: bool,
+    public_base_url: str | None,
+    public_host_for_resolution: str | None,
+    archive_record_slug: str | None,
+    control_base_url: str | None,
+    control_site_id: str | int | None,
+    control_auth_header: str | None,
+    control_auth_source: str | None,
+) -> tuple[dict[str, Any], str]:
+    from launch_rc_hosted_preflight import render_hosted_preflight_markdown, run_hosted_preflight
+
+    summary = run_hosted_preflight(
+        generated_at=generated_at,
+        include_control_checks=include_control_checks,
+        public_base_url=public_base_url,
+        public_host_for_resolution=public_host_for_resolution,
+        archive_record_slug=archive_record_slug,
+        control_base_url=control_base_url,
+        control_site_id=control_site_id,
+        control_auth_header=control_auth_header,
+        control_auth_source=control_auth_source,
+    )
+    return summary, render_hosted_preflight_markdown(summary)
+
+
+def _default_hosted_route_diagnosis_runner(
+    *,
+    generated_at: str,
+    public_base_url: str,
+    public_host_for_resolution: str | None,
+    archive_record_slug: str | None,
+    timeout_seconds: int,
+) -> tuple[dict[str, Any], str]:
+    from launch_rc_hosted_route_diagnosis import (
+        render_hosted_route_diagnosis_markdown,
+        run_hosted_route_diagnosis,
+    )
+
+    summary = run_hosted_route_diagnosis(
+        generated_at=generated_at,
+        public_base_url=public_base_url,
+        public_host_for_resolution=public_host_for_resolution,
+        archive_record_slug=archive_record_slug,
+        timeout_seconds=timeout_seconds,
+    )
+    return summary, render_hosted_route_diagnosis_markdown(summary)
+
+
+def _default_attachment_validation_runner(
+    *,
+    generated_at: str,
+    bundle_dir: Path,
+    attachments_manifest: dict[str, Any],
+) -> tuple[dict[str, Any], str]:
+    from launch_rc_hosted_preflight import render_attachment_validation_markdown, validate_attachment_references
+
+    summary = validate_attachment_references(
+        generated_at=generated_at,
+        bundle_dir=bundle_dir,
+        attachments_manifest=attachments_manifest,
+    )
+    return summary, render_attachment_validation_markdown(summary)
+
+
+def _normalize_attachment_ref(raw: str) -> str:
+    text = str(raw or "").strip().replace("\\", "/")
+    if not text:
+        return ""
+    if text.startswith("./"):
+        text = text[2:]
+    return text
+
+
+def _build_attachments_manifest(
+    *,
+    generated_at: str,
+    screenshot_refs: list[str],
+    recording_refs: list[str],
+    operator_notes: list[str],
+) -> dict[str, Any]:
+    screenshots: list[dict[str, Any]] = []
+    recordings: list[dict[str, Any]] = []
+    for index, ref in enumerate(screenshot_refs, start=1):
+        normalized = _normalize_attachment_ref(ref)
+        if not normalized:
+            continue
+        screenshots.append(
+            {
+                "id": f"screenshot-{index}",
+                "kind": "screenshot",
+                "path": normalized,
+                "filename": Path(normalized).name,
+            }
+        )
+    for index, ref in enumerate(recording_refs, start=1):
+        normalized = _normalize_attachment_ref(ref)
+        if not normalized:
+            continue
+        recordings.append(
+            {
+                "id": f"recording-{index}",
+                "kind": "recording",
+                "path": normalized,
+                "filename": Path(normalized).name,
+            }
+        )
+    return {
+        "contract_version": "anu-launch-attachments.v1",
+        "generated_at": generated_at,
+        "attachments_dir": "attachments",
+        "screenshots": screenshots,
+        "recordings": recordings,
+        "operator_notes": [str(note).strip() for note in operator_notes if str(note).strip()],
+        "summary": {
+            "screenshots_count": len(screenshots),
+            "recordings_count": len(recordings),
+            "operator_notes_count": len([note for note in operator_notes if str(note).strip()]),
+        },
+    }
+
+
+def _build_operator_runbook_markdown(
+    *,
+    generated_at: str,
+    hosted_preflight_summary: dict[str, Any],
+    hosted_launch_smoke_summary: dict[str, Any] | None,
+    attachments_manifest: dict[str, Any] | None,
+    attachment_validation_summary: dict[str, Any] | None,
+) -> str:
+    preflight_counts = _coerce_object(hosted_preflight_summary.get("summary"))
+    smoke_counts = _coerce_object((hosted_launch_smoke_summary or {}).get("summary"))
+    attachment_counts = _coerce_object((attachments_manifest or {}).get("summary"))
+    validation_counts = _coerce_object((attachment_validation_summary or {}).get("summary"))
+    operator_notes = _coerce_object((attachment_validation_summary or {}).get("operator_notes"))
+
+    lines: list[str] = []
+    lines.append("# ANU Hosted Smoke Operator Runbook")
+    lines.append("")
+    lines.append(f"- Generated at (UTC): `{generated_at}`")
+    lines.append("- Scope: hosted RC smoke evidence capture only; no launch auto-approval.")
+    lines.append("")
+    lines.append("## Preflight Checklist")
+    lines.append("")
+    lines.append(f"- [ ] `public_base_url` configured and valid (preflight valid: `{preflight_counts.get('valid')}`)")
+    lines.append(
+        f"- [ ] `public_host_for_resolution` and `archive_record_slug` configured (preflight missing: `{preflight_counts.get('missing')}`)"
+    )
+    lines.append(
+        f"- [ ] control inputs configured when control checks enabled (preflight skipped_by_mode: `{preflight_counts.get('skipped_by_mode')}`)"
+    )
+    lines.append(f"- [ ] preflight `valid_for_execution` is true (`{preflight_counts.get('valid_for_execution')}`)")
+    lines.append("")
+    lines.append("## Hosted Smoke Checklist")
+    lines.append("")
+    lines.append(f"- [ ] run hosted smoke checks (total: `{smoke_counts.get('total', 0)}`)")
+    lines.append(f"- [ ] verify failures are explicit (failed: `{smoke_counts.get('failed', 0)}`)")
+    lines.append(f"- [ ] verify skipped checks are intentional (skipped: `{smoke_counts.get('skipped', 0)}`)")
+    lines.append("")
+    lines.append("## Attachment Checklist")
+    lines.append("")
+    lines.append(f"- [ ] screenshot refs listed (count: `{attachment_counts.get('screenshots_count', 0)}`)")
+    lines.append(f"- [ ] recording refs listed if available (count: `{attachment_counts.get('recordings_count', 0)}`)")
+    lines.append(
+        f"- [ ] attachment validation reviewed (valid: `{validation_counts.get('valid', 0)}`, missing: `{validation_counts.get('missing', 0)}`, invalid: `{validation_counts.get('invalid', 0)}`)"
+    )
+    lines.append(
+        f"- [ ] operator notes included (status: `{operator_notes.get('status')}`, count: `{operator_notes.get('notes_count', 0)}`)"
+    )
+    lines.append("")
+    lines.append("## Contract Reminder")
+    lines.append("")
+    lines.append("- `launch_readiness_claim` must remain `null` in automation artifacts.")
+    lines.append("- Milestone launch decisions remain human-owned.")
+    lines.append("")
+    return "\n".join(lines)
+
+
 def generate_evidence_bundle(
     *,
     milestone_or_slice: str,
@@ -266,12 +552,34 @@ def generate_evidence_bundle(
     repo_root: Path,
     generated_at: str | None,
     build_id: str | None,
+    allow_existing_bundle_dir: bool = False,
     command_runner: Callable[[str, Path], CommandResult] = _run_command,
     run_launch_smoke_layer: bool = False,
     launch_smoke_control_host: str = "control.test",
     launch_smoke_skip_control_checks: bool = False,
     launch_smoke_skip_bootstrap_mutation: bool = False,
     launch_smoke_runner: Callable[..., tuple[dict[str, Any], str]] = _default_launch_smoke_runner,
+    run_hosted_launch_smoke_layer: bool = False,
+    run_hosted_route_diagnosis_layer: bool = False,
+    hosted_public_base_url: str | None = None,
+    hosted_public_host_for_resolution: str | None = None,
+    hosted_archive_record_slug: str | None = None,
+    hosted_control_base_url: str | None = None,
+    hosted_control_site_id: str | int | None = None,
+    hosted_control_auth_header: str | None = None,
+    hosted_control_plane_secret_header: str | None = None,
+    hosted_control_auth_source: str | None = None,
+    hosted_launch_smoke_skip_control_checks: bool = False,
+    hosted_launch_smoke_enable_bootstrap_mutation: bool = False,
+    hosted_launch_smoke_timeout_seconds: int = 12,
+    hosted_route_diagnosis_timeout_seconds: int = 12,
+    hosted_screenshot_refs: list[str] | None = None,
+    hosted_recording_refs: list[str] | None = None,
+    hosted_operator_notes: list[str] | None = None,
+    hosted_preflight_runner: Callable[..., tuple[dict[str, Any], str]] = _default_hosted_preflight_runner,
+    hosted_launch_smoke_runner: Callable[..., tuple[dict[str, Any], str]] = _default_hosted_launch_smoke_runner,
+    hosted_route_diagnosis_runner: Callable[..., tuple[dict[str, Any], str]] = _default_hosted_route_diagnosis_runner,
+    attachment_validation_runner: Callable[..., tuple[dict[str, Any], str]] = _default_attachment_validation_runner,
 ) -> tuple[Path, dict[str, Any], str]:
     generated_at_iso = _parse_generated_at(generated_at)
     timestamp_segment = _timestamp_segment(generated_at_iso, build_id)
@@ -292,13 +600,25 @@ def generate_evidence_bundle(
 
     bundle_dir = output_root / milestone_slug / timestamp_segment
     if bundle_dir.exists():
-        raise FileExistsError(f"Evidence bundle directory already exists: {bundle_dir}")
-
-    bundle_dir.mkdir(parents=True, exist_ok=False)
+        if not allow_existing_bundle_dir:
+            raise FileExistsError(f"Evidence bundle directory already exists: {bundle_dir}")
+    else:
+        bundle_dir.mkdir(parents=True, exist_ok=False)
     evidence_json_path = bundle_dir / "evidence.json"
     evidence_md_path = bundle_dir / "evidence.md"
     launch_smoke_json_path = bundle_dir / "launch_smoke.json"
     launch_smoke_md_path = bundle_dir / "launch_smoke.md"
+    hosted_preflight_json_path = bundle_dir / "hosted_preflight.json"
+    hosted_preflight_md_path = bundle_dir / "hosted_preflight.md"
+    hosted_launch_smoke_json_path = bundle_dir / "hosted_launch_smoke.json"
+    hosted_launch_smoke_md_path = bundle_dir / "hosted_launch_smoke.md"
+    hosted_route_diagnosis_json_path = bundle_dir / "hosted_route_diagnosis.json"
+    hosted_route_diagnosis_md_path = bundle_dir / "hosted_route_diagnosis.md"
+    attachments_json_path = bundle_dir / "attachments.json"
+    attachment_validation_json_path = bundle_dir / "attachment_validation.json"
+    attachment_validation_md_path = bundle_dir / "attachment_validation.md"
+    operator_runbook_path = bundle_dir / "operator_runbook.md"
+    attachments_dir_path = bundle_dir / "attachments"
 
     launch_smoke_summary: dict[str, Any] | None = None
     launch_smoke_markdown: str | None = None
@@ -314,6 +634,105 @@ def generate_evidence_bundle(
             encoding="utf-8",
         )
         launch_smoke_md_path.write_text(launch_smoke_markdown, encoding="utf-8")
+
+    hosted_screenshots = hosted_screenshot_refs or []
+    hosted_recordings = hosted_recording_refs or []
+    hosted_notes = hosted_operator_notes or []
+    hosted_preflight_summary: dict[str, Any] | None = None
+    hosted_preflight_markdown: str | None = None
+    hosted_launch_smoke_summary: dict[str, Any] | None = None
+    hosted_launch_smoke_markdown: str | None = None
+    hosted_route_diagnosis_summary: dict[str, Any] | None = None
+    hosted_route_diagnosis_markdown: str | None = None
+    attachments_manifest: dict[str, Any] | None = None
+    attachment_validation_summary: dict[str, Any] | None = None
+    attachment_validation_markdown: str | None = None
+    operator_runbook_markdown: str | None = None
+    if run_hosted_launch_smoke_layer:
+        hosted_preflight_summary, hosted_preflight_markdown = hosted_preflight_runner(
+            generated_at=generated_at_iso,
+            include_control_checks=not hosted_launch_smoke_skip_control_checks,
+            public_base_url=hosted_public_base_url,
+            public_host_for_resolution=hosted_public_host_for_resolution,
+            archive_record_slug=hosted_archive_record_slug,
+            control_base_url=hosted_control_base_url,
+            control_site_id=hosted_control_site_id,
+            control_auth_header=hosted_control_auth_header,
+            control_auth_source=hosted_control_auth_source,
+        )
+        hosted_preflight_json_path.write_text(
+            json.dumps(hosted_preflight_summary, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        hosted_preflight_md_path.write_text(hosted_preflight_markdown, encoding="utf-8")
+        preflight_valid = bool((_coerce_object(hosted_preflight_summary.get("summary"))).get("valid_for_execution"))
+        if not preflight_valid:
+            blocking_fields = hosted_preflight_summary.get("blocking_fields") or []
+            raise ValueError(
+                "Hosted preflight validation failed for required inputs: "
+                + ", ".join(str(field) for field in blocking_fields)
+            )
+
+        hosted_launch_smoke_summary, hosted_launch_smoke_markdown = hosted_launch_smoke_runner(
+            generated_at=generated_at_iso,
+            public_base_url=str(hosted_public_base_url or "").strip(),
+            public_host_for_resolution=hosted_public_host_for_resolution,
+            archive_record_slug=hosted_archive_record_slug,
+            control_base_url=hosted_control_base_url,
+            control_site_id=hosted_control_site_id,
+            control_auth_header=hosted_control_auth_header,
+            control_plane_secret_header=hosted_control_plane_secret_header,
+            include_control_checks=not hosted_launch_smoke_skip_control_checks,
+            include_bootstrap_mutation=hosted_launch_smoke_enable_bootstrap_mutation,
+            timeout_seconds=int(hosted_launch_smoke_timeout_seconds),
+        )
+        hosted_launch_smoke_json_path.write_text(
+            json.dumps(hosted_launch_smoke_summary, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        hosted_launch_smoke_md_path.write_text(hosted_launch_smoke_markdown, encoding="utf-8")
+        attachments_dir_path.mkdir(parents=True, exist_ok=True)
+        attachments_manifest = _build_attachments_manifest(
+            generated_at=generated_at_iso,
+            screenshot_refs=hosted_screenshots,
+            recording_refs=hosted_recordings,
+            operator_notes=hosted_notes,
+        )
+        attachments_json_path.write_text(
+            json.dumps(attachments_manifest, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        attachment_validation_summary, attachment_validation_markdown = attachment_validation_runner(
+            generated_at=generated_at_iso,
+            bundle_dir=bundle_dir,
+            attachments_manifest=attachments_manifest,
+        )
+        attachment_validation_json_path.write_text(
+            json.dumps(attachment_validation_summary, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        attachment_validation_md_path.write_text(attachment_validation_markdown, encoding="utf-8")
+        operator_runbook_markdown = _build_operator_runbook_markdown(
+            generated_at=generated_at_iso,
+            hosted_preflight_summary=hosted_preflight_summary,
+            hosted_launch_smoke_summary=hosted_launch_smoke_summary,
+            attachments_manifest=attachments_manifest,
+            attachment_validation_summary=attachment_validation_summary,
+        )
+        operator_runbook_path.write_text(operator_runbook_markdown, encoding="utf-8")
+    if run_hosted_route_diagnosis_layer:
+        hosted_route_diagnosis_summary, hosted_route_diagnosis_markdown = hosted_route_diagnosis_runner(
+            generated_at=generated_at_iso,
+            public_base_url=str(hosted_public_base_url or "").strip(),
+            public_host_for_resolution=hosted_public_host_for_resolution,
+            archive_record_slug=hosted_archive_record_slug,
+            timeout_seconds=int(hosted_route_diagnosis_timeout_seconds),
+        )
+        hosted_route_diagnosis_json_path.write_text(
+            json.dumps(hosted_route_diagnosis_summary, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        hosted_route_diagnosis_md_path.write_text(hosted_route_diagnosis_markdown, encoding="utf-8")
 
     payload = {
         "artifact_version": ARTIFACT_VERSION,
@@ -366,6 +785,46 @@ def generate_evidence_bundle(
             "markdown_artifact": "launch_smoke.md",
             "summary": _coerce_object(launch_smoke_summary.get("summary")),
         }
+    if hosted_preflight_summary is not None:
+        payload["hosted_preflight"] = {
+            "json_artifact": "hosted_preflight.json",
+            "markdown_artifact": "hosted_preflight.md",
+            "summary": _coerce_object(hosted_preflight_summary.get("summary")),
+            "blocking_fields": hosted_preflight_summary.get("blocking_fields") or [],
+            "launch_readiness_claim": hosted_preflight_summary.get("launch_readiness_claim"),
+        }
+    if hosted_launch_smoke_summary is not None:
+        payload["hosted_launch_smoke"] = {
+            "json_artifact": "hosted_launch_smoke.json",
+            "markdown_artifact": "hosted_launch_smoke.md",
+            "summary": _coerce_object(hosted_launch_smoke_summary.get("summary")),
+            "target_metadata": _coerce_object(hosted_launch_smoke_summary.get("environment")),
+            "launch_readiness_claim": hosted_launch_smoke_summary.get("launch_readiness_claim"),
+        }
+    if hosted_route_diagnosis_summary is not None:
+        payload["hosted_route_diagnosis"] = {
+            "json_artifact": "hosted_route_diagnosis.json",
+            "markdown_artifact": "hosted_route_diagnosis.md",
+            "summary": _coerce_object(hosted_route_diagnosis_summary.get("summary")),
+            "target_metadata": _coerce_object(hosted_route_diagnosis_summary.get("environment")),
+            "launch_readiness_claim": hosted_route_diagnosis_summary.get("launch_readiness_claim"),
+        }
+    if attachments_manifest is not None:
+        payload["attachments"] = {
+            "manifest_artifact": "attachments.json",
+            "attachments_dir": "attachments",
+            "summary": _coerce_object(attachments_manifest.get("summary")),
+        }
+    if attachment_validation_summary is not None:
+        payload["attachment_validation"] = {
+            "json_artifact": "attachment_validation.json",
+            "markdown_artifact": "attachment_validation.md",
+            "summary": _coerce_object(attachment_validation_summary.get("summary")),
+            "operator_notes": _coerce_object(attachment_validation_summary.get("operator_notes")),
+            "launch_readiness_claim": attachment_validation_summary.get("launch_readiness_claim"),
+        }
+    if operator_runbook_markdown is not None:
+        payload["operator_runbook"] = {"markdown_artifact": "operator_runbook.md"}
 
     evidence_json_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown = _build_markdown(
@@ -380,6 +839,12 @@ def generate_evidence_bundle(
         human_notes=human_notes,
         inferred=inferred,
         launch_smoke_summary=launch_smoke_summary,
+        hosted_preflight_summary=hosted_preflight_summary,
+        hosted_launch_smoke_summary=hosted_launch_smoke_summary,
+        hosted_route_diagnosis_summary=hosted_route_diagnosis_summary,
+        attachments_manifest=attachments_manifest,
+        attachment_validation_summary=attachment_validation_summary,
+        operator_runbook_artifact=("operator_runbook.md" if operator_runbook_markdown is not None else None),
     )
     evidence_md_path.write_text(markdown, encoding="utf-8")
     return bundle_dir, payload, markdown
@@ -406,6 +871,11 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--generated-at", default=None, help="ISO timestamp override for deterministic generation")
     parser.add_argument("--build-id", default=None, help="Optional deterministic bundle id override")
     parser.add_argument(
+        "--allow-existing-bundle-dir",
+        action="store_true",
+        help="Allow regenerating evidence into an existing deterministic bundle directory",
+    )
+    parser.add_argument(
         "--run-launch-smoke",
         action="store_true",
         help="Run ANU-LAUNCH-001 release-candidate smoke checks and attach artifacts to the bundle",
@@ -425,6 +895,101 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Mark bootstrap API smoke mutation as skipped/not-configured",
     )
+    parser.add_argument(
+        "--run-hosted-launch-smoke",
+        action="store_true",
+        help="Run ANU-LAUNCH-002 hosted release-candidate smoke checks and attach hosted artifacts",
+    )
+    parser.add_argument(
+        "--run-hosted-route-diagnosis",
+        action="store_true",
+        help="Run ANU-LAUNCH-005 hosted public-route diagnosis and attach diagnosis artifacts",
+    )
+    parser.add_argument(
+        "--hosted-public-base-url",
+        default=None,
+        help="Hosted public base URL used by ANU-LAUNCH-002 smoke checks",
+    )
+    parser.add_argument(
+        "--hosted-public-host-for-resolution",
+        default=None,
+        help="Host value used for hosted /api/public/sites/resolve check",
+    )
+    parser.add_argument(
+        "--hosted-archive-record-slug",
+        default=None,
+        help="Archive slug used by hosted public archive record detail check",
+    )
+    parser.add_argument(
+        "--hosted-control-base-url",
+        default=None,
+        help="Hosted control base URL used by ANU-LAUNCH-002 control checks",
+    )
+    parser.add_argument(
+        "--hosted-control-site-id",
+        default=None,
+        help="Hosted control site/node id used for control read checks",
+    )
+    parser.add_argument(
+        "--hosted-control-auth-header",
+        default=None,
+        help="Authorization header value for hosted control checks, e.g. Bearer <token>",
+    )
+    parser.add_argument(
+        "--hosted-control-auth-header-env",
+        default=None,
+        help="Environment variable name containing hosted control auth header value",
+    )
+    parser.add_argument(
+        "--hosted-control-plane-secret-header",
+        default=None,
+        help="X-Control-Plane-Secret header value for hosted control checks",
+    )
+    parser.add_argument(
+        "--hosted-control-plane-secret-header-env",
+        default=None,
+        help="Environment variable name containing hosted control-plane shared secret header value",
+    )
+    parser.add_argument(
+        "--hosted-launch-smoke-skip-control-checks",
+        action="store_true",
+        help="Mark hosted control-plane smoke checks as skipped/not-configured",
+    )
+    parser.add_argument(
+        "--hosted-launch-smoke-enable-bootstrap-mutation",
+        action="store_true",
+        help="Enable hosted bootstrap mutation check (default uses validation-only probe payload)",
+    )
+    parser.add_argument(
+        "--hosted-launch-smoke-timeout-seconds",
+        type=int,
+        default=12,
+        help="Timeout in seconds for hosted launch smoke HTTP requests",
+    )
+    parser.add_argument(
+        "--hosted-route-diagnosis-timeout-seconds",
+        type=int,
+        default=12,
+        help="Timeout in seconds for hosted route diagnosis HTTP requests",
+    )
+    parser.add_argument(
+        "--hosted-screenshot-ref",
+        action="append",
+        default=[],
+        help="Attachment reference for hosted screenshot evidence (recommend attachments/<file>)",
+    )
+    parser.add_argument(
+        "--hosted-recording-ref",
+        action="append",
+        default=[],
+        help="Attachment reference for hosted recording evidence (recommend attachments/<file>)",
+    )
+    parser.add_argument(
+        "--hosted-operator-note",
+        action="append",
+        default=[],
+        help="Operator-authored note for hosted smoke evidence bundle",
+    )
     return parser
 
 
@@ -432,6 +997,22 @@ def main() -> int:
     args = _build_parser().parse_args()
     repo_root = Path(args.repo_root).resolve()
     output_root = Path(args.output_root).resolve()
+    hosted_control_auth_header = str(args.hosted_control_auth_header or "").strip()
+    hosted_control_auth_env_name = str(args.hosted_control_auth_header_env or "").strip()
+    hosted_control_plane_secret_header = str(args.hosted_control_plane_secret_header or "").strip()
+    hosted_control_plane_secret_env_name = str(args.hosted_control_plane_secret_header_env or "").strip()
+    hosted_control_auth_source = None
+    if not hosted_control_auth_header and hosted_control_auth_env_name:
+        import os
+
+        hosted_control_auth_header = str(os.environ.get(hosted_control_auth_env_name, "")).strip()
+        hosted_control_auth_source = f"env:{hosted_control_auth_env_name}"
+    elif hosted_control_auth_header:
+        hosted_control_auth_source = "direct_header"
+    if not hosted_control_plane_secret_header and hosted_control_plane_secret_env_name:
+        import os
+
+        hosted_control_plane_secret_header = str(os.environ.get(hosted_control_plane_secret_env_name, "")).strip()
 
     bundle_dir, payload, _ = generate_evidence_bundle(
         milestone_or_slice=args.milestone_or_slice,
@@ -446,10 +1027,28 @@ def main() -> int:
         repo_root=repo_root,
         generated_at=args.generated_at,
         build_id=args.build_id,
+        allow_existing_bundle_dir=bool(args.allow_existing_bundle_dir),
         run_launch_smoke_layer=bool(args.run_launch_smoke),
         launch_smoke_control_host=str(args.launch_smoke_control_host or "control.test"),
         launch_smoke_skip_control_checks=bool(args.launch_smoke_skip_control_checks),
         launch_smoke_skip_bootstrap_mutation=bool(args.launch_smoke_skip_bootstrap_mutation),
+        run_hosted_launch_smoke_layer=bool(args.run_hosted_launch_smoke),
+        run_hosted_route_diagnosis_layer=bool(args.run_hosted_route_diagnosis),
+        hosted_public_base_url=args.hosted_public_base_url,
+        hosted_public_host_for_resolution=args.hosted_public_host_for_resolution,
+        hosted_archive_record_slug=args.hosted_archive_record_slug,
+        hosted_control_base_url=args.hosted_control_base_url,
+        hosted_control_site_id=args.hosted_control_site_id,
+        hosted_control_auth_header=hosted_control_auth_header or None,
+        hosted_control_plane_secret_header=hosted_control_plane_secret_header or None,
+        hosted_control_auth_source=hosted_control_auth_source,
+        hosted_launch_smoke_skip_control_checks=bool(args.hosted_launch_smoke_skip_control_checks),
+        hosted_launch_smoke_enable_bootstrap_mutation=bool(args.hosted_launch_smoke_enable_bootstrap_mutation),
+        hosted_launch_smoke_timeout_seconds=int(args.hosted_launch_smoke_timeout_seconds),
+        hosted_route_diagnosis_timeout_seconds=int(args.hosted_route_diagnosis_timeout_seconds),
+        hosted_screenshot_refs=args.hosted_screenshot_ref or [],
+        hosted_recording_refs=args.hosted_recording_ref or [],
+        hosted_operator_notes=args.hosted_operator_note or [],
     )
 
     print(

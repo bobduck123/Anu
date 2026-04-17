@@ -1,0 +1,135 @@
+{
+  "contract_version": "anu-launch-hosted-route-diagnosis.v1",
+  "generated_at": "2026-04-16T22:20:10.201621+00:00",
+  "environment": {
+    "runtime": "hosted-http",
+    "public_base_url": "https://anu-back-end.vercel.app",
+    "public_host_for_resolution": "maanara.vercel.app",
+    "archive_record_slug": "manara-record",
+    "timeout_seconds": 20
+  },
+  "checks": [
+    {
+      "check_id": "public_archive_list_route",
+      "label": "Public archive list route",
+      "method": "GET",
+      "path": "/public/archive/records?page=1&page_size=5",
+      "status": "failed",
+      "outcome_category": "http_5xx",
+      "duration_ms": 515,
+      "http_status": 503,
+      "message": "Archive summary list temporarily unavailable",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://anu-back-end.vercel.app/public/archive/records?page=1&page_size=5",
+        "content_type": "application/json",
+        "content_length": "176",
+        "request_id": "a8678088-ad60-433c-af56-ceffd3f0c10e",
+        "error_code": "service_unavailable",
+        "error_message": "Archive summary list temporarily unavailable",
+        "payload_ok": false,
+        "response_preview": "{\"error\":{\"code\":\"service_unavailable\",\"details\":null,\"message\":\"Archive summary list temporarily unavailable\"},\"ok\":false,\"request_id\":\"a8678088-ad60-433c-af56-ceffd3f0c10e\"}\n"
+      }
+    },
+    {
+      "check_id": "public_archive_record_detail_route",
+      "label": "Public archive record detail route",
+      "method": "GET",
+      "path": "/public/archive-handoffs/manara-record",
+      "status": "failed",
+      "outcome_category": "http_5xx",
+      "duration_ms": 356,
+      "http_status": 503,
+      "message": "Archive handoff temporarily unavailable",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://anu-back-end.vercel.app/public/archive-handoffs/manara-record",
+        "content_type": "application/json",
+        "content_length": "171",
+        "request_id": "e0a03dc6-9b74-4000-b11b-6ae11fd21f40",
+        "error_code": "service_unavailable",
+        "error_message": "Archive handoff temporarily unavailable",
+        "payload_ok": false,
+        "response_preview": "{\"error\":{\"code\":\"service_unavailable\",\"details\":null,\"message\":\"Archive handoff temporarily unavailable\"},\"ok\":false,\"request_id\":\"e0a03dc6-9b74-4000-b11b-6ae11fd21f40\"}\n"
+      }
+    },
+    {
+      "check_id": "public_trust_decisions_route",
+      "label": "Public trust decisions route",
+      "method": "GET",
+      "path": "/public/trust/decisions?limit=5",
+      "status": "failed",
+      "outcome_category": "http_5xx",
+      "duration_ms": 327,
+      "http_status": 503,
+      "message": "Decision summary list temporarily unavailable",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://anu-back-end.vercel.app/public/trust/decisions?limit=5",
+        "content_type": "application/json",
+        "content_length": "177",
+        "request_id": "5e20d67a-99ce-4a8e-8d16-71ae595efe67",
+        "error_code": "service_unavailable",
+        "error_message": "Decision summary list temporarily unavailable",
+        "payload_ok": false,
+        "response_preview": "{\"error\":{\"code\":\"service_unavailable\",\"details\":null,\"message\":\"Decision summary list temporarily unavailable\"},\"ok\":false,\"request_id\":\"5e20d67a-99ce-4a8e-8d16-71ae595efe67\"}\n"
+      }
+    },
+    {
+      "check_id": "white_label_public_host_resolution",
+      "label": "White-label public host resolution",
+      "method": "GET",
+      "path": "/api/public/sites/resolve?host=maanara.vercel.app",
+      "status": "failed",
+      "outcome_category": "http_5xx",
+      "duration_ms": 354,
+      "http_status": 503,
+      "message": "Public site resolution temporarily unavailable",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://anu-back-end.vercel.app/api/public/sites/resolve?host=maanara.vercel.app",
+        "content_type": "application/json",
+        "content_length": "178",
+        "request_id": "1c5b2ad2-b19a-4caf-acc0-778e67d844f3",
+        "error_code": "service_unavailable",
+        "error_message": "Public site resolution temporarily unavailable",
+        "payload_ok": false,
+        "response_preview": "{\"error\":{\"code\":\"service_unavailable\",\"details\":null,\"message\":\"Public site resolution temporarily unavailable\"},\"ok\":false,\"request_id\":\"1c5b2ad2-b19a-4caf-acc0-778e67d844f3\"}\n"
+      }
+    }
+  ],
+  "summary": {
+    "total": 4,
+    "passed": 0,
+    "failed": 4,
+    "skipped": 0,
+    "categories": {
+      "success": 0,
+      "skipped_not_configured": 0,
+      "dns": 0,
+      "transport": 0,
+      "timeout": 0,
+      "http_4xx": 0,
+      "http_5xx": 4,
+      "invalid_payload": 0,
+      "http_other": 0
+    },
+    "public_surface_state": {
+      "status": "degraded",
+      "degraded_reason_categories": [
+        "http_5xx"
+      ],
+      "annotation": "Public route failures are reported as observed with no coercion."
+    }
+  },
+  "launch_readiness_claim": null,
+  "conclusion": "not-set-by-route-diagnosis"
+}

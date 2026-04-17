@@ -1,0 +1,94 @@
+{
+  "artifact_version": "anu-evidence.v1",
+  "milestone_or_slice": "ANU-LAUNCH-001",
+  "generated_at": "2026-04-16T09:05:00+00:00",
+  "environment_note": null,
+  "git_revision": {
+    "commit_sha": "c97bca5c1f04ebe5defea35cb9e1a74ba5cb8fa9",
+    "short_sha": "c97bca5",
+    "branch": "main"
+  },
+  "commands_run": [
+    "python -m unittest scripts.tests.test_launch_rc_smoke -v"
+  ],
+  "results": [
+    {
+      "command": "python -m unittest scripts.tests.test_launch_rc_smoke -v",
+      "category": "test",
+      "started_at": "2026-04-16T09:19:53.425681+00:00",
+      "finished_at": "2026-04-16T09:19:55.621000+00:00",
+      "duration_ms": 2195,
+      "exit_code": 0,
+      "status": "passed",
+      "stdout": "AUTO_CREATE_ALL is enabled; ensuring database schema, default node, and optional alpha data exist.\nplane_log_event\nplane_log_event\nAUTO_CREATE_ALL is enabled; ensuring database schema, default node, and optional alpha data exist.\nplane_log_event\nplane_log_event\nAUTO_CREATE_ALL is enabled; ensuring database schema, default node, and optional alpha data exist.\nplane_log_event\nplane_log_event\nplane_log_event\nAUTO_CREATE_ALL is enabled; ensuring database schema, default node, and optional alpha data exist.\nplane_log_event\nplane_log_event\nAUTO_CREATE_ALL is enabled; ensuring database schema, default node, and optional alpha data exist.\nplane_log_event\nplane_log_event\nplane_log_event\nplane_log_event\nplane_log_event\nplane_log_event\nplane_log_event\n",
+      "stderr": "test_markdown_summary_renders_contract_honestly (scripts.tests.test_launch_rc_smoke.LaunchRcSmokeTests.test_markdown_summary_renders_contract_honestly) ... C:\\Dev\\Flora_fauna\\flora-fauna\\backend\\app\\services\\public_site_service.py:380: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)\n  candidate_node = Node.query.get(domain_record.node_id)\nok\ntest_smoke_output_shape_is_deterministic (scripts.tests.test_launch_rc_smoke.LaunchRcSmokeTests.test_smoke_output_shape_is_deterministic) ... ok\ntest_success_failure_and_skipped_states_are_honest (scripts.tests.test_launch_rc_smoke.LaunchRcSmokeTests.test_success_failure_and_skipped_states_are_honest) ... C:\\Dev\\Flora_fauna\\flora-fauna\\backend\\app\\services\\public_site_authoring_service.py:441: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)\n  node = Node.query.get(node_id)\nC:\\Dev\\Flora_fauna\\flora-fauna\\backend\\app\\services\\control_site_publish_readiness_service.py:23: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)\n  node = Node.query.get(node_id)\nC:\\Dev\\Flora_fauna\\flora-fauna\\backend\\app\\services\\control_operator_assignment_service.py:57: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)\n  node = Node.query.get(node_id)\nC:\\Dev\\Flora_fauna\\flora-fauna\\backend\\app\\services\\control_site_domain_service.py:105: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)\n  node = Node.query.get(node_id)\nok\n\n----------------------------------------------------------------------\nRan 3 tests in 1.673s\n\nOK\n"
+    }
+  ],
+  "changed_files": [
+    "scripts/capture_milestone_evidence.py",
+    "scripts/launch_rc_smoke.py",
+    "scripts/tests/test_capture_milestone_evidence.py",
+    "scripts/tests/test_launch_rc_smoke.py"
+  ],
+  "targeted_tests_summary": {
+    "command_count": 1,
+    "category_counts": {
+      "test": 1,
+      "typecheck": 0,
+      "build": 0
+    },
+    "passed_count": 1,
+    "failed_count": 0
+  },
+  "typecheck_build_summary": {
+    "typecheck_commands": [],
+    "build_commands": []
+  },
+  "open_risks": [
+    "Hosted-environment smoke and operator recordings remain out of this RC smoke layer."
+  ],
+  "source_docs_referenced": [
+    "docs/program/EVIDENCE_AUTOMATION_SPEC_2026-04-14.md",
+    "docs/program/MILESTONE_ACCEPTANCE_PACK_2026-04-07.md",
+    "docs/program/M5_COMPLETION_REPORT.md"
+  ],
+  "observed": {
+    "commands_run": [
+      "python -m unittest scripts.tests.test_launch_rc_smoke -v"
+    ],
+    "command_results_count": 1,
+    "changed_files_count": 4
+  },
+  "inferred": {
+    "all_commands_succeeded": true,
+    "failed_command_count": 0,
+    "targeted_tests_summary": {
+      "command_count": 1,
+      "category_counts": {
+        "test": 1,
+        "typecheck": 0,
+        "build": 0
+      },
+      "passed_count": 1,
+      "failed_count": 0
+    }
+  },
+  "human_narrative": {
+    "notes": [
+      "ANU-LAUNCH-001 captures RC smoke evidence only; launch acceptance remains human-owned."
+    ],
+    "completion_claim": null,
+    "conclusion": "not-set-by-automation"
+  },
+  "launch_smoke": {
+    "json_artifact": "launch_smoke.json",
+    "markdown_artifact": "launch_smoke.md",
+    "summary": {
+      "total": 9,
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0,
+      "all_passed": true
+    }
+  }
+}

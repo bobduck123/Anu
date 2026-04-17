@@ -1,0 +1,132 @@
+{
+  "artifact_version": "anu-evidence.v1",
+  "milestone_or_slice": "ANU-LAUNCH-005",
+  "generated_at": "2026-04-16T22:20:10.201621+00:00",
+  "environment_note": "hosted-rc-diagnosis",
+  "git_revision": {
+    "commit_sha": "c97bca5c1f04ebe5defea35cb9e1a74ba5cb8fa9",
+    "short_sha": "c97bca5",
+    "branch": "main"
+  },
+  "commands_run": [
+    "python -m unittest scripts.tests.test_launch_rc_hosted_route_diagnosis -v",
+    "python -m unittest scripts.tests.test_capture_milestone_evidence -v"
+  ],
+  "results": [
+    {
+      "command": "python -m unittest scripts.tests.test_launch_rc_hosted_route_diagnosis -v",
+      "category": "test",
+      "started_at": "2026-04-16T22:20:10.201621+00:00",
+      "finished_at": "2026-04-16T22:20:10.300059+00:00",
+      "duration_ms": 98,
+      "exit_code": 0,
+      "status": "passed",
+      "stdout": "",
+      "stderr": "test_degraded_state_annotation_remains_honest (scripts.tests.test_launch_rc_hosted_route_diagnosis.LaunchRcHostedRouteDiagnosisTests.test_degraded_state_annotation_remains_honest) ... ok\ntest_diagnosis_output_shape_is_deterministic (scripts.tests.test_launch_rc_hosted_route_diagnosis.LaunchRcHostedRouteDiagnosisTests.test_diagnosis_output_shape_is_deterministic) ... ok\ntest_response_classification_is_honest_and_stable (scripts.tests.test_launch_rc_hosted_route_diagnosis.LaunchRcHostedRouteDiagnosisTests.test_response_classification_is_honest_and_stable) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 0.000s\n\nOK\n"
+    },
+    {
+      "command": "python -m unittest scripts.tests.test_capture_milestone_evidence -v",
+      "category": "test",
+      "started_at": "2026-04-16T22:20:10.300059+00:00",
+      "finished_at": "2026-04-16T22:20:10.993768+00:00",
+      "duration_ms": 693,
+      "exit_code": 0,
+      "status": "passed",
+      "stdout": "",
+      "stderr": "test_bundle_generation_can_reuse_existing_target_when_explicitly_enabled (scripts.tests.test_capture_milestone_evidence.EvidenceCaptureTests.test_bundle_generation_can_reuse_existing_target_when_explicitly_enabled) ... ok\ntest_bundle_generation_is_append_only_by_target_path (scripts.tests.test_capture_milestone_evidence.EvidenceCaptureTests.test_bundle_generation_is_append_only_by_target_path) ... ok\ntest_failed_commands_are_captured_honestly (scripts.tests.test_capture_milestone_evidence.EvidenceCaptureTests.test_failed_commands_are_captured_honestly) ... ok\ntest_generates_deterministic_json_and_markdown_outputs (scripts.tests.test_capture_milestone_evidence.EvidenceCaptureTests.test_generates_deterministic_json_and_markdown_outputs) ... ok\ntest_generation_does_not_overwrite_milestone_conclusion_docs (scripts.tests.test_capture_milestone_evidence.EvidenceCaptureTests.test_generation_does_not_overwrite_milestone_conclusion_docs) ... ok\ntest_hosted_launch_smoke_and_attachment_manifest_integrate_honestly (scripts.tests.test_capture_milestone_evidence.EvidenceCaptureTests.test_hosted_launch_smoke_and_attachment_manifest_integrate_honestly) ... ok\ntest_hosted_route_diagnosis_artifacts_integrate_additively (scripts.tests.test_capture_milestone_evidence.EvidenceCaptureTests.test_hosted_route_diagnosis_artifacts_integrate_additively) ... ok\ntest_invalid_hosted_preflight_fails_fast_before_hosted_smoke (scripts.tests.test_capture_milestone_evidence.EvidenceCaptureTests.test_invalid_hosted_preflight_fails_fast_before_hosted_smoke) ... ok\ntest_launch_smoke_artifacts_integrate_without_breaking_contract (scripts.tests.test_capture_milestone_evidence.EvidenceCaptureTests.test_launch_smoke_artifacts_integrate_without_breaking_contract) ... ok\ntest_unittest_commands_are_classified_as_test_category (scripts.tests.test_capture_milestone_evidence.EvidenceCaptureTests.test_unittest_commands_are_classified_as_test_category) ... ok\n\n----------------------------------------------------------------------\nRan 10 tests in 0.626s\n\nOK\n"
+    }
+  ],
+  "changed_files": [
+    "scripts/capture_milestone_evidence.py",
+    "scripts/launch_rc_hosted_route_diagnosis.py",
+    "scripts/tests/test_capture_milestone_evidence.py",
+    "scripts/tests/test_launch_rc_hosted_route_diagnosis.py"
+  ],
+  "targeted_tests_summary": {
+    "command_count": 2,
+    "category_counts": {
+      "test": 2,
+      "typecheck": 0,
+      "build": 0
+    },
+    "passed_count": 2,
+    "failed_count": 0
+  },
+  "typecheck_build_summary": {
+    "typecheck_commands": [],
+    "build_commands": []
+  },
+  "open_risks": [
+    "ANU-LAUNCH-004A rerun remains blocked pending real hosted control credentials/domain verification on 2026-04-18."
+  ],
+  "source_docs_referenced": [
+    "docs/program/EVIDENCE_AUTOMATION_SPEC_2026-04-14.md",
+    "docs/program/MILESTONE_ACCEPTANCE_PACK_2026-04-07.md",
+    "docs/program/M5_COMPLETION_REPORT.md"
+  ],
+  "observed": {
+    "commands_run": [
+      "python -m unittest scripts.tests.test_launch_rc_hosted_route_diagnosis -v",
+      "python -m unittest scripts.tests.test_capture_milestone_evidence -v"
+    ],
+    "command_results_count": 2,
+    "changed_files_count": 4
+  },
+  "inferred": {
+    "all_commands_succeeded": true,
+    "failed_command_count": 0,
+    "targeted_tests_summary": {
+      "command_count": 2,
+      "category_counts": {
+        "test": 2,
+        "typecheck": 0,
+        "build": 0
+      },
+      "passed_count": 2,
+      "failed_count": 0
+    }
+  },
+  "human_narrative": {
+    "notes": [
+      "ANU-LAUNCH-005 captures hosted public-route diagnosis and degraded-state evidence only."
+    ],
+    "completion_claim": null,
+    "conclusion": "not-set-by-automation"
+  },
+  "hosted_route_diagnosis": {
+    "json_artifact": "hosted_route_diagnosis.json",
+    "markdown_artifact": "hosted_route_diagnosis.md",
+    "summary": {
+      "total": 4,
+      "passed": 0,
+      "failed": 4,
+      "skipped": 0,
+      "categories": {
+        "success": 0,
+        "skipped_not_configured": 0,
+        "dns": 0,
+        "transport": 0,
+        "timeout": 0,
+        "http_4xx": 0,
+        "http_5xx": 4,
+        "invalid_payload": 0,
+        "http_other": 0
+      },
+      "public_surface_state": {
+        "status": "degraded",
+        "degraded_reason_categories": [
+          "http_5xx"
+        ],
+        "annotation": "Public route failures are reported as observed with no coercion."
+      }
+    },
+    "target_metadata": {
+      "runtime": "hosted-http",
+      "public_base_url": "https://anu-back-end.vercel.app",
+      "public_host_for_resolution": "maanara.vercel.app",
+      "archive_record_slug": "manara-record",
+      "timeout_seconds": 20
+    },
+    "launch_readiness_claim": null
+  }
+}

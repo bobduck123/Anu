@@ -1,0 +1,158 @@
+{
+  "contract_version": "anu-launch-smoke.v1",
+  "generated_at": "2026-04-16T09:05:00+00:00",
+  "environment": {
+    "runtime": "in-memory-flask",
+    "control_host": "control.test",
+    "include_control_checks": true,
+    "include_bootstrap_mutation": true
+  },
+  "checks": [
+    {
+      "check_id": "public_archive_list_route",
+      "label": "Public archive list route",
+      "method": "GET",
+      "path": "/public/archive/records?page=1&page_size=5",
+      "status": "passed",
+      "duration_ms": 9,
+      "http_status": 200,
+      "message": "ok",
+      "details": {
+        "expected_statuses": [
+          200
+        ]
+      }
+    },
+    {
+      "check_id": "public_archive_record_detail_route",
+      "label": "Public archive record detail route",
+      "method": "GET",
+      "path": "/public/archive-handoffs/launch-smoke-archive-record",
+      "status": "passed",
+      "duration_ms": 2,
+      "http_status": 200,
+      "message": "ok",
+      "details": {
+        "expected_statuses": [
+          200
+        ]
+      }
+    },
+    {
+      "check_id": "public_trust_decisions_route",
+      "label": "Public trust decisions route",
+      "method": "GET",
+      "path": "/public/trust/decisions?limit=5",
+      "status": "passed",
+      "duration_ms": 2,
+      "http_status": 200,
+      "message": "ok",
+      "details": {
+        "expected_statuses": [
+          200
+        ]
+      }
+    },
+    {
+      "check_id": "white_label_public_host_resolution",
+      "label": "White-label public host resolution",
+      "method": "GET",
+      "path": "/api/public/sites/resolve?host=launch-smoke.example.com",
+      "status": "passed",
+      "duration_ms": 2,
+      "http_status": 200,
+      "message": "resolved",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "resolved": true,
+        "node_slug": "launch-smoke-node"
+      }
+    },
+    {
+      "check_id": "control_manifest_authoring_read_path",
+      "label": "Control manifest authoring read path",
+      "method": "GET",
+      "path": "/api/control/sites/2/manifest-authoring",
+      "status": "passed",
+      "duration_ms": 3,
+      "http_status": 200,
+      "message": "ok",
+      "details": {
+        "expected_statuses": [
+          200
+        ]
+      }
+    },
+    {
+      "check_id": "control_publish_readiness_path",
+      "label": "Control publish-readiness path",
+      "method": "GET",
+      "path": "/api/control/sites/2/publish-readiness",
+      "status": "passed",
+      "duration_ms": 2,
+      "http_status": 200,
+      "message": "ok",
+      "details": {
+        "expected_statuses": [
+          200
+        ]
+      }
+    },
+    {
+      "check_id": "control_operator_assignments_api_availability",
+      "label": "Control operator assignment API availability",
+      "method": "GET",
+      "path": "/api/control/sites/2/operator-assignments",
+      "status": "passed",
+      "duration_ms": 1,
+      "http_status": 200,
+      "message": "ok",
+      "details": {
+        "expected_statuses": [
+          200
+        ]
+      }
+    },
+    {
+      "check_id": "control_domain_bindings_api_availability",
+      "label": "Control domain bindings API availability",
+      "method": "GET",
+      "path": "/api/control/sites/2/domain-bindings",
+      "status": "passed",
+      "duration_ms": 1,
+      "http_status": 200,
+      "message": "ok",
+      "details": {
+        "expected_statuses": [
+          200
+        ]
+      }
+    },
+    {
+      "check_id": "control_bootstrap_api_availability",
+      "label": "Control bootstrap API availability",
+      "method": "POST",
+      "path": "/api/control/sites/bootstrap",
+      "status": "passed",
+      "duration_ms": 6,
+      "http_status": 201,
+      "message": "ok",
+      "details": {
+        "expected_statuses": [
+          201
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "all_passed": true
+  },
+  "launch_readiness_claim": null,
+  "conclusion": "not-set-by-smoke"
+}

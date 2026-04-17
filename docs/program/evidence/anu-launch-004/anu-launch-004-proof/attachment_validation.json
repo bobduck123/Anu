@@ -1,0 +1,70 @@
+{
+  "contract_version": "anu-launch-attachment-validation.v1",
+  "generated_at": "2026-04-16T10:56:18.983206+00:00",
+  "checks": [
+    {
+      "id": "screenshot-1",
+      "kind": "screenshot",
+      "path": "attachments/public-archive-list-route.png",
+      "status": "valid",
+      "message": "attachment file exists"
+    },
+    {
+      "id": "screenshot-2",
+      "kind": "screenshot",
+      "path": "attachments/public-archive-record-detail-route.png",
+      "status": "valid",
+      "message": "attachment file exists"
+    },
+    {
+      "id": "screenshot-3",
+      "kind": "screenshot",
+      "path": "attachments/public-trust-decisions-route.png",
+      "status": "valid",
+      "message": "attachment file exists"
+    },
+    {
+      "id": "screenshot-4",
+      "kind": "screenshot",
+      "path": "attachments/white-label-public-host-resolution.png",
+      "status": "valid",
+      "message": "attachment file exists"
+    },
+    {
+      "id": "screenshot-5",
+      "kind": "screenshot",
+      "path": "attachments/control-manifest-authoring-read-path.png",
+      "status": "valid",
+      "message": "attachment file exists"
+    },
+    {
+      "id": "screenshot-6",
+      "kind": "screenshot",
+      "path": "attachments/control-publish-readiness-path.png",
+      "status": "valid",
+      "message": "attachment file exists"
+    },
+    {
+      "id": "screenshot-7",
+      "kind": "screenshot",
+      "path": "attachments/control-bootstrap-api-availability.png",
+      "status": "valid",
+      "message": "attachment file exists"
+    }
+  ],
+  "operator_notes": {
+    "status": "valid",
+    "notes_count": 2,
+    "message": "operator notes present"
+  },
+  "summary": {
+    "total": 7,
+    "valid": 7,
+    "invalid": 0,
+    "missing": 0,
+    "screenshots_total": 7,
+    "recordings_total": 0
+  },
+  "launch_readiness_claim": null,
+  "conclusion": "not-set-by-attachment-validation"
+}

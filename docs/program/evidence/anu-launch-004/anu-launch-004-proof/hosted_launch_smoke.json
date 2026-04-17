@@ -1,0 +1,180 @@
+{
+  "contract_version": "anu-launch-smoke-hosted.v1",
+  "generated_at": "2026-04-16T10:56:18.983206+00:00",
+  "environment": {
+    "runtime": "hosted-http",
+    "public_base_url": "https://anu-back-end.vercel.app",
+    "public_host_for_resolution": "maanara.vercel.app",
+    "archive_record_slug": "manara-record",
+    "control_base_url": "https://anu-back-end.vercel.app",
+    "control_site_id": 1,
+    "control_auth_header_configured": true,
+    "include_control_checks": true,
+    "include_bootstrap_mutation": false,
+    "timeout_seconds": 20
+  },
+  "checks": [
+    {
+      "check_id": "public_archive_list_route",
+      "label": "Public archive list route",
+      "method": "GET",
+      "path": "/public/archive/records?page=1&page_size=5",
+      "status": "failed",
+      "duration_ms": 379,
+      "http_status": 503,
+      "message": "Archive summary list temporarily unavailable",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://anu-back-end.vercel.app/public/archive/records?page=1&page_size=5",
+        "response_preview": "{\"error\":{\"code\":\"service_unavailable\",\"details\":null,\"message\":\"Archive summary list temporarily unavailable\"},\"ok\":false,\"request_id\":\"da197bc4-4363-43e2-9642-a01d74280ff7\"}\n"
+      }
+    },
+    {
+      "check_id": "public_archive_record_detail_route",
+      "label": "Public archive record detail route",
+      "method": "GET",
+      "path": "/public/archive-handoffs/manara-record",
+      "status": "failed",
+      "duration_ms": 354,
+      "http_status": 503,
+      "message": "Archive handoff temporarily unavailable",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://anu-back-end.vercel.app/public/archive-handoffs/manara-record",
+        "response_preview": "{\"error\":{\"code\":\"service_unavailable\",\"details\":null,\"message\":\"Archive handoff temporarily unavailable\"},\"ok\":false,\"request_id\":\"0ec46db0-74a4-4c07-b4c1-fe76fdeca225\"}\n"
+      }
+    },
+    {
+      "check_id": "public_trust_decisions_route",
+      "label": "Public trust decisions route",
+      "method": "GET",
+      "path": "/public/trust/decisions?limit=5",
+      "status": "failed",
+      "duration_ms": 330,
+      "http_status": 503,
+      "message": "Decision summary list temporarily unavailable",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://anu-back-end.vercel.app/public/trust/decisions?limit=5",
+        "response_preview": "{\"error\":{\"code\":\"service_unavailable\",\"details\":null,\"message\":\"Decision summary list temporarily unavailable\"},\"ok\":false,\"request_id\":\"3cb02947-51d8-4c24-bc48-4c254cad5dbb\"}\n"
+      }
+    },
+    {
+      "check_id": "white_label_public_host_resolution",
+      "label": "White-label public host resolution",
+      "method": "GET",
+      "path": "/api/public/sites/resolve?host=maanara.vercel.app",
+      "status": "failed",
+      "duration_ms": 372,
+      "http_status": 503,
+      "message": "Public site resolution temporarily unavailable",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://anu-back-end.vercel.app/api/public/sites/resolve?host=maanara.vercel.app",
+        "response_preview": "{\"error\":{\"code\":\"service_unavailable\",\"details\":null,\"message\":\"Public site resolution temporarily unavailable\"},\"ok\":false,\"request_id\":\"f76e2839-5cd0-48d1-a9b0-60406aa46b4c\"}\n"
+      }
+    },
+    {
+      "check_id": "control_manifest_authoring_read_path",
+      "label": "Control manifest authoring read path",
+      "method": "GET",
+      "path": "/api/control/sites/1/manifest-authoring",
+      "status": "failed",
+      "duration_ms": 324,
+      "http_status": 422,
+      "message": "http_422",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://anu-back-end.vercel.app/api/control/sites/1/manifest-authoring",
+        "response_preview": "{\"msg\":\"Not enough segments\"}\n"
+      }
+    },
+    {
+      "check_id": "control_publish_readiness_path",
+      "label": "Control publish-readiness path",
+      "method": "GET",
+      "path": "/api/control/sites/1/publish-readiness",
+      "status": "failed",
+      "duration_ms": 346,
+      "http_status": 422,
+      "message": "http_422",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://anu-back-end.vercel.app/api/control/sites/1/publish-readiness",
+        "response_preview": "{\"msg\":\"Not enough segments\"}\n"
+      }
+    },
+    {
+      "check_id": "control_operator_assignments_api_availability",
+      "label": "Control operator assignment API availability",
+      "method": "GET",
+      "path": "/api/control/sites/1/operator-assignments",
+      "status": "failed",
+      "duration_ms": 334,
+      "http_status": 422,
+      "message": "http_422",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://anu-back-end.vercel.app/api/control/sites/1/operator-assignments",
+        "response_preview": "{\"msg\":\"Not enough segments\"}\n"
+      }
+    },
+    {
+      "check_id": "control_domain_bindings_api_availability",
+      "label": "Control domain bindings API availability",
+      "method": "GET",
+      "path": "/api/control/sites/1/domain-bindings",
+      "status": "failed",
+      "duration_ms": 322,
+      "http_status": 422,
+      "message": "http_422",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://anu-back-end.vercel.app/api/control/sites/1/domain-bindings",
+        "response_preview": "{\"msg\":\"Not enough segments\"}\n"
+      }
+    },
+    {
+      "check_id": "control_bootstrap_api_availability",
+      "label": "Control bootstrap API availability",
+      "method": "POST",
+      "path": "/api/control/sites/bootstrap",
+      "status": "passed",
+      "duration_ms": 332,
+      "http_status": 422,
+      "message": "http_422",
+      "details": {
+        "expected_statuses": [
+          400,
+          422
+        ],
+        "target_url": "https://anu-back-end.vercel.app/api/control/sites/bootstrap"
+      }
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "passed": 1,
+    "failed": 8,
+    "skipped": 0,
+    "all_passed": false
+  },
+  "launch_readiness_claim": null,
+  "conclusion": "not-set-by-smoke"
+}

@@ -430,9 +430,142 @@ GET /public/archive/records?title_prefix=%20%20Alpha%20%20%20Trust%20%20&page=1&
 - workflow safety note:
   - automation captures observed results and inferred status only; milestone acceptance conclusions remain human-authored.
 
+### Evidence snapshot (ANU-LAUNCH-001 release-candidate smoke verification, 2026-04-16)
+- smoke/evidence focused test suites:
+  - `python -m unittest scripts.tests.test_launch_rc_smoke -v` (3 tests passed),
+  - `python -m unittest scripts.tests.test_capture_milestone_evidence -v` (6 tests passed),
+- generated artifact bundle:
+  - `docs/program/evidence/anu-launch-001/anu-launch-001-rc-smoke/evidence.json`
+  - `docs/program/evidence/anu-launch-001/anu-launch-001-rc-smoke/evidence.md`
+  - `docs/program/evidence/anu-launch-001/anu-launch-001-rc-smoke/launch_smoke.json`
+  - `docs/program/evidence/anu-launch-001/anu-launch-001-rc-smoke/launch_smoke.md`
+- implementation references:
+  - `scripts/launch_rc_smoke.py`
+  - `scripts/capture_milestone_evidence.py`
+  - `scripts/tests/test_launch_rc_smoke.py`
+  - `scripts/tests/test_capture_milestone_evidence.py`
+  - `docs/program/EVIDENCE_AUTOMATION_SPEC_2026-04-14.md`
+- contract posture:
+  - smoke output distinguishes `passed`/`failed`/`skipped` checks explicitly.
+  - smoke layer does not auto-claim launch readiness (`launch_readiness_claim` remains null).
+  - this is release-candidate smoke coverage, not a full QA or CI/CD redesign.
+
+### Evidence snapshot (ANU-LAUNCH-002 hosted RC smoke + attachments, 2026-04-16)
+- hosted smoke/evidence focused test suites:
+  - `python -m unittest scripts.tests.test_launch_rc_hosted_smoke -v` (3 tests passed),
+  - `python -m unittest scripts.tests.test_capture_milestone_evidence -v` (7 tests passed),
+- generated artifact bundle:
+  - `docs/program/evidence/anu-launch-002/anu-launch-002-proof/evidence.json`
+  - `docs/program/evidence/anu-launch-002/anu-launch-002-proof/evidence.md`
+  - `docs/program/evidence/anu-launch-002/anu-launch-002-proof/hosted_launch_smoke.json`
+  - `docs/program/evidence/anu-launch-002/anu-launch-002-proof/hosted_launch_smoke.md`
+  - `docs/program/evidence/anu-launch-002/anu-launch-002-proof/attachments.json`
+- implementation references:
+  - `scripts/launch_rc_hosted_smoke.py`
+  - `scripts/capture_milestone_evidence.py`
+  - `scripts/tests/test_launch_rc_hosted_smoke.py`
+  - `scripts/tests/test_capture_milestone_evidence.py`
+  - `docs/program/EVIDENCE_AUTOMATION_SPEC_2026-04-14.md`
+- contract posture:
+  - hosted smoke output preserves explicit `passed`/`failed`/`skipped` states with no coercion.
+  - `attachments.json` captures screenshot refs, optional recording refs, and operator notes only.
+  - launch readiness remains human-owned (`launch_readiness_claim` remains null).
+  - this is hosted release-candidate evidence capture, not a CI/CD or full browser-E2E redesign.
+
+### Evidence snapshot (ANU-LAUNCH-003 hosted preflight + runbook enforcement, 2026-04-16)
+- hosted preflight/evidence focused test suites:
+  - `python -m unittest scripts.tests.test_launch_rc_hosted_preflight -v` (5 tests passed),
+  - `python -m unittest scripts.tests.test_launch_rc_hosted_smoke -v` (3 tests passed),
+  - `python -m unittest scripts.tests.test_capture_milestone_evidence -v` (8 tests passed),
+  - `python -m unittest scripts.tests.test_launch_rc_smoke -v` (3 tests passed),
+- generated artifact bundle:
+  - `docs/program/evidence/anu-launch-003/anu-launch-003-proof/evidence.json`
+  - `docs/program/evidence/anu-launch-003/anu-launch-003-proof/evidence.md`
+  - `docs/program/evidence/anu-launch-003/anu-launch-003-proof/hosted_preflight.json`
+  - `docs/program/evidence/anu-launch-003/anu-launch-003-proof/hosted_preflight.md`
+  - `docs/program/evidence/anu-launch-003/anu-launch-003-proof/hosted_launch_smoke.json`
+  - `docs/program/evidence/anu-launch-003/anu-launch-003-proof/hosted_launch_smoke.md`
+  - `docs/program/evidence/anu-launch-003/anu-launch-003-proof/attachments.json`
+  - `docs/program/evidence/anu-launch-003/anu-launch-003-proof/attachment_validation.json`
+  - `docs/program/evidence/anu-launch-003/anu-launch-003-proof/attachment_validation.md`
+  - `docs/program/evidence/anu-launch-003/anu-launch-003-proof/operator_runbook.md`
+- implementation references:
+  - `scripts/launch_rc_hosted_preflight.py`
+  - `scripts/capture_milestone_evidence.py`
+  - `scripts/tests/test_launch_rc_hosted_preflight.py`
+  - `scripts/tests/test_launch_rc_hosted_smoke.py`
+  - `scripts/tests/test_capture_milestone_evidence.py`
+  - `docs/program/EVIDENCE_AUTOMATION_SPEC_2026-04-14.md`
+- contract posture:
+  - preflight statuses distinguish `valid` / `invalid` / `missing` / `skipped-by-mode`.
+  - invalid or missing required hosted inputs fail preflight before hosted smoke execution.
+  - attachment validation reports existing/missing/invalid references honestly.
+  - launch readiness remains human-owned (`launch_readiness_claim` remains null).
+
+### Evidence snapshot (ANU-LAUNCH-004 real hosted proof capture pass, 2026-04-16)
+- hosted proof/evidence focused test suites:
+  - `python -m unittest scripts.tests.test_launch_rc_hosted_preflight -v` (5 tests passed),
+  - `python -m unittest scripts.tests.test_launch_rc_hosted_smoke -v` (3 tests passed),
+  - `python -m unittest scripts.tests.test_capture_milestone_evidence -v` (9 tests passed),
+- generated artifact bundle:
+  - `docs/program/evidence/anu-launch-004/anu-launch-004-proof/evidence.json`
+  - `docs/program/evidence/anu-launch-004/anu-launch-004-proof/evidence.md`
+  - `docs/program/evidence/anu-launch-004/anu-launch-004-proof/hosted_preflight.json`
+  - `docs/program/evidence/anu-launch-004/anu-launch-004-proof/hosted_preflight.md`
+  - `docs/program/evidence/anu-launch-004/anu-launch-004-proof/hosted_launch_smoke.json`
+  - `docs/program/evidence/anu-launch-004/anu-launch-004-proof/hosted_launch_smoke.md`
+  - `docs/program/evidence/anu-launch-004/anu-launch-004-proof/attachments.json`
+  - `docs/program/evidence/anu-launch-004/anu-launch-004-proof/attachment_validation.json`
+  - `docs/program/evidence/anu-launch-004/anu-launch-004-proof/attachment_validation.md`
+  - `docs/program/evidence/anu-launch-004/anu-launch-004-proof/operator_runbook.md`
+  - `docs/program/evidence/anu-launch-004/anu-launch-004-proof/attachments/*.png` (real hosted captures)
+- implementation references:
+  - `scripts/capture_milestone_evidence.py` (`--allow-existing-bundle-dir` for deterministic in-place regeneration)
+  - `scripts/tests/test_capture_milestone_evidence.py`
+- contract posture:
+  - hosted preflight executed with `include_control_checks=true` and `valid_for_execution=true`.
+  - attachment validation confirms referenced screenshot files exist (`valid=7`, `missing=0`, `invalid=0`).
+  - hosted smoke preserves real failed states (`503` public routes, `422` control read routes) with no coercion.
+  - launch readiness remains human-owned (`launch_readiness_claim` remains null).
+
 ### Remaining M5 evidence items
-- hosted screenshot artifact for public-host vs control-host isolation (`/control/*`) is still operational-evidence pending.
 - hosted recording artifact for flagship journey walk-through is still operational-evidence pending.
+- valid hosted control credential issuance path for control read checks remains operational-evidence pending.
 
+### Status refresh (ANU-LAUNCH-004A, 2026-04-17)
+- rerun hardening landed for hosted control secret-header support:
+  - `scripts/launch_rc_hosted_smoke.py`
+  - `scripts/capture_milestone_evidence.py`
+  - `scripts/tests/test_launch_rc_hosted_smoke.py`
+- focused verification remained green:
+  - `python -m unittest scripts.tests.test_launch_rc_hosted_preflight -v` (5 passed)
+  - `python -m unittest scripts.tests.test_launch_rc_hosted_smoke -v` (4 passed)
+  - `python -m unittest scripts.tests.test_capture_milestone_evidence -v` (9 passed)
+- ANU-LAUNCH-004A is explicitly bookmarked as blocked until `2026-04-18` pending:
+  - valid hosted control auth token,
+  - control-plane secret header if enforced by deployment,
+  - tomorrow target/domain verification.
+- deterministic hosted bundle rerun with valid control token remains deferred; existing `anu-launch-004-proof` artifacts remain the latest 004/004A bundle.
 
-
+### Evidence snapshot (ANU-LAUNCH-005 hosted public-route diagnosis + resilience hardening, 2026-04-17)
+- focused diagnosis/evidence test suites:
+  - `python -m unittest scripts.tests.test_launch_rc_hosted_route_diagnosis -v` (3 tests passed),
+  - `python -m unittest scripts.tests.test_capture_milestone_evidence -v` (10 tests passed),
+  - `python -m unittest scripts.tests.test_launch_rc_hosted_preflight -v` (5 tests passed),
+  - `python -m unittest scripts.tests.test_launch_rc_hosted_smoke -v` (4 tests passed),
+- generated artifact bundle:
+  - `docs/program/evidence/anu-launch-005/anu-launch-005-proof/evidence.json`
+  - `docs/program/evidence/anu-launch-005/anu-launch-005-proof/evidence.md`
+  - `docs/program/evidence/anu-launch-005/anu-launch-005-proof/hosted_route_diagnosis.json`
+  - `docs/program/evidence/anu-launch-005/anu-launch-005-proof/hosted_route_diagnosis.md`
+- implementation references:
+  - `scripts/launch_rc_hosted_route_diagnosis.py`
+  - `scripts/capture_milestone_evidence.py`
+  - `scripts/tests/test_launch_rc_hosted_route_diagnosis.py`
+  - `scripts/tests/test_capture_milestone_evidence.py`
+  - `docs/program/EVIDENCE_AUTOMATION_SPEC_2026-04-14.md`
+- diagnosis posture:
+  - public-route outcomes are classified deterministically (`dns`/`transport`/`timeout`/`http_4xx`/`http_5xx`/`invalid_payload`/`success`/`skipped_not_configured`/`http_other`),
+  - current hosted run captured four public-route failures as `http_5xx` (`503`) with request IDs recorded per route,
+  - public surface is marked `degraded` with explicit `degraded_reason_categories`,
+  - launch readiness remains human-owned (`launch_readiness_claim` remains null).

@@ -1,0 +1,42 @@
+{
+  "contract_version": "anu-launch-attachment-validation.v1",
+  "generated_at": "2026-04-16T12:00:00+00:00",
+  "checks": [
+    {
+      "id": "screenshot-1",
+      "kind": "screenshot",
+      "path": "attachments/public-archive-list.png",
+      "status": "missing",
+      "message": "attachment file missing"
+    },
+    {
+      "id": "screenshot-2",
+      "kind": "screenshot",
+      "path": "attachments/public-trust-decisions.png",
+      "status": "missing",
+      "message": "attachment file missing"
+    },
+    {
+      "id": "recording-1",
+      "kind": "recording",
+      "path": "attachments/hosted-smoke-walkthrough.mp4",
+      "status": "missing",
+      "message": "attachment file missing"
+    }
+  ],
+  "operator_notes": {
+    "status": "valid",
+    "notes_count": 1,
+    "message": "operator notes present"
+  },
+  "summary": {
+    "total": 3,
+    "valid": 0,
+    "invalid": 0,
+    "missing": 3,
+    "screenshots_total": 2,
+    "recordings_total": 1
+  },
+  "launch_readiness_claim": null,
+  "conclusion": "not-set-by-attachment-validation"
+}

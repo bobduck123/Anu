@@ -1,0 +1,151 @@
+{
+  "artifact_version": "anu-evidence.v1",
+  "milestone_or_slice": "ANU-LAUNCH-003",
+  "generated_at": "2026-04-16T12:00:00+00:00",
+  "environment_note": null,
+  "git_revision": {
+    "commit_sha": "c97bca5c1f04ebe5defea35cb9e1a74ba5cb8fa9",
+    "short_sha": "c97bca5",
+    "branch": "main"
+  },
+  "commands_run": [
+    "python -m unittest scripts.tests.test_launch_rc_hosted_preflight -v"
+  ],
+  "results": [
+    {
+      "command": "python -m unittest scripts.tests.test_launch_rc_hosted_preflight -v",
+      "category": "test",
+      "started_at": "2026-04-16T09:47:08.934178+00:00",
+      "finished_at": "2026-04-16T09:47:09.002710+00:00",
+      "duration_ms": 68,
+      "exit_code": 0,
+      "status": "passed",
+      "stdout": "",
+      "stderr": "test_attachment_validator_detects_missing_files (scripts.tests.test_launch_rc_hosted_preflight.LaunchRcHostedPreflightTests.test_attachment_validator_detects_missing_files) ... ok\ntest_invalid_and_missing_inputs_fail_preflight (scripts.tests.test_launch_rc_hosted_preflight.LaunchRcHostedPreflightTests.test_invalid_and_missing_inputs_fail_preflight) ... ok\ntest_preflight_markdown_includes_statuses (scripts.tests.test_launch_rc_hosted_preflight.LaunchRcHostedPreflightTests.test_preflight_markdown_includes_statuses) ... ok\ntest_required_hosted_inputs_validate_correctly (scripts.tests.test_launch_rc_hosted_preflight.LaunchRcHostedPreflightTests.test_required_hosted_inputs_validate_correctly) ... ok\ntest_skipped_by_mode_inputs_are_represented_honestly (scripts.tests.test_launch_rc_hosted_preflight.LaunchRcHostedPreflightTests.test_skipped_by_mode_inputs_are_represented_honestly) ... ok\n\n----------------------------------------------------------------------\nRan 5 tests in 0.002s\n\nOK\n"
+    }
+  ],
+  "changed_files": [
+    "scripts/capture_milestone_evidence.py",
+    "scripts/launch_rc_hosted_preflight.py",
+    "scripts/tests/test_capture_milestone_evidence.py",
+    "scripts/tests/test_launch_rc_hosted_preflight.py"
+  ],
+  "targeted_tests_summary": {
+    "command_count": 1,
+    "category_counts": {
+      "test": 1,
+      "typecheck": 0,
+      "build": 0
+    },
+    "passed_count": 1,
+    "failed_count": 0
+  },
+  "typecheck_build_summary": {
+    "typecheck_commands": [],
+    "build_commands": []
+  },
+  "open_risks": [
+    "Hosted smoke/attachments still rely on operator-provided targets and files."
+  ],
+  "source_docs_referenced": [
+    "docs/program/EVIDENCE_AUTOMATION_SPEC_2026-04-14.md",
+    "docs/program/MILESTONE_ACCEPTANCE_PACK_2026-04-07.md",
+    "docs/program/M5_COMPLETION_REPORT.md"
+  ],
+  "observed": {
+    "commands_run": [
+      "python -m unittest scripts.tests.test_launch_rc_hosted_preflight -v"
+    ],
+    "command_results_count": 1,
+    "changed_files_count": 4
+  },
+  "inferred": {
+    "all_commands_succeeded": true,
+    "failed_command_count": 0,
+    "targeted_tests_summary": {
+      "command_count": 1,
+      "category_counts": {
+        "test": 1,
+        "typecheck": 0,
+        "build": 0
+      },
+      "passed_count": 1,
+      "failed_count": 0
+    }
+  },
+  "human_narrative": {
+    "notes": [
+      "ANU-LAUNCH-003 enforces hosted preflight and attachment validation without auto-approval."
+    ],
+    "completion_claim": null,
+    "conclusion": "not-set-by-automation"
+  },
+  "hosted_preflight": {
+    "json_artifact": "hosted_preflight.json",
+    "markdown_artifact": "hosted_preflight.md",
+    "summary": {
+      "total": 6,
+      "valid": 3,
+      "invalid": 0,
+      "missing": 0,
+      "skipped_by_mode": 3,
+      "valid_for_execution": true
+    },
+    "blocking_fields": [],
+    "launch_readiness_claim": null
+  },
+  "hosted_launch_smoke": {
+    "json_artifact": "hosted_launch_smoke.json",
+    "markdown_artifact": "hosted_launch_smoke.md",
+    "summary": {
+      "total": 9,
+      "passed": 0,
+      "failed": 4,
+      "skipped": 5,
+      "all_passed": false
+    },
+    "target_metadata": {
+      "runtime": "hosted-http",
+      "public_base_url": "https://example.com",
+      "public_host_for_resolution": "partner.example.com",
+      "archive_record_slug": "sample-record",
+      "control_base_url": null,
+      "control_site_id": null,
+      "control_auth_header_configured": false,
+      "include_control_checks": false,
+      "include_bootstrap_mutation": false,
+      "timeout_seconds": 12
+    },
+    "launch_readiness_claim": null
+  },
+  "attachments": {
+    "manifest_artifact": "attachments.json",
+    "attachments_dir": "attachments",
+    "summary": {
+      "screenshots_count": 2,
+      "recordings_count": 1,
+      "operator_notes_count": 1
+    }
+  },
+  "attachment_validation": {
+    "json_artifact": "attachment_validation.json",
+    "markdown_artifact": "attachment_validation.md",
+    "summary": {
+      "total": 3,
+      "valid": 0,
+      "invalid": 0,
+      "missing": 3,
+      "screenshots_total": 2,
+      "recordings_total": 1
+    },
+    "operator_notes": {
+      "status": "valid",
+      "notes_count": 1,
+      "message": "operator notes present"
+    },
+    "launch_readiness_claim": null
+  },
+  "operator_runbook": {
+    "markdown_artifact": "operator_runbook.md"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "contract_version": "anu-launch-attachments.v1",
+  "generated_at": "2026-04-16T12:00:00+00:00",
+  "attachments_dir": "attachments",
+  "screenshots": [
+    {
+      "id": "screenshot-1",
+      "kind": "screenshot",
+      "path": "attachments/public-archive-list.png",
+      "filename": "public-archive-list.png"
+    },
+    {
+      "id": "screenshot-2",
+      "kind": "screenshot",
+      "path": "attachments/public-trust-decisions.png",
+      "filename": "public-trust-decisions.png"
+    }
+  ],
+  "recordings": [
+    {
+      "id": "recording-1",
+      "kind": "recording",
+      "path": "attachments/hosted-smoke-walkthrough.mp4",
+      "filename": "hosted-smoke-walkthrough.mp4"
+    }
+  ],
+  "operator_notes": [
+    "Operator note placeholder for bundle-shape proof."
+  ],
+  "summary": {
+    "screenshots_count": 2,
+    "recordings_count": 1,
+    "operator_notes_count": 1
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "contract_version": "anu-launch-attachments.v1",
+  "generated_at": "2026-04-16T10:56:18.983206+00:00",
+  "attachments_dir": "attachments",
+  "screenshots": [
+    {
+      "id": "screenshot-1",
+      "kind": "screenshot",
+      "path": "attachments/public-archive-list-route.png",
+      "filename": "public-archive-list-route.png"
+    },
+    {
+      "id": "screenshot-2",
+      "kind": "screenshot",
+      "path": "attachments/public-archive-record-detail-route.png",
+      "filename": "public-archive-record-detail-route.png"
+    },
+    {
+      "id": "screenshot-3",
+      "kind": "screenshot",
+      "path": "attachments/public-trust-decisions-route.png",
+      "filename": "public-trust-decisions-route.png"
+    },
+    {
+      "id": "screenshot-4",
+      "kind": "screenshot",
+      "path": "attachments/white-label-public-host-resolution.png",
+      "filename": "white-label-public-host-resolution.png"
+    },
+    {
+      "id": "screenshot-5",
+      "kind": "screenshot",
+      "path": "attachments/control-manifest-authoring-read-path.png",
+      "filename": "control-manifest-authoring-read-path.png"
+    },
+    {
+      "id": "screenshot-6",
+      "kind": "screenshot",
+      "path": "attachments/control-publish-readiness-path.png",
+      "filename": "control-publish-readiness-path.png"
+    },
+    {
+      "id": "screenshot-7",
+      "kind": "screenshot",
+      "path": "attachments/control-bootstrap-api-availability.png",
+      "filename": "control-bootstrap-api-availability.png"
+    }
+  ],
+  "recordings": [],
+  "operator_notes": [
+    "Hosted ANU-LAUNCH-004 run executed against deployed targets with control checks enabled; backend endpoints currently returning service-unavailable/unauthorized statuses.",
+    "No recording file was captured in this run; screenshots are attached as direct file references."
+  ],
+  "summary": {
+    "screenshots_count": 7,
+    "recordings_count": 0,
+    "operator_notes_count": 2
+  }
+}

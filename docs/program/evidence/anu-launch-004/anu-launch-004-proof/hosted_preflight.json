@@ -1,0 +1,62 @@
+{
+  "contract_version": "anu-launch-preflight.v1",
+  "generated_at": "2026-04-16T10:56:18.983206+00:00",
+  "mode": {
+    "include_control_checks": true
+  },
+  "checks": [
+    {
+      "field": "public_base_url",
+      "required": true,
+      "status": "valid",
+      "message": "configured",
+      "value_preview": "https://anu-back-end.vercel.app"
+    },
+    {
+      "field": "public_host_for_resolution",
+      "required": true,
+      "status": "valid",
+      "message": "configured",
+      "value_preview": "maanara.vercel.app"
+    },
+    {
+      "field": "archive_record_slug",
+      "required": true,
+      "status": "valid",
+      "message": "configured",
+      "value_preview": "manara-record"
+    },
+    {
+      "field": "control_base_url",
+      "required": true,
+      "status": "valid",
+      "message": "configured",
+      "value_preview": "https://anu-back-end.vercel.app"
+    },
+    {
+      "field": "control_site_id",
+      "required": true,
+      "status": "valid",
+      "message": "configured",
+      "value_preview": "1"
+    },
+    {
+      "field": "control_auth_source",
+      "required": true,
+      "status": "valid",
+      "message": "configured",
+      "value_preview": "direct_header"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "valid": 6,
+    "invalid": 0,
+    "missing": 0,
+    "skipped_by_mode": 0,
+    "valid_for_execution": true
+  },
+  "blocking_fields": [],
+  "launch_readiness_claim": null,
+  "conclusion": "not-set-by-preflight"
+}

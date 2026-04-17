@@ -1,0 +1,164 @@
+{
+  "contract_version": "anu-launch-smoke-hosted.v1",
+  "generated_at": "2026-04-16T11:05:00+00:00",
+  "environment": {
+    "runtime": "hosted-http",
+    "public_base_url": "https://example.com",
+    "public_host_for_resolution": "partner.example.com",
+    "archive_record_slug": "sample-record",
+    "control_base_url": null,
+    "control_site_id": null,
+    "control_auth_header_configured": false,
+    "include_control_checks": false,
+    "include_bootstrap_mutation": false,
+    "timeout_seconds": 12
+  },
+  "checks": [
+    {
+      "check_id": "public_archive_list_route",
+      "label": "Public archive list route",
+      "method": "GET",
+      "path": "/public/archive/records?page=1&page_size=5",
+      "status": "failed",
+      "duration_ms": 137,
+      "http_status": null,
+      "message": "request_failed: <urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://example.com/public/archive/records?page=1&page_size=5",
+        "response_preview": "",
+        "request_error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+      }
+    },
+    {
+      "check_id": "public_archive_record_detail_route",
+      "label": "Public archive record detail route",
+      "method": "GET",
+      "path": "/public/archive-handoffs/sample-record",
+      "status": "failed",
+      "duration_ms": 17,
+      "http_status": null,
+      "message": "request_failed: <urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://example.com/public/archive-handoffs/sample-record",
+        "response_preview": "",
+        "request_error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+      }
+    },
+    {
+      "check_id": "public_trust_decisions_route",
+      "label": "Public trust decisions route",
+      "method": "GET",
+      "path": "/public/trust/decisions?limit=5",
+      "status": "failed",
+      "duration_ms": 31,
+      "http_status": null,
+      "message": "request_failed: <urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://example.com/public/trust/decisions?limit=5",
+        "response_preview": "",
+        "request_error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+      }
+    },
+    {
+      "check_id": "white_label_public_host_resolution",
+      "label": "White-label public host resolution",
+      "method": "GET",
+      "path": "/api/public/sites/resolve?host=partner.example.com",
+      "status": "failed",
+      "duration_ms": 30,
+      "http_status": null,
+      "message": "request_failed: <urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>",
+      "details": {
+        "expected_statuses": [
+          200
+        ],
+        "target_url": "https://example.com/api/public/sites/resolve?host=partner.example.com",
+        "response_preview": "",
+        "request_error": "<urlopen error [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions>"
+      }
+    },
+    {
+      "check_id": "control_manifest_authoring_read_path",
+      "label": "Control manifest authoring read path",
+      "method": "GET",
+      "path": "/api/control/sites/<missing-site-id>/manifest-authoring",
+      "status": "skipped",
+      "duration_ms": 0,
+      "http_status": null,
+      "message": "control checks disabled/not-configured for this run",
+      "details": {
+        "skip_reason": "control checks disabled/not-configured for this run"
+      }
+    },
+    {
+      "check_id": "control_publish_readiness_path",
+      "label": "Control publish-readiness path",
+      "method": "GET",
+      "path": "/api/control/sites/<missing-site-id>/publish-readiness",
+      "status": "skipped",
+      "duration_ms": 0,
+      "http_status": null,
+      "message": "control checks disabled/not-configured for this run",
+      "details": {
+        "skip_reason": "control checks disabled/not-configured for this run"
+      }
+    },
+    {
+      "check_id": "control_operator_assignments_api_availability",
+      "label": "Control operator assignment API availability",
+      "method": "GET",
+      "path": "/api/control/sites/<missing-site-id>/operator-assignments",
+      "status": "skipped",
+      "duration_ms": 0,
+      "http_status": null,
+      "message": "control checks disabled/not-configured for this run",
+      "details": {
+        "skip_reason": "control checks disabled/not-configured for this run"
+      }
+    },
+    {
+      "check_id": "control_domain_bindings_api_availability",
+      "label": "Control domain bindings API availability",
+      "method": "GET",
+      "path": "/api/control/sites/<missing-site-id>/domain-bindings",
+      "status": "skipped",
+      "duration_ms": 0,
+      "http_status": null,
+      "message": "control checks disabled/not-configured for this run",
+      "details": {
+        "skip_reason": "control checks disabled/not-configured for this run"
+      }
+    },
+    {
+      "check_id": "control_bootstrap_api_availability",
+      "label": "Control bootstrap API availability",
+      "method": "POST",
+      "path": "/api/control/sites/bootstrap",
+      "status": "skipped",
+      "duration_ms": 0,
+      "http_status": null,
+      "message": "control checks disabled/not-configured for this run",
+      "details": {
+        "skip_reason": "control checks disabled/not-configured for this run"
+      }
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "passed": 0,
+    "failed": 4,
+    "skipped": 5,
+    "all_passed": false
+  },
+  "launch_readiness_claim": null,
+  "conclusion": "not-set-by-smoke"
+}
