@@ -19,6 +19,17 @@ from .utils import ok, error
 wcle_bp = Blueprint("wcle", __name__, url_prefix="/wcle")
 
 
+def _wcle_error_response(exc: ValueError):
+    if isinstance(exc, wcle_service.WCLEValidationError):
+        return error(
+            exc.code,
+            str(exc),
+            status=exc.status,
+            details=exc.details,
+        )
+    return error("validation", str(exc), status=422)
+
+
 # ---------------------------------------------------------------------------
 # Runs
 # ---------------------------------------------------------------------------
@@ -129,7 +140,7 @@ def create_run():
             microcosm_id=body.get("microcosm_id"),
         )
     except ValueError as e:
-        return error("validation", str(e), status=422)
+        return _wcle_error_response(e)
 
     return ok(run.to_dict(), status=201)
 
@@ -180,7 +191,7 @@ def open_run(run_id):
     try:
         run = wcle_service.open_run(run_id)
     except ValueError as e:
-        return error("validation", str(e), status=422)
+        return _wcle_error_response(e)
     return ok(run.to_dict())
 
 
@@ -196,7 +207,7 @@ def close_run(run_id):
     try:
         run = wcle_service.close_run(run_id)
     except ValueError as e:
-        return error("validation", str(e), status=422)
+        return _wcle_error_response(e)
     return ok(run.to_dict())
 
 
@@ -212,7 +223,7 @@ def execute_run(run_id):
     try:
         run = wcle_service.execute_run(run_id)
     except ValueError as e:
-        return error("validation", str(e), status=422)
+        return _wcle_error_response(e)
     return ok(run.to_dict())
 
 
@@ -232,7 +243,7 @@ def complete_run(run_id):
             bulk_actual_total_cents=body.get("bulk_actual_total_cents"),
         )
     except ValueError as e:
-        return error("validation", str(e), status=422)
+        return _wcle_error_response(e)
     return ok(run.to_dict())
 
 
@@ -248,7 +259,7 @@ def cancel_run(run_id):
     try:
         run = wcle_service.cancel_run(run_id)
     except ValueError as e:
-        return error("validation", str(e), status=422)
+        return _wcle_error_response(e)
     return ok(run.to_dict())
 
 
@@ -340,7 +351,7 @@ def create_pack(run_id):
             waste_buffer_bps=body.get("waste_buffer_bps", 500),
         )
     except ValueError as e:
-        return error("validation", str(e), status=422)
+        return _wcle_error_response(e)
     return ok(pack.to_dict(), status=201)
 
 
@@ -354,7 +365,7 @@ def update_pack(pack_id):
     try:
         pack = wcle_service.update_pack(pack_id, **body)
     except ValueError as e:
-        return error("validation", str(e), status=422)
+        return _wcle_error_response(e)
     return ok(pack.to_dict())
 
 
@@ -388,7 +399,7 @@ def create_pledge(run_id):
             custom_items=body.get("custom_items"),
         )
     except ValueError as e:
-        return error("validation", str(e), status=422)
+        return _wcle_error_response(e)
     return ok(pledge.to_dict(), status=201)
 
 
@@ -404,7 +415,7 @@ def confirm_pledge(pledge_id):
     try:
         pledge = wcle_service.confirm_pledge(pledge_id)
     except ValueError as e:
-        return error("validation", str(e), status=422)
+        return _wcle_error_response(e)
     return ok(pledge.to_dict())
 
 
@@ -420,7 +431,7 @@ def cancel_pledge(pledge_id):
     try:
         pledge = wcle_service.cancel_pledge(pledge_id)
     except ValueError as e:
-        return error("validation", str(e), status=422)
+        return _wcle_error_response(e)
     return ok(pledge.to_dict())
 
 
@@ -431,7 +442,7 @@ def fulfil_pledge(pledge_id):
     try:
         pledge = wcle_service.mark_pledge_fulfilled(pledge_id)
     except ValueError as e:
-        return error("validation", str(e), status=422)
+        return _wcle_error_response(e)
     return ok(pledge.to_dict())
 
 
@@ -442,7 +453,7 @@ def no_show_pledge(pledge_id):
     try:
         pledge = wcle_service.mark_pledge_no_show(pledge_id)
     except ValueError as e:
-        return error("validation", str(e), status=422)
+        return _wcle_error_response(e)
     return ok(pledge.to_dict())
 
 
@@ -492,7 +503,7 @@ def create_receipt(run_id):
             receipt_meta=body.get("receipt_meta"),
         )
     except ValueError as e:
-        return error("validation", str(e), status=422)
+        return _wcle_error_response(e)
     return ok(receipt.to_dict(), status=201)
 
 
@@ -532,7 +543,7 @@ def create_baseline_price():
             source_note=body.get("source_note"),
         )
     except ValueError as e:
-        return error("validation", str(e), status=422)
+        return _wcle_error_response(e)
     return ok(price.to_dict(), status=201)
 
 

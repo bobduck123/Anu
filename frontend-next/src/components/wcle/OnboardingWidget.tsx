@@ -1,59 +1,99 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 interface EstimateResult {
-  weeklyRange: [number, number]; // [low, high] in dollars
+  weeklyRange: [number, number];
+  annualRange: [number, number];
 }
 
-function estimateSavings(householdSize: number, weeklyGrocery: number): EstimateResult {
-  // Conservative estimate: 25-40% savings on the bulk portion
-  // Assume ~60% of grocery spend can go through bulk runs
-  const bulkable = weeklyGrocery * 0.6;
-  const low = bulkable * 0.25;
-  const high = bulkable * 0.40;
-  return { weeklyRange: [Math.round(low), Math.round(high)] };
+const scopeProfiles: Record<string, { captureRate: number; lowGain: number; highGain: number }> = {
+  groceries: { captureRate: 0.6, lowGain: 0.25, highGain: 0.4 },
+  household: { captureRate: 0.5, lowGain: 0.18, highGain: 0.32 },
+  energy: { captureRate: 0.45, lowGain: 0.12, highGain: 0.24 },
+  mobility: { captureRate: 0.4, lowGain: 0.1, highGain: 0.2 },
+};
+
+function estimateSavings(scope: string, weeklySpend: number, commitmentLevel: number): EstimateResult {
+  const profile = scopeProfiles[scope] || scopeProfiles.groceries;
+  const commitmentMultiplier = commitmentLevel / 100;
+
+  const eligibleSpend = weeklySpend * profile.captureRate * commitmentMultiplier;
+  const low = Math.round(eligibleSpend * profile.lowGain);
+  const high = Math.round(eligibleSpend * profile.highGain);
+
+  return {
+    weeklyRange: [low, high],
+    annualRange: [low * 52, high * 52],
+  };
 }
 
 export function OnboardingWidget() {
+  const [scope, setScope] = useState('groceries');
   const [postcode, setPostcode] = useState('');
+  const [weeklySpend, setWeeklySpend] = useState(180);
+  const [commitmentLevel, setCommitmentLevel] = useState(70);
   const [householdSize, setHouseholdSize] = useState(2);
-  const [weeklyGrocery, setWeeklyGrocery] = useState(150);
-  const [diet, setDiet] = useState('mixed');
   const [result, setResult] = useState<EstimateResult | null>(null);
 
+  const scopeHint = useMemo(() => {
+    if (scope === 'energy') return 'Energy scenarios usually have lower weekly variance but stronger long-term impact.';
+    if (scope === 'mobility') return 'Mobility scenarios often depend on route and timing constraints.';
+    if (scope === 'household') return 'Household essentials tend to produce consistent repeat savings.';
+    return 'Groceries generally have the widest short-term savings spread.';
+  }, [scope]);
+
   function handleEstimate() {
-    const est = estimateSavings(householdSize, weeklyGrocery);
-    setResult(est);
+    setResult(estimateSavings(scope, weeklySpend, commitmentLevel));
   }
 
   return (
-    <div className="bg-[#665700] border border-[#665700] rounded-xl p-6">
-      <h3 className="text-lg font-semibold text-[#1e0227] mb-1">
-        How much could you save?
-      </h3>
-      <p className="text-sm text-[#7c413c] mb-4">
-        Tell us about your household and we&apos;ll estimate your weekly savings.
+    <div className="card-civic border border-[color:rgba(246,212,203,0.16)]">
+      <p className="text-xs uppercase tracking-[0.18em] text-[color:rgba(246,212,203,0.64)]">Scenario setup</p>
+      <h3 className="text-lg font-semibold text-[var(--color-foreground)] mt-2 mb-1">Estimate your optimization potential</h3>
+      <p className="text-sm text-[color:rgba(246,212,203,0.74)] mb-4">
+        Define your scope and constraints. This estimate helps compare options before committing.
       </p>
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
         <div>
-          <label className="block text-xs text-[#1e0227] mb-1">Postcode</label>
+          <label className="block text-xs text-[color:rgba(246,212,203,0.72)] mb-1">Optimization scope</label>
+          <select
+            value={scope}
+            onChange={(e) => setScope(e.target.value)}
+            className="input-civic w-full"
+          >
+            <option value="groceries">Groceries</option>
+            <option value="household">Household essentials</option>
+            <option value="energy">Energy</option>
+            <option value="mobility">Mobility</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs text-[color:rgba(246,212,203,0.72)] mb-1">Postcode</label>
           <input
             type="text"
             value={postcode}
             onChange={(e) => setPostcode(e.target.value)}
             placeholder="2042"
-            className="w-full border border-[#7c413c] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-[#665700]"
+            className="input-civic w-full"
           />
         </div>
+
         <div>
-          <label className="block text-xs text-[#1e0227] mb-1">Household size</label>
-          <select
-            value={householdSize}
-            onChange={(e) => setHouseholdSize(Number(e.target.value))}
-            className="w-full border border-[#7c413c] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-[#665700]"
-          >
+          <label className="block text-xs text-[color:rgba(246,212,203,0.72)] mb-1">Current weekly spend ($)</label>
+          <input
+            type="number"
+            value={weeklySpend}
+            onChange={(e) => setWeeklySpend(Number(e.target.value || 0))}
+            className="input-civic w-full"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs text-[color:rgba(246,212,203,0.72)] mb-1">Household size</label>
+          <select value={householdSize} onChange={(e) => setHouseholdSize(Number(e.target.value))} className="input-civic w-full">
             <option value={1}>1 person</option>
             <option value={2}>2 people</option>
             <option value={3}>3 people</option>
@@ -61,47 +101,37 @@ export function OnboardingWidget() {
             <option value={5}>5+ people</option>
           </select>
         </div>
-        <div>
-          <label className="block text-xs text-[#1e0227] mb-1">Weekly grocery ($)</label>
-          <input
-            type="number"
-            value={weeklyGrocery}
-            onChange={(e) => setWeeklyGrocery(Number(e.target.value))}
-            className="w-full border border-[#7c413c] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-[#665700]"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-[#1e0227] mb-1">Diet preference</label>
-          <select
-            value={diet}
-            onChange={(e) => setDiet(e.target.value)}
-            className="w-full border border-[#7c413c] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-[#665700]"
-          >
-            <option value="mixed">Mixed (meat + veg)</option>
-            <option value="vegetarian">Vegetarian</option>
-            <option value="vegan">Vegan</option>
-          </select>
-        </div>
       </div>
 
-      <button
-        onClick={handleEstimate}
-        className="w-full bg-[#665700] text-[var(--color-foreground)] py-2.5 rounded-lg text-sm font-medium hover:bg-[#665700] transition-colors"
-      >
-        Estimate My Savings
+      <div className="mb-4 rounded-lg border border-[color:rgba(246,212,203,0.12)] bg-[color:rgba(246,212,203,0.04)] px-3 py-2.5">
+        <label className="block text-xs text-[color:rgba(246,212,203,0.72)] mb-1">Commitment level: {commitmentLevel}%</label>
+        <input
+          type="range"
+          min={20}
+          max={100}
+          step={5}
+          value={commitmentLevel}
+          onChange={(e) => setCommitmentLevel(Number(e.target.value))}
+          className="w-full"
+        />
+        <p className="mt-1 text-xs text-[color:rgba(246,212,203,0.68)]">{scopeHint}</p>
+      </div>
+
+      <button onClick={handleEstimate} className="w-full btn-pill btn-pill-primary text-sm">
+        Calculate estimate
       </button>
 
-      {result && (
-        <div className="mt-4 bg-[var(--color-foreground)] border border-[#665700] rounded-lg p-4 text-center">
-          <p className="text-sm text-[#7c413c]">Estimated weekly savings</p>
+      {result ? (
+        <div className="mt-4 rounded-lg border border-[color:rgba(246,212,203,0.14)] bg-[color:rgba(30,2,39,0.36)] p-4 text-center">
+          <p className="text-sm text-[color:rgba(246,212,203,0.74)]">Estimated weekly range</p>
           <p className="text-2xl font-bold text-[#665700] mt-1">
-            ${result.weeklyRange[0]} &ndash; ${result.weeklyRange[1]}
+            ${result.weeklyRange[0]} - ${result.weeklyRange[1]}
           </p>
-          <p className="text-xs text-[#7c413c] mt-1">
-            That&apos;s ${result.weeklyRange[0] * 52} &ndash; ${result.weeklyRange[1] * 52} per year
+          <p className="text-xs text-[color:rgba(246,212,203,0.7)] mt-1">
+            Annual projection: ${result.annualRange[0]} - ${result.annualRange[1]}
           </p>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

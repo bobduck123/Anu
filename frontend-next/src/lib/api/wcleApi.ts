@@ -1,11 +1,15 @@
 /**
  * WCLE (Weekly Cost-Lowering Engine) — Phase 1 API client
  */
+import { normalizeScenarioMeta } from '@/lib/wcle/scenarioConfig';
+import type { WCLEComparisonMode, WCLEObjective, WCLEOptimizationScope, WCLEScenarioMeta } from '@/lib/wcle/scenarioConfig';
 import { apiFetch } from './client';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
+
+export type { WCLEComparisonMode, WCLEObjective, WCLEOptimizationScope, WCLEScenarioMeta } from '@/lib/wcle/scenarioConfig';
 
 export interface WCLERun {
   id: number;
@@ -35,6 +39,7 @@ export interface WCLERun {
   packs?: WCLEPack[];
   pledge_count?: number;
   organizer_username?: string | null;
+  scenario_meta?: WCLEScenarioMeta | null;
 }
 
 export interface WCLEPackItem {
@@ -137,6 +142,31 @@ export interface OrganizerPanelData {
   aggregated_quantities: AggregatedItem[];
 }
 
+function normalizeRun(run: WCLERun): WCLERun {
+  return {
+    ...run,
+    scenario_meta: normalizeScenarioMeta(run.scenario_meta),
+  };
+}
+
+function normalizeRunsResponse(response: RunsListResponse): RunsListResponse {
+  return {
+    ...response,
+    runs: (response.runs || []).map(normalizeRun),
+  };
+}
+
+function normalizeRunPayload(payload: Partial<WCLERun>): Partial<WCLERun> {
+  if (!Object.prototype.hasOwnProperty.call(payload, 'scenario_meta')) {
+    return payload;
+  }
+
+  return {
+    ...payload,
+    scenario_meta: normalizeScenarioMeta(payload.scenario_meta ?? null),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // API Functions
 // ---------------------------------------------------------------------------
@@ -150,47 +180,61 @@ export const wcleApi = {
     if (params?.status) query.set('status', params.status);
     if (params?.page) query.set('page', String(params.page));
     const qs = query.toString();
-    return apiFetch<RunsListResponse>(`/api/wcle/runs${qs ? `?${qs}` : ''}`);
+    return apiFetch<RunsListResponse>(`/api/wcle/runs${qs ? `?${qs}` : ''}`)
+      .then(normalizeRunsResponse);
   },
 
   getRun: (id: number) =>
-    apiFetch<WCLERun>(`/api/wcle/runs/${id}`),
+    apiFetch<WCLERun>(`/api/wcle/runs/${id}`)
+      .then(normalizeRun),
 
   createRun: (data: Partial<WCLERun>) =>
     apiFetch<WCLERun>('/api/wcle/runs', {
       method: 'POST',
-      body: JSON.stringify(data),
-    }),
+      body: JSON.stringify(normalizeRunPayload(data)),
+    })
+      .then(normalizeRun),
 
   updateRun: (id: number, data: Partial<WCLERun>) =>
     apiFetch<WCLERun>(`/api/wcle/runs/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify(data),
-    }),
+      body: JSON.stringify(normalizeRunPayload(data)),
+    })
+      .then(normalizeRun),
 
   openRun: (id: number) =>
-    apiFetch<WCLERun>(`/api/wcle/runs/${id}/open`, { method: 'POST' }),
+    apiFetch<WCLERun>(`/api/wcle/runs/${id}/open`, { method: 'POST' })
+      .then(normalizeRun),
 
   closeRun: (id: number) =>
-    apiFetch<WCLERun>(`/api/wcle/runs/${id}/close`, { method: 'POST' }),
+    apiFetch<WCLERun>(`/api/wcle/runs/${id}/close`, { method: 'POST' })
+      .then(normalizeRun),
 
   executeRun: (id: number) =>
-    apiFetch<WCLERun>(`/api/wcle/runs/${id}/execute`, { method: 'POST' }),
+    apiFetch<WCLERun>(`/api/wcle/runs/${id}/execute`, { method: 'POST' })
+      .then(normalizeRun),
 
   completeRun: (id: number, bulk_actual_total_cents?: number) =>
     apiFetch<WCLERun>(`/api/wcle/runs/${id}/complete`, {
       method: 'POST',
       body: JSON.stringify({ bulk_actual_total_cents }),
-    }),
+    })
+      .then(normalizeRun),
 
   cancelRun: (id: number) =>
-    apiFetch<WCLERun>(`/api/wcle/runs/${id}/cancel`, { method: 'POST' }),
+    apiFetch<WCLERun>(`/api/wcle/runs/${id}/cancel`, { method: 'POST' })
+      .then(normalizeRun),
 
   getOrganizerPanel: (id: number) =>
-    apiFetch<OrganizerPanelData>(`/api/wcle/runs/${id}/organizer`),
+    apiFetch<OrganizerPanelData>(`/api/wcle/runs/${id}/organizer`)
+      .then((panel) => ({
+        ...panel,
+        run: normalizeRun(panel.run),
+      })),
 
   myRuns: () =>
-    apiFetch<WCLERun[]>('/api/wcle/my-runs'),
+    apiFetch<WCLERun[]>('/api/wcle/my-runs')
+      .then((runs) => runs.map(normalizeRun)),
 
   // Packs
   listPacks: (runId: number) =>

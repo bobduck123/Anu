@@ -7,6 +7,7 @@ notification triggers for Phase 1 bulk-buying runs.
 import hashlib
 import json
 from datetime import datetime
+from typing import Any
 
 from ..extensions import db
 from ..models import (
@@ -22,6 +23,117 @@ from ..models import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+class WCLEValidationError(ValueError):
+    """Structured WCLE validation error surfaced to API clients."""
+
+    def __init__(self, code: str, message: str, *, status: int = 422, details: dict[str, Any] | None = None):
+        super().__init__(message)
+        self.code = code
+        self.status = status
+        self.details = details
+
+
+def _raise_run_not_found(run_id: int):
+    raise WCLEValidationError(
+        "wcle_run_not_found",
+        "Run not found",
+        status=404,
+        details={"run_id": run_id},
+    )
+
+
+def _raise_pledge_not_found(pledge_id: int):
+    raise WCLEValidationError(
+        "wcle_pledge_not_found",
+        "Pledge not found",
+        status=404,
+        details={"pledge_id": pledge_id},
+    )
+
+
+def _ensure_run_transition(
+    run: WCLERun,
+    *,
+    action: str,
+    allowed_from: tuple[str, ...],
+    target_status: str,
+    idempotent_statuses: tuple[str, ...] = (),
+) -> bool:
+    """
+    Validate deterministic run transitions.
+
+    Returns True when the run is already in an idempotent terminal state and
+    callers should treat the operation as a safe no-op.
+    """
+    if run.status == target_status or run.status in idempotent_statuses:
+        return True
+
+    if run.status not in allowed_from:
+        raise WCLEValidationError(
+            "wcle_invalid_run_transition",
+            f"Cannot {action} run from status {run.status}",
+            details={
+                "run_id": run.id,
+                "action": action,
+                "current_status": run.status,
+                "allowed_from_statuses": list(allowed_from),
+                "target_status": target_status,
+            },
+        )
+
+    return False
+
+
+def _ensure_pledge_transition(
+    pledge: WCLEPledge,
+    *,
+    action: str,
+    allowed_from: tuple[str, ...],
+    target_status: str,
+    idempotent_statuses: tuple[str, ...] = (),
+) -> bool:
+    """
+    Validate deterministic pledge transitions.
+
+    Returns True when the pledge is already in an idempotent status and the
+    operation should be treated as a safe no-op.
+    """
+    if pledge.status == target_status or pledge.status in idempotent_statuses:
+        return True
+
+    if pledge.status not in allowed_from:
+        raise WCLEValidationError(
+            "wcle_invalid_pledge_transition",
+            f"Cannot {action} pledge from status {pledge.status}",
+            details={
+                "pledge_id": pledge.id,
+                "run_id": pledge.run_id,
+                "action": action,
+                "current_status": pledge.status,
+                "allowed_from_statuses": list(allowed_from),
+                "target_status": target_status,
+            },
+        )
+
+    return False
+
+
+def _normalize_requested_items(custom_items):
+    if not custom_items:
+        return []
+    if isinstance(custom_items, list):
+        return custom_items
+    return _parse_items_json(custom_items)
+
+
+def _canonical_request_payload(pack_id=None, custom_items=None):
+    return {
+        "pack_id": pack_id,
+        "custom_items": _normalize_requested_items(custom_items),
+    }
+
 
 def _now():
     return datetime.utcnow()
@@ -47,7 +159,14 @@ def create_run(organizer_user_id, title, supplier_type, run_date, pledge_deadlin
                location_name=None, address=None, suburb=None, postcode=None,
                lat=None, lng=None, microcosm_id=None):
     if supplier_type not in WCLERun.VALID_SUPPLIER_TYPES:
-        raise ValueError(f"Invalid supplier_type: {supplier_type}")
+        raise WCLEValidationError(
+            "wcle_invalid_supplier_type",
+            f"Invalid supplier_type: {supplier_type}",
+            details={
+                "supplier_type": supplier_type,
+                "valid_supplier_types": list(WCLERun.VALID_SUPPLIER_TYPES),
+            },
+        )
     run = WCLERun(
         title=title,
         supplier_type=supplier_type,
@@ -73,9 +192,15 @@ def create_run(organizer_user_id, title, supplier_type, run_date, pledge_deadlin
 def open_run(run_id):
     run = db.session.get(WCLERun, run_id)
     if not run:
-        raise ValueError("Run not found")
-    if run.status != "DRAFT":
-        raise ValueError(f"Cannot open run in status {run.status}")
+        _raise_run_not_found(run_id)
+    is_noop = _ensure_run_transition(
+        run,
+        action="open",
+        allowed_from=("DRAFT",),
+        target_status="OPEN",
+    )
+    if is_noop:
+        return run
     run.status = "OPEN"
     db.session.commit()
     _notify_run_event(run, "opened")
@@ -86,9 +211,15 @@ def close_run(run_id):
     """Close a run: aggregate pledges and compute retail/bulk estimate totals."""
     run = db.session.get(WCLERun, run_id)
     if not run:
-        raise ValueError("Run not found")
-    if run.status != "OPEN":
-        raise ValueError(f"Cannot close run in status {run.status}")
+        _raise_run_not_found(run_id)
+    is_noop = _ensure_run_transition(
+        run,
+        action="close",
+        allowed_from=("OPEN",),
+        target_status="CLOSED",
+    )
+    if is_noop:
+        return run
 
     confirmed = WCLEPledge.query.filter_by(run_id=run_id, status="CONFIRMED").all()
 
@@ -110,9 +241,15 @@ def close_run(run_id):
 def execute_run(run_id):
     run = db.session.get(WCLERun, run_id)
     if not run:
-        raise ValueError("Run not found")
-    if run.status != "CLOSED":
-        raise ValueError(f"Cannot execute run in status {run.status}")
+        _raise_run_not_found(run_id)
+    is_noop = _ensure_run_transition(
+        run,
+        action="execute",
+        allowed_from=("CLOSED",),
+        target_status="EXECUTED",
+    )
+    if is_noop:
+        return run
     run.status = "EXECUTED"
     db.session.commit()
     return run
@@ -126,9 +263,31 @@ def complete_run(run_id, bulk_actual_total_cents=None):
     """
     run = db.session.get(WCLERun, run_id)
     if not run:
-        raise ValueError("Run not found")
-    if run.status not in ("EXECUTED", "CLOSED"):
-        raise ValueError(f"Cannot complete run in status {run.status}")
+        _raise_run_not_found(run_id)
+    if run.status == "COMPLETED":
+        if (
+            bulk_actual_total_cents is not None
+            and run.bulk_actual_total_cents is not None
+            and run.bulk_actual_total_cents != bulk_actual_total_cents
+        ):
+            raise WCLEValidationError(
+                "wcle_run_completion_immutable",
+                "Run is already completed with a different final bulk total",
+                status=409,
+                details={
+                    "run_id": run.id,
+                    "current_status": run.status,
+                    "persisted_bulk_actual_total_cents": run.bulk_actual_total_cents,
+                    "requested_bulk_actual_total_cents": bulk_actual_total_cents,
+                },
+            )
+        return run
+    _ensure_run_transition(
+        run,
+        action="complete",
+        allowed_from=("EXECUTED", "CLOSED"),
+        target_status="COMPLETED",
+    )
 
     # Determine actual bulk total
     if bulk_actual_total_cents is not None:
@@ -137,7 +296,11 @@ def complete_run(run_id, bulk_actual_total_cents=None):
         receipts = WCLERunReceipt.query.filter_by(run_id=run_id).all()
         actual = sum(r.bulk_actual_total_cents for r in receipts)
     if actual < 0:
-        raise ValueError("bulk_actual_total_cents cannot be negative")
+        raise WCLEValidationError(
+            "wcle_invalid_bulk_total",
+            "bulk_actual_total_cents cannot be negative",
+            details={"bulk_actual_total_cents": actual},
+        )
 
     run.bulk_actual_total_cents = actual
 
@@ -169,9 +332,21 @@ def complete_run(run_id, bulk_actual_total_cents=None):
 def cancel_run(run_id):
     run = db.session.get(WCLERun, run_id)
     if not run:
-        raise ValueError("Run not found")
+        _raise_run_not_found(run_id)
+    if run.status == "CANCELLED":
+        return run
     if run.status == "COMPLETED":
-        raise ValueError("Cannot cancel a completed run")
+        raise WCLEValidationError(
+            "wcle_invalid_run_transition",
+            "Cannot cancel a completed run",
+            details={
+                "run_id": run.id,
+                "action": "cancel",
+                "current_status": run.status,
+                "allowed_from_statuses": ["DRAFT", "OPEN", "CLOSED", "EXECUTED"],
+                "target_status": "CANCELLED",
+            },
+        )
     run.status = "CANCELLED"
     # Cancel all non-terminal pledges
     WCLEPledge.query.filter(
@@ -190,7 +365,7 @@ def create_pack(run_id, name, items, description=None,
                 adjustable_quantities=False, waste_buffer_bps=500):
     run = db.session.get(WCLERun, run_id)
     if not run:
-        raise ValueError("Run not found")
+        _raise_run_not_found(run_id)
 
     retail_est = sum(
         (i.get("retail_unit_price_cents", 0) * i.get("qty", 0)) for i in items
@@ -241,25 +416,63 @@ def update_pack(pack_id, **kwargs):
 def create_pledge(run_id, user_id, pack_id=None, custom_items=None):
     run = db.session.get(WCLERun, run_id)
     if not run:
-        raise ValueError("Run not found")
+        _raise_run_not_found(run_id)
     if run.status != "OPEN":
-        raise ValueError("Run is not open for pledges")
-    if run.max_households:
-        count = WCLEPledge.query.filter(
-            WCLEPledge.run_id == run_id,
-            WCLEPledge.status.in_(("DRAFT", "CONFIRMED")),
-        ).count()
-        if count >= run.max_households:
-            raise ValueError("Run has reached maximum households")
+        raise WCLEValidationError(
+            "wcle_run_not_open_for_pledges",
+            "Run is not open for pledges",
+            details={
+                "run_id": run_id,
+                "current_status": run.status,
+                "required_status": "OPEN",
+            },
+        )
 
-    # Check user doesn't already have an active pledge
+    requested_payload = _canonical_request_payload(pack_id=pack_id, custom_items=custom_items)
+
+    # Retry-safe idempotency guard: reuse matching active pledge.
     existing = WCLEPledge.query.filter(
         WCLEPledge.run_id == run_id,
         WCLEPledge.user_id == user_id,
         WCLEPledge.status.in_(("DRAFT", "CONFIRMED")),
     ).first()
     if existing:
-        raise ValueError("User already has an active pledge for this run")
+        existing_payload = _canonical_request_payload(
+            pack_id=existing.pack_id,
+            custom_items=_parse_items_json(existing.custom_items_json),
+        )
+        if existing_payload == requested_payload:
+            return existing
+        raise WCLEValidationError(
+            "wcle_pledge_exists_conflict",
+            "An active pledge already exists for this run with different selections",
+            status=409,
+            details={
+                "run_id": run_id,
+                "user_id": user_id,
+                "existing_pledge_id": existing.id,
+                "existing_status": existing.status,
+                "requested_payload": requested_payload,
+                "existing_payload": existing_payload,
+            },
+        )
+
+    if run.max_households:
+        count = WCLEPledge.query.filter(
+            WCLEPledge.run_id == run_id,
+            WCLEPledge.status.in_(("DRAFT", "CONFIRMED")),
+        ).count()
+        if count >= run.max_households:
+            raise WCLEValidationError(
+                "wcle_max_households_reached",
+                "Run has reached maximum households",
+                status=409,
+                details={
+                    "run_id": run_id,
+                    "max_households": run.max_households,
+                    "active_households": count,
+                },
+            )
 
     retail_est = 0
     bulk_est = 0
@@ -267,7 +480,14 @@ def create_pledge(run_id, user_id, pack_id=None, custom_items=None):
     if pack_id:
         pack = db.session.get(WCLEPack, pack_id)
         if not pack or pack.run_id != run_id:
-            raise ValueError("Invalid pack for this run")
+            raise WCLEValidationError(
+                "wcle_invalid_pack_for_run",
+                "Invalid pack for this run",
+                details={
+                    "run_id": run_id,
+                    "pack_id": pack_id,
+                },
+            )
         retail_est = pack.retail_estimate_cents or 0
         bulk_est = pack.bulk_estimate_cents or 0
 
@@ -296,9 +516,15 @@ def create_pledge(run_id, user_id, pack_id=None, custom_items=None):
 def confirm_pledge(pledge_id):
     pledge = db.session.get(WCLEPledge, pledge_id)
     if not pledge:
-        raise ValueError("Pledge not found")
-    if pledge.status != "DRAFT":
-        raise ValueError(f"Cannot confirm pledge in status {pledge.status}")
+        _raise_pledge_not_found(pledge_id)
+    is_noop = _ensure_pledge_transition(
+        pledge,
+        action="confirm",
+        allowed_from=("DRAFT",),
+        target_status="CONFIRMED",
+    )
+    if is_noop:
+        return pledge
     pledge.status = "CONFIRMED"
     db.session.commit()
     return pledge
@@ -307,9 +533,15 @@ def confirm_pledge(pledge_id):
 def cancel_pledge(pledge_id):
     pledge = db.session.get(WCLEPledge, pledge_id)
     if not pledge:
-        raise ValueError("Pledge not found")
-    if pledge.status not in ("DRAFT", "CONFIRMED"):
-        raise ValueError(f"Cannot cancel pledge in status {pledge.status}")
+        _raise_pledge_not_found(pledge_id)
+    is_noop = _ensure_pledge_transition(
+        pledge,
+        action="cancel",
+        allowed_from=("DRAFT", "CONFIRMED"),
+        target_status="CANCELLED",
+    )
+    if is_noop:
+        return pledge
     pledge.status = "CANCELLED"
     db.session.commit()
     return pledge
@@ -318,9 +550,15 @@ def cancel_pledge(pledge_id):
 def mark_pledge_fulfilled(pledge_id):
     pledge = db.session.get(WCLEPledge, pledge_id)
     if not pledge:
-        raise ValueError("Pledge not found")
-    if pledge.status not in ("CONFIRMED",):
-        raise ValueError(f"Cannot fulfil pledge in status {pledge.status}")
+        _raise_pledge_not_found(pledge_id)
+    is_noop = _ensure_pledge_transition(
+        pledge,
+        action="fulfil",
+        allowed_from=("CONFIRMED",),
+        target_status="FULFILLED",
+    )
+    if is_noop:
+        return pledge
     pledge.status = "FULFILLED"
     pledge.pickup_confirmed_at = _now()
     db.session.commit()
@@ -330,9 +568,15 @@ def mark_pledge_fulfilled(pledge_id):
 def mark_pledge_no_show(pledge_id):
     pledge = db.session.get(WCLEPledge, pledge_id)
     if not pledge:
-        raise ValueError("Pledge not found")
-    if pledge.status not in ("CONFIRMED",):
-        raise ValueError(f"Cannot mark no-show for pledge in status {pledge.status}")
+        _raise_pledge_not_found(pledge_id)
+    is_noop = _ensure_pledge_transition(
+        pledge,
+        action="mark no-show",
+        allowed_from=("CONFIRMED",),
+        target_status="NO_SHOW",
+    )
+    if is_noop:
+        return pledge
     pledge.status = "NO_SHOW"
     db.session.commit()
     return pledge

@@ -85,9 +85,9 @@ export function getMobileDockLinks(
     || canonicalPath?.startsWith('/pledges')
   ) {
     return [
-      { href: '/home', label: 'Home', icon: House },
-      { href: '/actions', label: 'Actions', icon: Target },
-      { href: '/events', label: 'Events', icon: Map },
+      { href: '/cost-lowering', label: 'Optimize', icon: Target },
+      { href: '/runs', label: 'Scenarios', icon: Map },
+      { href: '/dashboard/savings', label: 'Outcomes', icon: Shield },
       doorwayLink,
     ];
   }
@@ -95,7 +95,7 @@ export function getMobileDockLinks(
   return [
     { href: '/community', label: 'Commons', icon: Compass },
     { href: '/education', label: 'Learn', icon: BookOpen },
-    { href: '/cost-lowering', label: 'Tasks', icon: Target },
+    { href: '/cost-lowering', label: 'Optimize', icon: Target },
     doorwayLink,
   ];
 }

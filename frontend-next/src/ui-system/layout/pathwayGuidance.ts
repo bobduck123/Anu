@@ -81,7 +81,7 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
       steps: [
         { href: '/community', label: 'Open community' },
         { href: '/education', label: 'Browse learning paths' },
-        { href: '/cost-lowering', label: 'Inspect run opportunities' },
+        { href: '/cost-lowering', label: 'Inspect optimization scenarios' }
       ],
     };
   }
@@ -136,12 +136,12 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
 
   if (canonicalPath.startsWith('/cost-lowering') || canonicalPath.startsWith('/runs') || canonicalPath.startsWith('/pledges')) {
     return {
-      title: 'Cost-lowering flow',
-      summary: 'Explore runs first, then commit and track outcomes.',
+      title: 'Optimization flow',
+      summary: 'Define constraints, compare scenario options, then commit and review outcomes.',
       steps: [
-        { href: '/cost-lowering', label: 'Browse active runs' },
-        { href: '/pledges', label: 'Manage pledges', authRequired: true },
-        { href: '/dashboard/savings', label: 'Review savings', authRequired: true },
+        { href: '/cost-lowering', label: 'Browse scenario options' },
+        { href: '/pledges', label: 'Manage commitments', authRequired: true },
+        { href: '/dashboard/savings', label: 'Review outcomes', authRequired: true },
       ],
     };
   }
@@ -255,7 +255,7 @@ export function buildPathwayGuide(pathname: string | null): PathwayGuide {
     steps: [
       { href: '/community', label: 'Open community' },
       { href: '/education', label: 'Open education' },
-      { href: '/cost-lowering', label: 'Open cost-lowering' },
+      { href: '/cost-lowering', label: 'Open optimization studio' },
     ],
   };
 }
