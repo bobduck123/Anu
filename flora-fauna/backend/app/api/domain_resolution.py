@@ -11,13 +11,21 @@ from functools import wraps
 import json
 import os
 import requests
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 
 from ..extensions import db
 from ..models import Node, NodeDomain, NodeConfig
 from ..schemas import DomainResolutionResponseSchema
-from ..services.public_site_service import build_public_site_manifest_for_node
-from ..security.alpha import alpha_jwt_required
+from ..services.public_site_service import build_public_site_manifest_for_node, build_registry_only_public_site_manifest
+from ..services.white_label_site_registry import (
+    find_white_label_site_by_allowed_domain,
+    find_white_label_site_by_deployment_alias,
+    get_white_label_site_by_slug,
+    normalize_hostname,
+)
+from ..security.control_plane import control_plane_required
+from ..security.control_tenant_scope import resolve_effective_control_managed_node_ids
+from flask_jwt_extended import get_jwt
 from ..security.policy import get_current_user
 
 domain_resolution_bp = Blueprint('domain_resolution', __name__)
@@ -50,7 +58,7 @@ def _require_authenticated_user():
 
 def _require_domain_admin(fn):
     @wraps(fn)
-    @alpha_jwt_required()
+    @control_plane_required(scopes=["sites:domains:write"])
     def wrapper(*args, **kwargs):
         user, error_response = _require_authenticated_user()
         if error_response:
@@ -62,6 +70,52 @@ def _require_domain_admin(fn):
         return fn(user, *args, **kwargs)
 
     return wrapper
+
+
+def _registry_site_for_domain(domain: str):
+    return find_white_label_site_by_deployment_alias(domain) or find_white_label_site_by_allowed_domain(domain)
+
+
+def _registry_only_domain_response(registry_site, domain: str, *, resolution_status: str):
+    manifest = build_registry_only_public_site_manifest(site=registry_site, resolved_host=domain)
+    theme_tokens = manifest.get("theme_tokens") or {}
+    brand_assets = manifest.get("brand_assets") or {}
+    brand = {
+        "primary_color": theme_tokens.get("primary_color"),
+        "secondary_color": theme_tokens.get("secondary_color"),
+        "accent_color": theme_tokens.get("accent_color"),
+        "logo_url": brand_assets.get("logo_url"),
+        "favicon_url": brand_assets.get("favicon_url"),
+        "custom_css": theme_tokens.get("custom_css"),
+    }
+    response_data = domain_resolution_response_schema.dump({
+        'contract_version': DOMAIN_RESOLUTION_CONTRACT_VERSION,
+        'node_id': 0,
+        'node_slug': registry_site.slug,
+        'node_name': registry_site.canonical_name,
+        'semantic_key': None,
+        'white_label': True,
+        'brand': brand,
+        'site_manifest': manifest,
+        'site_resolution': {
+            'resolved': True,
+            'resolution_status': resolution_status,
+            'fallback_note': 'Registry metadata only; active tenant node bootstrap is still required for data APIs.',
+            'host': domain,
+        },
+        'domain': domain,
+        'tls_ready': domain in registry_site.deployment_aliases,
+        'is_white_label': True,
+        'brand_config': brand,
+    })
+    response = jsonify(response_data)
+    response.headers['Cache-Control'] = 'public, max-age=120, stale-while-revalidate=300'
+    return response
+
+
+def _allowed_domain_node_ids(user) -> set[int] | None:
+    claims = get_jwt() or {}
+    return resolve_effective_control_managed_node_ids(user=user, claims=claims)
 
 
 # -----------------------------------------------------------------------------
@@ -86,34 +140,82 @@ def resolve_domain():
         - is_white_label: Whether this is a full white-label deployment
         - brand_config: Branding configuration (colors, logos, etc.)
     """
-    domain = request.args.get('domain', '').lower().strip()
+    domain = normalize_hostname(request.args.get('domain', ''))
     
     if not domain:
         return jsonify({'error': 'Domain parameter required'}), 400
-    
-    # Look up domain in NodeDomain table
-    node_domain = NodeDomain.query.filter(
-        NodeDomain.domain == domain,
-        NodeDomain.status == 'active'
-    ).first()
-    
-    if not node_domain:
-        # Check for wildcard subdomain patterns
-        parts = domain.split('.')
-        if len(parts) > 2:
-            # Try parent domain (e.g., example.com from sub.example.com)
-            parent_domain = '.'.join(parts[-2:])
-            node_domain = NodeDomain.query.filter(
-                NodeDomain.domain == f'*.{parent_domain}',
-                NodeDomain.status == 'active'
-            ).first()
-    
-    if not node_domain:
+
+    registry_site = _registry_site_for_domain(domain)
+
+    try:
+        # Look up domain in NodeDomain table
+        node_domain = NodeDomain.query.filter(
+            NodeDomain.domain == domain,
+            NodeDomain.status == 'active'
+        ).first()
+
+        if not node_domain:
+            # Check for wildcard subdomain patterns
+            parts = domain.split('.')
+            if len(parts) > 2:
+                # Try parent domain (e.g., example.com from sub.example.com)
+                parent_domain = '.'.join(parts[-2:])
+                node_domain = NodeDomain.query.filter(
+                    NodeDomain.domain == f'*.{parent_domain}',
+                    NodeDomain.status == 'active'
+                ).first()
+    except Exception:
+        current_app.logger.exception("Domain resolution storage lookup failed")
+        db.session.rollback()
+        if registry_site:
+            return _registry_only_domain_response(
+                registry_site,
+                domain,
+                resolution_status="resolved_registry_only_db_unavailable",
+            )
+        return jsonify({
+            'ok': False,
+            'error': {
+                'code': 'service_unavailable',
+                'message': 'Domain resolution temporarily unavailable',
+            },
+            'domain': domain,
+        }), 503
+
+    node = None
+    tls_ready = False
+    resolution_status = "resolved"
+    if node_domain:
+        node = Node.query.get(node_domain.node_id)
+        tls_ready = bool(node_domain.tls_ready)
+    else:
+        if registry_site:
+            node = (
+                Node.query.filter(
+                    Node.slug == registry_site.slug,
+                    Node.status == 'active',
+                )
+                .order_by(Node.id.asc())
+                .first()
+            )
+            tls_ready = True
+            resolution_status = "resolved_deployment_alias"
+
+    if not node_domain and not registry_site:
         return jsonify({'error': 'Domain not configured', 'domain': domain}), 404
-    
+
     # Get node details
-    node = Node.query.get(node_domain.node_id)
     if not node or node.status != 'active':
+        if registry_site:
+            return _registry_only_domain_response(
+                registry_site,
+                domain,
+                resolution_status=(
+                    "resolved_deployment_alias"
+                    if domain in registry_site.deployment_aliases
+                    else "resolved_registered_domain"
+                ),
+            )
         return jsonify({'error': 'Node not active'}), 404
     
     # Get node configuration for branding
@@ -122,7 +224,9 @@ def resolve_domain():
     
     # Extract brand configuration
     brand_config = config_json.get('branding', {}) or {}
-    white_label_enabled = bool(config_json.get('white_label', {}).get('enabled', False))
+    white_label_enabled = bool(config_json.get('white_label', {}).get('enabled', False)) or bool(
+        get_white_label_site_by_slug(node.slug)
+    )
     semantic_key = config_json.get('semantic_key')
     if semantic_key is not None:
         semantic_key = str(semantic_key).strip() or None
@@ -151,12 +255,12 @@ def resolve_domain():
         ),
         'site_resolution': {
             'resolved': True,
-            'resolution_status': 'resolved',
+            'resolution_status': resolution_status,
             'fallback_note': None,
             'host': domain,
         },
         'domain': domain,
-        'tls_ready': node_domain.tls_ready,
+        'tls_ready': tls_ready,
         # Backward-compatible aliases
         'is_white_label': white_label_enabled,
         'brand_config': brand,
@@ -173,17 +277,22 @@ def resolve_domain():
 # -----------------------------------------------------------------------------
 
 @domain_resolution_bp.route('/domains', methods=['GET'])
-@alpha_jwt_required()
+@control_plane_required(scopes=["sites:domains:read"])
 def list_domains():
     """List all domains for the current user's node or all nodes (admin)."""
     current_user, error_response = _require_authenticated_user()
     if error_response:
         return error_response
 
-    if current_user.role in {'admin', 'platform_admin'}:
-        domains = NodeDomain.query.all()
-    elif current_user.node_id:
-        domains = NodeDomain.query.filter_by(node_id=current_user.node_id).all()
+    allowed_node_ids = _allowed_domain_node_ids(current_user)
+    if allowed_node_ids is None:
+        domains = NodeDomain.query.order_by(NodeDomain.id.asc()).all()
+    elif allowed_node_ids:
+        domains = (
+            NodeDomain.query.filter(NodeDomain.node_id.in_(sorted(allowed_node_ids)))
+            .order_by(NodeDomain.id.asc())
+            .all()
+        )
     else:
         return jsonify({'domains': []})
     

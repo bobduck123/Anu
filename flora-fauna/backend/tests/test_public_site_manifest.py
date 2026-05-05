@@ -93,7 +93,78 @@ def test_public_site_resolution_unknown_host_falls_back_honestly():
     assert payload["resolution_status"] == "fallback_unknown_host"
     assert payload["fallback_note"] is not None
     assert payload["node_slug"] == "anu-platform"
-    assert payload["site_manifest"]["site_key"] == "anu-public"
+    assert payload["site_manifest"]["site_key"] == "unassigned-public-host"
+    assert payload["site_manifest"]["site_name"] == "Site not configured"
+
+
+def test_public_site_resolution_uses_registered_mudyin_deployment_alias_when_node_exists():
+    app = _build_app()
+
+    from manara_backend_app.extensions import db
+    from manara_backend_app.models import Node
+
+    with app.app_context():
+        node = Node(name="Mudyin", slug="mudyin", status="active")
+        db.session.add(node)
+        db.session.commit()
+
+    response = app.test_client().get("/api/public/sites/resolve?host=mudyin-live.vercel.app")
+    assert response.status_code == 200
+
+    payload = response.get_json()["data"]
+    assert payload["resolved"] is True
+    assert payload["resolution_status"] == "resolved_deployment_alias"
+    assert payload["node_slug"] == "mudyin"
+    assert payload["site_manifest"]["site_key"] == "mudyin-public"
+    assert payload["site_manifest"]["site_name"] == "Mudyin"
+    assert "mudyin-live.vercel.app" in payload["site_manifest"]["canonical_domains"]
+
+
+def test_public_site_resolution_supports_explicit_site_hint_without_domain_hosting():
+    app = _build_app()
+
+    from manara_backend_app.extensions import db
+    from manara_backend_app.models import Node
+
+    with app.app_context():
+        node = Node(name="Mudyin", slug="mudyin", status="active")
+        db.session.add(node)
+        db.session.commit()
+
+    response = app.test_client().get(
+        "/api/public/sites/resolve?site=mudyin&host=external-mudyin.example"
+    )
+    assert response.status_code == 200
+
+    payload = response.get_json()["data"]
+    assert payload["resolved"] is True
+    assert payload["resolution_status"] == "resolved_site_hint"
+    assert payload["node_slug"] == "mudyin"
+    assert payload["site_manifest"]["site_key"] == "mudyin-public"
+    assert "external-mudyin.example" in payload["site_manifest"]["canonical_domains"]
+
+
+def test_public_site_resolution_unknown_explicit_site_hint_returns_404():
+    app = _build_app()
+
+    response = app.test_client().get("/api/public/sites/resolve?site=unknown-tenant")
+    assert response.status_code == 404
+    assert response.get_json()["error"]["code"] == "not_found"
+
+
+def test_public_site_resolution_can_return_registry_only_mudyin_config_before_node_bootstrap():
+    app = _build_app()
+
+    response = app.test_client().get("/api/public/sites/resolve?site=mudyin")
+    assert response.status_code == 200
+
+    payload = response.get_json()["data"]
+    assert payload["resolved"] is True
+    assert payload["resolution_status"] == "resolved_registry_only"
+    assert payload["node_id"] == 0
+    assert payload["node_slug"] == "mudyin"
+    assert payload["fallback_note"]
+    assert payload["site_manifest"]["site_key"] == "mudyin-public"
 
 
 def test_public_site_resolution_is_tenant_isolated_by_host_binding():

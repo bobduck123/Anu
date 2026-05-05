@@ -48,6 +48,8 @@ ALL_CONTROL_SCOPES = {
     "sites:operator-assignments:read",
     "sites:operator-assignments:write",
     "sites:bootstrap:write",
+    "sites:tenants:read",
+    "sites:tenants:write",
 }
 
 

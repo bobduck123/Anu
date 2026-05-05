@@ -20,6 +20,14 @@ FAILED = "failed"
 SKIPPED = "skipped"
 
 
+def _status_label(status: str) -> str:
+    if status == PASSED:
+        return "PASS"
+    if status == FAILED:
+        return "FAIL"
+    return "WARN"
+
+
 @dataclass
 class HttpResponse:
     status_code: int | None
@@ -46,9 +54,11 @@ class SmokeCheck:
             "method": self.method,
             "path": self.path,
             "status": self.status,
+            "status_label": _status_label(self.status),
             "duration_ms": self.duration_ms,
             "http_status": self.http_status,
             "message": self.message,
+            "remediation_hint": self.details.get("remediation_hint"),
             "details": self.details,
         }
 
@@ -137,6 +147,33 @@ def _response_message(response: HttpResponse) -> str:
     return "request_failed"
 
 
+def _remediation_hint(
+    *,
+    status: str,
+    path: str,
+    http_status: int | None,
+    response_error: str | None = None,
+    skip_reason: str | None = None,
+) -> str:
+    if status == SKIPPED:
+        return f"Configure this smoke input and rerun: {skip_reason or 'missing input'}."
+    if status == PASSED:
+        return "No action."
+    if response_error:
+        return "Check DNS, TLS, Vercel routing, and service availability for the target URL."
+    if http_status in {401, 403} and "/api/control/" in path:
+        return "Provide a valid CONTROL_SMOKE_AUTH_HEADER bearer token, X-Control-Plane-Secret, and a control-plane host allowed by CONTROL_PLANE_HOSTS."
+    if http_status in {401, 403}:
+        return "Check route authentication, token audience, and authorization policy."
+    if http_status == 404:
+        return "Check the deployed route path, Vercel rewrites, and domain/site binding."
+    if http_status in {422, 400} and "/api/control/sites/bootstrap" in path:
+        return "For mutation checks, provide a valid bootstrap payload or keep bootstrap mutation disabled."
+    if http_status and http_status >= 500:
+        return "Inspect hosted application logs, runtime env vars, database connectivity, and migrations."
+    return "Inspect the response preview and compare expected status codes with the deployed contract."
+
+
 def _run_check(
     *,
     check_id: str,
@@ -163,7 +200,10 @@ def _run_check(
             duration_ms=0,
             http_status=None,
             message=skip_reason,
-            details={"skip_reason": skip_reason},
+            details={
+                "skip_reason": skip_reason,
+                "remediation_hint": _remediation_hint(status=SKIPPED, path=path, http_status=None, skip_reason=skip_reason),
+            },
         )
     if not target_base_url:
         return SmokeCheck(
@@ -175,7 +215,15 @@ def _run_check(
             duration_ms=0,
             http_status=None,
             message="target base URL not configured",
-            details={"skip_reason": "target base URL not configured"},
+            details={
+                "skip_reason": "target base URL not configured",
+                "remediation_hint": _remediation_hint(
+                    status=SKIPPED,
+                    path=path,
+                    http_status=None,
+                    skip_reason="target base URL not configured",
+                ),
+            },
         )
 
     full_url = f"{target_base_url}{path}"
@@ -207,6 +255,12 @@ def _run_check(
         details["response_preview"] = response.body_text[:300]
         if response.error:
             details["request_error"] = response.error
+    details["remediation_hint"] = _remediation_hint(
+        status=PASSED if passed else FAILED,
+        path=path,
+        http_status=http_status,
+        response_error=response.error,
+    )
 
     return SmokeCheck(
         check_id=check_id,
@@ -239,6 +293,7 @@ def run_hosted_launch_smoke(
     generated_at: str | None = None,
     public_base_url: str,
     public_host_for_resolution: str | None = None,
+    public_site_hint: str | None = None,
     archive_record_slug: str | None = None,
     control_base_url: str | None = None,
     control_site_id: str | int | None = None,
@@ -268,14 +323,16 @@ def run_hosted_launch_smoke(
         )
 
     resolve_host = str(public_host_for_resolution or "").strip()
+    site_hint = str(public_site_hint or "").strip()
     archive_slug = str(archive_record_slug or "").strip()
+    node_query = f"&node={urllib_parse.quote_plus(site_hint)}" if site_hint else ""
 
     checks.append(
         _run_check(
             check_id="public_archive_list_route",
             label="Public archive list route",
             method="GET",
-            path="/public/archive/records?page=1&page_size=5",
+            path=f"/public/archive/records?page=1&page_size=5{node_query}",
             target_base_url=public_url,
             expected_statuses={200},
             timeout_seconds=timeout_seconds,
@@ -301,9 +358,37 @@ def run_hosted_launch_smoke(
             check_id="public_trust_decisions_route",
             label="Public trust decisions route",
             method="GET",
-            path="/public/trust/decisions?limit=5",
+            path=f"/public/trust/decisions?limit=5{node_query}",
             target_base_url=public_url,
             expected_statuses={200},
+            timeout_seconds=timeout_seconds,
+            request_runner=request_runner,
+        )
+    )
+    checks.append(
+        _run_check(
+            check_id="white_label_current_public_config",
+            label="White-label current public config",
+            method="GET",
+            path=(
+                "/api/public/nodes/current/config?"
+                + urllib_parse.urlencode(
+                    {
+                        key: value
+                        for key, value in {
+                            "site": site_hint or None,
+                            "host": resolve_host or None,
+                        }.items()
+                        if value
+                    }
+                )
+            )
+            if (site_hint or resolve_host)
+            else "/api/public/nodes/current/config?site=<missing-site>",
+            target_base_url=public_url,
+            expected_statuses={200},
+            enabled=bool(site_hint or resolve_host),
+            skip_reason="public_site_hint or public_host_for_resolution not configured",
             timeout_seconds=timeout_seconds,
             request_runner=request_runner,
         )
@@ -313,13 +398,25 @@ def run_hosted_launch_smoke(
             check_id="white_label_public_host_resolution",
             label="White-label public host resolution",
             method="GET",
-            path=f"/api/public/sites/resolve?host={urllib_parse.quote_plus(resolve_host)}"
-            if resolve_host
+            path=(
+                "/api/public/sites/resolve?"
+                + urllib_parse.urlencode(
+                    {
+                        key: value
+                        for key, value in {
+                            "site": site_hint or None,
+                            "host": resolve_host or None,
+                        }.items()
+                        if value
+                    }
+                )
+            )
+            if (resolve_host or site_hint)
             else "/api/public/sites/resolve?host=<missing-host>",
             target_base_url=public_url,
             expected_statuses={200},
-            enabled=bool(resolve_host),
-            skip_reason="public_host_for_resolution not configured",
+            enabled=bool(resolve_host or site_hint),
+            skip_reason="public_host_for_resolution or public_site_hint not configured",
             timeout_seconds=timeout_seconds,
             request_runner=request_runner,
             validator=_white_label_validator,
@@ -446,6 +543,7 @@ def run_hosted_launch_smoke(
             "runtime": "hosted-http",
             "public_base_url": public_url,
             "public_host_for_resolution": resolve_host or None,
+            "public_site_hint": site_hint or None,
             "archive_record_slug": archive_slug or None,
             "control_base_url": control_url or None,
             "control_site_id": site_id,
@@ -478,18 +576,21 @@ def render_hosted_launch_smoke_markdown(summary: dict[str, Any]) -> str:
     lines.append(f"- Skipped: `{counts.get('skipped', 0)}`")
     lines.append(f"- launch_readiness_claim: `{summary.get('launch_readiness_claim')}`")
     lines.append("")
-    lines.append("| check_id | status | method | path | http_status | message |")
-    lines.append("|---|---|---|---|---:|---|")
+    lines.append("| check_id | status | method | url/path | http_status | message | remediation |")
+    lines.append("|---|---|---|---|---:|---|---|")
     for check in summary.get("checks") or []:
         check_obj = check if isinstance(check, dict) else {}
+        details = check_obj.get("details") if isinstance(check_obj.get("details"), dict) else {}
+        target_url = details.get("target_url") or check_obj.get("path")
         lines.append(
-            "| `{}` | {} | {} | `{}` | {} | {} |".format(
+            "| `{}` | {} | {} | `{}` | {} | {} | {} |".format(
                 check_obj.get("check_id"),
-                check_obj.get("status"),
+                check_obj.get("status_label") or _status_label(str(check_obj.get("status") or "")),
                 check_obj.get("method"),
-                check_obj.get("path"),
+                target_url,
                 check_obj.get("http_status") if check_obj.get("http_status") is not None else "_n/a_",
                 str(check_obj.get("message") or "").replace("|", "\\|"),
+                str(check_obj.get("remediation_hint") or "").replace("|", "\\|"),
             )
         )
     lines.append("")
@@ -508,6 +609,11 @@ def _build_parser() -> argparse.ArgumentParser:
         "--public-host-for-resolution",
         default=None,
         help="Host value passed to /api/public/sites/resolve?host=...",
+    )
+    parser.add_argument(
+        "--public-site-hint",
+        default=None,
+        help="Public site/app hint passed as site=... and node=... for external frontend integration smoke.",
     )
     parser.add_argument("--archive-record-slug", default=None, help="Archive slug used by public detail route check")
     parser.add_argument("--control-base-url", default=None, help="Hosted control base URL")
@@ -567,6 +673,7 @@ def main() -> int:
         generated_at=args.generated_at,
         public_base_url=str(args.public_base_url),
         public_host_for_resolution=args.public_host_for_resolution,
+        public_site_hint=args.public_site_hint,
         archive_record_slug=args.archive_record_slug,
         control_base_url=args.control_base_url,
         control_site_id=args.control_site_id,

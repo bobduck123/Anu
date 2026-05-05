@@ -13,6 +13,7 @@ from ..schemas import (
 from ..services.decision_register_service import get_public_decision_summary, list_public_decision_summaries
 from ..services.node_service import resolve_node
 from ..services.trust_report_service import get_public_trust_report_detail, list_public_trust_reports
+from ..services.white_label_site_registry import find_white_label_site_by_public_hint
 from .utils import error, ok
 
 public_trust_bp = Blueprint("public_trust", __name__, url_prefix="/public/trust")
@@ -21,6 +22,37 @@ TRUST_REPORT_LIST_PAYLOAD_SCHEMA = PublicTrustReportListPayloadSchema()
 TRUST_REPORT_DETAIL_PAYLOAD_SCHEMA = PublicTrustReportDetailPayloadSchema()
 DECISION_SUMMARY_LIST_PAYLOAD_SCHEMA = PublicDecisionSummaryListPayloadSchema()
 DECISION_SUMMARY_DETAIL_PAYLOAD_SCHEMA = PublicDecisionSummaryDetailPayloadSchema()
+
+
+def _degraded_trust_report_list_payload():
+    return {
+        "reports": [],
+        "degraded_honesty": {
+            "is_degraded": True,
+            "reason": "public_trust_storage_unavailable",
+            "fallback": "Public trust report storage is temporarily unavailable; no private reports are exposed.",
+        },
+    }
+
+
+def _degraded_decision_list_payload():
+    return {
+        "decisions": [],
+        "degraded_honesty": {
+            "is_degraded": True,
+            "reason": "public_decision_storage_unavailable",
+            "fallback": "Public decision storage is temporarily unavailable; restricted decisions remain hidden.",
+        },
+    }
+
+
+def _registered_but_unbootstrapped_payload(payload: dict):
+    degraded = payload.get("degraded_honesty") or {}
+    degraded["is_degraded"] = True
+    degraded["reason"] = "tenant_node_not_bootstrapped"
+    degraded["fallback"] = "This white-label site is registered, but its active tenant node is not bootstrapped yet."
+    payload["degraded_honesty"] = degraded
+    return payload
 
 
 @public_trust_bp.route("/reports", methods=["GET"])
@@ -39,6 +71,8 @@ def list_public_trust_reports_route():
         if node_param:
             node = resolve_node(node_param)
             if not node:
+                if find_white_label_site_by_public_hint(node_param):
+                    return ok(TRUST_REPORT_LIST_PAYLOAD_SCHEMA.dump(_registered_but_unbootstrapped_payload(_degraded_trust_report_list_payload())))
                 return error("not_found", "Node not found", 404)
 
         payload = list_public_trust_reports(node_slug=node.slug if node else None, limit=limit)
@@ -68,7 +102,7 @@ def list_public_trust_reports_route():
         )
         current_app.logger.exception("Public trust report list failed")
         db.session.rollback()
-        return error("service_unavailable", "Trust report list temporarily unavailable", 503)
+        return ok(TRUST_REPORT_LIST_PAYLOAD_SCHEMA.dump(_degraded_trust_report_list_payload()))
 
 
 @public_trust_bp.route("/reports/<report_ref>", methods=["GET"])
@@ -120,6 +154,8 @@ def list_public_decisions_route():
         if node_param:
             node = resolve_node(node_param)
             if not node:
+                if find_white_label_site_by_public_hint(node_param):
+                    return ok(DECISION_SUMMARY_LIST_PAYLOAD_SCHEMA.dump(_registered_but_unbootstrapped_payload(_degraded_decision_list_payload())))
                 return error("not_found", "Node not found", 404)
 
         payload = list_public_decision_summaries(node_slug=node.slug if node else None, limit=limit)
@@ -149,7 +185,7 @@ def list_public_decisions_route():
         )
         current_app.logger.exception("Public decision summary list failed")
         db.session.rollback()
-        return error("service_unavailable", "Decision summary list temporarily unavailable", 503)
+        return ok(DECISION_SUMMARY_LIST_PAYLOAD_SCHEMA.dump(_degraded_decision_list_payload()))
 
 
 @public_trust_bp.route("/decisions/<decision_ref>", methods=["GET"])

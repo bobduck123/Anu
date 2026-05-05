@@ -481,7 +481,10 @@ class Config:
             self.CONTROL_PLANE_HOSTS = [
                 h.strip() for h in control_hosts.split(",") if h.strip()
             ]
-        self.CONTROL_PLANE_SHARED_SECRET = os.environ.get("CONTROL_PLANE_SHARED_SECRET")
+        self.CONTROL_PLANE_SHARED_SECRET = (
+            os.environ.get("CONTROL_PLANE_SHARED_SECRET")
+            or os.environ.get("CONTROL_PLANE_SECRET_HEADER")
+        )
         self.CONNECTOR_PULL_JOB_LEASE_SECONDS = int(
             os.environ.get("CONNECTOR_PULL_JOB_LEASE_SECONDS", 180)
         )
@@ -587,7 +590,7 @@ class DevelopmentConfig(Config):
             if not (self.CONTROL_PLANE_SHARED_SECRET and len(str(self.CONTROL_PLANE_SHARED_SECRET).strip()) >= 16):
                 raise SecurityValidationError(
                     "STRICT CONTROL PLANE VIOLATION:\n"
-                    "CONTROL_PLANE_SHARED_SECRET must be explicitly set (>= 16 chars) for non-development runtimes"
+                    "CONTROL_PLANE_SHARED_SECRET must be explicitly set (>= 16 chars) for non-development runtimes; CONTROL_PLANE_SECRET_HEADER is accepted as a legacy alias"
                 )
 
         if not self.SECRET_KEY:
@@ -722,10 +725,14 @@ class ProductionConfig(Config):
             )
         
         # Critical: Control plane shared secret must be explicit for gateway defense-in-depth
-        control_secret = os.environ.get('CONTROL_PLANE_SHARED_SECRET', '').strip()
+        control_secret = (
+            os.environ.get('CONTROL_PLANE_SHARED_SECRET')
+            or os.environ.get('CONTROL_PLANE_SECRET_HEADER')
+            or ''
+        ).strip()
         if not control_secret:
             security_errors.append(
-                "CONTROL_PLANE_SHARED_SECRET must be explicitly set in production"
+                "CONTROL_PLANE_SHARED_SECRET must be explicitly set in production (CONTROL_PLANE_SECRET_HEADER is accepted as a legacy alias)"
             )
         elif len(control_secret) < 16:
             security_errors.append(

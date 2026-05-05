@@ -327,7 +327,14 @@ def _init_cors(app):
             r"/api/*": {
                 "origins": cors_origins,
                 "supports_credentials": True,
-                "allow_headers": ["Content-Type", "Authorization", "X-Request-ID"],
+                "allow_headers": [
+                    "Content-Type",
+                    "Authorization",
+                    "X-Request-ID",
+                    "X-ANU-App-ID",
+                    "X-ANU-Site",
+                    "X-ANU-Site-Slug",
+                ],
                 "expose_headers": ["X-Request-ID"],
             },
             r"/auth/*": {

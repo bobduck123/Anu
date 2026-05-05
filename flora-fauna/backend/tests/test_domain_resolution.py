@@ -104,3 +104,46 @@ def test_domain_resolution_returns_not_found_for_unknown_or_inactive_nodes():
 
     inactive = client.get("/api/domains/resolve?domain=inactive.domain.example")
     assert inactive.status_code == 404
+
+
+def test_domain_resolution_supports_registered_mudyin_vercel_alias_without_custom_domain_row():
+    app = _build_app()
+
+    from manara_backend_app.extensions import db
+    from manara_backend_app.models import Node
+
+    with app.app_context():
+        node = Node(name="Mudyin", slug="mudyin", status="active")
+        db.session.add(node)
+        db.session.commit()
+
+    response = app.test_client().get("/api/domains/resolve?domain=mudyin-live.vercel.app")
+    assert response.status_code == 200
+
+    payload = response.get_json()
+    assert payload["node_slug"] == "mudyin"
+    assert payload["white_label"] is True
+    assert payload["site_resolution"]["resolution_status"] == "resolved_deployment_alias"
+    assert payload["tls_ready"] is True
+    assert payload["site_manifest"]["site_key"] == "mudyin-public"
+
+
+def test_domain_resolution_returns_registry_only_payload_for_known_site_before_node_bootstrap():
+    app = _build_app()
+
+    response = app.test_client().get("/api/domains/resolve?domain=www.mudyin.com")
+    assert response.status_code == 200
+
+    payload = response.get_json()
+    assert payload["node_id"] == 0
+    assert payload["node_slug"] == "mudyin"
+    assert payload["site_resolution"]["resolution_status"] == "resolved_registered_domain"
+    assert payload["site_manifest"]["site_key"] == "mudyin-public"
+
+
+def test_domain_resolution_supports_current_mudyin_vercel_alias():
+    app = _build_app()
+
+    response = app.test_client().get("/api/domains/resolve?domain=mudyin.vercel.app")
+    assert response.status_code == 200
+    assert response.get_json()["node_slug"] == "mudyin"

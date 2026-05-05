@@ -39,7 +39,7 @@ def _issue_control_headers(
             "token_use": "control",
             "requires_mfa": True,
             "role": role,
-            "scp": ["sites:manifest:read", "sites:manifest:write"],
+            "scp": ["sites:manifest:read", "sites:manifest:write", "sites:tenants:read"],
         }
         if node_id is not None:
             claims["node_id"] = node_id
@@ -322,6 +322,41 @@ def test_manifest_authoring_rejects_unknown_or_disallowed_fields():
     assert response.status_code == 400
     payload = response.get_json()
     assert payload["error"]["code"] == "validation_error"
+
+
+def test_manifest_authoring_allows_about_nav_but_still_rejects_internal_routes():
+    app = _build_app()
+    node_id = _seed_node(app)
+    headers = _issue_control_headers(app, "control-admin")
+    latest = _get_manifest_payload(app, node_id, headers)
+
+    about_response = app.test_client().patch(
+        f"/api/control/sites/{node_id}/manifest-authoring",
+        json={
+            "revision_token": latest["revision_token"],
+            "nav_items": [
+                {"label": "About", "href": "/about"},
+                {"label": "Trust", "href": "/trust", "module": "trust"},
+            ],
+        },
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert about_response.status_code == 200
+    nav_hrefs = [item["href"] for item in about_response.get_json()["data"]["authoring"]["nav_items"]]
+    assert "/about" in nav_hrefs
+
+    unsafe_response = app.test_client().patch(
+        f"/api/control/sites/{node_id}/manifest-authoring",
+        json={
+            "revision_token": about_response.get_json()["data"]["revision_token"],
+            "nav_items": [{"label": "Control", "href": "/api/control/sites"}],
+        },
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert unsafe_response.status_code == 400
+    assert unsafe_response.get_json()["error"]["code"] == "validation_error"
 
 
 def test_delegated_operator_can_read_write_publish_assigned_tenant_only():

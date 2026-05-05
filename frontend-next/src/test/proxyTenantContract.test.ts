@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 
 vi.mock('@/lib/supabase/middleware', () => ({
@@ -17,6 +17,13 @@ import { getCoreApiOrigin } from '@/lib/runtime';
 describe('proxy tenant contract', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    delete process.env.WHITE_LABEL_DEPLOYMENT_HOSTS;
+    delete process.env.NEXT_PUBLIC_WHITE_LABEL_DEPLOYMENT_HOSTS;
+  });
+
+  afterEach(() => {
+    delete process.env.WHITE_LABEL_DEPLOYMENT_HOSTS;
+    delete process.env.NEXT_PUBLIC_WHITE_LABEL_DEPLOYMENT_HOSTS;
   });
 
   it('hydrates the full tenant cookie contract from one domain resolution response', async () => {
@@ -145,5 +152,75 @@ describe('proxy tenant contract', () => {
 
     expect(response.headers.get('x-tenant-site-resolution')).toBe('fallback_unknown_host');
     expect(response.headers.get('location')).toBeNull();
+  });
+
+  it('resolves configured white-label Vercel deployment aliases instead of skipping all previews', async () => {
+    process.env.WHITE_LABEL_DEPLOYMENT_HOSTS = 'mudyin-live.vercel.app';
+    const supabaseResponse = NextResponse.next();
+
+    vi.mocked(updateSupabaseSession).mockResolvedValue({
+      supabaseResponse,
+      user: null,
+    });
+    vi.mocked(getCoreApiOrigin).mockReturnValue('https://core.example.com');
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          contract_version: '2026-04-10',
+          node_id: 11,
+          node_slug: 'mudyin',
+          node_name: 'Mudyin',
+          semantic_key: 'mudyin',
+          white_label: true,
+          site_resolution: {
+            resolved: true,
+            resolution_status: 'resolved_deployment_alias',
+            fallback_note: null,
+            host: 'mudyin-live.vercel.app',
+          },
+          site_manifest: {
+            tenant_id: 11,
+            site_key: 'mudyin-public',
+            site_name: 'Mudyin',
+            tagline: 'Community programs, public records, and cultural participation pathways.',
+            nav_items: [{ label: 'About', href: '/about' }],
+            enabled_public_modules: ['community', 'trust'],
+            footer_links: [{ label: 'Contact', href: '/contact' }],
+            legal_links: { privacy: '/privacy', terms: '/terms', code_of_conduct: '/code-of-conduct' },
+            trust_links: { trust_center: '/trust', transparency: '/transparency', archive: '/archive' },
+            contact: { email: 'hello@mudyin.com', public_contact_url: '/contact', location_label: 'Sydney' },
+            canonical_domains: ['www.mudyin.com'],
+            preview_host: 'mudyin-live.vercel.app',
+          },
+          brand: {
+            primary_color: '#0f4a43',
+            accent_color: '#d4a24d',
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const request = new NextRequest('https://mudyin-live.vercel.app/community', {
+      headers: { host: 'mudyin-live.vercel.app' },
+    });
+    const response = await proxy(request);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://core.example.com/api/domains/resolve?domain=mudyin-live.vercel.app',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'X-Forwarded-Host': 'mudyin-live.vercel.app',
+        }),
+      }),
+    );
+    expect(response.headers.get('x-tenant-slug')).toBe('mudyin');
+    expect(response.headers.get('x-tenant-site-resolution')).toBe('resolved_deployment_alias');
+    expect(response.headers.get('x-tenant-site-key')).toBe('mudyin-public');
   });
 });

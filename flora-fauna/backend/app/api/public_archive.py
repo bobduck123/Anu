@@ -7,11 +7,43 @@ from ..security.plane_log import emit_plane_log
 from ..schemas import PublicArchiveSummaryListPayloadSchema
 from ..services.archive_service import list_public_archive_summaries
 from ..services.node_service import resolve_node
+from ..services.white_label_site_registry import find_white_label_site_by_public_hint
 from .utils import error, ok
 
 public_archive_bp = Blueprint("public_archive", __name__, url_prefix="/public/archive")
 
 ARCHIVE_SUMMARY_LIST_PAYLOAD_SCHEMA = PublicArchiveSummaryListPayloadSchema()
+
+
+def _degraded_archive_payload(*, node_slug=None, record_type=None, title_prefix=None, page=1, page_size=24):
+    return {
+        "records": [],
+        "pagination": {
+            "model": "offset",
+            "page": page,
+            "page_size": page_size,
+            "total_records": 0,
+            "total_pages": 0,
+            "has_more": False,
+            "has_previous": False,
+            "next_page": None,
+            "previous_page": None,
+            "ordering": ["updated_at:desc", "id:desc"],
+        },
+        "available_record_types": [],
+        "applied_filters": {
+            "record_type": record_type,
+            "title_prefix": title_prefix,
+            "node_slug": node_slug,
+        },
+        "applied_record_type_filter": record_type,
+        "applied_title_prefix_filter": title_prefix,
+        "degraded_honesty": {
+            "is_degraded": True,
+            "reason": "public_archive_storage_unavailable",
+            "fallback": "Public archive storage is temporarily unavailable; no private or draft records are exposed.",
+        },
+    }
 
 
 @public_archive_bp.route("/records", methods=["GET"])
@@ -37,6 +69,20 @@ def list_public_archive_records_route():
         if node_param:
             node = resolve_node(node_param)
             if not node:
+                registry_site = find_white_label_site_by_public_hint(node_param)
+                if registry_site:
+                    payload = _degraded_archive_payload(
+                        node_slug=registry_site.slug,
+                        record_type=record_type,
+                        title_prefix=title_prefix,
+                        page=page,
+                        page_size=page_size,
+                    )
+                    payload["degraded_honesty"]["reason"] = "tenant_node_not_bootstrapped"
+                    payload["degraded_honesty"]["fallback"] = (
+                        "This white-label site is registered, but its active tenant node is not bootstrapped yet."
+                    )
+                    return ok(ARCHIVE_SUMMARY_LIST_PAYLOAD_SCHEMA.dump(payload))
                 return error("not_found", "Node not found", 404)
 
         payload = list_public_archive_summaries(
@@ -80,4 +126,11 @@ def list_public_archive_records_route():
         )
         current_app.logger.exception("Public archive summary list failed")
         db.session.rollback()
-        return error("service_unavailable", "Archive summary list temporarily unavailable", 503)
+        payload = _degraded_archive_payload(
+            node_slug=node.slug if "node" in locals() and node else node_param,
+            record_type=record_type,
+            title_prefix=title_prefix,
+            page=page,
+            page_size=page_size,
+        )
+        return ok(ARCHIVE_SUMMARY_LIST_PAYLOAD_SCHEMA.dump(payload))

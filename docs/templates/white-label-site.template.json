@@ -1,0 +1,106 @@
+{
+  "site_id": "example-site",
+  "slug": "example-site",
+  "canonical_name": "Example Site",
+  "short_name": "Example",
+  "allowed_domains": [
+    "www.example.com",
+    "example.com"
+  ],
+  "deployment_aliases": [
+    "example-live.vercel.app"
+  ],
+  "tenant_scope": "node:example-site",
+  "enabled_features": [
+    "community",
+    "trust",
+    "transparency"
+  ],
+  "required_runtime_env": [
+    "DATABASE_URL",
+    "CONTROL_PLANE_HOSTS",
+    "CONTROL_PLANE_SHARED_SECRET"
+  ],
+  "manifest_defaults": {
+    "site_key": "example-public",
+    "site_name": "Example Site",
+    "tagline": "Public community and transparency surfaces.",
+    "canonical_domains": [
+      "www.example.com",
+      "example.com"
+    ],
+    "deployment_aliases": [
+      "example-live.vercel.app"
+    ],
+    "preview_host": "example-live.vercel.app",
+    "brand_assets": {
+      "logo_url": null,
+      "favicon_url": null,
+      "wordmark_url": null
+    },
+    "theme_tokens": {
+      "primary_color": "#123456",
+      "secondary_color": "#234567",
+      "accent_color": "#b58932"
+    },
+    "nav_items": [
+      {
+        "label": "About",
+        "href": "/about"
+      },
+      {
+        "label": "Community",
+        "href": "/community",
+        "module": "community"
+      },
+      {
+        "label": "Trust",
+        "href": "/trust",
+        "module": "trust"
+      },
+      {
+        "label": "Transparency",
+        "href": "/transparency",
+        "module": "transparency"
+      }
+    ],
+    "footer_links": [
+      {
+        "label": "About",
+        "href": "/about"
+      },
+      {
+        "label": "Contact",
+        "href": "/contact"
+      },
+      {
+        "label": "Privacy",
+        "href": "/privacy"
+      },
+      {
+        "label": "Terms",
+        "href": "/terms"
+      },
+      {
+        "label": "Code of Conduct",
+        "href": "/code-of-conduct"
+      }
+    ],
+    "legal_links": {
+      "privacy": "/privacy",
+      "terms": "/terms",
+      "code_of_conduct": "/code-of-conduct"
+    },
+    "trust_links": {
+      "trust_center": "/trust",
+      "transparency": "/transparency",
+      "archive": "/archive"
+    },
+    "contact": {
+      "email": "hello@example.com",
+      "public_contact_url": "/contact",
+      "location_label": "City, Region"
+    }
+  }
+}
+

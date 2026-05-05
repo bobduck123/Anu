@@ -217,6 +217,16 @@ function resolveTargetOrigin(target: ProxyTarget): string | null {
   return getImpactApiOrigin();
 }
 
+function getControlPlaneSharedSecret(): string | null {
+  const configured = process.env.CONTROL_PLANE_SHARED_SECRET || process.env.CONTROL_PLANE_SECRET_HEADER || '';
+  const trimmed = configured.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function requiresCoreControlSharedSecret(rule: ProxyRule): boolean {
+  return rule.requiresPrivilegedAuth && rule.target === 'core';
+}
+
 async function forwardControlRequest(
   request: NextRequest,
   upstreamUrl: string,
@@ -236,6 +246,14 @@ async function forwardControlRequest(
 
   let controlAccessToken: string | null = null;
   if (rule.requiresPrivilegedAuth) {
+    if (requiresCoreControlSharedSecret(rule) && process.env.NODE_ENV === 'production' && !getControlPlaneSharedSecret()) {
+      logControlProxyEvent(traceIdValue, 'control_proxy_shared_secret_missing', 'error', {
+        routeFamily: rule.routeFamily,
+        target: rule.target,
+      });
+      return jsonError(503, 'control_shared_secret_missing', 'Control plane shared secret is not configured.', traceIdValue);
+    }
+
     controlAccessToken = await mintControlToken(coreOrigin as string, controlSession.publicAccessToken, traceIdValue);
     if (!controlAccessToken) {
       logControlProxyEvent(traceIdValue, 'control_proxy_privileged_token_denied', 'warn', {
@@ -264,6 +282,10 @@ async function forwardControlRequest(
   }
   if (controlAccessToken) {
     outgoingHeaders.Authorization = `Bearer ${controlAccessToken}`;
+  }
+  const controlSharedSecret = requiresCoreControlSharedSecret(rule) ? getControlPlaneSharedSecret() : null;
+  if (controlSharedSecret) {
+    outgoingHeaders['X-Control-Plane-Secret'] = controlSharedSecret;
   }
 
   let body: BodyInit | undefined;
@@ -430,4 +452,5 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
 export const __testables = {
   resolveRule,
+  getControlPlaneSharedSecret,
 };

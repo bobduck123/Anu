@@ -68,6 +68,26 @@ function isVercelPreviewDomain(hostname: string): boolean {
   return hostname.endsWith('.vercel.app') || hostname.endsWith('.vercel.sh');
 }
 
+function getWhiteLabelDeploymentHostsFromEnv(): Set<string> {
+  const raw = [
+    process.env.WHITE_LABEL_DEPLOYMENT_HOSTS,
+    process.env.NEXT_PUBLIC_WHITE_LABEL_DEPLOYMENT_HOSTS,
+  ]
+    .filter(Boolean)
+    .join(',');
+
+  return new Set(
+    raw
+      .split(',')
+      .map((host) => normalizeHostname(host.trim()))
+      .filter(Boolean),
+  );
+}
+
+function isWhiteLabelDeploymentAlias(hostname: string): boolean {
+  return getWhiteLabelDeploymentHostsFromEnv().has(hostname);
+}
+
 function isLocalDevelopmentHostname(hostname: string): boolean {
   if (hostname === 'local' || hostname.endsWith('.local') || hostname.endsWith('.localhost')) {
     return true;
@@ -213,8 +233,14 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Skip tenant resolution for platform domains and Vercel preview deployments
-  if (isPlatformDomain(hostname) || isVercelPreviewDomain(hostname) || isLocalDevelopmentHostname(hostname)) {
+  // Skip tenant resolution for platform domains and generic Vercel previews.
+  // Named white-label deployment aliases are resolved because they are public launch surfaces.
+  const shouldResolveVercelAlias = isVercelPreviewDomain(hostname) && isWhiteLabelDeploymentAlias(hostname);
+  if (
+    isPlatformDomain(hostname)
+    || (isVercelPreviewDomain(hostname) && !shouldResolveVercelAlias)
+    || isLocalDevelopmentHostname(hostname)
+  ) {
     return supabaseResponse;
   }
 
@@ -316,4 +342,10 @@ export const config = {
      */
     '/((?!_next/static|_next/image|favicon.ico|public/).*)',
   ],
+};
+
+export const __testables = {
+  getWhiteLabelDeploymentHostsFromEnv,
+  isWhiteLabelDeploymentAlias,
+  isVercelPreviewDomain,
 };

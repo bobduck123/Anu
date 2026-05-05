@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 const { createClientMock, getCoreApiOriginMock, getImpactApiOriginMock } = vi.hoisted(() => ({
@@ -68,8 +68,14 @@ function createSupabaseSessionMock(role: string | null, accessToken = 'public.se
 describe('control proxy route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.CONTROL_PLANE_SHARED_SECRET = 'test-control-plane-secret';
     getCoreApiOriginMock.mockReturnValue('https://core.example.com');
     getImpactApiOriginMock.mockReturnValue('https://impact.example.com');
+  });
+
+  afterEach(() => {
+    delete process.env.CONTROL_PLANE_SHARED_SECRET;
+    delete process.env.CONTROL_PLANE_SECRET_HEADER;
   });
 
   it('rejects access on public hosts', async () => {
@@ -161,6 +167,7 @@ describe('control proxy route', () => {
       if (url === 'https://core.example.com/api/admin/tenants') {
         expect(init?.headers).toMatchObject({
           Authorization: 'Bearer control.token',
+          'X-Control-Plane-Secret': 'test-control-plane-secret',
           'x-control-proxy-route-family': 'core-admin-tenants',
           'x-control-proxy-target': 'core',
         });

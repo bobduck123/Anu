@@ -2,6 +2,17 @@
 
 All three database schemas are now connected to their appropriate deployments. Below is a complete guide to the documentation and setup files.
 
+## White-Label Launch Readiness
+
+- **[WHITE_LABEL_READINESS.md](./WHITE_LABEL_READINESS.md)** - Architecture map, readiness contract, and launch gates.
+- **[WHITE_LABEL_SITE_ONBOARDING.md](./WHITE_LABEL_SITE_ONBOARDING.md)** - Reusable onboarding flow and site template instructions.
+- **[MUDYIN_LAUNCH_READINESS.md](./MUDYIN_LAUNCH_READINESS.md)** - Mudyin-specific domain, env, smoke, and content checklist.
+- **[CONTROL_PLANE_SECURITY.md](./CONTROL_PLANE_SECURITY.md)** - Control-plane auth, shared-secret, host, and smoke requirements.
+- **[VERCEL_ENVIRONMENT_SETUP.md](./VERCEL_ENVIRONMENT_SETUP.md)** - Exact Vercel env vars for backend/frontend/impact.
+- **[DOMAIN_AND_DNS_SETUP.md](./DOMAIN_AND_DNS_SETUP.md)** - Cloudflare/Vercel domain setup and verification.
+- **[HOSTED_SMOKE_TESTS.md](./HOSTED_SMOKE_TESTS.md)** - Hosted public/control smoke commands and expected outputs.
+- **[RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md)** - Final white-label release checklist.
+
 ## 📚 Main Documentation Files
 
 ### ⭐ Database & Auth Systems (NEW - March 2026)

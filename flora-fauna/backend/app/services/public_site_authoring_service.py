@@ -13,6 +13,7 @@ from .public_site_service import build_public_site_manifest_for_node
 _ALLOWED_THEME_TOKEN_KEYS = {"primary_color", "secondary_color", "accent_color"}
 _ALLOWED_MODULE_KEYS = {"community", "impact", "education", "trust", "transparency", "archive"}
 _ALLOWED_NAV_HREFS = {
+    "/about",
     "/community",
     "/impact",
     "/education",

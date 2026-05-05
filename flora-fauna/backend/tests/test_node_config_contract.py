@@ -201,3 +201,51 @@ def test_public_node_config_slug_resolution_not_found_for_unknown_slug():
 
     response = client.get("/api/public/nodes/unknown-node/config")
     assert response.status_code == 404
+
+
+def test_public_node_current_config_supports_explicit_site_hint_for_external_frontends():
+    app = _build_app()
+    client = app.test_client()
+
+    from manara_backend_app.extensions import db
+    from manara_backend_app.models import Node
+
+    with app.app_context():
+        node = Node(name="Mudyin", slug="mudyin", status="active")
+        db.session.add(node)
+        db.session.commit()
+
+    response = client.get(
+        "/api/public/nodes/current/config?site=mudyin",
+        headers={"Origin": "https://mudyin.vercel.app"},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["node_slug"] == "mudyin"
+    assert payload["site_resolution"]["resolution_status"] == "resolved_site_hint"
+    assert payload["site_manifest"]["site_key"] == "mudyin-public"
+
+
+def test_public_node_current_config_registry_only_hint_is_stable_before_bootstrap():
+    app = _build_app()
+    client = app.test_client()
+
+    response = client.get("/api/public/nodes/current/config?site=mudyin")
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["node_id"] == 0
+    assert payload["node_slug"] == "mudyin"
+    assert payload["status"] == "registry_only"
+    assert payload["site_manifest"]["site_key"] == "mudyin-public"
+
+
+def test_public_node_current_config_unknown_site_hint_returns_structured_404():
+    app = _build_app()
+    client = app.test_client()
+
+    response = client.get("/api/public/nodes/current/config?site=unknown-site")
+
+    assert response.status_code == 404
+    assert response.get_json()["error"]["code"] == "not_found"

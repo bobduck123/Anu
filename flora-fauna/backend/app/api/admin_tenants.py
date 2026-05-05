@@ -9,12 +9,13 @@ Provides endpoints for:
 """
 
 from flask import Blueprint, request, current_app
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from flask_jwt_extended import get_jwt
 import json
 
 from .utils import ok, error
 from ..extensions import db
 from ..models import Node, NodeConfig, NodeDomain, User
+from ..security.control_plane import control_plane_required
 from ..security.policy import get_current_user
 from ..security.control_tenant_scope import resolve_effective_control_managed_node_ids
 
@@ -46,9 +47,11 @@ def _get_node_config_payload(cfg):
 
 
 def _require_platform_admin():
-    username = get_jwt_identity()
-    user = User.query.filter_by(username=username).first()
-    if not user or user.role != "platform_admin":
+    user = get_current_user()
+    claims = get_jwt() or {}
+    role = str(claims.get("role") or getattr(user, "role", "") or "").strip().lower()
+    persisted_role = str(getattr(user, "role", "") or "").strip().lower()
+    if not user or role != "platform_admin" or persisted_role != "platform_admin":
         return None, error("FORBIDDEN", "Platform admin required", 403)
     return user, None
 
@@ -79,7 +82,7 @@ def _resolve_tenant_access_scope():
 
 
 @admin_tenants_bp.route("", methods=["GET"])
-@jwt_required()
+@control_plane_required(scopes=["sites:tenants:read"])
 def list_tenants():
     allowed_node_ids, err = _resolve_tenant_access_scope()
     if err:
@@ -102,7 +105,7 @@ def list_tenants():
 
 
 @admin_tenants_bp.route("", methods=["POST"])
-@jwt_required()
+@control_plane_required(scopes=["sites:tenants:write"])
 def create_tenant():
     user, err = _require_platform_admin()
     if err:
@@ -141,7 +144,7 @@ def create_tenant():
 
 
 @admin_tenants_bp.route("/<int:node_id>/modules", methods=["PATCH"])
-@jwt_required()
+@control_plane_required(scopes=["sites:tenants:write"])
 def update_modules(node_id):
     user, err = _require_platform_admin()
     if err:
@@ -163,7 +166,7 @@ def update_modules(node_id):
 
 
 @admin_tenants_bp.route("/<int:node_id>/branding", methods=["PATCH"])
-@jwt_required()
+@control_plane_required(scopes=["sites:tenants:write"])
 def update_branding(node_id):
     user, err = _require_platform_admin()
     if err:
@@ -185,7 +188,7 @@ def update_branding(node_id):
 
 
 @admin_tenants_bp.route("/provision", methods=["POST"])
-@jwt_required()
+@control_plane_required(scopes=["sites:tenants:write"])
 def provision_tenant():
     """
     Full white-label tenant provisioning endpoint.
@@ -342,12 +345,14 @@ def provision_tenant():
 
 
 @admin_tenants_bp.route("/<int:node_id>", methods=["GET"])
-@jwt_required()
+@control_plane_required(scopes=["sites:tenants:read"])
 def get_tenant(node_id):
     """Get detailed tenant information including domains and config."""
-    user, err = _require_platform_admin()
+    allowed_node_ids, err = _resolve_tenant_access_scope()
     if err:
         return err
+    if allowed_node_ids is not None and node_id not in allowed_node_ids:
+        return error("FORBIDDEN", "Tenant scope does not allow this node", 403)
     
     node = Node.query.get(node_id)
     if not node:
@@ -386,7 +391,7 @@ def get_tenant(node_id):
 
 
 @admin_tenants_bp.route("/<int:node_id>/white-label", methods=["PATCH"])
-@jwt_required()
+@control_plane_required(scopes=["sites:tenants:write"])
 def update_white_label(node_id):
     """Enable or configure white-label settings for a tenant."""
     user, err = _require_platform_admin()

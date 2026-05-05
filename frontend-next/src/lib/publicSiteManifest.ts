@@ -50,6 +50,8 @@ export interface PublicSiteResolutionMeta {
 
 const PUBLIC_ROUTE_PREFIXES = [
   '/',
+  '/about',
+  '/mission',
   '/archive',
   '/trust',
   '/transparency',
@@ -68,6 +70,7 @@ const PUBLIC_ROUTE_PREFIXES = [
 ] as const;
 
 const DEFAULT_NAV_ITEMS: PublicSiteManifestNavItem[] = [
+  { label: 'About', href: '/about' },
   { label: 'Community', href: '/community', module: 'community' },
   { label: 'Impact', href: '/impact', module: 'impact' },
   { label: 'Education', href: '/education', module: 'education' },
@@ -77,6 +80,7 @@ const DEFAULT_NAV_ITEMS: PublicSiteManifestNavItem[] = [
 ];
 
 const DEFAULT_FOOTER_LINKS: PublicSiteManifestLinkItem[] = [
+  { label: 'About', href: '/about' },
   { label: 'Trust Center', href: '/trust' },
   { label: 'Transparency', href: '/transparency' },
   { label: 'Archive', href: '/archive' },
