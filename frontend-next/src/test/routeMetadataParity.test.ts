@@ -41,9 +41,9 @@ describe('route metadata parity', () => {
   it('keeps observatory/primitive manifest routes canon-normalized', () => {
     const aliases = ROUTE_ALIAS_REGISTRY.map((entry) => entry.alias);
 
-    for (const module of ANU_OBSERVATORY_MODULES) {
-      expect(aliases).not.toContain(module.route);
-      expect(resolveCanonicalRoute(module.route)).toBe(module.route);
+    for (const observatoryModule of ANU_OBSERVATORY_MODULES) {
+      expect(aliases).not.toContain(observatoryModule.route);
+      expect(resolveCanonicalRoute(observatoryModule.route)).toBe(observatoryModule.route);
     }
 
     for (const entry of ANU_PRIMITIVE_MANIFEST) {

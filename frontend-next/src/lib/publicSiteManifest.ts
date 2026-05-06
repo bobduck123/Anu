@@ -142,8 +142,8 @@ function sanitizeNavItems(raw: unknown): PublicSiteManifestNavItem[] {
       continue;
     }
 
-    const module = asNullableText(row.module);
-    projected.push(module ? { label, href, module } : { label, href });
+    const moduleKey = asNullableText(row.module);
+    projected.push(moduleKey ? { label, href, module: moduleKey } : { label, href });
   }
 
   return projected.length ? projected : DEFAULT_NAV_ITEMS;

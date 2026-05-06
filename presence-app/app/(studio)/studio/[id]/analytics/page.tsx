@@ -1,0 +1,87 @@
+"use client";
+
+import { use, useEffect, useState } from "react";
+import { useOwnerNode } from "@/components/studio/useOwnerNode";
+import StudioShell from "@/components/studio/StudioShell";
+import { Loading } from "@/components/ui";
+import { getAnalytics } from "@/lib/api/owner";
+import type { PresenceAnalyticsSummary } from "@/lib/api/types";
+
+export default function StudioAnalyticsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const nodeId = Number(id);
+  const { node, token, loading } = useOwnerNode(nodeId);
+  const [analytics, setAnalytics] = useState<PresenceAnalyticsSummary | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    getAnalytics(nodeId, token).then(setAnalytics).catch(console.error);
+  }, [nodeId, token]);
+
+  if (loading) return <Loading />;
+  if (!node) return null;
+
+  return (
+    <StudioShell node={node}>
+      <div className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-6">
+        <h2 className="text-sm font-semibold text-[var(--p-studio-text)]">Analytics</h2>
+
+        {analytics ? (
+          <>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Views", value: analytics.total_views },
+                { label: "Enquiries", value: analytics.total_enquiries },
+                { label: "Rate", value: `${(analytics.conversion_rate * 100).toFixed(1)}%` },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="flex flex-col gap-1 p-4 rounded-xl bg-[var(--p-studio-surface)] border border-[var(--p-studio-border)] text-center"
+                >
+                  <span className="text-2xl font-semibold text-[var(--p-studio-text)]">{stat.value}</span>
+                  <span className="text-xs text-[var(--p-studio-muted)]">{stat.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {analytics.top_sources && analytics.top_sources.length > 0 && (
+              <section className="flex flex-col gap-3">
+                <h3 className="text-xs font-semibold text-[var(--p-studio-muted)] uppercase tracking-widest">
+                  Top sources
+                </h3>
+                {analytics.top_sources.map((src, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-[var(--p-studio-surface)] border border-[var(--p-studio-border)]">
+                    <span className="text-sm text-[var(--p-studio-text)]">
+                      {src.source_type ?? "direct"}
+                    </span>
+                    <span className="text-sm font-medium text-[var(--p-studio-accent)]">{src.count}</span>
+                  </div>
+                ))}
+              </section>
+            )}
+
+            {analytics.recent_events && analytics.recent_events.length > 0 && (
+              <section className="flex flex-col gap-3">
+                <h3 className="text-xs font-semibold text-[var(--p-studio-muted)] uppercase tracking-widest">
+                  Recent activity
+                </h3>
+                {analytics.recent_events.slice(0, 8).map((ev) => (
+                  <div key={ev.id} className="flex items-center justify-between py-2 border-b border-[var(--p-studio-border)]">
+                    <span className="text-xs text-[var(--p-studio-text)]">{ev.event_type}</span>
+                    {ev.created_at && (
+                      <span className="text-xs text-[var(--p-studio-muted)]">
+                        {new Date(ev.created_at).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </section>
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-[var(--p-studio-muted)]">Loading analytics…</p>
+        )}
+      </div>
+    </StudioShell>
+  );
+}

@@ -29,6 +29,21 @@ function routeStartsWith(pathname: string, prefixes: readonly string[]): boolean
 
 export const REALM_ROUTE_REGISTRY: RealmRouteEntry[] = [
   {
+    id: 'presence-owner-app',
+    prefixes: ['/app'],
+    surface: {
+      realm: 'neutral',
+      strength: 'strong',
+      surfaceKind: 'internal',
+      environmentTitle: 'Presence owner app',
+      entryPattern: 'threshold',
+      supportsRealmTransition: false,
+      fallbackMode: 'standard',
+      hideSupportChrome: true,
+      immersiveCanvas: false,
+    },
+  },
+  {
     id: 'labyrinth-passage',
     prefixes: ['/governance/model-registry'],
     surface: {

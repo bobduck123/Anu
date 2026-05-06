@@ -20,7 +20,7 @@ describe('pathway guidance model', () => {
 
   it('builds cost-lowering-specific guidance steps', () => {
     const guide = buildPathwayGuide('/runs/12');
-    expect(guide.title).toBe('Cost-lowering flow');
+    expect(guide.title).toBe('Optimization flow');
     expect(guide.steps.map((step) => step.href)).toContain('/cost-lowering');
   });
 

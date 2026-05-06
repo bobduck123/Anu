@@ -573,6 +573,599 @@ class NodeServiceBinding(db.Model):
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
 
+class PresenceTemplate(db.Model):
+    __tablename__ = "presence_template"
+    __table_args__ = (
+        db.Index("ix_presence_template_node_type", "node_type"),
+        db.Index("ix_presence_template_display_mode", "display_mode"),
+        db.Index("ix_presence_template_active", "is_active"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(160), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    node_type = db.Column(db.String(80), nullable=False, default="custom")
+    display_mode = db.Column(db.String(80), nullable=False, default="profile_card")
+    preview_image_url = db.Column(db.String(700), nullable=True)
+    theme_schema = db.Column(db.JSON, nullable=True)
+    layout_schema = db.Column(db.JSON, nullable=True)
+    section_schema = db.Column(db.JSON, nullable=True)
+    supports_landing_portal = db.Column(db.Boolean, default=False, nullable=False)
+    supports_collections = db.Column(db.Boolean, default=False, nullable=False)
+    supports_business_functions = db.Column(db.Boolean, default=False, nullable=False)
+    supports_tradie_functions = db.Column(db.Boolean, default=False, nullable=False)
+    supports_professional_contract = db.Column(db.Boolean, default=False, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    is_premium = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+
+class PresenceNode(db.Model):
+    __tablename__ = "presence_node"
+    __table_args__ = (
+        db.UniqueConstraint("slug", name="uq_presence_node_slug"),
+        db.Index("ix_presence_node_tenant_id", "tenant_id"),
+        db.Index("ix_presence_node_organisation_id", "organisation_id"),
+        db.Index("ix_presence_node_owner_user_id", "owner_user_id"),
+        db.Index("ix_presence_node_status", "status"),
+        db.Index("ix_presence_node_type", "node_type"),
+        db.Index("ix_presence_node_display_mode", "display_mode"),
+        db.Index("ix_presence_node_plan_type", "plan_type"),
+        db.Index("ix_presence_node_template_id", "template_id"),
+        db.Index("ix_presence_node_readiness", "directory_ready", "map_ready", "archive_ready", "marketplace_ready"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    owner_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    organisation_id = db.Column(db.Integer, nullable=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("node.id"), nullable=True)
+    slug = db.Column(db.String(180), nullable=False)
+    display_name = db.Column(db.String(180), nullable=False)
+    headline = db.Column(db.String(220), nullable=True)
+    bio = db.Column(db.Text, nullable=True)
+    node_type = db.Column(db.String(80), nullable=False, default="custom")
+    display_mode = db.Column(db.String(80), nullable=False, default="profile_card")
+    plan_type = db.Column(db.String(80), nullable=False, default="basic")
+    status = db.Column(db.String(40), nullable=False, default="draft")
+    visibility = db.Column(db.String(40), nullable=False, default="public")
+    template_id = db.Column(db.Integer, db.ForeignKey("presence_template.id"), nullable=True)
+    theme_config = db.Column(db.JSON, nullable=True)
+    visual_mood = db.Column(db.String(120), nullable=True)
+    custom_typography_config = db.Column(db.JSON, nullable=True)
+    custom_spacing_config = db.Column(db.JSON, nullable=True)
+    profile_image_url = db.Column(db.String(700), nullable=True)
+    cover_image_url = db.Column(db.String(700), nullable=True)
+    location_label = db.Column(db.String(180), nullable=True)
+    service_area = db.Column(db.String(220), nullable=True)
+    primary_cta_label = db.Column(db.String(100), nullable=True)
+    primary_cta_url = db.Column(db.String(700), nullable=True)
+    landing_enabled = db.Column(db.Boolean, default=False, nullable=False)
+    landing_title = db.Column(db.String(180), nullable=True)
+    landing_subtitle = db.Column(db.String(260), nullable=True)
+    landing_background_url = db.Column(db.String(700), nullable=True)
+    landing_enter_label = db.Column(db.String(80), nullable=True)
+    practice_statement = db.Column(db.Text, nullable=True)
+    curatorial_statement = db.Column(db.Text, nullable=True)
+    capability_statement = db.Column(db.Text, nullable=True)
+    proof_summary = db.Column(db.Text, nullable=True)
+    procurement_summary = db.Column(db.Text, nullable=True)
+    business_functions_enabled = db.Column(db.Boolean, default=False, nullable=False)
+    directory_ready = db.Column(db.Boolean, default=False, nullable=False)
+    map_ready = db.Column(db.Boolean, default=False, nullable=False)
+    archive_ready = db.Column(db.Boolean, default=False, nullable=False)
+    marketplace_ready = db.Column(db.Boolean, default=False, nullable=False)
+    white_label_ready = db.Column(db.Boolean, default=False, nullable=False)
+    public_email = db.Column(db.String(180), nullable=True)
+    public_phone = db.Column(db.String(80), nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+    published_at = db.Column(db.DateTime, nullable=True)
+    archived_at = db.Column(db.DateTime, nullable=True)
+
+    sections = db.relationship("PresenceNodeSection", backref="node", lazy=True, cascade="all, delete-orphan")
+    collections = db.relationship("PresenceCollection", backref="node", lazy=True, cascade="all, delete-orphan")
+    works = db.relationship("PresenceWork", backref="node", lazy=True, cascade="all, delete-orphan")
+    links = db.relationship("PresenceLink", backref="node", lazy=True, cascade="all, delete-orphan")
+    services = db.relationship("PresenceService", backref="node", lazy=True, cascade="all, delete-orphan")
+    portfolio_items = db.relationship("PresencePortfolioItem", backref="node", lazy=True, cascade="all, delete-orphan")
+    availability_chips = db.relationship("PresenceAvailabilityChip", backref="node", lazy=True, cascade="all, delete-orphan")
+    business_functions = db.relationship("PresenceBusinessFunction", backref="node", lazy=True, cascade="all, delete-orphan")
+    proof_items = db.relationship("PresenceProofItem", backref="node", lazy=True, cascade="all, delete-orphan")
+    credentials = db.relationship("PresenceCredential", backref="node", lazy=True, cascade="all, delete-orphan")
+    procurement_profiles = db.relationship("PresenceProcurementProfile", backref="node", lazy=True, cascade="all, delete-orphan")
+    nfc_tags = db.relationship("PresenceNfcTag", backref="node", lazy=True, cascade="all, delete-orphan")
+    connections = db.relationship("PresenceConnection", backref="node", lazy=True, cascade="all, delete-orphan")
+    interactions = db.relationship("PresenceInteraction", backref="node", lazy=True, cascade="all, delete-orphan")
+    quotes = db.relationship("PresenceQuote", backref="node", lazy=True, cascade="all, delete-orphan")
+    variations = db.relationship("PresenceVariation", backref="node", lazy=True, cascade="all, delete-orphan")
+    invoice_support_records = db.relationship("PresenceInvoiceSupport", backref="node", lazy=True, cascade="all, delete-orphan")
+    handovers = db.relationship("PresenceWorkHandover", backref="node", lazy=True, cascade="all, delete-orphan")
+    enquiries = db.relationship("PresenceEnquiry", backref="node", lazy=True, cascade="all, delete-orphan")
+    analytics_events = db.relationship("PresenceAnalyticsEvent", backref="node", lazy=True, cascade="all, delete-orphan")
+
+
+class PresenceNodeSection(db.Model):
+    __tablename__ = "presence_node_section"
+    __table_args__ = (
+        db.Index("ix_presence_node_section_node_order", "node_id", "sort_order"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    section_type = db.Column(db.String(80), nullable=False)
+    title = db.Column(db.String(180), nullable=True)
+    content = db.Column(db.Text, nullable=True)
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+    is_visible = db.Column(db.Boolean, default=True, nullable=False)
+    config = db.Column(db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+
+class PresenceCollection(db.Model):
+    __tablename__ = "presence_collection"
+    __table_args__ = (
+        db.Index("ix_presence_collection_node_order", "node_id", "sort_order"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    title = db.Column(db.String(180), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    cover_image_url = db.Column(db.String(700), nullable=True)
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+    is_visible = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+
+class PresenceWork(db.Model):
+    __tablename__ = "presence_work"
+    __table_args__ = (
+        db.UniqueConstraint("node_id", "slug", name="uq_presence_work_node_slug"),
+        db.Index("ix_presence_work_node_order", "node_id", "sort_order"),
+        db.Index("ix_presence_work_collection_id", "collection_id"),
+        db.Index("ix_presence_work_availability_status", "availability_status"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    collection_id = db.Column(db.Integer, db.ForeignKey("presence_collection.id"), nullable=True)
+    slug = db.Column(db.String(180), nullable=True)
+    title = db.Column(db.String(180), nullable=False)
+    year = db.Column(db.String(40), nullable=True)
+    medium = db.Column(db.String(180), nullable=True)
+    dimensions = db.Column(db.String(120), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    image_url = db.Column(db.String(700), nullable=True)
+    thumbnail_url = db.Column(db.String(700), nullable=True)
+    gallery_images = db.Column(db.JSON, nullable=True)
+    external_url = db.Column(db.String(700), nullable=True)
+    availability_status = db.Column(db.String(80), nullable=True)
+    price_label = db.Column(db.String(100), nullable=True)
+    exhibition_history = db.Column(db.Text, nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+    is_visible = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    collection = db.relationship("PresenceCollection", backref=db.backref("works", lazy=True))
+
+
+class PresenceLink(db.Model):
+    __tablename__ = "presence_link"
+    __table_args__ = (
+        db.Index("ix_presence_link_node_order", "node_id", "sort_order"),
+        db.Index("ix_presence_link_type", "link_type"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    label = db.Column(db.String(120), nullable=False)
+    url = db.Column(db.String(700), nullable=False)
+    link_type = db.Column(db.String(80), nullable=False, default="website")
+    icon = db.Column(db.String(80), nullable=True)
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+    is_visible = db.Column(db.Boolean, default=True, nullable=False)
+
+
+class PresenceService(db.Model):
+    __tablename__ = "presence_service"
+    __table_args__ = (
+        db.Index("ix_presence_service_node_order", "node_id", "sort_order"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    title = db.Column(db.String(160), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    problem_solved = db.Column(db.Text, nullable=True)
+    who_it_is_for = db.Column(db.Text, nullable=True)
+    format = db.Column(db.String(120), nullable=True)
+    deliverables = db.Column(db.Text, nullable=True)
+    price_label = db.Column(db.String(100), nullable=True)
+    duration_label = db.Column(db.String(100), nullable=True)
+    cta_label = db.Column(db.String(100), nullable=True)
+    cta_url = db.Column(db.String(700), nullable=True)
+    enquiry_type = db.Column(db.String(80), nullable=True)
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+    is_visible = db.Column(db.Boolean, default=True, nullable=False)
+
+
+class PresencePortfolioItem(db.Model):
+    __tablename__ = "presence_portfolio_item"
+    __table_args__ = (
+        db.Index("ix_presence_portfolio_node_order", "node_id", "sort_order"),
+        db.Index("ix_presence_portfolio_media_type", "media_type"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    title = db.Column(db.String(180), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    media_url = db.Column(db.String(700), nullable=True)
+    thumbnail_url = db.Column(db.String(700), nullable=True)
+    external_url = db.Column(db.String(700), nullable=True)
+    media_type = db.Column(db.String(80), nullable=False, default="image")
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+    is_visible = db.Column(db.Boolean, default=True, nullable=False)
+
+
+class PresenceAvailabilityChip(db.Model):
+    __tablename__ = "presence_availability_chip"
+    __table_args__ = (
+        db.Index("ix_presence_availability_node_order", "node_id", "sort_order"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    label = db.Column(db.String(120), nullable=False)
+    chip_type = db.Column(db.String(80), nullable=False, default="availability")
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+
+
+class PresenceBusinessFunction(db.Model):
+    __tablename__ = "presence_business_function"
+    __table_args__ = (
+        db.UniqueConstraint("node_id", "function_type", name="uq_presence_business_function_node_type"),
+        db.Index("ix_presence_business_function_node", "node_id"),
+        db.Index("ix_presence_business_function_type", "function_type"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    function_type = db.Column(db.String(80), nullable=False)
+    is_enabled = db.Column(db.Boolean, default=True, nullable=False)
+    config = db.Column(db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+
+class PresenceProofItem(db.Model):
+    __tablename__ = "presence_proof_item"
+    __table_args__ = (
+        db.Index("ix_presence_proof_node_order", "node_id", "sort_order"),
+        db.Index("ix_presence_proof_industry", "industry"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    title = db.Column(db.String(180), nullable=False)
+    client_label = db.Column(db.String(160), nullable=True)
+    industry = db.Column(db.String(120), nullable=True)
+    challenge = db.Column(db.Text, nullable=True)
+    approach = db.Column(db.Text, nullable=True)
+    outcome = db.Column(db.Text, nullable=True)
+    metrics = db.Column(db.JSON, nullable=True)
+    testimonial = db.Column(db.Text, nullable=True)
+    media_urls = db.Column(db.JSON, nullable=True)
+    is_public = db.Column(db.Boolean, default=True, nullable=False)
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+
+class PresenceCredential(db.Model):
+    __tablename__ = "presence_credential"
+    __table_args__ = (
+        db.Index("ix_presence_credential_node", "node_id"),
+        db.Index("ix_presence_credential_type", "credential_type"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    title = db.Column(db.String(180), nullable=False)
+    issuer = db.Column(db.String(180), nullable=True)
+    credential_type = db.Column(db.String(80), nullable=False, default="credential")
+    issued_at = db.Column(db.DateTime, nullable=True)
+    expires_at = db.Column(db.DateTime, nullable=True)
+    verification_url = db.Column(db.String(700), nullable=True)
+    is_public = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+
+class PresenceProcurementProfile(db.Model):
+    __tablename__ = "presence_procurement_profile"
+    __table_args__ = (
+        db.UniqueConstraint("node_id", name="uq_presence_procurement_profile_node"),
+        db.Index("ix_presence_procurement_profile_node", "node_id"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    business_name = db.Column(db.String(180), nullable=True)
+    abn_acn_or_registration = db.Column(db.String(120), nullable=True)
+    regions_served = db.Column(db.JSON, nullable=True)
+    contract_types = db.Column(db.JSON, nullable=True)
+    rate_label = db.Column(db.String(120), nullable=True)
+    insurance_status = db.Column(db.String(120), nullable=True)
+    nda_ready = db.Column(db.Boolean, default=False, nullable=False)
+    procurement_contact_email = db.Column(db.String(180), nullable=True)
+    compliance_notes = db.Column(db.Text, nullable=True)
+    payment_terms_label = db.Column(db.String(120), nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+
+class PresenceNfcTag(db.Model):
+    __tablename__ = "presence_nfc_tag"
+    __table_args__ = (
+        db.UniqueConstraint("node_id", "source_code", name="uq_presence_nfc_tag_node_source"),
+        db.Index("ix_presence_nfc_tag_node", "node_id"),
+        db.Index("ix_presence_nfc_tag_source", "source_code"),
+        db.Index("ix_presence_nfc_tag_active", "is_active"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    tag_uid = db.Column(db.String(180), nullable=True)
+    label = db.Column(db.String(160), nullable=False)
+    tag_type = db.Column(db.String(80), nullable=False, default="custom")
+    destination_url = db.Column(db.String(700), nullable=True)
+    source_code = db.Column(db.String(120), nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+
+class PresenceConnection(db.Model):
+    __tablename__ = "presence_connection"
+    __table_args__ = (
+        db.Index("ix_presence_connection_node", "node_id"),
+        db.Index("ix_presence_connection_status", "status"),
+        db.Index("ix_presence_connection_source_tag", "source_tag_id"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    contact_name = db.Column(db.String(160), nullable=True)
+    contact_email = db.Column(db.String(180), nullable=True)
+    contact_phone = db.Column(db.String(80), nullable=True)
+    organisation = db.Column(db.String(180), nullable=True)
+    source_type = db.Column(db.String(80), nullable=False, default="manual")
+    source_tag_id = db.Column(db.Integer, db.ForeignKey("presence_nfc_tag.id"), nullable=True)
+    status = db.Column(db.String(80), nullable=False, default="scanned")
+    consent_status = db.Column(db.String(80), nullable=False, default="unknown")
+    notes = db.Column(db.Text, nullable=True)
+    last_interaction_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    source_tag = db.relationship("PresenceNfcTag", backref=db.backref("connections", lazy=True))
+
+
+class PresenceInteraction(db.Model):
+    __tablename__ = "presence_interaction"
+    __table_args__ = (
+        db.Index("ix_presence_interaction_node_time", "node_id", "occurred_at"),
+        db.Index("ix_presence_interaction_connection", "connection_id"),
+        db.Index("ix_presence_interaction_type", "interaction_type"),
+        db.Index("ix_presence_interaction_source_tag", "source_tag_id"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    connection_id = db.Column(db.Integer, db.ForeignKey("presence_connection.id"), nullable=True)
+    interaction_type = db.Column(db.String(80), nullable=False)
+    source_type = db.Column(db.String(80), nullable=True)
+    source_tag_id = db.Column(db.Integer, db.ForeignKey("presence_nfc_tag.id"), nullable=True)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    occurred_at = db.Column(db.DateTime, default=utcnow)
+
+    connection = db.relationship("PresenceConnection", backref=db.backref("interactions", lazy=True))
+    source_tag = db.relationship("PresenceNfcTag", backref=db.backref("interactions", lazy=True))
+
+
+class PresenceQuote(db.Model):
+    __tablename__ = "presence_quote"
+    __table_args__ = (
+        db.Index("ix_presence_quote_node", "node_id"),
+        db.Index("ix_presence_quote_connection", "connection_id"),
+        db.Index("ix_presence_quote_status", "status"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    connection_id = db.Column(db.Integer, db.ForeignKey("presence_connection.id"), nullable=True)
+    title = db.Column(db.String(180), nullable=False)
+    status = db.Column(db.String(80), nullable=False, default="draft")
+    description = db.Column(db.Text, nullable=True)
+    total_amount = db.Column(db.Numeric(12, 2), nullable=True)
+    currency = db.Column(db.String(12), nullable=False, default="AUD")
+    terms = db.Column(db.Text, nullable=True)
+    expires_at = db.Column(db.DateTime, nullable=True)
+    approved_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    connection = db.relationship("PresenceConnection", backref=db.backref("quotes", lazy=True))
+
+
+class PresenceQuoteLineItem(db.Model):
+    __tablename__ = "presence_quote_line_item"
+    __table_args__ = (
+        db.Index("ix_presence_quote_line_item_quote_order", "quote_id", "sort_order"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    quote_id = db.Column(db.Integer, db.ForeignKey("presence_quote.id"), nullable=False)
+    label = db.Column(db.String(180), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    quantity = db.Column(db.Numeric(12, 2), nullable=False, default=1)
+    unit_price = db.Column(db.Numeric(12, 2), nullable=True)
+    total_price = db.Column(db.Numeric(12, 2), nullable=True)
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+
+    quote = db.relationship("PresenceQuote", backref=db.backref("line_items", lazy=True, cascade="all, delete-orphan"))
+
+
+class PresenceVariation(db.Model):
+    __tablename__ = "presence_variation"
+    __table_args__ = (
+        db.Index("ix_presence_variation_node", "node_id"),
+        db.Index("ix_presence_variation_quote", "quote_id"),
+        db.Index("ix_presence_variation_connection", "connection_id"),
+        db.Index("ix_presence_variation_status", "status"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    quote_id = db.Column(db.Integer, db.ForeignKey("presence_quote.id"), nullable=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    connection_id = db.Column(db.Integer, db.ForeignKey("presence_connection.id"), nullable=True)
+    title = db.Column(db.String(180), nullable=False)
+    reason = db.Column(db.Text, nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    price_delta = db.Column(db.Numeric(12, 2), nullable=True)
+    time_delta = db.Column(db.String(120), nullable=True)
+    evidence_urls = db.Column(db.JSON, nullable=True)
+    status = db.Column(db.String(80), nullable=False, default="draft")
+    approved_by_name = db.Column(db.String(160), nullable=True)
+    approved_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    quote = db.relationship("PresenceQuote", backref=db.backref("variations", lazy=True))
+    connection = db.relationship("PresenceConnection", backref=db.backref("variations", lazy=True))
+
+
+class PresenceInvoiceSupport(db.Model):
+    __tablename__ = "presence_invoice_support"
+    __table_args__ = (
+        db.Index("ix_presence_invoice_support_node", "node_id"),
+        db.Index("ix_presence_invoice_support_connection", "connection_id"),
+        db.Index("ix_presence_invoice_support_quote", "quote_id"),
+        db.Index("ix_presence_invoice_support_status", "status"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    connection_id = db.Column(db.Integer, db.ForeignKey("presence_connection.id"), nullable=True)
+    quote_id = db.Column(db.Integer, db.ForeignKey("presence_quote.id"), nullable=True)
+    external_invoice_url = db.Column(db.String(700), nullable=True)
+    invoice_number = db.Column(db.String(120), nullable=True)
+    status = db.Column(db.String(80), nullable=False, default="draft")
+    amount = db.Column(db.Numeric(12, 2), nullable=True)
+    currency = db.Column(db.String(12), nullable=False, default="AUD")
+    notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    connection = db.relationship("PresenceConnection", backref=db.backref("invoice_support_records", lazy=True))
+    quote = db.relationship("PresenceQuote", backref=db.backref("invoice_support_records", lazy=True))
+
+
+class PresenceWorkHandover(db.Model):
+    __tablename__ = "presence_work_handover"
+    __table_args__ = (
+        db.Index("ix_presence_work_handover_node", "node_id"),
+        db.Index("ix_presence_work_handover_connection", "connection_id"),
+        db.Index("ix_presence_work_handover_quote", "quote_id"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    connection_id = db.Column(db.Integer, db.ForeignKey("presence_connection.id"), nullable=True)
+    quote_id = db.Column(db.Integer, db.ForeignKey("presence_quote.id"), nullable=True)
+    summary = db.Column(db.Text, nullable=True)
+    before_images = db.Column(db.JSON, nullable=True)
+    after_images = db.Column(db.JSON, nullable=True)
+    work_notes = db.Column(db.Text, nullable=True)
+    materials_used = db.Column(db.Text, nullable=True)
+    warranty_notes = db.Column(db.Text, nullable=True)
+    customer_acceptance_status = db.Column(db.String(80), nullable=False, default="pending")
+    accepted_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    connection = db.relationship("PresenceConnection", backref=db.backref("handovers", lazy=True))
+    quote = db.relationship("PresenceQuote", backref=db.backref("handovers", lazy=True))
+
+
+class PresenceEnquiry(db.Model):
+    __tablename__ = "presence_enquiry"
+    __table_args__ = (
+        db.Index("ix_presence_enquiry_node_id", "node_id"),
+        db.Index("ix_presence_enquiry_tenant_id", "tenant_id"),
+        db.Index("ix_presence_enquiry_organisation_id", "organisation_id"),
+        db.Index("ix_presence_enquiry_connection_id", "connection_id"),
+        db.Index("ix_presence_enquiry_source_tag_id", "source_tag_id"),
+        db.Index("ix_presence_enquiry_status", "status"),
+        db.Index("ix_presence_enquiry_created_at", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    organisation_id = db.Column(db.Integer, nullable=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("node.id"), nullable=True)
+    connection_id = db.Column(db.Integer, db.ForeignKey("presence_connection.id"), nullable=True)
+    enquiry_type = db.Column(db.String(80), nullable=False, default="general")
+    name = db.Column(db.String(160), nullable=False)
+    email = db.Column(db.String(180), nullable=False)
+    phone = db.Column(db.String(80), nullable=True)
+    company = db.Column(db.String(180), nullable=True)
+    role_title = db.Column(db.String(160), nullable=True)
+    budget_range = db.Column(db.String(120), nullable=True)
+    timeline = db.Column(db.String(120), nullable=True)
+    project_type = db.Column(db.String(120), nullable=True)
+    urgency = db.Column(db.String(80), nullable=True)
+    decision_maker_status = db.Column(db.String(120), nullable=True)
+    message = db.Column(db.Text, nullable=False)
+    preferred_contact_method = db.Column(db.String(40), nullable=False, default="email")
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    source_url = db.Column(db.String(700), nullable=True)
+    source_type = db.Column(db.String(80), nullable=True)
+    source_tag_id = db.Column(db.Integer, db.ForeignKey("presence_nfc_tag.id"), nullable=True)
+    ip_hash = db.Column(db.String(96), nullable=True)
+    user_agent_hash = db.Column(db.String(96), nullable=True)
+    status = db.Column(db.String(40), nullable=False, default="new")
+    assigned_to_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    connection = db.relationship("PresenceConnection", backref=db.backref("enquiries", lazy=True))
+    source_tag = db.relationship("PresenceNfcTag", backref=db.backref("enquiries", lazy=True))
+
+
+class PresenceAnalyticsEvent(db.Model):
+    __tablename__ = "presence_analytics_event"
+    __table_args__ = (
+        db.Index("ix_presence_analytics_node_event", "node_id", "event_type"),
+        db.Index("ix_presence_analytics_created_at", "created_at"),
+        db.Index("ix_presence_analytics_session", "anonymous_session_id"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    event_type = db.Column(db.String(80), nullable=False)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    anonymous_session_id = db.Column(db.String(120), nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+
+
 class PartnerKey(db.Model):
     __table_args__ = (
         db.UniqueConstraint('node_id', 'key_id', name='uq_partner_key_node_key'),

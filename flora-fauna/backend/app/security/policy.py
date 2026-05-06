@@ -141,6 +141,31 @@ PERMISSIONS = {
     "wcle:receipt:create": ["organizer", "node_admin", "platform_admin"],
     "wcle:baseline:manage": ["organizer", "node_admin", "platform_admin", "auditor"],
     "wcle:savings:read": ALL_ROLES,
+
+    # Presence Nodes
+    "presence.node.create": ["organizer", "publisher", "node_admin", "platform_admin"],
+    "presence.node.read": ["organizer", "publisher", "node_admin", "platform_admin", "auditor"],
+    "presence.node.update": ["organizer", "publisher", "node_admin", "platform_admin"],
+    "presence.node.delete": ["node_admin", "platform_admin"],
+    "presence.node.publish": ["publisher", "node_admin", "platform_admin"],
+    "presence.node.suspend": ["node_admin", "platform_admin"],
+    "presence.node.archive": ["node_admin", "platform_admin"],
+    "presence.enquiry.read": ["organizer", "publisher", "node_admin", "platform_admin"],
+    "presence.enquiry.update": ["organizer", "publisher", "node_admin", "platform_admin"],
+    "presence.template.manage": ["node_admin", "platform_admin"],
+    "presence.analytics.read": ["organizer", "publisher", "node_admin", "platform_admin", "auditor"],
+    "presence.organisation.manage": ["node_admin", "platform_admin"],
+    "presence.collection.manage": ["organizer", "publisher", "node_admin", "platform_admin"],
+    "presence.work.manage": ["organizer", "publisher", "node_admin", "platform_admin"],
+    "presence.service.manage": ["organizer", "publisher", "node_admin", "platform_admin"],
+    "presence.proof.manage": ["organizer", "publisher", "node_admin", "platform_admin"],
+    "presence.procurement.manage": ["publisher", "node_admin", "platform_admin"],
+    "presence.nfc.manage": ["organizer", "publisher", "node_admin", "platform_admin"],
+    "presence.connection.read": ["organizer", "publisher", "node_admin", "platform_admin"],
+    "presence.connection.update": ["organizer", "publisher", "node_admin", "platform_admin"],
+    "presence.quote.manage": ["organizer", "publisher", "node_admin", "platform_admin"],
+    "presence.variation.manage": ["organizer", "publisher", "node_admin", "platform_admin"],
+    "presence.handover.manage": ["organizer", "publisher", "node_admin", "platform_admin"],
 }
 
 

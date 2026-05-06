@@ -54,6 +54,14 @@ const PROXY_RULES: readonly ProxyRule[] = [
     requiresPrivilegedAuth: true,
   },
   {
+    id: 'core-api-control-presence',
+    target: 'core',
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    pathPattern: /^\/api\/control\/presence\/[a-z0-9/_-]+$/,
+    routeFamily: 'core-presence-control',
+    requiresPrivilegedAuth: true,
+  },
+  {
     id: 'core-runtime-health',
     target: 'core',
     methods: ['GET'],

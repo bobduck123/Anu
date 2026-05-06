@@ -48,6 +48,9 @@ export default async function ControlLayout({ children }: { children: ReactNode 
         <Link href="/control/tenants" className="btn-pill btn-pill-outline text-xs">
           Tenants
         </Link>
+        <Link href="/control/presence" className="btn-pill btn-pill-outline text-xs">
+          Presence
+        </Link>
         <Link href="/control/runtime-health" className="btn-pill btn-pill-outline text-xs">
           Runtime Health
         </Link>

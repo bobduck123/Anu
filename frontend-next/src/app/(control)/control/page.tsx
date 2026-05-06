@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Activity, Building2 } from 'lucide-react';
+import { Activity, Building2, ContactRound } from 'lucide-react';
 import {
   AnuControlLink,
   AnuPageHero,
@@ -18,6 +18,9 @@ export default function ControlHomePage() {
             <AnuControlLink href="/control/tenants" tone="active" iconLeft={Building2}>
               Open tenants
             </AnuControlLink>
+            <AnuControlLink href="/control/presence" tone="default" iconLeft={ContactRound}>
+              Open presence
+            </AnuControlLink>
             <AnuControlLink href="/control/runtime-health" tone="default" iconLeft={Activity}>
               Open runtime health
             </AnuControlLink>
@@ -25,7 +28,7 @@ export default function ControlHomePage() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <AnuSurfacePanel tone="soft" className="p-5">
           <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Tenant stewardship</h2>
           <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.84)]">
@@ -33,6 +36,15 @@ export default function ControlHomePage() {
           </p>
           <Link href="/control/tenants" className="mt-4 inline-flex text-sm text-[var(--color-foreground)] underline-offset-2 hover:underline">
             Go to /control/tenants
+          </Link>
+        </AnuSurfacePanel>
+        <AnuSurfacePanel tone="soft" className="p-5">
+          <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Presence Nodes</h2>
+          <p className="mt-2 text-sm text-[color:rgba(246,212,203,0.84)]">
+            Manage digital business cards, public portfolios, enquiries, and QR/vCard controls.
+          </p>
+          <Link href="/control/presence" className="mt-4 inline-flex text-sm text-[var(--color-foreground)] underline-offset-2 hover:underline">
+            Go to /control/presence
           </Link>
         </AnuSurfacePanel>
         <AnuSurfacePanel tone="soft" className="p-5">

@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+/* Presence design system — warm, editorial, creative-portfolio aesthetic */
+:root {
+  --p-bg: #faf9f7;
+  --p-surface: #ffffff;
+  --p-surface-alt: #f5f3ef;
+  --p-border: #e8e4de;
+  --p-text: #1c1917;
+  --p-text-muted: #78716c;
+  --p-text-faint: #a8a29e;
+  --p-accent: #c2410c;         /* warm terracotta */
+  --p-accent-light: #fed7aa;
+  --p-accent-dark: #9a3412;
+  --p-ink: #292524;
+  --p-studio-bg: #1c1917;      /* deep warm black for studio */
+  --p-studio-surface: #292524;
+  --p-studio-border: #44403c;
+  --p-studio-text: #fafaf9;
+  --p-studio-muted: #a8a29e;
+  --p-studio-accent: #fb923c;  /* orange for studio CTAs */
+}
+
+@theme inline {
+  --color-p-bg: var(--p-bg);
+  --color-p-surface: var(--p-surface);
+  --color-p-surface-alt: var(--p-surface-alt);
+  --color-p-border: var(--p-border);
+  --color-p-text: var(--p-text);
+  --color-p-text-muted: var(--p-text-muted);
+  --color-p-text-faint: var(--p-text-faint);
+  --color-p-accent: var(--p-accent);
+  --color-p-accent-light: var(--p-accent-light);
+  --color-p-accent-dark: var(--p-accent-dark);
+  --color-p-ink: var(--p-ink);
+  --color-p-studio-bg: var(--p-studio-bg);
+  --color-p-studio-surface: var(--p-studio-surface);
+  --color-p-studio-border: var(--p-studio-border);
+  --color-p-studio-text: var(--p-studio-text);
+  --color-p-studio-muted: var(--p-studio-muted);
+  --color-p-studio-accent: var(--p-studio-accent);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--p-bg);
+  color: var(--p-text);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  min-height: 100dvh;
+}
+
+/* Studio shell: dark background */
+body[data-shell="studio"] {
+  background: var(--p-studio-bg);
+  color: var(--p-studio-text);
+}
+
+/* Safe areas for PWA */
+.safe-top    { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }

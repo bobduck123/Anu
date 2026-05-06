@@ -604,6 +604,15 @@ def _register_cli_commands(app):
         summary = rebuild_projectors(node_id=node_id)
         click.echo(f"Rebuilt Hell projectors for node={node_id}: {summary}")
 
+    @app.cli.command("seed-presence")
+    def seed_presence_cmd():
+        """Seed Presence Node templates and alpha demo nodes."""
+        from .services.presence_service import seed_presence_demo_data
+
+        summary = seed_presence_demo_data()
+        db.session.commit()
+        click.echo(f"Seeded Presence Nodes: {summary}")
+
 
 def _init_database(app):
     """Initialize database schema and seed data."""
@@ -708,8 +717,14 @@ def _seed_alpha_data(app):
     """Seed alpha data for development."""
     if not app.config.get("ALPHA_SEED"):
         return
-    # ... (keep existing implementation)
-    pass
+    try:
+        from .services.presence_service import seed_presence_demo_data
+
+        seed_presence_demo_data()
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        app.logger.exception("Presence alpha seed failed")
 
 
 # Maintain backwards compatibility
