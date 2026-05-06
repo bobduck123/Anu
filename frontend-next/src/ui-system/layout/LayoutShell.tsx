@@ -16,7 +16,7 @@ export function LayoutShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const realmSurface = getRealmSurface(pathname);
 
-  const isFullBleedRoute = pathname?.startsWith('/wishlist/');
+  const isFullBleedRoute = pathname?.startsWith('/wishlist/') || pathname?.startsWith('/p/');
   const isImmersiveUniverseRoute = realmSurface.immersiveCanvas;
   const hideSupportChrome = realmSurface.hideSupportChrome;
 

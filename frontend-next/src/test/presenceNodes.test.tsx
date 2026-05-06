@@ -375,7 +375,7 @@ describe('Presence Nodes frontend', () => {
     expect(screen.getByText('Mudyin Healing Centre')).toBeInTheDocument();
     expect(screen.getByText('Taking enquiries')).toBeInTheDocument();
     expect(screen.getByText('Intro call')).toBeInTheDocument();
-    expect(screen.getByText('Studio work')).toBeInTheDocument();
+    expect(screen.getByText('Practice notes and public records')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /share/i }).length).toBeGreaterThan(0);
     expect(screen.getAllByText('vCard').length).toBeGreaterThan(0);
     expect(screen.getByLabelText('Message')).toBeInTheDocument();
@@ -417,6 +417,8 @@ describe('Presence Nodes frontend', () => {
     );
     expect(screen.getByRole('link', { name: /enter/i })).toBeInTheDocument();
     expect(screen.getByText('Quiet works for thresholds.')).toBeInTheDocument();
+    expect(screen.getByText('Portal index')).toBeInTheDocument();
+    expect(screen.getByText('Collection index')).toBeInTheDocument();
   });
 
   it('renders the six creative pilot template modes with distinct public sections', () => {
@@ -428,6 +430,7 @@ describe('Presence Nodes frontend', () => {
     );
     expect(screen.getByText('Gallery Wall')).toBeInTheDocument();
     expect(screen.getAllByText(/selected works/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Curated rooms/i).length).toBeGreaterThan(0);
 
     rerender(
       <PresenceNodeRenderer
@@ -437,6 +440,7 @@ describe('Presence Nodes frontend', () => {
     );
     expect(screen.getByText('Editorial Portfolio')).toBeInTheDocument();
     expect(screen.getByText(/View selected work/i)).toBeInTheDocument();
+    expect(screen.getByText(/Selected works and projects/i)).toBeInTheDocument();
 
     rerender(
       <PresenceNodeRenderer
@@ -445,7 +449,8 @@ describe('Presence Nodes frontend', () => {
       />,
     );
     expect(screen.getByText('Studio Practice')).toBeInTheDocument();
-    expect(screen.getByText(/Explore our work/i)).toBeInTheDocument();
+    expect(screen.getByText(/Studio method/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Bodies of work/i).length).toBeGreaterThan(0);
 
     rerender(
       <PresenceNodeRenderer
@@ -454,7 +459,8 @@ describe('Presence Nodes frontend', () => {
       />,
     );
     expect(screen.getByText('Practitioner Presence')).toBeInTheDocument();
-    expect(screen.getByText(/Book or enquire/i)).toBeInTheDocument();
+    expect(screen.getByText(/Method and philosophy/i)).toBeInTheDocument();
+    expect(screen.getByText(/Grounding and trust/i)).toBeInTheDocument();
 
     rerender(
       <PresenceNodeRenderer
@@ -462,8 +468,8 @@ describe('Presence Nodes frontend', () => {
         publicUrl="http://localhost:3000/p/the-commons"
       />,
     );
-    expect(screen.getByText(/venue profile/i)).toBeInTheDocument();
-    expect(screen.getByText(/Enquiry and visit/i)).toBeInTheDocument();
+    expect(screen.getByText(/Venue \/ Collective Presence/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Programs and gatherings/i).length).toBeGreaterThan(0);
   });
 
   it('renders Opportunity, Professional Contract, and Tradie display modes differently', () => {
@@ -590,8 +596,8 @@ describe('Presence Nodes frontend', () => {
     expect(screen.getByText('Trauma-informed practitioner')).toBeInTheDocument();
     expect(screen.getByText('/river-practitioner')).toBeInTheDocument();
     expect(screen.getAllByText('http://localhost:3000/p/river-practitioner').length).toBeGreaterThan(0);
-    expect(screen.getByRole('link', { name: /Open presence/i })).toHaveAttribute('href', '/app/presence');
-    expect(screen.getByRole('link', { name: /Open public page/i })).toHaveAttribute('href', 'http://localhost:3000/p/river-practitioner');
+    expect(screen.getByRole('link', { name: /Shape this presence/i })).toHaveAttribute('href', '/app/presence');
+    expect(screen.getByRole('link', { name: /View as visitors do/i })).toHaveAttribute('href', 'http://localhost:3000/p/river-practitioner');
     expect(screen.getByRole('link', { name: /Portfolio/ })).toHaveAttribute('href', '/app/portfolio');
     expect(screen.getByRole('link', { name: /Works/ })).toHaveAttribute('href', '/app/works');
     expect(screen.getByRole('link', { name: /Collections/ })).toHaveAttribute('href', '/app/collections');
@@ -606,8 +612,8 @@ describe('Presence Nodes frontend', () => {
     getOwnerPresenceNodesMock.mockResolvedValueOnce([]);
     render(<PresenceStudioEntryPage />);
 
-    expect(await screen.findByText('No Presence nodes yet')).toBeInTheDocument();
-    expect(screen.getByText(/does not have a Presence node attached yet/i)).toBeInTheDocument();
+    expect(await screen.findByText('Your studio is waiting')).toBeInTheDocument();
+    expect(screen.getByText(/No public presence is attached to this account yet/i)).toBeInTheDocument();
   });
 
   it('renders the presence studio shell navigation with active route styling', () => {

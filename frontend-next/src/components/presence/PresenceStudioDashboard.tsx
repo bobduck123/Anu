@@ -51,7 +51,7 @@ function StudioQuickLinks({ publicHref }: { publicHref?: string }) {
             <ArrowRight className="mt-1 h-4 w-4 text-[#f6d4cb]/50 transition-transform group-hover:translate-x-0.5 group-hover:text-[#f6d4cb]/80" />
           </div>
           <h2 className="mt-4 text-lg text-[#fff7f2]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-            Public page
+            Open the public studio
           </h2>
           <p className="mt-2 break-all text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{publicHref}</p>
         </Link>
@@ -101,29 +101,29 @@ export function PresenceStudioDashboard() {
       <AnuSurfacePanel tone="soft" className="p-5 md:p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="max-w-3xl">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/68">Owner dashboard</p>
+            <p className="text-[11px] uppercase tracking-[0.32em] text-[#f6d4cb]/68">Your studio</p>
             <h1 className="mt-3 text-3xl text-[#fff7f2] md:text-[2.6rem]" style={{ fontFamily: 'var(--anu-type-display)' }}>
               Presence Studio
             </h1>
             <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.86)] md:text-base">
-              This is the owner console for shaping the public Presence node. Use it as the private operating base for portfolio language, publishing surfaces, scan tools, and future enquiry handling.
+              The private workroom behind your public presence. Shape what visitors see, prepare new works and gatherings, and tend to the people who reach out.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2 md:justify-end">
             <AnuChip tone="accent" icon={Sparkles}>Portfolio-led</AnuChip>
-            <AnuChip tone="muted">Owner-safe</AnuChip>
+            <AnuChip tone="muted">Owner-only</AnuChip>
           </div>
         </div>
       </AnuSurfacePanel>
 
       {loading ? (
         <AnuSurfacePanel tone="quiet" className="p-5 md:p-6">
-          <LoadingState message="Loading owner node..." />
+          <LoadingState message="Opening your studio…" />
         </AnuSurfacePanel>
       ) : errorState ? (
         <AnuSurfacePanel tone="quiet" className="p-5 md:p-6">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/64">Owner access</p>
+          <p className="text-[11px] uppercase tracking-[0.32em] text-[#f6d4cb]/64">Studio access</p>
           <h2 className="mt-3 text-xl text-[#fff7f2]" style={{ fontFamily: 'var(--anu-type-display)' }}>
             {errorState.title}
           </h2>
@@ -144,21 +144,21 @@ export function PresenceStudioDashboard() {
         <AnuSurfacePanel tone="quiet" className="p-5 md:p-6">
           <EmptyState
             icon={UserRound}
-            title="No Presence nodes yet"
-            description="This owner account does not have a Presence node attached yet. The studio shell is ready when the first node is assigned."
+            title="Your studio is waiting"
+            description="No public presence is attached to this account yet. As soon as one is, this room becomes its private workspace — for shaping identity, works, gatherings, and conversations."
           />
         </AnuSurfacePanel>
       ) : (
         <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
           <AnuSurfacePanel tone="quiet" className="p-5 md:p-6">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/64">Current node</p>
+            <p className="text-[11px] uppercase tracking-[0.32em] text-[#f6d4cb]/64">This presence</p>
             <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-2xl">
                 <h2 className="text-2xl text-[#fff7f2]" style={{ fontFamily: 'var(--anu-type-display)' }}>
                   {primaryNode.display_name}
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-[color:rgba(246,212,203,0.84)]">
-                  {primaryNode.headline?.trim() || 'No headline has been added to this public node yet.'}
+                  {primaryNode.headline?.trim() || 'A headline gives the first sense of who you are. Add one whenever it feels right.'}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <AnuChip tone="accent">{labelize(primaryNode.status, 'draft')}</AnuChip>
@@ -173,14 +173,14 @@ export function PresenceStudioDashboard() {
                   href="/app/presence"
                   className="inline-flex items-center gap-2 rounded-full border border-white/12 px-4 py-2 text-sm text-[#f6d4cb]/88 transition-colors hover:border-white/24 hover:bg-white/[0.06]"
                 >
-                  Open presence
+                  Shape this presence
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   href={publicHref}
                   className="inline-flex items-center gap-2 rounded-full border border-[#f6d4cb]/18 px-4 py-2 text-sm text-[#fff7f2] transition-colors hover:border-[#f6d4cb]/30 hover:bg-[rgba(246,212,203,0.08)]"
                 >
-                  Open public page
+                  View as visitors do
                   <ExternalLink className="h-4 w-4" />
                 </Link>
               </div>
@@ -188,19 +188,19 @@ export function PresenceStudioDashboard() {
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-2xl border border-white/8 bg-white/[0.04] px-4 py-3">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-[#f6d4cb]/60">Slug</p>
+                <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/60">Public address</p>
                 <p className="mt-2 text-sm text-[#fff7f2]">/{primaryNode.slug}</p>
               </div>
               <div className="rounded-2xl border border-white/8 bg-white/[0.04] px-4 py-3">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-[#f6d4cb]/60">Public route</p>
+                <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/60">Living URL</p>
                 <p className="mt-2 break-all text-sm text-[#fff7f2]">{publicHref}</p>
               </div>
               <div className="rounded-2xl border border-white/8 bg-white/[0.04] px-4 py-3">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-[#f6d4cb]/60">Display mode</p>
+                <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/60">Template</p>
                 <p className="mt-2 text-sm text-[#fff7f2]">{labelize(primaryNode.display_mode, 'profile card')}</p>
               </div>
               <div className="rounded-2xl border border-white/8 bg-white/[0.04] px-4 py-3">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-[#f6d4cb]/60">Plan</p>
+                <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/60">Tier</p>
                 <p className="mt-2 text-sm text-[#fff7f2]">{labelize(primaryNode.plan_type, 'basic')}</p>
               </div>
             </div>

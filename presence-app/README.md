@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Presence App — standalone creative-portfolio platform
 
-## Getting Started
+A standalone Next.js 16 PWA for the Presence Ecosystem. Connects directly to
+the Flask backend at `flora-fauna/backend/` via Supabase JWT. Has its own
+design system (warm terracotta / dark studio palette) — **no dependency on
+the Manara `frontend-next` codebase**.
 
-First, run the development server:
+## Status
+
+Alpha. Public portfolio routes use a generic profile renderer
+(`components/portfolio/PortfolioRenderer.tsx`). The six distinctive creative
+templates (minimal_portal, artist_gallery, editorial_portfolio,
+studio_practice, practitioner_profile, venue_profile) currently live in
+`frontend-next/src/components/presence/PresenceNodeRenderer.tsx`. Mirroring
+those templates here is documented as a follow-up — see
+`docs/presence/PRESENCE_ECOSYSTEM_APP_PWA_SPEC.md`.
+
+For pilot launch, route public portfolio traffic to the frontend-next
+deployment and use this app for the owner studio surface only.
+
+## Local launch
+
+The app expects the Flask backend running on `http://localhost:5000` and a
+Supabase project for owner auth.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# 1. Install
+cd C:\Dev\Flora_fauna\presence-app
+npm install
+
+# 2. Configure (.env.local)
+# NEXT_PUBLIC_API_BASE=http://localhost:5000
+# NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+
+# 3. Dev server (port 3001 to avoid clash with frontend-next on 3000)
+npm run dev -- --port 3001
+
+# 4. Verify
+npm run typecheck
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Routes
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Public:
+- `/p/[slug]` — public portfolio (generic renderer)
+- `/p/[slug]/works/[workId]` — work detail with OG metadata
+- `/p/[slug]/collections/[collectionId]` — collection detail
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Owner studio (Supabase JWT required):
+- `/studio` — owned-node list
+- `/studio/[id]` — dashboard
+- `/studio/[id]/{portfolio,works,collections,enquiries,qr,analytics,settings}`
 
-## Learn More
+## Backend dependency
 
-To learn more about Next.js, take a look at the following resources:
+This app does NOT contain backend code. All API calls go to the Flask
+backend at `flora-fauna/backend/`:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Public: `GET /api/presence/public/<slug>`
+- Owner: `GET|PATCH|POST|DELETE /api/presence/owner/*` with
+  `Authorization: Bearer <supabase-jwt>`
+- QR: `GET /api/presence/public/<slug>/qr` (scanner-grade SVG)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment
 
-## Deploy on Vercel
+Recommended: deploy this app as a separate Vercel project from the same
+monorepo. Root directory: `presence-app`. Framework preset: Next.js. Env
+vars: `NEXT_PUBLIC_API_BASE`, `NEXT_PUBLIC_SUPABASE_URL`,
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Split into a separate Git repo only after the API/template/auth contracts
+have stabilised post-pilot.

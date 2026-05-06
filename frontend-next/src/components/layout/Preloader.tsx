@@ -1,16 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { gsap } from 'gsap';
 import ManaraMark from '@/components/branding/ManaraMark';
 import { brand } from '@/lib/brand';
 
 export function Preloader() {
+  const pathname = usePathname();
+  // Public Presence portfolios are stand-alone identity surfaces. Never wrap them
+  // in the Manara preloader, which would brand the artist's page as "Manara" first.
+  const isPresencePublicRoute = pathname?.startsWith('/p/');
   const prefersReducedMotion = typeof window !== 'undefined'
     && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const [isLoading, setIsLoading] = useState(!prefersReducedMotion);
+  const [isLoading, setIsLoading] = useState(!prefersReducedMotion && !isPresencePublicRoute);
 
   useEffect(() => {
+    if (isPresencePublicRoute) {
+      document.body.classList.add('site-ready');
+      return;
+    }
     if (!isLoading) {
       document.body.classList.add('site-ready');
       return;
