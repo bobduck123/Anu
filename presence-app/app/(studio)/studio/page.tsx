@@ -115,14 +115,22 @@ export default function StudioIndexPage() {
         {!loading && !error && nodes.length === 0 && (
           <Empty
             title="No Presence assigned yet"
-            body="This alpha is studio-assisted. Ask the Presence team to assign a public world to this account."
+            body="Your account is verified, but no public world has been assigned yet. Begin beta onboarding to prepare a draft/setup request."
             action={
-              <Link
-                href="/gallery"
-                className="rounded-xl border border-[var(--p-studio-border)] px-4 py-2 text-sm font-semibold text-[var(--p-studio-text)] transition hover:border-[var(--p-studio-accent)]/60"
-              >
-                View public gallery
-              </Link>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Link
+                  href="/beta/onboarding"
+                  className="rounded-xl bg-[var(--p-studio-accent)] px-4 py-2 text-sm font-semibold text-stone-950 transition hover:bg-orange-300"
+                >
+                  Begin beta onboarding
+                </Link>
+                <Link
+                  href="/gallery"
+                  className="rounded-xl border border-[var(--p-studio-border)] px-4 py-2 text-sm font-semibold text-[var(--p-studio-text)] transition hover:border-[var(--p-studio-accent)]/60"
+                >
+                  View public gallery
+                </Link>
+              </div>
             }
           />
         )}

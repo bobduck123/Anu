@@ -14,8 +14,8 @@ Alpha. Public portfolio routes use a generic renderer in
 templates currently live in `frontend-next/src/components/presence/`.
 Mirroring those templates here remains a follow-up.
 
-For current pilots, this app provides the Presence landing page, public entry
-routes, auth flows, and owner Studio.
+For current pilots and public beta, this app provides the Presence landing
+page, public beta entry routes, auth flows, beta onboarding, and owner Studio.
 
 ## Local launch
 
@@ -33,7 +33,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3001
 # and NEXT_PUBLIC_PRESENCE_PUBLIC_ORIGIN.
 NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
-NEXT_PUBLIC_PRESENCE_ALLOW_SIGNUPS=false
+NEXT_PUBLIC_PRESENCE_ALLOW_SIGNUPS=true
 NEXT_PUBLIC_PRESENCE_STUDIO_CONTACT=mailto:hello@presence.studio
 
 npm run dev -- --port 3001
@@ -45,6 +45,8 @@ npm run build
 
 Public:
 - `/` - Presence landing page with Gallery and Studio choices
+- `/beta` - public beta explanation and start CTA
+- `/beta/onboarding` - protected post-verification beta setup/request flow
 - `/gallery` - alpha public gallery entry, no private data
 - `/healthz` - deployment health check
 - `/p/[slug]` - public portfolio
@@ -118,6 +120,7 @@ Required Supabase URL settings for production:
 - Redirect URL: `https://presence-gilt.vercel.app/auth/callback`
 - Redirect URL: `https://presence-gilt.vercel.app/auth/reset-password`
 - Redirect URL: `https://presence-gilt.vercel.app/auth/verify-email`
+- Redirect URL: `https://presence-gilt.vercel.app/beta/onboarding`
 
 Email confirmation:
 
@@ -142,3 +145,32 @@ supabase.auth.resend({ type: "signup", email })
 After verification, users are sent to `/studio`. If the backend has no
 Presence assigned to their user, Studio shows the honest "No Presence assigned
 yet" state and does not create fake ownership client-side.
+
+## Public beta mode
+
+Current beta mode is hybrid:
+
+- Public users can create and verify a Presence Studio account when
+  `NEXT_PUBLIC_PRESENCE_ALLOW_SIGNUPS=true`.
+- Verification can route to `/beta/onboarding`.
+- `/beta/onboarding` collects public-world direction and prepares a
+  studio-assisted setup request.
+- If a backend owner Presence is already assigned, `/studio` opens normally.
+- If no Presence is assigned, `/studio` links back to beta onboarding.
+
+The app does not currently create owner Presence records client-side. This is
+intentional until the backend has a dedicated, tested owner-safe beta creation
+endpoint. Any beta-created Presence must start draft/unpublished and must not
+be public by default.
+
+For public beta deployment:
+
+- Set `NEXT_PUBLIC_PRESENCE_ALLOW_SIGNUPS=true`.
+- Set `NEXT_PUBLIC_PRESENCE_STUDIO_CONTACT` to a monitored `mailto:` address.
+- Redeploy after changing `NEXT_PUBLIC_*` variables because Vercel bakes them
+  into the client bundle at build time.
+
+If self-service draft creation is added later, use a narrow owner endpoint such
+as `POST /api/presence/owner/beta/start` and test that it requires auth,
+creates only draft/unpublished Presences, prevents duplicate slugs, and never
+exposes other owners' records.

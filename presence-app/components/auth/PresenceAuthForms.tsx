@@ -96,11 +96,11 @@ function Field({
   );
 }
 
-function useReturnTo() {
+function useReturnTo(fallback = "/studio") {
   const searchParams = useSearchParams();
   return useMemo(
-    () => sanitizeReturnTo(searchParams.get("returnTo"), "/studio"),
-    [searchParams],
+    () => sanitizeReturnTo(searchParams.get("returnTo"), fallback),
+    [searchParams, fallback],
   );
 }
 
@@ -174,8 +174,8 @@ export function SignInForm() {
         <Link href={`/auth/forgot-password?returnTo=${encodeURIComponent(returnTo)}`} className="hover:text-[var(--p-studio-text)]">
           Forgot password?
         </Link>
-        <Link href={`/auth/sign-up?returnTo=${encodeURIComponent(returnTo)}`} className="hover:text-[var(--p-studio-text)]">
-          Request access
+        <Link href={`/auth/sign-up?returnTo=${encodeURIComponent("/beta/onboarding")}`} className="hover:text-[var(--p-studio-text)]">
+          Start your Presence
         </Link>
       </div>
     </AuthShell>
@@ -184,7 +184,7 @@ export function SignInForm() {
 
 export function SignUpForm() {
   const router = useRouter();
-  const returnTo = useReturnTo();
+  const returnTo = useReturnTo("/beta/onboarding");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -259,10 +259,10 @@ export function SignUpForm() {
   return (
     <AuthShell
       eyebrow="Invite-first alpha"
-      title={signupsEnabled ? "Create your Studio account" : "Presence Studio is invite-first"}
+      title={signupsEnabled ? "Create your Presence Studio account" : "Presence Studio is invite-first"}
       body={
         signupsEnabled
-          ? "Create an account for Presence Studio. Access to owner data still requires an assigned Presence record."
+          ? "Start with a verified account. Build your Presence as a draft or setup request, then publish only when your public world is ready."
           : "First pilots are studio-assisted. We create or assign your Presence before you can manage it here."
       }
     >
@@ -310,12 +310,13 @@ export function SignUpForm() {
               <option value="practitioner">Practitioner</option>
               <option value="venue_collective">Venue / Collective</option>
               <option value="organisation">Organisation</option>
+              <option value="creative_professional">Creative Professional</option>
               <option value="other">Other</option>
             </select>
           </label>
           <p className="text-xs leading-5 text-[var(--p-studio-muted)]">
-            After verification, Studio will show any Presence assigned to this
-            account. It will not create ownership automatically.
+            After verification, you will enter beta onboarding. If no Presence
+            is assigned yet, setup remains honest and draft-only.
           </p>
           <button
             type="submit"
@@ -336,7 +337,7 @@ export function VerifyEmailForm() {
   const searchParams = useSearchParams();
   const emailFromQuery = searchParams.get("email")?.trim().toLowerCase() ?? "";
   const returnTo = useMemo(
-    () => sanitizeReturnTo(searchParams.get("returnTo"), "/studio"),
+    () => sanitizeReturnTo(searchParams.get("returnTo"), "/beta/onboarding"),
     [searchParams],
   );
   const [code, setCode] = useState("");

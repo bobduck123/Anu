@@ -42,6 +42,21 @@ export default function Home() {
               cultural organisations.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/auth/sign-up?returnTo=%2Fbeta%2Fonboarding"
+                className="inline-flex items-center gap-2 rounded-2xl bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-stone-800"
+              >
+                Start your Presence
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/beta"
+                className="inline-flex items-center gap-2 rounded-2xl border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-800 transition hover:border-stone-950"
+              >
+                Public beta
+              </Link>
+            </div>
+            <div className="mt-8 flex flex-wrap gap-3">
               {principles.map((item) => (
                 <span
                   key={item}

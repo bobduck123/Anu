@@ -50,13 +50,21 @@ export default function GalleryPage() {
               </p>
             </div>
           </div>
-          <Link
-            href="/studio"
-            className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-stone-800"
-          >
-            Enter Studio
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              href="/auth/sign-up?returnTo=%2Fbeta%2Fonboarding"
+              className="inline-flex items-center gap-2 rounded-2xl bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-stone-800"
+            >
+              Start your Presence
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/studio"
+              className="inline-flex items-center gap-2 rounded-2xl border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-800 transition hover:border-stone-950"
+            >
+              Enter Studio
+            </Link>
+          </div>
         </section>
       </div>
     </main>
