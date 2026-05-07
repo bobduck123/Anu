@@ -40,7 +40,7 @@ export default function StudioIndexPage() {
         <p className="text-sm text-[var(--p-studio-muted)]">Select a presence to manage</p>
       </header>
 
-      {loading && <Loading label="Loading your nodes…" />}
+      {loading && <Loading label="Loading your nodes..." />}
 
       {error && (
         <div className="flex items-start gap-3 p-4 rounded-xl border border-red-800 bg-red-950/30 text-red-400">
