@@ -1,0 +1,14 @@
+import { Suspense } from "react";
+import { VerifyEmailForm } from "@/components/auth/PresenceAuthForms";
+
+export const metadata = {
+  title: "Verify email",
+};
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={null}>
+      <VerifyEmailForm />
+    </Suspense>
+  );
+}

@@ -9,6 +9,7 @@ function normalizeInternalPath(path: string, fallback: string) {
   if (path === "/auth" || path.startsWith("/auth?")) return fallback;
   if (path.startsWith("/auth/sign-in")) return fallback;
   if (path.startsWith("/auth/sign-up")) return fallback;
+  if (path.startsWith("/auth/verify-email")) return fallback;
   return path;
 }
 

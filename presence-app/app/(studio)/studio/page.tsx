@@ -13,6 +13,7 @@ export default function StudioIndexPage() {
   const [nodes, setNodes] = useState<PresenceNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -21,6 +22,15 @@ export default function StudioIndexPage() {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           setError("Sign in to access your studio.");
+          return;
+        }
+        const user = session.user;
+        if (
+          user?.email &&
+          !user.email_confirmed_at &&
+          !user.confirmed_at
+        ) {
+          setVerificationEmail(user.email);
           return;
         }
         const data = await listNodes(session.access_token);
@@ -36,6 +46,34 @@ export default function StudioIndexPage() {
 
   if (!loading && error === "Sign in to access your studio.") {
     return <StudioAuthGate returnTo="/studio" />;
+  }
+
+  if (!loading && verificationEmail) {
+    const params = new URLSearchParams();
+    params.set("email", verificationEmail);
+    params.set("returnTo", "/studio");
+    return (
+      <main className="min-h-dvh bg-[var(--p-studio-bg)] px-4 py-10 text-[var(--p-studio-text)] safe-top">
+        <div className="mx-auto max-w-lg rounded-3xl border border-[var(--p-studio-border)] bg-[var(--p-studio-surface)] p-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--p-studio-muted)]">
+            Email verification required
+          </p>
+          <h1 className="mt-3 text-2xl font-semibold tracking-tight">
+            Check your email before opening Studio
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-[var(--p-studio-muted)]">
+            Your account is signed in, but Supabase has not marked the email as
+            verified. Verify <span className="text-[var(--p-studio-text)]">{verificationEmail}</span> before loading owner data.
+          </p>
+          <Link
+            href={`/auth/verify-email?${params.toString()}`}
+            className="mt-6 inline-flex rounded-2xl bg-[var(--p-studio-accent)] px-5 py-3 text-sm font-semibold text-stone-950 transition hover:bg-orange-300"
+          >
+            Enter verification code
+          </Link>
+        </div>
+      </main>
+    );
   }
 
   return (

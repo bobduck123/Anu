@@ -54,6 +54,7 @@ Public:
 Auth:
 - `/auth/sign-in` - Supabase email/password sign-in
 - `/auth/sign-up` - invite-first access by default
+- `/auth/verify-email` - code entry and resend for signup verification
 - `/auth/callback` - Supabase callback exchange
 - `/auth/sign-out` - signs out and returns home
 - `/auth/forgot-password` - reset email flow
@@ -104,3 +105,40 @@ Optional production env vars:
 
 Never expose Supabase service-role keys, database URLs, control-plane secrets,
 or smoke tokens through `NEXT_PUBLIC_*` variables.
+
+## Supabase auth configuration
+
+Presence uses the public Supabase anon key in the browser and sends the
+resulting user access token to the backend owner API. Do not use the Supabase
+service-role key in this app.
+
+Required Supabase URL settings for production:
+
+- Site URL: `https://presence-gilt.vercel.app`
+- Redirect URL: `https://presence-gilt.vercel.app/auth/callback`
+- Redirect URL: `https://presence-gilt.vercel.app/auth/reset-password`
+- Redirect URL: `https://presence-gilt.vercel.app/auth/verify-email`
+
+Email confirmation:
+
+- Enable Confirm email.
+- Keep the standard confirmation link working with `{{ .ConfirmationURL }}` so
+  `/auth/callback` remains valid.
+- For the `/auth/verify-email` code-entry flow, update the Confirm signup email
+  template to include `{{ .Token }}` as the verification code.
+
+The verify page uses:
+
+```ts
+supabase.auth.verifyOtp({ email, token, type: "email" })
+```
+
+The resend action uses:
+
+```ts
+supabase.auth.resend({ type: "signup", email })
+```
+
+After verification, users are sent to `/studio`. If the backend has no
+Presence assigned to their user, Studio shows the honest "No Presence assigned
+yet" state and does not create fake ownership client-side.

@@ -185,8 +185,11 @@ export function SignInForm() {
 export function SignUpForm() {
   const router = useRouter();
   const returnTo = useReturnTo();
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [intendedPresenceType, setIntendedPresenceType] = useState("artist");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -195,17 +198,38 @@ export function SignUpForm() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!signupsEnabled) return;
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!displayName.trim()) {
+      setError("Add your name so the studio can recognise the account.");
+      return;
+    }
+    if (!normalizedEmail.includes("@")) {
+      setError("Enter a valid email address.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Use at least 8 characters for your password.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     setBusy(true);
     setError(null);
     setMessage(null);
     const redirectTo = `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(returnTo)}`;
     const supabase = createClient();
     const { data, error: signUpError } = await supabase.auth.signUp({
-      email,
+      email: normalizedEmail,
       password,
       options: {
         emailRedirectTo: redirectTo,
         data: {
+          display_name: displayName.trim(),
+          intended_presence_type: intendedPresenceType,
           product: "presence",
           role: "presence_owner_candidate",
         },
@@ -213,14 +237,23 @@ export function SignUpForm() {
     });
     setBusy(false);
     if (signUpError) {
-      setError(signUpError.message);
+      setError(
+        signUpError.message.toLowerCase().includes("already")
+          ? "An account with this email may already exist. Try signing in or reset your password."
+          : signUpError.message,
+      );
       return;
     }
     if (data.session) {
       router.replace(returnTo);
       return;
     }
-    setMessage("Check your email to confirm the account, then return to Presence Studio.");
+    savePendingReturnTo(returnTo);
+    setMessage("We sent a verification code to your email.");
+    const params = new URLSearchParams();
+    params.set("email", normalizedEmail);
+    params.set("returnTo", returnTo);
+    router.replace(`/auth/verify-email?${params.toString()}`);
   }
 
   return (
@@ -260,8 +293,30 @@ export function SignUpForm() {
           )}
           {error && <Message tone="error">{error}</Message>}
           {message && <Message tone="success">{message}</Message>}
+          <Field label="Name" value={displayName} autoComplete="name" onChange={setDisplayName} />
           <Field label="Email" type="email" value={email} autoComplete="email" onChange={setEmail} />
           <Field label="Password" type="password" value={password} autoComplete="new-password" onChange={setPassword} />
+          <Field label="Confirm password" type="password" value={confirmPassword} autoComplete="new-password" onChange={setConfirmPassword} />
+          <label className="flex flex-col gap-2 text-sm">
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--p-studio-muted)]">
+              Intended Presence type
+            </span>
+            <select
+              value={intendedPresenceType}
+              onChange={(event) => setIntendedPresenceType(event.target.value)}
+              className="rounded-2xl border border-[var(--p-studio-border)] bg-black/20 px-4 py-3 text-[var(--p-studio-text)] outline-none transition focus:border-[var(--p-studio-accent)]"
+            >
+              <option value="artist">Artist</option>
+              <option value="practitioner">Practitioner</option>
+              <option value="venue_collective">Venue / Collective</option>
+              <option value="organisation">Organisation</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <p className="text-xs leading-5 text-[var(--p-studio-muted)]">
+            After verification, Studio will show any Presence assigned to this
+            account. It will not create ownership automatically.
+          </p>
           <button
             type="submit"
             disabled={busy || !isSupabaseConfigured()}
@@ -272,6 +327,135 @@ export function SignUpForm() {
           </button>
         </form>
       )}
+    </AuthShell>
+  );
+}
+
+export function VerifyEmailForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const emailFromQuery = searchParams.get("email")?.trim().toLowerCase() ?? "";
+  const returnTo = useMemo(
+    () => sanitizeReturnTo(searchParams.get("returnTo"), "/studio"),
+    [searchParams],
+  );
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setMessage(null);
+
+    if (!emailFromQuery) {
+      setError("Missing email address. Return to sign-up and try again.");
+      return;
+    }
+    const token = code.trim().replace(/\s+/g, "");
+    if (token.length < 6) {
+      setError("Enter the verification code from your email.");
+      return;
+    }
+
+    setBusy(true);
+    const supabase = createClient();
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email: emailFromQuery,
+      token,
+      type: "email",
+    });
+    setBusy(false);
+
+    if (verifyError) {
+      setError(verifyError.message);
+      return;
+    }
+
+    clearPendingReturnTo();
+    setMessage("Email verified. Opening Presence Studio...");
+    window.setTimeout(() => router.replace(returnTo), 700);
+  }
+
+  async function resend() {
+    if (!emailFromQuery) {
+      setError("Missing email address. Return to sign-up and try again.");
+      return;
+    }
+    setResending(true);
+    setError(null);
+    setMessage(null);
+    const redirectTo = `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(returnTo)}`;
+    const supabase = createClient();
+    const { error: resendError } = await supabase.auth.resend({
+      type: "signup",
+      email: emailFromQuery,
+      options: { emailRedirectTo: redirectTo },
+    });
+    setResending(false);
+    if (resendError) {
+      setError(resendError.message);
+      return;
+    }
+    setMessage("A new verification email has been sent. Wait a moment before requesting another code.");
+  }
+
+  return (
+    <AuthShell
+      eyebrow="Verify email"
+      title="Activate your Presence Studio account"
+      body="We sent a verification code to your email. Enter it below to activate your account, then continue into Studio."
+    >
+      <form className="mt-6 flex flex-col gap-4" onSubmit={submit}>
+        {!isSupabaseConfigured() && (
+          <Message tone="error">{SUPABASE_MISSING_MESSAGE}</Message>
+        )}
+        {!emailFromQuery && (
+          <Message tone="error">
+            Missing email address. Return to sign-up so we know which account to verify.
+          </Message>
+        )}
+        {emailFromQuery && (
+          <Message tone="info">
+            Code sent to <span className="text-[var(--p-studio-text)]">{emailFromQuery}</span>.
+          </Message>
+        )}
+        {error && <Message tone="error">{error}</Message>}
+        {message && <Message tone="success">{message}</Message>}
+        <Field
+          label="Verification code"
+          value={code}
+          autoComplete="one-time-code"
+          onChange={setCode}
+        />
+        <button
+          type="submit"
+          disabled={busy || !isSupabaseConfigured() || !emailFromQuery}
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--p-studio-accent)] px-5 py-3 text-sm font-semibold text-stone-950 transition hover:bg-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {busy ? "Verifying..." : "Verify and enter Studio"}
+          <ArrowRight className="h-4 w-4" />
+        </button>
+      </form>
+
+      <div className="mt-5 grid gap-3 text-xs text-[var(--p-studio-muted)]">
+        <button
+          type="button"
+          onClick={() => void resend()}
+          disabled={resending || !isSupabaseConfigured() || !emailFromQuery}
+          className="text-left hover:text-[var(--p-studio-text)] disabled:opacity-50"
+        >
+          {resending ? "Resending..." : "Resend verification code"}
+        </button>
+        <Link href={`/auth/sign-up?returnTo=${encodeURIComponent(returnTo)}`} className="hover:text-[var(--p-studio-text)]">
+          Change email
+        </Link>
+        <Link href={`/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}`} className="hover:text-[var(--p-studio-text)]">
+          Already verified? Sign in
+        </Link>
+      </div>
     </AuthShell>
   );
 }

@@ -32,6 +32,12 @@ export function createClient() {
         async signUp(_credentials?: unknown) {
           return { data: { user: null, session: null }, error };
         },
+        async verifyOtp(_credentials?: unknown) {
+          return { data: { user: null, session: null }, error };
+        },
+        async resend(_credentials?: unknown) {
+          return { data: { user: null, session: null }, error };
+        },
         async signOut() {
           return { error: null };
         },
