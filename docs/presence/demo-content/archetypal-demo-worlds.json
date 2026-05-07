@@ -1,0 +1,277 @@
+{
+  "version": "0.4",
+  "canonical_public_host": "frontend-next",
+  "presence_app_status": "standalone alpha / future public host",
+  "scope": "documentation/demo content only; not wired to backend seed or runtime",
+  "worlds": [
+    {
+      "name": "Nara Vale",
+      "archetype": "The Threshold Artist",
+      "template": "Minimal Artist Portal",
+      "display_mode": "minimal_portal",
+      "mechanism": "threshold / private exhibition",
+      "primary_verb": "enter",
+      "world_statement": "A threshold of projected bodies, soft architectures, and rooms that remember light.",
+      "first_10_seconds": "A dark field, a suspended image, a name that feels like a signal, one line of copy, and a single Enter action.",
+      "public_identity": "Experimental visual artist working with projection, fabric, skin, shadow, and architectural darkness.",
+      "works": [
+        "Black Room Study",
+        "Soft Signal",
+        "Body as Screen",
+        "The Waiting Surface",
+        "Afterimage Vessel"
+      ],
+      "collections": [
+        "Threshold Studies",
+        "Rooms for Light",
+        "Body / Signal",
+        "Afterimage Notes"
+      ],
+      "opportunity_routes": [
+        "Request a private viewing",
+        "Discuss installation work",
+        "Invite for exhibition",
+        "Request image sequence"
+      ],
+      "ideal_media": [
+        "dark installation stills",
+        "skin close-ups",
+        "fabric",
+        "projection",
+        "silhouette",
+        "blur",
+        "slow light"
+      ],
+      "atmosphere": {
+        "core": "css_signal_field",
+        "premium": "gallery_void_lite",
+        "flagship": "three_gallery_void"
+      },
+      "proves": "Presence can create emotional gravity before it explains anything."
+    },
+    {
+      "name": "Kira Stone",
+      "archetype": "The Image Field",
+      "template": "Gallery Wall",
+      "display_mode": "artist_gallery",
+      "mechanism": "gallery wall / urban image field",
+      "primary_verb": "witness",
+      "world_statement": "Image systems for people who read the city as material.",
+      "first_10_seconds": "A field of images at different scales where the city appears as texture, object, reflection, mark, sign, and threshold.",
+      "public_identity": "Photographer and designer studying urban surfaces, signage, pavements, objects, and informal visual systems.",
+      "works": [
+        "Concrete Bloom",
+        "Night Market Signal",
+        "Blue Door Index",
+        "Object of Use No. 7",
+        "Surface Grammar",
+        "Temporary Shrine"
+      ],
+      "collections": [
+        "Concrete Bloom",
+        "Night Markets",
+        "Objects of Use",
+        "Surface Grammar",
+        "Threshold Index"
+      ],
+      "opportunity_routes": [
+        "Enquire about prints",
+        "Request portfolio conversation",
+        "Commission image research",
+        "License a series"
+      ],
+      "ideal_media": [
+        "city surfaces",
+        "signage",
+        "vertical images",
+        "night reflections",
+        "object studies"
+      ],
+      "atmosphere": {
+        "core": "irregular_gallery_wall",
+        "premium": "canvas_gallery_field",
+        "flagship": "three_gallery_void"
+      },
+      "proves": "Presence can compete with portfolio sites by making images feel spatial and curated."
+    },
+    {
+      "name": "Yorke Collier",
+      "archetype": "The Public Dossier",
+      "template": "Editorial Portfolio",
+      "display_mode": "editorial_portfolio",
+      "mechanism": "dossier / issue / public record",
+      "primary_verb": "understand",
+      "world_statement": "A record of exhibitions, essays, campaigns, and cultural systems built through language, image, and public trust.",
+      "first_10_seconds": "A masthead, a thesis, numbered files, and evidence that feel like a cultural intelligence document.",
+      "public_identity": "Curator, writer, and creative strategist working across exhibitions, campaigns, public programs, and cultural documentation.",
+      "works": [
+        "The Listening Room",
+        "Archive as Weather",
+        "Night School Campaign",
+        "Rooms That Hold Us",
+        "Public Proof Notes"
+      ],
+      "collections": [
+        "Public Texts",
+        "Campaign Dossiers",
+        "Exhibition Systems",
+        "Research Notes"
+      ],
+      "opportunity_routes": [
+        "Commission an exhibition text",
+        "Request a project dossier",
+        "Discuss cultural strategy",
+        "Build funder proof"
+      ],
+      "ideal_media": [
+        "document crops",
+        "exhibition images",
+        "publication spreads",
+        "annotated screenshots",
+        "program ephemera"
+      ],
+      "atmosphere": {
+        "core": "dossier_index",
+        "premium": "css_signal_rail",
+        "flagship": "not_required_initially"
+      },
+      "proves": "Presence can extend into curators, consultants, cultural strategists, and contract professionals without becoming LinkedIn."
+    },
+    {
+      "name": "Anika Wells Studio",
+      "archetype": "The Living Workbench",
+      "template": "Studio Practice",
+      "display_mode": "studio_practice",
+      "mechanism": "studio wall / workbench / material archive",
+      "primary_verb": "trace",
+      "world_statement": "Clay, ash, vessel forms, and small rituals of repair.",
+      "first_10_seconds": "A bench, a fragment, a vessel, a note, a hand, and a material surface that make process feel valuable.",
+      "public_identity": "Ceramic and object practice focused on clay, ash, vessel forms, repair, domestic ritual, and the memory of use.",
+      "works": [
+        "Ash Vessel I",
+        "Blue Clay Test No. 4",
+        "Table Object with Scar",
+        "Repair Bowl",
+        "Studio Fragment Wall"
+      ],
+      "collections": [
+        "Ash Vessels",
+        "Blue Clay Tests",
+        "Repair Notes",
+        "Table Objects",
+        "Fragments Wall"
+      ],
+      "opportunity_routes": [
+        "Ask about commissions",
+        "Request a studio visit",
+        "Join a small workshop",
+        "Discuss collaborative object work"
+      ],
+      "ideal_media": [
+        "workbench",
+        "tools",
+        "fragments",
+        "hands",
+        "shelves",
+        "unfired clay",
+        "process images"
+      ],
+      "atmosphere": {
+        "core": "css_studio_wall",
+        "premium": "studio_fragment_field",
+        "flagship": "spatial_studio_room"
+      },
+      "proves": "Presence can turn process into value, which normal portfolio systems rarely do."
+    },
+    {
+      "name": "Mina River",
+      "archetype": "The Care Pathway",
+      "template": "Practitioner Presence",
+      "display_mode": "practitioner_profile",
+      "mechanism": "care pathway / method room / trust surface",
+      "primary_verb": "be guided",
+      "world_statement": "A grounded practice for people moving through grief, transition, and nervous-system repair.",
+      "first_10_seconds": "A calm threshold, a clear method, and a soft but confident path through ways to work.",
+      "public_identity": "Facilitator, somatic educator, and community practitioner supporting care, grief, transition, and embodied listening.",
+      "works": [
+        "One-to-one sessions",
+        "Group circles",
+        "Workshops",
+        "Organisational care sessions"
+      ],
+      "collections": [
+        "Methods",
+        "Seasonal Circles",
+        "Community Sessions",
+        "Writings and Notes"
+      ],
+      "opportunity_routes": [
+        "Begin a conversation",
+        "Explore ways to work",
+        "Ask about sessions",
+        "Invite a workshop"
+      ],
+      "ideal_media": [
+        "calm portraiture",
+        "room details",
+        "hands",
+        "gathering spaces",
+        "warm natural light"
+      ],
+      "atmosphere": {
+        "core": "care_pathway",
+        "premium": "canvas_care_pathway",
+        "flagship": "not_required_unless_institutional"
+      },
+      "proves": "Presence can make practitioner pages feel trustworthy and human without becoming generic wellness funnels."
+    },
+    {
+      "name": "Waratah Room",
+      "archetype": "The Cultural Node",
+      "template": "Venue / Collective Presence",
+      "display_mode": "venue_profile",
+      "mechanism": "public noticeboard / program wall / cultural node",
+      "primary_verb": "gather",
+      "world_statement": "A room for sound, practice, gathering, and local cultural memory.",
+      "first_10_seconds": "A room, a public invitation, program traces, and a sense of people gathering.",
+      "public_identity": "Small cultural venue and collective room for sound, workshops, exhibitions, repair circles, youth programs, and public memory.",
+      "works": [
+        "Listening Night",
+        "Open Studio Sunday",
+        "Repair Circle",
+        "Youth Workshop Block",
+        "Visiting Artist Talk"
+      ],
+      "collections": [
+        "Past Programs",
+        "Room Archive",
+        "Community Use",
+        "Support the Room",
+        "Posters and Notices"
+      ],
+      "opportunity_routes": [
+        "Visit",
+        "Propose a program",
+        "Partner",
+        "Document",
+        "Support the room",
+        "Refer an artist"
+      ],
+      "ideal_media": [
+        "posters",
+        "room interiors",
+        "people gathering",
+        "chairs",
+        "noticeboards",
+        "flyers",
+        "street frontage"
+      ],
+      "atmosphere": {
+        "core": "public_noticeboard",
+        "premium": "canvas_noticeboard",
+        "flagship": "three_venue_room_or_archive_river"
+      },
+      "proves": "Presence can hold venues and cultural organisations as public infrastructure, not brochures or event lists."
+    }
+  ]
+}

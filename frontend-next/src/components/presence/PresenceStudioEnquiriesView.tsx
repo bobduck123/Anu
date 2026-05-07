@@ -117,12 +117,12 @@ export function PresenceStudioEnquiriesView() {
       <AnuSurfacePanel tone="soft" className="p-5 md:p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="max-w-3xl">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/68">Enquiries</p>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/68">Opportunities</p>
             <h1 className="mt-3 text-3xl text-[#fff7f2] md:text-[2.5rem]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-              Owner inbox
+              Opportunity inbox
             </h1>
             <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.86)] md:text-base">
-              Public portfolio enquiries arrive here with enough context to follow up without turning Presence into a full CRM.
+              Public Presence enquiries arrive here as possible commissions, visits, sessions, referrals, support routes, or first conversations. Status updates stay simple for alpha.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -136,7 +136,7 @@ export function PresenceStudioEnquiriesView() {
 
       {enquiries.length === 0 ? (
         <AnuSurfacePanel tone="quiet" className="p-5 md:p-6">
-          <EmptyState icon={Inbox} title="No enquiries yet" description="When someone contacts this public Presence page, the owner-safe enquiry record will appear here." />
+          <EmptyState icon={Inbox} title="No conversations yet" description="When someone begins a conversation from the public Presence, the owner-safe enquiry record will appear here with source context where available." />
         </AnuSurfacePanel>
       ) : (
         <div className="grid gap-4">
@@ -187,6 +187,9 @@ export function PresenceStudioEnquiriesView() {
               <p className="mt-3 break-all text-xs text-[#f6d4cb]/48">
                 Source: {enquiry.source_url || enquiry.source_type || 'not provided'}
                 {enquiry.source_tag_id ? ` / tag ${enquiry.source_tag_id}` : ''}
+              </p>
+              <p className="mt-3 text-xs leading-5 text-[#f6d4cb]/58">
+                Alpha follow-up is manual: reply through your normal email or phone workflow, then update the status here so the Studio remembers where the opportunity sits.
               </p>
             </AnuSurfacePanel>
           ))}

@@ -610,8 +610,36 @@ export function getOwnerPresenceNodeCollections(nodeId: number) {
   return apiFetch<PresenceCollection[]>(`/api/presence/owner/nodes/${nodeId}/collections`);
 }
 
+export function createOwnerPresenceCollection(nodeId: number, payload: Partial<PresenceCollection>) {
+  return apiFetch<PresenceCollection>(`/api/presence/owner/nodes/${nodeId}/collections`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateOwnerPresenceCollection(id: number, payload: Partial<PresenceCollection>) {
+  return apiFetch<PresenceCollection>(`/api/presence/owner/collections/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
 export function getOwnerPresenceNodeWorks(nodeId: number) {
   return apiFetch<PresenceWork[]>(`/api/presence/owner/nodes/${nodeId}/works`);
+}
+
+export function createOwnerPresenceWork(nodeId: number, payload: Partial<PresenceWork>) {
+  return apiFetch<PresenceWork>(`/api/presence/owner/nodes/${nodeId}/works`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateOwnerPresenceWork(id: number, payload: Partial<PresenceWork>) {
+  return apiFetch<PresenceWork>(`/api/presence/owner/works/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
 }
 
 export function getOwnerPresenceNodeEnquiries(nodeId: number, params: Record<string, string> = {}) {

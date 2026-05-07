@@ -151,6 +151,16 @@ export function PresenceStudioPresenceView() {
   }
 
   const publicHref = getPresenceStudioPublicHref(node);
+  const dirty = JSON.stringify({
+    display_name: node.display_name,
+    headline: node.headline,
+    bio: node.bio,
+    visual_mood: node.visual_mood,
+    profile_image_url: node.profile_image_url,
+    cover_image_url: node.cover_image_url,
+    practice_statement: node.practice_statement,
+    curatorial_statement: node.curatorial_statement,
+  }) !== JSON.stringify(draft);
 
   const updateDraft = (key: keyof PresenceNodeInput, value: PresenceNodeInput[keyof PresenceNodeInput]) => {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -186,12 +196,17 @@ export function PresenceStudioPresenceView() {
       <AnuSurfacePanel tone="soft" className="p-5 md:p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="max-w-3xl">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/68">Presence</p>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/68">Public identity</p>
             <h1 className="mt-3 text-3xl text-[#fff7f2] md:text-[2.5rem]" style={{ fontFamily: 'var(--anu-type-display)' }}>
               {node.display_name}
             </h1>
+            {node.headline ? (
+              <p className="mt-2 max-w-2xl text-lg leading-7 text-[#fff7f2]/88 md:text-xl">
+                {node.headline}
+              </p>
+            ) : null}
             <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.86)] md:text-base">
-              {node.headline?.trim() || 'No headline has been added to this public node yet.'}
+              Shape the name, headline, images, bio, and statements that make this Presence publicly understandable.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <AnuChip tone="accent">{labelize(node.status, 'draft')}</AnuChip>
@@ -205,7 +220,7 @@ export function PresenceStudioPresenceView() {
             href={publicHref}
             className="inline-flex items-center gap-2 rounded-full border border-[#f6d4cb]/18 px-4 py-2 text-sm text-[#fff7f2] transition-colors hover:border-[#f6d4cb]/30 hover:bg-[rgba(246,212,203,0.08)]"
           >
-            Open public page
+            Public preview
             <ExternalLink className="h-4 w-4" />
           </Link>
         </div>
@@ -252,7 +267,15 @@ export function PresenceStudioPresenceView() {
       </div>
 
       <AnuSurfacePanel tone="quiet" className="p-5 md:p-6">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-[#f6d4cb]/62">Owner edit</p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.16em] text-[#f6d4cb]/62">Shape public identity</p>
+              <p className="mt-2 text-sm leading-6 text-[#f6d4cb]/70">
+                These owner-safe fields update the public Presence. Use hosted image URLs for alpha media.
+              </p>
+            </div>
+            <AnuChip tone={dirty ? 'accent' : 'muted'}>{dirty ? 'Unsaved changes' : 'Saved state'}</AnuChip>
+          </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <label className="space-y-2 text-sm text-[#f6d4cb]/78">
             Display name
@@ -277,8 +300,8 @@ export function PresenceStudioPresenceView() {
             <textarea value={draft.curatorial_statement || ''} onChange={(event) => updateDraft('curatorial_statement', event.target.value)} className="min-h-28 w-full rounded-md border border-white/14 bg-[#1e0227]/70 px-3 py-2 text-sm text-white outline-none" />
           </label>
         </div>
-        <button type="button" onClick={() => void save()} disabled={saving} className="mt-5 rounded-md bg-[#e0b115] px-4 py-2 text-sm font-semibold text-[#1e0227] disabled:opacity-60">
-          {saving ? 'Saving...' : 'Save profile'}
+        <button type="button" onClick={() => void save()} disabled={saving || !dirty} className="mt-5 rounded-md bg-[#e0b115] px-4 py-2 text-sm font-semibold text-[#1e0227] disabled:opacity-60">
+          {saving ? 'Saving...' : 'Save public identity'}
         </button>
       </AnuSurfacePanel>
     </div>

@@ -109,12 +109,12 @@ export function PresenceStudioAnalyticsView() {
       <AnuSurfacePanel tone="soft" className="p-5 md:p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="max-w-3xl">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/68">Analytics</p>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/68">Signals</p>
             <h1 className="mt-3 text-3xl text-[#fff7f2] md:text-[2.5rem]" style={{ fontFamily: 'var(--anu-type-display)' }}>
               Audience signals
             </h1>
             <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.86)] md:text-base">
-              Privacy-conscious activity for the public portfolio: views, enquiries, scan activity, top sources, and recent events.
+              Privacy-conscious activity for the public Presence: views, enquiries, scan activity, top sources, and recent events. Real signals only; no invented charts.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -126,7 +126,7 @@ export function PresenceStudioAnalyticsView() {
 
       {!analytics ? (
         <AnuSurfacePanel tone="quiet" className="p-5 md:p-6">
-          <EmptyState icon={BarChart3} title="No analytics yet" description="Public visits and enquiries will appear here after the node receives activity." />
+          <EmptyState icon={BarChart3} title="No signals yet" description="Public visits, enquiries, QR views, and NFC source activity will appear here after the Presence receives real activity." />
         </AnuSurfacePanel>
       ) : (
         <>

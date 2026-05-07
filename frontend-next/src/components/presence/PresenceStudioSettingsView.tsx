@@ -14,6 +14,7 @@ import {
   type PresenceNode,
 } from '@/lib/api/presence';
 import { describeOwnerPresenceError, getPresenceStudioPublicHref } from './presenceStudioOwnerUtils';
+import { buildPresenceStudioReadiness, PresenceStudioReadinessCard } from './PresenceStudioReadiness';
 
 function labelize(value: string | null | undefined, fallback = 'not set') {
   return value && value.trim() ? value.replace(/_/g, ' ') : fallback;
@@ -118,12 +119,12 @@ export function PresenceStudioSettingsView() {
       <AnuSurfacePanel tone="soft" className="p-5 md:p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="max-w-3xl">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/68">Settings</p>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/68">Launch controls</p>
             <h1 className="mt-3 text-3xl text-[#fff7f2] md:text-[2.5rem]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-              Publishing state
+              Publish safely
             </h1>
             <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.86)] md:text-base">
-              Owner-safe settings for visibility, display mode, template, readiness flags, and public route handling.
+              Review launch readiness, publication status, visibility, public route, and future network flags before sharing the Presence widely.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -135,9 +136,19 @@ export function PresenceStudioSettingsView() {
 
       {message ? <p className="rounded-2xl border border-emerald-200/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">{message}</p> : null}
 
+      <PresenceStudioReadinessCard
+        summary={buildPresenceStudioReadiness({
+          node,
+          works: node.works || [],
+          collections: node.collections || [],
+          publicHref,
+        })}
+        compact
+      />
+
       <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <AnuSurfacePanel tone="quiet" className="p-5 md:p-6">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-[#f6d4cb]/62">Node settings</p>
+          <p className="text-[11px] uppercase tracking-[0.16em] text-[#f6d4cb]/62">Public-world settings</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/8 bg-white/[0.04] px-4 py-3">
               <p className="text-xs uppercase tracking-[0.14em] text-[#f6d4cb]/54">Status</p>
@@ -167,7 +178,7 @@ export function PresenceStudioSettingsView() {
         </AnuSurfacePanel>
 
         <AnuSurfacePanel tone="quiet" className="p-5 md:p-6">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-[#f6d4cb]/62">Publishing action</p>
+          <p className="text-[11px] uppercase tracking-[0.16em] text-[#f6d4cb]/62">Publication action</p>
           <h2 className="mt-3 text-xl text-[#fff7f2]" style={{ fontFamily: 'var(--anu-type-display)' }}>
             {node.status === 'published' ? 'Public page is live' : 'Public page is not live'}
           </h2>

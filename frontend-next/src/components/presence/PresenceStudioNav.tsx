@@ -20,7 +20,7 @@ export function PresenceStudioNav({ routes, variant = 'rail' }: PresenceStudioNa
 
   if (variant === 'dock') {
     return (
-      <nav aria-label="Presence Studio quick navigation" className="grid grid-cols-4 gap-2">
+      <nav aria-label="Presence Studio quick navigation" className="grid gap-2" style={{ gridTemplateColumns: `repeat(${routes.length}, minmax(0, 1fr))` }}>
         {routes.map((route) => {
           const Icon = route.icon;
           const active = isRouteActive(pathname, route);
@@ -30,7 +30,7 @@ export function PresenceStudioNav({ routes, variant = 'rail' }: PresenceStudioNa
               href={route.href}
               aria-current={active ? 'page' : undefined}
               data-active={active ? 'true' : 'false'}
-              className={`flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-[1.15rem] border px-2 py-2 text-center text-[11px] font-medium transition-colors ${
+              className={`flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-[1.15rem] border px-1.5 py-2 text-center text-[10px] font-medium transition-colors sm:text-[11px] ${
                 active
                   ? 'border-[#f6d4cb]/60 bg-[rgba(246,212,203,0.14)] text-[#fff7f2]'
                   : 'border-white/10 bg-white/[0.04] text-[#f6d4cb]/82 hover:border-white/20 hover:bg-white/[0.08]'

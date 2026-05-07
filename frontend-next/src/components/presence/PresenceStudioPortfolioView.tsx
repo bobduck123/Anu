@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ArrowRight, CheckCircle2, Circle, ExternalLink, FolderOpen, Image as ImageIcon, Mail, QrCode, UserRound } from 'lucide-react';
+import { ArrowRight, ExternalLink, FolderOpen, Image as ImageIcon, Mail, QrCode, UserRound } from 'lucide-react';
 import { AnuChip, AnuSurfacePanel } from '@/ui-system/anu/surfacePrimitives';
 import { EmptyState } from '@/ui-system/states/EmptyState';
 import { LoadingState } from '@/ui-system/states/LoadingState';
@@ -16,19 +16,10 @@ import {
   type PresenceWork,
 } from '@/lib/api/presence';
 import { describeOwnerPresenceError, getPresenceStudioPublicHref, hasRenderableRichText } from './presenceStudioOwnerUtils';
+import { buildPresenceStudioReadiness, PresenceStudioReadinessCard } from './PresenceStudioReadiness';
 
 function labelize(value: string | null | undefined, fallback: string) {
   return value && value.trim() ? value.replace(/_/g, ' ') : fallback;
-}
-
-function ReadinessItem({ ready, label }: { ready: boolean; label: string }) {
-  const Icon = ready ? CheckCircle2 : Circle;
-  return (
-    <li className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-[#f6d4cb]/86">
-      <Icon className={ready ? 'h-4 w-4 text-emerald-200' : 'h-4 w-4 text-[#f6d4cb]/42'} />
-      <span>{label}</span>
-    </li>
-  );
 }
 
 export function PresenceStudioPortfolioView() {
@@ -113,22 +104,23 @@ export function PresenceStudioPortfolioView() {
   const statementReady = hasRenderableRichText(node.practice_statement) || hasRenderableRichText(node.curatorial_statement);
   const visibleWorks = works.filter((work) => work.is_visible !== false);
   const visibleCollections = collections.filter((collection) => collection.is_visible !== false);
+  const readiness = buildPresenceStudioReadiness({ node, works, collections, publicHref });
 
   return (
     <div className="space-y-4">
       <AnuSurfacePanel tone="soft" className="p-5 md:p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="max-w-3xl">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/68">Portfolio</p>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/68">World builder</p>
             <h1 className="mt-3 text-3xl text-[#fff7f2] md:text-[2.5rem]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-              Public portfolio readiness
+              Shape the public world
             </h1>
             <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.86)] md:text-base">
-              A focused view of the owner node as a public creative portfolio: identity, statements, selected works, collections, enquiry, and scan readiness.
+              This is the owner map for turning raw material into a Presence: identity, statements, selected works, collections, opportunities, physical-world bridge, and launch state.
             </p>
           </div>
           <Link href={publicHref} className="inline-flex items-center gap-2 rounded-full border border-[#f6d4cb]/18 px-4 py-2 text-sm text-[#fff7f2] transition-colors hover:border-[#f6d4cb]/30 hover:bg-[rgba(246,212,203,0.08)]">
-            Open public page
+            Public preview
             <ExternalLink className="h-4 w-4" />
           </Link>
         </div>
@@ -158,18 +150,26 @@ export function PresenceStudioPortfolioView() {
           </div>
         </AnuSurfacePanel>
 
-        <AnuSurfacePanel tone="quiet" className="p-5 md:p-6">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-[#f6d4cb]/62">Readiness checklist</p>
-          <ul className="mt-4 grid gap-2">
-            <ReadinessItem ready={Boolean(node.display_name && node.headline)} label="Profile identity present" />
-            <ReadinessItem ready={statementReady} label="Statement present" />
-            <ReadinessItem ready={visibleWorks.length > 0} label="Selected works present" />
-            <ReadinessItem ready={visibleCollections.length > 0} label="Collection present" />
-            <ReadinessItem ready label="Enquiry route enabled" />
-            <ReadinessItem ready label="QR route available" />
-          </ul>
-        </AnuSurfacePanel>
+        <PresenceStudioReadinessCard summary={readiness} compact />
       </div>
+
+      <AnuSurfacePanel tone="quiet" className="p-5 md:p-6">
+        <p className="text-[11px] uppercase tracking-[0.16em] text-[#f6d4cb]/62">World guidance</p>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+            <p className="text-sm font-medium text-[#fff7f2]">Works are proof objects</p>
+            <p className="mt-2 text-xs leading-5 text-[#f6d4cb]/64">Use them to show what exists, what happened, what was made, or what can be trusted.</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+            <p className="text-sm font-medium text-[#fff7f2]">Collections are rooms</p>
+            <p className="mt-2 text-xs leading-5 text-[#f6d4cb]/64">Treat each collection as a series, shelf, dossier, archive, program, or body of work.</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+            <p className="text-sm font-medium text-[#fff7f2]">Statements give the world meaning</p>
+            <p className="mt-2 text-xs leading-5 text-[#f6d4cb]/64">{statementReady ? 'A statement is present. Review it against the public-world doctrine before launch.' : 'Add a bio, practice statement, or curatorial statement before pilot publication.'}</p>
+          </div>
+        </div>
+      </AnuSurfacePanel>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Link href="/app/presence" className="rounded-2xl border border-white/10 bg-white/[0.05] p-4 text-sm text-[#f6d4cb]/86 hover:bg-white/[0.08]">

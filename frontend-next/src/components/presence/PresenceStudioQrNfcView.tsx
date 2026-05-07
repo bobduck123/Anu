@@ -22,6 +22,16 @@ function labelize(value: string | null | undefined, fallback = 'not provided') {
   return value && value.trim() ? value.replace(/_/g, ' ') : fallback;
 }
 
+const PHYSICAL_USE_CASES = [
+  'exhibition card',
+  'studio wall',
+  'business card',
+  'event badge',
+  'venue entrance',
+  'flyer/poster',
+  'artwork label',
+];
+
 export function PresenceStudioQrNfcView() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -135,10 +145,10 @@ export function PresenceStudioQrNfcView() {
           <div className="max-w-3xl">
             <p className="text-[11px] uppercase tracking-[0.22em] text-[#f6d4cb]/68">QR / NFC</p>
             <h1 className="mt-3 text-3xl text-[#fff7f2] md:text-[2.5rem]" style={{ fontFamily: 'var(--anu-type-display)' }}>
-              Scan surfaces
+              Physical-world bridge
             </h1>
             <p className="mt-3 text-sm leading-6 text-[color:rgba(246,212,203,0.86)] md:text-base">
-              Use the canonical public URL for printed cards, exhibition labels, venue placards, and NFC handoffs. Source codes track anonymous scan context without creating named contacts.
+              Turn cards, labels, room entrances, event materials, and NFC tags into public-world entry points. Source codes track anonymous scan context without creating named contacts.
             </p>
           </div>
           <a href={publicHref} className="inline-flex items-center gap-2 rounded-full border border-[#f6d4cb]/18 px-4 py-2 text-sm text-[#fff7f2] transition-colors hover:border-[#f6d4cb]/30 hover:bg-[rgba(246,212,203,0.08)]">
@@ -149,6 +159,18 @@ export function PresenceStudioQrNfcView() {
       </AnuSurfacePanel>
 
       {message ? <p className="rounded-2xl border border-white/12 bg-white/[0.05] px-4 py-3 text-sm text-[#f6d4cb]/82">{message}</p> : null}
+
+      <AnuSurfacePanel tone="quiet" className="p-5 md:p-6">
+        <p className="text-[11px] uppercase tracking-[0.16em] text-[#f6d4cb]/62">Where this gets used</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {PHYSICAL_USE_CASES.map((item) => (
+            <AnuChip key={item} tone="muted">{item}</AnuChip>
+          ))}
+        </div>
+        <p className="mt-4 text-sm leading-6 text-[#f6d4cb]/70">
+          A custom QR or NFC tag can point to the whole Presence, a specific work, a collection, or an enquiry route. Hardware writing remains outside alpha; the Studio prepares the destination and source code.
+        </p>
+      </AnuSurfacePanel>
 
       <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
         <AnuSurfacePanel tone="quiet" className="p-5 md:p-6">
@@ -181,7 +203,7 @@ export function PresenceStudioQrNfcView() {
             {saving ? 'Creating...' : 'Create source tag'}
           </button>
           <p className="mt-3 text-xs leading-5 text-[#f6d4cb]/58">
-            This creates a source record for links such as `/p/{node.slug}?nfc=source-code`. Writing physical NFC hardware is outside alpha.
+            This creates a source record for links such as `/p/{node.slug}?nfc=source-code`. Anonymous scans stay anonymous; named contacts only begin after a submitted enquiry or manual owner/admin entry.
           </p>
         </AnuSurfacePanel>
       </div>

@@ -42,7 +42,11 @@ const updateOwnerPresenceNodeMock = vi.fn();
 const publishOwnerPresenceNodeMock = vi.fn();
 const unpublishOwnerPresenceNodeMock = vi.fn();
 const getOwnerPresenceNodeWorksMock = vi.fn();
+const createOwnerPresenceWorkMock = vi.fn();
+const updateOwnerPresenceWorkMock = vi.fn();
 const getOwnerPresenceNodeCollectionsMock = vi.fn();
+const createOwnerPresenceCollectionMock = vi.fn();
+const updateOwnerPresenceCollectionMock = vi.fn();
 const getOwnerPresenceNodeEnquiriesMock = vi.fn();
 const updateOwnerPresenceEnquiryMock = vi.fn();
 const getOwnerPresenceNodeAnalyticsMock = vi.fn();
@@ -101,7 +105,11 @@ vi.mock('@/lib/api/presence', () => ({
   publishOwnerPresenceNode: (...args: unknown[]) => publishOwnerPresenceNodeMock(...args),
   unpublishOwnerPresenceNode: (...args: unknown[]) => unpublishOwnerPresenceNodeMock(...args),
   getOwnerPresenceNodeWorks: (...args: unknown[]) => getOwnerPresenceNodeWorksMock(...args),
+  createOwnerPresenceWork: (...args: unknown[]) => createOwnerPresenceWorkMock(...args),
+  updateOwnerPresenceWork: (...args: unknown[]) => updateOwnerPresenceWorkMock(...args),
   getOwnerPresenceNodeCollections: (...args: unknown[]) => getOwnerPresenceNodeCollectionsMock(...args),
+  createOwnerPresenceCollection: (...args: unknown[]) => createOwnerPresenceCollectionMock(...args),
+  updateOwnerPresenceCollection: (...args: unknown[]) => updateOwnerPresenceCollectionMock(...args),
   getOwnerPresenceNodeEnquiries: (...args: unknown[]) => getOwnerPresenceNodeEnquiriesMock(...args),
   updateOwnerPresenceEnquiry: (...args: unknown[]) => updateOwnerPresenceEnquiryMock(...args),
   getOwnerPresenceNodeAnalytics: (...args: unknown[]) => getOwnerPresenceNodeAnalyticsMock(...args),
@@ -356,7 +364,11 @@ describe('Presence Nodes frontend', () => {
     publishOwnerPresenceNodeMock.mockResolvedValue({ ...ownerNodeSample, status: 'published' });
     unpublishOwnerPresenceNodeMock.mockResolvedValue({ ...ownerNodeSample, status: 'unpublished' });
     getOwnerPresenceNodeWorksMock.mockResolvedValue(ownerWorksSample);
+    createOwnerPresenceWorkMock.mockImplementation(async (_id, payload) => ({ id: 88, ...payload }));
+    updateOwnerPresenceWorkMock.mockImplementation(async (_id, payload) => ({ ...ownerWorksSample[0], ...payload }));
     getOwnerPresenceNodeCollectionsMock.mockResolvedValue(ownerCollectionsSample);
+    createOwnerPresenceCollectionMock.mockImplementation(async (_id, payload) => ({ id: 77, ...payload }));
+    updateOwnerPresenceCollectionMock.mockImplementation(async (_id, payload) => ({ ...ownerCollectionsSample[0], ...payload }));
     getOwnerPresenceNodeEnquiriesMock.mockResolvedValue(ownerEnquiriesSample);
     updateOwnerPresenceEnquiryMock.mockImplementation(async (_id, status) => ({ ...ownerEnquiriesSample[0], status }));
     getOwnerPresenceNodeAnalyticsMock.mockResolvedValue(ownerAnalyticsSample);
@@ -591,20 +603,21 @@ describe('Presence Nodes frontend', () => {
     currentPathname = '/app';
     render(<PresenceStudioEntryPage />);
 
-    expect(await screen.findByRole('heading', { name: 'Presence Studio' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Prepare your public world' })).toBeInTheDocument();
     expect(await screen.findByText('River Stone')).toBeInTheDocument();
     expect(screen.getByText('Trauma-informed practitioner')).toBeInTheDocument();
     expect(screen.getByText('/river-practitioner')).toBeInTheDocument();
     expect(screen.getAllByText('http://localhost:3000/p/river-practitioner').length).toBeGreaterThan(0);
-    expect(screen.getByRole('link', { name: /Shape this presence/i })).toHaveAttribute('href', '/app/presence');
-    expect(screen.getByRole('link', { name: /View as visitors do/i })).toHaveAttribute('href', 'http://localhost:3000/p/river-practitioner');
-    expect(screen.getByRole('link', { name: /Portfolio/ })).toHaveAttribute('href', '/app/portfolio');
+    expect(screen.getByRole('link', { name: /Shape this Presence/i })).toHaveAttribute('href', '/app/presence');
+    expect(screen.getAllByRole('link', { name: /Public preview/i })[0]).toHaveAttribute('href', 'http://localhost:3000/p/river-practitioner');
+    expect(screen.getByText(/Launch readiness/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /World/ })).toHaveAttribute('href', '/app/portfolio');
     expect(screen.getByRole('link', { name: /Works/ })).toHaveAttribute('href', '/app/works');
     expect(screen.getByRole('link', { name: /Collections/ })).toHaveAttribute('href', '/app/collections');
     expect(screen.getByRole('link', { name: /Enquiries/ })).toHaveAttribute('href', '/app/enquiries');
     expect(screen.getByRole('link', { name: /QR\/NFC/ })).toHaveAttribute('href', '/app/qr-nfc');
-    expect(screen.getByRole('link', { name: /Analytics/ })).toHaveAttribute('href', '/app/analytics');
-    expect(screen.getByRole('link', { name: /Settings/ })).toHaveAttribute('href', '/app/settings');
+    expect(screen.getByRole('link', { name: /Signals/ })).toHaveAttribute('href', '/app/analytics');
+    expect(screen.getByRole('link', { name: /Launch/ })).toHaveAttribute('href', '/app/settings');
   });
 
   it('renders the presence studio dashboard empty state when the owner has no nodes', async () => {
@@ -613,7 +626,7 @@ describe('Presence Nodes frontend', () => {
     render(<PresenceStudioEntryPage />);
 
     expect(await screen.findByText('Your studio is waiting')).toBeInTheDocument();
-    expect(screen.getByText(/No public presence is attached to this account yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/No public Presence is attached to this account yet/i)).toBeInTheDocument();
   });
 
   it('renders the presence studio shell navigation with active route styling', () => {
@@ -624,10 +637,10 @@ describe('Presence Nodes frontend', () => {
       </PresenceStudioLayout>,
     );
 
-    expect(screen.getByText('Portfolio Studio Console')).toBeInTheDocument();
+    expect(screen.getByText('Shape your public world')).toBeInTheDocument();
     expect(screen.getByLabelText('Presence Studio sections')).toBeInTheDocument();
     expect(screen.getByText('studio child')).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Dashboard' })[0]).toHaveAttribute('href', '/app/dashboard');
+    expect(screen.getAllByRole('link', { name: 'Studio' })[0]).toHaveAttribute('href', '/app/dashboard');
     expect(screen.getAllByRole('link', { name: 'Presence' })[0]).toHaveAttribute('aria-current', 'page');
   });
 
@@ -642,7 +655,7 @@ describe('Presence Nodes frontend', () => {
     expect(screen.getByText('Curatorial statement for river practice.')).toBeInTheDocument();
     expect(screen.getByText('Gentle care for community members.')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Headline'), { target: { value: 'Updated owner headline' } });
-    fireEvent.click(screen.getByRole('button', { name: /save profile/i }));
+    fireEvent.click(screen.getByRole('button', { name: /save public identity/i }));
     await waitFor(() => expect(updateOwnerPresenceNodeMock).toHaveBeenCalled());
     expect(updateOwnerPresenceNodeMock.mock.calls[0][1].headline).toBe('Updated owner headline');
   });
@@ -669,12 +682,16 @@ describe('Presence Nodes frontend', () => {
     currentPathname = '/app/works';
     render(<PresenceStudioWorksPage />);
 
-    expect(await screen.findByRole('heading', { name: 'Works library' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Proof objects for the public world' })).toBeInTheDocument();
     expect(await screen.findByText('River Memory Wall')).toBeInTheDocument();
-    expect(screen.getByText('2026 · Acrylic · 18m wall')).toBeInTheDocument();
+    expect(screen.getByText('2026 / Acrylic / 18m wall')).toBeInTheDocument();
     expect(screen.getByText('Selected work sample.')).toBeInTheDocument();
     expect(screen.getByText('Selected Works')).toBeInTheDocument();
     expect(screen.getByText('commissioned')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /add selected work/i }));
+    fireEvent.change(screen.getByLabelText('Work title'), { target: { value: 'New Studio Study' } });
+    fireEvent.click(screen.getByRole('button', { name: /^add work$/i }));
+    await waitFor(() => expect(createOwnerPresenceWorkMock).toHaveBeenCalled());
   });
 
   it('renders the works screen empty state when no works exist', async () => {
@@ -682,8 +699,8 @@ describe('Presence Nodes frontend', () => {
     getOwnerPresenceNodeWorksMock.mockResolvedValueOnce([]);
     render(<PresenceStudioWorksPage />);
 
-    expect(await screen.findByText('No works added yet')).toBeInTheDocument();
-    expect(screen.getByText(/there are no individual works in the library yet/i)).toBeInTheDocument();
+    expect(await screen.findByText('No selected works yet')).toBeInTheDocument();
+    expect(screen.getByText(/Add the first work/i)).toBeInTheDocument();
   });
 
   it('renders the works screen error state when works cannot load', async () => {
@@ -698,11 +715,15 @@ describe('Presence Nodes frontend', () => {
     currentPathname = '/app/collections';
     render(<PresenceStudioCollectionsPage />);
 
-    expect(await screen.findByRole('heading', { name: 'Collections studio' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Rooms inside the public world' })).toBeInTheDocument();
     expect(await screen.findByText('Selected Works')).toBeInTheDocument();
     expect(screen.getByText('A small collection.')).toBeInTheDocument();
     expect(screen.getByText('1 works')).toBeInTheDocument();
     expect(screen.getByText('Sort 0')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /new collection/i }));
+    fireEvent.change(screen.getByLabelText('Collection title'), { target: { value: 'New Body of Work' } });
+    fireEvent.click(screen.getByRole('button', { name: /^create collection$/i }));
+    await waitFor(() => expect(createOwnerPresenceCollectionMock).toHaveBeenCalled());
   });
 
   it('renders the collections screen empty state when no collections exist', async () => {
@@ -710,15 +731,15 @@ describe('Presence Nodes frontend', () => {
     getOwnerPresenceNodeCollectionsMock.mockResolvedValueOnce([]);
     render(<PresenceStudioCollectionsPage />);
 
-    expect(await screen.findByText('No collections added yet')).toBeInTheDocument();
-    expect(screen.getByText(/there are no curated sets attached to this node yet/i)).toBeInTheDocument();
+    expect(await screen.findByText('No collections yet')).toBeInTheDocument();
+    expect(screen.getByText(/Create the first body of work/i)).toBeInTheDocument();
   });
 
   it('renders the enquiries screen with loaded owner enquiries and status updates', async () => {
     currentPathname = '/app/enquiries';
     render(<PresenceStudioEnquiriesPage />);
 
-    expect(await screen.findByRole('heading', { name: 'Owner inbox' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Opportunity inbox' })).toBeInTheDocument();
     expect(screen.getByText('Ari Visitor')).toBeInTheDocument();
     expect(screen.getByText(/Studio North/)).toBeInTheDocument();
     expect(screen.getByText(/gallery-card/)).toBeInTheDocument();
@@ -730,7 +751,7 @@ describe('Presence Nodes frontend', () => {
     currentPathname = '/app/qr-nfc';
     render(<PresenceStudioQrNfcPage />);
 
-    expect(await screen.findByRole('heading', { name: 'Scan surfaces' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Physical-world bridge' })).toBeInTheDocument();
     expect(screen.getByText('http://localhost:3000/p/river-practitioner')).toBeInTheDocument();
     expect(screen.getByAltText(/scanner-grade QR/i)).toHaveAttribute('src', 'http://localhost:5000/api/presence/public/river-practitioner/qr');
     expect(screen.getByText('Gallery card')).toBeInTheDocument();
@@ -743,9 +764,9 @@ describe('Presence Nodes frontend', () => {
   it('renders the portfolio overview, analytics, and settings screens', async () => {
     currentPathname = '/app/portfolio';
     const portfolio = render(<PresenceStudioPortfolioPage />);
-    expect(await screen.findByRole('heading', { name: 'Public portfolio readiness' })).toBeInTheDocument();
-    expect(screen.getByText('Selected works present')).toBeInTheDocument();
-    expect(screen.getByText('Collection present')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Shape the public world' })).toBeInTheDocument();
+    expect(screen.getByText('Selected works are strong enough')).toBeInTheDocument();
+    expect(screen.getByText('A body of work is named')).toBeInTheDocument();
     portfolio.unmount();
 
     currentPathname = '/app/analytics';
@@ -757,7 +778,7 @@ describe('Presence Nodes frontend', () => {
 
     currentPathname = '/app/settings';
     render(<PresenceStudioSettingsPage />);
-    expect(await screen.findByRole('heading', { name: 'Publishing state' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Publish safely' })).toBeInTheDocument();
     expect(screen.getByText('Display mode')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /unpublish/i }));
     await waitFor(() => expect(unpublishOwnerPresenceNodeMock).toHaveBeenCalledWith(12));
