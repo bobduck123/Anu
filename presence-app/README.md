@@ -1,22 +1,21 @@
-# Presence App — standalone creative-portfolio platform
+# Presence App - standalone creative-portfolio platform
 
-A standalone Next.js 16 PWA for the Presence Ecosystem. Connects directly to
-the Flask backend at `flora-fauna/backend/` via Supabase JWT. Has its own
-design system (warm terracotta / dark studio palette) — **no dependency on
-the Manara `frontend-next` codebase**.
+A standalone Next.js 16 PWA for the Presence Ecosystem. It connects directly
+to the Flask backend at `flora-fauna/backend/` via Supabase JWT and keeps its
+own warm terracotta / dark studio design system.
+
+`presence-app` is the deployed Presence-only app. It should not import ANU
+admin/control surfaces or broader `frontend-next` product pages.
 
 ## Status
 
-Alpha. Public portfolio routes use a generic profile renderer
-(`components/portfolio/PortfolioRenderer.tsx`). The six distinctive creative
-templates (minimal_portal, artist_gallery, editorial_portfolio,
-studio_practice, practitioner_profile, venue_profile) currently live in
-`frontend-next/src/components/presence/PresenceNodeRenderer.tsx`. Mirroring
-those templates here is documented as a follow-up — see
-`docs/presence/PRESENCE_ECOSYSTEM_APP_PWA_SPEC.md`.
+Alpha. Public portfolio routes use a generic renderer in
+`components/portfolio/PortfolioRenderer.tsx`. The six distinctive creative
+templates currently live in `frontend-next/src/components/presence/`.
+Mirroring those templates here remains a follow-up.
 
-For pilot launch, route public portfolio traffic to the frontend-next
-deployment and use this app for the owner studio surface only.
+For current pilots, this app provides the Presence landing page, public entry
+routes, auth flows, and owner Studio.
 
 ## Local launch
 
@@ -24,19 +23,20 @@ The app expects the Flask backend running on `http://localhost:5000` and a
 Supabase project for owner auth.
 
 ```bash
-# 1. Install
 cd C:\Dev\Flora_fauna\presence-app
 npm install
 
-# 2. Configure (.env.local)
-# NEXT_PUBLIC_API_BASE=http://localhost:5000
-# NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
-# NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+# .env.local
+NEXT_PUBLIC_API_BASE=http://localhost:5000
+NEXT_PUBLIC_APP_URL=http://localhost:3001
+# Alias support also exists for NEXT_PUBLIC_PRESENCE_API_BASE_URL
+# and NEXT_PUBLIC_PRESENCE_PUBLIC_ORIGIN.
+NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+NEXT_PUBLIC_PRESENCE_ALLOW_SIGNUPS=false
+NEXT_PUBLIC_PRESENCE_STUDIO_CONTACT=mailto:hello@presence.studio
 
-# 3. Dev server (port 3001 to avoid clash with frontend-next on 3000)
 npm run dev -- --port 3001
-
-# 4. Verify
 npm run typecheck
 npm run build
 ```
@@ -44,31 +44,63 @@ npm run build
 ## Routes
 
 Public:
-- `/p/[slug]` — public portfolio (generic renderer)
-- `/p/[slug]/works/[workId]` — work detail with OG metadata
-- `/p/[slug]/collections/[collectionId]` — collection detail
+- `/` - Presence landing page with Gallery and Studio choices
+- `/gallery` - alpha public gallery entry, no private data
+- `/healthz` - deployment health check
+- `/p/[slug]` - public portfolio
+- `/p/[slug]/works/[workId]` - public work detail
+- `/p/[slug]/collections/[collectionId]` - public collection detail
 
-Owner studio (Supabase JWT required):
-- `/studio` — owned-node list
-- `/studio/[id]` — dashboard
-- `/studio/[id]/{portfolio,works,collections,enquiries,qr,analytics,settings}`
+Auth:
+- `/auth/sign-in` - Supabase email/password sign-in
+- `/auth/sign-up` - invite-first access by default
+- `/auth/callback` - Supabase callback exchange
+- `/auth/sign-out` - signs out and returns home
+- `/auth/forgot-password` - reset email flow
+- `/auth/reset-password` - new password flow
+
+Owner Studio:
+- `/studio` - auth gate or owned-node list
+- `/studio/[id]` - dashboard
+- `/studio/[id]/portfolio`
+- `/studio/[id]/works`
+- `/studio/[id]/collections`
+- `/studio/[id]/enquiries`
+- `/studio/[id]/qr`
+- `/studio/[id]/analytics`
+- `/studio/[id]/settings`
 
 ## Backend dependency
 
-This app does NOT contain backend code. All API calls go to the Flask
-backend at `flora-fauna/backend/`:
+This app does not contain backend code. All API calls go to the Flask backend:
 
 - Public: `GET /api/presence/public/<slug>`
 - Owner: `GET|PATCH|POST|DELETE /api/presence/owner/*` with
   `Authorization: Bearer <supabase-jwt>`
-- QR: `GET /api/presence/public/<slug>/qr` (scanner-grade SVG)
+- QR: `GET /api/presence/public/<slug>/qr`
+- vCard: `GET /api/presence/public/<slug>/vcard`
 
 ## Deployment
 
-Recommended: deploy this app as a separate Vercel project from the same
-monorepo. Root directory: `presence-app`. Framework preset: Next.js. Env
-vars: `NEXT_PUBLIC_API_BASE`, `NEXT_PUBLIC_SUPABASE_URL`,
-`NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+Recommended Vercel settings:
 
-Split into a separate Git repo only after the API/template/auth contracts
-have stabilised post-pilot.
+- Root Directory: `presence-app`
+- Output Directory: blank/default
+- Build Command: `npm run build`
+- Install Command: `npm ci`
+- Production Branch: `feature/presence-ecosystem-alpha`
+
+Required production env vars:
+
+- `NEXT_PUBLIC_API_BASE` or `NEXT_PUBLIC_PRESENCE_API_BASE_URL`
+- `NEXT_PUBLIC_APP_URL` or `NEXT_PUBLIC_PRESENCE_PUBLIC_ORIGIN`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Optional production env vars:
+
+- `NEXT_PUBLIC_PRESENCE_ALLOW_SIGNUPS`
+- `NEXT_PUBLIC_PRESENCE_STUDIO_CONTACT`
+
+Never expose Supabase service-role keys, database URLs, control-plane secrets,
+or smoke tokens through `NEXT_PUBLIC_*` variables.

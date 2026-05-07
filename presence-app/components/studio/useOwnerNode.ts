@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import { getNode } from "@/lib/api/owner";
 import type { PresenceNode } from "@/lib/api/types";
 
+export const AUTH_REQUIRED_MESSAGE = "Sign in required.";
+
 export function useOwnerNode(nodeId: number) {
   const [node, setNode] = useState<PresenceNode | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -18,7 +20,7 @@ export function useOwnerNode(nodeId: number) {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        setError("Sign in required.");
+        setError(AUTH_REQUIRED_MESSAGE);
         return;
       }
       setToken(session.access_token);
@@ -33,5 +35,12 @@ export function useOwnerNode(nodeId: number) {
 
   useEffect(() => { void reload(); }, [reload]);
 
-  return { node, token, loading, error, reload };
+  return {
+    node,
+    token,
+    loading,
+    error,
+    authRequired: error === AUTH_REQUIRED_MESSAGE,
+    reload,
+  };
 }

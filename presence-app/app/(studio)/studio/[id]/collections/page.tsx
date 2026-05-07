@@ -2,9 +2,10 @@
 
 import { use, useEffect, useState } from "react";
 import Image from "next/image";
-import { Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Pencil } from "lucide-react";
 import { useOwnerNode } from "@/components/studio/useOwnerNode";
 import StudioShell from "@/components/studio/StudioShell";
+import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
 import { Loading, Empty, Button, Input, Textarea } from "@/components/ui";
 import { listCollections, createCollection, updateCollection, deleteCollection } from "@/lib/api/owner";
 import type { PresenceCollection } from "@/lib/api/types";
@@ -12,7 +13,7 @@ import type { PresenceCollection } from "@/lib/api/types";
 export default function StudioCollectionsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const nodeId = Number(id);
-  const { node, token, loading } = useOwnerNode(nodeId);
+  const { node, token, loading, error, authRequired } = useOwnerNode(nodeId);
   const [collections, setCollections] = useState<PresenceCollection[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<PresenceCollection> | null>(null);
@@ -52,14 +53,29 @@ export default function StudioCollectionsPage({ params }: { params: Promise<{ id
     setCollections((cs) => cs.filter((c) => c.id !== col.id));
   }
 
-  if (loading) return <Loading />;
-  if (!node) return null;
+  if (loading) return <Loading label="Loading collections..." />;
+  if (!node) {
+    return (
+      <StudioNodeGate
+        authRequired={authRequired}
+        returnTo={`/studio/${nodeId}/collections`}
+        error={error ?? "Node not found."}
+      />
+    );
+  }
 
   return (
     <StudioShell node={node}>
       <div className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-[var(--p-studio-text)]">Collections</h2>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--p-studio-muted)]">
+              Bodies of work
+            </p>
+            <h2 className="mt-1 text-xl font-semibold text-[var(--p-studio-text)]">
+              Organise rooms, series, and dossiers
+            </h2>
+          </div>
           <Button size="sm" onClick={() => setEditing({ is_visible: true })}>
             <Plus className="w-4 h-4" /> Add
           </Button>
@@ -80,9 +96,9 @@ export default function StudioCollectionsPage({ params }: { params: Promise<{ id
           </div>
         )}
 
-        {listLoading && <Loading />}
+        {listLoading && <Loading label="Loading collections..." />}
         {!listLoading && collections.length === 0 && (
-          <Empty title="No collections yet" body="Group related works into collections." />
+          <Empty title="No collections yet" body="Group related works into a room, series, shelf, dossier, or archive path." />
         )}
 
         {collections.map((col) => (
@@ -97,11 +113,13 @@ export default function StudioCollectionsPage({ params }: { params: Promise<{ id
               {col.description && <p className="text-xs text-[var(--p-studio-muted)] line-clamp-2">{col.description}</p>}
             </div>
             <div className="flex items-center gap-1 shrink-0">
-              <button className="p-1.5 text-[var(--p-studio-muted)] hover:text-[var(--p-studio-text)]" onClick={() => void toggleVisibility(col)}>
+              <button className="p-1.5 text-[var(--p-studio-muted)] hover:text-[var(--p-studio-text)]" onClick={() => void toggleVisibility(col)} title={col.is_visible ? "Hide" : "Show"}>
                 {col.is_visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               </button>
-              <button className="p-1.5 text-[var(--p-studio-muted)] hover:text-[var(--p-studio-text)]" onClick={() => setEditing(col)}>✏️</button>
-              <button className="p-1.5 text-red-500 hover:text-red-400" onClick={() => void remove(col)}>
+              <button className="p-1.5 text-[var(--p-studio-muted)] hover:text-[var(--p-studio-text)]" onClick={() => setEditing(col)} title="Edit">
+                <Pencil className="w-4 h-4" />
+              </button>
+              <button className="p-1.5 text-red-500 hover:text-red-400" onClick={() => void remove(col)} title="Delete">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>

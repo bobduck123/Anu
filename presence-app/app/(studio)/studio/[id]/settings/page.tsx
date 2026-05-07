@@ -1,17 +1,17 @@
 "use client";
 
 import { use } from "react";
-import Link from "next/link";
-import { Globe, AlertTriangle } from "lucide-react";
+import { Globe } from "lucide-react";
 import { useOwnerNode } from "@/components/studio/useOwnerNode";
 import StudioShell from "@/components/studio/StudioShell";
+import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
 import { Loading, StatusPill, Button } from "@/components/ui";
 import { publishNode, unpublishNode } from "@/lib/api/owner";
 
 export default function StudioSettingsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const nodeId = Number(id);
-  const { node, token, loading, reload } = useOwnerNode(nodeId);
+  const { node, token, loading, error, authRequired, reload } = useOwnerNode(nodeId);
 
   async function handlePublishToggle() {
     if (!token || !node) return;
@@ -23,27 +23,37 @@ export default function StudioSettingsPage({ params }: { params: Promise<{ id: s
     await reload();
   }
 
-  if (loading) return <Loading />;
-  if (!node) return null;
+  if (loading) return <Loading label="Loading settings..." />;
+  if (!node) {
+    return (
+      <StudioNodeGate
+        authRequired={authRequired}
+        returnTo={`/studio/${nodeId}/settings`}
+        error={error ?? "Node not found."}
+      />
+    );
+  }
 
   return (
     <StudioShell node={node}>
       <div className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-6">
-        <h2 className="text-sm font-semibold text-[var(--p-studio-text)]">Settings</h2>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--p-studio-muted)]">
+            Publish controls
+          </p>
+          <h2 className="mt-1 text-xl font-semibold text-[var(--p-studio-text)]">
+            Settings
+          </h2>
+        </div>
 
-        {/* Visibility */}
         <section className="flex flex-col gap-4 p-5 rounded-2xl bg-[var(--p-studio-surface)] border border-[var(--p-studio-border)]">
           <h3 className="text-xs font-semibold text-[var(--p-studio-muted)] uppercase tracking-widest">Visibility</h3>
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-sm text-[var(--p-studio-text)]">Status</span>
+              <span className="text-sm text-[var(--p-studio-text)]">Publication status</span>
               <StatusPill status={node.status} />
             </div>
-            <Button
-              variant={node.status === "published" ? "secondary" : "primary"}
-              size="sm"
-              onClick={() => void handlePublishToggle()}
-            >
+            <Button variant={node.status === "published" ? "secondary" : "primary"} size="sm" onClick={() => void handlePublishToggle()}>
               {node.status === "published" ? "Unpublish" : "Publish"}
             </Button>
           </div>
@@ -51,21 +61,20 @@ export default function StudioSettingsPage({ params }: { params: Promise<{ id: s
           {node.public_url && (
             <div className="flex items-center gap-2 text-sm text-[var(--p-studio-muted)]">
               <Globe className="w-4 h-4 shrink-0" />
-              <a
-                href={node.public_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="truncate hover:text-[var(--p-studio-accent)] transition-colors"
-              >
+              <a href={node.public_url} target="_blank" rel="noopener noreferrer" className="truncate hover:text-[var(--p-studio-accent)] transition-colors">
                 {node.public_url}
               </a>
             </div>
           )}
+          <p className="text-xs leading-5 text-[var(--p-studio-muted)]">
+            Publishing makes the public route available when the backend marks
+            this Presence public. Draft, private, suspended, and archived
+            Presences remain hidden from public visitors.
+          </p>
         </section>
 
-        {/* Node info */}
         <section className="flex flex-col gap-3 p-5 rounded-2xl bg-[var(--p-studio-surface)] border border-[var(--p-studio-border)]">
-          <h3 className="text-xs font-semibold text-[var(--p-studio-muted)] uppercase tracking-widest">Node info</h3>
+          <h3 className="text-xs font-semibold text-[var(--p-studio-muted)] uppercase tracking-widest">Presence record</h3>
           <dl className="grid grid-cols-2 gap-3 text-sm">
             <div>
               <dt className="text-[var(--p-studio-muted)] text-xs">Slug</dt>
@@ -81,7 +90,7 @@ export default function StudioSettingsPage({ params }: { params: Promise<{ id: s
             </div>
             <div>
               <dt className="text-[var(--p-studio-muted)] text-xs">Plan</dt>
-              <dd className="text-[var(--p-studio-text)]">{node.plan_type ?? "—"}</dd>
+              <dd className="text-[var(--p-studio-text)]">{node.plan_type ?? "Not set"}</dd>
             </div>
           </dl>
         </section>

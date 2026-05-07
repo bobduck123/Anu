@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from "react";
 import { useOwnerNode } from "@/components/studio/useOwnerNode";
 import StudioShell from "@/components/studio/StudioShell";
+import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
 import { Loading } from "@/components/ui";
 import { getAnalytics } from "@/lib/api/owner";
 import type { PresenceAnalyticsSummary } from "@/lib/api/types";
@@ -10,7 +11,7 @@ import type { PresenceAnalyticsSummary } from "@/lib/api/types";
 export default function StudioAnalyticsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const nodeId = Number(id);
-  const { node, token, loading } = useOwnerNode(nodeId);
+  const { node, token, loading, error, authRequired } = useOwnerNode(nodeId);
   const [analytics, setAnalytics] = useState<PresenceAnalyticsSummary | null>(null);
 
   useEffect(() => {
@@ -18,13 +19,28 @@ export default function StudioAnalyticsPage({ params }: { params: Promise<{ id: 
     getAnalytics(nodeId, token).then(setAnalytics).catch(console.error);
   }, [nodeId, token]);
 
-  if (loading) return <Loading />;
-  if (!node) return null;
+  if (loading) return <Loading label="Loading signals..." />;
+  if (!node) {
+    return (
+      <StudioNodeGate
+        authRequired={authRequired}
+        returnTo={`/studio/${nodeId}/analytics`}
+        error={error ?? "Node not found."}
+      />
+    );
+  }
 
   return (
     <StudioShell node={node}>
       <div className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-6">
-        <h2 className="text-sm font-semibold text-[var(--p-studio-text)]">Analytics</h2>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--p-studio-muted)]">
+            Signals
+          </p>
+          <h2 className="mt-1 text-xl font-semibold text-[var(--p-studio-text)]">
+            Activity and response
+          </h2>
+        </div>
 
         {analytics ? (
           <>
@@ -34,10 +50,7 @@ export default function StudioAnalyticsPage({ params }: { params: Promise<{ id: 
                 { label: "Enquiries", value: analytics.total_enquiries },
                 { label: "Rate", value: `${(analytics.conversion_rate * 100).toFixed(1)}%` },
               ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="flex flex-col gap-1 p-4 rounded-xl bg-[var(--p-studio-surface)] border border-[var(--p-studio-border)] text-center"
-                >
+                <div key={stat.label} className="flex flex-col gap-1 p-4 rounded-xl bg-[var(--p-studio-surface)] border border-[var(--p-studio-border)] text-center">
                   <span className="text-2xl font-semibold text-[var(--p-studio-text)]">{stat.value}</span>
                   <span className="text-xs text-[var(--p-studio-muted)]">{stat.label}</span>
                 </div>
@@ -51,9 +64,7 @@ export default function StudioAnalyticsPage({ params }: { params: Promise<{ id: 
                 </h3>
                 {analytics.top_sources.map((src, i) => (
                   <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-[var(--p-studio-surface)] border border-[var(--p-studio-border)]">
-                    <span className="text-sm text-[var(--p-studio-text)]">
-                      {src.source_type ?? "direct"}
-                    </span>
+                    <span className="text-sm text-[var(--p-studio-text)]">{src.source_type ?? "direct"}</span>
                     <span className="text-sm font-medium text-[var(--p-studio-accent)]">{src.count}</span>
                   </div>
                 ))}
@@ -79,7 +90,10 @@ export default function StudioAnalyticsPage({ params }: { params: Promise<{ id: 
             )}
           </>
         ) : (
-          <p className="text-sm text-[var(--p-studio-muted)]">Loading analytics…</p>
+          <p className="rounded-2xl border border-[var(--p-studio-border)] bg-[var(--p-studio-surface)] p-4 text-sm leading-6 text-[var(--p-studio-muted)]">
+            Signals appear after public views, QR scans, NFC source visits, and
+            enquiries are recorded.
+          </p>
         )}
       </div>
     </StudioShell>

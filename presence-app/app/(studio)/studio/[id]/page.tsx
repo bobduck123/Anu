@@ -5,22 +5,23 @@ import Link from "next/link";
 import { Globe, Eye, Edit, QrCode, BarChart2, Inbox } from "lucide-react";
 import { useOwnerNode } from "@/components/studio/useOwnerNode";
 import StudioShell from "@/components/studio/StudioShell";
+import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
 import { Loading, StatusPill, Button } from "@/components/ui";
 import { publishNode, unpublishNode } from "@/lib/api/owner";
 
 const QUICK_LINKS = [
-  { label: "Edit portfolio", href: "portfolio", icon: Edit },
-  { label: "Works", href: "works", icon: Eye },
+  { label: "Shape portfolio", href: "portfolio", icon: Edit },
+  { label: "Selected works", href: "works", icon: Eye },
   { label: "Collections", href: "collections", icon: Eye },
   { label: "Enquiries", href: "enquiries", icon: Inbox },
   { label: "QR & NFC", href: "qr", icon: QrCode },
-  { label: "Analytics", href: "analytics", icon: BarChart2 },
+  { label: "Signals", href: "analytics", icon: BarChart2 },
 ];
 
 export default function StudioDashboard({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const nodeId = Number(id);
-  const { node, token, loading, error, reload } = useOwnerNode(nodeId);
+  const { node, token, loading, error, authRequired, reload } = useOwnerNode(nodeId);
 
   async function handlePublish() {
     if (!token || !node) return;
@@ -28,9 +29,15 @@ export default function StudioDashboard({ params }: { params: Promise<{ id: stri
     await reload();
   }
 
-  if (loading) return <Loading label="Loading your presence…" />;
+  if (loading) return <Loading label="Loading your Presence..." />;
   if (error || !node) {
-    return <div className="p-8 text-red-400 text-sm">{error ?? "Node not found."}</div>;
+    return (
+      <StudioNodeGate
+        authRequired={authRequired}
+        returnTo={`/studio/${nodeId}`}
+        error={error ?? "Node not found."}
+      />
+    );
   }
 
   const base = `/studio/${nodeId}`;
@@ -38,8 +45,20 @@ export default function StudioDashboard({ params }: { params: Promise<{ id: stri
   return (
     <StudioShell node={node}>
       <div className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-6">
+        <section className="rounded-3xl border border-[var(--p-studio-border)] bg-[var(--p-studio-surface)] p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--p-studio-muted)]">
+            Public world
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--p-studio-text)]">
+            {node.display_name}
+          </h1>
+          {node.headline && (
+            <p className="mt-2 text-sm leading-6 text-[var(--p-studio-muted)]">
+              {node.headline}
+            </p>
+          )}
+        </section>
 
-        {/* Status bar */}
         <div className="flex items-center justify-between p-4 rounded-2xl bg-[var(--p-studio-surface)] border border-[var(--p-studio-border)]">
           <div className="flex flex-col gap-1">
             <StatusPill status={node.status} />
@@ -64,7 +83,6 @@ export default function StudioDashboard({ params }: { params: Promise<{ id: stri
           </Button>
         </div>
 
-        {/* Analytics snapshot */}
         {node.analytics && (
           <div className="grid grid-cols-3 gap-3">
             {[
@@ -80,7 +98,6 @@ export default function StudioDashboard({ params }: { params: Promise<{ id: stri
           </div>
         )}
 
-        {/* Quick links */}
         <div className="grid grid-cols-2 gap-2">
           {QUICK_LINKS.map((ql) => (
             <Link

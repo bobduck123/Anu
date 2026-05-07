@@ -1,9 +1,10 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { Mail, CheckCircle, Clock } from "lucide-react";
+import { Mail, CheckCircle } from "lucide-react";
 import { useOwnerNode } from "@/components/studio/useOwnerNode";
 import StudioShell from "@/components/studio/StudioShell";
+import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
 import { Loading, Empty, Button } from "@/components/ui";
 import { listEnquiries, updateEnquiry } from "@/lib/api/owner";
 import type { PresenceEnquiry } from "@/lib/api/types";
@@ -18,7 +19,7 @@ const STATUS_COLOR: Record<string, string> = {
 export default function StudioEnquiriesPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const nodeId = Number(id);
-  const { node, token, loading } = useOwnerNode(nodeId);
+  const { node, token, loading, error, authRequired } = useOwnerNode(nodeId);
   const [enquiries, setEnquiries] = useState<PresenceEnquiry[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [expanded, setExpanded] = useState<number | null>(null);
@@ -34,29 +35,38 @@ export default function StudioEnquiriesPage({ params }: { params: Promise<{ id: 
     setEnquiries((es) => es.map((e) => (e.id === updated.id ? updated : e)));
   }
 
-  if (loading) return <Loading />;
-  if (!node) return null;
+  if (loading) return <Loading label="Loading enquiries..." />;
+  if (!node) {
+    return (
+      <StudioNodeGate
+        authRequired={authRequired}
+        returnTo={`/studio/${nodeId}/enquiries`}
+        error={error ?? "Node not found."}
+      />
+    );
+  }
 
   return (
     <StudioShell node={node}>
       <div className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-4">
-        <h2 className="text-sm font-semibold text-[var(--p-studio-text)]">Enquiries</h2>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--p-studio-muted)]">
+            Conversations
+          </p>
+          <h2 className="mt-1 text-xl font-semibold text-[var(--p-studio-text)]">
+            Enquiries
+          </h2>
+        </div>
 
-        {listLoading && <Loading />}
+        {listLoading && <Loading label="Loading enquiries..." />}
 
         {!listLoading && enquiries.length === 0 && (
-          <Empty title="No enquiries yet" body="When people reach out via your portfolio, they'll appear here." />
+          <Empty title="No enquiries yet" body="When someone begins a conversation from your public Presence, it will appear here." />
         )}
 
         {enquiries.map((enq) => (
-          <div
-            key={enq.id}
-            className="flex flex-col gap-3 p-4 rounded-2xl bg-[var(--p-studio-surface)] border border-[var(--p-studio-border)]"
-          >
-            <button
-              className="flex items-start justify-between gap-3 text-left w-full"
-              onClick={() => setExpanded(expanded === enq.id ? null : enq.id)}
-            >
+          <div key={enq.id} className="flex flex-col gap-3 p-4 rounded-2xl bg-[var(--p-studio-surface)] border border-[var(--p-studio-border)]">
+            <button className="flex items-start justify-between gap-3 text-left w-full" onClick={() => setExpanded(expanded === enq.id ? null : enq.id)}>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-[var(--p-studio-border)] flex items-center justify-center shrink-0">
                   <Mail className="w-4 h-4 text-[var(--p-studio-muted)]" />
@@ -66,7 +76,7 @@ export default function StudioEnquiriesPage({ params }: { params: Promise<{ id: 
                   <p className="text-xs text-[var(--p-studio-muted)]">{enq.email}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex flex-col items-end gap-1 shrink-0">
                 <span className={`text-xs font-medium ${STATUS_COLOR[enq.status] ?? "text-stone-400"}`}>
                   {enq.status}
                 </span>
@@ -80,15 +90,10 @@ export default function StudioEnquiriesPage({ params }: { params: Promise<{ id: 
 
             {expanded === enq.id && (
               <div className="flex flex-col gap-3 pt-2 border-t border-[var(--p-studio-border)]">
-                {enq.company && (
-                  <p className="text-xs text-[var(--p-studio-muted)]">{enq.company}</p>
-                )}
+                {enq.company && <p className="text-xs text-[var(--p-studio-muted)]">{enq.company}</p>}
                 <p className="text-sm text-[var(--p-studio-text)] whitespace-pre-wrap">{enq.message}</p>
                 <div className="flex items-center gap-2">
-                  <a
-                    href={`mailto:${enq.email}`}
-                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border border-[var(--p-studio-border)] text-xs text-[var(--p-studio-text)] hover:border-[var(--p-studio-accent)] transition-colors"
-                  >
+                  <a href={`mailto:${enq.email}`} className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border border-[var(--p-studio-border)] text-xs text-[var(--p-studio-text)] hover:border-[var(--p-studio-accent)] transition-colors">
                     <Mail className="w-3.5 h-3.5" />
                     Reply
                   </a>
