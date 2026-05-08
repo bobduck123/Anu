@@ -58,7 +58,7 @@ export default function BetaPage() {
               {[
                 "Create a Presence Studio account.",
                 "Complete beta onboarding.",
-                "Begin in draft or setup-pending.",
+                "Begin in private draft.",
                 "Publish only when your public world is ready.",
               ].map((step) => (
                 <div key={step} className="flex items-start gap-3">
@@ -75,8 +75,8 @@ export default function BetaPage() {
               <p className="text-sm leading-6 text-stone-600">
                 New beta users do not get auto-published pages. If your account
                 does not already have an assigned Presence, onboarding starts a
-                private draft when available or saves a setup request for
-                studio-assisted review.
+                private draft through the self-serve Studio flow. Assisted
+                setup requests are only for users who explicitly choose manual help.
               </p>
             </div>
           </div>

@@ -137,8 +137,8 @@ export default function PlansPage() {
           </h1>
           <p className="max-w-2xl text-base leading-7 text-stone-600">
             During public beta, plans are organised by intent, not feature
-            count. Every Presence begins as a draft or setup-pending request —
-            nothing is published until you say so.
+            count. The normal path creates a private draft in Studio; nothing
+            is published until you say so.
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Link

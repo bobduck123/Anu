@@ -259,11 +259,11 @@ export function BetaOnboardingForm() {
       return;
     }
     if (!form.headline.trim()) {
-      setError("Add a short world statement so the setup request has direction.");
+      setError("Add a short world statement so your draft has direction.");
       return;
     }
     if (!form.acknowledgedDraft) {
-      setError("Confirm that beta Presences begin as draft or setup-pending.");
+      setError("Confirm that beta Presences begin private and unpublished.");
       return;
     }
 
@@ -276,11 +276,9 @@ export function BetaOnboardingForm() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(localPayload));
 
     // Server persistence path:
-    // 1. If user chose "draft_self_build" → try POST /owner/beta/start
-    //    On success → redirect to /studio/[id]
-    //    On 409 duplicate_starter → user already has a node → redirect anyway
-    //    On other failure → fall through to application persistence
-    // 2. Else → POST /beta/applications (Studio reviews and replies)
+    // 1. draft_self_build calls POST /owner/beta/start only.
+    // 2. assisted/manual modes call POST /beta/applications only.
+    // Draft creation errors are surfaced and never fall through to applications.
     setSubmitting(true);
     setPersistMode("local-only");
     try {
@@ -318,35 +316,46 @@ export function BetaOnboardingForm() {
           setTimeout(() => router.push(`/studio/${draft.id}`), 1500);
           return;
         } catch (e) {
-          // Duplicate starter → user already has a node; route to /studio.
+          // Duplicate starter: user already has a node; route to /studio.
           if (e instanceof PresenceApiError && e.code === "duplicate_starter") {
             setPersistMode("draft");
             setSubmitted(true);
             setTimeout(() => router.push("/studio"), 800);
             return;
           }
-          // Duplicate slug → surface and let user retry without falling through.
+          // Duplicate slug: surface and let user retry.
           if (e instanceof PresenceApiError && e.code === "duplicate_slug") {
             setError(
               "That public address is already taken. Choose another and try again.",
             );
             return;
           }
-          // Anything else → fall through to application persistence.
-          // (Don't lose the user's input.)
+          const message =
+            e instanceof Error
+              ? e.message
+              : "We couldn't create your draft Presence right now.";
+          setError(
+            `${message} Your answers are saved locally. Try again, or choose Studio-assisted setup if you want manual help.`,
+          );
+          return;
         }
       }
 
       // Application persistence — works for both "setup_request" and
-      // "studio_assisted" beta modes, and as the fall-through for failures.
+      // "studio_assisted" beta modes. It is not a draft-error fallback.
+      if (wantsDraft) {
+        setError("Draft creation did not complete. Your answers are saved locally.");
+        return;
+      }
+
       await submitBetaApplication(session.access_token, apiPayload);
       setPersistMode("application");
       setSubmitted(true);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Setup request server unavailable.";
+      const message = err instanceof Error ? err.message : "Assisted setup server unavailable.";
       setPersistMode("local-only");
       setError(
-        `${message} Your request is saved locally — send it via email below or try again later.`,
+        `${message} Your request is saved locally. Send it via email below or try again later.`,
       );
       setSubmitted(true);
     } finally {
@@ -416,8 +425,9 @@ export function BetaOnboardingForm() {
             Begin shaping your public world
           </h1>
           <p className="mt-3 text-sm leading-6 text-[var(--p-studio-muted)]">
-            Public beta accounts are verified first. Your first Presence starts
-            as draft or setup-pending; nothing is published until it is ready.
+            Public beta accounts are verified first. The normal path creates a
+            private draft immediately; assisted setup is only for people who
+            explicitly choose manual help. Nothing is published until it is ready.
           </p>
 
           <form className="mt-6 grid gap-4" onSubmit={submit}>
@@ -509,8 +519,7 @@ export function BetaOnboardingForm() {
                 className="mt-1"
               />
               <span>
-                I understand that beta Presences begin as draft or
-                setup-pending and are not published automatically.
+                I understand that beta Presences begin private and unpublished.
               </span>
             </label>
             <button

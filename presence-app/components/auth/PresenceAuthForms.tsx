@@ -282,9 +282,9 @@ export function SignUpForm() {
 
   function verificationAwareSignupNote() {
     if (emailVerificationRequired) {
-      return "After verification, you will enter beta onboarding. Your first Presence starts as a private draft or setup-pending request.";
+      return "After verification, you will enter beta onboarding. Your first Presence starts as a private draft.";
     }
-    return "After account creation, you will enter onboarding. Your first Presence starts as a private draft or setup-pending request.";
+    return "After account creation, you will enter onboarding. Your first Presence starts as a private draft.";
   }
 
   function verificationAwareEyebrow() {

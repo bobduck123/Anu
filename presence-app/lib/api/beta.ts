@@ -29,9 +29,11 @@ export interface BetaApplicationResult {
 }
 
 /**
- * Persist a public-beta setup request server-side. Requires an authenticated
- * Supabase access token. The endpoint stores intent only; it does NOT
- * create a PresenceNode and does NOT assign ownership.
+ * Persist an explicit assisted/manual public-beta setup request server-side.
+ * Requires an authenticated Supabase access token. The endpoint stores intent
+ * only; it does NOT create a PresenceNode and does NOT assign ownership.
+ *
+ * The default self-serve onboarding flow must not call this endpoint.
  */
 export function submitBetaApplication(
   token: string,
@@ -63,7 +65,7 @@ export interface BetaStartResult {
 
 /**
  * Create one DRAFT, PRIVATE, UNPUBLISHED Presence for the calling user.
- * Used by /beta/onboarding when the user chooses self-build mode.
+ * Used by the default /onboarding self-serve flow.
  *
  * Throws PresenceApiError with `code === "duplicate_slug"` (409) or
  * `code === "duplicate_starter"` (409) when the user already has a Presence.

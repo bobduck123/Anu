@@ -18,7 +18,7 @@ import {
   isEmailVerificationRequired,
   studioContactHref,
 } from "@/lib/supabase/config";
-import { startBetaPresence, submitBetaApplication, type BetaApplicationInput } from "@/lib/api/beta";
+import { startBetaPresence, type BetaApplicationInput } from "@/lib/api/beta";
 import { PresenceApiError } from "@/lib/api/client";
 
 const STORAGE_KEY = "presence.onboardingDraft.v2";
@@ -350,7 +350,6 @@ export function OnboardingWizard() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<{ id: number; slug: string } | null>(null);
-  const [fallbackUsed, setFallbackUsed] = useState(false);
 
   // ── Init: load auth state + draft from localStorage ─────────────────────
   useEffect(() => {
@@ -460,7 +459,6 @@ export function OnboardingWizard() {
 
     setSubmitting(true);
     setError(null);
-    setFallbackUsed(false);
     try {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
@@ -512,18 +510,11 @@ export function OnboardingWizard() {
           );
           return;
         }
-        // Recovery path — preserve input + offer a setup-request fallback.
-        setFallbackUsed(true);
-        try {
-          await submitBetaApplication(session.access_token, apiPayload);
-          setError(
-            "We couldn't create your draft automatically. We've saved your answers as a setup request — the studio team will get back to you. Your inputs are preserved.",
-          );
-        } catch (innerErr) {
-          const message =
-            innerErr instanceof Error ? innerErr.message : "Setup unavailable.";
-          setError(`${message} Your answers are saved locally — try again in a moment.`);
-        }
+        const message =
+          e instanceof Error
+            ? e.message
+            : "We couldn't create your draft Presence right now.";
+        setError(`${message} Your answers are still saved on this device.`);
       }
     } finally {
       setSubmitting(false);
@@ -768,7 +759,7 @@ export function OnboardingWizard() {
 
         {/* Step 7 — Review and generate */}
         {step === 7 && (
-          <ReviewStep form={form} accountEmail={accountEmail} fallbackUsed={fallbackUsed} submitting={submitting} onGenerate={generate} />
+          <ReviewStep form={form} accountEmail={accountEmail} submitting={submitting} onGenerate={generate} />
         )}
 
         {/* Step nav */}
@@ -811,13 +802,11 @@ export function OnboardingWizard() {
 function ReviewStep({
   form,
   accountEmail,
-  fallbackUsed,
   submitting,
   onGenerate,
 }: {
   form: Form;
   accountEmail: string | null;
-  fallbackUsed: boolean;
   submitting: boolean;
   onGenerate: () => void | Promise<void>;
 }) {
@@ -880,12 +869,6 @@ function ReviewStep({
           Public visitors land on a 404 until you publish from Studio. Your QR / NFC code is held back until then.
         </p>
       </div>
-
-      {fallbackUsed && (
-        <p className="text-xs leading-5 text-amber-300">
-          Saved as a setup request. The studio team will follow up by email.
-        </p>
-      )}
 
       <button
         type="button"
