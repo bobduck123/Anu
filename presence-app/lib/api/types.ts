@@ -1,11 +1,11 @@
-// Presence domain types — standalone, no Manara dependency
+// Presence domain types. Kept standalone with no Manara dependency.
 
 export interface PresenceTemplate {
   id: number;
   name: string;
   description?: string | null;
   node_type: string;
-  display_mode?: string;
+  display_mode?: string | null;
   preview_image_url?: string | null;
   is_active: boolean;
   is_premium: boolean;
@@ -92,11 +92,20 @@ export interface PresenceEnquiry {
   node_id: number;
   enquiry_type: string;
   name: string;
-  email: string;
+  email: string | null;
   phone?: string | null;
   company?: string | null;
   message: string;
   status: string;
+  preferred_contact_method?: string | null;
+  contact_handle?: string | null;
+  contact_routes?: Array<{ type: string; value: string }> | null;
+  contact_route_summary?: string | null;
+  source_url?: string | null;
+  source_type?: string | null;
+  submitter_user_id?: number | null;
+  is_anu_member?: boolean;
+  metadata?: Record<string, unknown> | null;
   created_at?: string | null;
   updated_at?: string | null;
 }
@@ -178,14 +187,20 @@ export interface PresenceMediaUploadResult {
 
 export interface PresenceEnquiryInput {
   name: string;
-  email: string;
+  email?: string;
   phone?: string;
   message: string;
   consent: boolean;
   enquiry_type?: string;
-  preferred_contact_method?: string;
+  preferred_contact_method?: "email" | "phone" | "sms" | "handle" | "in_studio" | "any";
+  contact_handle?: string;
+  company?: string;
+  budget_range?: string;
+  timeline?: string;
   source_url?: string;
   source_type?: string;
+  form_started_at?: number;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PublicPresenceWorkDetail {

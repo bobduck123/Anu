@@ -3180,3 +3180,432 @@ def test_owner_beta_start_owner_safe_payload_no_admin_only_fields():
     assert "variations" not in body or body["variations"] == []
     assert "invoice_support_records" not in body or body["invoice_support_records"] == []
     assert "handovers" not in body or body["handovers"] == []
+
+
+# ----------------------------------------------------------------------------
+# ANU-native Presence enquiry integration
+# ----------------------------------------------------------------------------
+
+
+def _publish_owner_node(client, headers, *, tenant_id, slug, display_name, owner_user_id):
+    """Helper: create a published, public Presence node for a real owner."""
+    res = client.post(
+        "/api/control/presence/nodes",
+        json={
+            "tenant_id": tenant_id,
+            "slug": slug,
+            "display_name": display_name,
+            "node_type": "artist",
+            "display_mode": "artist_gallery",
+            "plan_type": "basic",
+            "visibility": "public",
+            "headline": "Test artist",
+            "owner_user_id": owner_user_id,
+        },
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert res.status_code == 201, res.get_json()
+    node_id = res.get_json()["data"]["id"]
+    pub = client.post(
+        f"/api/control/presence/nodes/{node_id}/publish",
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert pub.status_code == 200
+    return node_id
+
+
+def test_anonymous_phone_preferred_enquiry_succeeds_without_email():
+    """Visitor who prefers phone contact does not need to provide an email.
+    The PresenceEnquiry record is the source of truth — no email required."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    admin_headers = _headers(app)
+    owner_user_id = _create_owner_user(
+        app, username="enq-owner", pseudonym="enq-owner",
+        email="owner@example.com", node_id=tenant_id, role="participant",
+    )
+    _publish_owner_node(client, admin_headers, tenant_id=tenant_id,
+                        slug="phone-pilot", display_name="Phone Pilot", owner_user_id=owner_user_id)
+
+    res = client.post(
+        "/api/presence/public/phone-pilot/enquiries",
+        json={
+            "name": "A Visitor",
+            "phone": "+61 400 000 000",
+            "message": "Please call me about a private viewing.",
+            "consent": True,
+            "preferred_contact_method": "phone",
+            "form_started_at": 1,
+            "enquiry_type": "viewing",
+        },
+        base_url="http://public.test",
+    )
+    assert res.status_code == 201, res.get_json()
+    body = res.get_json()["data"]
+    assert body["status"] == "new"
+    assert body["submitter_linked"] is False  # anonymous
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceEnquiry, Notification
+
+    with app.app_context():
+        rows = _db.session.query(PresenceEnquiry).all()
+        assert len(rows) == 1
+        assert rows[0].phone == "+61 400 000 000"
+        assert rows[0].email is None
+        assert rows[0].preferred_contact_method == "phone"
+        assert rows[0].submitter_user_id is None
+        # ANU Notification fired for the owner.
+        notes = _db.session.query(Notification).filter_by(user_id=owner_user_id).all()
+        assert len(notes) == 1
+        # Privacy guard: visitor PII must not leak into the notification text.
+        assert "+61" not in notes[0].message
+        assert "private viewing" not in notes[0].message.lower()
+
+
+def test_anonymous_email_preferred_enquiry_succeeds_and_public_response_is_safe():
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    admin_headers = _headers(app)
+    owner_user_id = _create_owner_user(
+        app,
+        username="enq-owner-email",
+        pseudonym="enq-owner-email",
+        email="owner-email@example.com",
+        node_id=tenant_id,
+        role="participant",
+    )
+    _publish_owner_node(
+        client,
+        admin_headers,
+        tenant_id=tenant_id,
+        slug="email-pilot",
+        display_name="Email Pilot",
+        owner_user_id=owner_user_id,
+    )
+
+    res = client.post(
+        "/api/presence/public/email-pilot/enquiries",
+        json={
+            "name": "Email Visitor",
+            "email": "visitor-email@example.com",
+            "message": "Please email me about this work.",
+            "consent": True,
+            "preferred_contact_method": "email",
+            "form_started_at": 1,
+            "enquiry_type": "work_enquiry",
+        },
+        base_url="http://public.test",
+    )
+
+    assert res.status_code == 201, res.get_json()
+    body = res.get_json()["data"]
+    assert body == {
+        "id": body["id"],
+        "status": "new",
+        "submitter_linked": False,
+        "message": "Enquiry submitted.",
+    }
+    assert "email" not in body
+    assert "phone" not in body
+    assert "submitter_user_id" not in body
+    assert "owner_user_id" not in body
+
+
+def test_authenticated_visitor_enquiry_links_submitter_user_id():
+    """When the public enquiry POST attaches a Supabase JWT for an ANU user,
+    the resulting PresenceEnquiry.submitter_user_id matches that user."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    admin_headers = _headers(app)
+    owner_user_id = _create_owner_user(
+        app, username="enq-owner2", pseudonym="enq-owner2",
+        email="owner2@example.com", node_id=tenant_id, role="participant",
+    )
+    _publish_owner_node(client, admin_headers, tenant_id=tenant_id,
+                        slug="auth-pilot", display_name="Auth Pilot",
+                        owner_user_id=owner_user_id)
+
+    submitter_id = _create_owner_user(
+        app, username="visitor-auth", pseudonym="visitor-auth",
+        email="visitor@example.com", node_id=tenant_id, role="participant",
+    )
+    submitter_headers = _owner_headers(app, "visitor-auth", role="participant")
+
+    res = client.post(
+        "/api/presence/public/auth-pilot/enquiries",
+        json={
+            "name": "Visitor",
+            "email": "visitor@example.com",
+            "message": "I would like to commission a piece.",
+            "consent": True,
+            "preferred_contact_method": "email",
+            "form_started_at": 1,
+            "enquiry_type": "commission_request",
+        },
+        headers=submitter_headers,
+        base_url="http://public.test",
+    )
+    assert res.status_code == 201, res.get_json()
+    assert res.get_json()["data"]["submitter_linked"] is True
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceEnquiry
+
+    with app.app_context():
+        rows = _db.session.query(PresenceEnquiry).all()
+        assert rows[0].submitter_user_id == submitter_id
+
+
+def test_authenticated_supabase_visitor_without_local_user_is_provisioned_and_linked():
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    admin_headers = _headers(app)
+    owner_user_id = _create_owner_user(
+        app,
+        username="enq-owner-supa",
+        pseudonym="enq-owner-supa",
+        email="owner-supa@example.com",
+        node_id=tenant_id,
+        role="participant",
+    )
+    _publish_owner_node(
+        client,
+        admin_headers,
+        tenant_id=tenant_id,
+        slug="supabase-visitor-pilot",
+        display_name="Supabase Visitor Pilot",
+        owner_user_id=owner_user_id,
+    )
+
+    visitor_headers = _supabase_owner_headers(
+        app,
+        sub="supabase-enquiry-visitor-1",
+        email="supabase-enquiry-visitor@example.com",
+        display_name="Supabase Visitor",
+    )
+    res = client.post(
+        "/api/presence/public/supabase-visitor-pilot/enquiries",
+        json={
+            "name": "Supabase Visitor",
+            "email": "supabase-enquiry-visitor@example.com",
+            "message": "Link this enquiry to my ANU account.",
+            "consent": True,
+            "preferred_contact_method": "email",
+            "form_started_at": 1,
+        },
+        headers=visitor_headers,
+        base_url="http://public.test",
+    )
+
+    assert res.status_code == 201, res.get_json()
+    assert res.get_json()["data"]["submitter_linked"] is True
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceEnquiry, User
+
+    with app.app_context():
+        visitor = _db.session.query(User).filter_by(global_subject_id="supabase-enquiry-visitor-1").one()
+        assert visitor.role == "participant"
+        row = _db.session.query(PresenceEnquiry).one()
+        assert row.submitter_user_id == visitor.id
+
+
+def test_handle_only_enquiry_succeeds_without_email_or_phone():
+    """Visitor who prefers a social handle / website link does not need
+    email or phone. Service requires at least one contact route via the
+    metadata.contact_handle field."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    admin_headers = _headers(app)
+    owner_user_id = _create_owner_user(
+        app, username="enq-owner3", pseudonym="enq-owner3",
+        email="owner3@example.com", node_id=tenant_id, role="participant",
+    )
+    _publish_owner_node(client, admin_headers, tenant_id=tenant_id,
+                        slug="handle-pilot", display_name="Handle Pilot",
+                        owner_user_id=owner_user_id)
+
+    res = client.post(
+        "/api/presence/public/handle-pilot/enquiries",
+        json={
+            "name": "Visitor X",
+            "message": "Please reach out via Instagram about a collaboration.",
+            "consent": True,
+            "preferred_contact_method": "handle",
+            "contact_handle": "@visitor.x",
+            "form_started_at": 1,
+            "enquiry_type": "collaboration",
+        },
+        base_url="http://public.test",
+    )
+    assert res.status_code == 201, res.get_json()
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceEnquiry
+
+    with app.app_context():
+        row = _db.session.query(PresenceEnquiry).first()
+        assert row.email is None
+        assert row.phone is None
+        assert (row.metadata_json or {}).get("contact_handle") == "@visitor.x"
+
+
+def test_enquiry_without_any_contact_route_is_rejected():
+    """A visitor who selects 'any' but provides nothing is rejected — the
+    owner must be able to follow up somehow."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    admin_headers = _headers(app)
+    owner_user_id = _create_owner_user(
+        app, username="enq-owner4", pseudonym="enq-owner4",
+        email="owner4@example.com", node_id=tenant_id, role="participant",
+    )
+    _publish_owner_node(client, admin_headers, tenant_id=tenant_id,
+                        slug="any-pilot", display_name="Any Pilot",
+                        owner_user_id=owner_user_id)
+
+    res = client.post(
+        "/api/presence/public/any-pilot/enquiries",
+        json={
+            "name": "Faceless",
+            "message": "No way to reach me.",
+            "consent": True,
+            "preferred_contact_method": "any",
+            "form_started_at": 1,
+        },
+        base_url="http://public.test",
+    )
+    assert res.status_code in (400, 422), res.get_json()
+
+
+def test_owner_can_list_enquiries_with_contact_summary_and_cross_owner_is_denied():
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    admin_headers = _headers(app)
+    owner_user_id = _create_owner_user(
+        app,
+        username="enq-list-owner",
+        pseudonym="enq-list-owner",
+        email="enq-list-owner@example.com",
+        node_id=tenant_id,
+        role="participant",
+    )
+    _create_owner_user(
+        app,
+        username="enq-list-other",
+        pseudonym="enq-list-other",
+        email="enq-list-other@example.com",
+        node_id=tenant_id,
+        role="participant",
+    )
+    node_id = _publish_owner_node(
+        client,
+        admin_headers,
+        tenant_id=tenant_id,
+        slug="owner-inbox-pilot",
+        display_name="Owner Inbox Pilot",
+        owner_user_id=owner_user_id,
+    )
+
+    submit = client.post(
+        "/api/presence/public/owner-inbox-pilot/enquiries",
+        json={
+            "name": "Inbox Visitor",
+            "phone": "+61 411 111 111",
+            "contact_handle": "@inbox.visitor",
+            "message": "I prefer a call, but this handle also works.",
+            "consent": True,
+            "preferred_contact_method": "phone",
+            "source_url": "/p/owner-inbox-pilot?source=studio-door",
+            "source_type": "studio_door",
+            "form_started_at": 1,
+        },
+        base_url="http://public.test",
+    )
+    assert submit.status_code == 201, submit.get_json()
+
+    owner_list = client.get(
+        f"/api/presence/owner/nodes/{node_id}/enquiries",
+        headers=_owner_headers(app, "enq-list-owner", "participant"),
+        base_url="http://public.test",
+    )
+    assert owner_list.status_code == 200, owner_list.get_json()
+    rows = owner_list.get_json()["data"]
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["preferred_contact_method"] == "phone"
+    assert row["contact_handle"] == "@inbox.visitor"
+    assert row["contact_routes"][0]["type"] == "phone"
+    assert "Prefers phone" in row["contact_route_summary"]
+    assert row["source_url"] == "/p/owner-inbox-pilot?source=studio-door"
+    assert row["source_type"] == "studio_door"
+    assert row["is_anu_member"] is False
+
+    cross_owner = client.get(
+        f"/api/presence/owner/nodes/{node_id}/enquiries",
+        headers=_owner_headers(app, "enq-list-other", "participant"),
+        base_url="http://public.test",
+    )
+    assert cross_owner.status_code == 403
+
+
+def test_enquiry_notification_failure_does_not_break_enquiry_creation(monkeypatch):
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    admin_headers = _headers(app)
+    owner_user_id = _create_owner_user(
+        app,
+        username="enq-notify-owner",
+        pseudonym="enq-notify-owner",
+        email="enq-notify-owner@example.com",
+        node_id=tenant_id,
+        role="participant",
+    )
+    _publish_owner_node(
+        client,
+        admin_headers,
+        tenant_id=tenant_id,
+        slug="notify-failure-pilot",
+        display_name="Notify Failure Pilot",
+        owner_user_id=owner_user_id,
+    )
+
+    from manara_backend_app import models as model_module
+
+    class BrokenNotification:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError("notification adapter unavailable")
+
+    monkeypatch.setattr(model_module, "Notification", BrokenNotification)
+
+    res = client.post(
+        "/api/presence/public/notify-failure-pilot/enquiries",
+        json={
+            "name": "Notification Failure Visitor",
+            "email": "notify-failure@example.com",
+            "message": "The enquiry should still be stored.",
+            "consent": True,
+            "preferred_contact_method": "email",
+            "form_started_at": 1,
+        },
+        base_url="http://public.test",
+    )
+
+    assert res.status_code == 201, res.get_json()
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceEnquiry
+
+    with app.app_context():
+        assert _db.session.query(PresenceEnquiry).count() == 1

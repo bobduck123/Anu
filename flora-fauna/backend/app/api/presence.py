@@ -27,6 +27,9 @@ from ..security.alpha import alpha_jwt_required
 from ..security.control_plane import control_plane_required, log_control_event
 from ..security.control_tenant_scope import resolve_effective_control_managed_node_ids
 from ..security.policy import get_current_user
+from ..services.presence_owner_identity import (
+    resolve_or_provision_presence_owner as resolve_or_provision_presence_user,
+)
 from ..services.presence_service import (
     PRESENCE_ANALYTICS_EVENTS,
     PRESENCE_NODE_STATUSES,
@@ -290,16 +293,42 @@ def get_public_presence_collection(slug, collection_id):
 @presence_bp.route("/public/<string:slug>/enquiries", methods=["POST"])
 @limiter.limit("8 per minute; 40 per hour")
 def submit_public_presence_enquiry(slug):
+    """Submit a public enquiry against a published Presence Node.
+
+    Anonymous visitors are fully supported (no auth required). When the
+    visitor IS authenticated as an ANU user - by attaching their Supabase
+    bearer token - the resulting PresenceEnquiry links back to their User
+    row via ``submitter_user_id``. This enables future internal-message
+    threading without changing the public submission contract.
+    """
     node = public_presence_node_by_slug(slug)
     if not node:
         return error("not_found", "Presence Node not found", 404)
+    # Optional auth: try to verify a bearer token without requiring one.
+    submitter_user = None
     try:
-        enquiry = create_presence_enquiry(node, request.get_json(silent=True) or {})
+        from flask_jwt_extended import verify_jwt_in_request
+        verify_jwt_in_request(optional=True)
+        submitter_user = get_current_user()
+        if not submitter_user and get_jwt():
+            # Reuse the least-privilege ANU identity bridge: a valid Supabase
+            # visitor can be linked to a local User row without gaining owner,
+            # admin, or control-plane privileges.
+            submitter_user = resolve_or_provision_presence_user()
+    except Exception:
+        submitter_user = None
+    try:
+        enquiry = create_presence_enquiry(
+            node,
+            request.get_json(silent=True) or {},
+            submitter_user=submitter_user,
+        )
         db.session.commit()
         return ok(
             {
                 "id": enquiry.id,
                 "status": enquiry.status,
+                "submitter_linked": enquiry.submitter_user_id is not None,
                 "message": "Enquiry submitted.",
             },
             201,

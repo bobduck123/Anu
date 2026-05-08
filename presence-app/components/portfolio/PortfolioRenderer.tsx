@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MapPin, Mail, Phone, ExternalLink } from "lucide-react";
 import type { PresenceNode, PresenceWork, PresenceCollection } from "@/lib/api/types";
 import { Chip, StatusPill } from "@/components/ui";
+import { PublicEnquiryDialog } from "@/components/portfolio/PublicEnquiryDialog";
 
 interface PortfolioRendererProps {
   node: PresenceNode;
@@ -976,17 +977,16 @@ export default function PortfolioRenderer({ node }: PortfolioRendererProps) {
         <ServicesBlock node={node} />
         <LinksBlock node={node} />
 
-        {/* Enquiry CTA */}
+        {/* Enquiry CTA: internal Studio inbox, not a mailto */}
         {node.public_url && (
           <section className="flex flex-col gap-3 items-start">
             <h2 className="text-xs font-semibold text-[var(--p-text-muted)] uppercase tracking-widest">Get in touch</h2>
-            <a
-              href={`mailto:${node.public_email ?? ""}`}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--p-accent)] text-white text-sm font-medium hover:bg-[var(--p-accent-dark)] transition-colors"
-            >
-              <Mail className="w-4 h-4" />
-              {node.primary_cta_label ?? "Send an enquiry"}
-            </a>
+            <PublicEnquiryDialog
+              slug={node.slug}
+              displayName={node.display_name}
+              nodeType={node.node_type}
+              triggerLabel={node.primary_cta_label ?? "Send an enquiry"}
+            />
           </section>
         )}
       </main>

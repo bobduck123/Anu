@@ -22,11 +22,28 @@ export function fetchPublicCollectionDetail(slug: string, collectionId: number |
   );
 }
 
-export function submitEnquiry(slug: string, payload: PresenceEnquiryInput) {
-  return apiFetch<{ enquiry_id: number; connection_id?: number | null }>(
-    `/api/presence/public/${encodeURIComponent(slug)}/enquiries`,
-    { method: "POST", body: JSON.stringify(payload) },
-  );
+/**
+ * Submit a public enquiry. The endpoint accepts anonymous submissions. When an
+ * authenticated ANU user submits with a bearer token, the resulting enquiry can
+ * link back to their local ANU User row via submitter_user_id.
+ */
+export function submitEnquiry(
+  slug: string,
+  payload: PresenceEnquiryInput,
+  options: { token?: string | null } = {},
+) {
+  const headers: Record<string, string> = {};
+  if (options.token) headers.Authorization = `Bearer ${options.token}`;
+  return apiFetch<{
+    id: number;
+    status: string;
+    submitter_linked?: boolean;
+    message?: string;
+  }>(`/api/presence/public/${encodeURIComponent(slug)}/enquiries`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+    headers,
+  });
 }
 
 export function trackView(slug: string, sourceType?: string, sourceCode?: string) {
@@ -42,8 +59,6 @@ export function trackLinkClick(slug: string, url: string, label: string) {
     body: JSON.stringify({ url, label }),
   }).catch(() => {});
 }
-
-// ── v1.1: Public list endpoint for /gallery ────────────────────────────────
 
 export interface PublicPresenceCard {
   id: number;

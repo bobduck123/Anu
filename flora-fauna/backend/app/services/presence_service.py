@@ -871,7 +871,35 @@ def serialize_handover(item: PresenceWorkHandover) -> dict[str, Any]:
     }
 
 
+def _enquiry_contact_handle(item: PresenceEnquiry) -> str | None:
+    metadata = item.metadata_json if isinstance(item.metadata_json, dict) else {}
+    value = metadata.get("contact_handle")
+    return str(value).strip() if value else None
+
+
+def _enquiry_contact_routes(item: PresenceEnquiry) -> list[dict[str, str]]:
+    routes: list[dict[str, str]] = []
+    if item.email:
+        routes.append({"type": "email", "value": item.email})
+    if item.phone:
+        routes.append({"type": "phone", "value": item.phone})
+    handle = _enquiry_contact_handle(item)
+    if handle:
+        routes.append({"type": "handle", "value": handle})
+    return routes
+
+
+def _enquiry_contact_route_summary(item: PresenceEnquiry) -> str:
+    method = (item.preferred_contact_method or "email").replace("_", " ")
+    routes = _enquiry_contact_routes(item)
+    if not routes:
+        return f"Prefers {method}; no external route supplied"
+    first = routes[0]
+    return f"Prefers {method}; {first['type']}: {first['value']}"
+
+
 def serialize_enquiry(item: PresenceEnquiry) -> dict[str, Any]:
+    contact_handle = _enquiry_contact_handle(item)
     return {
         "id": item.id,
         "node_id": item.node_id,
@@ -882,6 +910,9 @@ def serialize_enquiry(item: PresenceEnquiry) -> dict[str, Any]:
         "name": item.name,
         "email": item.email,
         "phone": item.phone,
+        "contact_handle": contact_handle,
+        "contact_routes": _enquiry_contact_routes(item),
+        "contact_route_summary": _enquiry_contact_route_summary(item),
         "company": item.company,
         "role_title": item.role_title,
         "budget_range": item.budget_range,
@@ -897,6 +928,8 @@ def serialize_enquiry(item: PresenceEnquiry) -> dict[str, Any]:
         "source_tag_id": item.source_tag_id,
         "status": item.status,
         "assigned_to_user_id": item.assigned_to_user_id,
+        "submitter_user_id": item.submitter_user_id,
+        "is_anu_member": item.submitter_user_id is not None,
         "created_at": item.created_at.isoformat() if item.created_at else None,
         "updated_at": item.updated_at.isoformat() if item.updated_at else None,
     }
@@ -2038,6 +2071,14 @@ def hash_request_value(value: str | None) -> str | None:
     return hashlib.sha256(f"{pepper}:{value}".encode("utf-8")).hexdigest()
 
 
+# Preferred-contact methods we recognise. The chosen method drives which
+# contact route must be present on submit, so a phone-preferred enquiry no
+# longer requires a real email to succeed.
+_PREFERRED_CONTACT_METHODS = {
+    "email", "phone", "sms", "handle", "in_studio", "any",
+}
+
+
 def validate_enquiry_payload(data: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise PresenceValidationError("JSON object payload is required.")
@@ -2052,19 +2093,55 @@ def validate_enquiry_payload(data: dict[str, Any]) -> dict[str, Any]:
 
     name = _clean_text(data.get("name"), max_length=160)
     email = _clean_text(data.get("email"), max_length=180)
+    phone = _clean_text(data.get("phone"), max_length=80)
     message = _clean_text(data.get("message"), max_length=3000)
-    if not name or not email or not message:
-        raise PresenceValidationError("name, email, and message are required.")
-    if not _EMAIL_RE.match(email):
+
+    raw_method = (_clean_text(data.get("preferred_contact_method"), max_length=40) or "email").lower()
+    if raw_method not in _PREFERRED_CONTACT_METHODS:
+        raise PresenceValidationError(
+            f"Unsupported preferred_contact_method: {raw_method}",
+            {"allowed": sorted(_PREFERRED_CONTACT_METHODS)},
+        )
+    preferred_contact_method = raw_method
+
+    # Optional contact handle (Instagram / Twitter / website) lives in metadata.
+    metadata = _json_object(data.get("metadata"))
+    contact_handle = _clean_text(data.get("contact_handle") or metadata.get("contact_handle"), max_length=240)
+    if contact_handle:
+        metadata["contact_handle"] = contact_handle
+
+    if not name or not message:
+        raise PresenceValidationError("name and message are required.")
+
+    # Require at least one contact route based on preferred_contact_method.
+    if preferred_contact_method == "email":
+        if not email:
+            raise PresenceValidationError("email is required when email is the preferred contact method.")
+    elif preferred_contact_method in ("phone", "sms"):
+        if not phone:
+            raise PresenceValidationError(f"phone is required when {preferred_contact_method} is the preferred contact method.")
+    elif preferred_contact_method == "handle":
+        if not contact_handle:
+            raise PresenceValidationError("A handle / website is required when handle is the preferred contact method.")
+    else:  # "in_studio" or "any"
+        # Need at least one route so the owner can follow up.
+        if not email and not phone and not contact_handle:
+            raise PresenceValidationError("Provide at least one contact route (email, phone, or handle).")
+
+    # If email IS provided, validate it; accepting 'phone' preferred but
+    # invalid email would silently corrupt the table.
+    if email and not _EMAIL_RE.match(email):
         raise PresenceValidationError("email must be a valid email address.")
+
     if not bool(data.get("consent")):
         raise PresenceValidationError("Consent is required before submitting an enquiry.")
+
     source_url = normalize_url(data.get("source_url"), allow_relative=True) if data.get("source_url") else None
     return {
         "enquiry_type": _clean_text(data.get("enquiry_type"), max_length=80) or "general",
         "name": name,
         "email": email,
-        "phone": _clean_text(data.get("phone"), max_length=80),
+        "phone": phone,
         "company": _clean_text(data.get("company") or data.get("organisation"), max_length=180),
         "role_title": _clean_text(data.get("role_title") or data.get("role"), max_length=160),
         "budget_range": _clean_text(data.get("budget_range"), max_length=120),
@@ -2073,8 +2150,8 @@ def validate_enquiry_payload(data: dict[str, Any]) -> dict[str, Any]:
         "urgency": _clean_text(data.get("urgency"), max_length=80),
         "decision_maker_status": _clean_text(data.get("decision_maker_status"), max_length=120),
         "message": message,
-        "preferred_contact_method": _clean_text(data.get("preferred_contact_method"), max_length=40) or "email",
-        "metadata_json": _json_object(data.get("metadata")),
+        "preferred_contact_method": preferred_contact_method,
+        "metadata_json": metadata,
         "source_url": source_url,
         "source_type": _clean_text(data.get("source_type"), max_length=80),
         "source_tag_id": _int_or_none(data.get("source_tag_id")),
@@ -2165,18 +2242,65 @@ def _create_connection_for_submitted_details(
     return connection
 
 
-def create_presence_enquiry(node: PresenceNode, data: dict[str, Any]) -> PresenceEnquiry:
+def _notify_owner_of_enquiry(node: PresenceNode, enquiry: PresenceEnquiry) -> None:
+    """Fire a single ANU Notification row to the Presence node owner.
+
+    First internal cross-module integration: Presence enquiry to ANU
+    notification. Failures are logged and swallowed so a notification outage
+    never blocks an enquiry submission (the PresenceEnquiry record itself is
+    the source of truth).
+    """
+    if not node.owner_user_id:
+        return
+    try:
+        # Local import to keep services modular; avoids a circular import
+        # between presence_service and the top of models.py.
+        from ..models import Notification
+
+        # Keep the message short and PII-safe: never put the visitor's email,
+        # phone, or full message into the notification text. Studio Inbox is
+        # the privileged surface for those.
+        kind = (enquiry.enquiry_type or "general").replace("_", " ")
+        notification = Notification(
+            user_id=node.owner_user_id,
+            message=f"New {kind} enquiry on {node.display_name}",
+        )
+        db.session.add(notification)
+    except Exception:
+        current_app.logger.exception("Presence enquiry notification dispatch failed")
+
+
+def create_presence_enquiry(
+    node: PresenceNode,
+    data: dict[str, Any],
+    *,
+    submitter_user: "User | None" = None,
+) -> PresenceEnquiry:
+    """Create the PresenceEnquiry record (source of truth) plus internal
+    side-effects: PresenceConnection (relationship ledger), PresenceInteraction
+    (analytics event), PresenceAnalyticsEvent, and an ANU Notification to the
+    node owner.
+
+    ``submitter_user`` is the optional authenticated submitter; when present
+    we link the enquiry back to their ANU User row so an owner can resolve
+    enquirers to ANU identities (and, in future passes, open an internal
+    direct-message thread between them).
+    """
     payload = validate_enquiry_payload(data)
     tag = source_tag_for_node(node, data)
     source_tag_id = tag.id if tag else payload.get("source_tag_id")
     source_type = _public_source_type(data, tag) or payload.get("source_type") or "public_enquiry"
     _validate_optional_node_child_ids(node, source_tag_id=source_tag_id)
     connection = _create_connection_for_submitted_details(node, payload, source_type=source_type, source_tag_id=source_tag_id)
+
+    submitter_id = getattr(submitter_user, "id", None) if submitter_user else None
+
     enquiry = PresenceEnquiry(
         node_id=node.id,
         tenant_id=node.tenant_id,
         organisation_id=node.organisation_id,
         connection_id=connection.id,
+        submitter_user_id=submitter_id,
         ip_hash=hash_request_value(request.headers.get("X-Forwarded-For") or request.remote_addr),
         user_agent_hash=hash_request_value(request.headers.get("User-Agent")),
         status="new",
@@ -2198,6 +2322,7 @@ def create_presence_enquiry(node: PresenceNode, data: dict[str, Any]) -> Presenc
         metadata={"enquiry_type": enquiry.enquiry_type, "source_type": source_type, "source_tag_id": source_tag_id},
         anonymous_session_id=data.get("anonymous_session_id"),
     )
+    _notify_owner_of_enquiry(node, enquiry)
     return enquiry
 
 

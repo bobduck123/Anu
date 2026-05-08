@@ -1153,6 +1153,7 @@ class PresenceEnquiry(db.Model):
         db.Index("ix_presence_enquiry_connection_id", "connection_id"),
         db.Index("ix_presence_enquiry_source_tag_id", "source_tag_id"),
         db.Index("ix_presence_enquiry_status", "status"),
+        db.Index("ix_presence_enquiry_submitter_user_id", "submitter_user_id"),
         db.Index("ix_presence_enquiry_created_at", "created_at"),
     )
 
@@ -1163,7 +1164,10 @@ class PresenceEnquiry(db.Model):
     connection_id = db.Column(db.Integer, db.ForeignKey("presence_connection.id"), nullable=True)
     enquiry_type = db.Column(db.String(80), nullable=False, default="general")
     name = db.Column(db.String(160), nullable=False)
-    email = db.Column(db.String(180), nullable=False)
+    # email is now optional at the model layer to support phone/handle-only
+    # enquiries. Service-layer validation guarantees at least one contact
+    # route is present based on preferred_contact_method.
+    email = db.Column(db.String(180), nullable=True)
     phone = db.Column(db.String(80), nullable=True)
     company = db.Column(db.String(180), nullable=True)
     role_title = db.Column(db.String(160), nullable=True)
@@ -1182,6 +1186,10 @@ class PresenceEnquiry(db.Model):
     user_agent_hash = db.Column(db.String(96), nullable=True)
     status = db.Column(db.String(40), nullable=False, default="new")
     assigned_to_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    # ANU-native integration: when an authenticated ANU user submits the
+    # enquiry, this links to their user row so an owner can resolve back to
+    # an ANU identity (and, in future passes, an internal message thread).
+    submitter_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     created_at = db.Column(db.DateTime, default=utcnow)
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
