@@ -35,6 +35,14 @@ DESIRED_SLUG = (
 ).strip()
 SMOKE_EMAIL = (os.environ.get("PRESENCE_SMOKE_EMAIL") or "").strip()
 CLEANUP_REQUESTED = (os.environ.get("PRESENCE_SMOKE_CLEANUP") or "false").lower() == "true"
+# Origin used for CORS preflight checks. Defaults to the deployed Presence
+# frontend so a fresh `python presence_v1_1_smoke.py` against a hosted backend
+# proves the production allowlist contains it.
+SMOKE_ORIGIN = (
+    os.environ.get("PRESENCE_SMOKE_ORIGIN")
+    or APP_BASE
+    or "https://presence-gilt.vercel.app"
+).rstrip("/")
 
 FORBIDDEN_PUBLIC_FIELDS = {
     "owner_user_id",
@@ -148,6 +156,117 @@ def check_public_list() -> list[Any]:
     else:
         record("public_nodes_limit", "failed", f"unsafe limit in response: {limit}")
     return data["items"]
+
+
+def _request_with_response_headers(
+    method: str,
+    base: str,
+    path: str,
+    headers: dict[str, str] | None = None,
+    payload: dict[str, Any] | None = None,
+    *,
+    timeout: int = 20,
+) -> tuple[int, dict[str, str], str]:
+    """Like request_json but returns the response headers (lowercased keys).
+
+    Required for CORS preflight diagnostics: the contract is in headers,
+    not the body. Never logs Authorization values.
+    """
+    body = json.dumps(payload).encode("utf-8") if payload is not None else None
+    request_headers = {"Accept": "application/json"}
+    if body is not None:
+        request_headers["Content-Type"] = "application/json"
+    if headers:
+        for key, value in headers.items():
+            if value:
+                request_headers[key] = value
+    request = urllib.request.Request(f"{base}{path}", data=body, headers=request_headers, method=method)
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            raw = response.read().decode("utf-8", errors="replace") if method != "OPTIONS" else ""
+            return response.status, {k.lower(): v for k, v in response.headers.items()}, raw
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", errors="replace")
+        return exc.code, {k.lower(): v for k, v in exc.headers.items()}, raw
+    except Exception as exc:
+        return 0, {}, str(exc)
+
+
+def check_cors_preflight_and_diagnostics() -> None:
+    """No-token CORS smoke for the Presence frontend → ANU backend pair.
+
+    These are the most actionable checks: if any fail, the live error in the
+    browser console is "No 'Access-Control-Allow-Origin' header is present on
+    the requested resource." for one of the routes Studio actually calls.
+    """
+    if not SMOKE_ORIGIN:
+        record("cors_preflight", "skipped", "PRESENCE_SMOKE_ORIGIN not set")
+        return
+
+    # 1. OPTIONS /api/presence/owner/nodes from the Presence frontend.
+    status, headers, _ = _request_with_response_headers(
+        "OPTIONS",
+        API_BASE,
+        "/api/presence/owner/nodes",
+        headers={
+            "Origin": SMOKE_ORIGIN,
+            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Headers": "authorization,content-type",
+        },
+    )
+    acao = headers.get("access-control-allow-origin")
+    if status in (200, 204) and acao == SMOKE_ORIGIN:
+        record("cors_preflight_owner_nodes", "passed",
+               f"OPTIONS -> {status} ACAO={acao}")
+    else:
+        allow_headers = headers.get("access-control-allow-headers", "")
+        record(
+            "cors_preflight_owner_nodes",
+            "failed",
+            f"OPTIONS -> status={status} ACAO={acao!r} allow-headers={allow_headers!r} "
+            f"-- check CORS_ORIGINS env on backend Vercel project",
+        )
+
+    # 2. GET /api/presence/owner/nodes WITHOUT auth from the Presence origin.
+    #    Must be 401 (or 422), with CORS header attached so the browser shows
+    #    the 401 instead of a CORS error.
+    status, headers, _ = _request_with_response_headers(
+        "GET",
+        API_BASE,
+        "/api/presence/owner/nodes",
+        headers={"Origin": SMOKE_ORIGIN},
+    )
+    acao = headers.get("access-control-allow-origin")
+    if status in (401, 403, 422) and acao == SMOKE_ORIGIN:
+        record("cors_owner_nodes_401_with_cors", "passed",
+               f"protected route -> {status}, ACAO={acao}")
+    else:
+        record(
+            "cors_owner_nodes_401_with_cors",
+            "failed",
+            f"protected route -> status={status} ACAO={acao!r} "
+            f"-- if status is 200 the auth gate is broken; "
+            f"if ACAO is missing, CORS_ORIGINS doesn't include {SMOKE_ORIGIN}",
+        )
+
+    # 3. GET /api/presence/public/nodes from the Presence origin — should
+    #    return 200 and include the CORS header.
+    status, headers, _ = _request_with_response_headers(
+        "GET",
+        API_BASE,
+        "/api/presence/public/nodes?limit=1",
+        headers={"Origin": SMOKE_ORIGIN},
+    )
+    acao = headers.get("access-control-allow-origin")
+    if status == 200 and acao == SMOKE_ORIGIN:
+        record("cors_public_list_with_cors", "passed",
+               f"public list -> 200 ACAO={acao}")
+    else:
+        record(
+            "cors_public_list_with_cors",
+            "failed",
+            f"public list -> status={status} ACAO={acao!r}",
+        )
 
 
 def check_authless_rejections() -> None:
@@ -292,6 +411,7 @@ def check_optional_owner_flow(public_items_before: list[Any]) -> None:
 def main() -> int:
     public_items = []
     check_backend_health()
+    check_cors_preflight_and_diagnostics()
     public_items = check_public_list()
     check_authless_rejections()
     check_app_health()
@@ -305,6 +425,7 @@ def main() -> int:
         "ok": not failed,
         "api_base_url": API_BASE,
         "app_base_url": APP_BASE or None,
+        "smoke_origin": SMOKE_ORIGIN or None,
         "auth_checks": bool(TOKEN),
         "desired_slug": DESIRED_SLUG,
         "checks": [asdict(check) for check in checks],

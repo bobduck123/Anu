@@ -560,12 +560,16 @@ class DevelopmentConfig(Config):
             # Disable pooling for SQLite
             self.SQLALCHEMY_ENGINE_OPTIONS = {}
         
-        # Allow more relaxed CORS in development
+        # Allow more relaxed CORS in development. Mirrors the safety-net
+        # default in app/__init__.py:_init_cors so a developer can boot the
+        # backend and have presence-gilt + localhost:3001 work without
+        # invisible env config. Production still requires explicit CORS_ORIGINS.
         if not self.CORS_ORIGINS:
             self.CORS_ORIGINS = [
                 'http://localhost:3000',
                 'http://localhost:3001',
                 'http://127.0.0.1:3000',
+                'http://127.0.0.1:3001',
             ]
     
     def validate(self):

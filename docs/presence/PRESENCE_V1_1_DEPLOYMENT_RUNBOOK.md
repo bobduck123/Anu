@@ -28,6 +28,83 @@ Required endpoint availability after backend deploy:
 - `POST /api/presence/owner/beta/start`
 - `POST /api/presence/beta/applications`
 
+### 2a. CORS allowlist (REQUIRED in production)
+
+The Flask backend uses `CORS_ORIGINS` (comma-separated) for the `/api/*` and
+`/auth/*` resources. **In production this env var must be set explicitly** —
+the app will refuse to start if it is missing. Local/staging boots fall back
+to a curated default that already includes `https://presence-gilt.vercel.app`,
+but production must be explicit so misconfigurations are loud.
+
+#### Backend Vercel project — required env var
+
+Project: `anu-back-end`
+
+Set `CORS_ORIGINS` to a comma-separated list. Suggested production value:
+
+```
+CORS_ORIGINS=https://presence-gilt.vercel.app,https://mudyin.com,https://www.mudyin.com,https://mudyin-live.vercel.app,https://mudyin.vercel.app,https://maanara.vercel.app,http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001
+```
+
+Adjust the list to match the frontends actually deployed against this backend.
+Do not add `*` — `supports_credentials` is on, so wildcard is rejected.
+
+After changing the value, **redeploy** the backend on Vercel (env var changes
+do not affect a running deployment).
+
+#### Verification commands
+
+After redeploy, from a local terminal (not the browser — preflights bypass cookies):
+
+```
+# 1) Preflight from the Presence frontend
+curl -i -X OPTIONS \
+  -H "Origin: https://presence-gilt.vercel.app" \
+  -H "Access-Control-Request-Method: GET" \
+  -H "Access-Control-Request-Headers: authorization,content-type" \
+  https://anu-back-end.vercel.app/api/presence/owner/nodes
+```
+
+Expected: `HTTP/2 204` (or `200`) and these headers present:
+
+```
+access-control-allow-origin: https://presence-gilt.vercel.app
+access-control-allow-headers: ...,Authorization,...
+access-control-allow-methods: ...,GET,...
+```
+
+```
+# 2) Actual GET without auth
+curl -i \
+  -H "Origin: https://presence-gilt.vercel.app" \
+  https://anu-back-end.vercel.app/api/presence/owner/nodes
+```
+
+Expected: `HTTP/2 401` AND `access-control-allow-origin: https://presence-gilt.vercel.app` is still present. (If ACAO is missing here, the browser will report the 401 as a CORS error instead of an auth error.)
+
+```
+# 3) Public list
+curl -i \
+  -H "Origin: https://presence-gilt.vercel.app" \
+  https://anu-back-end.vercel.app/api/presence/public/nodes
+```
+
+Expected: `HTTP/2 200`, `access-control-allow-origin: https://presence-gilt.vercel.app`, JSON body with `data.items`.
+
+#### Browser DevTools Network-tab diagnosis cheatsheet
+
+When something fails on `https://presence-gilt.vercel.app`:
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| "No 'Access-Control-Allow-Origin' header is present" | Backend `CORS_ORIGINS` doesn't include the frontend origin | Add the origin to `CORS_ORIGINS`, redeploy backend |
+| `OPTIONS` returns `200` with ACAO but `GET` returns `401` (no CORS error) | Backend reachable, auth missing | User isn't signed in / token not attached |
+| `OPTIONS` returns `200` with ACAO but `GET` returns `404` | Route is missing or mounted at the wrong prefix | Check blueprint registration order in `app/api/__init__.py` |
+| `OPTIONS` returns `200` with ACAO but `GET` returns `500` | Backend reachable, runtime/schema error inside handler | Check Vercel function logs for the specific exception |
+
+Note: setting `CORS_ORIGINS` in Vercel is a build-time config — you must
+redeploy the backend before changes take effect.
+
 ## 3. Apply Migration
 
 Apply:

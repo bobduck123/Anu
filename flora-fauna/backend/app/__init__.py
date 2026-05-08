@@ -311,16 +311,63 @@ def _init_jwt_error_handlers(app):
         return jsonify({"msg": "Token has expired"}), 401
 
 
+# Presence frontends and other deployed ANU surfaces that should be allowed
+# when an operator hasn't explicitly set CORS_ORIGINS (non-production only).
+# Production still REQUIRES CORS_ORIGINS to be set explicitly — see below.
+_DEFAULT_KNOWN_FRONTEND_ORIGINS: list[str] = [
+    # Presence (the new public-world studio)
+    "https://presence-gilt.vercel.app",
+    # Mudyin (existing pilot site)
+    "https://mudyin.com",
+    "https://www.mudyin.com",
+    "https://mudyin-live.vercel.app",
+    "https://mudyin.vercel.app",
+    # Manara / ANU
+    "https://maanara.vercel.app",
+]
+
+_DEFAULT_LOCAL_DEV_ORIGINS: list[str] = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+]
+
+
 def _init_cors(app):
-    """Initialize CORS with strict security settings."""
-    cors_origins = app.config.get('CORS_ORIGINS', [])
-    
-    # In production, CORS_ORIGINS must be explicitly set
+    """Initialize CORS with strict security settings.
+
+    Origin policy:
+      - If CORS_ORIGINS env/config is explicitly set → operator's choice wins,
+        full stop. We never silently extend it.
+      - If CORS_ORIGINS is unset and ENV == 'production' → SecurityValidationError.
+        Production must list its origins explicitly so misconfigurations are loud.
+      - If CORS_ORIGINS is unset and ENV != 'production' → fall back to the
+        documented known-frontend list plus localhost dev origins so a fresh
+        development/staging boot is usable without invisible config.
+
+    `supports_credentials=True` means we cannot use wildcard ('*') with
+    credentials — Flask-CORS reflects only the matching origin in
+    `Access-Control-Allow-Origin`. OPTIONS preflight is handled by
+    flask-cors itself before route auth decorators run.
+    """
+    cors_origins = list(app.config.get('CORS_ORIGINS') or [])
+
+    # In production, CORS_ORIGINS must be explicitly set.
     if app.config.get('ENV') == 'production' and not cors_origins:
         raise SecurityValidationError(
             "CORS_ORIGINS must be explicitly configured in production"
         )
-    
+
+    # Outside production, fall back to the curated known-frontend allowlist
+    # so a fresh `flask run` / staging deploy is usable without invisible env.
+    if not cors_origins:
+        cors_origins = list(_DEFAULT_KNOWN_FRONTEND_ORIGINS) + list(_DEFAULT_LOCAL_DEV_ORIGINS)
+
+    # Persist back into config so other modules (e.g. middleware) see the same
+    # resolved list when introspecting.
+    app.config['CORS_ORIGINS'] = cors_origins
+
     CORS(
         app,
         resources={
@@ -330,17 +377,21 @@ def _init_cors(app):
                 "allow_headers": [
                     "Content-Type",
                     "Authorization",
+                    "Accept",
+                    "X-Requested-With",
                     "X-Request-ID",
                     "X-ANU-App-ID",
                     "X-ANU-Site",
                     "X-ANU-Site-Slug",
                 ],
                 "expose_headers": ["X-Request-ID"],
+                "max_age": 600,
             },
             r"/auth/*": {
                 "origins": cors_origins,
                 "supports_credentials": True,
-                "allow_headers": ["Content-Type", "Authorization"],
+                "allow_headers": ["Content-Type", "Authorization", "Accept"],
+                "max_age": 600,
             },
         }
     )
