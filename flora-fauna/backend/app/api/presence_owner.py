@@ -533,6 +533,9 @@ def upload_owner_media(node_id):
         return _err("validation_error", "Unsupported media slot.", 422)
 
     file = request.files.get("file")
+    if not file or not getattr(file, "filename", ""):
+        return _err("validation_error", "Choose a JPG, PNG, or WEBP image to upload.", 400)
+
     try:
         storage_path = build_presence_media_path(
             owner_user_id=user.id,

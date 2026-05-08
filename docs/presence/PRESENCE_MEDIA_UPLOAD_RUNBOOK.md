@@ -11,6 +11,24 @@ Scope: direct image upload for the Presence standalone frontend using the ANU-na
 - The backend validates the Supabase bearer token, resolves the ANU local user, checks node ownership, then writes media.
 - Draft and private Presences stay hidden publicly even when media exists.
 
+## Route Contract
+
+The standalone Presence frontend expects this exact ANU backend route:
+
+- `OPTIONS /api/presence/owner/nodes/<node_id>/media`
+- `POST /api/presence/owner/nodes/<node_id>/media`
+
+Required behavior:
+
+- `OPTIONS` returns `200` or `204`
+- `Access-Control-Allow-Origin` reflects `https://presence-gilt.vercel.app`
+- `Access-Control-Allow-Methods` includes `POST, OPTIONS`
+- `Access-Control-Allow-Headers` includes `Authorization, Content-Type`
+- `OPTIONS` does not require auth
+- `POST` still requires valid owner auth and owner-scoped access
+
+If production returns `404` on either `OPTIONS` or `POST`, the deployed ANU backend does not contain the media route. That is a deployment mismatch, not a storage-bucket failure.
+
 ## Media Slots
 
 Supported slots:

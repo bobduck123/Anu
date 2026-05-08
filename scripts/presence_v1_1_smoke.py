@@ -49,6 +49,7 @@ SMOKE_ORIGIN = (
     or APP_BASE
     or "https://presence-gilt.vercel.app"
 ).rstrip("/")
+SMOKE_NODE_ID = str(os.environ.get("PRESENCE_SMOKE_NODE_ID") or "1").strip() or "1"
 
 FORBIDDEN_PUBLIC_FIELDS = {
     "owner_user_id",
@@ -312,6 +313,32 @@ def check_cors_preflight_and_diagnostics() -> None:
             f"if ACAO is missing, CORS_ORIGINS doesn't include {SMOKE_ORIGIN}",
         )
 
+    # 2. OPTIONS /api/presence/owner/nodes/<id>/media from the Presence frontend.
+    media_path = f"/api/presence/owner/nodes/{SMOKE_NODE_ID}/media"
+    status, headers, _ = _request_with_response_headers(
+        "OPTIONS",
+        API_BASE,
+        media_path,
+        headers={
+            "Origin": SMOKE_ORIGIN,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "authorization,content-type",
+        },
+    )
+    acao = headers.get("access-control-allow-origin")
+    allow_methods = headers.get("access-control-allow-methods", "")
+    if status in (200, 204) and acao == SMOKE_ORIGIN and "POST" in allow_methods.upper():
+        record("cors_preflight_owner_media_upload", "passed",
+               f"OPTIONS {media_path} -> {status} ACAO={acao}")
+    else:
+        allow_headers = headers.get("access-control-allow-headers", "")
+        record(
+            "cors_preflight_owner_media_upload",
+            "failed",
+            f"OPTIONS {media_path} -> status={status} ACAO={acao!r} allow-methods={allow_methods!r} "
+            f"allow-headers={allow_headers!r} -- this route should exist and allow POST/OPTIONS from {SMOKE_ORIGIN}",
+        )
+
     # 3. GET /api/presence/public/nodes from the Presence origin — should
     #    return 200 and include the CORS header.
     status, headers, _ = _request_with_response_headers(
@@ -348,16 +375,21 @@ def check_authless_rejections() -> None:
         else:
             record(name, "failed", f"expected 401, got {status} payload={payload}")
 
+    media_path = f"/api/presence/owner/nodes/{SMOKE_NODE_ID}/media"
     status, headers, raw = _request_with_response_headers(
         "POST",
         API_BASE,
-        "/api/presence/owner/nodes/1/media",
+        media_path,
         headers={"Origin": SMOKE_ORIGIN},
     )
     if status in (401, 403):
-        record("media_upload_without_token", "passed", f"status={status}")
+        record("media_upload_without_token", "passed", f"path={media_path} status={status}")
     else:
-        record("media_upload_without_token", "failed", f"status={status} body={raw[:200]!r} headers={headers}")
+        record(
+            "media_upload_without_token",
+            "failed",
+            f"path={media_path} status={status} body={raw[:200]!r} headers={headers} -- expected 401/403, never 404",
+        )
 
 
 def check_app_health() -> None:

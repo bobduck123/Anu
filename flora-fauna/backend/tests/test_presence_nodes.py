@@ -1626,6 +1626,69 @@ def test_owner_media_upload_requires_auth_not_500():
     assert response.status_code != 500
 
 
+def test_owner_media_upload_missing_file_returns_400():
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers = _headers(app)
+    owner_headers = _owner_headers(app, "node-admin", "node_admin")
+
+    from manara_backend_app.models import User
+
+    with app.app_context():
+        owner_id = User.query.filter_by(username="node-admin").first().id
+    node = _create_presence_node_for_owner(
+        client,
+        headers,
+        tenant_id,
+        owner_id,
+        slug="media-missing-file-node",
+        display_name="Media Missing File Node",
+    )
+
+    response = client.post(
+        f"/api/presence/owner/nodes/{node['id']}/media",
+        data={"target_type": "profile_image"},
+        headers=owner_headers,
+        base_url="http://public.test",
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400, response.get_json()
+    assert response.get_json()["error"]["code"] == "validation_error"
+
+
+def test_owner_media_upload_rejects_invalid_slot():
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers = _headers(app)
+    owner_headers = _owner_headers(app, "node-admin", "node_admin")
+
+    from manara_backend_app.models import User
+
+    with app.app_context():
+        owner_id = User.query.filter_by(username="node-admin").first().id
+    node = _create_presence_node_for_owner(
+        client,
+        headers,
+        tenant_id,
+        owner_id,
+        slug="media-invalid-slot-node",
+        display_name="Media Invalid Slot Node",
+    )
+
+    response = _upload_image(
+        client,
+        node_id=node["id"],
+        headers=owner_headers,
+        target_type="unknown_slot",
+    )
+
+    assert response.status_code == 422, response.get_json()
+    assert response.get_json()["error"]["code"] == "validation_error"
+
+
 def test_owner_media_upload_rejects_invalid_mime_and_oversized_file():
     app = _build_app()
     tenant_id, _ = _seed_fixture(app)
@@ -1722,6 +1785,7 @@ def test_owner_media_upload_saves_profile_image_and_clear_removes_it(monkeypatch
         owner_id,
         slug="media-profile-node",
         display_name="Media Profile Node",
+        extra={"status": "draft", "visibility": "private", "published_at": None},
     )
 
     uploaded = _upload_image(client, node_id=node["id"], headers=owner_headers)
@@ -1734,6 +1798,9 @@ def test_owner_media_upload_saves_profile_image_and_clear_removes_it(monkeypatch
     with app.app_context():
         row = _db.session.query(PresenceNode).get(node["id"])
         assert row.profile_image_url == data["url"]
+        assert row.status == "draft"
+        assert row.visibility == "private"
+        assert row.published_at is None
 
     cleared = client.post(
         f"/api/presence/owner/nodes/{node['id']}/media/clear",
@@ -1745,6 +1812,9 @@ def test_owner_media_upload_saves_profile_image_and_clear_removes_it(monkeypatch
     with app.app_context():
         row = _db.session.query(PresenceNode).get(node["id"])
         assert row.profile_image_url is None
+        assert row.status == "draft"
+        assert row.visibility == "private"
+        assert row.published_at is None
 
 
 def test_owner_media_upload_saves_work_and_collection_image_fields(monkeypatch):

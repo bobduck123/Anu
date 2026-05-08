@@ -123,7 +123,34 @@ curl -i \
 Expected: `HTTP/2 401` AND `access-control-allow-origin: https://presence-gilt.vercel.app` is still present. (If ACAO is missing here, the browser will report the 401 as a CORS error instead of an auth error.)
 
 ```
-# 3) Public list
+# 3) Media upload preflight from the Presence frontend
+curl -i -X OPTIONS \
+  -H "Origin: https://presence-gilt.vercel.app" \
+  -H "Access-Control-Request-Method: POST" \
+  -H "Access-Control-Request-Headers: authorization,content-type" \
+  https://anu-back-end.vercel.app/api/presence/owner/nodes/1/media
+```
+
+Expected: `HTTP/2 204` (or `200`) and these headers present:
+
+```
+access-control-allow-origin: https://presence-gilt.vercel.app
+access-control-allow-headers: ...,Authorization,Content-Type,...
+access-control-allow-methods: ...,POST,OPTIONS,...
+```
+
+```
+# 4) Media upload route without auth
+curl -i -X POST \
+  -H "Origin: https://presence-gilt.vercel.app" \
+  -F "target_type=profile_image" \
+  https://anu-back-end.vercel.app/api/presence/owner/nodes/1/media
+```
+
+Expected: `HTTP/2 401` (or `403` if your auth stack normalizes that way), never `404`. If this returns `404`, the deployed backend does not contain the media route.
+
+```
+# 5) Public list
 curl -i \
   -H "Origin: https://presence-gilt.vercel.app" \
   https://anu-back-end.vercel.app/api/presence/public/nodes

@@ -79,6 +79,32 @@ def test_options_preflight_on_owner_nodes_from_presence_frontend_succeeds():
     assert "GET" in allow_methods, f"GET must be allowed: {allow_methods}"
 
 
+def test_options_preflight_on_owner_media_upload_from_presence_frontend_succeeds():
+    app = _build_app([PRESENCE_ORIGIN])
+    client = app.test_client()
+
+    response = client.options(
+        "/api/presence/owner/nodes/1/media",
+        headers={
+            "Origin": PRESENCE_ORIGIN,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "authorization,content-type",
+        },
+    )
+
+    assert response.status_code in (200, 204), (
+        f"media preflight should succeed without auth, got {response.status_code} "
+        f"with body {response.get_data(as_text=True)[:200]}"
+    )
+    assert response.headers.get("Access-Control-Allow-Origin") == PRESENCE_ORIGIN
+    allow_headers = (response.headers.get("Access-Control-Allow-Headers") or "").lower()
+    assert "authorization" in allow_headers
+    assert "content-type" in allow_headers
+    allow_methods = (response.headers.get("Access-Control-Allow-Methods") or "").upper()
+    assert "POST" in allow_methods, f"POST must be allowed for media upload: {allow_methods}"
+    assert "OPTIONS" in allow_methods, f"OPTIONS must be allowed for media upload: {allow_methods}"
+
+
 # ---------------------------------------------------------------------------
 # 2. Actual protected request without auth — must return 401, must include
 #    CORS header so the browser surfaces a normal 401 (not a CORS error).
@@ -103,6 +129,24 @@ def test_get_owner_nodes_without_auth_returns_401_with_cors_header():
     assert response.headers.get("Access-Control-Allow-Origin") == PRESENCE_ORIGIN
 
 
+def test_post_owner_media_without_auth_returns_401_with_cors_header_not_404():
+    app = _build_app([PRESENCE_ORIGIN])
+    client = app.test_client()
+
+    response = client.post(
+        "/api/presence/owner/nodes/1/media",
+        data={"target_type": "profile_image"},
+        headers={"Origin": PRESENCE_ORIGIN},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 401, (
+        f"protected media route without auth should return 401, got {response.status_code}"
+    )
+    assert response.status_code != 404
+    assert response.headers.get("Access-Control-Allow-Origin") == PRESENCE_ORIGIN
+
+
 # ---------------------------------------------------------------------------
 # 3. Public list endpoint from the Presence frontend — 200 with CORS header.
 # ---------------------------------------------------------------------------
@@ -118,6 +162,25 @@ def test_get_owner_nodes_invalid_token_returns_401_with_cors_header_not_500():
             "Origin": PRESENCE_ORIGIN,
             "Authorization": "Bearer not-a-valid-jwt",
         },
+    )
+
+    assert response.status_code == 401
+    assert response.status_code != 500
+    assert response.headers.get("Access-Control-Allow-Origin") == PRESENCE_ORIGIN
+
+
+def test_post_owner_media_invalid_token_returns_401_with_cors_header_not_500():
+    app = _build_app([PRESENCE_ORIGIN])
+    client = app.test_client()
+
+    response = client.post(
+        "/api/presence/owner/nodes/1/media",
+        data={"target_type": "profile_image"},
+        headers={
+            "Origin": PRESENCE_ORIGIN,
+            "Authorization": "Bearer not-a-valid-jwt",
+        },
+        content_type="multipart/form-data",
     )
 
     assert response.status_code == 401
