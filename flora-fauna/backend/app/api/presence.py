@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 
 from ..extensions import db, limiter
 from ..models import (
+    PresenceBetaApplication,
     PresenceCollection,
     PresenceConnection,
     PresenceEnquiry,
@@ -22,6 +23,7 @@ from ..models import (
     PresenceWork,
     PresenceWorkHandover,
 )
+from ..security.alpha import alpha_jwt_required
 from ..security.control_plane import control_plane_required, log_control_event
 from ..security.control_tenant_scope import resolve_effective_control_managed_node_ids
 from ..security.policy import get_current_user
@@ -47,6 +49,8 @@ from ..services.presence_service import (
     normalize_slug,
     pseudo_qr_svg,
     public_presence_node_by_slug,
+    public_presence_nodes,
+    serialize_public_card,
     publish_presence_node,
     record_presence_source_hit,
     record_presence_event,
@@ -153,6 +157,47 @@ def _require_payload_tenant_scope(data: dict):
         403,
         details={"requested_tenant_id": requested_tenant_id, "allowed_node_ids": sorted(allowed_node_ids or [])},
     )
+
+
+@presence_bp.route("/public/nodes", methods=["GET"])
+@limiter.limit("120 per minute; 600 per hour")
+def list_public_presence_nodes():
+    """Public, paginated list of published Presence nodes (gallery feed).
+
+    Filters draft / private / unlisted / suspended / archived rows out at the
+    query level. Returns owner-safe card payloads only — never owner_user_id,
+    tenant_id, organisation_id, private contact, or admin metadata.
+    """
+    args = request.args
+    try:
+        limit = int(args.get("limit", 24))
+    except (TypeError, ValueError):
+        limit = 24
+    try:
+        offset = int(args.get("offset", 0))
+    except (TypeError, ValueError):
+        offset = 0
+
+    presence_type = (args.get("presence_type") or args.get("node_type") or "").strip() or None
+    display_mode = (args.get("display_mode") or "").strip() or None
+    plan_type = (args.get("plan_type") or "").strip() or None
+    search_raw = (args.get("search") or args.get("q") or "").strip()
+    search = search_raw[:80] or None
+
+    rows, total = public_presence_nodes(
+        limit=limit,
+        offset=offset,
+        presence_type=presence_type,
+        display_mode=display_mode,
+        plan_type=plan_type,
+        search=search,
+    )
+    return ok({
+        "items": [serialize_public_card(n) for n in rows],
+        "total": total,
+        "limit": min(max(int(limit or 24), 1), 50),
+        "offset": max(int(offset or 0), 0),
+    })
 
 
 @presence_bp.route("/public/<string:slug>", methods=["GET"])
@@ -321,6 +366,148 @@ def submit_public_presence_quote_request(slug):
         current_app.logger.exception("Presence quote request submission failed")
         db.session.rollback()
         return error("service_unavailable", "Quote request temporarily unavailable", 503)
+
+
+# ---------------------------------------------------------------------------
+# Public-beta setup-request persistence
+#
+# A verified Supabase user can submit a setup request via /api/presence/beta/
+# applications. This is *intent only* — it does not create a PresenceNode and
+# does not assign ownership. Studio reviews these and provisions a real draft
+# node manually (or via a future safe `POST /owner/beta/start` endpoint).
+#
+# Public routes never expose these records.
+# ---------------------------------------------------------------------------
+
+_ALLOWED_BETA_PRESENCE_TYPES = {
+    "artist", "practitioner", "venue_collective", "organisation",
+    "creative_professional", "consultant", "service_professional", "other",
+}
+_ALLOWED_BETA_PURPOSES = {
+    "portfolio", "gallery", "practitioner_profile", "venue_collective",
+    "organisation", "professional_profile", "service_profile", "other",
+}
+_ALLOWED_BETA_CTAS = {
+    "contact", "conversation", "viewing", "work_enquiry",
+    "commission_request", "quote_request", "visit_partner_support", "other",
+}
+_ALLOWED_BETA_TEMPLATES = {
+    "minimal_artist_portal", "gallery_wall", "editorial_portfolio",
+    "studio_practice", "practitioner_pathway", "venue_collective_node", "unsure",
+}
+_ALLOWED_BETA_MOODS = {
+    "nocturne", "gallery_white", "warm_studio", "editorial_paper",
+    "care_path", "public_noticeboard", "institutional_dusk", "signal_field",
+}
+_ALLOWED_BETA_MODES = {"setup_request", "studio_assisted", "draft_self_build"}
+
+
+def _clean_str(value, max_len: int):
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    return text[:max_len]
+
+
+def _serialize_beta_application(app: "PresenceBetaApplication") -> dict:
+    return {
+        "id": app.id,
+        "display_name": app.display_name,
+        "desired_slug": app.desired_slug,
+        "presence_type": app.presence_type,
+        "primary_purpose": app.primary_purpose,
+        "primary_cta": app.primary_cta,
+        "template_direction": app.template_direction,
+        "visual_mood": app.visual_mood,
+        "location_label": app.location_label,
+        "headline": app.headline,
+        "description": app.description,
+        "beta_mode": app.beta_mode,
+        "status": app.status,
+        "created_at": app.created_at.isoformat() if app.created_at else None,
+    }
+
+
+@presence_bp.route("/beta/applications", methods=["POST"])
+@alpha_jwt_required()
+@limiter.limit("6 per minute; 30 per hour")
+def submit_beta_application():
+    """Persist a public-beta setup request from a verified Supabase user.
+
+    Requires Supabase JWT (alpha_jwt_required). Creates one PresenceBetaApplication
+    row in status=pending. Does NOT create a PresenceNode and does NOT assign
+    ownership. Returns an owner-safe summary.
+    """
+    user = get_current_user()
+    if not user:
+        return error("unauthorized", "Sign in is required for beta applications.", 401)
+
+    payload = request.get_json(silent=True) or {}
+
+    presence_type = _clean_str(payload.get("presence_type"), 80)
+    primary_purpose = _clean_str(payload.get("primary_purpose"), 80)
+    primary_cta = _clean_str(payload.get("primary_cta"), 80)
+    template_direction = _clean_str(payload.get("template_direction"), 80)
+    visual_mood = _clean_str(payload.get("visual_mood"), 80)
+    beta_mode = _clean_str(payload.get("beta_mode"), 40) or "setup_request"
+
+    # Whitelist enum-like fields. Reject unknown values rather than store junk.
+    if presence_type and presence_type not in _ALLOWED_BETA_PRESENCE_TYPES:
+        return error("validation_error", f"Unsupported presence_type: {presence_type}", 422)
+    if primary_purpose and primary_purpose not in _ALLOWED_BETA_PURPOSES:
+        return error("validation_error", f"Unsupported primary_purpose: {primary_purpose}", 422)
+    if primary_cta and primary_cta not in _ALLOWED_BETA_CTAS:
+        return error("validation_error", f"Unsupported primary_cta: {primary_cta}", 422)
+    if template_direction and template_direction not in _ALLOWED_BETA_TEMPLATES:
+        return error("validation_error", f"Unsupported template_direction: {template_direction}", 422)
+    if visual_mood and visual_mood not in _ALLOWED_BETA_MOODS:
+        return error("validation_error", f"Unsupported visual_mood: {visual_mood}", 422)
+    if beta_mode not in _ALLOWED_BETA_MODES:
+        return error("validation_error", f"Unsupported beta_mode: {beta_mode}", 422)
+
+    display_name = _clean_str(payload.get("display_name"), 160)
+    if not display_name:
+        return error("validation_error", "display_name is required", 422)
+
+    desired_slug = _clean_str(payload.get("desired_slug"), 160)
+    if desired_slug:
+        try:
+            desired_slug = normalize_slug(desired_slug)
+        except PresenceValidationError as exc:
+            return _validation_error(exc)
+
+    user_id_raw = getattr(user, "supabase_user_id", None) or getattr(user, "id", None)
+    user_id_str = str(user_id_raw)[:80] if user_id_raw is not None else None
+    email_attr = getattr(user, "email", None)
+    email = _clean_str(email_attr, 180)
+
+    application = PresenceBetaApplication(
+        user_id=user_id_str,
+        email=email,
+        display_name=display_name,
+        desired_slug=desired_slug,
+        presence_type=presence_type,
+        primary_purpose=primary_purpose,
+        primary_cta=primary_cta,
+        template_direction=template_direction,
+        visual_mood=visual_mood,
+        location_label=_clean_str(payload.get("location_label"), 160),
+        headline=_clean_str(payload.get("headline"), 280),
+        description=_clean_str(payload.get("description"), 4000),
+        beta_mode=beta_mode,
+        status="pending",
+    )
+    db.session.add(application)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        current_app.logger.exception("PresenceBetaApplication insert failed")
+        return error("service_unavailable", "Setup request temporarily unavailable", 503)
+
+    return ok(_serialize_beta_application(application), 201)
 
 
 @presence_bp.route("/public/<string:slug>/vcard", methods=["GET"])

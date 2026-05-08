@@ -1918,10 +1918,90 @@ def public_presence_node_by_slug(slug: str) -> PresenceNode | None:
             PresenceNode.slug == normalize_slug(slug),
             PresenceNode.status == "published",
             PresenceNode.visibility.in_(sorted(PRESENCE_PUBLIC_VISIBILITIES)),
+            PresenceNode.archived_at.is_(None),
         )
         .order_by(PresenceNode.id.asc())
         .first()
     )
+
+
+def public_presence_nodes(
+    *,
+    limit: int = 24,
+    offset: int = 0,
+    presence_type: str | None = None,
+    display_mode: str | None = None,
+    plan_type: str | None = None,
+    search: str | None = None,
+) -> tuple[list[PresenceNode], int]:
+    """Return only published, public-visibility Presence nodes.
+
+    Always excludes draft, private, suspended, archived, and unlisted-only nodes
+    (unlisted nodes are reachable by direct slug but should not appear in lists).
+
+    Returns ``(rows, total)``. Pagination is offset-based with a hard cap of 50.
+    """
+    safe_limit = max(1, min(int(limit or 24), 50))
+    safe_offset = max(0, int(offset or 0))
+
+    query = PresenceNode.query.filter(
+        PresenceNode.status == "published",
+        PresenceNode.visibility == "public",   # exclude unlisted from public listings
+        PresenceNode.archived_at.is_(None),
+    )
+
+    if presence_type:
+        query = query.filter(PresenceNode.node_type == presence_type)
+    if display_mode:
+        query = query.filter(PresenceNode.display_mode == display_mode)
+    if plan_type:
+        query = query.filter(PresenceNode.plan_type == plan_type)
+    if search:
+        needle = f"%{search.strip().lower()}%"
+        query = query.filter(
+            db.or_(
+                db.func.lower(PresenceNode.display_name).like(needle),
+                db.func.lower(PresenceNode.headline).like(needle),
+            )
+        )
+
+    total = query.count()
+    rows = (
+        query.order_by(PresenceNode.published_at.desc().nullslast(), PresenceNode.id.desc())
+        .offset(safe_offset)
+        .limit(safe_limit)
+        .all()
+    )
+    return rows, total
+
+
+def serialize_public_card(node: PresenceNode) -> dict[str, Any]:
+    """Public-card serializer for /api/presence/public/nodes.
+
+    Owner-safe: never includes ``owner_user_id``, ``tenant_id``, ``organisation_id``,
+    private contact, procurement details, or admin metadata.
+    """
+    bio = (node.bio or "").strip()
+    if len(bio) > 220:
+        bio_excerpt = bio[:217].rstrip() + "…"
+    else:
+        bio_excerpt = bio or None
+    return {
+        "id": node.id,
+        "slug": node.slug,
+        "display_name": node.display_name,
+        "headline": node.headline,
+        "bio_excerpt": bio_excerpt,
+        "node_type": node.node_type,
+        "display_mode": node.display_mode,
+        "plan_type": node.plan_type,
+        "profile_image_url": node.profile_image_url,
+        "cover_image_url": node.cover_image_url,
+        "location_label": node.location_label,
+        "visual_mood": node.visual_mood,
+        "public_url": public_url_for_node(node),
+        "published_at": node.published_at.isoformat() if node.published_at else None,
+    }
 
 
 def hash_request_value(value: str | None) -> str | None:

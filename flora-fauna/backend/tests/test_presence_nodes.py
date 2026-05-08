@@ -1250,6 +1250,89 @@ def test_presence_owner_node_suspend_is_control_only_for_normal_owners():
         assert node.status == "published"
 
 
+def test_presence_owner_node_publish_cannot_restore_suspended_or_archived_nodes():
+    app = _build_app()
+    tenant_a_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    control_headers = _headers(app)
+
+    from manara_backend_app.models import PresenceNode, User
+
+    with app.app_context():
+        owner_a_id = User.query.filter_by(username="node-admin").first().id
+
+    owner_node = _create_presence_node_for_owner(
+        client,
+        control_headers,
+        tenant_a_id,
+        owner_a_id,
+        slug="owner-node-suspended-alpha",
+        display_name="Owner Suspended Alpha",
+    )
+    publish_response = client.post(
+        f"/api/presence/owner/nodes/{owner_node['id']}/publish",
+        headers=_owner_headers(app, "node-admin", "node_admin"),
+        base_url="http://public.test",
+    )
+    assert publish_response.status_code == 200
+
+    suspend_response = client.post(
+        f"/api/control/presence/nodes/{owner_node['id']}/suspend",
+        headers=control_headers,
+        base_url="http://control.test",
+    )
+    assert suspend_response.status_code == 200
+    assert client.get("/api/presence/public/owner-node-suspended-alpha", base_url="http://public.test").status_code == 404
+
+    owner_publish = client.post(
+        f"/api/presence/owner/nodes/{owner_node['id']}/publish",
+        headers=_owner_headers(app, "node-admin", "node_admin"),
+        base_url="http://public.test",
+    )
+    assert owner_publish.status_code == 403
+    assert owner_publish.get_json()["error"]["code"] == "forbidden"
+
+    with app.app_context():
+        node = PresenceNode.query.get(owner_node["id"])
+        assert node.status == "suspended"
+
+    assert client.get("/api/presence/public/owner-node-suspended-alpha", base_url="http://public.test").status_code == 404
+
+    archived_node = _create_presence_node_for_owner(
+        client,
+        control_headers,
+        tenant_a_id,
+        owner_a_id,
+        slug="owner-node-archived-alpha",
+        display_name="Owner Archived Alpha",
+    )
+    assert client.post(
+        f"/api/presence/owner/nodes/{archived_node['id']}/publish",
+        headers=_owner_headers(app, "node-admin", "node_admin"),
+        base_url="http://public.test",
+    ).status_code == 200
+    archive_response = client.post(
+        f"/api/control/presence/nodes/{archived_node['id']}/archive",
+        headers=control_headers,
+        base_url="http://control.test",
+    )
+    assert archive_response.status_code == 200
+
+    owner_archive_publish = client.post(
+        f"/api/presence/owner/nodes/{archived_node['id']}/publish",
+        headers=_owner_headers(app, "node-admin", "node_admin"),
+        base_url="http://public.test",
+    )
+    assert owner_archive_publish.status_code == 403
+    assert owner_archive_publish.get_json()["error"]["code"] == "forbidden"
+
+    with app.app_context():
+        node = PresenceNode.query.get(archived_node["id"])
+        assert node.status == "archived"
+
+    assert client.get("/api/presence/public/owner-node-archived-alpha", base_url="http://public.test").status_code == 404
+
+
 
 def test_presence_owner_nodes_route_excludes_nodes_owned_by_other_users():
     app = _build_app()
@@ -1761,3 +1844,645 @@ def test_presence_portfolio_first_templates_and_display_mode_routing():
     public_studio = client.get("/api/presence/public/test-studio-practice", base_url="http://public.test")
     assert public_studio.status_code == 200
     assert public_studio.get_json()["data"]["display_mode"] == "studio_practice"
+
+
+# ----------------------------------------------------------------------------
+# /api/presence/beta/applications — public-beta setup-request persistence
+# ----------------------------------------------------------------------------
+
+
+def test_presence_beta_application_requires_auth():
+    """Unauthenticated requests are rejected with 401, no row created."""
+    app = _build_app()
+    _seed_fixture(app)
+    client = app.test_client()
+
+    response = client.post(
+        "/api/presence/beta/applications",
+        json={"display_name": "Anonymous", "presence_type": "artist"},
+        base_url="http://public.test",
+    )
+    assert response.status_code == 401, response.get_json()
+
+    # Confirm no row was inserted.
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceBetaApplication
+
+    with app.app_context():
+        assert _db.session.query(PresenceBetaApplication).count() == 0
+
+
+def test_presence_beta_application_persists_authenticated_request_with_owner_safe_payload():
+    """Verified Supabase user can submit a setup request; row is pending and
+    the response is owner-safe (no user_id, no email leakage)."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+
+    _create_owner_user(app, username="studio-pilot", pseudonym="studio-pilot",
+                       email="pilot@example.com", node_id=tenant_id, role="participant")
+    headers = _owner_headers(app, "studio-pilot", role="participant")
+    response = client.post(
+        "/api/presence/beta/applications",
+        json={
+            "display_name": "Mira Cole",
+            "desired_slug": "mira-cole",
+            "presence_type": "artist",
+            "primary_purpose": "portfolio",
+            "primary_cta": "viewing",
+            "template_direction": "studio_practice",
+            "visual_mood": "warm_studio",
+            "location_label": "Hobart, Tasmania",
+            "headline": "Textile artist working with country, dye, and weave.",
+            "description": "Pilot world for a sculptor / weaver.",
+            "beta_mode": "studio_assisted",
+        },
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert response.status_code == 201, response.get_json()
+    body = response.get_json()["data"]
+    # Owner-safe shape: no internal user_id or email exposed.
+    assert body["display_name"] == "Mira Cole"
+    assert body["desired_slug"] == "mira-cole"
+    assert body["status"] == "pending"
+    assert body["beta_mode"] == "studio_assisted"
+    assert "user_id" not in body
+    assert "email" not in body
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceBetaApplication
+
+    with app.app_context():
+        rows = _db.session.query(PresenceBetaApplication).all()
+        assert len(rows) == 1
+        # user_id is recorded server-side for follow-up review.
+        assert rows[0].status == "pending"
+        assert rows[0].presence_type == "artist"
+        assert rows[0].template_direction == "studio_practice"
+
+
+def test_presence_beta_application_rejects_unknown_enum_values():
+    """Unknown enum values are rejected with 422 — keeps the table clean."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+
+    _create_owner_user(app, username="studio-pilot", pseudonym="studio-pilot",
+                       email="pilot@example.com", node_id=tenant_id, role="participant")
+    headers = _owner_headers(app, "studio-pilot", role="participant")
+    response = client.post(
+        "/api/presence/beta/applications",
+        json={
+            "display_name": "Test",
+            "presence_type": "definitely_not_a_type",
+        },
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert response.status_code == 422, response.get_json()
+
+    response = client.post(
+        "/api/presence/beta/applications",
+        json={
+            "display_name": "Test",
+            "primary_cta": "buy_followers",
+        },
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert response.status_code == 422, response.get_json()
+
+
+def test_presence_beta_application_does_not_create_presence_node_or_assign_ownership():
+    """A beta application MUST NOT create a PresenceNode or assign ownership.
+    It is a setup *request*, reviewed by Studio. This guards against accidental
+    auto-publishing or fake ownership in v1."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+
+    _create_owner_user(app, username="studio-pilot", pseudonym="studio-pilot",
+                       email="pilot@example.com", node_id=tenant_id, role="participant")
+    headers = _owner_headers(app, "studio-pilot", role="participant")
+    response = client.post(
+        "/api/presence/beta/applications",
+        json={
+            "display_name": "Pilot User",
+            "desired_slug": "pilot-user",
+            "presence_type": "artist",
+        },
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert response.status_code == 201
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceNode
+
+    with app.app_context():
+        # No PresenceNode created.
+        assert _db.session.query(PresenceNode).filter_by(slug="pilot-user").first() is None
+
+    # Public route does not surface the desired slug.
+    public = client.get("/api/presence/public/pilot-user", base_url="http://public.test")
+    assert public.status_code == 404
+
+
+# ----------------------------------------------------------------------------
+# /api/presence/public/nodes — safe public list endpoint (v1.1 gallery feed)
+# ----------------------------------------------------------------------------
+
+
+def _make_node(client, headers, *, tenant_id, slug, display_name, status="published",
+               visibility="public", display_mode="profile_card", node_type="custom"):
+    payload = {
+        "tenant_id": tenant_id,
+        "slug": slug,
+        "display_name": display_name,
+        "node_type": node_type,
+        "display_mode": display_mode,
+        "plan_type": "basic",
+        "visibility": visibility,
+        "headline": f"Headline for {display_name}",
+        "bio": f"Public bio for {display_name}.",
+    }
+    if status != "published":
+        payload["status"] = status
+    res = client.post(
+        "/api/control/presence/nodes",
+        json=payload,
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert res.status_code == 201, res.get_json()
+    node_id = res.get_json()["data"]["id"]
+    if status == "published":
+        pub = client.post(
+            f"/api/control/presence/nodes/{node_id}/publish",
+            headers=headers,
+            base_url="http://control.test",
+        )
+        assert pub.status_code == 200
+    return node_id
+
+
+def test_public_presence_list_returns_only_published_public_nodes_with_owner_safe_payload():
+    """Endpoint must return ONLY published+public rows; payload must NOT leak
+    owner_user_id, tenant_id, organisation_id, or admin metadata."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers = _headers(app)
+
+    # 1 published+public plus hidden draft / unpublished / suspended /
+    # private / unlisted / archived variants.
+    _make_node(client, headers, tenant_id=tenant_id, slug="gallery-published-public",
+               display_name="Public Pilot", status="published", visibility="public",
+               display_mode="artist_gallery", node_type="artist")
+    _make_node(client, headers, tenant_id=tenant_id, slug="gallery-draft",
+               display_name="Draft Pilot", status="draft", visibility="public")
+    _make_node(client, headers, tenant_id=tenant_id, slug="gallery-unpublished",
+               display_name="Unpublished Pilot", status="unpublished", visibility="public")
+    _make_node(client, headers, tenant_id=tenant_id, slug="gallery-suspended",
+               display_name="Suspended Pilot", status="suspended", visibility="public")
+    _make_node(client, headers, tenant_id=tenant_id, slug="gallery-private",
+               display_name="Private Pilot", status="published", visibility="private")
+    _make_node(client, headers, tenant_id=tenant_id, slug="gallery-unlisted",
+               display_name="Unlisted Pilot", status="published", visibility="unlisted")
+    archived_id = _make_node(client, headers, tenant_id=tenant_id, slug="gallery-archived",
+                             display_name="Archived Pilot", status="published", visibility="public")
+    arch = client.post(
+        f"/api/control/presence/nodes/{archived_id}/archive",
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert arch.status_code == 200, arch.get_json()
+
+    res = client.get("/api/presence/public/nodes", base_url="http://public.test")
+    assert res.status_code == 200, res.get_json()
+    data = res.get_json()["data"]
+    slugs = {item["slug"] for item in data["items"]}
+
+    # Only the published+public+non-archived row appears.
+    assert "gallery-published-public" in slugs
+    assert "gallery-draft" not in slugs
+    assert "gallery-unpublished" not in slugs
+    assert "gallery-suspended" not in slugs
+    assert "gallery-private" not in slugs
+    assert "gallery-unlisted" not in slugs
+    assert "gallery-archived" not in slugs
+
+    # Owner-safe payload check.
+    public_pilot = next(item for item in data["items"] if item["slug"] == "gallery-published-public")
+    forbidden_keys = {
+        "owner_user_id", "tenant_id", "organisation_id",
+        "procurement_contact_email", "compliance_notes",
+        "abn_acn_or_registration", "connections", "nfc_tags",
+        "quotes", "variations", "invoice_support_records",
+        "handovers", "directory_ready", "map_ready",
+        "archive_ready", "marketplace_ready",
+    }
+    assert forbidden_keys.isdisjoint(public_pilot.keys()), (
+        f"public list leaked private fields: {forbidden_keys & public_pilot.keys()}"
+    )
+
+
+def test_public_presence_list_supports_pagination_and_filters():
+    """limit + offset + presence_type / display_mode filters work."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers = _headers(app)
+
+    for i in range(3):
+        _make_node(client, headers, tenant_id=tenant_id, slug=f"artist-pilot-{i}",
+                   display_name=f"Artist {i}", status="published", visibility="public",
+                   display_mode="artist_gallery", node_type="artist")
+    for i in range(2):
+        _make_node(client, headers, tenant_id=tenant_id, slug=f"venue-pilot-{i}",
+                   display_name=f"Venue {i}", status="published", visibility="public",
+                   display_mode="venue_profile", node_type="venue")
+
+    # Filter by display_mode
+    res = client.get("/api/presence/public/nodes?display_mode=venue_profile",
+                     base_url="http://public.test")
+    items = res.get_json()["data"]["items"]
+    assert all(it["display_mode"] == "venue_profile" for it in items)
+    assert len(items) >= 2
+
+    # Pagination — limit 2
+    res2 = client.get("/api/presence/public/nodes?limit=2&offset=0", base_url="http://public.test")
+    page = res2.get_json()["data"]
+    assert len(page["items"]) == 2
+    assert page["limit"] == 2
+    assert page["total"] >= 5
+
+    # Limit hard-capped at 50.
+    res3 = client.get("/api/presence/public/nodes?limit=9999", base_url="http://public.test")
+    assert res3.get_json()["data"]["limit"] == 50
+
+
+def test_public_presence_list_search_matches_display_name_and_headline_only():
+    """Search must match display_name / headline only — never bio / private fields."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers = _headers(app)
+
+    _make_node(client, headers, tenant_id=tenant_id, slug="haunted-river",
+               display_name="Haunted River Studio", status="published", visibility="public",
+               display_mode="studio_practice", node_type="artist")
+    _make_node(client, headers, tenant_id=tenant_id, slug="quiet-house",
+               display_name="Quiet House", status="published", visibility="public",
+               display_mode="practitioner_profile", node_type="practitioner")
+
+    res = client.get("/api/presence/public/nodes?search=haunted", base_url="http://public.test")
+    items = res.get_json()["data"]["items"]
+    assert {it["slug"] for it in items} == {"haunted-river"}
+
+    res = client.get("/api/presence/public/nodes?search=quiet", base_url="http://public.test")
+    items = res.get_json()["data"]["items"]
+    assert {it["slug"] for it in items} == {"quiet-house"}
+
+
+def test_public_presence_slug_hides_archived_timestamp_even_if_status_is_published():
+    """Direct public slug route also honours archived_at, not just status."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers = _headers(app)
+
+    node_id = _make_node(
+        client,
+        headers,
+        tenant_id=tenant_id,
+        slug="published-but-archived",
+        display_name="Published But Archived",
+        status="published",
+        visibility="public",
+    )
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceNode
+    from manara_backend_app.time_utils import now_utc
+
+    with app.app_context():
+        node = _db.session.query(PresenceNode).get(node_id)
+        node.status = "published"
+        node.visibility = "public"
+        node.archived_at = now_utc()
+        _db.session.commit()
+
+    res = client.get("/api/presence/public/published-but-archived", base_url="http://public.test")
+    assert res.status_code == 404
+
+
+# ----------------------------------------------------------------------------
+# /api/presence/owner/beta/start — safe self-service draft creation (v1.1)
+# ----------------------------------------------------------------------------
+
+
+def test_owner_beta_start_requires_auth():
+    """Unauthenticated calls are rejected with 401, no node created."""
+    app = _build_app()
+    _seed_fixture(app)
+    client = app.test_client()
+
+    res = client.post(
+        "/api/presence/owner/beta/start",
+        json={"display_name": "Anon"},
+        base_url="http://public.test",
+    )
+    assert res.status_code == 401, res.get_json()
+
+
+def test_owner_beta_start_creates_draft_private_unpublished_node_and_assigns_owner():
+    """Verified user creates exactly one draft+private+unpublished node owned by them."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+
+    user_id = _create_owner_user(
+        app, username="beta-pilot", pseudonym="beta-pilot",
+        email="beta@example.com", node_id=tenant_id, role="participant",
+    )
+    headers = _owner_headers(app, "beta-pilot", role="participant")
+
+    res = client.post(
+        "/api/presence/owner/beta/start",
+        json={
+            "display_name": "Mira Cole",
+            "desired_slug": "mira-cole-pilot",
+            "presence_type": "artist",
+            "primary_purpose": "portfolio",
+            "primary_cta": "viewing",
+            "template_direction": "studio_practice",
+            "visual_mood": "warm_studio",
+            "headline": "Textile artist working with country, dye, and weave.",
+            "description": "A pilot draft Presence.",
+            "location_label": "Hobart, Tasmania",
+            "beta_mode": "draft_self_build",
+        },
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert res.status_code == 201, res.get_json()
+    body = res.get_json()["data"]
+    assert body["display_name"] == "Mira Cole"
+    assert body["slug"] == "mira-cole-pilot"
+    assert body["status"] == "draft"
+    assert body["visibility"] == "private"
+    assert body["published_at"] is None
+    assert body["node_type"] == "artist"
+    assert body["headline"] == "Textile artist working with country, dye, and weave."
+    assert body["bio"] == "A pilot draft Presence."
+    assert body["location_label"] == "Hobart, Tasmania"
+    assert body["primary_cta_label"] == "Request a viewing"
+    # template_direction → display_mode mapping
+    assert body["display_mode"] == "studio_practice"
+    # visual_mood persisted
+    assert body["visual_mood"] == "warm_studio"
+    # theme_config carries the onboarding intent
+    intent = body.get("theme_config", {}).get("beta_intent", {})
+    assert intent.get("template_direction") == "studio_practice"
+    assert intent.get("visual_mood") == "warm_studio"
+    assert intent.get("primary_purpose") == "portfolio"
+    assert intent.get("primary_cta") == "viewing"
+    assert intent.get("beta_mode") == "draft_self_build"
+
+    # Server-side: node row is exactly as expected, owned by the user.
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceNode
+
+    with app.app_context():
+        node = _db.session.query(PresenceNode).filter_by(slug="mira-cole-pilot").one()
+        assert node.status == "draft"
+        assert node.visibility == "private"
+        assert node.published_at is None
+        assert node.owner_user_id == user_id
+
+
+def test_owner_beta_start_public_routes_hide_the_draft():
+    """Public single-slug + list endpoints must hide the new draft."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    _create_owner_user(
+        app, username="beta-pilot", pseudonym="beta-pilot",
+        email="beta@example.com", node_id=tenant_id, role="participant",
+    )
+    headers = _owner_headers(app, "beta-pilot", role="participant")
+
+    res = client.post(
+        "/api/presence/owner/beta/start",
+        json={
+            "display_name": "Quiet Draft",
+            "desired_slug": "quiet-draft",
+            "presence_type": "practitioner",
+            "template_direction": "practitioner_pathway",
+            "visual_mood": "care_path",
+        },
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert res.status_code == 201
+
+    # Public single-slug route → 404
+    public = client.get("/api/presence/public/quiet-draft", base_url="http://public.test")
+    assert public.status_code == 404
+
+    # Public list endpoint never includes it
+    list_res = client.get("/api/presence/public/nodes", base_url="http://public.test")
+    items = list_res.get_json()["data"]["items"]
+    assert "quiet-draft" not in {it["slug"] for it in items}
+
+
+def test_owner_beta_start_draft_can_be_explicitly_published_to_public_route():
+    """A private beta draft is hidden until owner publish; publish makes it public."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    _create_owner_user(
+        app, username="publish-pilot", pseudonym="publish-pilot",
+        email="publish@example.com", node_id=tenant_id, role="participant",
+    )
+    headers = _owner_headers(app, "publish-pilot", role="participant")
+
+    res = client.post(
+        "/api/presence/owner/beta/start",
+        json={"display_name": "Publish Draft", "desired_slug": "publish-draft", "presence_type": "artist"},
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert res.status_code == 201
+    node_id = res.get_json()["data"]["id"]
+    assert client.get("/api/presence/public/publish-draft", base_url="http://public.test").status_code == 404
+
+    published = client.post(
+        f"/api/presence/owner/nodes/{node_id}/publish",
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert published.status_code == 200, published.get_json()
+    body = published.get_json()["data"]
+    assert body["status"] == "published"
+    assert body["visibility"] == "public"
+    assert body["published_at"] is not None
+    assert client.get("/api/presence/public/publish-draft", base_url="http://public.test").status_code == 200
+
+
+def test_owner_beta_start_rejects_duplicate_slug():
+    """Explicitly-requested slug that already exists → 409 (don't silently mutate)."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers_admin = _headers(app)
+    # Create an existing public node owned by the seed admin.
+    res_admin = client.post(
+        "/api/control/presence/nodes",
+        json={
+            "tenant_id": tenant_id,
+            "slug": "taken-slug",
+            "display_name": "Taken Slug Pilot",
+            "node_type": "artist",
+            "display_mode": "artist_gallery",
+            "plan_type": "basic",
+            "visibility": "public",
+        },
+        headers=headers_admin,
+        base_url="http://control.test",
+    )
+    assert res_admin.status_code == 201
+
+    # Now a different verified beta user tries the same slug.
+    _create_owner_user(
+        app, username="beta-pilot-b", pseudonym="beta-pilot-b",
+        email="b@example.com", node_id=tenant_id, role="participant",
+    )
+    headers_b = _owner_headers(app, "beta-pilot-b", role="participant")
+    dup = client.post(
+        "/api/presence/owner/beta/start",
+        json={"display_name": "Trying same", "desired_slug": "taken-slug", "presence_type": "artist"},
+        headers=headers_b,
+        base_url="http://public.test",
+    )
+    assert dup.status_code == 409, dup.get_json()
+    assert dup.get_json()["error"]["code"] == "duplicate_slug"
+
+
+def test_owner_beta_start_rejects_unusable_desired_slug():
+    """Requested slugs must normalize to at least one public slug token."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    user_id = _create_owner_user(
+        app, username="bad-slug-pilot", pseudonym="bad-slug-pilot",
+        email="bad-slug@example.com", node_id=tenant_id, role="participant",
+    )
+    headers = _owner_headers(app, "bad-slug-pilot", role="participant")
+
+    res = client.post(
+        "/api/presence/owner/beta/start",
+        json={"display_name": "Bad Slug", "desired_slug": "!!!", "presence_type": "artist"},
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert res.status_code == 422, res.get_json()
+    assert res.get_json()["error"]["code"] == "validation_error"
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceNode
+
+    with app.app_context():
+        assert _db.session.query(PresenceNode).filter_by(owner_user_id=user_id).count() == 0
+
+
+def test_owner_beta_start_one_starter_per_user_rule():
+    """A user with an existing PresenceNode cannot create another starter."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    _create_owner_user(
+        app, username="repeat-pilot", pseudonym="repeat-pilot",
+        email="repeat@example.com", node_id=tenant_id, role="participant",
+    )
+    headers = _owner_headers(app, "repeat-pilot", role="participant")
+
+    first = client.post(
+        "/api/presence/owner/beta/start",
+        json={"display_name": "First", "desired_slug": "repeat-first", "presence_type": "artist"},
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert first.status_code == 201
+
+    second = client.post(
+        "/api/presence/owner/beta/start",
+        json={"display_name": "Second", "desired_slug": "repeat-second", "presence_type": "artist"},
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert second.status_code == 409, second.get_json()
+    assert second.get_json()["error"]["code"] == "duplicate_starter"
+
+
+def test_owner_beta_start_owner_can_fetch_own_draft_via_owner_endpoint_cross_owner_cannot():
+    """Owner can GET /api/presence/owner/nodes/<id> — cross-owner gets 403."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    _create_owner_user(
+        app, username="owner-a", pseudonym="owner-a",
+        email="a@example.com", node_id=tenant_id, role="participant",
+    )
+    _create_owner_user(
+        app, username="owner-b", pseudonym="owner-b",
+        email="b@example.com", node_id=tenant_id, role="participant",
+    )
+    headers_a = _owner_headers(app, "owner-a", role="participant")
+    headers_b = _owner_headers(app, "owner-b", role="participant")
+
+    res = client.post(
+        "/api/presence/owner/beta/start",
+        json={"display_name": "Owner A draft", "desired_slug": "owner-a-draft", "presence_type": "artist"},
+        headers=headers_a,
+        base_url="http://public.test",
+    )
+    assert res.status_code == 201
+    node_id = res.get_json()["data"]["id"]
+
+    # Owner A can fetch
+    own = client.get(f"/api/presence/owner/nodes/{node_id}", headers=headers_a, base_url="http://public.test")
+    assert own.status_code == 200
+
+    # Owner B cannot fetch
+    cross = client.get(f"/api/presence/owner/nodes/{node_id}", headers=headers_b, base_url="http://public.test")
+    assert cross.status_code == 403
+
+
+def test_owner_beta_start_owner_safe_payload_no_admin_only_fields():
+    """Returned payload must not include admin-only or cross-owner fields."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    _create_owner_user(
+        app, username="safe-pilot", pseudonym="safe-pilot",
+        email="safe@example.com", node_id=tenant_id, role="participant",
+    )
+    headers = _owner_headers(app, "safe-pilot", role="participant")
+    res = client.post(
+        "/api/presence/owner/beta/start",
+        json={"display_name": "Safe", "desired_slug": "safe-pilot", "presence_type": "artist"},
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert res.status_code == 201
+    body = res.get_json()["data"]
+    # Must not include the per-tenant organisation aggregate or cross-owner data.
+    assert body.get("organisation") is None or "organisation" not in body
+    assert "connections" not in body or body["connections"] == []
+    assert "quotes" not in body or body["quotes"] == []
+    assert "variations" not in body or body["variations"] == []
+    assert "invoice_support_records" not in body or body["invoice_support_records"] == []
+    assert "handovers" not in body or body["handovers"] == []

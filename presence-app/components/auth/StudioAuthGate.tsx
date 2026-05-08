@@ -46,7 +46,7 @@ export function StudioAuthGate({
               href={buildSignUpHref(returnTo)}
               className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--p-studio-border)] px-5 py-3 text-sm font-semibold text-[var(--p-studio-text)] transition hover:border-[var(--p-studio-accent)]/60"
             >
-              Request pilot access
+              Create verified account
             </Link>
           </div>
         </section>
@@ -55,8 +55,8 @@ export function StudioAuthGate({
           <div className="flex items-start gap-3">
             <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[var(--p-studio-accent)]" />
             <p className="text-xs leading-5 text-[var(--p-studio-muted)]">
-              Presence Studio is invite-first during alpha. Signing in gives
-              access only to Presences assigned to your account.
+              Presence Studio is in public beta. Signing in gives access only
+              to Presences assigned to your account.
               <a
                 href={studioContactHref()}
                 className="ml-1 text-[var(--p-studio-text)] underline decoration-[var(--p-studio-accent)]/60 underline-offset-4"

@@ -114,15 +114,15 @@ export default function StudioIndexPage() {
 
         {!loading && !error && nodes.length === 0 && (
           <Empty
-            title="No Presence assigned yet"
-            body="Your account is verified, but no public world has been assigned yet. Begin beta onboarding to prepare a draft/setup request."
+            title="No Presence yet"
+            body="Begin onboarding to start a draft Presence right now, or request studio-assisted setup. Drafts are private until you publish them."
             action={
               <div className="flex flex-wrap justify-center gap-3">
                 <Link
                   href="/beta/onboarding"
                   className="rounded-xl bg-[var(--p-studio-accent)] px-4 py-2 text-sm font-semibold text-stone-950 transition hover:bg-orange-300"
                 >
-                  Begin beta onboarding
+                  Start a draft Presence
                 </Link>
                 <Link
                   href="/gallery"

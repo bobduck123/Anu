@@ -31,8 +31,11 @@ from ..services.presence_service import (
     analytics_summary,
     create_presence_collection,
     create_presence_nfc_tag,
+    create_presence_node,
     create_presence_service,
     create_presence_work,
+    ensure_unique_presence_slug,
+    normalize_slug,
     publish_presence_node,
     serialize_collection,
     serialize_enquiry,
@@ -144,6 +147,229 @@ def _require_owner_suspend_access():
     return _err("forbidden", "Suspending a Presence Node is control-plane only", 403)
 
 
+# ---------------------------------------------------------------------------
+# Safe self-service draft Presence creation
+#
+# A verified beta user may create one private/draft/unpublished starter
+# Presence from onboarding. This endpoint is the only owner-side creation path.
+#
+# Hard rules (enforced by tests):
+#   - auth required
+#   - status forced to "draft", visibility forced to "private"
+#   - published_at is never set
+#   - owner_user_id is set from the authenticated user (never trusted from payload)
+#   - duplicate slug → 409
+#   - duplicate starter node per user → 409 (one-per-user rule)
+#   - public route hides the result (status=draft, visibility=private)
+# ---------------------------------------------------------------------------
+
+_BETA_PRESENCE_TYPES = {
+    "artist", "practitioner", "venue_collective", "organisation",
+    "creative_professional", "consultant", "service_professional", "other",
+}
+_BETA_PURPOSES = {
+    "portfolio", "gallery", "practitioner_profile", "venue_collective",
+    "organisation", "professional_profile", "service_profile", "other",
+}
+_BETA_CTAS = {
+    "contact", "conversation", "viewing", "work_enquiry",
+    "commission_request", "quote_request", "visit_partner_support", "other",
+}
+_BETA_TEMPLATES = {
+    "minimal_artist_portal", "gallery_wall", "editorial_portfolio",
+    "studio_practice", "practitioner_pathway", "venue_collective_node", "unsure",
+}
+_BETA_MOODS = {
+    "nocturne", "gallery_white", "warm_studio", "editorial_paper",
+    "care_path", "public_noticeboard", "institutional_dusk", "signal_field",
+}
+
+# Map beta-onboarding template_direction → PresenceNode.display_mode (the
+# value the public renderer routes on). Keep the mapping conservative.
+_TEMPLATE_TO_DISPLAY_MODE = {
+    "minimal_artist_portal": "minimal_portal",
+    "gallery_wall": "artist_gallery",
+    "editorial_portfolio": "editorial_portfolio",
+    "studio_practice": "studio_practice",
+    "practitioner_pathway": "practitioner_profile",
+    "venue_collective_node": "venue_profile",
+    # "unsure" → leave unset and use the default for the node_type
+}
+
+_PRESENCE_TYPE_TO_NODE_TYPE = {
+    "artist": "artist",
+    "practitioner": "practitioner",
+    "venue_collective": "venue",
+    "organisation": "organisation",
+    "creative_professional": "creative",
+    "consultant": "consultant",
+    "service_professional": "tradie",
+    "other": "custom",
+}
+
+_BETA_CTA_LABELS = {
+    "contact": "Contact me",
+    "conversation": "Book a conversation",
+    "viewing": "Request a viewing",
+    "work_enquiry": "Enquire about a work",
+    "commission_request": "Commission request",
+    "quote_request": "Request a quote",
+    "visit_partner_support": "Visit / partner / support",
+    "other": "Send a message",
+}
+
+
+def _trim(value, max_len):
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    return text[:max_len]
+
+
+@presence_owner_bp.route("/beta/start", methods=["POST"])
+@alpha_jwt_required()
+def start_beta_presence():
+    """Create one DRAFT, PRIVATE, UNPUBLISHED Presence for the calling user.
+
+    This is the safe self-service entry point used by /beta/onboarding once a
+    user is verified. It NEVER publishes, NEVER assigns ownership to anyone
+    other than the caller, and NEVER returns owner-private fields beyond the
+    caller's own draft.
+    """
+    user = _resolve_owner_user()
+    if not user:
+        return _err("unauthorized", "Authentication required", 401)
+
+    payload = request.get_json(silent=True) or {}
+
+    display_name = _trim(payload.get("display_name"), 160)
+    if not display_name:
+        return _err("validation_error", "display_name is required", 422)
+
+    presence_type = _trim(payload.get("presence_type"), 80) or "other"
+    if presence_type not in _BETA_PRESENCE_TYPES:
+        return _err("validation_error", f"Unsupported presence_type: {presence_type}", 422)
+    primary_purpose = _trim(payload.get("primary_purpose"), 80)
+    if primary_purpose and primary_purpose not in _BETA_PURPOSES:
+        return _err("validation_error", f"Unsupported primary_purpose: {primary_purpose}", 422)
+    primary_cta = _trim(payload.get("primary_cta"), 80)
+    if primary_cta and primary_cta not in _BETA_CTAS:
+        return _err("validation_error", f"Unsupported primary_cta: {primary_cta}", 422)
+    template_direction = _trim(payload.get("template_direction"), 80)
+    if template_direction and template_direction not in _BETA_TEMPLATES:
+        return _err("validation_error", f"Unsupported template_direction: {template_direction}", 422)
+    visual_mood = _trim(payload.get("visual_mood"), 80)
+    if visual_mood and visual_mood not in _BETA_MOODS:
+        return _err("validation_error", f"Unsupported visual_mood: {visual_mood}", 422)
+
+    # One-starter-per-user rule. Platform admins are exempt (they may need
+    # multiple starter nodes for staff demos).
+    if getattr(user, "role", None) != "platform_admin":
+        existing = (
+            PresenceNode.query.filter_by(owner_user_id=user.id)
+            .first()
+        )
+        if existing:
+            return _err(
+                "duplicate_starter",
+                "You already have a Presence Node — open Studio to continue shaping it.",
+                409,
+                node_id=existing.id,
+            )
+
+    # Slug derivation + uniqueness. We use ensure_unique_presence_slug which
+    # appends a numeric suffix on collision, but if the user explicitly
+    # requested a slug that's already taken, return 409 instead of silently
+    # appending — beta users should know about the collision.
+    raw_slug = _trim(payload.get("desired_slug"), 160)
+    if raw_slug:
+        try:
+            requested = normalize_slug(raw_slug, fallback="")
+        except PresenceValidationError as exc:
+            return _validation_error(exc)
+        if not requested:
+            return _err(
+                "validation_error",
+                "desired_slug must contain letters or numbers.",
+                422,
+            )
+        existing_slug_node = PresenceNode.query.filter_by(slug=requested).first()
+        if existing_slug_node:
+            return _err(
+                "duplicate_slug",
+                "That public address is already taken. Choose another.",
+                409,
+            )
+        slug = requested
+    else:
+        slug = None  # let create_presence_node derive from display_name
+
+    node_type = _PRESENCE_TYPE_TO_NODE_TYPE.get(presence_type, "custom")
+    display_mode = _TEMPLATE_TO_DISPLAY_MODE.get(template_direction or "")
+
+    bio_text = _trim(payload.get("description"), 4000)
+    headline_text = _trim(payload.get("headline"), 280)
+    location_label = _trim(payload.get("location_label"), 180)
+
+    primary_cta_label = _BETA_CTA_LABELS.get(primary_cta) if primary_cta else None
+
+    node_payload = {
+        "display_name": display_name,
+        "node_type": node_type,
+        "plan_type": "basic",
+        # CRITICAL: force draft + private regardless of any payload field.
+        "status": "draft",
+        "visibility": "private",
+        "headline": headline_text,
+        "bio": bio_text,
+        "location_label": location_label,
+        "primary_cta_label": primary_cta_label,
+        "visual_mood": visual_mood,
+        # theme_config records the onboarding intent for Studio + future use.
+        "theme_config": {
+            "beta_intent": {
+                "template_direction": template_direction,
+                "visual_mood": visual_mood,
+                "primary_purpose": primary_purpose,
+                "primary_cta": primary_cta,
+                "beta_mode": _trim(payload.get("beta_mode"), 40) or "draft_self_build",
+            },
+        },
+    }
+    if slug:
+        node_payload["slug"] = slug
+    if display_mode:
+        node_payload["display_mode"] = display_mode
+
+    try:
+        node = create_presence_node(node_payload, actor=user)
+    except PresenceValidationError as exc:
+        db.session.rollback()
+        return _validation_error(exc)
+    except Exception:
+        db.session.rollback()
+        return _err("service_unavailable", "Draft creation temporarily unavailable", 503)
+
+    # Defensive re-assertion — the safety contract of this endpoint is that
+    # the resulting row is draft + private, regardless of what create_presence_node
+    # did with the payload.
+    if node.status != "draft":
+        node.status = "draft"
+    if node.visibility != "private":
+        node.visibility = "private"
+    if node.published_at is not None:
+        node.published_at = None
+    # owner_user_id should already be the caller, but enforce explicitly.
+    if node.owner_user_id != user.id and getattr(user, "role", None) != "platform_admin":
+        node.owner_user_id = user.id
+
+    db.session.commit()
+
+    return _ok(_owner_node_payload(node, include_children=True), 201)
+
+
 @presence_owner_bp.route("/nodes", methods=["GET"])
 @alpha_jwt_required()
 def list_owner_nodes():
@@ -193,7 +419,14 @@ def publish_owner_node(node_id):
     if err:
         return err
     try:
+        if node.status in {"suspended", "archived"}:
+            return _err(
+                "forbidden",
+                "Suspended or archived Presences can only be restored by platform staff.",
+                403,
+            )
         publish_presence_node(node)
+        node.visibility = "public"
         db.session.commit()
         return _owner_node_detail_response(node)
     except PresenceValidationError as exc:

@@ -932,6 +932,45 @@ class PresenceNfcTag(db.Model):
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
 
+class PresenceBetaApplication(db.Model):
+    """Public-beta setup request submitted before any Presence is owned.
+
+    This is *not* an owned PresenceNode. It captures intent only — what the
+    verified user wants their public world to be — and is reviewed by Studio
+    staff before any draft/private node is created. Public routes never expose
+    these records.
+    """
+
+    __tablename__ = "presence_beta_application"
+    __table_args__ = (
+        db.Index("ix_presence_beta_application_user", "user_id"),
+        db.Index("ix_presence_beta_application_email", "email"),
+        db.Index("ix_presence_beta_application_status", "status"),
+        db.Index("ix_presence_beta_application_created", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    # Supabase user_id (string subject) for linking back to the requester.
+    user_id = db.Column(db.String(80), nullable=True)
+    email = db.Column(db.String(180), nullable=True)
+    display_name = db.Column(db.String(160), nullable=True)
+    desired_slug = db.Column(db.String(160), nullable=True)
+    presence_type = db.Column(db.String(80), nullable=True)
+    primary_purpose = db.Column(db.String(80), nullable=True)
+    primary_cta = db.Column(db.String(80), nullable=True)
+    template_direction = db.Column(db.String(80), nullable=True)
+    visual_mood = db.Column(db.String(80), nullable=True)
+    location_label = db.Column(db.String(160), nullable=True)
+    headline = db.Column(db.String(280), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    beta_mode = db.Column(db.String(40), nullable=False, default="setup_request")
+    status = db.Column(db.String(40), nullable=False, default="pending")
+    notes = db.Column(db.Text, nullable=True)
+    metadata_json = db.Column(db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+
 class PresenceConnection(db.Model):
     __tablename__ = "presence_connection"
     __table_args__ = (

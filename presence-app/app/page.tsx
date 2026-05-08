@@ -123,7 +123,7 @@ export default function Home() {
           {[
             ["Public route", "/p/your-slug"],
             ["Owner Studio", "/studio"],
-            ["Health check", "/healthz"],
+            ["Plans", "/plans"],
           ].map(([label, route]) => (
             <div key={label} className="rounded-2xl border border-stone-200 p-5">
               <Compass className="mb-4 h-4 w-4 text-[var(--p-accent)]" />
