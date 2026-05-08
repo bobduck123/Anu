@@ -298,7 +298,8 @@ def _init_jwt_error_handlers(app):
     @jwt.invalid_token_loader
     def _invalid_token(reason):
         app.logger.warning(f"JWT invalid token: {reason}")
-        return jsonify({"msg": reason}), 422
+        status = 401 if request.path.startswith("/api/presence/") else 422
+        return jsonify({"msg": reason}), status
 
     @jwt.unauthorized_loader
     def _missing_token(reason):

@@ -228,8 +228,8 @@ def check_cors_preflight_and_diagnostics() -> None:
         )
 
     # 2. GET /api/presence/owner/nodes WITHOUT auth from the Presence origin.
-    #    Must be 401 (or 422), with CORS header attached so the browser shows
-    #    the 401 instead of a CORS error.
+    #    Must be 401/403, never 500, with CORS attached so the browser shows
+    #    the auth failure instead of a CORS error.
     status, headers, _ = _request_with_response_headers(
         "GET",
         API_BASE,
@@ -237,7 +237,7 @@ def check_cors_preflight_and_diagnostics() -> None:
         headers={"Origin": SMOKE_ORIGIN},
     )
     acao = headers.get("access-control-allow-origin")
-    if status in (401, 403, 422) and acao == SMOKE_ORIGIN:
+    if status in (401, 403) and acao == SMOKE_ORIGIN:
         record("cors_owner_nodes_401_with_cors", "passed",
                f"protected route -> {status}, ACAO={acao}")
     else:
@@ -300,6 +300,24 @@ def check_app_health() -> None:
 def check_optional_owner_flow(public_items_before: list[Any]) -> None:
     if not TOKEN:
         record("owner_draft_flow", "skipped", "PRESENCE_SMOKE_AUTH_TOKEN not provided")
+        return
+
+    status_nodes_before, owner_nodes_before, _ = request_json(
+        "GET",
+        API_BASE,
+        "/api/presence/owner/nodes",
+        token=TOKEN,
+    )
+    nodes_before_data = payload_data(owner_nodes_before)
+    if status_nodes_before == 200 and isinstance(nodes_before_data, list):
+        detail = "empty owner state" if not nodes_before_data else f"owner node count={len(nodes_before_data)}"
+        record("owner_nodes_with_token_before_draft", "passed", detail)
+    else:
+        record(
+            "owner_nodes_with_token_before_draft",
+            "failed",
+            f"status={status_nodes_before} payload={owner_nodes_before}",
+        )
         return
 
     draft_payload = {

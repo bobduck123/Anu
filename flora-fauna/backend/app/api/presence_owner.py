@@ -1,8 +1,9 @@
 """Owner-facing Presence API blueprint.
 
 Mounted at /api/presence/owner/*. Authenticated by Supabase JWT via the existing
-alpha_jwt_required + get_current_user pattern. NOT host-gated and does NOT use the
-control-plane shared secret. The owner blueprint exposes the subset of presence
+alpha_jwt_required pattern, then resolved to a local least-privilege ANU User
+for Presence ownership. NOT host-gated and does NOT use the control-plane
+shared secret. The owner blueprint exposes the subset of presence
 operations that a node owner needs to run their own portfolio (no cross-tenant
 operations, no platform-admin actions, no template management, no seed endpoints).
 
@@ -25,7 +26,7 @@ from ..models import (
     PresenceWork,
 )
 from ..security.alpha import alpha_jwt_required
-from ..security.policy import get_current_user
+from ..services.presence_owner_identity import resolve_or_provision_presence_owner
 from ..services.presence_service import (
     PresenceValidationError,
     analytics_summary,
@@ -85,8 +86,8 @@ def _validation_error(exc: PresenceValidationError):
 
 
 def _resolve_owner_user():
-    """Return the authenticated owner user or None. Caller must check None and 401."""
-    return get_current_user()
+    """Return authenticated Presence owner, provisioning safe local user if needed."""
+    return resolve_or_provision_presence_owner()
 
 
 def _require_owner_node_access(node: PresenceNode):

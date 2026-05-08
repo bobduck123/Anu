@@ -95,7 +95,7 @@ def test_get_owner_nodes_without_auth_returns_401_with_cors_header():
     )
 
     # Must NOT be 200 — that would mean auth was bypassed.
-    assert response.status_code in (401, 422), (
+    assert response.status_code == 401, (
         f"protected route without auth should return 401, got {response.status_code}"
     )
     # CORS header must STILL be attached so the browser shows the 401 instead
@@ -106,6 +106,23 @@ def test_get_owner_nodes_without_auth_returns_401_with_cors_header():
 # ---------------------------------------------------------------------------
 # 3. Public list endpoint from the Presence frontend — 200 with CORS header.
 # ---------------------------------------------------------------------------
+
+
+def test_get_owner_nodes_invalid_token_returns_401_with_cors_header_not_500():
+    app = _build_app([PRESENCE_ORIGIN])
+    client = app.test_client()
+
+    response = client.get(
+        "/api/presence/owner/nodes",
+        headers={
+            "Origin": PRESENCE_ORIGIN,
+            "Authorization": "Bearer not-a-valid-jwt",
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.status_code != 500
+    assert response.headers.get("Access-Control-Allow-Origin") == PRESENCE_ORIGIN
 
 
 def test_get_public_nodes_from_presence_frontend_succeeds_with_cors_header():
@@ -180,7 +197,7 @@ def test_owner_routes_require_real_auth_even_with_correct_origin():
         json={"display_name": "Cors Bypass Attempt", "presence_type": "artist"},
         headers={"Origin": PRESENCE_ORIGIN},
     )
-    assert response.status_code in (401, 422)
+    assert response.status_code == 401
     assert response.status_code != 201, "beta/start must NOT succeed without auth"
     # CORS header still present.
     assert response.headers.get("Access-Control-Allow-Origin") == PRESENCE_ORIGIN

@@ -11,7 +11,7 @@ Do not deploy v1.2 feature work as part of this run.
 - Suggested commit:
 
 ```bash
-git add docs/presence/PRESENCE_V1_1_DEPLOYMENT_RUNBOOK.md docs/presence/screenshots/beta-to-launch-v1-pass docs/presence/screenshots/v1-1-gallery-draft-template-pass scripts/presence_v1_1_smoke.py scripts/presence_nodes_smoke.py flora-fauna/backend/app/api/presence.py flora-fauna/backend/app/api/presence_owner.py flora-fauna/backend/app/models.py flora-fauna/backend/app/services/presence_service.py flora-fauna/backend/tests/test_presence_nodes.py flora-fauna/backend/migrations/versions/20260508_presence_beta_application.sql presence-app
+git add docs/presence/PRESENCE_V1_1_DEPLOYMENT_RUNBOOK.md docs/presence/screenshots/beta-to-launch-v1-pass docs/presence/screenshots/v1-1-gallery-draft-template-pass scripts/presence_v1_1_smoke.py scripts/presence_nodes_smoke.py flora-fauna/backend/app/__init__.py flora-fauna/backend/app/api/presence.py flora-fauna/backend/app/api/presence_owner.py flora-fauna/backend/app/models.py flora-fauna/backend/app/services/presence_owner_identity.py flora-fauna/backend/app/services/presence_service.py flora-fauna/backend/tests/test_presence_nodes.py flora-fauna/backend/tests/test_presence_cors.py flora-fauna/backend/migrations/versions/20260508_presence_beta_application.sql flora-fauna/backend/migrations/versions/20260508_presence_owner_identity_user_subject.sql presence-app
 git commit -m "Harden Presence v1.1 public beta launch"
 git push origin feature/presence-ecosystem-alpha
 ```
@@ -28,7 +28,23 @@ Required endpoint availability after backend deploy:
 - `POST /api/presence/owner/beta/start`
 - `POST /api/presence/beta/applications`
 
-### 2a. CORS allowlist (REQUIRED in production)
+### 2a. Presence as ANU-native module
+
+Presence remains a standalone product frontend, but the backend module is ANU-native:
+
+- `presence-app` uses the ANU backend API at `https://anu-back-end.vercel.app`.
+- `presence-app` uses the same ANU Supabase project as the backend validates.
+- ANU backend owns `/api/presence/*` routes, Presence tables, and owner security.
+- ANU backend must allow `https://presence-gilt.vercel.app` in `CORS_ORIGINS`.
+- ANU backend resolves or provisions a local least-privilege `User` from a valid ANU Supabase JWT.
+- A first-time Supabase user with no Presence rows must receive `200` with an empty owner list, not `500`.
+- `/api/presence/owner/beta/start` must create `draft`, `private`, unpublished nodes only.
+
+The owner identity bridge uses the JWT `sub` as the stable key via `User.global_subject_id`.
+If no matching local user exists, it provisions a `participant` user with no tenant,
+admin, control-plane, treasury, governance, or organiser privileges.
+
+### 2b. CORS allowlist (REQUIRED in production)
 
 The Flask backend uses `CORS_ORIGINS` (comma-separated) for the `/api/*` and
 `/auth/*` resources. **In production this env var must be set explicitly** —
@@ -51,6 +67,21 @@ Do not add `*` — `supports_credentials` is on, so wildcard is rejected.
 
 After changing the value, **redeploy** the backend on Vercel (env var changes
 do not affect a running deployment).
+
+#### Backend auth/JWT env alignment
+
+Presence frontend Supabase settings and backend JWT validation must refer to
+the same ANU Supabase project.
+
+Required backend env:
+
+- `CORS_ORIGINS=https://presence-gilt.vercel.app,<existing origins...>`
+- `PUBLIC_JWT_SECRET_KEY` and `CONTROL_JWT_SECRET_KEY` remain configured for ANU public/control tokens.
+- If the ANU Supabase project signs public JWTs with the legacy HS secret, set `SUPABASE_JWT_SECRET` to that ANU Supabase JWT secret.
+- If ANU Supabase tokens are ES256/RS256 with JWKS, no service-role key is needed; backend validates against the token issuer JWKS.
+
+Never put Supabase service-role keys in `presence-app` or any `NEXT_PUBLIC_*`
+environment variable.
 
 #### Verification commands
 
@@ -97,10 +128,13 @@ When something fails on `https://presence-gilt.vercel.app`:
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| "No 'Access-Control-Allow-Origin' header is present" | Backend `CORS_ORIGINS` doesn't include the frontend origin | Add the origin to `CORS_ORIGINS`, redeploy backend |
-| `OPTIONS` returns `200` with ACAO but `GET` returns `401` (no CORS error) | Backend reachable, auth missing | User isn't signed in / token not attached |
-| `OPTIONS` returns `200` with ACAO but `GET` returns `404` | Route is missing or mounted at the wrong prefix | Check blueprint registration order in `app/api/__init__.py` |
-| `OPTIONS` returns `200` with ACAO but `GET` returns `500` | Backend reachable, runtime/schema error inside handler | Check Vercel function logs for the specific exception |
+| CORS error | Backend `CORS_ORIGINS` does not include `https://presence-gilt.vercel.app` | Add the origin to `CORS_ORIGINS`, redeploy backend |
+| `401` without token | Normal protected owner route behavior | Sign in and confirm the bearer token is attached |
+| `401` with token | Supabase project mismatch, JWT audience/issuer mismatch, or token validation mismatch | Confirm Presence uses the ANU Supabase URL/anon key and backend JWT envs validate the same project |
+| `500` with token | Local `User` mapping/provisioning/schema issue | Check Vercel logs and confirm `User.global_subject_id` migration is applied |
+| `404` route | Backend branch not deployed or Presence blueprint missing | Redeploy backend branch and check route registration |
+| `200` empty list | Correct first-time owner state | Continue to onboarding |
+| `201` draft on `beta/start` | Correct onboarding handoff | Open `/studio/[id]`; draft remains private/unpublished |
 
 Note: setting `CORS_ORIGINS` in Vercel is a build-time config — you must
 redeploy the backend before changes take effect.
@@ -110,11 +144,12 @@ redeploy the backend before changes take effect.
 Apply:
 
 - `flora-fauna/backend/migrations/versions/20260508_presence_beta_application.sql`
+- `flora-fauna/backend/migrations/versions/20260508_presence_owner_identity_user_subject.sql`
 
-No additional migration is required by this hardening pass.
-
-Migration caution: this creates `presence_beta_application` only. It should not
-modify `presence_node`, publish drafts, create owners, or expose public data.
+Migration caution: these migrations create `presence_beta_application` and
+ensure `user.global_subject_id` exists for ANU Supabase subject mapping. They
+must not publish drafts, create Presence nodes, create admin owners, or expose
+public data.
 
 ## 4. Backend Smoke
 
@@ -153,18 +188,18 @@ Vercel settings:
 
 Required Vercel env vars:
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `NEXT_PUBLIC_PRESENCE_API_BASE_URL`
-- `NEXT_PUBLIC_PRESENCE_PUBLIC_ORIGIN`
-- `NEXT_PUBLIC_PRESENCE_STUDIO_ORIGIN`
+- `NEXT_PUBLIC_SUPABASE_URL=<ANU Supabase URL>`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY=<ANU Supabase anon key>`
+- `NEXT_PUBLIC_PRESENCE_API_BASE_URL=https://anu-back-end.vercel.app`
+- `NEXT_PUBLIC_API_BASE=https://anu-back-end.vercel.app`
+- `NEXT_PUBLIC_PRESENCE_PUBLIC_ORIGIN=https://presence-gilt.vercel.app`
+- `NEXT_PUBLIC_PRESENCE_STUDIO_ORIGIN=https://presence-gilt.vercel.app`
 - `NEXT_PUBLIC_PRESENCE_ALLOW_SIGNUPS=true`
 - `NEXT_PUBLIC_PRESENCE_REQUIRE_EMAIL_VERIFICATION=false` for testing, or
   `true` when production email confirmation is configured
 
 Optional supported aliases:
 
-- `NEXT_PUBLIC_API_BASE`
 - `NEXT_PUBLIC_APP_URL`
 - `NEXT_PUBLIC_PRESENCE_STUDIO_CONTACT`
 
@@ -224,12 +259,16 @@ Backend:
 
 - `GET /healthz`
 - `GET /api/presence/public/nodes`
+- `OPTIONS /api/presence/owner/nodes` from `https://presence-gilt.vercel.app` returns `200` or `204`.
+- `GET /api/presence/owner/nodes` without token returns `401` or `403`, not `500`.
+- `GET /api/presence/owner/nodes` with a valid ANU Supabase user token returns `200` with an empty list or owner nodes.
 - `POST /api/presence/beta/applications` without token returns `401`.
 - `POST /api/presence/owner/beta/start` without token returns `401`.
 
 Authenticated beta proof:
 
 - Sign up.
+- Confirm the Presence frontend is using the ANU Supabase URL and anon key.
 - In test mode, confirm signup opens `/onboarding` without email verification.
 - If production verification is enabled, verify email first.
 - Open `/onboarding`.
@@ -266,11 +305,13 @@ Migration rollback caution:
 1. Commit and push Presence v1.1 hardening.
 2. Deploy backend.
 3. Apply `20260508_presence_beta_application.sql`.
-4. Run backend no-token smoke.
-5. Run optional token smoke with a real verified beta user token.
-6. Deploy `presence-app`.
-7. Run post-deploy route checks.
-8. Run end-to-end signup, onboarding, draft, Studio, public-hiding proof.
+4. Apply `20260508_presence_owner_identity_user_subject.sql`.
+5. Run backend no-token smoke.
+6. Run optional token smoke with a real ANU Supabase user token.
+7. Point `presence-app` Supabase env vars to the ANU Supabase project.
+8. Deploy `presence-app`.
+9. Run post-deploy route checks.
+10. Run end-to-end signup, onboarding, draft, Studio, public-hiding proof.
    Add email verification to this proof only when
    `NEXT_PUBLIC_PRESENCE_REQUIRE_EMAIL_VERIFICATION=true`.
-9. Keep rollback handles open until smoke and manual checks pass.
+11. Keep rollback handles open until smoke and manual checks pass.

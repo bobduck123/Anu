@@ -122,6 +122,39 @@ def _owner_headers(app, username="node-admin", role="node_admin"):
     return {"Authorization": f"Bearer {token}"}
 
 
+def _supabase_owner_headers(
+    app,
+    *,
+    sub="supabase-owner-1",
+    email="owner@example.com",
+    display_name="Presence Owner",
+    extra_claims=None,
+):
+    claims = {
+        "aud": "public",
+        "token_use": "public",
+        "requires_mfa": False,
+        "role": "authenticated",
+        "email": email,
+        "user_metadata": {
+            "display_name": display_name,
+            "name": display_name,
+        },
+        "app_metadata": {
+            "provider": "email",
+        },
+    }
+    if extra_claims:
+        claims.update(extra_claims)
+    with app.app_context():
+        token = create_access_token(
+            identity=sub,
+            additional_claims=claims,
+            expires_delta=timedelta(minutes=30),
+        )
+    return {"Authorization": f"Bearer {token}"}
+
+
 def _create_owner_user(app, *, username, pseudonym, email, node_id, role="node_admin"):
     from manara_backend_app.extensions import db
     from manara_backend_app.models import User
@@ -1381,13 +1414,158 @@ def test_presence_owner_nodes_route_excludes_nodes_owned_by_other_users():
 
 
 
-def test_presence_owner_nodes_route_requires_auth():
+def test_owner_nodes_without_auth_returns_401_not_500():
     app = _build_app()
     _seed_fixture(app)
     client = app.test_client()
 
     response = client.get("/api/presence/owner/nodes", base_url="http://public.test")
     assert response.status_code == 401
+    assert response.status_code != 500
+
+
+def test_owner_nodes_invalid_token_returns_401_not_500():
+    app = _build_app()
+    _seed_fixture(app)
+    client = app.test_client()
+
+    response = client.get(
+        "/api/presence/owner/nodes",
+        headers={"Authorization": "Bearer definitely-not-a-jwt"},
+        base_url="http://public.test",
+    )
+    assert response.status_code == 401
+    assert response.status_code != 500
+
+
+def test_owner_nodes_valid_supabase_user_without_local_user_provisions_safe_user():
+    app = _build_app()
+    _seed_fixture(app)
+    client = app.test_client()
+    subject = "anu-supabase-owner-empty"
+    email = "anu-supabase-owner-empty@example.com"
+    headers = _supabase_owner_headers(
+        app,
+        sub=subject,
+        email=email,
+        display_name="New Presence Owner",
+    )
+
+    response = client.get(
+        "/api/presence/owner/nodes",
+        headers=headers,
+        base_url="http://public.test",
+    )
+
+    assert response.status_code == 200, response.get_json()
+    assert response.get_json()["data"] == []
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import User
+
+    with app.app_context():
+        user = _db.session.query(User).filter_by(global_subject_id=subject).one()
+        assert user.email == email
+        assert user.role == "participant"
+        assert user.node_id is None
+        assert user.role not in {"platform_admin", "node_admin", "control_operator", "tenant_admin"}
+
+
+def test_owner_nodes_existing_user_without_nodes_returns_empty_list():
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    subject = "anu-existing-empty-owner"
+    email = "anu-existing-empty@example.com"
+    _create_owner_user(
+        app,
+        username="anu-existing-empty",
+        pseudonym="Existing Empty",
+        email=email,
+        node_id=tenant_id,
+        role="participant",
+    )
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import User
+
+    with app.app_context():
+        user = _db.session.query(User).filter_by(email=email).one()
+        user.global_subject_id = subject
+        _db.session.commit()
+
+    response = client.get(
+        "/api/presence/owner/nodes",
+        headers=_supabase_owner_headers(app, sub=subject, email=email),
+        base_url="http://public.test",
+    )
+
+    assert response.status_code == 200, response.get_json()
+    assert response.get_json()["data"] == []
+
+
+def test_owner_identity_upsert_is_idempotent():
+    app = _build_app()
+    _seed_fixture(app)
+    client = app.test_client()
+    subject = "anu-idempotent-owner"
+    headers = _supabase_owner_headers(app, sub=subject, email="anu-idempotent@example.com")
+
+    first = client.get("/api/presence/owner/nodes", headers=headers, base_url="http://public.test")
+    second = client.get("/api/presence/owner/nodes", headers=headers, base_url="http://public.test")
+
+    assert first.status_code == 200, first.get_json()
+    assert second.status_code == 200, second.get_json()
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import User
+
+    with app.app_context():
+        assert _db.session.query(User).filter_by(global_subject_id=subject).count() == 1
+
+
+def test_owner_identity_upsert_never_grants_admin_or_control_permissions():
+    app = _build_app()
+    _seed_fixture(app)
+    client = app.test_client()
+    subject = "anu-metadata-elevation-attempt"
+
+    response = client.get(
+        "/api/presence/owner/nodes",
+        headers=_supabase_owner_headers(
+            app,
+            sub=subject,
+            email="anu-elevation-attempt@example.com",
+            extra_claims={
+                "role": "platform_admin",
+                "username": "platform-admin",
+                "preferred_username": "platform-admin",
+                "user_metadata": {
+                    "display_name": "Elevated By Metadata",
+                    "role": "platform_admin",
+                    "is_admin": True,
+                },
+                "app_metadata": {
+                    "provider": "email",
+                    "role": "platform_admin",
+                    "roles": ["platform_admin", "control_operator"],
+                },
+            },
+        ),
+        base_url="http://public.test",
+    )
+
+    assert response.status_code == 200, response.get_json()
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import User
+
+    with app.app_context():
+        user = _db.session.query(User).filter_by(global_subject_id=subject).one()
+        assert user.role == "participant"
+        assert user.node_id is None
+        assert user.username != "platform-admin"
+        assert user.role not in {"platform_admin", "node_admin", "control_operator", "tenant_admin"}
 
 
 
@@ -2263,6 +2441,60 @@ def test_owner_beta_start_creates_draft_private_unpublished_node_and_assigns_own
         assert node.owner_user_id == user_id
 
 
+def test_owner_beta_start_valid_supabase_user_without_local_user_creates_private_draft():
+    """ANU Supabase users without a local row are provisioned and get a private draft."""
+    app = _build_app()
+    _seed_fixture(app)
+    client = app.test_client()
+    subject = "anu-beta-start-owner"
+    email = "anu-beta-start-owner@example.com"
+    headers = _supabase_owner_headers(
+        app,
+        sub=subject,
+        email=email,
+        display_name="ANU Beta Owner",
+    )
+
+    res = client.post(
+        "/api/presence/owner/beta/start",
+        json={
+            "display_name": "ANU Native Draft",
+            "desired_slug": "anu-native-draft",
+            "presence_type": "artist",
+            "primary_cta": "contact",
+            "template_direction": "studio_practice",
+            "visual_mood": "warm_studio",
+            "headline": "A private draft created by an ANU Supabase user.",
+            "description": "Draft created during ANU-native Presence onboarding.",
+        },
+        headers=headers,
+        base_url="http://public.test",
+    )
+
+    assert res.status_code == 201, res.get_json()
+    body = res.get_json()["data"]
+    assert body["slug"] == "anu-native-draft"
+    assert body["status"] == "draft"
+    assert body["visibility"] == "private"
+    assert body["published_at"] is None
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceNode, User
+
+    with app.app_context():
+        user = _db.session.query(User).filter_by(global_subject_id=subject).one()
+        node = _db.session.query(PresenceNode).filter_by(slug="anu-native-draft").one()
+        assert user.email == email
+        assert user.role == "participant"
+        assert node.owner_user_id == user.id
+        assert node.status == "draft"
+        assert node.visibility == "private"
+        assert node.published_at is None
+
+    public = client.get("/api/presence/public/anu-native-draft", base_url="http://public.test")
+    assert public.status_code == 404
+
+
 def test_owner_beta_start_public_routes_hide_the_draft():
     """Public single-slug + list endpoints must hide the new draft."""
     app = _build_app()
@@ -2459,6 +2691,80 @@ def test_owner_beta_start_owner_can_fetch_own_draft_via_owner_endpoint_cross_own
     # Owner B cannot fetch
     cross = client.get(f"/api/presence/owner/nodes/{node_id}", headers=headers_b, base_url="http://public.test")
     assert cross.status_code == 403
+
+
+def test_cross_owner_access_still_denied_after_auto_provision():
+    """Auto-provisioned Presence owners cannot fetch each other's drafts."""
+    app = _build_app()
+    _seed_fixture(app)
+    client = app.test_client()
+    headers_a = _supabase_owner_headers(
+        app,
+        sub="anu-auto-owner-a",
+        email="anu-auto-owner-a@example.com",
+        display_name="Auto Owner A",
+    )
+    headers_b = _supabase_owner_headers(
+        app,
+        sub="anu-auto-owner-b",
+        email="anu-auto-owner-b@example.com",
+        display_name="Auto Owner B",
+    )
+
+    node_a = client.post(
+        "/api/presence/owner/beta/start",
+        json={"display_name": "Auto Owner A", "desired_slug": "auto-owner-a", "presence_type": "artist"},
+        headers=headers_a,
+        base_url="http://public.test",
+    )
+    assert node_a.status_code == 201, node_a.get_json()
+
+    node_b = client.post(
+        "/api/presence/owner/beta/start",
+        json={"display_name": "Auto Owner B", "desired_slug": "auto-owner-b", "presence_type": "artist"},
+        headers=headers_b,
+        base_url="http://public.test",
+    )
+    assert node_b.status_code == 201, node_b.get_json()
+
+    node_a_id = node_a.get_json()["data"]["id"]
+    own = client.get(f"/api/presence/owner/nodes/{node_a_id}", headers=headers_a, base_url="http://public.test")
+    cross = client.get(f"/api/presence/owner/nodes/{node_a_id}", headers=headers_b, base_url="http://public.test")
+
+    assert own.status_code == 200, own.get_json()
+    assert cross.status_code == 403
+
+
+def test_presence_public_routes_still_hide_auto_created_draft():
+    """Auto-provisioned draft owners do not change public route visibility rules."""
+    app = _build_app()
+    _seed_fixture(app)
+    client = app.test_client()
+    headers = _supabase_owner_headers(
+        app,
+        sub="anu-public-hide-owner",
+        email="anu-public-hide-owner@example.com",
+    )
+
+    draft = client.post(
+        "/api/presence/owner/beta/start",
+        json={"display_name": "Hidden Auto Draft", "desired_slug": "hidden-auto-draft", "presence_type": "artist"},
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert draft.status_code == 201, draft.get_json()
+
+    public_slug = client.get("/api/presence/public/hidden-auto-draft", base_url="http://public.test")
+    assert public_slug.status_code == 404
+
+    public_list = client.get("/api/presence/public/nodes", base_url="http://public.test")
+    assert public_list.status_code == 200
+    slugs = {
+        item["slug"]
+        for item in public_list.get_json()["data"]["items"]
+        if isinstance(item, dict) and "slug" in item
+    }
+    assert "hidden-auto-draft" not in slugs
 
 
 def test_owner_beta_start_persists_full_self_serve_onboarding_payload():
