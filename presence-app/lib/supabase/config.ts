@@ -13,8 +13,32 @@ export function isSupabaseConfigured() {
   return Boolean(supabaseUrl && supabaseAnonKey);
 }
 
+/**
+ * Public signup gate.
+ *
+ * Default behaviour for Presence is **public signup enabled** so that the
+ * normal user flow (sign up → verify email → guided onboarding → private draft
+ * Presence in Studio) works on a fresh deploy without requiring an env var.
+ *
+ * Operators can disable signups in two equivalent ways:
+ *   - set NEXT_PUBLIC_PRESENCE_ALLOW_SIGNUPS to "false" / "0" / "no" / "off"
+ *   - set NEXT_PUBLIC_PRESENCE_INVITE_ONLY to "true"
+ *
+ * Anything else (unset, "true", "1", any other value) keeps signups open.
+ *
+ * NEXT_PUBLIC_* values are baked at build time on Vercel — change requires a
+ * redeploy.
+ */
 export function isPublicSignupEnabled() {
-  return process.env.NEXT_PUBLIC_PRESENCE_ALLOW_SIGNUPS === "true";
+  const inviteOnly = (process.env.NEXT_PUBLIC_PRESENCE_INVITE_ONLY ?? "").trim().toLowerCase();
+  if (inviteOnly === "true" || inviteOnly === "1" || inviteOnly === "yes") {
+    return false;
+  }
+  const allow = (process.env.NEXT_PUBLIC_PRESENCE_ALLOW_SIGNUPS ?? "").trim().toLowerCase();
+  if (allow === "false" || allow === "0" || allow === "no" || allow === "off") {
+    return false;
+  }
+  return true;
 }
 
 export function studioContactHref() {

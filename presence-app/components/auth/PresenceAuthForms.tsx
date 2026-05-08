@@ -174,7 +174,7 @@ export function SignInForm() {
         <Link href={`/auth/forgot-password?returnTo=${encodeURIComponent(returnTo)}`} className="hover:text-[var(--p-studio-text)]">
           Forgot password?
         </Link>
-        <Link href={`/auth/sign-up?returnTo=${encodeURIComponent("/beta/onboarding")}`} className="hover:text-[var(--p-studio-text)]">
+        <Link href={`/auth/sign-up?returnTo=${encodeURIComponent("/onboarding")}`} className="hover:text-[var(--p-studio-text)]">
           Start your Presence
         </Link>
       </div>
@@ -184,7 +184,7 @@ export function SignInForm() {
 
 export function SignUpForm() {
   const router = useRouter();
-  const returnTo = useReturnTo("/beta/onboarding");
+  const returnTo = useReturnTo("/onboarding");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -258,32 +258,32 @@ export function SignUpForm() {
 
   return (
     <AuthShell
-      eyebrow={signupsEnabled ? "Public beta" : "Invite-first beta"}
-      title={signupsEnabled ? "Create your Presence Studio account" : "Presence Studio is invite-first"}
+      eyebrow={signupsEnabled ? "Public beta" : "Studio access"}
+      title={signupsEnabled ? "Create your Presence Studio account" : "Studio access is paused"}
       body={
         signupsEnabled
-          ? "Start with a verified account. Build your Presence as a draft or setup request, then publish only when your public world is ready."
-          : "First pilots are studio-assisted. We create or assign your Presence before you can manage it here."
+          ? "Verify your email, then shape your first draft Presence in a guided onboarding sequence. Drafts stay private until you publish."
+          : "Public signup is paused for this environment. Reach the Presence team for access if you expected to sign in here."
       }
     >
       {!signupsEnabled ? (
         <div className="mt-6 flex flex-col gap-4">
           <Message tone="info">
-            Request access if you are part of the current pilot group or need a
-            Presence assigned to your email.
+            Public signup is currently disabled. If you already have an account
+            you can still sign in below.
           </Message>
           <a
             href={studioContactHref()}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--p-studio-accent)] px-5 py-3 text-sm font-semibold text-stone-950 transition hover:bg-orange-300"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--p-studio-border)] px-5 py-3 text-sm font-semibold text-[var(--p-studio-text)] transition hover:border-[var(--p-studio-accent)]/60"
           >
-            Request pilot access
+            Contact the studio
             <ArrowRight className="h-4 w-4" />
           </a>
           <Link
             href={`/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}`}
             className="text-center text-xs text-[var(--p-studio-muted)] hover:text-[var(--p-studio-text)]"
           >
-            Already invited? Sign in
+            Already have an account? Sign in
           </Link>
         </div>
       ) : (
@@ -337,7 +337,7 @@ export function VerifyEmailForm() {
   const searchParams = useSearchParams();
   const emailFromQuery = searchParams.get("email")?.trim().toLowerCase() ?? "";
   const returnTo = useMemo(
-    () => sanitizeReturnTo(searchParams.get("returnTo"), "/beta/onboarding"),
+    () => sanitizeReturnTo(searchParams.get("returnTo"), "/onboarding"),
     [searchParams],
   );
   const [code, setCode] = useState("");

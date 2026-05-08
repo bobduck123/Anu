@@ -37,7 +37,7 @@ export default function BetaPage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/auth/sign-up?returnTo=%2Fbeta%2Fonboarding"
+                href="/auth/sign-up?returnTo=%2Fonboarding"
                 className="inline-flex items-center gap-2 rounded-2xl bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-stone-800"
               >
                 Start your Presence

@@ -2461,6 +2461,79 @@ def test_owner_beta_start_owner_can_fetch_own_draft_via_owner_endpoint_cross_own
     assert cross.status_code == 403
 
 
+def test_owner_beta_start_persists_full_self_serve_onboarding_payload():
+    """Self-serve wizard fields (intensity, world_statement, proof_note) persist
+    safely into theme_config.beta_intent and proof_summary respectively."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    _create_owner_user(
+        app, username="wizard-pilot", pseudonym="wizard-pilot",
+        email="wizard@example.com", node_id=tenant_id, role="participant",
+    )
+    headers = _owner_headers(app, "wizard-pilot", role="participant")
+    res = client.post(
+        "/api/presence/owner/beta/start",
+        json={
+            "display_name": "Mira Cole",
+            "desired_slug": "mira-cole-wizard",
+            "presence_type": "artist",
+            "primary_purpose": "portfolio",
+            "primary_cta": "viewing",
+            "template_direction": "studio_practice",
+            "visual_mood": "warm_studio",
+            "intensity": "atmospheric",
+            "headline": "Textile artist working with country, dye, and weave.",
+            "description": "",
+            "world_statement": "A studio practice rooted in plant dye and slow weave.",
+            "proof_note": "Fifteen years of commissioned weavings in private and public collections.",
+            "location_label": "Hobart, Tasmania",
+            "beta_mode": "draft_self_build",
+        },
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert res.status_code == 201, res.get_json()
+    body = res.get_json()["data"]
+    intent = body.get("theme_config", {}).get("beta_intent", {})
+    assert intent.get("intensity") == "atmospheric"
+    assert intent.get("world_statement", "").startswith("A studio practice rooted in")
+    assert intent.get("proof_note", "").startswith("Fifteen years of commissioned weavings")
+    assert intent.get("onboarding_version", "").startswith("v2-self-serve")
+    assert intent.get("launch_mode") == "self_serve_draft"
+    # world_statement filled bio because description was empty
+    assert body["bio"].startswith("A studio practice rooted in")
+    # proof_note persisted to public proof_summary field
+    assert body.get("proof_summary", "").startswith("Fifteen years of commissioned weavings")
+    # Status guarantees still hold
+    assert body["status"] == "draft"
+    assert body["visibility"] == "private"
+
+
+def test_owner_beta_start_rejects_unknown_intensity():
+    """Unknown intensity values are rejected with 422."""
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    _create_owner_user(
+        app, username="bad-intensity", pseudonym="bad-intensity",
+        email="bi@example.com", node_id=tenant_id, role="participant",
+    )
+    headers = _owner_headers(app, "bad-intensity", role="participant")
+    res = client.post(
+        "/api/presence/owner/beta/start",
+        json={
+            "display_name": "Bad",
+            "desired_slug": "bad-intensity",
+            "presence_type": "artist",
+            "intensity": "loud_and_proud",
+        },
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert res.status_code == 422
+
+
 def test_owner_beta_start_owner_safe_payload_no_admin_only_fields():
     """Returned payload must not include admin-only or cross-owner fields."""
     app = _build_app()

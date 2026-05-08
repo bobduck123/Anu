@@ -114,21 +114,21 @@ export default function StudioIndexPage() {
 
         {!loading && !error && nodes.length === 0 && (
           <Empty
-            title="No Presence yet"
-            body="Begin onboarding to start a draft Presence right now, or request studio-assisted setup. Drafts are private until you publish them."
+            title="Create your first draft Presence"
+            body="Your account is verified. Start the onboarding sequence and we'll generate a private draft Presence you can shape in Studio. Drafts stay private until you publish."
             action={
               <div className="flex flex-wrap justify-center gap-3">
                 <Link
-                  href="/beta/onboarding"
+                  href="/onboarding"
                   className="rounded-xl bg-[var(--p-studio-accent)] px-4 py-2 text-sm font-semibold text-stone-950 transition hover:bg-orange-300"
                 >
-                  Start a draft Presence
+                  Start onboarding
                 </Link>
                 <Link
                   href="/gallery"
                   className="rounded-xl border border-[var(--p-studio-border)] px-4 py-2 text-sm font-semibold text-[var(--p-studio-text)] transition hover:border-[var(--p-studio-accent)]/60"
                 >
-                  View public gallery
+                  Explore gallery
                 </Link>
               </div>
             }

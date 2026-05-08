@@ -182,6 +182,11 @@ _BETA_TEMPLATES = {
 _BETA_MOODS = {
     "nocturne", "gallery_white", "warm_studio", "editorial_paper",
     "care_path", "public_noticeboard", "institutional_dusk", "signal_field",
+    # extended in self-serve onboarding pass
+    "earth_craft", "clean_professional",
+}
+_BETA_INTENSITIES = {
+    "restrained", "expressive", "atmospheric", "flagship",
 }
 
 # Map beta-onboarding template_direction → PresenceNode.display_mode (the
@@ -263,6 +268,9 @@ def start_beta_presence():
     visual_mood = _trim(payload.get("visual_mood"), 80)
     if visual_mood and visual_mood not in _BETA_MOODS:
         return _err("validation_error", f"Unsupported visual_mood: {visual_mood}", 422)
+    intensity = _trim(payload.get("intensity"), 40)
+    if intensity and intensity not in _BETA_INTENSITIES:
+        return _err("validation_error", f"Unsupported intensity: {intensity}", 422)
 
     # One-starter-per-user rule. Platform admins are exempt (they may need
     # multiple starter nodes for staff demos).
@@ -309,11 +317,37 @@ def start_beta_presence():
     node_type = _PRESENCE_TYPE_TO_NODE_TYPE.get(presence_type, "custom")
     display_mode = _TEMPLATE_TO_DISPLAY_MODE.get(template_direction or "")
 
+    # description is the wizard's "short intro / world statement" field, but
+    # the wizard may also pass a longer world_statement explicitly. Prefer
+    # description for bio (matches existing v1.1 contract); world_statement
+    # supplements it if separate.
     bio_text = _trim(payload.get("description"), 4000)
+    world_statement = _trim(payload.get("world_statement"), 4000)
+    if not bio_text and world_statement:
+        # Use world_statement as bio when description is empty.
+        bio_text = world_statement
+    proof_note = _trim(payload.get("proof_note"), 4000)
     headline_text = _trim(payload.get("headline"), 280)
     location_label = _trim(payload.get("location_label"), 180)
 
     primary_cta_label = _BETA_CTA_LABELS.get(primary_cta) if primary_cta else None
+
+    # theme_config.beta_intent records the full onboarding intent so Studio
+    # and the renderer can use it. Onboarding version is bumped when the wizard
+    # gains new mappable questions.
+    beta_intent: dict = {
+        "template_direction": template_direction,
+        "visual_mood": visual_mood,
+        "intensity": intensity,
+        "primary_purpose": primary_purpose,
+        "primary_cta": primary_cta,
+        "presence_type": presence_type,
+        "beta_mode": _trim(payload.get("beta_mode"), 40) or "draft_self_build",
+        "world_statement": world_statement,
+        "proof_note": proof_note,
+        "onboarding_version": "v2-self-serve-2026-05-08",
+        "launch_mode": "self_serve_draft",
+    }
 
     node_payload = {
         "display_name": display_name,
@@ -327,17 +361,12 @@ def start_beta_presence():
         "location_label": location_label,
         "primary_cta_label": primary_cta_label,
         "visual_mood": visual_mood,
-        # theme_config records the onboarding intent for Studio + future use.
-        "theme_config": {
-            "beta_intent": {
-                "template_direction": template_direction,
-                "visual_mood": visual_mood,
-                "primary_purpose": primary_purpose,
-                "primary_cta": primary_cta,
-                "beta_mode": _trim(payload.get("beta_mode"), 40) or "draft_self_build",
-            },
-        },
+        "theme_config": {"beta_intent": beta_intent},
     }
+    # If the user supplied a proof_note, persist it as the public proof_summary
+    # so it survives without depending on theme_config readers.
+    if proof_note:
+        node_payload["proof_summary"] = proof_note
     if slug:
         node_payload["slug"] = slug
     if display_mode:

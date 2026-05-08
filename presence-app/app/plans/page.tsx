@@ -142,7 +142,7 @@ export default function PlansPage() {
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Link
-              href="/auth/sign-up?returnTo=%2Fbeta%2Fonboarding"
+              href="/auth/sign-up?returnTo=%2Fonboarding"
               className="inline-flex items-center gap-2 rounded-2xl bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-stone-800"
             >
               Start your Presence
@@ -217,7 +217,7 @@ export default function PlansPage() {
 
                 <div className="mt-auto pt-2">
                   <Link
-                    href={`/auth/sign-up?returnTo=%2Fbeta%2Fonboarding&plan=${plan.key}`}
+                    href={`/auth/sign-up?returnTo=%2Fonboarding&plan=${plan.key}`}
                     className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition ${
                       isAccent
                         ? "border border-stone-700 text-white hover:border-stone-500"
