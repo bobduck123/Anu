@@ -29,7 +29,7 @@ export interface BetaApplicationResult {
 }
 
 /**
- * Persist a public-beta setup request server-side. Requires a verified
+ * Persist a public-beta setup request server-side. Requires an authenticated
  * Supabase access token. The endpoint stores intent only; it does NOT
  * create a PresenceNode and does NOT assign ownership.
  */

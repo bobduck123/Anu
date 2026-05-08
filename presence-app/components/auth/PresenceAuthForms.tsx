@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -12,6 +12,7 @@ import {
 } from "@/lib/auth/returnTo";
 import { createClient } from "@/lib/supabase/client";
 import {
+  isEmailVerificationRequired,
   isPublicSignupEnabled,
   isSupabaseConfigured,
   studioContactHref,
@@ -194,6 +195,7 @@ export function SignUpForm() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const signupsEnabled = isPublicSignupEnabled();
+  const emailVerificationRequired = isEmailVerificationRequired();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -220,7 +222,8 @@ export function SignUpForm() {
     setBusy(true);
     setError(null);
     setMessage(null);
-    const redirectTo = `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(returnTo)}`;
+    const onboardingReturnTo = "/onboarding";
+    const redirectTo = `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(onboardingReturnTo)}`;
     const supabase = createClient();
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: normalizedEmail,
@@ -244,27 +247,61 @@ export function SignUpForm() {
       );
       return;
     }
-    if (data.session) {
-      router.replace(returnTo);
+    if (emailVerificationRequired) {
+      savePendingReturnTo(onboardingReturnTo);
+      setMessage("We sent a verification code to your email.");
+      const params = new URLSearchParams();
+      params.set("email", normalizedEmail);
+      params.set("returnTo", onboardingReturnTo);
+      router.replace(`/auth/verify-email?${params.toString()}`);
       return;
     }
-    savePendingReturnTo(returnTo);
-    setMessage("We sent a verification code to your email.");
-    const params = new URLSearchParams();
-    params.set("email", normalizedEmail);
-    params.set("returnTo", returnTo);
-    router.replace(`/auth/verify-email?${params.toString()}`);
+
+    if (data.session) {
+      clearPendingReturnTo();
+      setMessage("Account created. Opening your onboarding studio.");
+      window.setTimeout(() => router.replace(onboardingReturnTo), 500);
+      return;
+    }
+
+    setError(
+      "Account created, but Supabase is still requiring email confirmation. For testing, disable Confirm email in Supabase Auth settings, then try signing in.",
+    );
+    return;
+  }
+
+  function verificationAwareSignupBody() {
+    if (!signupsEnabled) {
+      return "Public signup is paused for this environment. Reach the Presence team for access if you expected to sign in here.";
+    }
+    if (emailVerificationRequired) {
+      return "Verify your email, then shape your first draft Presence in a guided onboarding sequence. Drafts stay private until you publish.";
+    }
+    return "Create an account, enter onboarding, and generate your first private draft Presence. Drafts stay private until you publish.";
+  }
+
+  function verificationAwareSignupNote() {
+    if (emailVerificationRequired) {
+      return "After verification, you will enter beta onboarding. Your first Presence starts as a private draft or setup-pending request.";
+    }
+    return "After account creation, you will enter onboarding. Your first Presence starts as a private draft or setup-pending request.";
+  }
+
+  function verificationAwareEyebrow() {
+    if (!signupsEnabled) return "Studio access";
+    return emailVerificationRequired ? "Public beta verification" : "Public beta";
+  }
+
+  function verificationAwareTitle() {
+    if (!signupsEnabled) return "Studio access is paused";
+    return "Create your Presence Studio account";
   }
 
   return (
     <AuthShell
-      eyebrow={signupsEnabled ? "Public beta" : "Studio access"}
-      title={signupsEnabled ? "Create your Presence Studio account" : "Studio access is paused"}
-      body={
-        signupsEnabled
-          ? "Verify your email, then shape your first draft Presence in a guided onboarding sequence. Drafts stay private until you publish."
-          : "Public signup is paused for this environment. Reach the Presence team for access if you expected to sign in here."
-      }
+      eyebrow={verificationAwareEyebrow()}
+      title={verificationAwareTitle()}
+      body={verificationAwareSignupBody()}
     >
       {!signupsEnabled ? (
         <div className="mt-6 flex flex-col gap-4">
@@ -315,8 +352,7 @@ export function SignUpForm() {
             </select>
           </label>
           <p className="text-xs leading-5 text-[var(--p-studio-muted)]">
-            After verification, you will enter beta onboarding. Your first
-            Presence starts as a private draft or setup-pending request.
+            {verificationAwareSignupNote()}
           </p>
           <button
             type="submit"
@@ -340,11 +376,81 @@ export function VerifyEmailForm() {
     () => sanitizeReturnTo(searchParams.get("returnTo"), "/onboarding"),
     [searchParams],
   );
+  const emailVerificationRequired = isEmailVerificationRequired();
+  const [testModeSessionState, setTestModeSessionState] = useState<
+    "checking" | "no_session"
+  >("checking");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [resending, setResending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (emailVerificationRequired) return;
+    let cancelled = false;
+    async function redirectActiveSession() {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (session) {
+        router.replace("/onboarding");
+        return;
+      }
+      setTestModeSessionState("no_session");
+    }
+    void redirectActiveSession();
+    return () => {
+      cancelled = true;
+    };
+  }, [emailVerificationRequired, router]);
+
+  if (!emailVerificationRequired) {
+    if (testModeSessionState === "checking") {
+      return (
+        <AuthShell
+          eyebrow="Verification optional"
+          title="Checking your Presence session"
+          body="Email verification is not required in this testing environment. If you are already signed in, we will open onboarding."
+        >
+          <div className="mt-6">
+            <Message tone="info">Checking session...</Message>
+          </div>
+        </AuthShell>
+      );
+    }
+
+    return (
+      <AuthShell
+        eyebrow="Verification optional"
+        title="Email verification is not enabled for testing"
+        body="This page is only required when Presence email verification is enabled. Sign in or create an account to continue into onboarding."
+      >
+        <div className="mt-6 grid gap-3">
+          <Message tone="info">
+            No active session was found. If you just created an account and
+            Supabase sent a confirmation email, disable Confirm email in
+            Supabase Auth settings for testing, then try signing in.
+          </Message>
+          <Link
+            href={`/auth/sign-in?returnTo=${encodeURIComponent("/onboarding")}`}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--p-studio-accent)] px-5 py-3 text-sm font-semibold text-stone-950 transition hover:bg-orange-300"
+          >
+            Sign in
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link
+            href={`/auth/sign-up?returnTo=${encodeURIComponent("/onboarding")}`}
+            className="text-center text-xs text-[var(--p-studio-muted)] hover:text-[var(--p-studio-text)]"
+          >
+            Create account
+          </Link>
+        </div>
+      </AuthShell>
+    );
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -376,7 +482,7 @@ export function VerifyEmailForm() {
     }
 
     clearPendingReturnTo();
-    setMessage("Email verified. Opening Presence Studio...");
+    setMessage("Email verified. Opening Presence onboarding...");
     window.setTimeout(() => router.replace(returnTo), 700);
   }
 
@@ -407,7 +513,7 @@ export function VerifyEmailForm() {
     <AuthShell
       eyebrow="Verify email"
       title="Activate your Presence Studio account"
-      body="We sent a verification code to your email. Enter it below to activate your account, then continue into Studio."
+      body="Email verification is required in this environment. Enter the code from your email, then continue into onboarding."
     >
       <form className="mt-6 flex flex-col gap-4" onSubmit={submit}>
         {!isSupabaseConfigured() && (
@@ -436,7 +542,7 @@ export function VerifyEmailForm() {
           disabled={busy || !isSupabaseConfigured() || !emailFromQuery}
           className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--p-studio-accent)] px-5 py-3 text-sm font-semibold text-stone-950 transition hover:bg-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {busy ? "Verifying..." : "Verify and enter Studio"}
+          {busy ? "Verifying..." : "Verify and enter onboarding"}
           <ArrowRight className="h-4 w-4" />
         </button>
       </form>

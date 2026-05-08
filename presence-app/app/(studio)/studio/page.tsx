@@ -6,10 +6,12 @@ import { ChevronRight, Globe, LogOut } from "lucide-react";
 import { listNodes } from "@/lib/api/owner";
 import type { PresenceNode } from "@/lib/api/types";
 import { createClient } from "@/lib/supabase/client";
+import { isEmailVerificationRequired } from "@/lib/supabase/config";
 import { Loading, Empty, StatusPill } from "@/components/ui";
 import { StudioAuthGate } from "@/components/auth/StudioAuthGate";
 
 export default function StudioIndexPage() {
+  const emailVerificationRequired = isEmailVerificationRequired();
   const [nodes, setNodes] = useState<PresenceNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +28,7 @@ export default function StudioIndexPage() {
         }
         const user = session.user;
         if (
+          emailVerificationRequired &&
           user?.email &&
           !user.email_confirmed_at &&
           !user.confirmed_at
@@ -42,7 +45,7 @@ export default function StudioIndexPage() {
       }
     }
     void load();
-  }, []);
+  }, [emailVerificationRequired]);
 
   if (!loading && error === "Sign in to access your studio.") {
     return <StudioAuthGate returnTo="/studio" />;
@@ -115,7 +118,11 @@ export default function StudioIndexPage() {
         {!loading && !error && nodes.length === 0 && (
           <Empty
             title="Create your first draft Presence"
-            body="Your account is verified. Start the onboarding sequence and we'll generate a private draft Presence you can shape in Studio. Drafts stay private until you publish."
+            body={
+              emailVerificationRequired
+                ? "Your account is verified. Start the onboarding sequence and we'll generate a private draft Presence you can shape in Studio. Drafts stay private until you publish."
+                : "Start the onboarding sequence and we'll generate a private draft Presence you can shape in Studio. Drafts stay private until you publish."
+            }
             action={
               <div className="flex flex-wrap justify-center gap-3">
                 <Link

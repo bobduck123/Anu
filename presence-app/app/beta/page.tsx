@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle, Compass, ShieldCheck } from "lucide-react";
 export const metadata = {
   title: "Presence Public Beta",
   description:
-    "Create a verified Presence Studio account and begin shaping your public world in beta.",
+    "Create a Presence Studio account and begin shaping your public world in beta.",
 };
 
 export default function BetaPage() {
@@ -27,13 +27,13 @@ export default function BetaPage() {
               Public beta
             </p>
             <h1 className="max-w-3xl text-5xl font-semibold leading-[0.96] tracking-tight text-stone-950 sm:text-6xl">
-              Start your Presence as a verified draft.
+              Start your Presence as a private draft.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-stone-700 sm:text-lg">
               Presence is a public world system for artists, practitioners,
               venues, collectives, creative professionals, and cultural
-              organisations. Create an account, verify your email, and begin
-              shaping the public surface you want to launch.
+              organisations. Create an account and begin shaping the public
+              surface you want to launch.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -57,7 +57,6 @@ export default function BetaPage() {
             <div className="mt-6 grid gap-4">
               {[
                 "Create a Presence Studio account.",
-                "Verify your email with a code.",
                 "Complete beta onboarding.",
                 "Begin in draft or setup-pending.",
                 "Publish only when your public world is ready.",

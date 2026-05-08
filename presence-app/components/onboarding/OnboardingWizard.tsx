@@ -14,7 +14,10 @@ import {
 
 import { StudioAuthGate } from "@/components/auth/StudioAuthGate";
 import { createClient } from "@/lib/supabase/client";
-import { studioContactHref } from "@/lib/supabase/config";
+import {
+  isEmailVerificationRequired,
+  studioContactHref,
+} from "@/lib/supabase/config";
 import { startBetaPresence, submitBetaApplication, type BetaApplicationInput } from "@/lib/api/beta";
 import { PresenceApiError } from "@/lib/api/client";
 
@@ -337,6 +340,7 @@ const TOTAL_STEPS = 7;
 
 export function OnboardingWizard() {
   const router = useRouter();
+  const emailVerificationRequired = isEmailVerificationRequired();
   const [authState, setAuthState] = useState<"loading" | "needs_auth" | "needs_verify" | "ready">("loading");
   const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
   const [accountEmail, setAccountEmail] = useState<string | null>(null);
@@ -361,7 +365,12 @@ export function OnboardingWizard() {
           return;
         }
         const user = session.user;
-        if (user?.email && !user.email_confirmed_at && !user.confirmed_at) {
+        if (
+          emailVerificationRequired &&
+          user?.email &&
+          !user.email_confirmed_at &&
+          !user.confirmed_at
+        ) {
           setVerificationEmail(user.email);
           setAuthState("needs_verify");
           return;
@@ -391,7 +400,7 @@ export function OnboardingWizard() {
     }
     void init();
     return () => { cancelled = true; };
-  }, []);
+  }, [emailVerificationRequired]);
 
   // Persist draft on every change so the user never loses progress.
   useEffect(() => {
@@ -536,7 +545,11 @@ export function OnboardingWizard() {
       <StudioAuthGate
         returnTo="/onboarding"
         title="Sign in to begin onboarding"
-        body="Create or sign in to a verified Presence Studio account, then we'll guide you through shaping your first public world."
+        body={
+          emailVerificationRequired
+            ? "Create or sign in to a verified Presence Studio account, then we'll guide you through shaping your first public world."
+            : "Create or sign in to a Presence Studio account, then we'll guide you through shaping your first public world."
+        }
       />
     );
   }

@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { ArrowRight, LockKeyhole, Sparkles } from "lucide-react";
 import { buildSignInHref, buildSignUpHref } from "@/lib/auth/returnTo";
-import { studioContactHref } from "@/lib/supabase/config";
+import {
+  isEmailVerificationRequired,
+  studioContactHref,
+} from "@/lib/supabase/config";
 
 export function StudioAuthGate({
   returnTo = "/studio",
@@ -12,6 +15,7 @@ export function StudioAuthGate({
   title?: string;
   body?: string;
 }) {
+  const emailVerificationRequired = isEmailVerificationRequired();
   return (
     <main className="min-h-dvh bg-[var(--p-studio-bg)] text-[var(--p-studio-text)] px-4 py-10 safe-top">
       <div className="mx-auto flex max-w-lg flex-col gap-6">
@@ -46,7 +50,7 @@ export function StudioAuthGate({
               href={buildSignUpHref(returnTo)}
               className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--p-studio-border)] px-5 py-3 text-sm font-semibold text-[var(--p-studio-text)] transition hover:border-[var(--p-studio-accent)]/60"
             >
-              Create verified account
+              {emailVerificationRequired ? "Create verified account" : "Create account"}
             </Link>
           </div>
         </section>

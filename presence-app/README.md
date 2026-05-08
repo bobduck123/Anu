@@ -34,6 +34,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3001
 NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
 NEXT_PUBLIC_PRESENCE_ALLOW_SIGNUPS=true
+NEXT_PUBLIC_PRESENCE_REQUIRE_EMAIL_VERIFICATION=false
 NEXT_PUBLIC_PRESENCE_STUDIO_CONTACT=mailto:hello@presence.studio
 
 npm run dev -- --port 3001
@@ -46,7 +47,8 @@ npm run build
 Public:
 - `/` - Presence landing page with Gallery and Studio choices
 - `/beta` - public beta explanation and start CTA
-- `/beta/onboarding` - protected post-verification beta setup/request flow
+- `/onboarding` - protected beta onboarding and private draft creation flow
+- `/beta/onboarding` - legacy redirect to `/onboarding`
 - `/gallery` - alpha public gallery entry, no private data
 - `/healthz` - deployment health check
 - `/p/[slug]` - public portfolio
@@ -55,8 +57,8 @@ Public:
 
 Auth:
 - `/auth/sign-in` - Supabase email/password sign-in
-- `/auth/sign-up` - invite-first access by default
-- `/auth/verify-email` - code entry and resend for signup verification
+- `/auth/sign-up` - public beta account creation when signups are enabled
+- `/auth/verify-email` - code entry and resend when verification is enabled
 - `/auth/callback` - Supabase callback exchange
 - `/auth/sign-out` - signs out and returns home
 - `/auth/forgot-password` - reset email flow
@@ -103,6 +105,7 @@ Required production env vars:
 Optional production env vars:
 
 - `NEXT_PUBLIC_PRESENCE_ALLOW_SIGNUPS`
+- `NEXT_PUBLIC_PRESENCE_REQUIRE_EMAIL_VERIFICATION`
 - `NEXT_PUBLIC_PRESENCE_STUDIO_CONTACT`
 
 Never expose Supabase service-role keys, database URLs, control-plane secrets,
@@ -120,10 +123,23 @@ Required Supabase URL settings for production:
 - Redirect URL: `https://presence-gilt.vercel.app/auth/callback`
 - Redirect URL: `https://presence-gilt.vercel.app/auth/reset-password`
 - Redirect URL: `https://presence-gilt.vercel.app/auth/verify-email`
-- Redirect URL: `https://presence-gilt.vercel.app/beta/onboarding`
+- Redirect URL: `https://presence-gilt.vercel.app/onboarding`
 
-Email confirmation:
+Testing without email verification:
 
+- Supabase Dashboard -> Authentication -> Providers -> Email.
+- Disable Confirm email.
+- Save.
+- Redeploy `presence-app` with
+  `NEXT_PUBLIC_PRESENCE_REQUIRE_EMAIL_VERIFICATION=false`.
+- After signup, Supabase should return a session and Presence routes directly
+  to `/onboarding`.
+- If signup succeeds but no session exists, Confirm email is still enabled or
+  the Supabase auth settings are not aligned with this test mode.
+
+Production email confirmation:
+
+- Set `NEXT_PUBLIC_PRESENCE_REQUIRE_EMAIL_VERIFICATION=true`.
 - Enable Confirm email.
 - Keep the standard confirmation link working with `{{ .ConfirmationURL }}` so
   `/auth/callback` remains valid.
@@ -142,35 +158,43 @@ The resend action uses:
 supabase.auth.resend({ type: "signup", email })
 ```
 
-After verification, users are sent to `/studio`. If the backend has no
-Presence assigned to their user, Studio shows the honest "No Presence assigned
-yet" state and does not create fake ownership client-side.
+After signup or verification, users are sent to `/onboarding`. The onboarding
+flow creates a real owner-bound draft through
+`POST /api/presence/owner/beta/start`. If the backend has no Presence assigned
+or draft creation is unavailable, Studio shows an honest next action and does
+not create fake ownership client-side.
 
 ## Public beta mode
 
 Current beta mode is hybrid:
 
-- Public users can create and verify a Presence Studio account when
+- Public users can create a Presence Studio account when
   `NEXT_PUBLIC_PRESENCE_ALLOW_SIGNUPS=true`.
-- Verification can route to `/beta/onboarding`.
-- `/beta/onboarding` collects public-world direction and prepares a
-  studio-assisted setup request.
+- For local/staging testing, set
+  `NEXT_PUBLIC_PRESENCE_REQUIRE_EMAIL_VERIFICATION=false` and disable Confirm
+  email in Supabase so signup immediately opens `/onboarding`.
+- For production verification, set
+  `NEXT_PUBLIC_PRESENCE_REQUIRE_EMAIL_VERIFICATION=true` and configure
+  Supabase Site URL, redirect URLs, and the Confirm signup template.
+- `/onboarding` collects public-world direction and creates a private draft
+  Presence when the authenticated user does not already have one.
 - If a backend owner Presence is already assigned, `/studio` opens normally.
 - If no Presence is assigned, `/studio` links back to beta onboarding.
 
-The app does not currently create owner Presence records client-side. This is
-intentional until the backend has a dedicated, tested owner-safe beta creation
-endpoint. Any beta-created Presence must start draft/unpublished and must not
-be public by default.
+The app does not create fake owner records client-side. Self-service draft
+creation uses the tested owner-safe backend endpoint. Any beta-created Presence
+starts draft/private/unpublished and is not public by default.
 
 For public beta deployment:
 
 - Set `NEXT_PUBLIC_PRESENCE_ALLOW_SIGNUPS=true`.
+- Set `NEXT_PUBLIC_PRESENCE_REQUIRE_EMAIL_VERIFICATION=false` for test mode or
+  `true` for production email confirmation.
 - Set `NEXT_PUBLIC_PRESENCE_STUDIO_CONTACT` to a monitored `mailto:` address.
 - Redeploy after changing `NEXT_PUBLIC_*` variables because Vercel bakes them
   into the client bundle at build time.
 
-If self-service draft creation is added later, use a narrow owner endpoint such
-as `POST /api/presence/owner/beta/start` and test that it requires auth,
-creates only draft/unpublished Presences, prevents duplicate slugs, and never
+Self-service draft creation uses the narrow owner endpoint
+`POST /api/presence/owner/beta/start`. It requires auth, creates only
+draft/private/unpublished Presences, prevents duplicate slugs, and never
 exposes other owners' records.

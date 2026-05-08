@@ -41,6 +41,22 @@ export function isPublicSignupEnabled() {
   return true;
 }
 
+/**
+ * Email verification gate.
+ *
+ * Default is non-blocking for current local/staging testing. Production can
+ * recover the stricter flow by setting this env var to "true" and configuring
+ * Supabase Site URL, redirect URLs, and the Confirm signup template.
+ */
+export function isEmailVerificationRequired() {
+  const value = (
+    process.env.NEXT_PUBLIC_PRESENCE_REQUIRE_EMAIL_VERIFICATION ?? ""
+  )
+    .trim()
+    .toLowerCase();
+  return value === "true" || value === "1" || value === "yes" || value === "on";
+}
+
 export function studioContactHref() {
   const value = process.env.NEXT_PUBLIC_PRESENCE_STUDIO_CONTACT?.trim();
   return value || "mailto:hello@presence.studio";

@@ -82,6 +82,8 @@ Required Vercel env vars:
 - `NEXT_PUBLIC_PRESENCE_PUBLIC_ORIGIN`
 - `NEXT_PUBLIC_PRESENCE_STUDIO_ORIGIN`
 - `NEXT_PUBLIC_PRESENCE_ALLOW_SIGNUPS=true`
+- `NEXT_PUBLIC_PRESENCE_REQUIRE_EMAIL_VERIFICATION=false` for testing, or
+  `true` when production email confirmation is configured
 
 Optional supported aliases:
 
@@ -94,15 +96,33 @@ secrets, or smoke tokens as `NEXT_PUBLIC_*` variables.
 
 ## 6. Supabase Dashboard
 
-Authentication settings:
+Testing without email verification:
 
-- Site URL: production `presence-app` origin.
+- Authentication -> Providers -> Email.
+- Disable Confirm email.
+- Save.
+- Redeploy `presence-app` with
+  `NEXT_PUBLIC_PRESENCE_REQUIRE_EMAIL_VERIFICATION=false`.
+- A successful signup should return a Supabase session and route directly to
+  `/onboarding`.
+
+Production email confirmation settings:
+
+- Site URL: production `presence-app` origin, for example
+  `https://presence-gilt.vercel.app`.
 - Redirect URLs:
   - `https://<presence-app-host>/auth/callback`
   - `https://<presence-app-host>/auth/reset-password`
   - `https://<presence-app-host>/auth/verify-email`
-  - `https://<presence-app-host>/beta/onboarding`
+  - `https://<presence-app-host>/onboarding`
+  - For the current Presence Vercel host:
+    - `https://presence-gilt.vercel.app/auth/callback`
+    - `https://presence-gilt.vercel.app/auth/reset-password`
+    - `https://presence-gilt.vercel.app/auth/verify-email`
+    - `https://presence-gilt.vercel.app/onboarding`
 - Confirm email: enabled.
+- Presence app env:
+  - `NEXT_PUBLIC_PRESENCE_REQUIRE_EMAIL_VERIFICATION=true`
 - Confirm signup template:
   - include `{{ .Token }}` for `/auth/verify-email`.
   - keep `{{ .ConfirmationURL }}` as fallback for link-based confirmation.
@@ -119,7 +139,8 @@ Presence app:
 - `/auth/sign-up`
 - `/auth/verify-email`
 - `/auth/sign-in`
-- `/beta/onboarding`
+- `/onboarding`
+- `/beta/onboarding` redirects to `/onboarding`
 - `/studio`
 
 Backend:
@@ -132,8 +153,9 @@ Backend:
 Authenticated beta proof:
 
 - Sign up.
-- Verify email.
-- Open `/beta/onboarding`.
+- In test mode, confirm signup opens `/onboarding` without email verification.
+- If production verification is enabled, verify email first.
+- Open `/onboarding`.
 - Create draft via self-build mode.
 - Confirm redirect to `/studio/[id]`.
 - Confirm draft status is `draft`, visibility is `private`, and `published_at` is empty.
@@ -171,5 +193,7 @@ Migration rollback caution:
 5. Run optional token smoke with a real verified beta user token.
 6. Deploy `presence-app`.
 7. Run post-deploy route checks.
-8. Run end-to-end signup, verify, onboarding, draft, Studio, public-hiding proof.
+8. Run end-to-end signup, onboarding, draft, Studio, public-hiding proof.
+   Add email verification to this proof only when
+   `NEXT_PUBLIC_PRESENCE_REQUIRE_EMAIL_VERIFICATION=true`.
 9. Keep rollback handles open until smoke and manual checks pass.
