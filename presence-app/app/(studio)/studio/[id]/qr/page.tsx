@@ -21,6 +21,7 @@ import { useOwnerNode } from "@/components/studio/useOwnerNode";
 import StudioShell from "@/components/studio/StudioShell";
 import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
 import { Loading } from "@/components/ui";
+import { canonicalPublicUrl } from "@/lib/presence/url";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
@@ -61,11 +62,12 @@ export default function StudioQrPage({ params }: { params: Promise<{ id: string 
 
   const qrUrl = `${API_BASE}/api/presence/public/${node.slug}/qr`;
   const vcardUrl = `${API_BASE}/api/presence/public/${node.slug}/vcard`;
+  const publicUrl = canonicalPublicUrl(node.slug);
   const isPublished = node.status === "published";
 
   async function copyPublicUrl() {
-    if (!node?.public_url || typeof navigator === "undefined") return;
-    await navigator.clipboard?.writeText(node.public_url);
+    if (typeof navigator === "undefined") return;
+    await navigator.clipboard?.writeText(publicUrl);
   }
 
   return (
@@ -100,7 +102,7 @@ export default function StudioQrPage({ params }: { params: Promise<{ id: string 
             <div className="w-full rounded-2xl border border-[var(--p-studio-border)] bg-[var(--p-studio-surface)] p-4 text-center">
               <p className="text-xs text-[var(--p-studio-muted)]">Public Presence URL</p>
               <p className="mt-2 break-all font-mono text-xs text-[var(--p-studio-text)]">
-                {node.public_url}
+                {publicUrl}
               </p>
             </div>
 

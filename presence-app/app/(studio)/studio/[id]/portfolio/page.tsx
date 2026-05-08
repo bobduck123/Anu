@@ -4,9 +4,10 @@ import { use, useEffect, useState } from "react";
 import { useOwnerNode } from "@/components/studio/useOwnerNode";
 import StudioShell from "@/components/studio/StudioShell";
 import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
+import PresenceMediaSlot from "@/components/studio/PresenceMediaSlot";
 import { Loading, Button, Input, Textarea } from "@/components/ui";
 import { updateNode } from "@/lib/api/owner";
-import type { PresenceNodeInput } from "@/lib/api/types";
+import type { PresenceMediaUploadResult, PresenceNodeInput } from "@/lib/api/types";
 
 export default function StudioPortfolioPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -25,11 +26,13 @@ export default function StudioPortfolioPage({ params }: { params: Promise<{ id: 
       location_label: node.location_label ?? "",
       profile_image_url: node.profile_image_url ?? "",
       cover_image_url: node.cover_image_url ?? "",
+      landing_background_url: node.landing_background_url ?? "",
       practice_statement: node.practice_statement ?? "",
       curatorial_statement: node.curatorial_statement ?? "",
       public_email: node.public_email ?? "",
       public_phone: node.public_phone ?? "",
       primary_cta_label: node.primary_cta_label ?? "",
+      primary_cta_url: node.primary_cta_url ?? "",
     });
   }, [node]);
 
@@ -49,6 +52,12 @@ export default function StudioPortfolioPage({ params }: { params: Promise<{ id: 
     } finally {
       setSaving(false);
     }
+  }
+
+  function syncMedia(result: PresenceMediaUploadResult) {
+    if (!result.field) return;
+    setForm((f) => ({ ...f, [result.field]: result.url ?? "" }));
+    void reload();
   }
 
   if (loading) return <Loading label="Loading your Presence..." />;
@@ -88,11 +97,48 @@ export default function StudioPortfolioPage({ params }: { params: Promise<{ id: 
 
         <section className="flex flex-col gap-4 rounded-2xl border border-[var(--p-studio-border)] bg-[var(--p-studio-surface)] p-5">
           <h3 className="text-xs font-semibold text-[var(--p-studio-muted)] uppercase tracking-widest">Media</h3>
-          <Input label="Profile image URL" type="url" value={form.profile_image_url ?? ""} onChange={(e) => set("profile_image_url", e.target.value)} />
-          <Input label="Cover image URL" type="url" value={form.cover_image_url ?? ""} onChange={(e) => set("cover_image_url", e.target.value)} />
-          <p className="text-xs leading-5 text-[var(--p-studio-muted)]">
-            Use hosted image URLs for alpha. Native upload is intentionally deferred.
-          </p>
+          <PresenceMediaSlot
+            label="Profile image"
+            description="A face, mark, practice portrait, or object that identifies this Presence."
+            currentUrl={form.profile_image_url}
+            targetType="profile_image"
+            nodeId={nodeId}
+            token={token}
+            aspectHint="aspect-square"
+            recommendedSize="Recommended: square image, at least 900 px."
+            publicVisibilityNote={node.status === "published" ? "Visible on the public page after upload." : "Kept inside your private draft until publish."}
+            onUploaded={syncMedia}
+            onCleared={syncMedia}
+            onManualUrlChange={(url) => set("profile_image_url", url)}
+          />
+          <PresenceMediaSlot
+            label="Cover image"
+            description="A wide anchor image for your public page, gallery cards, and launch preview."
+            currentUrl={form.cover_image_url}
+            targetType="cover_image"
+            nodeId={nodeId}
+            token={token}
+            aspectHint="aspect-[16/9]"
+            recommendedSize="Recommended: landscape image, at least 1600 px wide."
+            publicVisibilityNote={node.status === "published" ? "Visible on the public page after upload." : "Kept inside your private draft until publish."}
+            onUploaded={syncMedia}
+            onCleared={syncMedia}
+            onManualUrlChange={(url) => set("cover_image_url", url)}
+          />
+          <PresenceMediaSlot
+            label="Landing background"
+            description="Optional first-screen atmosphere for Presence templates that use an entry view."
+            currentUrl={form.landing_background_url}
+            targetType="landing_background"
+            nodeId={nodeId}
+            token={token}
+            aspectHint="aspect-[16/10]"
+            recommendedSize="Recommended: calm, uncrowded image, at least 1600 px wide."
+            publicVisibilityNote={node.status === "published" ? "Used only by templates that enable the landing screen." : "Kept inside your private draft until publish."}
+            onUploaded={syncMedia}
+            onCleared={syncMedia}
+            onManualUrlChange={(url) => set("landing_background_url", url)}
+          />
         </section>
 
         <section className="flex flex-col gap-4 rounded-2xl border border-[var(--p-studio-border)] bg-[var(--p-studio-surface)] p-5">
@@ -107,6 +153,7 @@ export default function StudioPortfolioPage({ params }: { params: Promise<{ id: 
           <Input label="Public email" type="email" value={form.public_email ?? ""} onChange={(e) => set("public_email", e.target.value)} />
           <Input label="Public phone" type="tel" value={form.public_phone ?? ""} onChange={(e) => set("public_phone", e.target.value)} />
           <Input label="Primary CTA label" value={form.primary_cta_label ?? ""} onChange={(e) => set("primary_cta_label", e.target.value)} />
+          <Input label="Primary CTA URL" type="url" value={form.primary_cta_url ?? ""} onChange={(e) => set("primary_cta_url", e.target.value)} />
         </section>
 
         <div className="flex justify-end">

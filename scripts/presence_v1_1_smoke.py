@@ -28,6 +28,12 @@ API_BASE = (
     or "http://localhost:5000"
 ).rstrip("/")
 APP_BASE = (os.environ.get("PRESENCE_APP_BASE_URL") or "").rstrip("/")
+PUBLIC_ORIGIN = (
+    os.environ.get("PRESENCE_PUBLIC_ORIGIN")
+    or os.environ.get("NEXT_PUBLIC_PRESENCE_PUBLIC_ORIGIN")
+    or APP_BASE
+    or "https://presence-gilt.vercel.app"
+).rstrip("/")
 TOKEN = (os.environ.get("PRESENCE_SMOKE_AUTH_TOKEN") or "").strip()
 DESIRED_SLUG = (
     os.environ.get("PRESENCE_SMOKE_DESIRED_SLUG")
@@ -192,6 +198,63 @@ def _request_with_response_headers(
         return 0, {}, str(exc)
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # type: ignore[override]
+        return None
+
+
+def request_no_redirect(
+    method: str,
+    base: str,
+    path: str,
+    *,
+    timeout: int = 20,
+) -> tuple[int, dict[str, str], str]:
+    request = urllib.request.Request(f"{base}{path}", headers={"Accept": "text/html,application/json"}, method=method)
+    opener = urllib.request.build_opener(_NoRedirect)
+    try:
+        with opener.open(request, timeout=timeout) as response:
+            raw = response.read().decode("utf-8", errors="replace")
+            return response.status, {k.lower(): v for k, v in response.headers.items()}, raw
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", errors="replace")
+        return exc.code, {k.lower(): v for k, v in exc.headers.items()}, raw
+    except Exception as exc:
+        return 0, {}, str(exc)
+
+
+def check_wrong_host_public_redirect() -> None:
+    cases = [
+        ("/p/test-slug?source=smoke", f"{PUBLIC_ORIGIN}/p/test-slug?source=smoke"),
+        ("/p/test-slug/works/abc", f"{PUBLIC_ORIGIN}/p/test-slug/works/abc"),
+        ("/p/test-slug/collections/def", f"{PUBLIC_ORIGIN}/p/test-slug/collections/def"),
+    ]
+    for path, expected in cases:
+        status, headers, _ = request_no_redirect("GET", API_BASE, path)
+        location = headers.get("location", "")
+        ok = status in (301, 302, 307, 308) and location == expected
+        record(
+            f"wrong_host_redirect_{path.split('/')[3] if path.count('/') > 2 else 'page'}",
+            "passed" if ok else "failed",
+            f"status={status} location={location!r} expected={expected!r}",
+        )
+
+    api_status, api_payload, _ = request_json("GET", API_BASE, "/api/presence/public/test-slug")
+    record(
+        "public_api_not_affected_by_redirect",
+        "passed" if api_status in (200, 404) and isinstance(api_payload, dict) else "failed",
+        f"status={api_status}",
+    )
+
+    canonical = f"{PUBLIC_ORIGIN}/p/{DESIRED_SLUG}"
+    uses_backend_host = API_BASE.replace("https://", "").replace("http://", "") in canonical
+    record(
+        "canonical_public_url_frontend_origin",
+        "passed" if not uses_backend_host else "failed",
+        canonical,
+    )
+
+
 def check_cors_preflight_and_diagnostics() -> None:
     """No-token CORS smoke for the Presence frontend → ANU backend pair.
 
@@ -284,6 +347,17 @@ def check_authless_rejections() -> None:
             record(name, "passed", "401 without bearer token")
         else:
             record(name, "failed", f"expected 401, got {status} payload={payload}")
+
+    status, headers, raw = _request_with_response_headers(
+        "POST",
+        API_BASE,
+        "/api/presence/owner/nodes/1/media",
+        headers={"Origin": SMOKE_ORIGIN},
+    )
+    if status in (401, 403):
+        record("media_upload_without_token", "passed", f"status={status}")
+    else:
+        record("media_upload_without_token", "failed", f"status={status} body={raw[:200]!r} headers={headers}")
 
 
 def check_app_health() -> None:
@@ -429,6 +503,7 @@ def check_optional_owner_flow(public_items_before: list[Any]) -> None:
 def main() -> int:
     public_items = []
     check_backend_health()
+    check_wrong_host_public_redirect()
     check_cors_preflight_and_diagnostics()
     public_items = check_public_list()
     check_authless_rejections()
@@ -443,6 +518,7 @@ def main() -> int:
         "ok": not failed,
         "api_base_url": API_BASE,
         "app_base_url": APP_BASE or None,
+        "public_origin": PUBLIC_ORIGIN or None,
         "smoke_origin": SMOKE_ORIGIN or None,
         "auth_checks": bool(TOKEN),
         "desired_slug": DESIRED_SLUG,

@@ -9,7 +9,7 @@
 - Seed data: run the Flask CLI seed command exposed in `app/__init__.py` for Presence templates/demo data, or call `seed_presence_templates()` / `seed_presence_demo_data()` in an app context.
 - Confirm `qrcode==8.2` is installed in the backend environment.
 - Configure owner app auth with the existing participant/Supabase JWT path.
-- For alpha media, prepare public hosted image URLs. Native upload is not part of this pass.
+- For launch v1 media, configure Presence direct upload storage and keep hosted image URLs as the advanced fallback.
 
 ## Verification Commands
 
@@ -53,7 +53,7 @@ python -m py_compile scripts/presence_nodes_smoke.py
 - Enquiry and quote request forms validate required fields and consent.
 - NFC scan alone does not create a named connection.
 - QR SVG route scans to the canonical public URL.
-- Hosted image URL fields reject local/internal URLs and show previews/fallbacks.
+- Studio media slots upload JPG/PNG/WEBP images directly, reject unsafe/oversized files, and still allow hosted URLs as an advanced fallback.
 - Documentation and smoke instructions are current.
 
 ## Pilot Template Readiness Gate

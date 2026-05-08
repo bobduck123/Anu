@@ -6,9 +6,10 @@ import { Plus, Trash2, Eye, EyeOff, Pencil } from "lucide-react";
 import { useOwnerNode } from "@/components/studio/useOwnerNode";
 import StudioShell from "@/components/studio/StudioShell";
 import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
+import PresenceMediaSlot from "@/components/studio/PresenceMediaSlot";
 import { Loading, Empty, Button, Input, Textarea } from "@/components/ui";
 import { listWorks, createWork, updateWork, deleteWork } from "@/lib/api/owner";
-import type { PresenceWork } from "@/lib/api/types";
+import type { PresenceMediaUploadResult, PresenceWork } from "@/lib/api/types";
 
 export default function StudioWorksPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -16,12 +17,18 @@ export default function StudioWorksPage({ params }: { params: Promise<{ id: stri
   const { node, token, loading, error, authRequired } = useOwnerNode(nodeId);
   const [works, setWorks] = useState<PresenceWork[]>([]);
   const [worksLoading, setWorksLoading] = useState(true);
+  const [listError, setListError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Partial<PresenceWork> | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!token) return;
-    listWorks(nodeId, token).then(setWorks).catch(console.error).finally(() => setWorksLoading(false));
+    setWorksLoading(true);
+    setListError(null);
+    listWorks(nodeId, token)
+      .then(setWorks)
+      .catch((err) => setListError(err instanceof Error ? err.message : "Works could not be loaded."))
+      .finally(() => setWorksLoading(false));
   }, [nodeId, token]);
 
   async function save() {
@@ -51,6 +58,13 @@ export default function StudioWorksPage({ params }: { params: Promise<{ id: stri
     if (!token || !confirm("Delete this work?")) return;
     await deleteWork(work.id!, token);
     setWorks((ws) => ws.filter((w) => w.id !== work.id));
+  }
+
+  function syncUploadedWork(result: PresenceMediaUploadResult) {
+    const updated = result.entity as PresenceWork | undefined;
+    if (!updated?.id) return;
+    setEditing((current) => (current?.id === updated.id ? updated : current));
+    setWorks((ws) => ws.map((w) => (w.id === updated.id ? updated : w)));
   }
 
   if (loading) return <Loading label="Loading works..." />;
@@ -91,7 +105,27 @@ export default function StudioWorksPage({ params }: { params: Promise<{ id: stri
               <Input label="Year" value={editing.year ?? ""} onChange={(e) => setEditing((p) => ({ ...p, year: e.target.value }))} />
               <Input label="Medium" value={editing.medium ?? ""} onChange={(e) => setEditing((p) => ({ ...p, medium: e.target.value }))} />
             </div>
-            <Input label="Image URL" type="url" value={editing.image_url ?? ""} onChange={(e) => setEditing((p) => ({ ...p, image_url: e.target.value }))} />
+            {editing.id ? (
+              <PresenceMediaSlot
+                label="Work image"
+                description="Upload the image visitors should see first for this work."
+                currentUrl={editing.image_url ?? editing.thumbnail_url}
+                targetType="work_image"
+                nodeId={nodeId}
+                token={token}
+                workId={editing.id}
+                aspectHint="aspect-[4/3]"
+                recommendedSize="Recommended: at least 1200 px wide."
+                publicVisibilityNote={node.status === "published" ? "Visible while this work is shown." : "Kept inside your private draft until publish."}
+                onUploaded={syncUploadedWork}
+                onCleared={syncUploadedWork}
+                onManualUrlChange={(url) => setEditing((p) => ({ ...p, image_url: url, thumbnail_url: url }))}
+              />
+            ) : (
+              <div className="rounded-2xl border border-[var(--p-studio-border)] bg-black/10 p-4 text-xs leading-5 text-[var(--p-studio-muted)]">
+                Save this work once, then add its image from the edit panel. Draft works stay private until the Presence is published.
+              </div>
+            )}
             <Textarea label="Description" value={editing.description ?? ""} onChange={(e) => setEditing((p) => ({ ...p, description: e.target.value }))} />
             <div className="flex gap-2 justify-end">
               <Button variant="ghost" size="sm" onClick={() => setEditing(null)}>Cancel</Button>
@@ -101,9 +135,19 @@ export default function StudioWorksPage({ params }: { params: Promise<{ id: stri
         )}
 
         {worksLoading && <Loading label="Loading works..." />}
+        {listError && (
+          <div className="rounded-2xl border border-red-900/50 bg-red-950/25 p-4 text-sm leading-6 text-red-100">
+            <p className="font-semibold">Works could not be loaded</p>
+            <p className="mt-1 text-xs text-red-100/80">{listError}</p>
+          </div>
+        )}
 
-        {!worksLoading && works.length === 0 && (
-          <Empty title="No works yet" body="Add the first work, project, image, object, or proof item that helps people understand your world." />
+        {!worksLoading && !listError && works.length === 0 && (
+          <Empty
+            title="Add your first work"
+            body="Start with one project, image, object, case study, or proof item. You can upload its image after the first save."
+            action={<Button size="sm" onClick={() => setEditing({ is_visible: true })}>Add work</Button>}
+          />
         )}
 
         {works.map((work) => (

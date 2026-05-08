@@ -1,4 +1,5 @@
 import os
+import io
 from datetime import timedelta
 
 os.environ["FLASK_ENV"] = "testing"
@@ -11,6 +12,7 @@ from backend_factory import load_create_app  # noqa: E402
 
 
 CONTROL_SECRET = "presence-control-secret"
+PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
 
 
 PRESENCE_SCOPES = [
@@ -190,6 +192,37 @@ def _create_presence_node_for_owner(client, headers, tenant_id, owner_user_id, *
     )
     assert response.status_code == 201
     return response.get_json()["data"]
+
+
+def _upload_image(client, *, node_id, headers=None, target_type="profile_image", filename="presence.png", content=PNG_BYTES, extra=None):
+    data = {
+        "target_type": target_type,
+        "file": (io.BytesIO(content), filename),
+        **(extra or {}),
+    }
+    return client.post(
+        f"/api/presence/owner/nodes/{node_id}/media",
+        data=data,
+        headers=headers or {},
+        base_url="http://public.test",
+        content_type="multipart/form-data",
+    )
+
+
+def _patch_presence_media_store(monkeypatch):
+    from manara_backend_app.api import presence_owner as owner_api
+    from manara_backend_app.services.presence_media_storage import StoredPresenceMedia
+
+    def fake_store(file, *, storage_path):
+        return StoredPresenceMedia(
+            url=f"https://media.test/{storage_path}",
+            storage_path=storage_path,
+            backend="test",
+            content_type="image/png",
+            size=len(PNG_BYTES),
+        )
+
+    monkeypatch.setattr(owner_api, "store_presence_image", fake_store)
 
 
 def _node_payload(tenant_id, slug="river-practitioner"):
@@ -1568,6 +1601,241 @@ def test_owner_identity_upsert_never_grants_admin_or_control_permissions():
         assert user.role not in {"platform_admin", "node_admin", "control_operator", "tenant_admin"}
 
 
+def test_owner_media_upload_requires_auth_not_500():
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers = _headers(app)
+
+    from manara_backend_app.models import User
+
+    with app.app_context():
+        owner_id = User.query.filter_by(username="node-admin").first().id
+    node = _create_presence_node_for_owner(
+        client,
+        headers,
+        tenant_id,
+        owner_id,
+        slug="media-auth-node",
+        display_name="Media Auth Node",
+    )
+
+    response = _upload_image(client, node_id=node["id"])
+
+    assert response.status_code == 401
+    assert response.status_code != 500
+
+
+def test_owner_media_upload_rejects_invalid_mime_and_oversized_file():
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers = _headers(app)
+    owner_headers = _owner_headers(app, "node-admin", "node_admin")
+    app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
+
+    from manara_backend_app.models import User
+
+    with app.app_context():
+        owner_id = User.query.filter_by(username="node-admin").first().id
+    node = _create_presence_node_for_owner(
+        client,
+        headers,
+        tenant_id,
+        owner_id,
+        slug="media-validation-node",
+        display_name="Media Validation Node",
+    )
+
+    invalid = _upload_image(
+        client,
+        node_id=node["id"],
+        headers=owner_headers,
+        filename="bad.html",
+        content=b"<html><script>alert(1)</script></html>",
+    )
+    assert invalid.status_code == 422, invalid.get_json()
+
+    oversized = _upload_image(
+        client,
+        node_id=node["id"],
+        headers=owner_headers,
+        filename="large.png",
+        content=b"\x89PNG\r\n\x1a\n" + b"x" * (8 * 1024 * 1024 + 2),
+    )
+    assert oversized.status_code == 422, oversized.get_json()
+
+
+def test_owner_media_upload_rejects_cross_owner_node():
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    control_headers = _headers(app)
+
+    from manara_backend_app.models import User
+
+    with app.app_context():
+        owner_a_id = User.query.filter_by(username="node-admin").first().id
+    _create_owner_user(
+        app,
+        username="media-owner-b",
+        pseudonym="Media Owner B",
+        email="media-b@example.com",
+        node_id=tenant_id,
+        role="participant",
+    )
+    node = _create_presence_node_for_owner(
+        client,
+        control_headers,
+        tenant_id,
+        owner_a_id,
+        slug="media-cross-owner",
+        display_name="Media Cross Owner",
+    )
+
+    response = _upload_image(
+        client,
+        node_id=node["id"],
+        headers=_owner_headers(app, "media-owner-b", "participant"),
+    )
+
+    assert response.status_code == 403
+
+
+def test_owner_media_upload_saves_profile_image_and_clear_removes_it(monkeypatch):
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    control_headers = _headers(app)
+    owner_headers = _owner_headers(app, "node-admin", "node_admin")
+    _patch_presence_media_store(monkeypatch)
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceNode, User
+
+    with app.app_context():
+        owner_id = User.query.filter_by(username="node-admin").first().id
+    node = _create_presence_node_for_owner(
+        client,
+        control_headers,
+        tenant_id,
+        owner_id,
+        slug="media-profile-node",
+        display_name="Media Profile Node",
+    )
+
+    uploaded = _upload_image(client, node_id=node["id"], headers=owner_headers)
+    assert uploaded.status_code == 201, uploaded.get_json()
+    data = uploaded.get_json()["data"]
+    assert data["target_type"] == "profile_image"
+    assert data["field"] == "profile_image_url"
+    assert f"/presence/{owner_id}/{node['id']}/profile/" in data["url"]
+
+    with app.app_context():
+        row = _db.session.query(PresenceNode).get(node["id"])
+        assert row.profile_image_url == data["url"]
+
+    cleared = client.post(
+        f"/api/presence/owner/nodes/{node['id']}/media/clear",
+        json={"target_type": "profile_image"},
+        headers=owner_headers,
+        base_url="http://public.test",
+    )
+    assert cleared.status_code == 200, cleared.get_json()
+    with app.app_context():
+        row = _db.session.query(PresenceNode).get(node["id"])
+        assert row.profile_image_url is None
+
+
+def test_owner_media_upload_saves_work_and_collection_image_fields(monkeypatch):
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    control_headers = _headers(app)
+    owner_headers = _owner_headers(app, "node-admin", "node_admin")
+    _patch_presence_media_store(monkeypatch)
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceCollection, PresenceNode, PresenceWork, User
+
+    with app.app_context():
+        owner_id = User.query.filter_by(username="node-admin").first().id
+    node = _create_presence_node_for_owner(
+        client,
+        control_headers,
+        tenant_id,
+        owner_id,
+        slug="media-child-node",
+        display_name="Media Child Node",
+    )
+    work = client.post(
+        f"/api/presence/owner/nodes/{node['id']}/works",
+        json={"title": "Uploaded Work"},
+        headers=owner_headers,
+        base_url="http://public.test",
+    )
+    assert work.status_code == 201, work.get_json()
+    collection = client.post(
+        f"/api/presence/owner/nodes/{node['id']}/collections",
+        json={"title": "Uploaded Collection"},
+        headers=owner_headers,
+        base_url="http://public.test",
+    )
+    assert collection.status_code == 201, collection.get_json()
+    work_id = work.get_json()["data"]["id"]
+    collection_id = collection.get_json()["data"]["id"]
+
+    work_upload = _upload_image(
+        client,
+        node_id=node["id"],
+        headers=owner_headers,
+        target_type="work_image",
+        extra={"work_id": str(work_id)},
+    )
+    assert work_upload.status_code == 201, work_upload.get_json()
+    collection_upload = _upload_image(
+        client,
+        node_id=node["id"],
+        headers=owner_headers,
+        target_type="collection_cover",
+        extra={"collection_id": str(collection_id)},
+    )
+    assert collection_upload.status_code == 201, collection_upload.get_json()
+
+    with app.app_context():
+        work_row = _db.session.query(PresenceWork).get(work_id)
+        collection_row = _db.session.query(PresenceCollection).get(collection_id)
+        assert work_row.image_url == work_upload.get_json()["data"]["url"]
+        assert work_row.thumbnail_url == work_upload.get_json()["data"]["url"]
+        assert collection_row.cover_image_url == collection_upload.get_json()["data"]["url"]
+
+
+def test_presence_public_routes_still_hide_uploaded_image_draft(monkeypatch):
+    app = _build_app()
+    _seed_fixture(app)
+    client = app.test_client()
+    _patch_presence_media_store(monkeypatch)
+    headers = _supabase_owner_headers(
+        app,
+        sub="anu-uploaded-draft-owner",
+        email="anu-uploaded-draft-owner@example.com",
+    )
+
+    draft = client.post(
+        "/api/presence/owner/beta/start",
+        json={"display_name": "Uploaded Draft", "desired_slug": "uploaded-draft", "presence_type": "artist"},
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert draft.status_code == 201, draft.get_json()
+    node_id = draft.get_json()["data"]["id"]
+
+    uploaded = _upload_image(client, node_id=node_id, headers=headers)
+    assert uploaded.status_code == 201, uploaded.get_json()
+
+    assert client.get("/api/presence/public/uploaded-draft", base_url="http://public.test").status_code == 404
+
+
 
 def test_presence_public_hides_unpublished_suspended_archived_and_private_nodes():
     app = _build_app()
@@ -2264,6 +2532,53 @@ def test_public_presence_list_returns_only_published_public_nodes_with_owner_saf
     assert forbidden_keys.isdisjoint(public_pilot.keys()), (
         f"public list leaked private fields: {forbidden_keys & public_pilot.keys()}"
     )
+
+
+def test_wrong_host_presence_page_redirects_to_frontend_origin():
+    app = _build_app()
+    app.config["PRESENCE_PUBLIC_ORIGIN"] = "https://presence-gilt.vercel.app"
+    client = app.test_client()
+
+    response = client.get("/p/jafar", base_url="https://anu-back-end.vercel.app")
+
+    assert response.status_code == 302
+    assert response.headers["Location"] == "https://presence-gilt.vercel.app/p/jafar"
+
+
+def test_wrong_host_presence_page_redirect_preserves_query_string():
+    app = _build_app()
+    app.config["PRESENCE_PUBLIC_ORIGIN"] = "https://presence-gilt.vercel.app"
+    client = app.test_client()
+
+    response = client.get("/p/jafar?source=nfc-card&sid=abc", base_url="https://anu-back-end.vercel.app")
+
+    assert response.status_code == 302
+    assert response.headers["Location"] == "https://presence-gilt.vercel.app/p/jafar?source=nfc-card&sid=abc"
+
+
+def test_wrong_host_presence_work_and_collection_paths_redirect():
+    app = _build_app()
+    app.config["PRESENCE_PUBLIC_ORIGIN"] = "https://presence-gilt.vercel.app"
+    client = app.test_client()
+
+    work = client.get("/p/jafar/works/abc", base_url="https://anu-back-end.vercel.app")
+    collection = client.get("/p/jafar/collections/def", base_url="https://anu-back-end.vercel.app")
+
+    assert work.status_code == 302
+    assert work.headers["Location"] == "https://presence-gilt.vercel.app/p/jafar/works/abc"
+    assert collection.status_code == 302
+    assert collection.headers["Location"] == "https://presence-gilt.vercel.app/p/jafar/collections/def"
+
+
+def test_wrong_host_redirect_does_not_affect_public_api_route():
+    app = _build_app()
+    app.config["PRESENCE_PUBLIC_ORIGIN"] = "https://presence-gilt.vercel.app"
+    client = app.test_client()
+
+    response = client.get("/api/presence/public/jafar", base_url="https://anu-back-end.vercel.app")
+
+    assert response.status_code == 404
+    assert "Location" not in response.headers
 
 
 def test_public_presence_list_supports_pagination_and_filters():

@@ -7,6 +7,7 @@ import StudioShell from "@/components/studio/StudioShell";
 import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
 import { Loading, StatusPill, Button } from "@/components/ui";
 import { publishNode, unpublishNode } from "@/lib/api/owner";
+import { canonicalPublicUrl } from "@/lib/presence/url";
 
 export default function StudioSettingsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -34,6 +35,8 @@ export default function StudioSettingsPage({ params }: { params: Promise<{ id: s
     );
   }
 
+  const publicUrl = canonicalPublicUrl(node.slug);
+
   return (
     <StudioShell node={node}>
       <div className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-6">
@@ -58,12 +61,17 @@ export default function StudioSettingsPage({ params }: { params: Promise<{ id: s
             </Button>
           </div>
 
-          {node.public_url && (
+          {node.status === "published" ? (
             <div className="flex items-center gap-2 text-sm text-[var(--p-studio-muted)]">
               <Globe className="w-4 h-4 shrink-0" />
-              <a href={node.public_url} target="_blank" rel="noopener noreferrer" className="truncate hover:text-[var(--p-studio-accent)] transition-colors">
-                {node.public_url}
+              <a href={publicUrl} target="_blank" rel="noopener noreferrer" className="truncate hover:text-[var(--p-studio-accent)] transition-colors">
+                {publicUrl}
               </a>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-[var(--p-studio-muted)]">
+              <Globe className="w-4 h-4 shrink-0" />
+              <span className="truncate">Public URL reserved after publish: {publicUrl}</span>
             </div>
           )}
           <p className="text-xs leading-5 text-[var(--p-studio-muted)]">

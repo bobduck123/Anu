@@ -9,6 +9,7 @@ import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
 import { Loading, StatusPill, Button } from "@/components/ui";
 import { publishNode, unpublishNode } from "@/lib/api/owner";
 import type { PresenceNode } from "@/lib/api/types";
+import { canonicalPublicUrl, displayPublicUrl } from "@/lib/presence/url";
 
 const QUICK_LINKS = [
   { label: "Shape portfolio", href: "portfolio", icon: Edit },
@@ -114,6 +115,8 @@ export default function StudioDashboard({ params }: { params: Promise<{ id: stri
   const total = checks.length;
   const readinessPct = Math.round((completed / total) * 100);
   const nextActions = checks.filter((c) => !c.done).slice(0, 3);
+  const publicUrl = canonicalPublicUrl(node.slug);
+  const publicUrlDisplay = displayPublicUrl(node.slug);
 
   return (
     <StudioShell node={node}>
@@ -136,23 +139,21 @@ export default function StudioDashboard({ params }: { params: Promise<{ id: stri
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1 min-w-0">
               <StatusPill status={node.status} />
-              {node.public_url && (
-                node.status === "published" ? (
-                  <a
-                    href={node.public_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-xs text-[var(--p-studio-muted)] hover:text-[var(--p-studio-accent)] truncate"
-                  >
-                    <Globe className="w-3 h-3 shrink-0" />
-                    {node.public_url.replace("https://", "")}
-                  </a>
-                ) : (
-                  <span className="flex items-center gap-1 text-xs text-[var(--p-studio-muted)] truncate">
-                    <Globe className="w-3 h-3 shrink-0" />
-                    {node.public_url.replace("https://", "")}
-                  </span>
-                )
+              {node.status === "published" ? (
+                <a
+                  href={publicUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs text-[var(--p-studio-muted)] hover:text-[var(--p-studio-accent)] truncate"
+                >
+                  <Globe className="w-3 h-3 shrink-0" />
+                  {publicUrlDisplay}
+                </a>
+              ) : (
+                <span className="flex items-center gap-1 text-xs text-[var(--p-studio-muted)] truncate">
+                  <Globe className="w-3 h-3 shrink-0" />
+                  Draft preview path: /p/{node.slug}
+                </span>
               )}
             </div>
             <Button

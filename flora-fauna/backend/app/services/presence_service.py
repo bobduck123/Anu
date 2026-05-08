@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 from datetime import timedelta
 from typing import Any
@@ -334,8 +335,34 @@ def _date_or_none(value: Any):
         return None
 
 
+def configured_presence_public_origin() -> str:
+    """Return the canonical Presence frontend origin, never the API host by accident."""
+    configured = (
+        current_app.config.get("PRESENCE_PUBLIC_ORIGIN")
+        or os.environ.get("PRESENCE_PUBLIC_ORIGIN")
+        or os.environ.get("NEXT_PUBLIC_PRESENCE_PUBLIC_ORIGIN")
+    )
+    if configured:
+        return str(configured).strip().rstrip("/")
+
+    frontend_base = current_app.config.get("FRONTEND_BASE_URL") or os.environ.get("FRONTEND_BASE_URL")
+    if frontend_base and "anu-back-end" not in str(frontend_base):
+        return str(frontend_base).strip().rstrip("/")
+
+    env = (
+        current_app.config.get("FLASK_ENV")
+        or os.environ.get("FLASK_ENV")
+        or os.environ.get("APP_ENV")
+        or os.environ.get("VERCEL_ENV")
+        or ""
+    )
+    if str(env).strip().lower() == "production":
+        return "https://presence-gilt.vercel.app"
+    return "http://localhost:3001"
+
+
 def public_url_for_node(node: PresenceNode, *, host_url: str | None = None) -> str:
-    base = (host_url or request.host_url or current_app.config.get("FRONTEND_BASE_URL") or "").rstrip("/")
+    base = (host_url or configured_presence_public_origin()).rstrip("/")
     return f"{base}/p/{quote(node.slug)}"
 
 

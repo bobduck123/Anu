@@ -47,6 +47,7 @@ from ..services.presence_service import (
     create_presence_variation,
     create_presence_work,
     normalize_slug,
+    public_url_for_node,
     pseudo_qr_svg,
     public_presence_node_by_slug,
     public_presence_nodes,
@@ -522,7 +523,7 @@ def get_public_presence_vcard(slug):
     except Exception:
         db.session.rollback()
     return Response(
-        presence_vcard(node),
+        presence_vcard(node, host_url=public_url_for_node(node).rsplit("/p/", 1)[0]),
         mimetype="text/vcard",
         headers={"Content-Disposition": f'attachment; filename="{normalize_slug(node.slug)}.vcf"'},
     )
@@ -539,7 +540,10 @@ def get_public_presence_qr(slug):
         db.session.commit()
     except Exception:
         db.session.rollback()
-    return Response(pseudo_qr_svg(node), mimetype="image/svg+xml")
+    return Response(
+        pseudo_qr_svg(node, host_url=public_url_for_node(node).rsplit("/p/", 1)[0]),
+        mimetype="image/svg+xml",
+    )
 
 
 @presence_bp.route("/analytics/event", methods=["POST"])

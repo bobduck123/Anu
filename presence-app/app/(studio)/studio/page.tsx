@@ -156,12 +156,10 @@ export default function StudioIndexPage() {
                   </span>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--p-studio-muted)]">
                     <StatusPill status={node.status} />
-                    {node.public_url && (
-                      <span className="flex items-center gap-1 truncate">
-                        <Globe className="w-3 h-3" />
-                        {node.slug}
-                      </span>
-                    )}
+                    <span className="flex items-center gap-1 truncate">
+                      <Globe className="w-3 h-3" />
+                      {node.status === "published" ? `/p/${node.slug}` : `draft /p/${node.slug}`}
+                    </span>
                   </div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-[var(--p-studio-muted)] group-hover:text-[var(--p-studio-accent)] shrink-0 transition-colors" />

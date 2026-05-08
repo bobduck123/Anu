@@ -1,9 +1,11 @@
-import { ownerFetch } from "./client";
+import { ownerFetch, ownerMultipartFetch } from "./client";
 import type {
   PresenceNode,
   PresenceNodeInput,
   PresenceWork,
   PresenceCollection,
+  PresenceMediaTarget,
+  PresenceMediaUploadResult,
   PresenceService,
   PresenceNfcTag,
   PresenceEnquiry,
@@ -23,6 +25,39 @@ export const updateNode = (id: number, payload: PresenceNodeInput, t: string) =>
   ownerFetch<PresenceNode>(`${BASE}/nodes/${id}`, t, {
     method: "PATCH",
     body: JSON.stringify(payload),
+  });
+
+export const uploadNodeMedia = (
+  nodeId: number,
+  t: string,
+  input: {
+    targetType: PresenceMediaTarget;
+    file: File;
+    workId?: number;
+    collectionId?: number;
+  },
+) => {
+  const form = new FormData();
+  form.append("target_type", input.targetType);
+  form.append("file", input.file);
+  if (input.workId) form.append("work_id", String(input.workId));
+  if (input.collectionId) form.append("collection_id", String(input.collectionId));
+  return ownerMultipartFetch<PresenceMediaUploadResult>(`${BASE}/nodes/${nodeId}/media`, t, form);
+};
+
+export const clearNodeMedia = (
+  nodeId: number,
+  t: string,
+  targetType: PresenceMediaTarget,
+  input: { workId?: number; collectionId?: number } = {},
+) =>
+  ownerFetch<PresenceMediaUploadResult>(`${BASE}/nodes/${nodeId}/media/clear`, t, {
+    method: "POST",
+    body: JSON.stringify({
+      target_type: targetType,
+      work_id: input.workId,
+      collection_id: input.collectionId,
+    }),
   });
 
 export const publishNode = (id: number, t: string) =>

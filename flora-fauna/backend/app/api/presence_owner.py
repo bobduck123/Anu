@@ -26,6 +26,12 @@ from ..models import (
     PresenceWork,
 )
 from ..security.alpha import alpha_jwt_required
+from ..services.presence_media_storage import (
+    PresenceMediaStorageError,
+    PresenceMediaValidationError,
+    build_presence_media_path,
+    store_presence_image,
+)
 from ..services.presence_owner_identity import resolve_or_provision_presence_owner
 from ..services.presence_service import (
     PresenceValidationError,
@@ -65,8 +71,26 @@ _OWNER_NODE_MUTABLE_FIELDS = {
     "visual_mood",
     "profile_image_url",
     "cover_image_url",
+    "landing_background_url",
+    "location_label",
+    "primary_cta_label",
+    "primary_cta_url",
+    "public_email",
+    "public_phone",
+    "landing_enabled",
+    "landing_title",
+    "landing_subtitle",
+    "landing_enter_label",
     "practice_statement",
     "curatorial_statement",
+}
+
+_MEDIA_TARGETS = {
+    "profile_image",
+    "cover_image",
+    "landing_background",
+    "work_image",
+    "collection_cover",
 }
 
 
@@ -440,6 +464,133 @@ def update_owner_node(node_id):
     except PresenceValidationError as exc:
         db.session.rollback()
         return _validation_error(exc)
+
+
+def _int_request_value(name: str):
+    value = request.form.get(name)
+    if value is None:
+        data = request.get_json(silent=True) or {}
+        value = data.get(name)
+    try:
+        return int(value) if value not in (None, "") else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _media_target_for_node(node: PresenceNode, target_type: str):
+    if target_type not in _MEDIA_TARGETS:
+        return None, None, _err(
+            "validation_error",
+            "Unsupported media slot. Choose profile, cover, landing, work, or collection cover.",
+            422,
+        )
+    if target_type == "profile_image":
+        return node, "profile_image_url", None
+    if target_type == "cover_image":
+        return node, "cover_image_url", None
+    if target_type == "landing_background":
+        return node, "landing_background_url", None
+    if target_type == "work_image":
+        work_id = _int_request_value("work_id")
+        work = PresenceWork.query.get(work_id) if work_id else None
+        if not work or work.node_id != node.id:
+            return None, None, _err("not_found", "Work not found for this Presence.", 404)
+        return work, "image_url", work_id
+    collection_id = _int_request_value("collection_id")
+    collection = PresenceCollection.query.get(collection_id) if collection_id else None
+    if not collection or collection.node_id != node.id:
+        return None, None, _err("not_found", "Collection not found for this Presence.", 404)
+    return collection, "cover_image_url", collection_id
+
+
+def _serialize_media_entity(entity):
+    if isinstance(entity, PresenceNode):
+        return _owner_node_payload(entity, include_children=True)
+    if isinstance(entity, PresenceWork):
+        return serialize_work(entity)
+    if isinstance(entity, PresenceCollection):
+        return serialize_collection(entity, include_admin=True)
+    return None
+
+
+@presence_owner_bp.route("/nodes/<int:node_id>/media", methods=["POST"])
+@alpha_jwt_required()
+def upload_owner_media(node_id):
+    node, err = _load_owned_node(node_id)
+    if err:
+        return err
+    user = _resolve_owner_user()
+    if not user:
+        return _err("unauthorized", "Authentication required", 401)
+
+    target_type = str(request.form.get("target_type") or "").strip()
+    entity, field_name, child_id_or_err = _media_target_for_node(node, target_type)
+    if hasattr(child_id_or_err, "status_code") or (
+        isinstance(child_id_or_err, tuple) and len(child_id_or_err) == 2
+    ):
+        return child_id_or_err
+    if not entity or not field_name:
+        return _err("validation_error", "Unsupported media slot.", 422)
+
+    file = request.files.get("file")
+    try:
+        storage_path = build_presence_media_path(
+            owner_user_id=user.id,
+            node_id=node.id,
+            target_type=target_type,
+            filename=getattr(file, "filename", "") or "image",
+            work_id=child_id_or_err if target_type == "work_image" else None,
+            collection_id=child_id_or_err if target_type == "collection_cover" else None,
+        )
+        stored = store_presence_image(file, storage_path=storage_path)
+        setattr(entity, field_name, stored.url)
+        if isinstance(entity, PresenceWork) and field_name == "image_url":
+            entity.thumbnail_url = stored.url
+        db.session.commit()
+    except PresenceMediaValidationError as exc:
+        db.session.rollback()
+        return _err("validation_error", str(exc), 422)
+    except PresenceMediaStorageError as exc:
+        db.session.rollback()
+        return _err("storage_unavailable", str(exc), 503)
+
+    return _ok(
+        {
+            "target_type": target_type,
+            "field": field_name,
+            "url": stored.url,
+            "storage_path": stored.storage_path,
+            "storage_backend": stored.backend,
+            "entity": _serialize_media_entity(entity),
+        },
+        201,
+    )
+
+
+@presence_owner_bp.route("/nodes/<int:node_id>/media/clear", methods=["POST"])
+@alpha_jwt_required()
+def clear_owner_media(node_id):
+    node, err = _load_owned_node(node_id)
+    if err:
+        return err
+    target_type = str((request.get_json(silent=True) or {}).get("target_type") or "").strip()
+    entity, field_name, target_err = _media_target_for_node(node, target_type)
+    if isinstance(target_err, tuple):
+        return target_err
+    if not entity or not field_name:
+        return _err("validation_error", "Unsupported media slot.", 422)
+    setattr(entity, field_name, None)
+    if isinstance(entity, PresenceWork) and field_name == "image_url":
+        entity.thumbnail_url = None
+    db.session.commit()
+    return _ok(
+        {
+            "target_type": target_type,
+            "field": field_name,
+            "url": None,
+            "entity": _serialize_media_entity(entity),
+        }
+    )
 
 
 @presence_owner_bp.route("/nodes/<int:node_id>/publish", methods=["POST"])

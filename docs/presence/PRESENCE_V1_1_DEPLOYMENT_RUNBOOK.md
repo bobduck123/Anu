@@ -3,6 +3,9 @@
 Scope: launch hardening and public beta proof for backend plus `presence-app`.
 Do not deploy v1.2 feature work as part of this run.
 
+Media upload setup is detailed in
+`docs/presence/PRESENCE_MEDIA_UPLOAD_RUNBOOK.md`.
+
 ## 1. Commit And Push Checklist
 
 - Confirm working tree only contains intended Presence v1.1 files.
@@ -11,8 +14,8 @@ Do not deploy v1.2 feature work as part of this run.
 - Suggested commit:
 
 ```bash
-git add docs/presence/PRESENCE_V1_1_DEPLOYMENT_RUNBOOK.md docs/presence/screenshots/beta-to-launch-v1-pass docs/presence/screenshots/v1-1-gallery-draft-template-pass scripts/presence_v1_1_smoke.py scripts/presence_nodes_smoke.py flora-fauna/backend/app/__init__.py flora-fauna/backend/app/api/presence.py flora-fauna/backend/app/api/presence_owner.py flora-fauna/backend/app/models.py flora-fauna/backend/app/services/presence_owner_identity.py flora-fauna/backend/app/services/presence_service.py flora-fauna/backend/tests/test_presence_nodes.py flora-fauna/backend/tests/test_presence_cors.py flora-fauna/backend/migrations/versions/20260508_presence_beta_application.sql flora-fauna/backend/migrations/versions/20260508_presence_owner_identity_user_subject.sql presence-app
-git commit -m "Harden Presence v1.1 public beta launch"
+git add docs/presence scripts flora-fauna/backend/app flora-fauna/backend/tests/test_presence_nodes.py presence-app
+git commit -m "Modernize Presence launch media and public routing"
 git push origin feature/presence-ecosystem-alpha
 ```
 
@@ -24,9 +27,11 @@ draft endpoints exist before the UI calls them.
 Required endpoint availability after backend deploy:
 
 - `GET /healthz`
+- `GET /p/<slug>` redirects to the Presence frontend origin
 - `GET /api/presence/public/nodes`
 - `POST /api/presence/owner/beta/start`
 - `POST /api/presence/beta/applications`
+- `POST /api/presence/owner/nodes/<node_id>/media`
 
 ### 2a. Presence as ANU-native module
 
@@ -39,6 +44,8 @@ Presence remains a standalone product frontend, but the backend module is ANU-na
 - ANU backend resolves or provisions a local least-privilege `User` from a valid ANU Supabase JWT.
 - A first-time Supabase user with no Presence rows must receive `200` with an empty owner list, not `500`.
 - `/api/presence/owner/beta/start` must create `draft`, `private`, unpublished nodes only.
+- Wrong-host public page requests such as `https://anu-back-end.vercel.app/p/jafar` redirect to `https://presence-gilt.vercel.app/p/jafar`.
+- Direct media uploads are authenticated owner routes and never publish drafts.
 
 The owner identity bridge uses the JWT `sub` as the stable key via `User.global_subject_id`.
 If no matching local user exists, it provisions a `participant` user with no tenant,
@@ -76,9 +83,11 @@ the same ANU Supabase project.
 Required backend env:
 
 - `CORS_ORIGINS=https://presence-gilt.vercel.app,<existing origins...>`
+- `PRESENCE_PUBLIC_ORIGIN=https://presence-gilt.vercel.app`
 - `PUBLIC_JWT_SECRET_KEY` and `CONTROL_JWT_SECRET_KEY` remain configured for ANU public/control tokens.
 - If the ANU Supabase project signs public JWTs with the legacy HS secret, set `SUPABASE_JWT_SECRET` to that ANU Supabase JWT secret.
 - If ANU Supabase tokens are ES256/RS256 with JWKS, no service-role key is needed; backend validates against the token issuer JWKS.
+- For production media upload, set `PRESENCE_MEDIA_STORAGE_BACKEND=supabase`, `PRESENCE_MEDIA_BUCKET=presence-media`, `SUPABASE_URL=<ANU Supabase URL>`, and backend-only `SUPABASE_SERVICE_ROLE_KEY`.
 
 Never put Supabase service-role keys in `presence-app` or any `NEXT_PUBLIC_*`
 environment variable.
@@ -135,6 +144,9 @@ When something fails on `https://presence-gilt.vercel.app`:
 | `404` route | Backend branch not deployed or Presence blueprint missing | Redeploy backend branch and check route registration |
 | `200` empty list | Correct first-time owner state | Continue to onboarding |
 | `201` draft on `beta/start` | Correct onboarding handoff | Open `/studio/[id]`; draft remains private/unpublished |
+| `302` from `/p/<slug>` on backend | Correct wrong-host redirect | Browser should land on `https://presence-gilt.vercel.app/p/<slug>` |
+| `422` upload validation | Unsupported type or image over 8 MB | Upload JPG, PNG, or WEBP under 8 MB |
+| `403` upload | User does not own the Presence node/work/collection | Confirm signed-in account owns that draft |
 
 Note: setting `CORS_ORIGINS` in Vercel is a build-time config — you must
 redeploy the backend before changes take effect.
@@ -258,12 +270,15 @@ Presence app:
 Backend:
 
 - `GET /healthz`
+- `GET /p/jafar` on the backend host redirects to `https://presence-gilt.vercel.app/p/jafar`.
+- `GET /api/presence/public/jafar` remains an API JSON route and is not redirected to the frontend.
 - `GET /api/presence/public/nodes`
 - `OPTIONS /api/presence/owner/nodes` from `https://presence-gilt.vercel.app` returns `200` or `204`.
 - `GET /api/presence/owner/nodes` without token returns `401` or `403`, not `500`.
 - `GET /api/presence/owner/nodes` with a valid ANU Supabase user token returns `200` with an empty list or owner nodes.
 - `POST /api/presence/beta/applications` without token returns `401`.
 - `POST /api/presence/owner/beta/start` without token returns `401`.
+- `POST /api/presence/owner/nodes/<node_id>/media` without token returns `401` or `403`, not `500`.
 
 Authenticated beta proof:
 
@@ -279,6 +294,9 @@ Authenticated beta proof:
 - Confirm `/api/presence/public/nodes` does not include the draft.
 - Confirm owner `/api/presence/owner/nodes` includes the draft.
 - Confirm QR page says unpublished drafts are not public-ready.
+- Upload profile, cover, work, and collection images through Studio media slots.
+- Confirm uploaded-image draft remains hidden at `/api/presence/public/<draft-slug>`.
+- Confirm QR, copy, share, and public preview links use `https://presence-gilt.vercel.app/p/<slug>`, not the backend host.
 - Publish only after explicit operator/user action; confirm public route becomes available.
 
 ## 8. Rollback Notes

@@ -39,6 +39,6 @@ The alpha uses `/favicon.ico` as the manifest icon. Production app icons are def
 
 ## Limitations
 
-- Works and collections owner screens are review-first in this pass. Control-plane editors still support create/update/hide.
-- Native upload and offline service worker support are deferred.
+- Legacy `/app/*` notes are superseded by the standalone `presence-app` Studio for launch v1 owner workflows.
+- Offline service worker support is deferred.
 - Relationship ledger remains admin/control-first. Owner analytics and enquiry source context expose only owner-safe signals.

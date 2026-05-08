@@ -1,54 +1,65 @@
 # Presence Ecosystem Media Handling
 
-## Alpha Position
+## Launch v1 Position
 
-Presence alpha does not ship native upload. Media is handled through public hosted image URLs.
+Presence Studio supports direct image upload for the core public media slots:
 
-This removes upload/storage as a pilot blocker while keeping the public portfolio pages visually usable. Native upload can be added later through the platform's chosen storage provider.
+- profile image
+- cover image
+- landing background image
+- work image
+- collection cover image
 
-## Recommended Workflow
+Hosted image URLs remain available only as an advanced fallback. The primary Studio flow should not require users to paste image links.
 
-Use a public HTTPS image URL from one of:
+## Upload Architecture
 
-- Supabase Storage public bucket
-- Cloudinary
-- Imgix
-- a trusted website/CDN
-- a temporary pilot-safe asset host
+- `presence-app` uploads files to ANU backend owner routes with the user's Supabase bearer token.
+- The frontend never receives service-role keys.
+- The backend resolves the local ANU user, checks ownership, validates the file, stores media, and writes the resulting URL to the correct Presence field.
+- Draft and private Presences remain hidden publicly even when images are uploaded.
 
-Paste that URL into profile image, cover image, landing background, work image, thumbnail, or collection cover fields.
+See `docs/presence/PRESENCE_MEDIA_UPLOAD_RUNBOOK.md` for storage setup.
 
 ## Validation Rules
 
-Client and server validation align on the alpha baseline:
+Allowed:
 
-- allow `http` and `https`
-- reject `localhost`
-- reject `127.0.0.1`
-- reject `0.0.0.0`
-- reject `.local`
-- reject `.internal`
-- reject malformed URLs
+- JPG
+- PNG
+- WEBP
+- max 8 MB
+
+Rejected:
+
+- SVG
+- HTML
+- scripts
+- unknown MIME types
+- empty files
+- oversized files
 
 Server validation remains authoritative.
 
 ## Frontend Behaviour
 
-`PresenceMediaUrlInput` provides:
+`PresenceMediaSlot` provides:
 
-- controlled URL field
-- live preview when the URL is valid
-- broken image fallback
-- status pill for optional, valid, or invalid states
-- helper copy explaining hosted-image alpha workflow
+- drag and drop
+- select file button
+- preview
+- replace image
+- remove image
+- client-side type and size errors
+- advanced hosted URL fallback
+- draft/private visibility note
 
-It is used in the control editor and owner Presence profile editor for profile/cover/landing media fields.
+It is used in owner Studio for profile, cover, landing, work, and collection media fields.
 
 ## Deferred
 
-- native upload
+- full media library / DAM
 - image transformations
-- private media
+- private signed media lifecycle
 - asset moderation workflow
-- storage provider selection
-- signed URL lifecycle
+- multi-image work galleries

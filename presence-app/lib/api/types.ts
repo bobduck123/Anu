@@ -160,6 +160,22 @@ export type PresenceNodeInput = Partial<
   Omit<PresenceNode, "id" | "analytics" | "seo">
 >;
 
+export type PresenceMediaTarget =
+  | "profile_image"
+  | "cover_image"
+  | "landing_background"
+  | "work_image"
+  | "collection_cover";
+
+export interface PresenceMediaUploadResult {
+  target_type: PresenceMediaTarget;
+  field: string;
+  url: string | null;
+  storage_path?: string | null;
+  storage_backend?: string | null;
+  entity?: PresenceNode | PresenceWork | PresenceCollection | null;
+}
+
 export interface PresenceEnquiryInput {
   name: string;
   email: string;

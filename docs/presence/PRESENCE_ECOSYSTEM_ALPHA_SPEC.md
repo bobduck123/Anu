@@ -85,7 +85,7 @@ Public serializers **never** expose:
 
 - No native payments, booking engine, accounting sync, CRM automation, or marketplace workflow.
 - QR is generated with `qrcode==8.2` as scanner-grade SVG, with a logged non-scanner fallback only if the dependency is unavailable.
-- Native media upload is deferred. Alpha uses validated hosted image URLs with preview and fallback handling.
+- Native media upload is now handled by the standalone `presence-app` Studio and ANU backend owner media routes. Hosted URLs remain an advanced fallback.
 - Invoice support stores external invoice references only.
 - Quote/variation/handover records are foundations, not full field-service management.
 - Professional and tradie modules are alpha foundations; no deep field-service management in launch.

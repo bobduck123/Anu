@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ArrowLeft, Globe, LayoutDashboard, Image, FolderOpen, Inbox, QrCode, BarChart2, Settings, LogOut } from "lucide-react";
 import type { PresenceNode } from "@/lib/api/types";
 import { StatusPill } from "@/components/ui";
+import { canonicalPublicUrl } from "@/lib/presence/url";
 
 const NAV_TABS = [
   { label: "Overview", icon: LayoutDashboard, sub: "" },
@@ -25,6 +26,8 @@ export default function StudioShell({
 }) {
   const path = usePathname();
   const base = `/studio/${node.id}`;
+  const publicUrl = canonicalPublicUrl(node.slug);
+  const isPublished = node.status === "published";
 
   return (
     <div className="min-h-dvh bg-[var(--p-studio-bg)] text-[var(--p-studio-text)] flex flex-col">
@@ -35,9 +38,9 @@ export default function StudioShell({
         </Link>
         <div className="flex-1 min-w-0 flex flex-col">
           <span className="font-semibold text-sm truncate">{node.display_name}</span>
-          {node.public_url && (
+          {isPublished ? (
             <a
-              href={node.public_url}
+              href={publicUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-xs text-[var(--p-studio-muted)] hover:text-[var(--p-studio-accent)] transition-colors truncate"
@@ -45,6 +48,11 @@ export default function StudioShell({
               <Globe className="w-3 h-3 shrink-0" />
               {node.slug}
             </a>
+          ) : (
+            <span className="flex items-center gap-1 text-xs text-[var(--p-studio-muted)] truncate">
+              <Globe className="w-3 h-3 shrink-0" />
+              Draft /p/{node.slug}
+            </span>
           )}
         </div>
         <StatusPill status={node.status} />

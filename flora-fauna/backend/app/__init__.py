@@ -433,6 +433,9 @@ def _register_blueprints(app):
     
     from .routes import routes
     app.register_blueprint(routes)
+
+    from .presence_redirect import presence_redirect_bp
+    app.register_blueprint(presence_redirect_bp)
     
     from .api import api_bp
     app.register_blueprint(api_bp)
