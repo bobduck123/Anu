@@ -165,6 +165,26 @@ def test_public_site_resolution_can_return_registry_only_mudyin_config_before_no
     assert payload["node_slug"] == "mudyin"
     assert payload["fallback_note"]
     assert payload["site_manifest"]["site_key"] == "mudyin-public"
+    assert payload["site_manifest"]["feature_flags"]["enquiries"] is True
+    assert payload["site_manifest"]["feature_flags"]["booking_requests"] is True
+    assert payload["site_manifest"]["feature_flags"]["live_bookings"] is False
+    assert payload["site_manifest"]["feature_flags"]["donations"] is False
+
+
+def test_public_site_resolution_supports_real_mudyin_domains_without_domain_hosting():
+    app = _build_app()
+    client = app.test_client()
+
+    for host in ("mudyin.com", "www.mudyin.com"):
+        response = client.get(f"/api/public/sites/resolve?host={host}")
+        assert response.status_code == 200
+        payload = response.get_json()["data"]
+        assert payload["resolved"] is True
+        assert payload["resolution_status"] == "resolved_registry_only"
+        assert payload["node_slug"] == "mudyin"
+        assert host in payload["site_manifest"]["canonical_domains"]
+        assert payload["site_manifest"]["contact"]["public_contact_url"] == "/contact"
+        assert all(not item["href"].startswith("/control") for item in payload["site_manifest"]["nav_items"])
 
 
 def test_public_site_resolution_is_tenant_isolated_by_host_binding():

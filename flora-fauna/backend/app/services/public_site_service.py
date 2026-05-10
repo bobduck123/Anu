@@ -79,6 +79,8 @@ _PUBLIC_ROUTE_PREFIXES = (
     "/code-of-conduct",
     "/community",
     "/impact",
+    "/programs",
+    "/resources",
     "/education",
     "/actions",
     "/events",
@@ -311,6 +313,7 @@ def build_registry_only_public_site_manifest(
     enabled_modules = merged_site.get("enabled_public_modules")
     if not isinstance(enabled_modules, list) or not enabled_modules:
         enabled_modules = list(site.enabled_features)
+    enabled_public_modules = [str(item).strip() for item in enabled_modules if str(item).strip()]
 
     return {
         "tenant_id": 0,
@@ -331,7 +334,8 @@ def build_registry_only_public_site_manifest(
             "custom_css": _normalize_nullable_text(theme_tokens_raw.get("custom_css")),
         },
         "nav_items": _sanitize_nav_items(merged_site.get("nav_items")),
-        "enabled_public_modules": [str(item).strip() for item in enabled_modules if str(item).strip()],
+        "enabled_public_modules": enabled_public_modules,
+        "feature_flags": _build_public_feature_flags(merged_site, enabled_public_modules),
         "footer_links": _sanitize_link_items(merged_site.get("footer_links"), _DEFAULT_FOOTER_LINKS),
         "legal_links": _sanitize_path_lookup(merged_site.get("legal_links"), _DEFAULT_LEGAL_LINKS),
         "trust_links": _sanitize_path_lookup(merged_site.get("trust_links"), _DEFAULT_TRUST_LINKS),
@@ -437,6 +441,22 @@ def _build_enabled_public_modules(config_json: dict[str, Any], site_manifest: di
     return sorted({item.get("module") for item in _DEFAULT_NAV_ITEMS if item.get("module")})
 
 
+def _build_public_feature_flags(site_manifest: dict[str, Any], enabled_modules: list[str]) -> dict[str, bool]:
+    defaults = {
+        "enquiries": "enquiries" in enabled_modules,
+        "booking_requests": "booking_requests" in enabled_modules,
+        "live_bookings": False,
+        "donations": False,
+        "events": "events" in enabled_modules,
+        "practitioners": False,
+    }
+    configured = _coerce_object(site_manifest.get("feature_flags"))
+    for key in list(defaults.keys()):
+        if key in configured:
+            defaults[key] = bool(configured.get(key))
+    return defaults
+
+
 def build_public_site_manifest_for_node(
     *,
     node: Node,
@@ -509,6 +529,8 @@ def build_public_site_manifest_for_node(
     if not _is_public_safe_href(contact["public_contact_url"]):
         contact["public_contact_url"] = "/contact"
 
+    enabled_public_modules = _build_enabled_public_modules(config_json, merged_site)
+
     return {
         "tenant_id": node.id,
         "site_key": site_key,
@@ -521,7 +543,8 @@ def build_public_site_manifest_for_node(
         },
         "theme_tokens": theme_tokens,
         "nav_items": _sanitize_nav_items(merged_site.get("nav_items")),
-        "enabled_public_modules": _build_enabled_public_modules(config_json, merged_site),
+        "enabled_public_modules": enabled_public_modules,
+        "feature_flags": _build_public_feature_flags(merged_site, enabled_public_modules),
         "footer_links": _sanitize_link_items(merged_site.get("footer_links"), _DEFAULT_FOOTER_LINKS),
         "legal_links": _sanitize_path_lookup(merged_site.get("legal_links"), _DEFAULT_LEGAL_LINKS),
         "trust_links": _sanitize_path_lookup(merged_site.get("trust_links"), _DEFAULT_TRUST_LINKS),

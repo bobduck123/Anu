@@ -178,6 +178,7 @@ class PublicSiteManifestSchema(Schema):
     theme_tokens = fields.Nested(PublicSiteManifestThemeTokensSchema, required=True)
     nav_items = fields.List(fields.Nested(PublicSiteManifestNavItemSchema), required=True)
     enabled_public_modules = fields.List(fields.String(), required=True)
+    feature_flags = fields.Dict(keys=fields.String(), values=fields.Boolean(), required=False)
     footer_links = fields.List(fields.Nested(PublicSiteManifestLinkSchema), required=True)
     legal_links = fields.Dict(keys=fields.String(), values=fields.String(), required=True)
     trust_links = fields.Dict(keys=fields.String(), values=fields.String(), required=True)
