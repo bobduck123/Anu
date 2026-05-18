@@ -61,6 +61,23 @@ function pickTypes(nodeType?: string): Array<[string, string]> {
   return TYPES_BY_SEGMENT.artist;
 }
 
+function successCopy(
+  displayName: string,
+  deliveryStatus: string | null,
+  deliveryMessage: string | null,
+  signedIn: boolean,
+) {
+  if (deliveryStatus === "sent") {
+    return deliveryMessage || "Thanks. Your enquiry has been sent.";
+  }
+  if (deliveryStatus === "logged_fallback") {
+    return deliveryMessage || "Thanks. Your enquiry has been received.";
+  }
+  return signedIn
+    ? `${displayName} can follow up through the contact route you provided.`
+    : "Thanks. Your enquiry has been received.";
+}
+
 interface Props {
   slug: string;
   displayName: string;
@@ -81,6 +98,8 @@ export function PublicEnquiryDialog({
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deliveryStatus, setDeliveryStatus] = useState<string | null>(null);
+  const [deliveryMessage, setDeliveryMessage] = useState<string | null>(null);
   const [submitterToken, setSubmitterToken] = useState<string | null>(null);
   const [submitterEmail, setSubmitterEmail] = useState<string | null>(null);
 
@@ -106,6 +125,8 @@ export function PublicEnquiryDialog({
     formStartedAt.current = Date.now();
     setSuccess(false);
     setError(null);
+    setDeliveryStatus(null);
+    setDeliveryMessage(null);
     (async () => {
       try {
         const supabase = createClient();
@@ -168,7 +189,7 @@ export function PublicEnquiryDialog({
 
     setSubmitting(true);
     try {
-      await submitEnquiry(
+      const result = await submitEnquiry(
         slug,
         {
           name: form.name.trim(),
@@ -185,6 +206,12 @@ export function PublicEnquiryDialog({
         },
         { token: submitterToken },
       );
+      if (result.delivery_status && !["sent", "logged_fallback"].includes(result.delivery_status)) {
+        setError(result.message || "We could not confirm inbox delivery. Please try again or contact them directly.");
+        return;
+      }
+      setDeliveryStatus(result.delivery_status ?? null);
+      setDeliveryMessage(result.message ?? null);
       setSuccess(true);
       setForm((f) => ({ ...f, message: "", consent: false }));
     } catch (err) {
@@ -255,12 +282,10 @@ export function PublicEnquiryDialog({
               <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-emerald-300 bg-emerald-50 p-5 text-emerald-800">
                 <div className="flex items-center gap-2 font-semibold">
                   <CheckCircle2 className="w-4 h-4" />
-                  Sent
+                  {deliveryStatus === "sent" ? "Sent" : "Received"}
                 </div>
                 <p className="text-sm leading-6">
-                  {submitterEmail
-                    ? `${displayName} will reach you via your preferred contact method.`
-                    : "Thanks. They'll be in touch via your preferred contact method."}
+                  {successCopy(displayName, deliveryStatus, deliveryMessage, Boolean(submitterEmail))}
                 </p>
                 <button
                   type="button"
@@ -271,7 +296,7 @@ export function PublicEnquiryDialog({
                 </button>
               </div>
             ) : (
-              <form className="mt-5 flex flex-col gap-4" onSubmit={submit}>
+              <form className="mt-5 flex flex-col gap-4" onSubmit={submit} noValidate>
                 {error && (
                   <p className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
                     <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />

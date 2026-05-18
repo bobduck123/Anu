@@ -329,7 +329,8 @@ def submit_public_presence_enquiry(slug):
                 "id": enquiry.id,
                 "status": enquiry.status,
                 "submitter_linked": enquiry.submitter_user_id is not None,
-                "message": "Enquiry submitted.",
+                "delivery_status": enquiry.delivery_status,
+                "message": _enquiry_delivery_message(enquiry.delivery_status),
             },
             201,
         )
@@ -340,6 +341,14 @@ def submit_public_presence_enquiry(slug):
         current_app.logger.exception("Presence enquiry submission failed")
         db.session.rollback()
         return error("service_unavailable", "Enquiry submission temporarily unavailable", 503)
+
+
+def _enquiry_delivery_message(delivery_status: str | None) -> str:
+    if delivery_status == "sent":
+        return "Thanks. Your enquiry has been sent."
+    if delivery_status == "logged_fallback":
+        return "Thanks. Your enquiry has been received."
+    return "We could not submit your enquiry. Please try again or contact the organisation directly."
 
 
 @presence_bp.route("/public/<string:slug>/nfc-hit", methods=["POST"])
@@ -552,7 +561,7 @@ def get_public_presence_vcard(slug):
     except Exception:
         db.session.rollback()
     return Response(
-        presence_vcard(node, host_url=public_url_for_node(node).rsplit("/p/", 1)[0]),
+        presence_vcard(node),
         mimetype="text/vcard",
         headers={"Content-Disposition": f'attachment; filename="{normalize_slug(node.slug)}.vcf"'},
     )
@@ -570,7 +579,7 @@ def get_public_presence_qr(slug):
     except Exception:
         db.session.rollback()
     return Response(
-        pseudo_qr_svg(node, host_url=public_url_for_node(node).rsplit("/p/", 1)[0]),
+        pseudo_qr_svg(node),
         mimetype="image/svg+xml",
     )
 

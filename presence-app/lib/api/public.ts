@@ -37,6 +37,7 @@ export function submitEnquiry(
   return apiFetch<{
     id: number;
     status: string;
+    delivery_status?: string;
     submitter_linked?: boolean;
     message?: string;
   }>(`/api/presence/public/${encodeURIComponent(slug)}/enquiries`, {
@@ -69,8 +70,11 @@ export interface PublicPresenceCard {
   node_type: string;
   display_mode: string;
   plan_type: string;
+  room_type?: string | null;
+  theme_preset?: string | null;
   profile_image_url: string | null;
   cover_image_url: string | null;
+  hero_image_url?: string | null;
   location_label: string | null;
   visual_mood: string | null;
   public_url: string;

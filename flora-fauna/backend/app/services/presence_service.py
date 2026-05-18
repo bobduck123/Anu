@@ -79,6 +79,24 @@ PRESENCE_NODE_DISPLAY_MODES = {
     "tradie_profile",
     "field_service_profile",
 }
+PRESENCE_ROOM_TYPES = {
+    "minimal_card",
+    "artist_studio",
+    "practitioner",
+    "performer_music",
+    "organisation",
+}
+PRESENCE_THEME_PRESETS = {
+    "clean_light",
+    "editorial_dark",
+    "warm_earth",
+    "gallery_white",
+    "neon_night",
+    "soft_healing",
+    "cultural_org",
+    "minimal_mono",
+}
+PRESENCE_PUBLIC_STATUSES = {"draft", "private", "public"}
 PRESENCE_PLAN_TYPES = {
     "showcase",
     "basic",
@@ -221,6 +239,7 @@ PRESENCE_VARIATION_STATUSES = {"draft", "sent", "approved", "declined", "cancell
 _SLUG_RE = re.compile(r"[^a-z0-9-]+")
 _MULTI_DASH_RE = re.compile(r"-{2,}")
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+_HEX_COLOR_RE = re.compile(r"^#?[0-9a-fA-F]{6}$")
 
 
 class PresenceValidationError(ValueError):
@@ -286,6 +305,73 @@ def normalize_url(value: Any, *, allow_relative: bool = False) -> str | None:
     if _is_public_http_url(cleaned):
         return cleaned
     raise PresenceValidationError("URL must be a public http(s) URL.")
+
+
+def normalize_accent_color(value: Any) -> str | None:
+    cleaned = _clean_text(value, max_length=24)
+    if not cleaned:
+        return None
+    if not _HEX_COLOR_RE.match(cleaned):
+        raise PresenceValidationError("accent_color must be a six-digit hex colour.")
+    return cleaned if cleaned.startswith("#") else f"#{cleaned}"
+
+
+_MEDIA_EMBED_HOSTS = {
+    "youtube": ("youtube.com", "www.youtube.com", "youtu.be", "m.youtube.com"),
+    "vimeo": ("vimeo.com", "player.vimeo.com"),
+    "soundcloud": ("soundcloud.com", "w.soundcloud.com"),
+    "spotify": ("open.spotify.com", "embed.spotify.com"),
+    "bandcamp": ("bandcamp.com",),
+}
+_MEDIA_EMBED_TYPES = {"audio", "video", "track", "playlist", "press", "booking", "other"}
+
+
+def _provider_for_media_url(url: str) -> str | None:
+    host = (urlparse(url).hostname or "").strip().lower()
+    for provider, hosts in _MEDIA_EMBED_HOSTS.items():
+        if any(host == allowed or host.endswith(f".{allowed}") for allowed in hosts):
+            return provider
+    return None
+
+
+def normalize_media_embeds(value: Any) -> list[dict[str, Any]]:
+    rows = _json_list(value)
+    embeds: list[dict[str, Any]] = []
+    for index, raw in enumerate(rows[:8]):
+        if not isinstance(raw, dict):
+            continue
+        url = normalize_url(raw.get("url")) if raw.get("url") else None
+        if not url:
+            continue
+        provider = _provider_for_media_url(url)
+        if not provider:
+            raise PresenceValidationError(
+                "media_embeds only supports YouTube, Vimeo, SoundCloud, Spotify, and Bandcamp URLs."
+            )
+        embed_type = _clean_text(raw.get("type"), max_length=40) or "other"
+        if embed_type not in _MEDIA_EMBED_TYPES:
+            embed_type = "other"
+        embeds.append(
+            {
+                "label": _clean_text(raw.get("label") or raw.get("title"), max_length=140) or f"Media {index + 1}",
+                "url": url,
+                "provider": provider,
+                "type": embed_type,
+                "description": _clean_text(raw.get("description"), max_length=600, allow_basic_html=False),
+                "sort_order": int(raw.get("sort_order", index) or 0),
+            }
+        )
+    return sorted(embeds, key=lambda item: (item.get("sort_order") or 0, item.get("label") or ""))
+
+
+def effective_presence_public_status(node: PresenceNode) -> str:
+    if getattr(node, "public_status", None) in PRESENCE_PUBLIC_STATUSES:
+        return node.public_status
+    if node.status == "published" and node.visibility in PRESENCE_PUBLIC_VISIBILITIES and not node.archived_at:
+        return "public"
+    if node.visibility in PRESENCE_PRIVATE_VISIBILITIES:
+        return "private"
+    return "draft"
 
 
 def _bool(value: Any, default: bool = True) -> bool:
@@ -363,7 +449,7 @@ def configured_presence_public_origin() -> str:
 
 def public_url_for_node(node: PresenceNode, *, host_url: str | None = None) -> str:
     base = (host_url or configured_presence_public_origin()).rstrip("/")
-    return f"{base}/p/{quote(node.slug)}"
+    return f"{base}/presence/{quote(node.slug)}"
 
 
 def _template_payload(template: PresenceTemplate | None) -> dict[str, Any] | None:
@@ -418,9 +504,13 @@ def serialize_presence_node(
         "bio": node.bio,
         "node_type": node.node_type,
         "display_mode": node.display_mode,
+        "room_type": node.room_type,
+        "theme_preset": node.theme_preset,
+        "accent_color": node.accent_color,
         "plan_type": node.plan_type,
         "status": node.status if not public else "published",
         "visibility": node.visibility if not public else node.visibility,
+        "public_status": effective_presence_public_status(node),
         "template_id": node.template_id,
         "template": _template_payload(PresenceTemplate.query.get(node.template_id)) if node.template_id else None,
         "theme_config": node.theme_config or {},
@@ -429,10 +519,19 @@ def serialize_presence_node(
         "custom_spacing_config": node.custom_spacing_config or {},
         "profile_image_url": node.profile_image_url,
         "cover_image_url": node.cover_image_url,
+        "hero_title": node.hero_title,
+        "hero_subtitle": node.hero_subtitle,
+        "hero_image_url": node.hero_image_url,
+        "short_bio": node.short_bio,
+        "long_story": node.long_story,
         "location_label": node.location_label,
         "service_area": node.service_area,
         "primary_cta_label": node.primary_cta_label,
         "primary_cta_url": node.primary_cta_url,
+        "enquiry_email": None if public else node.enquiry_email,
+        "availability_status": node.availability_status,
+        "featured_notice": node.featured_notice,
+        "media_embeds": normalize_media_embeds(node.media_embeds or []),
         "landing_enabled": bool(node.landing_enabled),
         "landing_title": node.landing_title,
         "landing_subtitle": node.landing_subtitle,
@@ -451,16 +550,19 @@ def serialize_presence_node(
         "white_label_ready": bool(node.white_label_ready),
         "public_email": node.public_email,
         "public_phone": node.public_phone,
+        "seo_title": None if public else node.seo_title,
+        "seo_description": None if public else node.seo_description,
+        "social_preview_image_url": None if public else node.social_preview_image_url,
         "organisation": _node_org_payload(node),
         "public_url": public_url_for_node(node),
         "created_at": node.created_at.isoformat() if node.created_at else None,
         "updated_at": node.updated_at.isoformat() if node.updated_at else None,
         "published_at": node.published_at.isoformat() if node.published_at else None,
         "seo": {
-            "title": f"{node.display_name} {node.headline or ''}".strip(),
-            "description": (node.bio or node.headline or node.display_name or "")[:180],
+            "title": (node.seo_title or node.hero_title or f"{node.display_name} {node.headline or ''}").strip(),
+            "description": (node.seo_description or node.short_bio or node.bio or node.headline or node.display_name or "")[:180],
             "canonical_url": public_url_for_node(node),
-            "image": node.cover_image_url or node.profile_image_url,
+            "image": node.social_preview_image_url or node.hero_image_url or node.cover_image_url or node.profile_image_url,
         },
     }
     if include_admin and not public:
@@ -533,6 +635,43 @@ def serialize_presence_node(
                 ],
             }
         )
+        gallery_items = []
+        for work in payload.get("works", []):
+            gallery_items.append(
+                {
+                    "id": work.get("id"),
+                    "title": work.get("title"),
+                    "description": work.get("description"),
+                    "image_url": work.get("image_url") or work.get("thumbnail_url"),
+                    "alt": work.get("title"),
+                    "source_type": "work",
+                    "sort_order": work.get("sort_order") or 0,
+                }
+            )
+        for item in payload.get("portfolio_items", []):
+            gallery_items.append(
+                {
+                    "id": item.get("id"),
+                    "title": item.get("title"),
+                    "description": item.get("description"),
+                    "image_url": item.get("thumbnail_url") or item.get("media_url"),
+                    "alt": item.get("title"),
+                    "source_type": "portfolio_item",
+                    "sort_order": item.get("sort_order") or 0,
+                }
+            )
+        payload["gallery_items"] = sorted(gallery_items, key=lambda item: (item.get("sort_order") or 0, item.get("id") or 0))
+        payload["testimonials"] = [
+            {
+                "id": item.get("id"),
+                "quote": item.get("testimonial"),
+                "name": item.get("client_label") or item.get("title"),
+                "context": item.get("industry"),
+                "sort_order": item.get("sort_order") or 0,
+            }
+            for item in payload.get("proof_items", [])
+            if item.get("testimonial")
+        ]
         if include_admin and not public:
             payload.update(
                 {
@@ -926,6 +1065,9 @@ def serialize_enquiry(item: PresenceEnquiry) -> dict[str, Any]:
         "source_url": item.source_url,
         "source_type": item.source_type,
         "source_tag_id": item.source_tag_id,
+        "source_room_slug": item.source_room_slug,
+        "routed_to_email": item.routed_to_email,
+        "delivery_status": item.delivery_status,
         "status": item.status,
         "assigned_to_user_id": item.assigned_to_user_id,
         "submitter_user_id": item.submitter_user_id,
@@ -963,6 +1105,18 @@ def validate_node_payload(data: dict[str, Any], *, partial: bool = False) -> dic
         if display_mode not in PRESENCE_NODE_DISPLAY_MODES:
             raise PresenceValidationError("Unsupported display_mode.", {"allowed": sorted(PRESENCE_NODE_DISPLAY_MODES)})
         payload["display_mode"] = display_mode
+    if "room_type" in data:
+        room_type = str(data.get("room_type") or "").strip()
+        if room_type and room_type not in PRESENCE_ROOM_TYPES:
+            raise PresenceValidationError("Unsupported room_type.", {"allowed": sorted(PRESENCE_ROOM_TYPES)})
+        payload["room_type"] = room_type or None
+    if "theme_preset" in data:
+        theme_preset = str(data.get("theme_preset") or "").strip()
+        if theme_preset and theme_preset not in PRESENCE_THEME_PRESETS:
+            raise PresenceValidationError("Unsupported theme_preset.", {"allowed": sorted(PRESENCE_THEME_PRESETS)})
+        payload["theme_preset"] = theme_preset or None
+    if "accent_color" in data:
+        payload["accent_color"] = normalize_accent_color(data.get("accent_color"))
     if "plan_type" in data or "tier" in data:
         plan_type = str(data.get("plan_type") or data.get("tier") or "basic").strip()
         if plan_type not in PRESENCE_PLAN_TYPES:
@@ -973,6 +1127,10 @@ def validate_node_payload(data: dict[str, Any], *, partial: bool = False) -> dic
         if status not in PRESENCE_NODE_STATUSES:
             raise PresenceValidationError("Unsupported status.", {"allowed": sorted(PRESENCE_NODE_STATUSES)})
         payload["status"] = status
+        if "public_status" not in data and status in {"draft", "pending_review", "unpublished"}:
+            payload["public_status"] = "draft"
+        if "public_status" not in data and status in {"suspended", "archived"}:
+            payload["public_status"] = "private"
     if "visibility" in data:
         visibility = str(data.get("visibility") or "public").strip()
         if visibility in {"private-admin-only", "private/admin-only"}:
@@ -980,6 +1138,21 @@ def validate_node_payload(data: dict[str, Any], *, partial: bool = False) -> dic
         if visibility not in PRESENCE_NODE_VISIBILITIES:
             raise PresenceValidationError("Unsupported visibility.", {"allowed": sorted(PRESENCE_NODE_VISIBILITIES)})
         payload["visibility"] = visibility
+        if "public_status" not in data and visibility in PRESENCE_PRIVATE_VISIBILITIES:
+            payload["public_status"] = "private"
+    if "public_status" in data:
+        public_status = str(data.get("public_status") or "").strip()
+        if public_status not in PRESENCE_PUBLIC_STATUSES:
+            raise PresenceValidationError("Unsupported public_status.", {"allowed": sorted(PRESENCE_PUBLIC_STATUSES)})
+        payload["public_status"] = public_status
+        if public_status == "public":
+            payload.setdefault("status", "published")
+            payload.setdefault("visibility", "public")
+        elif public_status == "private":
+            payload.setdefault("visibility", "private")
+            payload.setdefault("status", "draft")
+        elif public_status == "draft":
+            payload.setdefault("status", "draft")
     if "slug" in data:
         payload["slug"] = normalize_slug(data.get("slug"))
     if "owner_user_id" in data:
@@ -996,7 +1169,11 @@ def validate_node_payload(data: dict[str, Any], *, partial: bool = False) -> dic
         payload["custom_typography_config"] = _json_object(data.get("custom_typography_config"))
     if "custom_spacing_config" in data:
         payload["custom_spacing_config"] = _json_object(data.get("custom_spacing_config"))
-    for key in ("profile_image_url", "cover_image_url", "landing_background_url"):
+    if "hero_image" in data and "hero_image_url" not in data:
+        data = {**data, "hero_image_url": data.get("hero_image")}
+    if "primary_cta_target" in data and "primary_cta_url" not in data:
+        data = {**data, "primary_cta_url": data.get("primary_cta_target")}
+    for key in ("profile_image_url", "cover_image_url", "landing_background_url", "hero_image_url", "social_preview_image_url"):
         if key in data:
             payload[key] = normalize_url(data.get(key)) if data.get(key) else None
     for key, limit in (
@@ -1004,9 +1181,14 @@ def validate_node_payload(data: dict[str, Any], *, partial: bool = False) -> dic
         ("service_area", 220),
         ("primary_cta_label", 100),
         ("visual_mood", 120),
+        ("hero_title", 220),
+        ("hero_subtitle", 320),
+        ("availability_status", 80),
         ("landing_title", 180),
         ("landing_subtitle", 260),
         ("landing_enter_label", 80),
+        ("seo_title", 180),
+        ("seo_description", 280),
     ):
         if key in data:
             payload[key] = _clean_text(data.get(key), max_length=limit)
@@ -1019,6 +1201,14 @@ def validate_node_payload(data: dict[str, Any], *, partial: bool = False) -> dic
         payload["practice_statement"] = _clean_text(data.get("practice_statement"), max_length=6000, allow_basic_html=True)
     if "curatorial_statement" in data:
         payload["curatorial_statement"] = _clean_text(data.get("curatorial_statement"), max_length=6000, allow_basic_html=True)
+    if "short_bio" in data:
+        payload["short_bio"] = _clean_text(data.get("short_bio"), max_length=1600, allow_basic_html=True)
+    if "long_story" in data:
+        payload["long_story"] = _clean_text(data.get("long_story"), max_length=8000, allow_basic_html=True)
+    if "featured_notice" in data:
+        payload["featured_notice"] = _clean_text(data.get("featured_notice"), max_length=2000, allow_basic_html=True)
+    if "media_embeds" in data:
+        payload["media_embeds"] = normalize_media_embeds(data.get("media_embeds"))
     if "capability_statement" in data:
         payload["capability_statement"] = _clean_text(data.get("capability_statement"), max_length=6000, allow_basic_html=True)
     if "proof_summary" in data:
@@ -1030,6 +1220,11 @@ def validate_node_payload(data: dict[str, Any], *, partial: bool = False) -> dic
         if email and not _EMAIL_RE.match(email):
             raise PresenceValidationError("public_email must be a valid email address.")
         payload["public_email"] = email
+    if "enquiry_email" in data:
+        email = _clean_text(data.get("enquiry_email"), max_length=180)
+        if email and not _EMAIL_RE.match(email):
+            raise PresenceValidationError("enquiry_email must be a valid email address.")
+        payload["enquiry_email"] = email
     if "public_phone" in data:
         payload["public_phone"] = _clean_text(data.get("public_phone"), max_length=80)
     return payload
@@ -1956,6 +2151,8 @@ def update_presence_handover(item: PresenceWorkHandover, data: dict[str, Any]) -
 def publish_presence_node(node: PresenceNode) -> PresenceNode:
     node.status = "published"
     node.visibility = node.visibility or "public"
+    if node.visibility in PRESENCE_PUBLIC_VISIBILITIES:
+        node.public_status = "public"
     node.published_at = now_utc()
     node.archived_at = None
     db.session.flush()
@@ -1968,6 +2165,9 @@ def transition_presence_node(node: PresenceNode, status: str) -> PresenceNode:
     node.status = status
     if status == "archived":
         node.archived_at = now_utc()
+        node.public_status = "private"
+    elif status in {"unpublished", "suspended"}:
+        node.public_status = "draft"
     db.session.flush()
     return node
 
@@ -1976,8 +2176,18 @@ def public_presence_node_by_slug(slug: str) -> PresenceNode | None:
     return (
         PresenceNode.query.filter(
             PresenceNode.slug == normalize_slug(slug),
-            PresenceNode.status == "published",
-            PresenceNode.visibility.in_(sorted(PRESENCE_PUBLIC_VISIBILITIES)),
+            db.or_(
+                db.and_(
+                    PresenceNode.public_status == "public",
+                    PresenceNode.visibility.in_(sorted(PRESENCE_PUBLIC_VISIBILITIES)),
+                ),
+                db.and_(
+                    PresenceNode.public_status.is_(None),
+                    PresenceNode.status == "published",
+                    PresenceNode.visibility.in_(sorted(PRESENCE_PUBLIC_VISIBILITIES)),
+                ),
+            ),
+            PresenceNode.status.notin_(["suspended", "archived"]),
             PresenceNode.archived_at.is_(None),
         )
         .order_by(PresenceNode.id.asc())
@@ -2005,8 +2215,18 @@ def public_presence_nodes(
     safe_offset = max(0, int(offset or 0))
 
     query = PresenceNode.query.filter(
-        PresenceNode.status == "published",
-        PresenceNode.visibility == "public",   # exclude unlisted from public listings
+        db.or_(
+            db.and_(
+                PresenceNode.public_status == "public",
+                PresenceNode.visibility == "public",
+            ),
+            db.and_(
+                PresenceNode.public_status.is_(None),
+                PresenceNode.status == "published",
+                PresenceNode.visibility == "public",   # exclude unlisted from public listings
+            ),
+        ),
+        PresenceNode.status.notin_(["suspended", "archived"]),
         PresenceNode.archived_at.is_(None),
     )
 
@@ -2054,9 +2274,12 @@ def serialize_public_card(node: PresenceNode) -> dict[str, Any]:
         "bio_excerpt": bio_excerpt,
         "node_type": node.node_type,
         "display_mode": node.display_mode,
+        "room_type": node.room_type,
+        "theme_preset": node.theme_preset,
         "plan_type": node.plan_type,
         "profile_image_url": node.profile_image_url,
         "cover_image_url": node.cover_image_url,
+        "hero_image_url": node.hero_image_url,
         "location_label": node.location_label,
         "visual_mood": node.visual_mood,
         "public_url": public_url_for_node(node),
@@ -2270,6 +2493,79 @@ def _notify_owner_of_enquiry(node: PresenceNode, enquiry: PresenceEnquiry) -> No
         current_app.logger.exception("Presence enquiry notification dispatch failed")
 
 
+def _resolve_enquiry_recipient(node: PresenceNode) -> str | None:
+    candidates = [
+        getattr(node, "enquiry_email", None),
+        getattr(node, "public_email", None),
+    ]
+    if node.owner_user_id:
+        owner = User.query.get(node.owner_user_id)
+        candidates.append(getattr(owner, "email", None) if owner else None)
+    for candidate in candidates:
+        email = _clean_text(candidate, max_length=180)
+        if email and _EMAIL_RE.match(email) and "\n" not in email and "\r" not in email:
+            return email
+    return None
+
+
+def _route_presence_enquiry_email(node: PresenceNode, enquiry: PresenceEnquiry) -> None:
+    """Route a Presence enquiry to the configured room inbox.
+
+    Email delivery is best-effort. When mail credentials are absent we keep a
+    clear, auditable fallback by logging and marking the enquiry record instead
+    of pretending the email was sent.
+    """
+    recipient = _resolve_enquiry_recipient(node)
+    enquiry.routed_to_email = recipient
+    if not recipient:
+        enquiry.delivery_status = "unrouted"
+        current_app.logger.warning(
+            "Presence enquiry stored without routeable recipient",
+            extra={"node_id": node.id, "slug": node.slug, "enquiry_id": enquiry.id},
+        )
+        return
+
+    mail_username = current_app.config.get("MAIL_USERNAME")
+    mail_password = current_app.config.get("MAIL_PASSWORD")
+    if not mail_username or not mail_password:
+        enquiry.delivery_status = "logged_fallback"
+        current_app.logger.info(
+            "Presence enquiry email delivery not configured; stored fallback route",
+            extra={"node_id": node.id, "slug": node.slug, "enquiry_id": enquiry.id, "recipient": recipient},
+        )
+        return
+
+    try:
+        from flask_mail import Message
+        from .. import mail
+
+        safe_display_name = _clean_text(node.display_name, max_length=120) or "Presence Room"
+        safe_display_name = safe_display_name.replace("\r", " ").replace("\n", " ")
+        subject = f"[Presence] New enquiry for {safe_display_name}"
+        body = "\n".join(
+            [
+                f"Presence Room: {node.display_name}",
+                f"Slug: {node.slug}",
+                f"Enquiry type: {enquiry.enquiry_type}",
+                f"Name: {enquiry.name}",
+                f"Email: {enquiry.email or 'Not supplied'}",
+                f"Phone: {enquiry.phone or 'Not supplied'}",
+                "",
+                "Message:",
+                enquiry.message,
+            ]
+        )
+        message = Message(subject=subject, recipients=[recipient], body=body)
+        mail.send(message)
+        enquiry.delivery_status = "sent"
+    except Exception:
+        enquiry.delivery_status = "failed"
+        current_app.logger.exception(
+            "Presence enquiry email delivery failed",
+            extra={"node_id": node.id, "slug": node.slug, "enquiry_id": enquiry.id, "recipient": recipient},
+        )
+
+
 def create_presence_enquiry(
     node: PresenceNode,
     data: dict[str, Any],
@@ -2301,6 +2597,7 @@ def create_presence_enquiry(
         organisation_id=node.organisation_id,
         connection_id=connection.id,
         submitter_user_id=submitter_id,
+        source_room_slug=node.slug,
         ip_hash=hash_request_value(request.headers.get("X-Forwarded-For") or request.remote_addr),
         user_agent_hash=hash_request_value(request.headers.get("User-Agent")),
         status="new",
@@ -2323,6 +2620,7 @@ def create_presence_enquiry(
         anonymous_session_id=data.get("anonymous_session_id"),
     )
     _notify_owner_of_enquiry(node, enquiry)
+    _route_presence_enquiry_email(node, enquiry)
     return enquiry
 
 
@@ -2539,8 +2837,9 @@ def presence_vcard(node: PresenceNode, *, host_url: str | None = None) -> str:
     org = _node_org_payload(node)
     if org:
         lines.append(f"ORG:{_vcard_escape(org['name'])}")
-    if node.public_email:
-        lines.append(f"EMAIL;TYPE=INTERNET:{_vcard_escape(node.public_email)}")
+    vcard_email = node.enquiry_email or node.public_email
+    if vcard_email:
+        lines.append(f"EMAIL;TYPE=INTERNET:{_vcard_escape(vcard_email)}")
     if node.public_phone:
         lines.append(f"TEL:{_vcard_escape(node.public_phone)}")
     lines.append(f"URL:{public_url_for_node(node, host_url=host_url)}")
@@ -2925,6 +3224,199 @@ def seed_presence_demo_data() -> dict[str, Any]:
         db.session.flush()
 
     demo_nodes = [
+        {
+            "slug": "rooms-independent-artist",
+            "display_name": "Mara Vale Studio",
+            "headline": "Paintings, field notes, and quiet commissions",
+            "node_type": "artist",
+            "display_mode": "artist_gallery",
+            "room_type": "artist_studio",
+            "theme_preset": "gallery_white",
+            "accent_color": "#b45309",
+            "plan_type": "artist_presence",
+            "template_id": templates["Gallery-First Artist Presence"].id,
+            "hero_title": "Mara Vale Studio",
+            "hero_subtitle": "A working studio of colour studies, small paintings, and slow landscape commissions.",
+            "hero_image_url": "https://images.unsplash.com/photo-1513364776144-60967b0f800f",
+            "short_bio": "Independent painter and maker working between studio studies, community workshops, and private commissions.",
+            "long_story": "The studio gathers small observations into finished works: paper tests, pigment notes, and paintings that hold the feeling of a place without flattening it into a postcard.",
+            "location_label": "Blue Mountains / online",
+            "availability_status": "Commissions open for winter 2026",
+            "featured_notice": "New small works are being prepared for an online preview.",
+            "primary_cta_label": "Commission enquiry",
+            "enquiry_email": "artist-room@example.org",
+            "public_email": "artist-room@example.org",
+            "seo_title": "Mara Vale Studio - Presence Room",
+            "seo_description": "A demo artist studio Presence Room with gallery wall, selected works, commissions, proof, and enquiry routing.",
+            "collections": [
+                {"title": "Field Colour", "description": "Paintings and studies built from seasonal colour notes.", "cover_image_url": "https://images.unsplash.com/photo-1541961017774-22349e4a1262"},
+                {"title": "Commission Archive", "description": "Selected private and public commissions.", "cover_image_url": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968"},
+            ],
+            "works": [
+                {"title": "Ochre Window", "year": "2026", "medium": "Acrylic and earth pigment", "description": "A small studio painting about late afternoon light.", "image_url": "https://images.unsplash.com/photo-1541961017774-22349e4a1262", "availability_status": "available", "price_label": "POA"},
+                {"title": "River Study", "year": "2025", "medium": "Gouache on paper", "description": "A preparatory work for a larger commission.", "image_url": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5", "availability_status": "sold"},
+            ],
+            "proof_items": [
+                {"title": "Collector note", "client_label": "Private collector", "testimonial": "The room made it easy to understand the work and begin a respectful commission conversation."}
+            ],
+            "credentials": [
+                {"title": "Regional studio residency", "issuer": "Demo Arts Centre", "credential_type": "residency"}
+            ],
+            "links": [
+                {"label": "Shop small works", "url": "https://example.org/shop", "link_type": "shop"},
+                {"label": "Instagram", "url": "https://example.org/artist-social", "link_type": "social"},
+            ],
+        },
+        {
+            "slug": "rooms-healing-practitioner",
+            "display_name": "River Kin Practice",
+            "headline": "Grounded support for people moving through change",
+            "node_type": "practitioner",
+            "display_mode": "practitioner_profile",
+            "room_type": "practitioner",
+            "theme_preset": "soft_healing",
+            "accent_color": "#527a52",
+            "plan_type": "practitioner_presence",
+            "template_id": templates["Premium Practitioner Profile"].id,
+            "hero_title": "A calm front door for careful conversations",
+            "hero_subtitle": "Mentoring, reflective practice, and culturally aware facilitation by appointment.",
+            "hero_image_url": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
+            "short_bio": "A small practitioner room for mentoring, reflective sessions, workshops, and values-led enquiry.",
+            "long_story": "River Kin Practice works slowly and clearly. The room explains what is offered, how a first conversation begins, and what kinds of support are appropriate.",
+            "location_label": "Sydney and online",
+            "availability_status": "Taking first conversations",
+            "featured_notice": "Booking requests are reviewed before any session is confirmed.",
+            "primary_cta_label": "Request a booking",
+            "enquiry_email": "practitioner-room@example.org",
+            "public_email": "practitioner-room@example.org",
+            "services": [
+                {"title": "First conversation", "description": "A short fit check before any ongoing work is agreed.", "duration_label": "30 min", "price_label": "Free"},
+                {"title": "Reflective mentoring", "description": "Structured support for personal, creative, or community work.", "duration_label": "60 min", "price_label": "From $120"},
+                {"title": "Group facilitation", "description": "Small group sessions for teams, programs, and community contexts.", "price_label": "By request"},
+            ],
+            "proof_items": [
+                {"title": "Client appreciation", "client_label": "Program participant", "testimonial": "The pathway felt safe, clear, and respectful from the first message."},
+                {"title": "Workshop note", "client_label": "Community partner", "testimonial": "The room helped our team understand the approach before we reached out."},
+            ],
+            "credentials": [
+                {"title": "Trauma-informed practice training", "issuer": "Demo Training Provider", "credential_type": "training"},
+                {"title": "Working with Children Check", "issuer": "Demo NSW", "credential_type": "clearance"},
+            ],
+        },
+        {
+            "slug": "rooms-dj-performer",
+            "display_name": "DJ Sol Nadir",
+            "headline": "Deep percussion, late-night radio, and festival sets",
+            "node_type": "creative",
+            "display_mode": "editorial_portfolio",
+            "room_type": "performer_music",
+            "theme_preset": "neon_night",
+            "accent_color": "#22d3ee",
+            "plan_type": "premium",
+            "template_id": templates["Editorial Portfolio"].id,
+            "hero_title": "DJ Sol Nadir",
+            "hero_subtitle": "A media-rich room for booking, listening, and remembering the set.",
+            "hero_image_url": "https://images.unsplash.com/photo-1492684223066-81342ee5ff30",
+            "short_bio": "Performer, selector, and radio host working across club sets, festivals, and listening rooms.",
+            "long_story": "Sol's room holds the immediate signals bookers need: sound, images, bio, current availability, and a direct booking route.",
+            "location_label": "Naarm / touring",
+            "availability_status": "Available for select late-2026 bookings",
+            "featured_notice": "New radio archive and summer availability now listed.",
+            "primary_cta_label": "Booking enquiry",
+            "enquiry_email": "performer-room@example.org",
+            "public_email": "performer-room@example.org",
+            "media_embeds": [
+                {"label": "Latest mix", "url": "https://soundcloud.com/example/demo-mix", "type": "audio"},
+                {"label": "Video clip", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "type": "video"},
+            ],
+            "works": [
+                {"title": "Festival press shot", "year": "2026", "medium": "Press photo", "image_url": "https://images.unsplash.com/photo-1492684223066-81342ee5ff30", "availability_status": "press"},
+                {"title": "Radio archive", "year": "2026", "medium": "Audio program", "image_url": "https://images.unsplash.com/photo-1516280440614-37939bbacd81", "availability_status": "published"},
+            ],
+            "credentials": [
+                {"title": "Festival mainstage support", "issuer": "Demo Festival", "credential_type": "performance"},
+                {"title": "Monthly radio residency", "issuer": "Demo Radio", "credential_type": "press"},
+            ],
+            "links": [
+                {"label": "Listen", "url": "https://example.org/listen", "link_type": "music"},
+                {"label": "Media kit", "url": "https://example.org/media-kit", "link_type": "press"},
+            ],
+        },
+        {
+            "slug": "rooms-consultant",
+            "display_name": "Sami Vale Advisory",
+            "headline": "Clear operating systems for small cultural teams",
+            "node_type": "consultant",
+            "display_mode": "profile_card",
+            "room_type": "minimal_card",
+            "theme_preset": "minimal_mono",
+            "accent_color": "#111827",
+            "plan_type": "basic",
+            "template_id": templates["Showcase Profile"].id,
+            "hero_title": "Sami Vale Advisory",
+            "hero_subtitle": "A concise room for offers, proof, and a clean first conversation.",
+            "short_bio": "Independent consultant helping founders, studios, and community programs make delivery visible and calm.",
+            "long_story": "This demo room stays intentionally compact: headline, services, proof, links, vCard, QR, and a routed enquiry.",
+            "location_label": "Australia / remote",
+            "availability_status": "Taking two advisory clients",
+            "primary_cta_label": "Start a conversation",
+            "enquiry_email": "consultant-room@example.org",
+            "public_email": "consultant-room@example.org",
+            "services": [
+                {"title": "Operating review", "description": "A clear map of commitments, risks, and next actions.", "price_label": "From $900"},
+                {"title": "Founder rhythm sprint", "description": "Two-week setup for planning, delivery, and accountability.", "price_label": "From $2,400"},
+            ],
+            "proof_items": [
+                {"title": "Case study", "client_label": "Creative studio", "testimonial": "Sami turned a messy set of priorities into a weekly rhythm we could actually keep.", "outcome": "Weekly delivery review adopted by the team."}
+            ],
+            "links": [
+                {"label": "Capability note", "url": "https://example.org/capability", "link_type": "document"},
+                {"label": "LinkedIn", "url": "https://example.org/linkedin", "link_type": "social"},
+            ],
+        },
+        {
+            "slug": "rooms-community-organisation",
+            "display_name": "Waratah Commons",
+            "headline": "A community organisation room for programs, trust, and support",
+            "node_type": "organisation",
+            "display_mode": "organisation_profile",
+            "room_type": "organisation",
+            "theme_preset": "cultural_org",
+            "accent_color": "#b91c1c",
+            "plan_type": "organisation_venue",
+            "template_id": templates["Organisation / Cultural Centre Profile"].id,
+            "hero_title": "Waratah Commons",
+            "hero_subtitle": "Programs, public notices, support pathways, and archive-ready community records.",
+            "hero_image_url": "https://images.unsplash.com/photo-1497366754035-f200968a6e72",
+            "short_bio": "A demo community organisation room suitable for white-label and Mudyin-style deployments.",
+            "long_story": "Waratah Commons keeps public language careful: what is active, what is being prepared, how people can volunteer or support, and how public trust records are held.",
+            "location_label": "Inner West Sydney",
+            "availability_status": "Programs open by enquiry",
+            "featured_notice": "Volunteer expressions of interest are open for the next community day.",
+            "primary_cta_label": "Volunteer or partner",
+            "enquiry_email": "organisation-room@example.org",
+            "public_email": "organisation-room@example.org",
+            "directory_ready": True,
+            "map_ready": True,
+            "archive_ready": True,
+            "white_label_ready": True,
+            "services": [
+                {"title": "Community day", "description": "Monthly gathering with workshops, food, and practical support.", "duration_label": "Monthly"},
+                {"title": "Youth studio", "description": "Creative after-school program by referral and consent.", "duration_label": "Term-based"},
+                {"title": "Venue partnership", "description": "Carefully reviewed public-interest collaborations.", "price_label": "By discussion"},
+            ],
+            "works": [
+                {"title": "Community day record", "year": "2026", "medium": "Public archive note", "image_url": "https://images.unsplash.com/photo-1528605248644-14dd04022da1", "availability_status": "archive"},
+                {"title": "Workshop room", "year": "2026", "medium": "Program documentation", "image_url": "https://images.unsplash.com/photo-1497366754035-f200968a6e72", "availability_status": "current"},
+            ],
+            "links": [
+                {"label": "Support pathway", "url": "https://example.org/support", "link_type": "donation"},
+                {"label": "Volunteer form", "url": "https://example.org/volunteer", "link_type": "volunteer"},
+            ],
+            "proof_items": [
+                {"title": "Public trust note", "client_label": "Community partner", "testimonial": "The room makes active programs and future-phase promises easy to separate."}
+            ],
+        },
         {
             "slug": "showcase-profile-demo",
             "display_name": "Ari Vale",
@@ -3417,24 +3909,35 @@ def seed_presence_demo_data() -> dict[str, Any]:
         collections = item.pop("collections", [])
         works = item.pop("works", [])
         data = {
-            **item,
             "tenant_id": tenant.id,
             "organisation_id": tenant.id,
             "owner_user_id": owner.id,
             "status": "published",
             "visibility": "public",
-            "bio": (
+            "public_status": "public",
+            **item,
+        }
+        data.setdefault(
+            "bio",
+            (
                 "A pilot Presence Node for invite-only alpha testing. It includes public-safe contact pathways, "
                 "service signals, links, portfolio highlights, and structured enquiry capture."
             ),
-            "primary_cta_label": "Send enquiry",
-            "primary_cta_url": "https://example.org/contact",
-            "public_email": "hello@example.org",
-            "links": [
+        )
+        data.setdefault("primary_cta_label", "Send enquiry")
+        data.setdefault("primary_cta_url", "https://example.org/contact")
+        data.setdefault("public_email", "hello@example.org")
+        data.setdefault("enquiry_email", data.get("public_email"))
+        data.setdefault(
+            "links",
+            [
                 {"label": "Website", "url": "https://example.org", "link_type": "website", "icon": "globe"},
                 {"label": "Instagram", "url": "https://example.org/social", "link_type": "social", "icon": "instagram"},
             ],
-            "services": [
+        )
+        data.setdefault(
+            "services",
+            [
                 {
                     "title": "Introductory session",
                     "description": "A focused first conversation to understand fit and next steps.",
@@ -3444,11 +3947,17 @@ def seed_presence_demo_data() -> dict[str, Any]:
                     "cta_url": "https://example.org/book",
                 }
             ],
-            "availability_chips": [
+        )
+        data.setdefault(
+            "availability_chips",
+            [
                 {"label": "Taking enquiries", "chip_type": "availability"},
                 {"label": "Online available", "chip_type": "format"},
             ],
-            "portfolio_items": [
+        )
+        data.setdefault(
+            "portfolio_items",
+            [
                 {
                     "title": "Pilot highlight",
                     "description": "A placeholder-safe portfolio item for alpha review.",
@@ -3458,10 +3967,13 @@ def seed_presence_demo_data() -> dict[str, Any]:
                     "media_type": "image",
                 }
             ],
-            "sections": [
+        )
+        data.setdefault(
+            "sections",
+            [
                 {"section_type": "about", "title": "About", "content": "Built for trusted introductions and light-touch CRM capture."}
             ],
-        }
+        )
         node = create_presence_node(data, actor=owner)
         created_collections = [create_presence_collection(node, row) for row in collections]
         for index, work in enumerate(works):

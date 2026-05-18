@@ -354,7 +354,7 @@ def _assert_owner_safe_node_detail_payload(
     assert isinstance(data["portfolio_items"], list)
     assert isinstance(data["availability_chips"], list)
     assert isinstance(data["business_functions"], list)
-    assert data["public_url"].endswith(f"/p/{expected_slug}")
+    assert data["public_url"].endswith(f"/presence/{expected_slug}")
 
     if expected_headline is not None:
         assert data["headline"] == expected_headline
@@ -475,6 +475,242 @@ def test_presence_node_create_edit_publish_public_enquiry_and_unpublish_flow():
     )
     assert unpublish_response.status_code == 200
     assert client.get("/api/presence/public/river-practitioner", base_url="http://public.test").status_code == 404
+
+
+def test_presence_room_validation_public_status_and_public_lookup():
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers = _headers(app)
+
+    missing_auth = client.post(
+        "/api/control/presence/nodes",
+        json={**_node_payload(tenant_id, slug="blocked-room"), "room_type": "artist_studio"},
+        base_url="http://control.test",
+    )
+    assert missing_auth.status_code == 401
+
+    valid = client.post(
+        "/api/control/presence/nodes",
+        json={
+            **_node_payload(tenant_id, slug="artist-room-public"),
+            "display_name": "Artist Room Public",
+            "room_type": "artist_studio",
+            "theme_preset": "gallery_white",
+            "accent_color": "#b45309",
+            "public_status": "public",
+            "hero_title": "Studio Front Door",
+            "hero_subtitle": "A structured room for a public artist.",
+            "hero_image": "https://example.org/hero.jpg",
+            "short_bio": "Short public room bio.",
+            "long_story": "Longer public room story.",
+            "enquiry_email": "artist-room@example.org",
+            "availability_status": "Commissions open",
+            "featured_notice": "New work is being prepared.",
+            "seo_title": "Artist Room Public",
+            "seo_description": "A Presence Room test page.",
+            "social_preview_image": "https://example.org/social.jpg",
+            "media_embeds": [{"label": "Studio clip", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "type": "video"}],
+        },
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert valid.status_code == 201, valid.get_json()
+    created = valid.get_json()["data"]
+    assert created["status"] == "published"
+    assert created["public_status"] == "public"
+    assert created["room_type"] == "artist_studio"
+    assert created["theme_preset"] == "gallery_white"
+    assert created["hero_image_url"] == "https://example.org/hero.jpg"
+
+    public = client.get("/api/presence/public/artist-room-public", base_url="http://public.test")
+    assert public.status_code == 200, public.get_json()
+    public_body = public.get_json()["data"]
+    assert public_body["display_name"] == "Artist Room Public"
+    assert public_body["room_type"] == "artist_studio"
+    assert public_body["seo"]["title"] == "Artist Room Public"
+    assert public_body["gallery_items"][0]["source_type"] == "portfolio_item"
+    assert "owner_user_id" not in public_body
+
+    invalid_room_type = client.post(
+        "/api/control/presence/nodes",
+        json={**_node_payload(tenant_id, slug="bad-room-type"), "room_type": "open_social_room"},
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert invalid_room_type.status_code == 400
+
+    invalid_theme = client.post(
+        "/api/control/presence/nodes",
+        json={**_node_payload(tenant_id, slug="bad-room-theme"), "theme_preset": "custom_css_market"},
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert invalid_theme.status_code == 400
+
+    invalid_status = client.post(
+        "/api/control/presence/nodes",
+        json={**_node_payload(tenant_id, slug="bad-public-status"), "public_status": "followers_only"},
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert invalid_status.status_code == 400
+
+    for status in ("draft", "private"):
+        slug = f"hidden-room-{status}"
+        response = client.post(
+            "/api/control/presence/nodes",
+            json={
+                **_node_payload(tenant_id, slug=slug),
+                "display_name": f"Hidden Room {status}",
+                "room_type": "minimal_card",
+                "theme_preset": "clean_light",
+                "public_status": status,
+            },
+            headers=headers,
+            base_url="http://control.test",
+        )
+        assert response.status_code == 201, response.get_json()
+        hidden = client.get(f"/api/presence/public/{slug}", base_url="http://public.test")
+        assert hidden.status_code == 404
+
+
+def test_presence_room_owner_patch_updates_safe_fields_and_rejects_unauthenticated_update():
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    control_headers = _headers(app)
+    owner_id = _create_owner_user(
+        app,
+        username="room-owner",
+        pseudonym="Room Owner",
+        email="room-owner@example.org",
+        node_id=tenant_id,
+        role="node_admin",
+    )
+    owner_node = _create_presence_node_for_owner(
+        client,
+        control_headers,
+        tenant_id,
+        owner_id,
+        slug="owner-room-patch",
+        display_name="Owner Room Patch",
+    )
+
+    unauthenticated = client.patch(
+        f"/api/presence/owner/nodes/{owner_node['id']}",
+        json={"room_type": "minimal_card"},
+        base_url="http://public.test",
+    )
+    assert unauthenticated.status_code == 401
+
+    owner_headers = _owner_headers(app, "room-owner", role="node_admin")
+    patched = client.patch(
+        f"/api/presence/owner/nodes/{owner_node['id']}",
+        json={
+            "room_type": "practitioner",
+            "theme_preset": "soft_healing",
+            "accent_color": "#527a52",
+            "public_status": "private",
+            "hero_title": "Owner Room Front Door",
+            "hero_subtitle": "Warm, grounded, clear.",
+            "short_bio": "Short owner-edited room bio.",
+            "long_story": "Long owner-edited room story.",
+            "enquiry_email": "room-route@example.org",
+            "availability_status": "Taking first conversations",
+            "featured_notice": "A careful notice.",
+            "seo_title": "Owner Room SEO",
+            "seo_description": "Owner-updated room metadata.",
+            "media_embeds": [{"label": "Practice video", "url": "https://vimeo.com/123456", "type": "video"}],
+            "owner_user_id": None,
+        },
+        headers=owner_headers,
+        base_url="http://public.test",
+    )
+    assert patched.status_code == 200, patched.get_json()
+    data = patched.get_json()["data"]
+    assert data["room_type"] == "practitioner"
+    assert data["theme_preset"] == "soft_healing"
+    assert data["public_status"] == "private"
+    assert data["hero_title"] == "Owner Room Front Door"
+    assert data["enquiry_email"] == "room-route@example.org"
+    assert data["media_embeds"][0]["provider"] == "vimeo"
+    assert "owner_user_id" not in data
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceNode
+
+    with app.app_context():
+        node = _db.session.query(PresenceNode).get(owner_node["id"])
+        assert node.owner_user_id == owner_id
+
+
+def test_presence_room_enquiry_routes_to_room_inbox_and_honeypot_is_rejected():
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers = _headers(app)
+
+    room = client.post(
+        "/api/control/presence/nodes",
+        json={
+            **_node_payload(tenant_id, slug="route-room"),
+            "display_name": "Route Room",
+            "room_type": "minimal_card",
+            "theme_preset": "minimal_mono",
+            "public_status": "public",
+            "public_email": "public-fallback@example.org",
+            "enquiry_email": "configured-room@example.org",
+        },
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert room.status_code == 201, room.get_json()
+
+    valid = client.post(
+        "/api/presence/public/route-room/enquiries",
+        json={
+            "name": "Room Visitor",
+            "email": "visitor@example.org",
+            "phone": "+61 400 111 222",
+            "message": "Please route this to the configured room inbox.",
+            "consent": True,
+            "preferred_contact_method": "email",
+            "enquiry_type": "conversation",
+            "source_url": "/p/route-room",
+            "source_type": "presence_room_test",
+        },
+        base_url="http://public.test",
+    )
+    assert valid.status_code == 201, valid.get_json()
+    body = valid.get_json()["data"]
+    assert body["status"] == "new"
+    assert body["delivery_status"] == "logged_fallback"
+    assert body["message"] == "Thanks. Your enquiry has been received."
+
+    spam = client.post(
+        "/api/presence/public/route-room/enquiries",
+        json={
+            "name": "Spam Visitor",
+            "email": "spam@example.org",
+            "message": "This should not create a real enquiry.",
+            "consent": True,
+            "preferred_contact_method": "email",
+            "website": "https://spam.example",
+        },
+        base_url="http://public.test",
+    )
+    assert spam.status_code == 400
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceEnquiry
+
+    with app.app_context():
+        rows = _db.session.query(PresenceEnquiry).all()
+        assert len(rows) == 1
+        assert rows[0].source_room_slug == "route-room"
+        assert rows[0].routed_to_email == "configured-room@example.org"
+        assert rows[0].delivery_status == "logged_fallback"
 
 
 def test_presence_basic_premium_artist_collections_and_works_alpha_flow():
@@ -842,7 +1078,7 @@ def test_presence_owner_nodes_route_lists_owned_nodes_with_owner_safe_fields():
     assert row["plan_type"] == "premium"
     assert row["status"] == "draft"
     assert row["visibility"] == "public"
-    assert row["public_url"].endswith("/p/owner-node-alpha")
+    assert row["public_url"].endswith("/presence/owner-node-alpha")
 
     for key in (
         "owner_user_id",
@@ -930,7 +1166,7 @@ def test_presence_owner_node_detail_returns_owner_safe_payload_for_owned_node():
     assert data["published_at"] is not None
     assert data["directory_ready"] is True
     assert data["map_ready"] is True
-    assert data["public_url"].endswith("/p/owner-node-detail-alpha")
+    assert data["public_url"].endswith("/presence/owner-node-detail-alpha")
 
     procurement = data["procurement_profile"]
     assert procurement["business_name"] == "Owner Detail Studio"
@@ -3378,7 +3614,8 @@ def test_anonymous_email_preferred_enquiry_succeeds_and_public_response_is_safe(
         "id": body["id"],
         "status": "new",
         "submitter_linked": False,
-        "message": "Enquiry submitted.",
+        "delivery_status": "logged_fallback",
+        "message": "Thanks. Your enquiry has been received.",
     }
     assert "email" not in body
     assert "phone" not in body

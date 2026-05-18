@@ -152,7 +152,7 @@ export default function StudioDashboard({ params }: { params: Promise<{ id: stri
               ) : (
                 <span className="flex items-center gap-1 text-xs text-[var(--p-studio-muted)] truncate">
                   <Globe className="w-3 h-3 shrink-0" />
-                  Draft preview path: /p/{node.slug}
+                  Draft preview path: /presence/{node.slug}
                 </span>
               )}
             </div>

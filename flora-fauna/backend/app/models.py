@@ -611,6 +611,9 @@ class PresenceNode(db.Model):
         db.Index("ix_presence_node_status", "status"),
         db.Index("ix_presence_node_type", "node_type"),
         db.Index("ix_presence_node_display_mode", "display_mode"),
+        db.Index("ix_presence_node_room_type", "room_type"),
+        db.Index("ix_presence_node_theme_preset", "theme_preset"),
+        db.Index("ix_presence_node_public_status", "public_status"),
         db.Index("ix_presence_node_plan_type", "plan_type"),
         db.Index("ix_presence_node_template_id", "template_id"),
         db.Index("ix_presence_node_readiness", "directory_ready", "map_ready", "archive_ready", "marketplace_ready"),
@@ -626,9 +629,13 @@ class PresenceNode(db.Model):
     bio = db.Column(db.Text, nullable=True)
     node_type = db.Column(db.String(80), nullable=False, default="custom")
     display_mode = db.Column(db.String(80), nullable=False, default="profile_card")
+    room_type = db.Column(db.String(80), nullable=True)
+    theme_preset = db.Column(db.String(80), nullable=True)
+    accent_color = db.Column(db.String(24), nullable=True)
     plan_type = db.Column(db.String(80), nullable=False, default="basic")
     status = db.Column(db.String(40), nullable=False, default="draft")
     visibility = db.Column(db.String(40), nullable=False, default="public")
+    public_status = db.Column(db.String(40), nullable=True)
     template_id = db.Column(db.Integer, db.ForeignKey("presence_template.id"), nullable=True)
     theme_config = db.Column(db.JSON, nullable=True)
     visual_mood = db.Column(db.String(120), nullable=True)
@@ -636,10 +643,19 @@ class PresenceNode(db.Model):
     custom_spacing_config = db.Column(db.JSON, nullable=True)
     profile_image_url = db.Column(db.String(700), nullable=True)
     cover_image_url = db.Column(db.String(700), nullable=True)
+    hero_title = db.Column(db.String(220), nullable=True)
+    hero_subtitle = db.Column(db.String(320), nullable=True)
+    hero_image_url = db.Column(db.String(700), nullable=True)
+    short_bio = db.Column(db.Text, nullable=True)
+    long_story = db.Column(db.Text, nullable=True)
     location_label = db.Column(db.String(180), nullable=True)
     service_area = db.Column(db.String(220), nullable=True)
     primary_cta_label = db.Column(db.String(100), nullable=True)
     primary_cta_url = db.Column(db.String(700), nullable=True)
+    enquiry_email = db.Column(db.String(180), nullable=True)
+    availability_status = db.Column(db.String(80), nullable=True)
+    featured_notice = db.Column(db.Text, nullable=True)
+    media_embeds = db.Column(db.JSON, nullable=True)
     landing_enabled = db.Column(db.Boolean, default=False, nullable=False)
     landing_title = db.Column(db.String(180), nullable=True)
     landing_subtitle = db.Column(db.String(260), nullable=True)
@@ -658,6 +674,9 @@ class PresenceNode(db.Model):
     white_label_ready = db.Column(db.Boolean, default=False, nullable=False)
     public_email = db.Column(db.String(180), nullable=True)
     public_phone = db.Column(db.String(80), nullable=True)
+    seo_title = db.Column(db.String(180), nullable=True)
+    seo_description = db.Column(db.String(280), nullable=True)
+    social_preview_image_url = db.Column(db.String(700), nullable=True)
     created_at = db.Column(db.DateTime, default=utcnow)
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
     published_at = db.Column(db.DateTime, nullable=True)
@@ -1182,6 +1201,9 @@ class PresenceEnquiry(db.Model):
     source_url = db.Column(db.String(700), nullable=True)
     source_type = db.Column(db.String(80), nullable=True)
     source_tag_id = db.Column(db.Integer, db.ForeignKey("presence_nfc_tag.id"), nullable=True)
+    source_room_slug = db.Column(db.String(180), nullable=True)
+    routed_to_email = db.Column(db.String(180), nullable=True)
+    delivery_status = db.Column(db.String(40), nullable=True)
     ip_hash = db.Column(db.String(96), nullable=True)
     user_agent_hash = db.Column(db.String(96), nullable=True)
     status = db.Column(db.String(40), nullable=False, default="new")

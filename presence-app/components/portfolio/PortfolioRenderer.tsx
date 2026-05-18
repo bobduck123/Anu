@@ -6,6 +6,7 @@ import { MapPin, Mail, Phone, ExternalLink } from "lucide-react";
 import type { PresenceNode, PresenceWork, PresenceCollection } from "@/lib/api/types";
 import { Chip, StatusPill } from "@/components/ui";
 import { PublicEnquiryDialog } from "@/components/portfolio/PublicEnquiryDialog";
+import PresenceRoomRenderer, { isPresenceRoomNode } from "@/components/portfolio/PresenceRoomRenderer";
 
 interface PortfolioRendererProps {
   node: PresenceNode;
@@ -913,6 +914,10 @@ function VenueView({ node }: { node: PresenceNode }) {
 // ── Display-mode routing ───────────────────────────────────────────────────
 
 export default function PortfolioRenderer({ node }: PortfolioRendererProps) {
+  if (isPresenceRoomNode(node)) {
+    return <PresenceRoomRenderer node={node} />;
+  }
+
   // v1.1 — three distinctive template branches, each with a named visual mechanism.
   if (node.display_mode === "studio_practice") {
     return <StudioPracticeView node={node} />;

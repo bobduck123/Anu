@@ -158,7 +158,7 @@ export default function StudioIndexPage() {
                     <StatusPill status={node.status} />
                     <span className="flex items-center gap-1 truncate">
                       <Globe className="w-3 h-3" />
-                      {node.status === "published" ? `/p/${node.slug}` : `draft /p/${node.slug}`}
+                      {node.status === "published" ? `/presence/${node.slug}` : `draft /presence/${node.slug}`}
                     </span>
                   </div>
                 </div>

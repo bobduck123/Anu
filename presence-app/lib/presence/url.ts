@@ -10,7 +10,7 @@ export const PRESENCE_PUBLIC_ORIGIN = (
 ).replace(/\/+$/, "");
 
 export function canonicalPublicUrl(slug: string): string {
-  return `${PRESENCE_PUBLIC_ORIGIN}/p/${encodeURIComponent(slug)}`;
+  return `${PRESENCE_PUBLIC_ORIGIN}/presence/${encodeURIComponent(slug)}`;
 }
 
 export function displayPublicUrl(slug: string): string {

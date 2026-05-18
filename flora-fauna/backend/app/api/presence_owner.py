@@ -67,6 +67,22 @@ _OWNER_NODE_MUTABLE_FIELDS = {
     "display_name",
     "headline",
     "bio",
+    "room_type",
+    "theme_preset",
+    "accent_color",
+    "public_status",
+    "hero_title",
+    "hero_subtitle",
+    "hero_image_url",
+    "short_bio",
+    "long_story",
+    "enquiry_email",
+    "availability_status",
+    "featured_notice",
+    "media_embeds",
+    "seo_title",
+    "seo_description",
+    "social_preview_image_url",
     "theme_config",
     "visual_mood",
     "profile_image_url",
@@ -609,8 +625,8 @@ def publish_owner_node(node_id):
                 "Suspended or archived Presences can only be restored by platform staff.",
                 403,
             )
-        publish_presence_node(node)
         node.visibility = "public"
+        publish_presence_node(node)
         db.session.commit()
         return _owner_node_detail_response(node)
     except PresenceValidationError as exc:

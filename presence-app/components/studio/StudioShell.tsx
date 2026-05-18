@@ -51,7 +51,7 @@ export default function StudioShell({
           ) : (
             <span className="flex items-center gap-1 text-xs text-[var(--p-studio-muted)] truncate">
               <Globe className="w-3 h-3 shrink-0" />
-              Draft /p/{node.slug}
+              Draft /presence/{node.slug}
             </span>
           )}
         </div>

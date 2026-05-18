@@ -12,6 +12,7 @@ All three database schemas are now connected to their appropriate deployments. B
 - **[DOMAIN_AND_DNS_SETUP.md](./DOMAIN_AND_DNS_SETUP.md)** - Cloudflare/Vercel domain setup and verification.
 - **[HOSTED_SMOKE_TESTS.md](./HOSTED_SMOKE_TESTS.md)** - Hosted public/control smoke commands and expected outputs.
 - **[RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md)** - Final white-label release checklist.
+- **[docs/PRESENCE_ROOMS_V1.md](./docs/PRESENCE_ROOMS_V1.md)** - Presence Rooms v1 product, model, admin, enquiry routing, demos, and smoke instructions.
 
 ## 📚 Main Documentation Files
 

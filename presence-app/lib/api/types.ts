@@ -33,6 +33,32 @@ export interface PresenceService {
   is_visible?: boolean;
 }
 
+export type PresenceRoomType =
+  | "minimal_card"
+  | "artist_studio"
+  | "practitioner"
+  | "performer_music"
+  | "organisation";
+
+export type PresenceThemePreset =
+  | "clean_light"
+  | "editorial_dark"
+  | "warm_earth"
+  | "gallery_white"
+  | "neon_night"
+  | "soft_healing"
+  | "cultural_org"
+  | "minimal_mono";
+
+export type PresencePublicStatus = "draft" | "private" | "public";
+
+export interface PresenceMediaEmbed {
+  label?: string | null;
+  url: string;
+  type?: "audio" | "video" | "playlist" | "link" | string;
+  provider?: string | null;
+}
+
 export interface PresenceCollection {
   id?: number;
   node_id?: number | null;
@@ -103,6 +129,9 @@ export interface PresenceEnquiry {
   contact_route_summary?: string | null;
   source_url?: string | null;
   source_type?: string | null;
+  source_room_slug?: string | null;
+  routed_to_email?: string | null;
+  delivery_status?: string | null;
   submitter_user_id?: number | null;
   is_anu_member?: boolean;
   metadata?: Record<string, unknown> | null;
@@ -132,11 +161,27 @@ export interface PresenceNode {
   plan_type?: string;
   status: string;
   visibility: string;
+  public_status?: PresencePublicStatus | string | null;
+  room_type?: PresenceRoomType | string | null;
+  theme_preset?: PresenceThemePreset | string | null;
+  accent_color?: string | null;
   profile_image_url?: string | null;
   cover_image_url?: string | null;
+  hero_title?: string | null;
+  hero_subtitle?: string | null;
+  hero_image_url?: string | null;
+  short_bio?: string | null;
+  long_story?: string | null;
   location_label?: string | null;
   primary_cta_label?: string | null;
   primary_cta_url?: string | null;
+  enquiry_email?: string | null;
+  availability_status?: string | null;
+  featured_notice?: string | null;
+  media_embeds?: PresenceMediaEmbed[];
+  seo_title?: string | null;
+  seo_description?: string | null;
+  social_preview_image_url?: string | null;
   landing_enabled?: boolean;
   landing_title?: string | null;
   landing_subtitle?: string | null;
@@ -151,8 +196,35 @@ export interface PresenceNode {
   services?: PresenceService[];
   collections?: PresenceCollection[];
   works?: PresenceWork[];
+  gallery_items?: PresenceWork[];
+  testimonials?: PresenceEnquiry[] | Array<{
+    id?: number;
+    title?: string | null;
+    client_label?: string | null;
+    testimonial?: string | null;
+    outcome?: string | null;
+  }>;
   availability_chips?: PresenceAvailabilityChip[];
   nfc_tags?: PresenceNfcTag[];
+  credentials?: Array<{
+    id?: number;
+    title: string;
+    issuer?: string | null;
+    credential_type?: string | null;
+    verification_url?: string | null;
+    is_public?: boolean;
+  }>;
+  proof_items?: Array<{
+    id?: number;
+    title?: string | null;
+    client_label?: string | null;
+    testimonial?: string | null;
+    outcome?: string | null;
+  }>;
+  directory_ready?: boolean;
+  map_ready?: boolean;
+  archive_ready?: boolean;
+  white_label_ready?: boolean;
   analytics?: PresenceAnalyticsSummary;
   seo?: {
     title: string;
