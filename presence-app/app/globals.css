@@ -66,3 +66,1415 @@ body[data-shell="studio"] {
 /* Safe areas for PWA */
 .safe-top    { padding-top: env(safe-area-inset-top); }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+/* =========================================================================
+ * Presence DNA — room rendering primitives.
+ *
+ * These rules drive the public room renderer (PresenceDnaRenderer).
+ * Variables prefixed --presence-* are scoped per room via inline style
+ * on the room root, so each room gets its own typography, palette,
+ * spacing, and edge identity without leaking into the Studio shell.
+ * ========================================================================= */
+
+.presence-room {
+  font-family: var(--presence-font, ui-sans-serif, system-ui, sans-serif);
+  background: var(--presence-bg);
+  color: var(--presence-text);
+  --presence-section-y: 3.75rem;
+  --presence-gutter: 1.25rem;
+  --presence-radius: 10px;
+}
+.presence-room a { color: inherit; }
+.presence-room ::selection { background: var(--presence-accent); color: var(--presence-accent-text); }
+
+/* ---- Typography modes (per-room scoped via theme genome) ---- */
+.presence-typography-editorial_serif .presence-h1,
+.presence-typography-display_serif .presence-h1 {
+  font-family: var(--presence-font);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.presence-typography-mono_technical .presence-h1 {
+  font-family: var(--presence-font);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+.presence-typography-industrial_sans .presence-h1 {
+  font-family: var(--presence-font);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ---- Density ---- */
+.presence-density-cinematic { --presence-section-y: 8rem; }
+.presence-density-airy      { --presence-section-y: 5.5rem; }
+.presence-density-tight     { --presence-section-y: 2.5rem; }
+
+/* =========================================================================
+ * Image treatment classes (treatment is identity, not decoration).
+ * Each treatment is applied to .presence-treated-wrap.
+ * ========================================================================= */
+.presence-treated-wrap {
+  position: relative;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+.presence-treated-wrap > img,
+.presence-treated-wrap .presence-treated-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.presence-image-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--presence-elevated, #ededeb);
+}
+
+.presence-treatment-editorial .presence-treated-img       { filter: contrast(1.02) saturate(1.02); }
+.presence-treatment-documentary .presence-treated-img     { filter: contrast(1.05) saturate(0.94) brightness(0.98); }
+.presence-treatment-cinematic .presence-treated-img       { filter: contrast(1.1) saturate(1.05) brightness(0.95); }
+.presence-treatment-clean_product .presence-treated-img   { filter: contrast(1.04) brightness(1.04); }
+.presence-treatment-archive .presence-treated-img         { filter: sepia(0.18) contrast(1.05) saturate(0.85); }
+.presence-treatment-warm_portrait .presence-treated-img   { filter: sepia(0.08) contrast(1.04) saturate(1.06) brightness(0.99); }
+.presence-treatment-high_gloss .presence-treated-img      { filter: contrast(1.12) saturate(1.15) brightness(1.02); }
+.presence-treatment-raw .presence-treated-img             { filter: none; }
+.presence-treatment-gallery_matte .presence-treated-img   { filter: contrast(0.96) saturate(0.96) brightness(1.01); }
+.presence-treatment-polaroid .presence-treated-img        { filter: contrast(1.04) saturate(0.92) brightness(1.03); }
+.presence-treatment-halftone .presence-treated-img        { filter: grayscale(0.5) contrast(1.15); }
+.presence-treatment-photocopy .presence-treated-img       { filter: grayscale(1) contrast(1.6); }
+.presence-treatment-projection .presence-treated-img      { filter: contrast(1.1) brightness(0.94) saturate(0.85); }
+
+/* Duotone — uses CSS blend mode of accent overlay */
+.presence-treatment-duotone { background: var(--presence-accent); }
+.presence-treatment-duotone .presence-treated-img {
+  filter: grayscale(1) contrast(1.1);
+  mix-blend-mode: lighten;
+  opacity: 0.78;
+}
+
+/* Glitch — colour split + scanline tint */
+.presence-treatment-glitch .presence-treated-img {
+  filter: contrast(1.08) saturate(1.1) brightness(0.96);
+}
+.presence-treatment-glitch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background: linear-gradient(90deg, rgba(255,0,80,0.05), transparent 8%, transparent 92%, rgba(0,180,255,0.05));
+  z-index: 2;
+}
+
+/* =========================================================================
+ * Texture overlays (composited on top of any image or surface)
+ * ========================================================================= */
+.presence-texture-grain::before,
+.presence-texture-scanline::before,
+.presence-texture-paper::before,
+.presence-texture-timber::before,
+.presence-texture-fabric::before,
+.presence-texture-stone::before,
+.presence-texture-light_leak::before,
+.presence-texture-paint::before,
+.presence-texture-dust::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.presence-texture-grain::before {
+  background-image:
+    radial-gradient(rgba(0,0,0,0.18) 1px, transparent 1.4px),
+    radial-gradient(rgba(255,255,255,0.06) 0.8px, transparent 1.2px);
+  background-size: 3px 3px, 7px 7px;
+  mix-blend-mode: overlay;
+  opacity: 0.6;
+}
+.presence-texture-scanline::before {
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(255,255,255,0.04) 0 1px,
+    transparent 1px 3px
+  );
+  mix-blend-mode: screen;
+  opacity: 0.5;
+}
+.presence-texture-paper::before {
+  background-image:
+    radial-gradient(rgba(120,90,40,0.06) 1px, transparent 1.4px),
+    repeating-linear-gradient(90deg, rgba(180,150,100,0.04) 0 1px, transparent 1px 2px);
+  background-size: 5px 5px, 100% 100%;
+  mix-blend-mode: multiply;
+  opacity: 0.7;
+}
+.presence-texture-timber::before {
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(70,40,15,0.05) 0 1px,
+    transparent 1px 4px,
+    rgba(70,40,15,0.08) 4px 5px,
+    transparent 5px 11px
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+}
+.presence-texture-fabric::before {
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.04) 0 1px, transparent 1px 4px);
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+}
+.presence-texture-stone::before {
+  background-image: radial-gradient(rgba(0,0,0,0.06) 1.2px, transparent 1.4px);
+  background-size: 6px 6px;
+  mix-blend-mode: multiply;
+}
+.presence-texture-light_leak::before {
+  background: radial-gradient(circle at 12% 18%, rgba(255,200,140,0.22), transparent 36%),
+              radial-gradient(circle at 82% 78%, rgba(255,150,80,0.16), transparent 38%);
+  mix-blend-mode: screen;
+  opacity: 0.7;
+}
+.presence-texture-paint::before {
+  background-image: radial-gradient(rgba(0,0,0,0.05) 2px, transparent 2.4px);
+  background-size: 9px 9px;
+  mix-blend-mode: multiply;
+}
+.presence-texture-dust::before {
+  background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1.2px);
+  background-size: 4px 4px;
+  mix-blend-mode: screen;
+  opacity: 0.5;
+}
+
+/* =========================================================================
+ * Behaviour presets (motion identity).
+ * All implementations respect prefers-reduced-motion below.
+ * ========================================================================= */
+
+/* controlled_glitch — class toggled by ControlledGlitch.tsx */
+.presence-behaviour-glitch { position: relative; isolation: isolate; }
+.presence-behaviour-glitch.is-glitching {
+  animation: presence-glitch-shake 0.32s steps(2) 1;
+}
+.presence-behaviour-glitch.is-glitching.with-chroma::before,
+.presence-behaviour-glitch.is-glitching.with-chroma::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  z-index: -1;
+}
+.presence-behaviour-glitch.is-glitching.with-chroma::before {
+  background: rgba(255, 0, 80, 0.22);
+  transform: translate(2px, -1px);
+}
+.presence-behaviour-glitch.is-glitching.with-chroma::after {
+  background: rgba(0, 220, 255, 0.18);
+  transform: translate(-3px, 1px);
+}
+.presence-behaviour-glitch.presence-glitch-reduced {
+  /* Static single-frame offset only — no animation. */
+  text-shadow: 1px 0 rgba(255, 0, 80, 0.18), -1px 0 rgba(0, 220, 255, 0.14);
+}
+@keyframes presence-glitch-shake {
+  0% { transform: translate(0,0); }
+  20% { transform: translate(-2px, 1px); }
+  40% { transform: translate(3px, -2px); }
+  60% { transform: translate(-1px, 2px); }
+  80% { transform: translate(2px, -1px); }
+  100% { transform: translate(0,0); }
+}
+
+/* gallery_breath — JS-driven inline transform; nothing to declare here. */
+.presence-behaviour-breath { transform-origin: center center; will-change: transform, opacity; }
+
+/* material_reveal */
+.presence-behaviour-reveal {
+  --reveal-lift: 28px;
+  --reveal-duration: 720ms;
+  opacity: 0;
+  transform: translateY(var(--reveal-lift));
+  transition: opacity var(--reveal-duration) ease, transform var(--reveal-duration) ease;
+}
+.presence-behaviour-reveal.is-revealed { opacity: 1; transform: translateY(0); }
+
+/* editorial_snap */
+.presence-behaviour-snap {
+  --snap-duration: 320ms;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity var(--snap-duration) ease, transform var(--snap-duration) ease;
+}
+.presence-behaviour-snap.is-revealed { opacity: 1; transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .presence-behaviour-glitch.is-glitching { animation: none; }
+  .presence-behaviour-glitch.is-glitching::before,
+  .presence-behaviour-glitch.is-glitching::after { display: none; }
+  .presence-behaviour-reveal { opacity: 1; transform: none; transition: none; }
+  .presence-behaviour-snap { opacity: 1; transform: none; transition: none; }
+  .presence-behaviour-breath { transform: none !important; opacity: 1 !important; }
+}
+
+/* =========================================================================
+ * Signature: glitch_gallery
+ * ========================================================================= */
+.presence-signature-glitch-wall {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-auto-rows: 140px;
+  gap: 8px;
+}
+.presence-signature-glitch-wall figure {
+  position: relative;
+  margin: 0;
+  background: #000;
+  overflow: hidden;
+  border: 1px solid var(--presence-border);
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.presence-signature-glitch-wall figure[data-span="lg"] { grid-column: span 4; grid-row: span 3; }
+.presence-signature-glitch-wall figure[data-span="md"] { grid-column: span 3; grid-row: span 2; }
+.presence-signature-glitch-wall figure[data-span="sm"] { grid-column: span 2; grid-row: span 2; }
+.presence-signature-glitch-wall .tile-img { position: absolute; inset: 0; }
+.presence-signature-glitch-wall .tile-scan {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(180deg, rgba(255,216,77,0.08) 0 1px, transparent 1px 4px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.presence-signature-glitch-wall figcaption {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 0.6rem 0.75rem 0.55rem;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.78) 80%);
+  color: var(--presence-accent);
+  font-family: var(--presence-font);
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  display: grid;
+  gap: 1px;
+}
+.presence-signature-glitch-wall figcaption .idx { opacity: 0.7; }
+.presence-signature-glitch-wall figcaption .title { color: #f5f3ee; font-weight: 600; }
+.presence-signature-glitch-wall figcaption .meta { opacity: 0.65; font-size: 0.66rem; }
+.presence-signature-glitch-wall figure.is-shimmering {
+  animation: presence-glitch-shimmer 0.22s steps(3);
+}
+@keyframes presence-glitch-shimmer {
+  0% { transform: translate(0,0); filter: none; }
+  50% { transform: translate(3px, -2px); filter: hue-rotate(15deg) saturate(1.4); }
+  100% { transform: translate(0,0); filter: none; }
+}
+@media (max-width: 720px) {
+  .presence-signature-glitch-wall {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 160px;
+  }
+  .presence-signature-glitch-wall figure { grid-column: span 1; grid-row: span 1; }
+  .presence-signature-glitch-wall figure[data-span="lg"] { grid-column: span 2; grid-row: span 2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .presence-signature-glitch-wall figure.is-shimmering { animation: none; }
+}
+.presence-glitch-empty { color: var(--presence-muted); padding: 2rem; text-align: center; }
+
+/* =========================================================================
+ * Signature: materials_board
+ * ========================================================================= */
+.presence-signature-materials-board {
+  position: relative;
+  padding: 2rem 1.5rem 2.5rem;
+  background: linear-gradient(165deg, #6b4d2c, #533a20);
+  box-shadow: inset 0 2px 14px rgba(0,0,0,0.4);
+  border-radius: var(--presence-radius);
+  isolation: isolate;
+}
+.presence-signature-materials-board .board-grain {
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(rgba(255,220,160,0.05) 1px, transparent 1.4px),
+    radial-gradient(rgba(0,0,0,0.35) 1px, transparent 1.6px);
+  background-size: 4px 4px, 9px 9px;
+  background-position: 0 0, 2px 3px;
+  mix-blend-mode: overlay;
+  z-index: 0;
+  pointer-events: none;
+}
+.presence-signature-materials-board .board-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.75rem 1.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  z-index: 1;
+}
+.presence-signature-materials-board .material-card {
+  position: relative;
+  background: #f4e8d4;
+  color: #2a1b0c;
+  padding: 0.65rem 0.65rem 0.85rem;
+  transform: rotate(var(--card-tilt, 0deg));
+  box-shadow: 0 18px 28px rgba(0,0,0,0.45), 0 4px 8px rgba(0,0,0,0.25);
+  font-family: Georgia, "Times New Roman", serif;
+}
+.presence-signature-materials-board .material-card .card-pin {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, #ffd58a, #b06d22 70%, #6a3d10);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  z-index: 2;
+}
+.presence-signature-materials-board .material-card .card-img {
+  position: relative;
+  aspect-ratio: 4/3;
+  background: #d8c8a8;
+  overflow: hidden;
+  border-radius: 2px;
+}
+.presence-signature-materials-board .material-card .card-meta {
+  padding: 0.55rem 0.2rem 0;
+}
+.presence-signature-materials-board .material-card .label {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+.presence-signature-materials-board .material-card .line {
+  margin: 0.3rem 0 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: #6a4a26;
+  text-transform: uppercase;
+}
+@media (max-width: 720px) {
+  .presence-signature-materials-board .board-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1.4rem 1rem; }
+}
+.presence-materials-empty { color: var(--presence-muted); padding: 2rem; text-align: center; }
+
+/* =========================================================================
+ * Signature: before/after slider
+ * ========================================================================= */
+.presence-signature-ba {
+  display: grid;
+  gap: 2rem;
+}
+.presence-signature-ba .presence-ba-figure {
+  margin: 0;
+  display: grid;
+  gap: 0.8rem;
+}
+.presence-signature-ba .presence-ba-window {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/10;
+  overflow: hidden;
+  border-radius: var(--presence-radius);
+  background: var(--presence-elevated);
+  border: 1px solid var(--presence-border);
+  user-select: none;
+  touch-action: pan-y;
+  cursor: ew-resize;
+  outline: none;
+}
+.presence-signature-ba .presence-ba-window:focus-visible {
+  box-shadow: 0 0 0 3px var(--presence-accent);
+}
+.presence-signature-ba .ba-layer { position: absolute; inset: 0; overflow: hidden; }
+.presence-signature-ba .ba-layer.ba-after { right: auto; }
+.presence-signature-ba .ba-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--presence-accent);
+  transform: translateX(-1px);
+  z-index: 5;
+}
+.presence-signature-ba .ba-handle > span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--presence-accent);
+  color: var(--presence-accent-text);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+.presence-signature-ba .ba-handle > span::before,
+.presence-signature-ba .ba-handle > span::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 0; height: 0;
+  border: 6px solid transparent;
+}
+.presence-signature-ba .ba-handle > span::before {
+  left: 6px;
+  border-right-color: var(--presence-accent-text);
+  transform: translateY(-50%);
+}
+.presence-signature-ba .ba-handle > span::after {
+  right: 6px;
+  border-left-color: var(--presence-accent-text);
+  transform: translateY(-50%);
+}
+.presence-signature-ba .ba-tags { position: absolute; inset: 0; display: flex; justify-content: space-between; padding: 0.75rem; pointer-events: none; }
+.presence-signature-ba .ba-tags .tag {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  align-self: flex-end;
+}
+.presence-signature-ba figcaption .label { margin: 0; font-weight: 600; color: var(--presence-text); }
+.presence-signature-ba figcaption .caption { margin: 0.2rem 0 0; color: var(--presence-muted); font-size: 0.9rem; }
+.presence-ba-empty { color: var(--presence-muted); padding: 2rem; text-align: center; border: 1px dashed var(--presence-border); border-radius: var(--presence-radius); }
+
+/* =========================================================================
+ * Mobile nav: floating_index
+ * ========================================================================= */
+.presence-nav-desktop {
+  position: fixed;
+  top: 50%;
+  right: 1.4rem;
+  transform: translateY(-50%);
+  z-index: 30;
+}
+.presence-nav-desktop ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.7rem;
+}
+.presence-nav-desktop a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--presence-muted);
+  text-decoration: none;
+  font-size: 0.74rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.presence-nav-desktop a .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--presence-border);
+  transition: transform 200ms ease, background 200ms ease;
+}
+.presence-nav-desktop a .label {
+  opacity: 0;
+  transform: translateX(8px);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.presence-nav-desktop a:hover .label,
+.presence-nav-desktop a:focus-visible .label,
+.presence-nav-desktop a[data-active="true"] .label {
+  opacity: 1;
+  transform: translateX(0);
+}
+.presence-nav-desktop a[data-active="true"] .dot {
+  background: var(--presence-accent);
+  transform: scale(1.6);
+}
+
+.presence-nav-mobile {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 1.1rem);
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+.presence-nav-mobile-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1rem 0.55rem 0.7rem;
+  background: var(--presence-ink);
+  color: var(--presence-accent);
+  border: 1px solid var(--presence-accent);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-family: var(--presence-font);
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+}
+.presence-nav-mobile-panel {
+  list-style: none;
+  margin: 0;
+  padding: 0.6rem;
+  background: var(--presence-ink);
+  border: 1px solid var(--presence-border);
+  border-radius: 14px;
+  display: grid;
+  gap: 0.25rem;
+  min-width: 220px;
+  box-shadow: 0 22px 44px rgba(0,0,0,0.45);
+}
+.presence-nav-mobile-panel a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  color: var(--presence-text);
+  text-decoration: none;
+  font-size: 0.86rem;
+}
+.presence-nav-mobile-panel a .glyph {
+  width: 1.6rem;
+  height: 1.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  border: 1px solid var(--presence-border);
+  font-family: var(--presence-font);
+  font-size: 0.78rem;
+  color: var(--presence-accent);
+}
+.presence-nav-mobile-panel a[data-active="true"] { background: var(--presence-elevated); }
+
+/* Provide bottom padding so the floating nav doesn't cover content on mobile. */
+@media (max-width: 768px) {
+  .presence-room { padding-bottom: 5.5rem; }
+}
+
+/* =========================================================================
+ * Depth + grid modifiers (shared shells)
+ * ========================================================================= */
+.presence-depth-flat .presence-card        { box-shadow: none; }
+.presence-depth-elevated .presence-card    { box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+.presence-depth-layered .presence-card     { box-shadow: 0 10px 28px rgba(0,0,0,0.08); }
+.presence-depth-dimensional .presence-card { box-shadow: 0 18px 36px rgba(0,0,0,0.16), 0 3px 8px rgba(0,0,0,0.08); }
+.presence-depth-scenographic .presence-card { box-shadow: 0 28px 60px rgba(0,0,0,0.42), 0 6px 14px rgba(0,0,0,0.32); }
+
+.presence-card {
+  background: var(--presence-surface);
+  border: 1px solid var(--presence-border);
+  border-radius: var(--presence-radius);
+}
+
+/* =========================================================================
+ * Shared room primitives (eyebrows, CTAs, headings)
+ * Each blueprint may further customise these locally.
+ * ========================================================================= */
+.presence-room .eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--presence-accent);
+  font-weight: 600;
+  margin: 0;
+}
+.presence-room .presence-h1 {
+  font-family: var(--presence-font);
+  font-size: clamp(2.4rem, 6vw, 4.4rem);
+  line-height: 0.98;
+  margin: 0;
+  color: var(--presence-text);
+}
+.presence-room .presence-h2 {
+  font-family: var(--presence-font);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1.1;
+  margin: 0.3rem 0 0;
+  color: var(--presence-text);
+}
+
+.presence-room .hero-sub {
+  font-size: 1.05rem;
+  color: var(--presence-muted);
+  line-height: 1.55;
+  margin: 0.8rem 0 0;
+  max-width: 36rem;
+}
+.presence-room .hero-prose,
+.presence-room .hero-summary {
+  font-size: 0.95rem;
+  color: var(--presence-muted);
+  line-height: 1.7;
+  margin: 1rem 0 0;
+  max-width: 38rem;
+}
+.presence-room .hero-locale {
+  display: inline-block;
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--presence-muted);
+  margin-top: 0.6rem;
+}
+.presence-room .hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 1.4rem;
+}
+
+.presence-cta-primary,
+.presence-cta-editorial,
+.presence-cta-material,
+.presence-cta-trust,
+.presence-cta-care,
+.presence-cta-nocturnal,
+.presence-cta-ghost-noct {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: var(--presence-radius);
+  padding: 0.7rem 1.1rem;
+  transition: transform 160ms ease, background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+.presence-cta-primary { background: var(--presence-accent); color: var(--presence-accent-text); }
+.presence-cta-primary:hover { transform: translateY(-1px); }
+
+.presence-cta-editorial {
+  background: var(--presence-text);
+  color: var(--presence-bg);
+  letter-spacing: 0.08em;
+}
+.presence-cta-material {
+  background: var(--presence-accent);
+  color: var(--presence-accent-text);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+.presence-cta-trust {
+  background: var(--presence-accent);
+  color: var(--presence-accent-text);
+  padding: 0.85rem 1.4rem;
+}
+.presence-cta-care {
+  background: var(--presence-accent);
+  color: var(--presence-accent-text);
+  border-radius: 999px;
+  padding: 0.75rem 1.4rem;
+}
+.presence-cta-nocturnal {
+  background: var(--presence-accent);
+  color: var(--presence-accent-text);
+  border: 1px solid var(--presence-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-family: var(--presence-font);
+  padding: 0.7rem 1.4rem;
+  box-shadow: 0 0 22px rgba(255, 216, 77, 0.18);
+}
+.presence-cta-ghost-noct {
+  background: transparent;
+  color: var(--presence-accent);
+  border: 1px solid var(--presence-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.presence-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--presence-surface);
+  color: var(--presence-text);
+  border: 1px solid var(--presence-border);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+.presence-secondary-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+/* =========================================================================
+ * BLUEPRINT: nocturnal_sonic
+ * ========================================================================= */
+.presence-nocturnal-front {
+  position: relative;
+  min-height: 92vh;
+  display: flex;
+  align-items: flex-end;
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+  overflow: hidden;
+  background: var(--presence-hero);
+  isolation: isolate;
+}
+.presence-nocturnal-front .hero-bg { position: absolute; inset: 0; opacity: 0.55; }
+.presence-nocturnal-front .hero-fog {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 18% 24%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.7) 80%),
+    linear-gradient(180deg, rgba(0,0,0,0.2), rgba(0,0,0,0.95));
+}
+.presence-nocturnal-front .hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(90deg, rgba(255,216,77,0.04) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255,216,77,0.04) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mix-blend-mode: screen;
+}
+.presence-nocturnal-front .hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 880px;
+  color: var(--presence-text);
+}
+.presence-nocturnal-front .eyebrow {
+  font-family: var(--presence-font);
+  letter-spacing: 0.4em;
+  font-size: 0.7rem;
+  margin-bottom: 1rem;
+}
+.presence-nocturnal-front .hero-title {
+  text-transform: lowercase;
+  letter-spacing: -0.01em;
+  font-size: clamp(3rem, 9vw, 6.8rem);
+  color: var(--presence-text);
+  text-shadow: 0 0 22px rgba(255, 216, 77, 0.18);
+}
+.presence-nocturnal-front .hero-sub {
+  font-family: var(--presence-font);
+  color: rgba(243, 241, 236, 0.74);
+  letter-spacing: 0.06em;
+}
+.presence-nocturnal-front .hero-locale {
+  display: block;
+  color: var(--presence-accent);
+  margin-top: 0.4rem;
+  letter-spacing: 0.3em;
+}
+
+.presence-noct-band,
+.presence-noct-section,
+.presence-noct-archive,
+.presence-noct-booking {
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.presence-noct-band .band-eyebrow,
+.presence-noct-section .band-head .band-eyebrow,
+.presence-noct-archive .band-eyebrow,
+.presence-noct-booking .band-eyebrow {
+  font-family: var(--presence-font);
+  color: var(--presence-accent);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+}
+.presence-noct-band .band-h,
+.presence-noct-section .band-head .band-h,
+.presence-noct-archive .band-h,
+.presence-noct-booking .band-h {
+  font-family: var(--presence-font);
+  text-transform: lowercase;
+  font-size: clamp(1.6rem, 4vw, 2.8rem);
+  letter-spacing: -0.01em;
+  margin: 0.4rem 0 1.6rem;
+}
+.presence-noct-band .audio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1rem;
+}
+.presence-noct-band .audio-card {
+  background: var(--presence-surface);
+  border: 1px solid var(--presence-border);
+  padding: 0.85rem;
+  border-radius: var(--presence-radius);
+}
+.presence-noct-band .audio-card .label {
+  font-family: var(--presence-font);
+  color: var(--presence-accent);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  margin: 0 0 0.6rem;
+}
+.presence-noct-band .audio-frame {
+  width: 100%;
+  height: 152px;
+  border: 0;
+  border-radius: 4px;
+  background: #000;
+}
+.presence-noct-band .audio-link {
+  display: inline-block;
+  padding: 0.7rem 1rem;
+  color: var(--presence-accent);
+  border: 1px solid var(--presence-accent);
+  border-radius: 4px;
+  text-decoration: none;
+}
+.presence-noct-archive .archive-prose {
+  font-family: var(--presence-font);
+  color: rgba(243, 241, 236, 0.88);
+  font-size: 1.05rem;
+  line-height: 1.85;
+  max-width: 56rem;
+  white-space: pre-wrap;
+}
+.presence-noct-archive .archive-tag {
+  margin-top: 1.4rem;
+  font-family: var(--presence-font);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--presence-muted);
+}
+.presence-noct-booking {
+  border-top: 1px solid var(--presence-border);
+  background: var(--presence-ink);
+}
+.presence-noct-booking .booking-sub {
+  color: var(--presence-muted);
+  max-width: 36rem;
+  margin: 0.8rem 0 1.4rem;
+}
+.presence-noct-booking .booking-ctas { display: flex; flex-wrap: wrap; gap: 1rem; }
+
+/* =========================================================================
+ * BLUEPRINT: editorial_identity
+ * ========================================================================= */
+.presence-editorial-work-hero {
+  position: relative;
+  min-height: 92vh;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  padding: 1.5rem clamp(1.25rem, 4vw, 5rem) 2rem;
+  background: var(--presence-bg);
+}
+.presence-editorial-work-hero .hero-work {
+  position: relative;
+  width: 100%;
+  height: 80vh;
+  max-height: 820px;
+  background: var(--presence-elevated);
+}
+.presence-editorial-work-hero .hero-label {
+  margin: 0;
+  padding: 1.6rem 0 0;
+  display: grid;
+  gap: 0.6rem;
+  max-width: 56rem;
+}
+.presence-editorial-work-hero .eyebrow {
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  color: var(--presence-muted);
+}
+.presence-editorial-work-hero .hero-piece {
+  font-family: var(--presence-font);
+  font-style: italic;
+  color: var(--presence-muted);
+  margin: 0;
+}
+
+.presence-editorial-statement-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  padding: clamp(3rem, 7vw, 7rem) clamp(1.25rem, 4vw, 5rem);
+  background: var(--presence-bg);
+}
+.presence-editorial-statement-hero .statement { max-width: 38rem; align-self: center; }
+.presence-editorial-statement-hero .statement-side {
+  position: relative;
+  aspect-ratio: 4/5;
+  background: var(--presence-elevated);
+  border-radius: var(--presence-radius);
+  overflow: hidden;
+}
+@media (max-width: 900px) {
+  .presence-editorial-statement-hero { grid-template-columns: 1fr; }
+}
+
+.presence-editorial-story {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+}
+.presence-editorial-story .story-prose {
+  font-family: var(--presence-font);
+  font-size: clamp(1.1rem, 1.8vw, 1.4rem);
+  line-height: 1.75;
+  color: var(--presence-text);
+  white-space: pre-wrap;
+  margin-top: 1rem;
+}
+
+.presence-editorial-works {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+}
+.presence-editorial-works .works-cap { display: grid; gap: 0.4rem; margin-bottom: 2rem; }
+.presence-editorial-works .works-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.4rem;
+}
+.presence-editorial-works .work-card { display: block; color: inherit; text-decoration: none; }
+.presence-editorial-works .work-img {
+  position: relative;
+  aspect-ratio: 4/5;
+  background: var(--presence-elevated);
+  overflow: hidden;
+  border-radius: var(--presence-radius);
+}
+.presence-editorial-works .work-meta {
+  padding-top: 0.7rem;
+}
+.presence-editorial-works .work-meta .title {
+  font-family: var(--presence-font);
+  margin: 0;
+  font-weight: 500;
+  color: var(--presence-text);
+}
+.presence-editorial-works .work-meta .meta-line {
+  margin: 0.25rem 0 0;
+  font-size: 0.82rem;
+  color: var(--presence-muted);
+  font-style: italic;
+}
+
+.presence-editorial-cases {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+}
+.presence-editorial-cases .cases-list {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 0;
+  display: grid;
+  gap: 1.6rem;
+}
+.presence-editorial-cases .cases-list li {
+  display: grid;
+  grid-template-columns: 4.2rem 1fr;
+  align-items: flex-start;
+  border-top: 1px solid var(--presence-border);
+  padding-top: 1.2rem;
+}
+.presence-editorial-cases .case-num {
+  font-family: var(--presence-font);
+  font-size: 1.6rem;
+  color: var(--presence-accent);
+  margin: 0;
+}
+.presence-editorial-cases .case-desc { color: var(--presence-muted); margin: 0.4rem 0 0; }
+.presence-editorial-cases .case-meta { color: var(--presence-muted); margin: 0.6rem 0 0; font-size: 0.82rem; font-style: italic; }
+
+.presence-editorial-proof {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+}
+.presence-editorial-proof .proof-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.2rem;
+  margin-top: 1.5rem;
+}
+.presence-editorial-proof .proof-card {
+  margin: 0;
+  background: var(--presence-surface);
+  border: 1px solid var(--presence-border);
+  border-radius: var(--presence-radius);
+  padding: 1.4rem;
+  font-family: var(--presence-font);
+}
+.presence-editorial-proof .proof-card .quote {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin: 0;
+  color: var(--presence-text);
+}
+.presence-editorial-proof .proof-card footer {
+  margin-top: 0.8rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--presence-accent);
+}
+
+.presence-editorial-contact {
+  text-align: center;
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem) calc(var(--presence-section-y) * 1.4);
+  border-top: 1px solid var(--presence-border);
+}
+.presence-editorial-contact .contact-ctas {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-top: 1.6rem;
+}
+
+/* =========================================================================
+ * BLUEPRINT: material_studio
+ * ========================================================================= */
+.presence-material-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 2.5rem;
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+  background: var(--presence-hero);
+  align-items: stretch;
+}
+.presence-material-hero .hero-cap { max-width: 32rem; align-self: center; }
+.presence-material-hero .hero-cap .eyebrow { color: var(--presence-accent); }
+.presence-material-hero .hero-cap .hero-locale {
+  background: var(--presence-elevated);
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  margin-left: 0.6rem;
+  border: 1px solid var(--presence-border);
+}
+@media (max-width: 900px) {
+  .presence-material-hero { grid-template-columns: 1fr; }
+}
+
+.presence-material-story {
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+  max-width: 56rem;
+  margin: 0 auto;
+}
+.presence-material-story .story-prose {
+  font-family: var(--presence-font);
+  color: var(--presence-text);
+  font-size: 1.05rem;
+  line-height: 1.85;
+  margin-top: 1rem;
+  white-space: pre-wrap;
+}
+
+.presence-material-works {
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.presence-material-works .works-cap { margin-bottom: 2rem; }
+.presence-material-works .works-collage {
+  list-style: none; margin: 0; padding: 0;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+}
+.presence-material-works .works-collage .tile { background: var(--presence-surface); border-radius: var(--presence-radius); overflow: hidden; }
+.presence-material-works .works-collage .tile-0 { grid-column: span 7; transform: rotate(-0.6deg); }
+.presence-material-works .works-collage .tile-1 { grid-column: span 5; transform: rotate(0.4deg); }
+.presence-material-works .works-collage .tile-2 { grid-column: span 4; transform: rotate(0.5deg); }
+.presence-material-works .works-collage .tile-3 { grid-column: span 4; transform: rotate(-0.3deg); }
+.presence-material-works .works-collage .tile-link { display: block; color: inherit; text-decoration: none; }
+.presence-material-works .works-collage .tile-img {
+  position: relative;
+  aspect-ratio: 4/3;
+  background: var(--presence-elevated);
+  overflow: hidden;
+}
+.presence-material-works .works-collage .tile-meta { padding: 0.7rem 1rem 1rem; font-family: var(--presence-font); }
+.presence-material-works .works-collage .num {
+  font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--presence-accent); margin: 0;
+}
+.presence-material-works .works-collage .title { margin: 0.3rem 0 0; color: var(--presence-text); font-size: 1rem; font-weight: 600; }
+.presence-material-works .works-collage .line { margin: 0.2rem 0 0; color: var(--presence-muted); font-size: 0.82rem; font-style: italic; }
+@media (max-width: 900px) {
+  .presence-material-works .works-collage { grid-template-columns: 1fr; }
+  .presence-material-works .works-collage .tile { grid-column: 1 / -1 !important; transform: none; }
+}
+
+.presence-material-pathway {
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+  max-width: 60rem;
+  margin: 0 auto;
+}
+.presence-material-pathway .pathway-list {
+  list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: 1.4rem;
+}
+.presence-material-pathway .pathway-list li {
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+  border-top: 1px solid var(--presence-border);
+  padding-top: 1rem;
+}
+.presence-material-pathway .step {
+  font-family: var(--presence-font);
+  font-size: 1.4rem;
+  color: var(--presence-accent);
+}
+.presence-material-pathway .desc { color: var(--presence-muted); margin: 0.3rem 0 0; }
+.presence-material-pathway .meta { color: var(--presence-muted); margin: 0.4rem 0 0; font-size: 0.82rem; font-style: italic; }
+
+.presence-material-proof {
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.presence-material-proof .proof-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 1.4rem; }
+.presence-material-proof .proof-card { background: var(--presence-surface); border: 1px solid var(--presence-border); border-radius: var(--presence-radius); padding: 1rem; }
+.presence-material-proof .proof-card .quote { margin: 0; color: var(--presence-text); }
+.presence-material-proof .proof-card .who { margin: 0.7rem 0 0; font-size: 0.76rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--presence-accent); }
+
+.presence-material-contact {
+  text-align: center;
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem) calc(var(--presence-section-y) * 1.4);
+  border-top: 1px solid var(--presence-border);
+}
+.presence-material-contact .contact-prose { color: var(--presence-muted); margin: 0.8rem auto 1.4rem; max-width: 32rem; }
+.presence-material-contact .contact-ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+
+/* =========================================================================
+ * BLUEPRINT: trust_conversion
+ * ========================================================================= */
+.presence-trust-hero {
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem) calc(var(--presence-section-y) * 0.6);
+  background: var(--presence-hero);
+  border-bottom: 1px solid var(--presence-border);
+}
+.presence-trust-hero .hero-cap { max-width: 56rem; }
+.presence-trust-hero .hero-trust-strip {
+  list-style: none; padding: 0; margin: 1.4rem 0 0;
+  display: flex; flex-wrap: wrap; gap: 0.5rem;
+}
+.presence-trust-hero .hero-trust-strip li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--presence-surface);
+  border: 1px solid var(--presence-border);
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  color: var(--presence-text);
+  font-weight: 600;
+}
+
+.presence-trust-ba,
+.presence-trust-services,
+.presence-trust-testimonials,
+.presence-trust-contact {
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.presence-trust-ba .presence-h2 { margin-bottom: 1.4rem; }
+
+.presence-trust-services .ladder {
+  list-style: none; padding: 0; margin: 1.4rem 0 0;
+  border-top: 1px solid var(--presence-border);
+}
+.presence-trust-services .ladder .rung {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.5rem; align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--presence-border);
+}
+.presence-trust-services .ladder h3 { margin: 0; color: var(--presence-text); font-size: 1.1rem; }
+.presence-trust-services .ladder .rung-desc { margin: 0.3rem 0 0; color: var(--presence-muted); font-size: 0.92rem; }
+.presence-trust-services .ladder .rung-meta {
+  margin: 0;
+  font-weight: 700;
+  color: var(--presence-accent);
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.presence-trust-testimonials .testimonials-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-top: 1.4rem;
+}
+.presence-trust-testimonials .testimonial {
+  background: var(--presence-surface);
+  border: 1px solid var(--presence-border);
+  border-left: 3px solid var(--presence-accent);
+  padding: 1rem 1.1rem;
+  margin: 0;
+  border-radius: 4px;
+}
+.presence-trust-testimonials .testimonial .quote { margin: 0; color: var(--presence-text); }
+.presence-trust-testimonials .testimonial footer { margin-top: 0.7rem; font-size: 0.78rem; color: var(--presence-muted); }
+.presence-trust-testimonials .testimonial .who { font-weight: 700; color: var(--presence-text); }
+
+.presence-trust-contact { background: var(--presence-elevated); border-radius: var(--presence-radius); max-width: 1200px; margin: var(--presence-section-y) auto; }
+.presence-trust-contact .contact-prose { color: var(--presence-muted); margin: 0.7rem 0 1.2rem; max-width: 36rem; }
+.presence-trust-contact .contact-ctas { display: flex; flex-wrap: wrap; gap: 1rem; }
+
+/* =========================================================================
+ * BLUEPRINT: program / care
+ * ========================================================================= */
+.presence-care-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 18rem);
+  gap: 2rem;
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+  background: var(--presence-hero);
+  align-items: center;
+}
+.presence-care-hero .hero-side {
+  position: relative;
+  aspect-ratio: 4/5;
+  background: var(--presence-elevated);
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid var(--presence-border);
+}
+@media (max-width: 900px) {
+  .presence-care-hero { grid-template-columns: 1fr; }
+}
+.presence-care-services {
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.presence-care-services .services-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 1.4rem;
+}
+.presence-care-services .service-card {
+  background: var(--presence-surface);
+  border: 1px solid var(--presence-border);
+  border-radius: 22px;
+  padding: 1.4rem;
+}
+.presence-care-services .service-card h3 { font-family: var(--presence-font); margin: 0.5rem 0 0; color: var(--presence-text); font-size: 1.3rem; }
+.presence-care-services .service-card .desc { color: var(--presence-muted); margin: 0.6rem 0 0; line-height: 1.65; }
+.presence-care-services .service-card .meta { color: var(--presence-accent); margin: 0.8rem 0 0; font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; }
+.presence-care-services .invitation { margin: 0; font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--presence-accent); }
+
+.presence-care-pathway {
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+  background: var(--presence-soft);
+  text-align: center;
+}
+.presence-care-pathway .pathway-intro { max-width: 36rem; margin: 1rem auto 0; color: var(--presence-muted); line-height: 1.7; }
+.presence-care-pathway .pathway-steps {
+  list-style: none; padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin: 3rem auto 0;
+  max-width: 1100px;
+  position: relative;
+}
+.presence-care-pathway .pathway-thread {
+  position: absolute;
+  top: 28px;
+  left: 12.5%;
+  right: 12.5%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--presence-border) 20%, var(--presence-border) 80%, transparent);
+}
+.presence-care-pathway .pathway-steps li { display: grid; gap: 0.4rem; justify-items: center; }
+.presence-care-pathway .step-num {
+  width: 56px; height: 56px;
+  border-radius: 999px;
+  background: var(--presence-bg);
+  border: 2px solid var(--presence-accent);
+  color: var(--presence-accent);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--presence-font); font-weight: 600;
+  position: relative; z-index: 1;
+}
+.presence-care-pathway .step-tag { font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--presence-accent); margin: 0; }
+.presence-care-pathway .pathway-steps h3 { font-family: var(--presence-font); margin: 0.1rem 0 0; color: var(--presence-text); font-size: 1.15rem; }
+.presence-care-pathway .step-body { margin: 0.5rem 0 0; color: var(--presence-muted); line-height: 1.7; max-width: 16rem; font-size: 0.92rem; }
+@media (max-width: 900px) {
+  .presence-care-pathway .pathway-steps { grid-template-columns: 1fr; gap: 2rem; }
+  .presence-care-pathway .pathway-thread { display: none; }
+}
+
+.presence-care-method {
+  padding: 0 clamp(1.25rem, 4vw, 4rem) var(--presence-section-y);
+  max-width: 56rem; margin: 0 auto;
+}
+.presence-care-method .method-card {
+  background: var(--presence-surface);
+  border: 1px solid var(--presence-border);
+  border-radius: 22px;
+  padding: 2rem;
+}
+.presence-care-method .method-prose { margin: 0.8rem 0 0; font-family: var(--presence-font); line-height: 1.85; white-space: pre-wrap; color: var(--presence-text); }
+
+.presence-care-booking {
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+  text-align: center;
+  background: var(--presence-text);
+  color: var(--presence-bg);
+}
+.presence-care-booking .eyebrow { color: var(--presence-accent); }
+.presence-care-booking .presence-h2 { color: var(--presence-bg); }
+.presence-care-booking .booking-prose { color: rgba(255,255,255,0.75); margin: 0.8rem auto 1.4rem; max-width: 32rem; }
+.presence-care-booking .booking-ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+.presence-care-booking .booking-proof { display: grid; gap: 0.8rem; margin: 2rem auto 0; max-width: 42rem; text-align: left; }
+.presence-care-booking .booking-proof blockquote { margin: 0; padding: 0.8rem 1rem; background: rgba(255,255,255,0.08); border-left: 2px solid var(--presence-accent); border-radius: 4px; }
+.presence-care-booking .booking-proof blockquote p { margin: 0; color: rgba(255,255,255,0.92); font-style: italic; }
+.presence-care-booking .booking-proof blockquote footer { margin: 0.4rem 0 0; font-size: 0.78rem; color: rgba(255,255,255,0.6); }
+
+/* =========================================================================
+ * BLUEPRINT: glitch_gallery (when nocturnal_sonic isn't appropriate)
+ * ========================================================================= */
+.presence-glitch-front {
+  position: relative;
+  min-height: 90vh;
+  display: flex;
+  align-items: flex-end;
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+  overflow: hidden;
+}
+.presence-glitch-front .hero-bg { position: absolute; inset: 0; }
+.presence-glitch-front .hero-veil {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.4), rgba(0,0,0,0.9));
+}
+.presence-glitch-front .hero-cap { position: relative; z-index: 2; max-width: 720px; color: var(--presence-text); }
+.presence-glitch-wallsec {
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+  max-width: 1320px; margin: 0 auto;
+}
+.presence-glitch-contact {
+  padding: var(--presence-section-y) clamp(1.25rem, 4vw, 4rem);
+  text-align: center; border-top: 1px solid var(--presence-border);
+}
+.presence-glitch-contact .contact-ctas { display: inline-flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-top: 1rem; }

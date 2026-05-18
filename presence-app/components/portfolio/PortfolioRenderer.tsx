@@ -7,9 +7,16 @@ import type { PresenceNode, PresenceWork, PresenceCollection } from "@/lib/api/t
 import { Chip, StatusPill } from "@/components/ui";
 import { PublicEnquiryDialog } from "@/components/portfolio/PublicEnquiryDialog";
 import PresenceRoomRenderer, { isPresenceRoomNode } from "@/components/portfolio/PresenceRoomRenderer";
+import PresenceDnaRenderer from "@/components/presence/PresenceDnaRenderer";
 
 interface PortfolioRendererProps {
   node: PresenceNode;
+  // Legacy escape hatch: when set, dispatch to the pre-DNA renderers.
+  // Production routes never set this — it exists only so the older
+  // PresenceRoomRenderer, StudioPracticeView, PractitionerView, and
+  // VenueView remain callable for non-regression comparisons until
+  // they are safely retired. See docs/PRESENCE_DNA_BEAUTY_QA.md.
+  legacyMode?: boolean;
 }
 
 // ── Shared sub-components ──────────────────────────────────────────────────
@@ -912,13 +919,22 @@ function VenueView({ node }: { node: PresenceNode }) {
 }
 
 // ── Display-mode routing ───────────────────────────────────────────────────
+//
+// Rendering authority is Presence DNA via PresenceDnaRenderer. Profession
+// (room_type, node_type, display_mode) is an input signal to DNA inference
+// but no longer selects the final layout. The legacy renderers below stay
+// callable behind `legacyMode` for non-regression comparison only.
 
-export default function PortfolioRenderer({ node }: PortfolioRendererProps) {
+export default function PortfolioRenderer({ node, legacyMode = false }: PortfolioRendererProps) {
+  if (!legacyMode) {
+    return <PresenceDnaRenderer node={node} />;
+  }
+
+  // ── LEGACY OPT-IN ONLY (not reached from the default public routes) ──
   if (isPresenceRoomNode(node)) {
     return <PresenceRoomRenderer node={node} />;
   }
 
-  // v1.1 — three distinctive template branches, each with a named visual mechanism.
   if (node.display_mode === "studio_practice") {
     return <StudioPracticeView node={node} />;
   }
