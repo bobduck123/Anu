@@ -528,8 +528,19 @@ def test_presence_room_validation_public_status_and_public_lookup():
     public_body = public.get_json()["data"]
     assert public_body["display_name"] == "Artist Room Public"
     assert public_body["room_type"] == "artist_studio"
+    assert public_body["theme_preset"] == "gallery_white"
+    assert public_body["hero_image"] == "https://example.org/hero.jpg"
+    assert public_body["hero_image_url"] == "https://example.org/hero.jpg"
+    assert public_body["primary_cta_target"] == public_body["primary_cta_url"]
+    assert public_body["seo_title"] == "Artist Room Public"
+    assert public_body["seo_description"] == "A Presence Room test page."
+    assert public_body["social_preview_image"] == "https://example.org/social.jpg"
+    assert public_body["social_preview_image_url"] == "https://example.org/social.jpg"
+    assert public_body["public_url"].endswith("/presence/artist-room-public")
     assert public_body["seo"]["title"] == "Artist Room Public"
+    assert public_body["seo"]["canonical_url"].endswith("/presence/artist-room-public")
     assert public_body["gallery_items"][0]["source_type"] == "portfolio_item"
+    assert public_body["enquiry_email"] is None
     assert "owner_user_id" not in public_body
 
     invalid_room_type = client.post(
@@ -2269,6 +2280,9 @@ def test_presence_spam_validation_templates_analytics_vcard_and_qr():
     assert vcard.status_code == 200
     assert b"BEGIN:VCARD" in vcard.data
     assert b"River Stone" in vcard.data
+    assert b"URL:" in vcard.data
+    assert b"/presence/analytics-node" in vcard.data
+    assert b"/p/analytics-node" not in vcard.data
 
     qr = client.get("/api/presence/public/analytics-node/qr", base_url="http://public.test")
     assert qr.status_code == 200
@@ -2279,6 +2293,8 @@ def test_presence_spam_validation_templates_analytics_vcard_and_qr():
     # Title element exposes the canonical public URL for accessibility/preview.
     assert b"<title>" in qr.data
     assert b"analytics-node" in qr.data
+    assert b"/presence/analytics-node" in qr.data
+    assert b"/p/analytics-node" not in qr.data
 
 
 def test_presence_institutional_professional_tradie_nfc_relationship_ledger_flow():

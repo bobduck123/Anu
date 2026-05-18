@@ -521,12 +521,14 @@ def serialize_presence_node(
         "cover_image_url": node.cover_image_url,
         "hero_title": node.hero_title,
         "hero_subtitle": node.hero_subtitle,
+        "hero_image": node.hero_image_url,
         "hero_image_url": node.hero_image_url,
         "short_bio": node.short_bio,
         "long_story": node.long_story,
         "location_label": node.location_label,
         "service_area": node.service_area,
         "primary_cta_label": node.primary_cta_label,
+        "primary_cta_target": node.primary_cta_url,
         "primary_cta_url": node.primary_cta_url,
         "enquiry_email": None if public else node.enquiry_email,
         "availability_status": node.availability_status,
@@ -550,9 +552,10 @@ def serialize_presence_node(
         "white_label_ready": bool(node.white_label_ready),
         "public_email": node.public_email,
         "public_phone": node.public_phone,
-        "seo_title": None if public else node.seo_title,
-        "seo_description": None if public else node.seo_description,
-        "social_preview_image_url": None if public else node.social_preview_image_url,
+        "seo_title": node.seo_title,
+        "seo_description": node.seo_description,
+        "social_preview_image": node.social_preview_image_url,
+        "social_preview_image_url": node.social_preview_image_url,
         "organisation": _node_org_payload(node),
         "public_url": public_url_for_node(node),
         "created_at": node.created_at.isoformat() if node.created_at else None,
@@ -1171,6 +1174,8 @@ def validate_node_payload(data: dict[str, Any], *, partial: bool = False) -> dic
         payload["custom_spacing_config"] = _json_object(data.get("custom_spacing_config"))
     if "hero_image" in data and "hero_image_url" not in data:
         data = {**data, "hero_image_url": data.get("hero_image")}
+    if "social_preview_image" in data and "social_preview_image_url" not in data:
+        data = {**data, "social_preview_image_url": data.get("social_preview_image")}
     if "primary_cta_target" in data and "primary_cta_url" not in data:
         data = {**data, "primary_cta_url": data.get("primary_cta_target")}
     for key in ("profile_image_url", "cover_image_url", "landing_background_url", "hero_image_url", "social_preview_image_url"):

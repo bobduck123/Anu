@@ -95,16 +95,58 @@ def request_json(method: str, path: str, payload: dict | None = None, *, auth: b
         raise _dependency_error(exc, API_BASE) from exc
 
 
+def canonical_path(slug: str) -> str:
+    return f"/presence/{slug}"
+
+
+def canonical_url(slug: str) -> str:
+    return f"{WEB_BASE}{canonical_path(slug)}"
+
+
+def assert_public_listing() -> None:
+    status, payload = request_json("GET", "/api/presence/public/nodes?limit=50")
+    require(status == 200, f"public nodes list failed: {status} {payload}")
+    data = payload.get("data") or []
+    if isinstance(data, dict):
+        rows = data.get("items") or []
+        total = data.get("total", len(rows))
+    else:
+        rows = data
+        meta = payload.get("meta") or {}
+        total = meta.get("total", payload.get("total", len(rows)))
+    slugs = {row.get("slug") for row in rows if isinstance(row, dict)}
+    missing = [slug for slug, _ in DEMO_ROOMS if slug not in slugs]
+    require(int(total or 0) >= len(DEMO_ROOMS), f"public nodes total too low: {total}")
+    require(not missing, f"public nodes list missing demo slugs: {missing}")
+
+
 def assert_public_room(slug: str, display_name: str) -> None:
     status, api = request_json("GET", f"/api/presence/public/{slug}")
     require(status == 200, f"public API failed for {slug}: {status} {api}")
     data = api.get("data") or {}
     require(data.get("display_name") == display_name, f"API display name mismatch for {slug}: {data.get('display_name')}")
     require(data.get("room_type"), f"room_type missing for {slug}")
-    require((data.get("seo") or {}).get("canonical_url", "").endswith(f"/presence/{slug}"), f"canonical URL not /presence for {slug}")
+    require(data.get("theme_preset"), f"theme_preset missing for {slug}")
+    require(str(data.get("public_url", "")).endswith(canonical_path(slug)), f"public_url not /presence for {slug}")
+    require((data.get("seo") or {}).get("canonical_url", "").endswith(canonical_path(slug)), f"canonical URL not /presence for {slug}")
 
     status, html = request_text(WEB_BASE, f"/presence/{slug}")
     require(status == 200 and display_name in html, f"web /presence route failed for {slug}: {status}")
+
+
+def assert_qr_and_vcard(slug: str) -> None:
+    expected_url = canonical_url(slug)
+
+    qr_status, qr_svg = request_text(API_BASE, f"/api/presence/public/{slug}/qr")
+    require(qr_status == 200, f"QR endpoint failed for {slug}: {qr_status}")
+    require(canonical_path(slug) in qr_svg, f"QR target is not canonical /presence path for {slug}")
+    require(expected_url in qr_svg, f"QR target is not {expected_url}")
+    require(f"/p/{slug}" not in qr_svg, f"QR still references legacy /p path for {slug}")
+
+    vcard_status, vcard = request_text(API_BASE, f"/api/presence/public/{slug}/vcard")
+    require(vcard_status == 200, f"vCard endpoint failed for {slug}: {vcard_status}")
+    require(f"URL:{expected_url}" in vcard, f"vCard URL is not {expected_url}")
+    require(f"/p/{slug}" not in vcard, f"vCard still references legacy /p path for {slug}")
 
 
 def assert_legacy_route(slug: str, display_name: str) -> None:
@@ -193,9 +235,16 @@ def assert_hidden_rooms() -> bool:
 
 def main() -> int:
     print(f"Presence Rooms smoke using API={API_BASE} WEB={WEB_BASE}")
+    assert_public_listing()
+    print("ok public nodes list")
+
     for slug, display_name in DEMO_ROOMS:
         assert_public_room(slug, display_name)
         print(f"ok public room {slug}")
+
+    for slug in ("rooms-consultant", "rooms-independent-artist"):
+        assert_qr_and_vcard(slug)
+        print(f"ok QR and vCard canonical {slug}")
 
     assert_legacy_route(DEMO_ROOMS[0][0], DEMO_ROOMS[0][1])
     print("ok legacy /p route")
