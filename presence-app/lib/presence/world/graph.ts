@@ -141,6 +141,10 @@ export interface ChamberSlotProps {
   chamber: RoomChamberDef;
   inspectingObjectId: string | null;
   onInspect: (objectId: string) => void;
+  /** True when this chamber is the active (current) one. Pre-mounted
+   * neighbours pass false so they can skip expensive content like
+   * audio iframes. Pass 5. */
+  isCurrent?: boolean;
 }
 
 export type ChamberSlotRenderer = (props: ChamberSlotProps) => ReactNode;

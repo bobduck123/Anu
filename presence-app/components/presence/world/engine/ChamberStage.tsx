@@ -13,6 +13,7 @@ interface ChamberStageProps {
   renderSlot: ChamberSlotRenderer;
   inspectingObjectId: string | null;
   onInspect: (objectId: string) => void;
+  isCurrent?: boolean;
 }
 
 export default function ChamberStage({
@@ -20,12 +21,14 @@ export default function ChamberStage({
   renderSlot,
   inspectingObjectId,
   onInspect,
+  isCurrent = true,
 }: ChamberStageProps) {
   return (
     <section
       className={`presence-chamber-stage chamber-role-${chamber.role}`}
       data-chamber-id={chamber.id}
       data-chamber-atmosphere={chamber.atmosphere ?? "default"}
+      data-current={isCurrent ? "true" : "false"}
       aria-label={`${chamber.role}: ${chamber.title}`}
     >
       <div className="chamber-stage-cap">
@@ -34,7 +37,7 @@ export default function ChamberStage({
         {chamber.caption && <p className="chamber-stage-caption">{chamber.caption}</p>}
       </div>
       <div className="chamber-stage-body">
-        {renderSlot({ chamber, inspectingObjectId, onInspect })}
+        {renderSlot({ chamber, inspectingObjectId, onInspect, isCurrent })}
       </div>
     </section>
   );

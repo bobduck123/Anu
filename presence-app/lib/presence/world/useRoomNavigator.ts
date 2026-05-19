@@ -225,9 +225,28 @@ export function useRoomNavigator(
           return;
         }
       }
+      // Pass 5 keyboard semantics: Enter on a focused interactive
+      // (button / anchor / role=button / data-room-object) lets the native
+      // click happen — never steals to "forward". This makes Enter work
+      // as "inspect this room object" when an object is focused, while
+      // plain Enter on the page still means "forward".
+      const focused = (typeof document !== "undefined" ? document.activeElement : null) as HTMLElement | null;
+      const focusedIsInteractive = !!(focused && (
+        focused instanceof HTMLButtonElement
+        || focused instanceof HTMLAnchorElement
+        || focused.getAttribute("role") === "button"
+        || focused.hasAttribute("data-room-object")
+      ));
       switch (e.key) {
         case "ArrowUp":
+          e.preventDefault();
+          dispatch({ type: "MOVE", direction: "forward" });
+          break;
         case "Enter":
+          if (focusedIsInteractive) {
+            // Let the native click fire — Enter inspects the focused object.
+            return;
+          }
           e.preventDefault();
           dispatch({ type: "MOVE", direction: "forward" });
           break;

@@ -3545,3 +3545,390 @@ body[data-shell="studio"] {
   display: grid;
   gap: 1rem;
 }
+
+/* =============================================================================
+ * PASS 5 — Engine depth, continuity, physicality.
+ *
+ * Pre-mounted adjacent chambers, direction-specific motion grammar,
+ * inspect recede, room-specific object skins.
+ * ============================================================================= */
+
+/* ── CAMERA RIG v2 ─────────────────────────────────────────────────────── */
+.presence-camera-rig {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  perspective: 1800px;
+  perspective-origin: 50% 50%;
+  transform-style: preserve-3d;
+  isolation: isolate;
+  overflow: hidden;
+}
+.presence-camera-rig .camera-scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transform-origin: 50% 50%;
+}
+.presence-camera-rig .camera-slot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 540ms cubic-bezier(0.22, 0.88, 0.24, 1),
+              opacity 320ms ease,
+              filter 320ms ease;
+  pointer-events: auto;
+}
+.presence-camera-rig .camera-slot[data-slot="current"] {
+  transform: translateZ(0) rotateY(0deg);
+  opacity: 1;
+  z-index: 4;
+}
+.presence-camera-rig .camera-slot[data-slot="forward"] {
+  transform: translateZ(-360px) scale(0.78);
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 3;
+  filter: blur(2px) brightness(0.7);
+}
+.presence-camera-rig .camera-slot[data-slot="back"] {
+  transform: translateZ(420px) scale(1.12);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.presence-camera-rig .camera-slot[data-slot="left"] {
+  transform: translateX(-55vw) translateZ(-150px) rotateY(48deg);
+  opacity: 0.16;
+  pointer-events: none;
+  z-index: 2;
+  filter: blur(2px) brightness(0.7);
+}
+.presence-camera-rig .camera-slot[data-slot="right"] {
+  transform: translateX(55vw) translateZ(-150px) rotateY(-48deg);
+  opacity: 0.16;
+  pointer-events: none;
+  z-index: 2;
+  filter: blur(2px) brightness(0.7);
+}
+
+@media (max-width: 768px) {
+  .presence-camera-rig .camera-slot:not([data-slot="current"]) { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .presence-camera-rig { perspective: none; }
+  .presence-camera-rig .camera-scene { transform: none !important; }
+  .presence-camera-rig .camera-slot { transition: none !important; }
+  .presence-camera-rig .camera-slot[data-slot="current"] { transform: none; opacity: 1; filter: none; }
+  .presence-camera-rig .camera-slot:not([data-slot="current"]) { display: none; }
+}
+
+/* ── INSPECT RECEDE ────────────────────────────────────────────────────── */
+.presence-engine-shell.is-inspecting .presence-camera-rig {
+  transform: scale(0.96);
+  filter: blur(4px) brightness(0.6) saturate(0.85);
+  transition: transform 320ms ease, filter 320ms ease;
+}
+.presence-engine-shell.is-inspecting .presence-engine-hud,
+.presence-engine-shell.is-inspecting .presence-mobile-dock {
+  opacity: 0.35;
+  pointer-events: none;
+  transition: opacity 240ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .presence-engine-shell.is-inspecting .presence-camera-rig {
+    transform: none;
+    filter: brightness(0.7);
+  }
+}
+
+/* ── OBJECT SKINS ──────────────────────────────────────────────────────── */
+.room-object-skin-default .room-object-inner { gap: 0.75rem; }
+
+/* Gallery: gallery-frame — picture wire + hook, museum mat, label below */
+.room-object-skin-gallery-frame .room-object-img {
+  padding: 0.8rem;
+  background: #fdfaf0;
+  border: 1px solid #ddd2bc;
+  box-shadow:
+    0 22px 40px rgba(0, 0, 0, 0.18),
+    inset 0 0 0 1px #e6dec4,
+    inset 0 2px 8px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+.room-object-skin-gallery-frame .room-object-img::before {
+  content: ""; position: absolute; left: 50%; top: -2.6rem; height: 2.4rem; width: 1px; background: rgba(0,0,0,0.28); transform: translateX(-50%);
+}
+.room-object-skin-gallery-frame .room-object-img::after {
+  content: ""; position: absolute; left: 50%; top: -2.9rem; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #d4b876, #8f6e2d 60%, #5b4413); transform: translateX(-50%);
+}
+.room-object-skin-gallery-frame .room-object-label {
+  background: #fdfaf0;
+  border: 1px solid #ddd2bc;
+  padding: 0.55rem 0.65rem;
+  margin-top: 0.4rem;
+  font-family: Georgia, "Times New Roman", serif;
+}
+.room-object-skin-gallery-frame .room-object-title { font-style: italic; font-weight: 500; color: #1a1a17; }
+
+/* Gallery: wall-label */
+.room-object-skin-wall-label {
+  display: block;
+  background: #fdfaf0;
+  border: 1px solid #ddd2bc;
+  padding: 1rem 1.2rem;
+  font-family: Georgia, serif;
+  max-width: 30rem;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+}
+.room-object-skin-wall-label .room-object-title { font-size: 1rem; color: #1a1a17; font-style: italic; }
+.room-object-skin-wall-label .room-object-kind { color: #8f6e2d; }
+
+/* Gallery: plinth — card on a plinth */
+.room-object-skin-plinth {
+  display: block;
+  background: var(--presence-surface);
+  border: 1px solid var(--presence-border);
+  padding: 1.4rem 1.6rem 1.6rem;
+  position: relative;
+  isolation: isolate;
+}
+.room-object-skin-plinth::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -16px;
+  width: 70%;
+  height: 14px;
+  background: linear-gradient(180deg, #d4cab2 0%, #b7a988 100%);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.18);
+  z-index: -1;
+}
+
+/* Gallery: invitation-card */
+.room-object-skin-invitation-card {
+  display: block;
+  background: linear-gradient(160deg, #ffffff 0%, #f3eedd 100%);
+  border: 1px dashed var(--presence-accent);
+  border-radius: 14px;
+  padding: 1.6rem 1.8rem;
+  text-align: center;
+  font-family: Georgia, serif;
+  position: relative;
+  box-shadow: 0 22px 44px rgba(0,0,0,0.12);
+  max-width: 32rem;
+}
+.room-object-skin-invitation-card::before {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #b8462e, #6a2412 70%, #3e1306);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.room-object-skin-invitation-card .room-object-title { font-style: italic; font-size: 1.15rem; }
+.room-object-skin-invitation-card .room-object-kind { color: #6a2412; }
+
+/* Sound: signal-tile — CRT-style glow */
+.room-object-skin-signal-tile .room-object-img {
+  background: #000;
+  border: 1px solid rgba(255, 216, 77, 0.3);
+  position: relative;
+}
+.room-object-skin-signal-tile .room-object-img::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(180deg, rgba(255,216,77,0.06) 0 1px, transparent 1px 4px),
+    radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.45) 100%);
+  mix-blend-mode: screen; pointer-events: none;
+}
+.room-object-skin-signal-tile .room-object-label {
+  background: rgba(0,0,0,0.5);
+  padding: 0.5rem 0.7rem;
+  border-left: 2px solid #ffd84d;
+  margin-top: 0.4rem;
+}
+.room-object-skin-signal-tile .room-object-title { color: #f3f1ec; font-family: var(--presence-font); font-weight: 600; }
+.room-object-skin-signal-tile .room-object-kind { color: #ffd84d; letter-spacing: 0.2em; }
+
+/* Sound: transmission */
+.room-object-skin-transmission {
+  display: block;
+  background: rgba(15, 16, 24, 0.85);
+  border: 1px solid rgba(255, 216, 77, 0.18);
+  padding: 1rem 1.1rem;
+  position: relative;
+  font-family: var(--presence-font);
+  color: #f3f1ec;
+  max-width: 32rem;
+}
+.room-object-skin-transmission::before {
+  content: "// TRANSMISSION";
+  position: absolute;
+  top: -10px;
+  left: 14px;
+  background: #0a0a10;
+  padding: 0 6px;
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+  color: #ffd84d;
+}
+.room-object-skin-transmission .room-object-title { color: #f3f1ec; font-weight: 600; }
+.room-object-skin-transmission .room-object-kind { color: #ffd84d; }
+
+/* Sound: flyer */
+.room-object-skin-flyer {
+  display: block;
+  background: #fdfaf0;
+  color: #1a1a17;
+  padding: 1.8rem 2rem;
+  font-family: var(--presence-font);
+  max-width: 32rem;
+  border: 1px solid #ddd2bc;
+  position: relative;
+  transform: rotate(-1deg);
+  box-shadow:
+    0 22px 44px rgba(0,0,0,0.4),
+    inset 0 0 0 4px #fdfaf0,
+    inset 0 0 0 5px rgba(0,0,0,0.05);
+}
+.room-object-skin-flyer::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 60px;
+  height: 18px;
+  background: rgba(255, 216, 77, 0.55);
+  transform: translateX(-50%) rotate(2deg);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.18);
+}
+.room-object-skin-flyer .room-object-title { color: #1a1a17; font-size: 1.2rem; }
+.room-object-skin-flyer .room-object-kind { color: #9a3412; letter-spacing: 0.22em; }
+.room-object-skin-flyer .room-object-summary { color: #6a4a26; }
+
+/* Studio: project-piece — shelf object with cast shadow */
+.room-object-skin-project-piece .room-object-img {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(224, 164, 85, 0.25);
+  position: relative;
+}
+.room-object-skin-project-piece .room-object-img::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  width: 80%;
+  height: 6px;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.5), transparent 70%);
+  transform: translateX(-50%);
+  filter: blur(2px);
+}
+.room-object-skin-project-piece .room-object-label { font-family: Georgia, serif; }
+.room-object-skin-project-piece .room-object-title { color: #f3e6cf; }
+.room-object-skin-project-piece .room-object-kind { color: #e0a455; }
+
+/* Studio: pinned-note */
+.room-object-skin-pinned-note {
+  display: block;
+  background: #f4e8d4;
+  color: #2a1b0c;
+  padding: 1rem 1.1rem;
+  font-family: Georgia, serif;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.35);
+  position: relative;
+}
+.room-object-skin-pinned-note::before {
+  content: ""; position: absolute; top: -8px; left: 50%;
+  width: 12px; height: 12px; border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, #ffd58a, #b06d22 70%, #6a3d10);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  transform: translateX(-50%);
+}
+.room-object-skin-pinned-note .room-object-title { font-style: italic; color: #2a1b0c; }
+.room-object-skin-pinned-note .room-object-kind { color: #6a4a26; }
+
+/* Studio: bench-tool */
+.room-object-skin-bench-tool {
+  display: block;
+  background: rgba(0, 0, 0, 0.3);
+  border-left: 3px solid #e0a455;
+  border-top: 1px solid rgba(224, 164, 85, 0.18);
+  border-right: 1px solid rgba(224, 164, 85, 0.18);
+  border-bottom: 1px solid rgba(224, 164, 85, 0.18);
+  padding: 1rem 1.2rem;
+  font-family: Georgia, serif;
+  color: #f3e6cf;
+  width: 100%;
+  max-width: 32rem;
+}
+.room-object-skin-bench-tool .room-object-title { color: #f3e6cf; font-size: 1rem; }
+.room-object-skin-bench-tool .room-object-kind { color: #e0a455; letter-spacing: 0.18em; }
+.room-object-skin-bench-tool .room-object-summary { color: rgba(243, 230, 207, 0.7); }
+.room-object-skin-bench-tool .room-object-meta { color: rgba(243, 230, 207, 0.55); }
+
+/* Studio: order-form */
+.room-object-skin-order-form {
+  display: block;
+  background: #f4e8d4;
+  color: #2a1b0c;
+  padding: 1.8rem 1.8rem 1.4rem;
+  font-family: Georgia, serif;
+  max-width: 32rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+.room-object-skin-order-form::before {
+  content: "ORDER · WORKSHOP";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  background: #2a1b0c;
+  color: #e0a455;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.32em;
+  text-align: center;
+  font-family: var(--presence-font);
+}
+.room-object-skin-order-form .room-object-title { font-style: italic; font-size: 1.2rem; }
+.room-object-skin-order-form .room-object-kind { color: #6a4a26; letter-spacing: 0.18em; }
+
+/* ── PORTAL PANEL refinements ─────────────────────────────────────────── */
+.portal-quote {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr;
+  gap: 0.6rem;
+  align-items: start;
+}
+.portal-quote-glyph { color: var(--presence-accent); opacity: 0.6; margin-top: 0.2rem; }
+
+/* Audio-frame placeholder shown in pre-mounted neighbour booth chambers */
+.audio-frame-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(255, 216, 77, 0.04), rgba(0,0,0,0.4) 60%);
+  border: 1px dashed rgba(255, 216, 77, 0.18);
+  width: 100%;
+  height: 152px;
+  border-radius: 4px;
+}
+.audio-placeholder-label {
+  font-family: var(--presence-font);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 216, 77, 0.6);
+}

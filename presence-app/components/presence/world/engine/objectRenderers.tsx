@@ -1,18 +1,23 @@
 "use client";
 
-// Object + portal renderers shared by the three Pass 4 rooms.
+// Object + portal renderers shared by Pass 5 rooms.
 //
-// Renderers are pure functions that take a RoomObjectDef and emit a
-// React node. Each room provides a slot renderer (how to arrange the
-// chamber's objects spatially) and reuses these primitives for the
-// objects themselves.
+// Pass 5: object skins. Each room can pass a `skin` prop to ObjectCard
+// to get a physically-distinct rendering — frame, plinth, vinyl, deck,
+// signal tile, timber sample, pinned note, etc. The underlying
+// RoomObject abstraction is shared; the visual chrome is per-room.
+//
+// Also: audio iframes register with the audio registry so the
+// chamber-change handler can pause them.
 
 import Image from "next/image";
-import { ArrowUpRight } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { ArrowUpRight, MessageSquare } from "lucide-react";
 import type { PresenceNode } from "@/lib/api/types";
 import type { RoomObjectDef } from "@/lib/presence/world/graph";
 import MagneticHover from "@/components/presence/world/MagneticHover";
 import { PublicEnquiryDialog } from "@/components/portfolio/PublicEnquiryDialog";
+import { register as registerAudio, unregister as unregisterAudio } from "@/lib/presence/world/audioRegistry";
 
 function isHttp(src: string) {
   try {
@@ -29,23 +34,44 @@ function mediaSrc(raw: string): string | null {
     const host = url.hostname.toLowerCase().replace(/^www\./, "");
     if (host === "youtube.com" || host === "m.youtube.com") {
       const id = url.searchParams.get("v");
-      return id ? `https://www.youtube.com/embed/${encodeURIComponent(id)}` : null;
+      // Enable JS API so postMessage pause works
+      return id ? `https://www.youtube.com/embed/${encodeURIComponent(id)}?enablejsapi=1` : null;
     }
     if (host === "youtu.be") {
       const id = url.pathname.replace("/", "");
-      return id ? `https://www.youtube.com/embed/${encodeURIComponent(id)}` : null;
+      return id ? `https://www.youtube.com/embed/${encodeURIComponent(id)}?enablejsapi=1` : null;
     }
     if (host === "vimeo.com") {
       const id = url.pathname.split("/").filter(Boolean)[0];
-      return id ? `https://player.vimeo.com/video/${encodeURIComponent(id)}` : null;
+      return id ? `https://player.vimeo.com/video/${encodeURIComponent(id)}?api=1&player_id=presence` : null;
     }
     if (host === "open.spotify.com") return `https://open.spotify.com/embed${url.pathname}`;
-    if (host === "soundcloud.com") return `https://w.soundcloud.com/player/?url=${encodeURIComponent(raw)}&color=%23ffd84d`;
+    if (host === "soundcloud.com") return `https://w.soundcloud.com/player/?url=${encodeURIComponent(raw)}&color=%23ffd84d&auto_play=false`;
   } catch {
     return null;
   }
   return null;
 }
+
+export type ObjectSkin =
+  | "default"
+  // Gallery skins
+  | "gallery-frame"
+  | "wall-label"
+  | "plinth"
+  | "invitation-card"
+  // Sound skins
+  | "vinyl"
+  | "signal-tile"
+  | "deck"
+  | "transmission"
+  | "flyer"
+  // Studio skins
+  | "timber-sample"
+  | "pinned-note"
+  | "bench-tool"
+  | "order-form"
+  | "project-piece";
 
 // ---------------------------------------------------------------------------
 // In-chamber object cards (tap to inspect)
@@ -53,13 +79,15 @@ function mediaSrc(raw: string): string | null {
 export function ObjectCard({
   object,
   onInspect,
-  variant = "frame",
+  skin = "default",
+  chamberId,
 }: {
   object: RoomObjectDef;
   onInspect: (id: string) => void;
-  variant?: "frame" | "tile" | "card" | "deck";
+  skin?: ObjectSkin;
+  chamberId?: string;
 }) {
-  const className = `room-object room-object-${variant} room-object-${object.kind}`;
+  const className = `room-object room-object-skin-${skin} room-object-${object.kind}`;
   const onClick = () => onInspect(object.id);
   const ariaLabel = `Inspect ${object.title}`;
 
@@ -70,6 +98,8 @@ export function ObjectCard({
       onClick={onClick}
       aria-label={ariaLabel}
       data-position={object.position ?? "center"}
+      data-room-object="true"
+      data-chamber={chamberId}
     >
       <MagneticHover strength={0.16} maxOffset={9}>
         <div className="room-object-inner">
@@ -96,33 +126,68 @@ export function ObjectCard({
   );
 }
 
-export function AudioObjectCard({ object, onInspect }: { object: RoomObjectDef; onInspect: (id: string) => void }) {
+// ---------------------------------------------------------------------------
+// Audio deck — registers iframe with the audio registry so the engine
+// can pause it on chamber change.
+// ---------------------------------------------------------------------------
+export function AudioObjectCard({
+  object,
+  onInspect,
+  chamberId,
+  isCurrent = true,
+}: {
+  object: RoomObjectDef;
+  onInspect: (id: string) => void;
+  chamberId?: string;
+  isCurrent?: boolean;
+}) {
   const src = object.media?.audioUrl ? mediaSrc(object.media.audioUrl) : null;
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const objectId = object.id;
+
+  useEffect(() => {
+    // Pass 5: only register the iframe when this card is in the active
+    // chamber. Pre-mounted neighbours render the deck shell without
+    // the iframe to avoid double-loading audio and to keep the audio
+    // registry consistent.
+    if (!src || !chamberId || !isCurrent) return;
+    const node = iframeRef.current;
+    if (!node) return;
+    registerAudio(objectId, chamberId, node, src);
+    return () => unregisterAudio(objectId);
+  }, [src, chamberId, objectId, isCurrent]);
+
   return (
-    <article className="room-audio-deck room-object room-object-audio" data-position={object.position ?? "center"}>
+    <article className="room-audio-deck room-object room-object-skin-deck room-object-audio" data-position={object.position ?? "center"} data-chamber={chamberId}>
       <header className="audio-head">
         <span className="audio-led" aria-hidden />
         <h3 className="audio-title">{object.title}</h3>
         {object.summary && <span className="audio-source">{object.summary}</span>}
       </header>
-      {src ? (
+      {isCurrent && src ? (
         <iframe
+          ref={iframeRef}
           title={object.title}
           src={src}
           loading="lazy"
           allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
           className="audio-frame"
         />
-      ) : object.media?.audioUrl ? (
+      ) : isCurrent && object.media?.audioUrl ? (
         <a href={object.media.audioUrl} target="_blank" rel="noopener noreferrer" className="audio-fallback">
           Open in source ↗
         </a>
-      ) : null}
+      ) : (
+        <div className="audio-frame audio-frame-placeholder" aria-hidden>
+          <span className="audio-placeholder-label">Tap to step into the booth</span>
+        </div>
+      )}
       <button
         type="button"
         className="audio-inspect"
         onClick={() => onInspect(object.id)}
         aria-label={`Inspect details for ${object.title}`}
+        data-room-object="true"
       >
         Inspect →
       </button>
@@ -131,7 +196,7 @@ export function AudioObjectCard({ object, onInspect }: { object: RoomObjectDef; 
 }
 
 // ---------------------------------------------------------------------------
-// Portal panel content renderers (shared)
+// Portal panel content renderers
 // ---------------------------------------------------------------------------
 export function makePortalRenderer(node: PresenceNode) {
   return function renderPortal(object: RoomObjectDef) {
@@ -169,6 +234,7 @@ export function makePortalRenderer(node: PresenceNode) {
         <div className="portal-body-text">
           {object.media?.caption && (
             <blockquote className="portal-quote">
+              <MessageSquare className="h-4 w-4 portal-quote-glyph" aria-hidden />
               {object.media.caption}
             </blockquote>
           )}

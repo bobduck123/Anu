@@ -1,14 +1,15 @@
 "use client";
 
-// RoomGraphRenderer — Presence Room Engine v1.
+// RoomGraphRenderer — Presence Room Engine v2 (Pass 5).
 //
-// Mounts the full chamber-graph navigation experience: navigator, HUD,
-// camera rig, stage, mobile dock, portal panel, and reduced-motion
-// fallback. Rooms supply the RoomGraph + chamber slot renderer +
-// portal renderer.
+// Adds:
+// - pre-mounted adjacent chambers via the new RoomCameraRig (current +
+//   forward + back + left + right slots)
+// - `is-inspecting` class on the shell so the camera scene can recede
+//   when a portal panel is open
+// - audio registry wired to the active chamber change
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import type { CSSProperties as CSS } from "react";
 import type {
   ChamberSlotRenderer,
   RoomGraph,
@@ -18,10 +19,11 @@ import { findChamber, findObject } from "@/lib/presence/world/graph";
 import type { ThemeGenome } from "@/lib/presence/dna/types";
 import { themeStyle, themeClasses } from "@/lib/presence/theme/genome";
 import { useRoomNavigator } from "@/lib/presence/world/useRoomNavigator";
+import { setActiveChamber as audioSetActiveChamber } from "@/lib/presence/world/audioRegistry";
 
 import SpatialNavHud from "./SpatialNavHud";
 import MobileRoomDock from "./MobileRoomDock";
-import RoomCameraRig from "./RoomCameraRig";
+import RoomCameraRig, { type CameraSlot } from "./RoomCameraRig";
 import ChamberStage from "./ChamberStage";
 import PortalPanel from "./PortalPanel";
 import ReducedMotionRoomFallback from "./ReducedMotionRoomFallback";
@@ -35,9 +37,7 @@ interface RoomGraphRendererProps {
   theme: ThemeGenome;
   worldLabel: string;
   worldEyebrow: string;
-  /** Optional class on the shell for room-specific styling. */
   shellClassName?: string;
-  /** Atmosphere class identifier — drives shell-level CSS variants. */
   atmosphere?: string;
 }
 
@@ -66,6 +66,11 @@ export default function RoomGraphRenderer({
     enableKeyboard: !reducedMotion,
   });
 
+  // Audio registry — pause iframes when chamber changes
+  useEffect(() => {
+    audioSetActiveChamber(state.activeChamberId);
+  }, [state.activeChamberId]);
+
   const activeChamber = useMemo(
     () => findChamber(graph, state.activeChamberId) ?? graph.chambers[0],
     [graph, state.activeChamberId],
@@ -76,12 +81,12 @@ export default function RoomGraphRenderer({
     return findObject(activeChamber, state.inspectingObjectId) ?? null;
   }, [activeChamber, state.inspectingObjectId]);
 
-  const style = themeStyle(theme) as CSS;
+  const style = themeStyle(theme) as CSSProperties;
+  const isInspecting = Boolean(inspectingObject);
 
-  // Reduced-motion path — flat accessible document, no engine
   if (reducedMotion) {
     return (
-      <div className={`${themeClasses(theme)} presence-engine-shell presence-engine-shell-fallback`} style={style as CSSProperties}>
+      <div className={`${themeClasses(theme)} presence-engine-shell presence-engine-shell-fallback`} style={style}>
         <ReducedMotionRoomFallback
           graph={graph}
           renderSlot={renderSlot}
@@ -94,8 +99,8 @@ export default function RoomGraphRenderer({
 
   return (
     <main
-      className={`${themeClasses(theme)} presence-engine-shell ${shellClassName ?? ""}`}
-      style={style as CSSProperties}
+      className={`${themeClasses(theme)} presence-engine-shell ${shellClassName ?? ""} ${isInspecting ? "is-inspecting" : ""}`}
+      style={style}
       data-presence-world={atmosphere ?? "default"}
       data-active-chamber={activeChamber.id}
       aria-label={`${worldLabel} — ${worldEyebrow}`}
@@ -108,14 +113,20 @@ export default function RoomGraphRenderer({
         worldEyebrow={worldEyebrow}
       />
 
-      <RoomCameraRig direction={state.lastDirection} activeChamberId={activeChamber.id}>
-        <ChamberStage
-          chamber={activeChamber}
-          renderSlot={renderSlot}
-          inspectingObjectId={state.inspectingObjectId}
-          onInspect={actions.inspect}
-        />
-      </RoomCameraRig>
+      <RoomCameraRig
+        graph={graph}
+        activeChamberId={activeChamber.id}
+        direction={state.lastDirection}
+        renderChamber={(chamber, slot: CameraSlot) => (
+          <ChamberStage
+            chamber={chamber}
+            renderSlot={renderSlot}
+            inspectingObjectId={slot === "current" ? state.inspectingObjectId : null}
+            onInspect={slot === "current" ? actions.inspect : () => {}}
+            isCurrent={slot === "current"}
+          />
+        )}
+      />
 
       <MobileRoomDock chamber={activeChamber} state={state} actions={actions} />
 

@@ -2,16 +2,15 @@
 
 // Slot renderers — how each room arranges its chamber objects.
 //
-// Same ChamberSlotProps shape for all three rooms; different visual
-// arrangement so each world reads as itself even though the engine is
-// shared.
+// Pass 5: each room passes a distinct `skin` to ObjectCard so the
+// visual chrome reads as the world's own physical object — frame,
+// plinth, vinyl, deck, signal tile, timber sample, pinned note, etc.
 
 import type { ChamberSlotProps } from "@/lib/presence/world/graph";
 import { AudioObjectCard, ObjectCard } from "./objectRenderers";
 
 // ---------------------------------------------------------------------------
-// Gallery slot — works hang on left/right walls, statement centred,
-// services and notes laid out as portal cards.
+// Gallery slot — frames on walls, plinth in centre, invitation card portal
 // ---------------------------------------------------------------------------
 export function GallerySlot({ chamber, onInspect }: ChamberSlotProps) {
   if (chamber.role === "threshold") {
@@ -27,12 +26,12 @@ export function GallerySlot({ chamber, onInspect }: ChamberSlotProps) {
       <div className="slot-wall-arrangement">
         <div className="wall-side wall-left">
           {chamber.objects.filter((_, i) => i % 2 === 0).map((o) => (
-            <ObjectCard key={o.id} object={o} onInspect={onInspect} variant="frame" />
+            <ObjectCard key={o.id} object={o} onInspect={onInspect} skin="gallery-frame" chamberId={chamber.id} />
           ))}
         </div>
         <div className="wall-side wall-right">
           {chamber.objects.filter((_, i) => i % 2 === 1).map((o) => (
-            <ObjectCard key={o.id} object={o} onInspect={onInspect} variant="frame" />
+            <ObjectCard key={o.id} object={o} onInspect={onInspect} skin="gallery-frame" chamberId={chamber.id} />
           ))}
         </div>
       </div>
@@ -42,7 +41,7 @@ export function GallerySlot({ chamber, onInspect }: ChamberSlotProps) {
     return (
       <div className="slot-statement">
         {chamber.objects.map((o) => (
-          <ObjectCard key={o.id} object={o} onInspect={onInspect} variant="card" />
+          <ObjectCard key={o.id} object={o} onInspect={onInspect} skin="wall-label" chamberId={chamber.id} />
         ))}
       </div>
     );
@@ -51,7 +50,13 @@ export function GallerySlot({ chamber, onInspect }: ChamberSlotProps) {
     return (
       <div className="slot-cards">
         {chamber.objects.map((o) => (
-          <ObjectCard key={o.id} object={o} onInspect={onInspect} variant="card" />
+          <ObjectCard
+            key={o.id}
+            object={o}
+            onInspect={onInspect}
+            skin={o.kind === "booking" ? "invitation-card" : "plinth"}
+            chamberId={chamber.id}
+          />
         ))}
       </div>
     );
@@ -61,7 +66,7 @@ export function GallerySlot({ chamber, onInspect }: ChamberSlotProps) {
       <div className="slot-pinboard">
         {chamber.objects.map((o, i) => (
           <div key={o.id} className="pinboard-pin" style={{ ["--tilt" as string]: `${(i % 2 === 0 ? -1.2 : 1) * (0.6 + (i % 3) * 0.4)}deg` }}>
-            <ObjectCard object={o} onInspect={onInspect} variant="card" />
+            <ObjectCard object={o} onInspect={onInspect} skin="wall-label" chamberId={chamber.id} />
           </div>
         ))}
       </div>
@@ -71,9 +76,9 @@ export function GallerySlot({ chamber, onInspect }: ChamberSlotProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Sound slot — booth decks, signal wall tiles, archive prose, booking portal.
+// Sound slot — decks (audio), signal tiles, transmissions, flyer portal
 // ---------------------------------------------------------------------------
-export function SoundSlot({ chamber, onInspect }: ChamberSlotProps) {
+export function SoundSlot({ chamber, onInspect, isCurrent = true }: ChamberSlotProps) {
   if (chamber.role === "threshold") {
     return (
       <div className="chamber-threshold-stage sound">
@@ -86,7 +91,7 @@ export function SoundSlot({ chamber, onInspect }: ChamberSlotProps) {
     return (
       <div className="slot-booth-rack">
         {chamber.objects.map((o) => (
-          <AudioObjectCard key={o.id} object={o} onInspect={onInspect} />
+          <AudioObjectCard key={o.id} object={o} onInspect={onInspect} chamberId={chamber.id} isCurrent={isCurrent} />
         ))}
       </div>
     );
@@ -95,7 +100,7 @@ export function SoundSlot({ chamber, onInspect }: ChamberSlotProps) {
     return (
       <div className="slot-signal-wall">
         {chamber.objects.map((o) => (
-          <ObjectCard key={o.id} object={o} onInspect={onInspect} variant="tile" />
+          <ObjectCard key={o.id} object={o} onInspect={onInspect} skin="signal-tile" chamberId={chamber.id} />
         ))}
       </div>
     );
@@ -104,7 +109,7 @@ export function SoundSlot({ chamber, onInspect }: ChamberSlotProps) {
     return (
       <div className="slot-archive-board">
         {chamber.objects.map((o) => (
-          <ObjectCard key={o.id} object={o} onInspect={onInspect} variant="card" />
+          <ObjectCard key={o.id} object={o} onInspect={onInspect} skin="transmission" chamberId={chamber.id} />
         ))}
       </div>
     );
@@ -113,7 +118,7 @@ export function SoundSlot({ chamber, onInspect }: ChamberSlotProps) {
     return (
       <div className="slot-portal-door">
         {chamber.objects.map((o) => (
-          <ObjectCard key={o.id} object={o} onInspect={onInspect} variant="card" />
+          <ObjectCard key={o.id} object={o} onInspect={onInspect} skin="flyer" chamberId={chamber.id} />
         ))}
       </div>
     );
@@ -122,7 +127,7 @@ export function SoundSlot({ chamber, onInspect }: ChamberSlotProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Studio slot — workbench (cta), shelf row, pathway list, appreciation deck.
+// Studio slot — timber samples, project pieces, pinned notes, order form
 // ---------------------------------------------------------------------------
 export function StudioSlot({ chamber, onInspect }: ChamberSlotProps) {
   if (chamber.role === "studio") {
@@ -137,7 +142,7 @@ export function StudioSlot({ chamber, onInspect }: ChamberSlotProps) {
     return (
       <div className="slot-shelf-row">
         {chamber.objects.map((o) => (
-          <ObjectCard key={o.id} object={o} onInspect={onInspect} variant="card" />
+          <ObjectCard key={o.id} object={o} onInspect={onInspect} skin="project-piece" chamberId={chamber.id} />
         ))}
       </div>
     );
@@ -148,7 +153,7 @@ export function StudioSlot({ chamber, onInspect }: ChamberSlotProps) {
         {chamber.objects.map((o, i) => (
           <li key={o.id} className="pathway-li">
             <span className="pathway-num">{String(i + 1).padStart(2, "0")}</span>
-            <ObjectCard object={o} onInspect={onInspect} variant="card" />
+            <ObjectCard object={o} onInspect={onInspect} skin="bench-tool" chamberId={chamber.id} />
           </li>
         ))}
       </ol>
@@ -159,7 +164,7 @@ export function StudioSlot({ chamber, onInspect }: ChamberSlotProps) {
       <div className="slot-appreciation-deck">
         {chamber.objects.map((o, i) => (
           <div key={o.id} className="appreciation-pin" style={{ ["--tilt" as string]: `${(i % 2 === 0 ? -1.2 : 1) * (0.6 + (i % 3) * 0.4)}deg` }}>
-            <ObjectCard object={o} onInspect={onInspect} variant="card" />
+            <ObjectCard object={o} onInspect={onInspect} skin="pinned-note" chamberId={chamber.id} />
           </div>
         ))}
       </div>
@@ -169,7 +174,7 @@ export function StudioSlot({ chamber, onInspect }: ChamberSlotProps) {
     return (
       <div className="slot-portal-door studio">
         {chamber.objects.map((o) => (
-          <ObjectCard key={o.id} object={o} onInspect={onInspect} variant="card" />
+          <ObjectCard key={o.id} object={o} onInspect={onInspect} skin="order-form" chamberId={chamber.id} />
         ))}
       </div>
     );
