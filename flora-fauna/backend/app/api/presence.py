@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
+import re
+
 from flask import Blueprint, Response, current_app, g, jsonify, request
-from flask_jwt_extended import get_jwt
+from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
@@ -457,9 +460,9 @@ def submit_public_presence_quote_request(slug):
 
 
 # ---------------------------------------------------------------------------
-# Public-beta setup-request persistence
+# Public setup-request persistence
 #
-# A verified Supabase user can submit a setup request via /api/presence/beta/
+# Anonymous/public visitors can submit a setup request via /api/presence/setup-
 # applications. This is *intent only* — it does not create a PresenceNode and
 # does not assign ownership. Studio reviews these and provisions a real draft
 # node manually (or via a future safe `POST /owner/beta/start` endpoint).
@@ -488,6 +491,14 @@ _ALLOWED_BETA_MOODS = {
     "care_path", "public_noticeboard", "institutional_dusk", "signal_field",
 }
 _ALLOWED_BETA_MODES = {"setup_request", "studio_assisted", "draft_self_build"}
+_SETUP_REQUEST_STATUSES = {
+    "submitted", "reviewing", "needs_assets", "preview_ready",
+    "approved", "published", "archived",
+}
+_SETUP_PRESENCE_STATUSES = {"setup_request", "preview", "published", "archived"}
+_ROOMGRAPH_SCHEMA_VERSION = "presence-roomgraph-v1"
+_SETUP_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+_SETUP_JSON_MAX_BYTES = 16 * 1024
 
 
 def _clean_str(value, max_len: int):
@@ -499,40 +510,109 @@ def _clean_str(value, max_len: int):
     return text[:max_len]
 
 
+def _setup_json_value(value, *, max_items: int = 20):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        text = _clean_str(value, 1000)
+        return [text] if text else None
+    if isinstance(value, list):
+        cleaned = []
+        for item in value[:max_items]:
+            if isinstance(item, str):
+                text = _clean_str(item, 1000)
+                if text:
+                    cleaned.append(text)
+            elif isinstance(item, dict):
+                obj = {}
+                for key, item_value in item.items():
+                    cleaned_key = _clean_str(key, 80)
+                    if not cleaned_key:
+                        continue
+                    obj[cleaned_key] = (
+                        _clean_str(item_value, 1000)
+                        if not isinstance(item_value, (dict, list))
+                        else item_value
+                    )
+                if obj:
+                    cleaned.append(obj)
+        return cleaned or None
+    if isinstance(value, dict):
+        return value
+    return None
+
+
+def _setup_json_object(value):
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise PresenceValidationError("RoomGraph-ready JSON fields must be objects.")
+    try:
+        encoded = json.dumps(value, ensure_ascii=True)
+    except (TypeError, ValueError) as exc:
+        raise PresenceValidationError("RoomGraph-ready JSON fields must be JSON-serialisable.") from exc
+    if len(encoded.encode("utf-8")) > _SETUP_JSON_MAX_BYTES:
+        raise PresenceValidationError(f"RoomGraph-ready JSON fields must be under {_SETUP_JSON_MAX_BYTES} bytes.")
+    return value
+
+
+def _optional_setup_requester_identity():
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return None, None
+    try:
+        verify_jwt_in_request(optional=True)
+        claims = get_jwt() or {}
+        subject = get_jwt_identity() or claims.get("sub")
+        email = claims.get("email")
+        return (_clean_str(subject, 80), _clean_str(email, 180))
+    except Exception:
+        current_app.logger.info("Ignoring invalid optional auth on public Presence setup request")
+        return None, None
+
+
 def _serialize_beta_application(app: "PresenceBetaApplication") -> dict:
     return {
         "id": app.id,
         "display_name": app.display_name,
         "desired_slug": app.desired_slug,
+        "contact_name": app.contact_name,
         "presence_type": app.presence_type,
+        "archetype": app.archetype,
+        "room_preference": app.room_preference,
         "primary_purpose": app.primary_purpose,
         "primary_cta": app.primary_cta,
         "template_direction": app.template_direction,
         "visual_mood": app.visual_mood,
         "location_label": app.location_label,
         "headline": app.headline,
+        "short_bio": app.short_bio,
         "description": app.description,
         "beta_mode": app.beta_mode,
         "status": app.status,
+        "presence_status": app.presence_status,
+        "schema_version": app.schema_version,
+        "next_step": "review",
         "created_at": app.created_at.isoformat() if app.created_at else None,
     }
 
 
+@presence_bp.route("/setup-requests", methods=["POST"])
 @presence_bp.route("/beta/applications", methods=["POST"])
-@alpha_jwt_required()
 @limiter.limit("6 per minute; 30 per hour")
 def submit_beta_application():
-    """Persist a public-beta setup request from a verified Supabase user.
+    """Persist a public Presence setup request.
 
-    Requires Supabase JWT (alpha_jwt_required). Creates one PresenceBetaApplication
-    row in status=pending. Does NOT create a PresenceNode and does NOT assign
-    ownership. Returns an owner-safe summary.
+    This endpoint is public concierge intake. It creates a submitted review
+    record only; it never creates, previews, publishes, or assigns a
+    PresenceNode. If a valid bearer token is present, it is linked server-side,
+    but owner auth is not required.
     """
-    user = get_current_user()
-    if not user:
-        return error("unauthorized", "Sign in is required for beta applications.", 401)
-
     payload = request.get_json(silent=True) or {}
+    if not isinstance(payload, dict):
+        return error("validation_error", "JSON object payload is required", 422)
+    if _clean_str(payload.get("website") or payload.get("company_website"), 120):
+        return error("validation_error", "Spam protection rejected the setup request.", 400)
 
     presence_type = _clean_str(payload.get("presence_type"), 80)
     primary_purpose = _clean_str(payload.get("primary_purpose"), 80)
@@ -540,6 +620,7 @@ def submit_beta_application():
     template_direction = _clean_str(payload.get("template_direction"), 80)
     visual_mood = _clean_str(payload.get("visual_mood"), 80)
     beta_mode = _clean_str(payload.get("beta_mode"), 40) or "setup_request"
+    schema_version = _clean_str(payload.get("schema_version"), 80) or _ROOMGRAPH_SCHEMA_VERSION
 
     # Whitelist enum-like fields. Reject unknown values rather than store junk.
     if presence_type and presence_type not in _ALLOWED_BETA_PRESENCE_TYPES:
@@ -554,10 +635,17 @@ def submit_beta_application():
         return error("validation_error", f"Unsupported visual_mood: {visual_mood}", 422)
     if beta_mode not in _ALLOWED_BETA_MODES:
         return error("validation_error", f"Unsupported beta_mode: {beta_mode}", 422)
+    if schema_version != _ROOMGRAPH_SCHEMA_VERSION:
+        return error("validation_error", f"Unsupported schema_version: {schema_version}", 422)
 
     display_name = _clean_str(payload.get("display_name"), 160)
     if not display_name:
         return error("validation_error", "display_name is required", 422)
+    email = _clean_str(payload.get("email"), 180)
+    if not email:
+        return error("validation_error", "email is required", 422)
+    if not _SETUP_EMAIL_RE.match(email):
+        return error("validation_error", "email must be a valid email address", 422)
 
     desired_slug = _clean_str(payload.get("desired_slug"), 160)
     if desired_slug:
@@ -566,26 +654,57 @@ def submit_beta_application():
         except PresenceValidationError as exc:
             return _validation_error(exc)
 
-    user_id_raw = getattr(user, "supabase_user_id", None) or getattr(user, "id", None)
-    user_id_str = str(user_id_raw)[:80] if user_id_raw is not None else None
-    email_attr = getattr(user, "email", None)
-    email = _clean_str(email_attr, 180)
+    try:
+        services_offerings = _setup_json_value(
+            payload.get("services") if "services" in payload else payload.get("offerings")
+        )
+        links = _setup_json_value(payload.get("links"))
+        presence_dna = _setup_json_object(payload.get("presence_dna"))
+        room_graph = _setup_json_object(payload.get("room_graph") or payload.get("roomGraph"))
+    except PresenceValidationError as exc:
+        return _validation_error(exc)
+
+    user_id_str, _auth_email = _optional_setup_requester_identity()
+    source_origin = (
+        _clean_str(payload.get("source_origin"), 300)
+        or _clean_str(request.headers.get("Origin"), 300)
+        or _clean_str(request.referrer, 300)
+    )
 
     application = PresenceBetaApplication(
         user_id=user_id_str,
         email=email,
+        contact_name=_clean_str(payload.get("contact_name") or payload.get("name"), 160),
         display_name=display_name,
         desired_slug=desired_slug,
         presence_type=presence_type,
+        archetype=_clean_str(payload.get("archetype"), 80),
+        room_preference=_clean_str(payload.get("room_preference"), 120),
         primary_purpose=primary_purpose,
         primary_cta=primary_cta,
         template_direction=template_direction,
         visual_mood=visual_mood,
         location_label=_clean_str(payload.get("location_label"), 160),
         headline=_clean_str(payload.get("headline"), 280),
+        short_bio=_clean_str(payload.get("short_bio"), 4000),
         description=_clean_str(payload.get("description"), 4000),
+        services_offerings=services_offerings,
+        links=links,
+        source_origin=source_origin,
         beta_mode=beta_mode,
-        status="pending",
+        status="submitted",
+        selected_room_world=_clean_str(payload.get("selected_room_world") or payload.get("room_preference"), 120),
+        atmosphere=_clean_str(payload.get("atmosphere") or visual_mood, 120),
+        presence_dna=presence_dna,
+        room_graph=room_graph,
+        schema_version=schema_version,
+        presence_status="setup_request",
+        notes=_clean_str(payload.get("notes"), 4000),
+        metadata_json={
+            "source_path": _clean_str(payload.get("source_path"), 300),
+            "lifecycle_states": sorted(_SETUP_REQUEST_STATUSES),
+            "presence_statuses": sorted(_SETUP_PRESENCE_STATUSES),
+        },
     )
     db.session.add(application)
     try:
@@ -593,6 +712,10 @@ def submit_beta_application():
     except IntegrityError:
         db.session.rollback()
         current_app.logger.exception("PresenceBetaApplication insert failed")
+        return error("service_unavailable", "Setup request temporarily unavailable", 503)
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Presence setup request insert failed")
         return error("service_unavailable", "Setup request temporarily unavailable", 503)
 
     return ok(_serialize_beta_application(application), 201)

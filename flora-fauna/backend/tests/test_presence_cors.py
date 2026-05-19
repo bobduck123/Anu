@@ -133,6 +133,27 @@ def test_options_preflight_on_beta_start_from_current_presence_frontend_succeeds
     assert "POST" in allow_methods
 
 
+def test_options_preflight_on_public_setup_request_from_current_presence_frontend_succeeds():
+    app = _build_app([PRESENCE_ORIGIN])
+    client = app.test_client()
+
+    response = client.options(
+        "/api/presence/setup-requests",
+        headers={
+            "Origin": YOUR_PRESENCE_ORIGIN,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+
+    assert response.status_code in (200, 204)
+    assert response.headers.get("Access-Control-Allow-Origin") == YOUR_PRESENCE_ORIGIN
+    allow_headers = (response.headers.get("Access-Control-Allow-Headers") or "").lower()
+    assert "content-type" in allow_headers
+    allow_methods = (response.headers.get("Access-Control-Allow-Methods") or "").upper()
+    assert "POST" in allow_methods
+
+
 # ---------------------------------------------------------------------------
 # 2. Actual protected request without auth — must return 401, must include
 #    CORS header so the browser surfaces a normal 401 (not a CORS error).
@@ -290,6 +311,9 @@ def test_owner_routes_require_real_auth_even_with_correct_origin():
     )
     assert response.status_code == 401
     assert response.status_code != 201, "beta/start must NOT succeed without auth"
+    body = response.get_json()
+    assert body["ok"] is False
+    assert body["error"]["code"] == "auth_required"
     # CORS header still present.
     assert response.headers.get("Access-Control-Allow-Origin") == PRESENCE_ORIGIN
 
@@ -306,4 +330,7 @@ def test_beta_start_requires_auth_but_returns_cors_for_current_presence_origin()
 
     assert response.status_code == 401
     assert response.status_code != 201
+    body = response.get_json()
+    assert body["ok"] is False
+    assert body["error"]["code"] == "auth_required"
     assert response.headers.get("Access-Control-Allow-Origin") == YOUR_PRESENCE_ORIGIN

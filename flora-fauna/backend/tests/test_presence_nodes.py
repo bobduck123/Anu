@@ -2937,29 +2937,56 @@ def test_presence_portfolio_first_templates_and_display_mode_routing():
 # ----------------------------------------------------------------------------
 
 
-def test_presence_beta_application_requires_auth():
-    """Unauthenticated requests are rejected with 401, no row created."""
+def test_presence_setup_request_public_intake_creates_submitted_request():
+    """Public concierge intake does not require owner auth and persists intent only."""
     app = _build_app()
     _seed_fixture(app)
     client = app.test_client()
 
     response = client.post(
-        "/api/presence/beta/applications",
-        json={"display_name": "Anonymous", "presence_type": "artist"},
+        "/api/presence/setup-requests",
+        json={
+            "display_name": "Anonymous Studio",
+            "contact_name": "Anon Maker",
+            "email": "anon@example.com",
+            "desired_slug": "anonymous-studio",
+            "archetype": "artist",
+            "room_preference": "gallery_wall",
+            "short_bio": "A small public intake request.",
+            "services": ["Commissions", "Workshops"],
+            "links": [{"label": "Portfolio", "url": "https://example.com"}],
+            "presence_dna": {"identity": {"tone": "quiet"}, "source": "backend_persisted"},
+            "room_graph": {"nodes": [{"id": "front-door", "type": "hero"}], "edges": []},
+            "source_origin": "https://your-presence.vercel.app",
+        },
         base_url="http://public.test",
     )
-    assert response.status_code == 401, response.get_json()
+    assert response.status_code == 201, response.get_json()
+    body = response.get_json()["data"]
+    assert body["status"] == "submitted"
+    assert body["presence_status"] == "setup_request"
+    assert body["schema_version"] == "presence-roomgraph-v1"
+    assert body["desired_slug"] == "anonymous-studio"
 
-    # Confirm no row was inserted.
     from manara_backend_app.extensions import db as _db
-    from manara_backend_app.models import PresenceBetaApplication
+    from manara_backend_app.models import PresenceBetaApplication, PresenceNode
 
     with app.app_context():
-        assert _db.session.query(PresenceBetaApplication).count() == 0
+        rows = _db.session.query(PresenceBetaApplication).all()
+        assert len(rows) == 1
+        assert rows[0].email == "anon@example.com"
+        assert rows[0].contact_name == "Anon Maker"
+        assert rows[0].source_origin == "https://your-presence.vercel.app"
+        assert rows[0].services_offerings == ["Commissions", "Workshops"]
+        assert rows[0].presence_dna["identity"]["tone"] == "quiet"
+        assert rows[0].room_graph["nodes"][0]["id"] == "front-door"
+        assert rows[0].schema_version == "presence-roomgraph-v1"
+        assert rows[0].presence_status == "setup_request"
+        assert _db.session.query(PresenceNode).filter_by(slug="anonymous-studio").first() is None
 
 
 def test_presence_beta_application_persists_authenticated_request_with_owner_safe_payload():
-    """Verified Supabase user can submit a setup request; row is pending and
+    """A signed-in user can also submit public intake; row is submitted and
     the response is owner-safe (no user_id, no email leakage)."""
     app = _build_app()
     tenant_id, _ = _seed_fixture(app)
@@ -2972,8 +2999,11 @@ def test_presence_beta_application_persists_authenticated_request_with_owner_saf
         "/api/presence/beta/applications",
         json={
             "display_name": "Mira Cole",
+            "email": "pilot@example.com",
             "desired_slug": "mira-cole",
             "presence_type": "artist",
+            "archetype": "artist",
+            "room_preference": "studio_practice",
             "primary_purpose": "portfolio",
             "primary_cta": "viewing",
             "template_direction": "studio_practice",
@@ -2991,8 +3021,10 @@ def test_presence_beta_application_persists_authenticated_request_with_owner_saf
     # Owner-safe shape: no internal user_id or email exposed.
     assert body["display_name"] == "Mira Cole"
     assert body["desired_slug"] == "mira-cole"
-    assert body["status"] == "pending"
+    assert body["status"] == "submitted"
     assert body["beta_mode"] == "studio_assisted"
+    assert body["presence_status"] == "setup_request"
+    assert body["schema_version"] == "presence-roomgraph-v1"
     assert "user_id" not in body
     assert "email" not in body
 
@@ -3002,10 +3034,14 @@ def test_presence_beta_application_persists_authenticated_request_with_owner_saf
     with app.app_context():
         rows = _db.session.query(PresenceBetaApplication).all()
         assert len(rows) == 1
-        # user_id is recorded server-side for follow-up review.
-        assert rows[0].status == "pending"
+        # user_id is recorded server-side for follow-up review when auth exists.
+        assert rows[0].status == "submitted"
+        assert rows[0].user_id == "studio-pilot"
+        assert rows[0].email == "pilot@example.com"
         assert rows[0].presence_type == "artist"
+        assert rows[0].archetype == "artist"
         assert rows[0].template_direction == "studio_practice"
+        assert rows[0].room_preference == "studio_practice"
 
 
 def test_presence_beta_application_rejects_unknown_enum_values():
@@ -3021,6 +3057,7 @@ def test_presence_beta_application_rejects_unknown_enum_values():
         "/api/presence/beta/applications",
         json={
             "display_name": "Test",
+            "email": "pilot@example.com",
             "presence_type": "definitely_not_a_type",
         },
         headers=headers,
@@ -3032,12 +3069,51 @@ def test_presence_beta_application_rejects_unknown_enum_values():
         "/api/presence/beta/applications",
         json={
             "display_name": "Test",
+            "email": "pilot@example.com",
             "primary_cta": "buy_followers",
         },
         headers=headers,
         base_url="http://public.test",
     )
     assert response.status_code == 422, response.get_json()
+
+
+def test_presence_setup_request_rejects_invalid_public_payloads():
+    app = _build_app()
+    _seed_fixture(app)
+    client = app.test_client()
+
+    missing_email = client.post(
+        "/api/presence/setup-requests",
+        json={"display_name": "No Email Studio"},
+        base_url="http://public.test",
+    )
+    assert missing_email.status_code == 422
+    body = missing_email.get_json()
+    assert body["ok"] is False
+    assert body["error"]["code"] == "validation_error"
+
+    malformed_email = client.post(
+        "/api/presence/setup-requests",
+        json={"display_name": "Bad Email Studio", "email": "not-an-email"},
+        base_url="http://public.test",
+    )
+    assert malformed_email.status_code == 422
+    body = malformed_email.get_json()
+    assert body["error"]["code"] == "validation_error"
+
+    honeypot = client.post(
+        "/api/presence/setup-requests",
+        json={
+            "display_name": "Bot Studio",
+            "email": "bot@example.com",
+            "website": "https://spam.example",
+        },
+        base_url="http://public.test",
+    )
+    assert honeypot.status_code == 400
+    body = honeypot.get_json()
+    assert body["error"]["code"] == "validation_error"
 
 
 def test_presence_beta_application_does_not_create_presence_node_or_assign_ownership():
@@ -3055,6 +3131,7 @@ def test_presence_beta_application_does_not_create_presence_node_or_assign_owner
         "/api/presence/beta/applications",
         json={
             "display_name": "Pilot User",
+            "email": "pilot@example.com",
             "desired_slug": "pilot-user",
             "presence_type": "artist",
         },
@@ -3328,6 +3405,9 @@ def test_owner_beta_start_requires_auth():
         base_url="http://public.test",
     )
     assert res.status_code == 401, res.get_json()
+    body = res.get_json()
+    assert body["ok"] is False
+    assert body["error"]["code"] == "auth_required"
 
 
 def test_owner_beta_start_creates_draft_private_unpublished_node_and_assigns_owner():

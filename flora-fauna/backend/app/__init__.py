@@ -295,21 +295,35 @@ def _init_jwt_key_routing(app):
 def _init_jwt_error_handlers(app):
     """Expose structured JWT auth failures and log cause for diagnostics."""
 
+    def _presence_auth_error(code, message, status):
+        if request.path.startswith("/api/presence/"):
+            return (
+                jsonify(
+                    {
+                        "ok": False,
+                        "error": {"code": code, "message": message, "details": None},
+                        "request_id": getattr(g, "request_id", None),
+                    }
+                ),
+                status,
+            )
+        return jsonify({"msg": message}), status
+
     @jwt.invalid_token_loader
     def _invalid_token(reason):
         app.logger.warning(f"JWT invalid token: {reason}")
         status = 401 if request.path.startswith("/api/presence/") else 422
-        return jsonify({"msg": reason}), status
+        return _presence_auth_error("invalid_token", reason, status)
 
     @jwt.unauthorized_loader
     def _missing_token(reason):
         app.logger.info(f"JWT missing token: {reason}")
-        return jsonify({"msg": reason}), 401
+        return _presence_auth_error("auth_required", reason, 401)
 
     @jwt.expired_token_loader
     def _expired_token(jwt_header, jwt_payload):
         app.logger.info("JWT expired token", extra={"sub": jwt_payload.get("sub")})
-        return jsonify({"msg": "Token has expired"}), 401
+        return _presence_auth_error("token_expired", "Token has expired", 401)
 
 
 # Presence frontends and other deployed ANU surfaces that should be allowed
