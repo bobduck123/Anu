@@ -1,0 +1,196 @@
+{
+  "proof_date": "2026-05-20",
+  "backend": "https://anu-back-end.vercel.app",
+  "frontend_observed": "https://your-presence.vercel.app",
+  "legacy_frontend_probe": "https://presence-gilt.vercel.app",
+  "deployed_commit_observed": {
+    "health_version": "dev",
+    "hash_exposed_by_runtime": false,
+    "behavioral_evidence": [
+      "customisation manifest endpoints are live, consistent with commit 205ce71 or later",
+      "admin setup request lifecycle routes exist and enforce auth, consistent with commit e80dcc4 or later",
+      "public setup request accepts RoomGraph customisation fields and persists submitted/setup_request state"
+    ],
+    "local_patch_pushed_after_proof_start": "574f7ca preserve studio setup intake metadata"
+  },
+  "migration_status": {
+    "20260520_presence_customisation_manifest_v1.sql": "behaviorally verified by manifest, recommendations, preview-seed, and setup-request customisation persistence",
+    "20260520_presence_setup_request_lifecycle_pipeline.sql": "behaviorally verified by setup-request 201 response plus admin lifecycle route existence; direct information_schema introspection was not performed",
+    "required_columns": {
+      "room_world": "verified via public setup response",
+      "engagement_dynamic": "verified via public setup response",
+      "motion_profile": "verified via public setup response",
+      "object_skin_pack": "verified via public setup response",
+      "atmosphere_pack": "verified via public setup response",
+      "customisation_manifest_version": "verified via public setup response",
+      "customisation_snapshot": "verified via public setup response as customisation",
+      "preview_token": "not directly introspected; preview route exists and admin create-preview is auth-protected",
+      "internal_notes": "not directly introspected; admin patch route is auth-protected",
+      "lifecycle_audit": "not directly introspected; setup request creation succeeded where lifecycle code is expected to write the initial audit"
+    }
+  },
+  "endpoint_matrix": [
+    {
+      "endpoint": "GET /health",
+      "status": 200,
+      "result": "ready true, database configured"
+    },
+    {
+      "endpoint": "GET /readiness",
+      "status": 200,
+      "result": "ready true, database ok"
+    },
+    {
+      "endpoint": "GET /api/presence/customisation/manifest",
+      "status": 200,
+      "result": "schema_version presence-customisation-manifest-v1"
+    },
+    {
+      "endpoint": "GET /api/presence/customisation/recommendations?archetype=artist",
+      "status": 200,
+      "result": "artist recommendations returned gallery painter and underground dj options"
+    },
+    {
+      "endpoint": "POST /api/presence/customisation/preview-seed",
+      "status": 200,
+      "result": "RoomGraph-ready preview seed returned without publication"
+    },
+    {
+      "endpoint": "OPTIONS /api/presence/setup-requests",
+      "status": 200,
+      "result": "CORS allows https://your-presence.vercel.app, POST, content-type, authorization"
+    },
+    {
+      "endpoint": "POST /api/presence/setup-requests",
+      "status": 201,
+      "result": "controlled setup request persisted with status submitted and presence_status setup_request"
+    },
+    {
+      "endpoint": "POST /api/presence/setup-requests invalid combination",
+      "status": 422,
+      "result": "structured validation_error with correction_hints"
+    },
+    {
+      "endpoint": "GET /api/presence/admin/setup-requests",
+      "status": 401,
+      "result": "auth_required structured response"
+    },
+    {
+      "endpoint": "POST /api/presence/admin/setup-requests/1/create-preview",
+      "status": 401,
+      "result": "auth_required structured response"
+    },
+    {
+      "endpoint": "GET /api/presence/preview/not-a-real-token",
+      "status": 404,
+      "result": "structured Preview not found"
+    },
+    {
+      "endpoint": "POST /api/presence/owner/beta/start",
+      "status": 401,
+      "result": "owner route remains authenticated"
+    },
+    {
+      "endpoint": "GET /api/presence/public/rooms-consultant",
+      "status": 200,
+      "result": "public read still returns Presence Room contract"
+    },
+    {
+      "endpoint": "GET /api/presence/public/rooms-consultant/qr",
+      "status": 200,
+      "result": "QR endpoint works but encodes presence-gilt canonical"
+    },
+    {
+      "endpoint": "GET /api/presence/public/rooms-consultant/vcard",
+      "status": 200,
+      "result": "vCard endpoint works but URL uses presence-gilt canonical"
+    }
+  ],
+  "setup_request_proof": {
+    "request_label": "ZZ Studio Backend Proof 2026-05-20",
+    "response_status": 201,
+    "response_id": 1,
+    "status": "submitted",
+    "presence_status": "setup_request",
+    "customisation_manifest_version": "presence-customisation-manifest-v1",
+    "room_world": "rooms-gallery-painter",
+    "engagement_dynamic": "chamber_walk",
+    "motion_profile": "calm",
+    "object_skin_pack": "gallery_frame_pack",
+    "atmosphere_pack": "quiet_gallery",
+    "sensitive_fields_redacted": [
+      "email",
+      "phone"
+    ],
+    "public_response_field_gap": "description was null when only what_they_are_building was supplied, proving production had not yet deployed the local 574f7ca Studio intake preservation patch at proof time",
+    "publication_check": "response remained setup_request; no public Presence was published"
+  },
+  "field_preservation_mapping": {
+    "display_name": "direct column",
+    "contact_name": "direct column",
+    "email": "direct column, redacted from evidence",
+    "phone": "metadata_json.studio_intake.phone in 574f7ca",
+    "what_they_are_building": "description fallback plus metadata_json.studio_intake.what_they_are_building in 574f7ca",
+    "notes": "direct notes column",
+    "references": "links fallback plus metadata_json.studio_intake.references in 574f7ca",
+    "do_not_wants": "metadata_json.studio_intake.do_not_wants in 574f7ca",
+    "consent_to_contact": "metadata_json.studio_intake.consent_to_contact in 574f7ca",
+    "customisation_snapshot": "authoritative backend snapshot plus submitted snapshot preserved in metadata_json.studio_intake in 574f7ca",
+    "local_test_result": "test_public_setup_request_preserves_studio_intake_fields_in_metadata passed"
+  },
+  "preview_seed_proof": {
+    "selection": {
+      "archetype": "artist",
+      "room_world": "rooms-gallery-painter",
+      "engagement_dynamic": "chamber_walk",
+      "atmosphere_pack": "quiet_gallery",
+      "object_skin_pack": "gallery_frame_pack",
+      "motion_profile": "calm"
+    },
+    "status": 200,
+    "schema_version": "presence-roomgraph-preview-seed-v1",
+    "room_graph_schema_version": "presence-roomgraph-v1",
+    "needs_review": false,
+    "publication": "none"
+  },
+  "admin_lifecycle_proof": {
+    "status": "blocked",
+    "reason": "no hosted control-plane Authorization header or shared-secret grant was available in this session",
+    "verified_without_auth": [
+      "admin list route exists and returns 401 auth_required",
+      "admin create-preview route exists and returns 401 auth_required",
+      "owner beta route remains protected"
+    ]
+  },
+  "frontend_host_findings": {
+    "your_presence": {
+      "presence_chooser": 200,
+      "studio": 200,
+      "presence_room_route": 200
+    },
+    "presence_gilt": {
+      "presence_room_route": 404,
+      "error": "DEPLOYMENT_NOT_FOUND"
+    },
+    "canonical_gap": "backend public_url, QR, vCard, and page metadata still point to https://presence-gilt.vercel.app even though the active hosted frontend observed for Studio is https://your-presence.vercel.app"
+  },
+  "smoke_result": {
+    "presence_gilt": "failed: frontend /presence route returned 404 deployment not found",
+    "your_presence": "failed: backend QR target was https://presence-gilt.vercel.app/presence/rooms-consultant, not https://your-presence.vercel.app/presence/rooms-consultant"
+  },
+  "local_regression": {
+    "py_compile": "passed",
+    "test_presence_customisation_manifest": "8 passed",
+    "test_presence_setup_request_lifecycle": "6 passed",
+    "full_backend_pytest": "244 passed",
+    "git_diff_check": "passed",
+    "warnings": "SQLAlchemy legacy warnings and pytest cache permission warning remain"
+  },
+  "readiness": {
+    "studio_public_intake": "ready after 574f7ca deploy for full field preservation; hosted e80dcc4 accepts requests and customisation but did not preserve what_they_are_building in public response at proof time",
+    "manifest_preview_seed": "ready",
+    "admin_lifecycle": "blocked by missing auth for end-to-end hosted proof",
+    "public_presence_regression": "backend green, current frontend/canonical deployment mismatch needs correction",
+    "recommendation": "go for frontend Studio integration against public setup intake after deploying 574f7ca; hold admin lifecycle go-live and public QR/canonical signoff until auth and frontend origin config are verified"
+  }
+}
