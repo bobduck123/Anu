@@ -104,6 +104,71 @@ gets native touch scrolling without drag intervention.
 
 ---
 
+## Pass 6 additions — natural motion + three engagement dynamics
+
+### 5. `cosmic-clock` + `cosmos-in-motion-a-3d-particle-study` (concept only)
+**Classification.** orbit/constellation.
+
+**Adaptation.** Extracted the rotating-around-a-centre concept into
+`OrbitConstellation.tsx`. Pure CSS-transform implementation — no canvas,
+no D3, no Three.js. Rings of satellites at three radii, rotation
+controlled by left/right input. The centre and each satellite
+counter-rotate so labels stay upright. Reduced-motion drops to a
+sorted list. Keyboard navigation built in.
+
+**Risks managed.** No physics engine, no infinite rotation. Each rotate
+is a discrete user action (45° increments) so the scene is always
+stable between inputs.
+
+### 6. `isometric-card-grid` + `infinite-grid` (concept extended)
+**Classification.** tableau / object interaction.
+
+**Adaptation.** The Pass 3 `IsometricCardLayer` already lifted the tilt
+pattern. Pass 6 builds on it for the dedicated `ObjectTableau` dynamic:
+a horizontal flex surface that tilts with pointer movement and zooms
+into the focused cluster on forward. Objects sit at random small
+offsets/rotations so the surface reads as physical placement, not a
+card grid.
+
+**Risks managed.** Pointer-fine + reduced-motion guards. Mobile
+fallback is a stacked flex-column layout. No rAF loops — tilt is
+direct pointer → state → CSS variable.
+
+### 7. `editorial-fashion-slider` + `multi-stage-comparator` + `time-traveling-art-gallery` (concept only)
+**Classification.** portal / cascade.
+
+**Adaptation.** Inspired the `PortalCascade` dynamic — branches arranged
+as tabs, each branch's layers stacked in depth via `translateZ` and
+`scale`, with `transform-style: preserve-3d`. Forward unfolds the next
+layer; back folds back; left/right changes branch and resets layer to
+0. Keyboard + HUD + mobile dock supported.
+
+**Risks managed.** No JS animation loops; transitions are CSS only.
+Layers behind the front layer are `pointer-events: none` and `inert`.
+Reduced-motion path renders all branches and all layers stacked
+vertically as a normal document.
+
+### 8. `frosted-saturated-borders` (extended from Pass 5)
+**Classification.** atmosphere / inspect.
+
+**Adaptation.** Now applied to the chooser cards: hover lift +
+accent-border highlight + soft shadow. Also extended to the
+onboarding overlay backdrop.
+
+### 9. CodePen examples reviewed at Pass 6 but not adopted now
+
+| Source | Why deferred |
+|---|---|
+| `slack-discord-cyberpunk-2077-redesign-w-preact` | Concept only; chooser tab patterns informed engagement card styling but no code was lifted. |
+| `boolean-field-geometry-from-binary-logic` | Visually striking but unclear identity payoff. |
+| `physics-of-wiresjavascript` | Strong potential for orbit-decoration backdrop; deferred until orbit gets a "lit night" atmosphere variant. |
+| `interactive-image-mosaic` | Tableau direction is now real — mosaic patterns queued for a "mosaic" tableau variant. |
+| `safari-fix-css-scroll-driven-scroll-snapping-animations` | Reviewed for `scroll-driven` patterns; deferred — Pass 6's chosen interaction model is direct dispatch, not scroll. |
+| `obsidian-gold-landing-template-tailwind-gsap` | Mood reference for editorial atmospheres only. |
+| `sweet-pseudo-text-effects` | Will inform per-room typography motion in a future pass. |
+
+---
+
 ## Adapt later (queued)
 
 | Source | Idea | Target classification |

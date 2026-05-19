@@ -27,6 +27,7 @@ import RoomCameraRig, { type CameraSlot } from "./RoomCameraRig";
 import ChamberStage from "./ChamberStage";
 import PortalPanel from "./PortalPanel";
 import ReducedMotionRoomFallback from "./ReducedMotionRoomFallback";
+import RoomOnboardingHint from "./RoomOnboardingHint";
 
 export type PortalContentRenderer = (object: RoomObjectDef) => React.ReactNode;
 
@@ -135,6 +136,15 @@ export default function RoomGraphRenderer({
           {renderPortal(inspectingObject)}
         </PortalPanel>
       )}
+
+      <RoomOnboardingHint
+        worldId={graph.id}
+        forwardLabel="Enter / forward"
+        leftLabel="Turn left"
+        rightLabel="Turn right"
+        backLabel="Step back"
+        inspectLabel="any object"
+      />
     </main>
   );
 }

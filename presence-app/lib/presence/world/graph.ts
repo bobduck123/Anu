@@ -39,7 +39,11 @@ export type RoomObjectKind =
   | "gallery"
   | "contact"
   | "memory"
-  | "external";
+  | "external"
+  // Pass 6 additions
+  | "case_study"
+  | "testimonial"
+  | "press";
 
 export type RoomObjectPosition =
   | "left-wall"
