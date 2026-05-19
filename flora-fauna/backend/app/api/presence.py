@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import Blueprint, Response, current_app, request
+from flask import Blueprint, Response, current_app, g, jsonify, request
 from flask_jwt_extended import get_jwt
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
@@ -340,7 +340,7 @@ def submit_public_presence_enquiry(slug):
     except Exception:
         current_app.logger.exception("Presence enquiry submission failed")
         db.session.rollback()
-        return error("service_unavailable", "Enquiry submission temporarily unavailable", 503)
+        return _enquiry_failed_response()
 
 
 def _enquiry_delivery_message(delivery_status: str | None) -> str:
@@ -348,7 +348,33 @@ def _enquiry_delivery_message(delivery_status: str | None) -> str:
         return "Thanks. Your enquiry has been sent."
     if delivery_status == "logged_fallback":
         return "Thanks. Your enquiry has been received."
+    if delivery_status == "unrouted":
+        return "This room is not currently accepting enquiries."
     return "We could not submit your enquiry. Please try again or contact the organisation directly."
+
+
+def _enquiry_failed_response():
+    delivery_status = "failed"
+    message = _enquiry_delivery_message(delivery_status)
+    return (
+        jsonify(
+            {
+                "ok": False,
+                "data": {
+                    "status": "failed",
+                    "delivery_status": delivery_status,
+                    "message": message,
+                },
+                "error": {
+                    "code": "service_unavailable",
+                    "message": message,
+                    "details": {"delivery_status": delivery_status},
+                },
+                "request_id": getattr(g, "request_id", None),
+            }
+        ),
+        503,
+    )
 
 
 @presence_bp.route("/public/<string:slug>/nfc-hit", methods=["POST"])

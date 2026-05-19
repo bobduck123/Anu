@@ -724,6 +724,262 @@ def test_presence_room_enquiry_routes_to_room_inbox_and_honeypot_is_rejected():
         assert rows[0].delivery_status == "logged_fallback"
 
 
+def test_presence_room_enquiry_smtp_success_returns_sent(monkeypatch):
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    app.config.update(
+        MAIL_USERNAME="smtp-user@example.org",
+        MAIL_PASSWORD="smtp-password",
+        MAIL_DEFAULT_SENDER=("Manara Commons", "smtp-user@example.org"),
+    )
+    client = app.test_client()
+    headers = _headers(app)
+
+    room = client.post(
+        "/api/control/presence/nodes",
+        json={
+            **_node_payload(tenant_id, slug="sent-room"),
+            "display_name": "Sent Room",
+            "room_type": "minimal_card",
+            "theme_preset": "clean_light",
+            "public_status": "public",
+            "enquiry_email": "sent-room@example.org",
+        },
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert room.status_code == 201, room.get_json()
+
+    import manara_backend_app
+
+    sent_messages = []
+
+    def fake_send(message):
+        sent_messages.append(message)
+
+    monkeypatch.setattr(manara_backend_app.mail, "send", fake_send)
+
+    res = client.post(
+        "/api/presence/public/sent-room/enquiries",
+        json={
+            "name": "SMTP Visitor",
+            "email": "smtp-visitor@example.org",
+            "message": "Please verify SMTP routing.",
+            "consent": True,
+            "preferred_contact_method": "email",
+            "enquiry_type": "conversation",
+        },
+        base_url="http://public.test",
+    )
+
+    assert res.status_code == 201, res.get_json()
+    body = res.get_json()["data"]
+    assert body["delivery_status"] == "sent"
+    assert body["message"] == "Thanks. Your enquiry has been sent."
+    assert len(sent_messages) == 1
+    assert sent_messages[0].recipients == ["sent-room@example.org"]
+    assert "Slug: sent-room" in sent_messages[0].body
+
+
+def test_presence_room_enquiry_smtp_failure_returns_failed_without_leaking(monkeypatch):
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    app.config.update(
+        MAIL_USERNAME="smtp-user@example.org",
+        MAIL_PASSWORD="smtp-password",
+        MAIL_DEFAULT_SENDER=("Manara Commons", "smtp-user@example.org"),
+    )
+    client = app.test_client()
+    headers = _headers(app)
+
+    room = client.post(
+        "/api/control/presence/nodes",
+        json={
+            **_node_payload(tenant_id, slug="failed-mail-room"),
+            "display_name": "Failed Mail Room",
+            "room_type": "minimal_card",
+            "theme_preset": "clean_light",
+            "public_status": "public",
+            "enquiry_email": "failed-mail@example.org",
+        },
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert room.status_code == 201, room.get_json()
+
+    import manara_backend_app
+
+    def fail_send(_message):
+        raise RuntimeError("smtp password rejected by provider")
+
+    monkeypatch.setattr(manara_backend_app.mail, "send", fail_send)
+
+    res = client.post(
+        "/api/presence/public/failed-mail-room/enquiries",
+        json={
+            "name": "SMTP Failure Visitor",
+            "email": "smtp-failure@example.org",
+            "message": "Please verify failed delivery reporting.",
+            "consent": True,
+            "preferred_contact_method": "email",
+        },
+        base_url="http://public.test",
+    )
+
+    assert res.status_code == 201, res.get_json()
+    body = res.get_json()["data"]
+    assert body["delivery_status"] == "failed"
+    assert body["message"] == "We could not submit your enquiry. Please try again or contact the organisation directly."
+    assert "smtp password" not in body["message"].lower()
+
+
+def test_presence_room_enquiry_without_route_returns_unrouted():
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers = _headers(app)
+
+    payload = {
+        **_node_payload(tenant_id, slug="unrouted-room"),
+        "display_name": "Unrouted Room",
+        "room_type": "minimal_card",
+        "theme_preset": "clean_light",
+        "public_status": "public",
+        "public_email": None,
+        "public_phone": None,
+        "enquiry_email": None,
+        "owner_user_id": None,
+    }
+    room = client.post(
+        "/api/control/presence/nodes",
+        json=payload,
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert room.status_code == 201, room.get_json()
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceNode
+
+    with app.app_context():
+        node = _db.session.query(PresenceNode).filter_by(slug="unrouted-room").one()
+        node.enquiry_email = None
+        node.public_email = None
+        node.owner_user_id = None
+        _db.session.commit()
+
+    res = client.post(
+        "/api/presence/public/unrouted-room/enquiries",
+        json={
+            "name": "Unrouted Visitor",
+            "email": "unrouted@example.org",
+            "message": "Please verify unrouted delivery reporting.",
+            "consent": True,
+            "preferred_contact_method": "email",
+        },
+        base_url="http://public.test",
+    )
+
+    assert res.status_code == 201, res.get_json()
+    body = res.get_json()["data"]
+    assert body["delivery_status"] == "unrouted"
+    assert body["message"] == "This room is not currently accepting enquiries."
+
+
+def test_presence_room_enquiry_side_effect_failure_still_logs_fallback(monkeypatch):
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers = _headers(app)
+
+    room = client.post(
+        "/api/control/presence/nodes",
+        json={
+            **_node_payload(tenant_id, slug="side-effect-room"),
+            "display_name": "Side Effect Room",
+            "room_type": "minimal_card",
+            "theme_preset": "clean_light",
+            "public_status": "public",
+            "enquiry_email": "side-effect@example.org",
+        },
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert room.status_code == 201, room.get_json()
+
+    from manara_backend_app.services import presence_service
+
+    def fail_interaction(*_args, **_kwargs):
+        raise RuntimeError("interaction table temporarily unavailable")
+
+    monkeypatch.setattr(presence_service, "create_presence_interaction", fail_interaction)
+
+    res = client.post(
+        "/api/presence/public/side-effect-room/enquiries",
+        json={
+            "name": "Side Effect Visitor",
+            "email": "side-effect-visitor@example.org",
+            "message": "The enquiry should still be captured.",
+            "consent": True,
+            "preferred_contact_method": "email",
+        },
+        base_url="http://public.test",
+    )
+
+    assert res.status_code == 201, res.get_json()
+    body = res.get_json()["data"]
+    assert body["status"] == "new"
+    assert body["delivery_status"] == "logged_fallback"
+
+
+def test_presence_room_enquiry_unexpected_failure_returns_delivery_status(monkeypatch):
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers = _headers(app)
+
+    room = client.post(
+        "/api/control/presence/nodes",
+        json={
+            **_node_payload(tenant_id, slug="error-contract-room"),
+            "display_name": "Error Contract Room",
+            "room_type": "minimal_card",
+            "theme_preset": "clean_light",
+            "public_status": "public",
+            "enquiry_email": "error-contract@example.org",
+        },
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert room.status_code == 201, room.get_json()
+
+    from manara_backend_app.api import presence as presence_api
+
+    def fail_create(*_args, **_kwargs):
+        raise RuntimeError("database column is missing")
+
+    monkeypatch.setattr(presence_api, "create_presence_enquiry", fail_create)
+
+    res = client.post(
+        "/api/presence/public/error-contract-room/enquiries",
+        json={
+            "name": "Contract Visitor",
+            "email": "contract-visitor@example.org",
+            "message": "The public error must include delivery status.",
+            "consent": True,
+            "preferred_contact_method": "email",
+        },
+        base_url="http://public.test",
+    )
+
+    assert res.status_code == 503
+    payload = res.get_json()
+    assert payload["ok"] is False
+    assert payload["data"]["delivery_status"] == "failed"
+    assert payload["error"]["details"]["delivery_status"] == "failed"
+    assert "database column" not in payload["error"]["message"].lower()
+
+
 def test_presence_basic_premium_artist_collections_and_works_alpha_flow():
     app = _build_app()
     tenant_id, _ = _seed_fixture(app)

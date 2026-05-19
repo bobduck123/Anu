@@ -5,7 +5,7 @@ import json
 import os
 import re
 from datetime import timedelta
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import quote, urlparse
 
 import bleach
@@ -2498,6 +2498,37 @@ def _notify_owner_of_enquiry(node: PresenceNode, enquiry: PresenceEnquiry) -> No
         current_app.logger.exception("Presence enquiry notification dispatch failed")
 
 
+def _run_enquiry_side_effect(
+    label: str,
+    node: PresenceNode,
+    callback: Callable[[], Any],
+    *,
+    enquiry: PresenceEnquiry | None = None,
+) -> Any | None:
+    """Run non-critical enquiry side-effects without blocking capture.
+
+    PresenceEnquiry is the source of truth. Relationship ledger, analytics,
+    and owner notification failures should be visible in logs but should not
+    turn a valid public enquiry into an opaque 503.
+    """
+    try:
+        with db.session.begin_nested():
+            result = callback()
+            db.session.flush()
+            return result
+    except Exception:
+        current_app.logger.exception(
+            "Presence enquiry side-effect failed",
+            extra={
+                "side_effect": label,
+                "node_id": node.id,
+                "slug": node.slug,
+                "enquiry_id": getattr(enquiry, "id", None),
+            },
+        )
+        return None
+
+
 def _resolve_enquiry_recipient(node: PresenceNode) -> str | None:
     candidates = [
         getattr(node, "enquiry_email", None),
@@ -2592,7 +2623,17 @@ def create_presence_enquiry(
     source_tag_id = tag.id if tag else payload.get("source_tag_id")
     source_type = _public_source_type(data, tag) or payload.get("source_type") or "public_enquiry"
     _validate_optional_node_child_ids(node, source_tag_id=source_tag_id)
-    connection = _create_connection_for_submitted_details(node, payload, source_type=source_type, source_tag_id=source_tag_id)
+    connection = _run_enquiry_side_effect(
+        "connection",
+        node,
+        lambda: _create_connection_for_submitted_details(
+            node,
+            payload,
+            source_type=source_type,
+            source_tag_id=source_tag_id,
+        ),
+    )
+    connection_id = getattr(connection, "id", None)
 
     submitter_id = getattr(submitter_user, "id", None) if submitter_user else None
 
@@ -2600,7 +2641,7 @@ def create_presence_enquiry(
         node_id=node.id,
         tenant_id=node.tenant_id,
         organisation_id=node.organisation_id,
-        connection_id=connection.id,
+        connection_id=connection_id,
         submitter_user_id=submitter_id,
         source_room_slug=node.slug,
         ip_hash=hash_request_value(request.headers.get("X-Forwarded-For") or request.remote_addr),
@@ -2610,21 +2651,36 @@ def create_presence_enquiry(
     )
     db.session.add(enquiry)
     db.session.flush()
-    create_presence_interaction(
+    _run_enquiry_side_effect(
+        "interaction",
         node,
-        "enquiry_submitted",
-        connection_id=connection.id,
-        source_type=source_type,
-        source_tag_id=source_tag_id,
-        metadata={"enquiry_id": enquiry.id, "enquiry_type": enquiry.enquiry_type},
+        lambda: create_presence_interaction(
+            node,
+            "enquiry_submitted",
+            connection_id=connection_id,
+            source_type=source_type,
+            source_tag_id=source_tag_id,
+            metadata={"enquiry_id": enquiry.id, "enquiry_type": enquiry.enquiry_type},
+        ),
+        enquiry=enquiry,
     )
-    record_presence_event(
+    _run_enquiry_side_effect(
+        "analytics",
         node,
-        "enquiry_submitted",
-        metadata={"enquiry_type": enquiry.enquiry_type, "source_type": source_type, "source_tag_id": source_tag_id},
-        anonymous_session_id=data.get("anonymous_session_id"),
+        lambda: record_presence_event(
+            node,
+            "enquiry_submitted",
+            metadata={"enquiry_type": enquiry.enquiry_type, "source_type": source_type, "source_tag_id": source_tag_id},
+            anonymous_session_id=data.get("anonymous_session_id"),
+        ),
+        enquiry=enquiry,
     )
-    _notify_owner_of_enquiry(node, enquiry)
+    _run_enquiry_side_effect(
+        "owner_notification",
+        node,
+        lambda: _notify_owner_of_enquiry(node, enquiry),
+        enquiry=enquiry,
+    )
     _route_presence_enquiry_email(node, enquiry)
     return enquiry
 
