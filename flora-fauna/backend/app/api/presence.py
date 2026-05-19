@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import secrets
 
 from flask import Blueprint, Response, current_app, g, jsonify, request
 from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
@@ -36,6 +37,7 @@ from ..services.presence_customisation_manifest import (
     customisation_manifest,
     normalize_customisation_selection,
     preview_seed_from_selection,
+    preview_seed_from_setup_request,
     recommendations_for_archetype,
     room_worlds as presence_customisation_room_worlds,
 )
@@ -103,6 +105,7 @@ from ..services.presence_service import (
     upsert_procurement_profile,
     presence_vcard,
 )
+from ..time_utils import now_utc
 from .utils import error, ok
 
 
@@ -548,6 +551,30 @@ _SETUP_PRESENCE_STATUSES = {"setup_request", "preview", "published", "archived"}
 _ROOMGRAPH_SCHEMA_VERSION = "presence-roomgraph-v1"
 _SETUP_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 _SETUP_JSON_MAX_BYTES = 16 * 1024
+_SETUP_ARCHETYPES_TO_NODE_TYPE = {
+    "artist": "artist",
+    "dj": "creative",
+    "maker": "creative",
+    "practitioner": "practitioner",
+    "consultant": "consultant",
+    "organisation": "organisation",
+    "local_business": "custom",
+}
+_SETUP_ROOM_WORLD_TO_ROOM_TYPE = {
+    "rooms-gallery-painter": "artist_studio",
+    "rooms-underground-dj": "performer_music",
+    "rooms-material-carpenter": "minimal_card",
+}
+_SETUP_ROOM_WORLD_TO_THEME = {
+    "rooms-gallery-painter": "gallery_white",
+    "rooms-underground-dj": "neon_night",
+    "rooms-material-carpenter": "warm_earth",
+}
+_SETUP_ROOM_WORLD_TO_ACCENT = {
+    "rooms-gallery-painter": "#111111",
+    "rooms-underground-dj": "#00d5ff",
+    "rooms-material-carpenter": "#a45a2a",
+}
 
 
 def _clean_str(value, max_len: int):
@@ -620,8 +647,91 @@ def _optional_setup_requester_identity():
         return None, None
 
 
-def _serialize_beta_application(app: "PresenceBetaApplication") -> dict:
+def _setup_actor_payload() -> dict:
+    user = get_current_user()
+    claims = get_jwt() or {}
     return {
+        "user_id": getattr(user, "id", None),
+        "username": getattr(user, "username", None),
+        "role": claims.get("role") or getattr(user, "role", None),
+    }
+
+
+def _append_setup_request_audit(
+    app: "PresenceBetaApplication",
+    *,
+    action: str,
+    previous_status: str | None = None,
+    new_status: str | None = None,
+    note: str | None = None,
+    metadata: dict | None = None,
+):
+    history = list(app.lifecycle_audit or [])
+    history.append(
+        {
+            "action": action,
+            "previous_status": previous_status if previous_status is not None else app.status,
+            "new_status": new_status if new_status is not None else app.status,
+            "actor": _setup_actor_payload(),
+            "note": _clean_str(note, 1200),
+            "metadata": metadata or {},
+            "created_at": now_utc().isoformat(),
+        }
+    )
+    app.lifecycle_audit = history[-100:]
+
+
+def _ensure_setup_preview_token(app: "PresenceBetaApplication") -> str:
+    if app.preview_token:
+        return app.preview_token
+    while True:
+        token = secrets.token_urlsafe(24)
+        if not PresenceBetaApplication.query.filter_by(preview_token=token).first():
+            app.preview_token = token
+            return token
+
+
+def _setup_request_query_for_control():
+    user, _claims, allowed_node_ids = _current_control_scope()
+    query = PresenceBetaApplication.query
+    if allowed_node_ids is None:
+        return query
+    if not allowed_node_ids and not user:
+        return query.filter(False)
+    query = query.outerjoin(PresenceNode, PresenceBetaApplication.presence_node_id == PresenceNode.id)
+    filters = []
+    if allowed_node_ids:
+        filters.append(PresenceNode.tenant_id.in_(sorted(allowed_node_ids)))
+    if user:
+        filters.append(PresenceNode.owner_user_id == user.id)
+    if not filters:
+        return query.filter(False)
+    return query.filter(or_(*filters))
+
+
+def _setup_request_by_id_for_control(request_id: int):
+    app = _setup_request_query_for_control().filter(PresenceBetaApplication.id == request_id).first()
+    if not app:
+        return None, error("not_found", "Setup request not found", 404)
+    return app, None
+
+
+def _setup_request_next_step(status: str | None) -> str:
+    if status == "submitted":
+        return "review"
+    if status in {"reviewing", "needs_assets"}:
+        return "create_preview"
+    if status in {"preview_ready", "approved"}:
+        return "publish"
+    if status == "published":
+        return "published"
+    if status == "archived":
+        return "archived"
+    return "review"
+
+
+def _serialize_beta_application(app: "PresenceBetaApplication", *, include_private: bool = False) -> dict:
+    payload = {
         "id": app.id,
         "display_name": app.display_name,
         "desired_slug": app.desired_slug,
@@ -648,9 +758,182 @@ def _serialize_beta_application(app: "PresenceBetaApplication") -> dict:
         "atmosphere_pack": app.atmosphere_pack,
         "customisation_manifest_version": app.customisation_manifest_version,
         "customisation": app.customisation_snapshot,
-        "next_step": "review",
+        "presence_node_id": app.presence_node_id if include_private else None,
+        "next_step": _setup_request_next_step(app.status),
         "created_at": app.created_at.isoformat() if app.created_at else None,
+        "updated_at": app.updated_at.isoformat() if app.updated_at else None,
     }
+    if not include_private:
+        payload.pop("presence_node_id", None)
+        return payload
+    payload.update(
+        {
+            "email": app.email,
+            "user_id": app.user_id,
+            "source_origin": app.source_origin,
+            "services_offerings": app.services_offerings,
+            "links": app.links,
+            "notes": app.notes,
+            "internal_notes": app.internal_notes,
+            "preview_token": app.preview_token,
+            "metadata": app.metadata_json or {},
+            "presence_dna": app.presence_dna,
+            "room_graph": app.room_graph,
+            "lifecycle_audit": app.lifecycle_audit or [],
+        }
+    )
+    return payload
+
+
+def _preview_presence_dna(app: "PresenceBetaApplication", preview_seed: dict) -> dict:
+    snapshot = preview_seed.get("customisation_snapshot") or app.customisation_snapshot or {}
+    resolved = snapshot.get("resolved") if isinstance(snapshot, dict) else {}
+    resolved = resolved if isinstance(resolved, dict) else {}
+    return {
+        "source": "backend_persisted",
+        "entity": {
+            "public_name": app.display_name,
+            "archetype": resolved.get("archetype") or app.archetype,
+            "setup_request_id": app.id,
+        },
+        "practice": {
+            "field": resolved.get("archetype") or app.archetype or app.presence_type or "custom",
+            "room_world": preview_seed.get("selected_room_world") or app.room_world,
+        },
+        "goal": {
+            "primary_goal": app.primary_purpose or "presence_preview",
+            "conversion_style": app.primary_cta or "contact",
+        },
+        "visual": {
+            "atmosphere_pack": preview_seed.get("atmosphere_pack") or app.atmosphere_pack,
+            "object_skin_pack": preview_seed.get("object_skin_pack") or app.object_skin_pack,
+        },
+        "composition": {
+            "engagement_dynamic": preview_seed.get("engagement_dynamic") or app.engagement_dynamic,
+            "motion_profile": preview_seed.get("motion_profile") or app.motion_profile,
+            "roomgraph_schema_version": _ROOMGRAPH_SCHEMA_VERSION,
+        },
+        "signature": {
+            "schema_version": app.customisation_manifest_version or MANIFEST_SCHEMA_VERSION,
+            "preview_seed_schema_version": preview_seed.get("schema_version"),
+        },
+    }
+
+
+def _preview_services(app: "PresenceBetaApplication") -> list[dict]:
+    rows = app.services_offerings if isinstance(app.services_offerings, list) else []
+    services = []
+    for index, item in enumerate(rows[:8]):
+        if isinstance(item, str):
+            services.append({"title": item, "description": None, "sort_order": index})
+        elif isinstance(item, dict):
+            title = _clean_str(item.get("title") or item.get("label") or item.get("name"), 160)
+            if not title:
+                continue
+            services.append(
+                {
+                    "title": title,
+                    "description": _clean_str(item.get("description") or item.get("body"), 2400),
+                    "price_label": _clean_str(item.get("price_label") or item.get("price"), 100),
+                    "duration_label": _clean_str(item.get("duration_label") or item.get("duration"), 100),
+                    "sort_order": index,
+                }
+            )
+    return services
+
+
+def _preview_links(app: "PresenceBetaApplication") -> list[dict]:
+    rows = app.links if isinstance(app.links, list) else []
+    links = []
+    for index, item in enumerate(rows[:12]):
+        if not isinstance(item, dict):
+            continue
+        url = _clean_str(item.get("url") or item.get("href"), 700)
+        label = _clean_str(item.get("label") or item.get("title") or url, 120)
+        if not url or not label:
+            continue
+        links.append(
+            {
+                "label": label,
+                "url": url,
+                "link_type": _clean_str(item.get("link_type") or item.get("type"), 80) or "website",
+                "sort_order": index,
+            }
+        )
+    return links
+
+
+def _preview_node_payload(app: "PresenceBetaApplication", preview_seed: dict) -> dict:
+    room_world = preview_seed.get("selected_room_world") or app.room_world or app.selected_room_world
+    archetype = app.archetype or "local_business"
+    display_name = app.display_name or "Untitled Presence"
+    preview_dna = _preview_presence_dna(app, preview_seed)
+    metadata = {
+        "presence_dna": preview_dna,
+        "room_graph": preview_seed.get("room_graph"),
+        "customisation_snapshot": preview_seed.get("customisation_snapshot") or app.customisation_snapshot,
+        "preview_seed": preview_seed,
+        "setup_request": {
+            "id": app.id,
+            "status": app.status,
+            "presence_status": app.presence_status,
+        },
+    }
+    payload = {
+        "slug": app.desired_slug or display_name,
+        "display_name": display_name,
+        "headline": app.headline or app.short_bio,
+        "bio": app.description or app.short_bio,
+        "node_type": _SETUP_ARCHETYPES_TO_NODE_TYPE.get(archetype, "custom"),
+        "display_mode": "showcase",
+        "room_type": _SETUP_ROOM_WORLD_TO_ROOM_TYPE.get(room_world, "minimal_card"),
+        "theme_preset": _SETUP_ROOM_WORLD_TO_THEME.get(room_world, "clean_light"),
+        "accent_color": _SETUP_ROOM_WORLD_TO_ACCENT.get(room_world),
+        "plan_type": "premium",
+        "status": "draft",
+        "visibility": "private",
+        "public_status": "private",
+        "hero_title": app.headline or display_name,
+        "hero_subtitle": app.short_bio,
+        "short_bio": app.short_bio,
+        "long_story": app.description,
+        "location_label": app.location_label,
+        "primary_cta_label": "Enquire",
+        "metadata": metadata,
+        "presence_dna": preview_dna,
+        "services": _preview_services(app),
+        "links": _preview_links(app),
+    }
+    return payload
+
+
+def _serialize_setup_preview(app: "PresenceBetaApplication", node: PresenceNode | None = None) -> dict:
+    node = node or (PresenceNode.query.get(app.presence_node_id) if app.presence_node_id else None)
+    preview_seed = preview_seed_from_setup_request(app)
+    payload = {
+        "setup_request_id": app.id,
+        "preview_token": app.preview_token,
+        "presence_node_id": getattr(node, "id", None),
+        "slug": getattr(node, "slug", None) or app.desired_slug,
+        "display_name": getattr(node, "display_name", None) or app.display_name,
+        "status": getattr(node, "status", None),
+        "visibility": getattr(node, "visibility", None),
+        "public_status": getattr(node, "public_status", None),
+        "presence_status": app.presence_status,
+        "request_status": app.status,
+        "archetype": app.archetype,
+        "room_world": preview_seed.get("selected_room_world") or app.room_world,
+        "engagement_dynamic": preview_seed.get("engagement_dynamic") or app.engagement_dynamic,
+        "atmosphere_pack": preview_seed.get("atmosphere_pack") or app.atmosphere_pack,
+        "motion_profile": preview_seed.get("motion_profile") or app.motion_profile,
+        "object_skin_pack": preview_seed.get("object_skin_pack") or app.object_skin_pack,
+        "presence_dna": preview_seed.get("presence_dna") or app.presence_dna,
+        "room_graph": preview_seed.get("room_graph") or app.room_graph,
+        "schema_version": app.schema_version,
+        "customisation": preview_seed.get("customisation_snapshot") or app.customisation_snapshot,
+        "public_url": public_url_for_node(node) if node and node.public_status == "public" else None,
+    }
+    return payload
 
 
 @presence_bp.route("/setup-requests", methods=["POST"])
@@ -784,6 +1067,17 @@ def submit_beta_application():
         customisation_snapshot=customisation_snapshot,
         presence_status="setup_request",
         notes=_clean_str(payload.get("notes"), 4000),
+        lifecycle_audit=[
+            {
+                "action": "submitted",
+                "previous_status": None,
+                "new_status": "submitted",
+                "actor": {"source": "public_intake", "user_id": user_id_str},
+                "note": None,
+                "metadata": {"source_origin": source_origin},
+                "created_at": now_utc().isoformat(),
+            }
+        ],
         metadata_json={
             "source_path": _clean_str(payload.get("source_path"), 300),
             "lifecycle_states": sorted(_SETUP_REQUEST_STATUSES),
@@ -803,6 +1097,290 @@ def submit_beta_application():
         return error("service_unavailable", "Setup request temporarily unavailable", 503)
 
     return ok(_serialize_beta_application(application), 201)
+
+
+@presence_bp.route("/admin/setup-requests", methods=["GET"])
+@control_presence_bp.route("/setup-requests", methods=["GET"])
+@control_plane_required(scopes=["presence.node.read"])
+@limiter.limit("60 per minute; 300 per hour")
+def list_admin_presence_setup_requests():
+    status = _clean_str(request.args.get("status"), 40)
+    query = _setup_request_query_for_control()
+    if status:
+        if status not in _SETUP_REQUEST_STATUSES:
+            return error("validation_error", "Unsupported setup request status", 422, details={"allowed": sorted(_SETUP_REQUEST_STATUSES)})
+        query = query.filter(PresenceBetaApplication.status == status)
+    try:
+        limit = min(max(int(request.args.get("limit", 50) or 50), 1), 100)
+        offset = max(int(request.args.get("offset", 0) or 0), 0)
+    except (TypeError, ValueError):
+        return error("validation_error", "limit and offset must be integers", 422)
+    total = query.count()
+    rows = (
+        query.order_by(PresenceBetaApplication.created_at.desc(), PresenceBetaApplication.id.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+    return ok(
+        {
+            "items": [_serialize_beta_application(row, include_private=True) for row in rows],
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+        }
+    )
+
+
+@presence_bp.route("/admin/setup-requests/<int:request_id>", methods=["GET"])
+@control_presence_bp.route("/setup-requests/<int:request_id>", methods=["GET"])
+@control_plane_required(scopes=["presence.node.read"])
+@limiter.limit("120 per minute; 600 per hour")
+def get_admin_presence_setup_request(request_id):
+    application, access_error = _setup_request_by_id_for_control(request_id)
+    if access_error:
+        return access_error
+    return ok(_serialize_beta_application(application, include_private=True))
+
+
+@presence_bp.route("/admin/setup-requests/<int:request_id>", methods=["PATCH"])
+@control_presence_bp.route("/setup-requests/<int:request_id>", methods=["PATCH"])
+@control_plane_required(scopes=["presence.node.update"])
+@limiter.limit("60 per minute; 300 per hour")
+def update_admin_presence_setup_request(request_id):
+    application, access_error = _setup_request_by_id_for_control(request_id)
+    if access_error:
+        return access_error
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict):
+        return error("validation_error", "JSON object payload is required", 422)
+    previous_status = application.status
+    requested_status = _clean_str(data.get("status"), 40)
+    if requested_status:
+        if requested_status not in _SETUP_REQUEST_STATUSES:
+            return error("validation_error", "Unsupported setup request status", 422, details={"allowed": sorted(_SETUP_REQUEST_STATUSES)})
+        if requested_status == "published":
+            return error("validation_error", "Use the publish action to publish a setup request.", 422)
+        if requested_status == "preview_ready" and not application.presence_node_id:
+            return error("validation_error", "Use create-preview before marking a setup request preview_ready.", 422)
+        application.status = requested_status
+        if requested_status == "archived":
+            application.presence_status = "archived"
+        elif requested_status in {"submitted", "reviewing", "needs_assets"}:
+            application.presence_status = "setup_request"
+        elif requested_status in {"preview_ready", "approved"}:
+            application.presence_status = "preview"
+    note = _clean_str(data.get("internal_notes") or data.get("note"), 4000)
+    if note is not None:
+        application.internal_notes = note
+    _append_setup_request_audit(
+        application,
+        action="status_updated" if requested_status else "notes_updated",
+        previous_status=previous_status,
+        new_status=application.status,
+        note=_clean_str(data.get("reason") or data.get("note"), 1200),
+    )
+    db.session.commit()
+    return ok(_serialize_beta_application(application, include_private=True))
+
+
+@presence_bp.route("/admin/setup-requests/<int:request_id>/create-preview", methods=["POST"])
+@control_presence_bp.route("/setup-requests/<int:request_id>/create-preview", methods=["POST"])
+@control_plane_required(scopes=["presence.node.create"])
+@limiter.limit("30 per minute; 120 per hour")
+def create_admin_presence_setup_preview(request_id):
+    application, access_error = _setup_request_by_id_for_control(request_id)
+    if access_error:
+        return access_error
+    if application.status == "archived":
+        return error("validation_error", "Archived setup requests cannot create previews.", 422)
+    if application.status == "published":
+        return error("validation_error", "Published setup requests already have a public Presence.", 422)
+
+    previous_status = application.status
+    preview_seed = preview_seed_from_setup_request(application)
+    if preview_seed.get("needs_review"):
+        application.status = "needs_assets"
+        application.presence_status = "setup_request"
+        _append_setup_request_audit(
+            application,
+            action="preview_blocked",
+            previous_status=previous_status,
+            new_status=application.status,
+            note="Stored customisation snapshot could not be converted safely.",
+            metadata={"errors": preview_seed.get("errors") or []},
+        )
+        db.session.commit()
+        return error("validation_error", "Stored customisation snapshot needs review before preview.", 422, details=preview_seed)
+
+    actor = get_current_user()
+    node = PresenceNode.query.get(application.presence_node_id) if application.presence_node_id else None
+    if node and node.status == "published":
+        return error("validation_error", "Published preview nodes cannot be regenerated here.", 422)
+
+    payload = _preview_node_payload(application, preview_seed)
+    try:
+        if node:
+            update_presence_node(node, payload)
+        else:
+            node = create_presence_node(payload, actor=actor)
+        node.status = "draft"
+        node.visibility = "private"
+        node.public_status = "private"
+        application.presence_node_id = node.id
+        application.presence_dna = preview_seed.get("presence_dna")
+        application.room_graph = preview_seed.get("room_graph")
+        application.status = "preview_ready"
+        application.presence_status = "preview"
+        _ensure_setup_preview_token(application)
+        _append_setup_request_audit(
+            application,
+            action="preview_created",
+            previous_status=previous_status,
+            new_status=application.status,
+            note=_clean_str((request.get_json(silent=True) or {}).get("note"), 1200),
+            metadata={"presence_node_id": node.id, "preview_token_created": bool(application.preview_token)},
+        )
+        db.session.commit()
+    except PresenceValidationError as exc:
+        db.session.rollback()
+        return _validation_error(exc)
+    except Exception:
+        current_app.logger.exception("Presence setup preview creation failed")
+        db.session.rollback()
+        return error("service_unavailable", "Preview creation temporarily unavailable.", 503)
+
+    return ok(
+        {
+            "setup_request": _serialize_beta_application(application, include_private=True),
+            "preview": _serialize_setup_preview(application, node),
+        },
+        201,
+    )
+
+
+@presence_bp.route("/preview/<string:preview_token>", methods=["GET"])
+@limiter.limit("120 per minute; 600 per hour")
+def get_presence_setup_preview(preview_token):
+    token = _clean_str(preview_token, 120)
+    if not token:
+        return error("not_found", "Preview not found", 404)
+    application = PresenceBetaApplication.query.filter_by(preview_token=token).first()
+    if not application or application.status == "archived":
+        return error("not_found", "Preview not found", 404)
+    node = PresenceNode.query.get(application.presence_node_id) if application.presence_node_id else None
+    if not node:
+        return error("not_found", "Preview not found", 404)
+    return ok(_serialize_setup_preview(application, node))
+
+
+@presence_bp.route("/admin/presences/<int:node_id>/preview", methods=["GET"])
+@control_presence_bp.route("/presences/<int:node_id>/preview", methods=["GET"])
+@control_plane_required(scopes=["presence.node.read"])
+@limiter.limit("120 per minute; 600 per hour")
+def get_admin_presence_preview_by_node(node_id):
+    application = _setup_request_query_for_control().filter(PresenceBetaApplication.presence_node_id == node_id).first()
+    if not application:
+        return error("not_found", "Preview Presence not found", 404)
+    node = PresenceNode.query.get(node_id)
+    if not node:
+        return error("not_found", "Preview Presence not found", 404)
+    return ok(_serialize_setup_preview(application, node))
+
+
+@presence_bp.route("/admin/setup-requests/<int:request_id>/publish", methods=["POST"])
+@control_presence_bp.route("/setup-requests/<int:request_id>/publish", methods=["POST"])
+@control_plane_required(scopes=["presence.node.publish"])
+@limiter.limit("30 per minute; 120 per hour")
+def publish_admin_presence_setup_request(request_id):
+    application, access_error = _setup_request_by_id_for_control(request_id)
+    if access_error:
+        return access_error
+    if application.status not in {"preview_ready", "approved"}:
+        return error(
+            "validation_error",
+            "Setup request must be preview_ready or approved before publishing.",
+            422,
+            details={"current_status": application.status},
+        )
+    node = PresenceNode.query.get(application.presence_node_id) if application.presence_node_id else None
+    if not node:
+        return error("validation_error", "A private preview Presence must exist before publishing.", 422)
+    preview_seed = preview_seed_from_setup_request(application)
+    if preview_seed.get("needs_review"):
+        return error("validation_error", "Stored customisation snapshot needs review before publishing.", 422, details=preview_seed)
+
+    previous_status = application.status
+    try:
+        node.visibility = "public"
+        node.public_status = "public"
+        publish_presence_node(node)
+        application.status = "published"
+        application.presence_status = "published"
+        _append_setup_request_audit(
+            application,
+            action="published",
+            previous_status=previous_status,
+            new_status=application.status,
+            note=_clean_str((request.get_json(silent=True) or {}).get("note"), 1200),
+            metadata={"presence_node_id": node.id, "public_url": public_url_for_node(node)},
+        )
+        db.session.commit()
+    except PresenceValidationError as exc:
+        db.session.rollback()
+        return _validation_error(exc)
+    except Exception:
+        current_app.logger.exception("Presence setup publish failed")
+        db.session.rollback()
+        return error("service_unavailable", "Publish temporarily unavailable.", 503)
+    return ok(
+        {
+            "setup_request": _serialize_beta_application(application, include_private=True),
+            "public": {
+                "presence_node_id": node.id,
+                "slug": node.slug,
+                "public_url": public_url_for_node(node),
+                "status": node.status,
+                "visibility": node.visibility,
+                "public_status": node.public_status,
+            },
+        }
+    )
+
+
+@presence_bp.route("/admin/setup-requests/<int:request_id>/archive", methods=["POST"])
+@control_presence_bp.route("/setup-requests/<int:request_id>/archive", methods=["POST"])
+@control_plane_required(scopes=["presence.node.archive"])
+@limiter.limit("30 per minute; 120 per hour")
+def archive_admin_presence_setup_request(request_id):
+    application, access_error = _setup_request_by_id_for_control(request_id)
+    if access_error:
+        return access_error
+    data = request.get_json(silent=True) or {}
+    previous_status = application.status
+    node = PresenceNode.query.get(application.presence_node_id) if application.presence_node_id else None
+    try:
+        if node and bool(data.get("unpublish_presence", True)):
+            transition_presence_node(node, "archived")
+        application.status = "archived"
+        application.presence_status = "archived"
+        _append_setup_request_audit(
+            application,
+            action="archived",
+            previous_status=previous_status,
+            new_status=application.status,
+            note=_clean_str(data.get("reason") or data.get("note"), 1200),
+            metadata={"presence_node_id": getattr(node, "id", None), "presence_archived": bool(node and data.get("unpublish_presence", True))},
+        )
+        db.session.commit()
+    except PresenceValidationError as exc:
+        db.session.rollback()
+        return _validation_error(exc)
+    except Exception:
+        current_app.logger.exception("Presence setup archive failed")
+        db.session.rollback()
+        return error("service_unavailable", "Archive temporarily unavailable.", 503)
+    return ok(_serialize_beta_application(application, include_private=True))
 
 
 @presence_bp.route("/public/<string:slug>/vcard", methods=["GET"])
