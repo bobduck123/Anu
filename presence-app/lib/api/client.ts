@@ -4,13 +4,22 @@ export const API_BASE =
   "http://localhost:5000";
 
 export class PresenceApiError extends Error {
+  status: number;
+  code: string;
+
   constructor(
-    public status: number,
-    public code: string,
+    status: number,
+    code: string,
     message: string,
   ) {
     super(message);
+    this.status = status;
+    this.code = code;
   }
+}
+
+export function buildApiUrl(path: string): string {
+  return `${API_BASE}${path.startsWith("/") ? "" : "/"}${path}`;
 }
 
 async function parseError(res: Response): Promise<PresenceApiError> {
@@ -58,7 +67,7 @@ export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const url = `${API_BASE}${path.startsWith("/") ? "" : "/"}${path}`;
+  const url = buildApiUrl(path);
   let res: Response;
   try {
     res = await fetch(url, {
@@ -103,7 +112,7 @@ export async function ownerMultipartFetch<T>(
   token: string,
   formData: FormData,
 ): Promise<T> {
-  const url = `${API_BASE}${path.startsWith("/") ? "" : "/"}${path}`;
+  const url = buildApiUrl(path);
   let res: Response;
   try {
     res = await fetch(url, {
