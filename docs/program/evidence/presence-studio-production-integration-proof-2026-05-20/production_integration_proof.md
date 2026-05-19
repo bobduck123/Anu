@@ -20,7 +20,12 @@ Backend production is healthy and serving the Studio intake contract:
 - `GET /api/presence/customisation/recommendations?archetype=artist`: `200 OK`
 - `POST /api/presence/customisation/preview-seed`: `200 OK` for valid selections
 
-The backend does not expose a commit endpoint. Behavior confirms the production backend includes the Studio metadata/alias preservation path from `7a8ad95` or later. Remote `main` was later advanced to `d06de95` for a frontend canonical helper fix.
+The backend does not expose a commit endpoint. Behavior confirms the production backend includes the Studio metadata/alias preservation path from `7a8ad95` or later.
+
+Frontend production was also promoted after this proof began:
+
+- `d06de95 fix presence frontend canonical origin`
+- `98fb066 add presence studio frontend`
 
 ## Frontend Payload Contract
 
@@ -132,7 +137,7 @@ https://your-presence.vercel.app/presence/[slug]
 
 ## Frontend Canonical Finding
 
-The backend public API, QR, and vCard are fixed. However, a hosted frontend HTML probe still showed `presence-gilt` in `<link rel="canonical">`, Open Graph URL, and JSON-LD URL before the frontend deployment promoted the local fix.
+The backend public API, QR, and vCard are fixed. A hosted frontend HTML probe initially showed `presence-gilt` in `<link rel="canonical">`, Open Graph URL, and JSON-LD URL. This was traced to the frontend canonical helper fallback and a stale deployed frontend build.
 
 Fix committed and pushed:
 
@@ -144,7 +149,10 @@ That change updates `presence-app/lib/presence/url.ts` so:
 - retired `https://presence-gilt.vercel.app` env values are remapped to the active host
 - a URL helper regression test covers both cases
 
-Full frontend integration signoff remains pending until `your-presence.vercel.app` serves `d06de95` or equivalent.
+Final hosted verification:
+
+- `/presence/rooms-consultant` now emits canonical, Open Graph URL, and JSON-LD URL using `https://your-presence.vercel.app`
+- `/presence-chooser` now serves the Presence Studio build with title `Presence Studio - Set the direction`
 
 ## Auth and Lifecycle Proof
 
@@ -194,7 +202,7 @@ Results:
 - Frontend URL helper test: `2 passed`
 - Frontend typecheck: passed
 - Frontend build: passed with existing multiple-lockfile workspace-root warning
-- `git diff --check`: passed with an existing line-ending warning on unrelated dirty frontend CSS
+- `git diff --check`: passed with an existing line-ending warning before the Studio frontend was committed
 
 ## Readiness Judgement
 
@@ -209,11 +217,10 @@ Backend Studio intake is production-ready for controlled use:
 
 Remaining blockers:
 
-- Hosted frontend `your-presence.vercel.app` had not yet promoted the `d06de95` canonical helper fix at the time of this proof.
 - Full admin lifecycle proof is blocked without control-plane/operator auth.
 - Private metadata preservation in hosted production cannot be inspected without auth or DB access; local backend tests cover it.
 
 Recommendation:
 
-- Go for backend Studio intake and controlled operator review.
-- Hold full public integration signoff until the frontend deployment serves `d06de95` or equivalent and admin auth is available for lifecycle proof.
+- Go for controlled Studio intake pilots and operator review.
+- Hold full admin lifecycle signoff until an operator auth header is provided for list/detail/create-preview/publish/archive proof.

@@ -5,7 +5,8 @@
   "commits": {
     "remote_main_after_backend_fix": "7a8ad95",
     "frontend_canonical_fix_pushed": "d06de95",
-    "backend_deployed_commit_observation": "No commit endpoint is exposed; production behavior matches 7a8ad95 for Studio intake aliases and canonical backend URL generation."
+    "frontend_studio_pushed": "98fb066",
+    "backend_deployed_commit_observation": "No commit endpoint is exposed; production behavior matches 7a8ad95 or later for Studio intake aliases and canonical backend URL generation."
   },
   "health": {
     "health": "200 OK, ready true",
@@ -69,7 +70,7 @@
     "backend_qr": "QR SVG title uses https://your-presence.vercel.app/presence/rooms-consultant",
     "backend_vcard": "URL field uses https://your-presence.vercel.app/presence/rooms-consultant",
     "retired_frontend_probe": "https://presence-gilt.vercel.app returns 404 DEPLOYMENT_NOT_FOUND",
-    "frontend_html_metadata": "Still observed presence-gilt in hosted HTML before frontend d06de95 promotion; code fix has been pushed."
+    "frontend_html_metadata": "Hosted frontend metadata now uses https://your-presence.vercel.app for canonical, Open Graph, and JSON-LD URLs."
   },
   "auth_and_lifecycle": {
     "public_setup_request": "Unauthenticated POST accepted with CORS from your-presence.",
@@ -95,7 +96,8 @@
     "backend_studio_intake": "go",
     "public_read_qr_vcard": "go",
     "admin_lifecycle": "blocked without auth",
-    "frontend_deployed_metadata": "pending frontend production promotion of d06de95",
-    "overall": "conditional-go for backend Studio intake proof; hold full public integration signoff until the frontend deployment serves d06de95 or equivalent."
+    "frontend_presence_chooser": "go; hosted /presence-chooser serves Presence Studio",
+    "frontend_deployed_metadata": "go",
+    "overall": "go for controlled Studio intake pilots; admin lifecycle proof remains blocked without operator auth."
   }
 }
