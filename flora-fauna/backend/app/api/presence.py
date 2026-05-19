@@ -632,6 +632,30 @@ def _setup_json_object(value):
     return value
 
 
+def _setup_studio_metadata(payload: dict, *, links, customisation_snapshot: dict) -> dict:
+    references = payload.get("references")
+    if references is None:
+        references = payload.get("reference_links")
+    studio_intake = {
+        "phone": _clean_str(payload.get("phone"), 80),
+        "what_they_are_building": _clean_str(
+            payload.get("what_they_are_building") or payload.get("building") or payload.get("project_description"),
+            4000,
+        ),
+        "do_not_wants": _setup_json_value(payload.get("do_not_wants") or payload.get("do_not_want"), max_items=20),
+        "references": _setup_json_value(references, max_items=20),
+        "consent_to_contact": bool(payload.get("consent_to_contact")) if "consent_to_contact" in payload else None,
+        "submitted_customisation_manifest_version": _clean_str(payload.get("customisation_manifest_version"), 120),
+        "submitted_customisation_snapshot": payload.get("customisation_snapshot")
+        if isinstance(payload.get("customisation_snapshot"), dict)
+        else None,
+        "backend_customisation_snapshot_schema": customisation_snapshot.get("schema_version") if isinstance(customisation_snapshot, dict) else None,
+    }
+    if links:
+        studio_intake["links_count"] = len(links)
+    return {key: value for key, value in studio_intake.items() if value is not None}
+
+
 def _optional_setup_requester_identity():
     auth_header = request.headers.get("Authorization")
     if not auth_header:
@@ -998,6 +1022,7 @@ def submit_beta_application():
             payload.get("services") if "services" in payload else payload.get("offerings")
         )
         links = _setup_json_value(payload.get("links"))
+        references = _setup_json_value(payload.get("references") or payload.get("reference_links"))
         presence_dna = _setup_json_object(payload.get("presence_dna"))
         room_graph = _setup_json_object(payload.get("room_graph") or payload.get("roomGraph"))
     except PresenceValidationError as exc:
@@ -1030,6 +1055,13 @@ def submit_beta_application():
         or _clean_str(request.headers.get("Origin"), 300)
         or _clean_str(request.referrer, 300)
     )
+    studio_metadata = _setup_studio_metadata(payload, links=links, customisation_snapshot=customisation_snapshot)
+    if references and not links:
+        links = references
+    description = (
+        _clean_str(payload.get("description"), 4000)
+        or studio_metadata.get("what_they_are_building")
+    )
 
     application = PresenceBetaApplication(
         user_id=user_id_str,
@@ -1047,7 +1079,7 @@ def submit_beta_application():
         location_label=_clean_str(payload.get("location_label"), 160),
         headline=_clean_str(payload.get("headline"), 280),
         short_bio=_clean_str(payload.get("short_bio"), 4000),
-        description=_clean_str(payload.get("description"), 4000),
+        description=description,
         services_offerings=services_offerings,
         links=links,
         source_origin=source_origin,
@@ -1082,6 +1114,7 @@ def submit_beta_application():
             "source_path": _clean_str(payload.get("source_path"), 300),
             "lifecycle_states": sorted(_SETUP_REQUEST_STATUSES),
             "presence_statuses": sorted(_SETUP_PRESENCE_STATUSES),
+            "studio_intake": studio_metadata,
         },
     )
     db.session.add(application)

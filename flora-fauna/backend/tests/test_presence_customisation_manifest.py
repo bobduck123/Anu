@@ -106,6 +106,55 @@ def test_public_setup_request_stores_versioned_customisation_snapshot():
         assert row.room_graph["roomWorld"] == "rooms-underground-dj"
 
 
+def test_public_setup_request_preserves_studio_intake_fields_in_metadata():
+    app = _build_app()
+    client = app.test_client()
+
+    submitted_snapshot = {"client": "snapshot-for-field-preservation"}
+    response = client.post(
+        "/api/presence/setup-requests",
+        json={
+            "display_name": "Studio Intake",
+            "contact_name": "Studio Contact",
+            "email": "studio@example.com",
+            "phone": "+61 400 000 000",
+            "what_they_are_building": "A painter room with a quiet gallery feel.",
+            "notes": "Needs a restrained proof shelf.",
+            "references": [{"label": "Reference", "url": "https://example.com/reference"}],
+            "do_not_wants": ["No neon", "No autoplay audio"],
+            "consent_to_contact": True,
+            "archetype": "artist",
+            "room_world": "rooms-gallery-painter",
+            "engagement_dynamic": "chamber_walk",
+            "motion_profile": "calm",
+            "object_skin_pack": "gallery_frame_pack",
+            "atmosphere_pack": "quiet_gallery",
+            "customisation_manifest_version": "presence-customisation-manifest-v1",
+            "customisation_snapshot": submitted_snapshot,
+        },
+        base_url="http://public.test",
+    )
+
+    assert response.status_code == 201, response.get_json()
+    from manara_backend_app.extensions import db
+    from manara_backend_app.models import PresenceBetaApplication
+
+    with app.app_context():
+        row = db.session.query(PresenceBetaApplication).one()
+        assert row.description == "A painter room with a quiet gallery feel."
+        assert row.notes == "Needs a restrained proof shelf."
+        assert row.links == [{"label": "Reference", "url": "https://example.com/reference"}]
+        studio_intake = row.metadata_json["studio_intake"]
+        assert studio_intake["phone"] == "+61 400 000 000"
+        assert studio_intake["what_they_are_building"] == "A painter room with a quiet gallery feel."
+        assert studio_intake["do_not_wants"] == ["No neon", "No autoplay audio"]
+        assert studio_intake["references"] == [{"label": "Reference", "url": "https://example.com/reference"}]
+        assert studio_intake["consent_to_contact"] is True
+        assert studio_intake["submitted_customisation_manifest_version"] == "presence-customisation-manifest-v1"
+        assert studio_intake["submitted_customisation_snapshot"] == submitted_snapshot
+        assert row.customisation_snapshot["resolved"]["room_world"] == "rooms-gallery-painter"
+
+
 def test_public_setup_request_rejects_invalid_customisation_combination():
     app = _build_app()
     client = app.test_client()

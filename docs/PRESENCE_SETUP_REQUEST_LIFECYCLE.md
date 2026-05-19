@@ -46,6 +46,26 @@ assign a public Presence.
 Customisation fields are validated against Presence Customisation Manifest v1
 and persisted as stable IDs plus a versioned snapshot.
 
+Studio intake field mapping:
+
+- `display_name` -> `presence_beta_application.display_name`
+- `contact_name` -> `presence_beta_application.contact_name`
+- `email` -> `presence_beta_application.email`
+- `notes` -> `presence_beta_application.notes`
+- `links` -> `presence_beta_application.links`
+- `references` / `reference_links` -> `presence_beta_application.links` when
+  `links` is absent, and always preserved in `metadata_json.studio_intake.references`
+- `what_they_are_building` -> `description` when `description` is absent, and
+  preserved in `metadata_json.studio_intake.what_they_are_building`
+- `phone` -> `metadata_json.studio_intake.phone`
+- `do_not_wants` / `do_not_want` -> `metadata_json.studio_intake.do_not_wants`
+- `consent_to_contact` -> `metadata_json.studio_intake.consent_to_contact`
+- submitted `customisation_manifest_version` and `customisation_snapshot` are
+  preserved in `metadata_json.studio_intake`
+
+The authoritative backend-resolved customisation snapshot remains
+`presence_beta_application.customisation_snapshot`.
+
 ## Operator Review Endpoints
 
 The control-plane compatible routes are:
