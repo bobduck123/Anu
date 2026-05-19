@@ -1,0 +1,101 @@
+{
+  "proof_date": "2026-05-20",
+  "frontend_url": "https://your-presence.vercel.app",
+  "backend_url": "https://anu-back-end.vercel.app",
+  "commits": {
+    "remote_main_after_backend_fix": "7a8ad95",
+    "frontend_canonical_fix_pushed": "d06de95",
+    "backend_deployed_commit_observation": "No commit endpoint is exposed; production behavior matches 7a8ad95 for Studio intake aliases and canonical backend URL generation."
+  },
+  "health": {
+    "health": "200 OK, ready true",
+    "readiness": "200 OK, database ok"
+  },
+  "manifest_endpoints": {
+    "manifest": "200 OK",
+    "recommendations_artist": "200 OK with Gallery Painter and Underground DJ recommendations",
+    "preview_seed_valid": "200 OK, schema_version=presence-roomgraph-preview-seed-v1, status=preview_ready",
+    "preview_seed_invalid": "422 validation_error, status=needs_review"
+  },
+  "studio_payload": {
+    "source": "presence-app/lib/presence/studio/useStudioState.ts and adapter.ts",
+    "fields_sent": [
+      "display_name",
+      "contact_name",
+      "email",
+      "phone",
+      "what_youre_building",
+      "notes",
+      "references",
+      "do_not_wants",
+      "consent_to_contact",
+      "archetype",
+      "room_world",
+      "engagement_dynamic",
+      "motion_profile",
+      "object_skin_pack",
+      "atmosphere_pack",
+      "contact_style",
+      "copy_tone",
+      "customisation_manifest_version",
+      "customisation_snapshot"
+    ],
+    "controlled_request": {
+      "display_name": "ZZ Studio Production Integration Proof 2026-05-20",
+      "email_domain": "example.invalid",
+      "archetype": "artist",
+      "room_world": "rooms-gallery-painter",
+      "engagement_dynamic": "chamber_walk",
+      "motion_profile_raw": "still",
+      "object_skin_pack_raw": "paper-wall",
+      "atmosphere_pack_raw": "north-light"
+    },
+    "production_response": {
+      "status_code": 201,
+      "status": "submitted",
+      "presence_status": "setup_request",
+      "id": 2,
+      "description_mapping": "what_youre_building was stored/returned as description",
+      "resolved_motion_profile": "calm",
+      "resolved_object_skin_pack": "gallery_frame_pack",
+      "resolved_atmosphere_pack": "quiet_gallery",
+      "selected_raw_preserved": true,
+      "public_presence_published": false
+    },
+    "field_preservation_note": "The public response confirms core identity, lifecycle, description mapping, and customisation snapshot preservation. Private contact fields and metadata fields are intentionally not echoed publicly; local backend tests verify metadata persistence, and hosted admin inspection is blocked without operator auth."
+  },
+  "canonical_qr_vcard": {
+    "backend_public_detail": "public_url and seo.canonical_url use https://your-presence.vercel.app/presence/rooms-consultant",
+    "backend_qr": "QR SVG title uses https://your-presence.vercel.app/presence/rooms-consultant",
+    "backend_vcard": "URL field uses https://your-presence.vercel.app/presence/rooms-consultant",
+    "retired_frontend_probe": "https://presence-gilt.vercel.app returns 404 DEPLOYMENT_NOT_FOUND",
+    "frontend_html_metadata": "Still observed presence-gilt in hosted HTML before frontend d06de95 promotion; code fix has been pushed."
+  },
+  "auth_and_lifecycle": {
+    "public_setup_request": "Unauthenticated POST accepted with CORS from your-presence.",
+    "admin_list_without_auth": "401 auth_required with CORS from your-presence.",
+    "create_preview_without_auth": "401 auth_required.",
+    "owner_route_without_auth": "401 auth_required with CORS from your-presence.",
+    "invalid_preview_token": "404 not_found.",
+    "full_admin_lifecycle": "Blocked: no control-plane/operator auth headers available in runtime."
+  },
+  "smoke": {
+    "presence_rooms_v1_smoke": "Passed against API=https://anu-back-end.vercel.app and WEB=https://your-presence.vercel.app; auth-dependent hidden checks skipped."
+  },
+  "regression_tests": {
+    "backend_py_compile": "passed",
+    "backend_customisation_tests": "9 passed",
+    "backend_presence_nodes_tests": "79 passed",
+    "backend_full_pytest": "246 passed",
+    "frontend_url_helper_test": "2 passed",
+    "frontend_typecheck": "passed",
+    "frontend_build": "passed with existing multiple-lockfile workspace-root warning"
+  },
+  "readiness": {
+    "backend_studio_intake": "go",
+    "public_read_qr_vcard": "go",
+    "admin_lifecycle": "blocked without auth",
+    "frontend_deployed_metadata": "pending frontend production promotion of d06de95",
+    "overall": "conditional-go for backend Studio intake proof; hold full public integration signoff until the frontend deployment serves d06de95 or equivalent."
+  }
+}
