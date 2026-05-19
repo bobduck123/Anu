@@ -9,6 +9,7 @@ import type { PresenceNode } from "@/lib/api/types";
 import { inferPresenceDna } from "./infer";
 import type { PresenceDna } from "./types";
 import { demoDnaForSlug } from "./demoOverlays";
+import { isDemoDnaOverlayDisabled } from "@/lib/presence/feature";
 
 interface NodeWithMetadata extends PresenceNode {
   metadata?: { presence_dna?: PresenceDna | Partial<PresenceDna> } | null;
@@ -41,15 +42,20 @@ function mergeDna(base: PresenceDna, overlay: Partial<PresenceDna> | null | unde
 export function resolvePresenceDna(node: PresenceNode): PresenceDna {
   const base = inferPresenceDna(node);
 
+  // Highest priority: DNA persisted on the backend (node.metadata.presence_dna).
   const persisted = readPersistedDna(node);
   if (persisted) {
     return mergeDna(base, persisted, "backend_persisted");
   }
 
-  const demo = demoDnaForSlug(node.slug);
-  if (demo) {
-    return mergeDna(base, demo, "demo_overlay");
+  // Next: demo overlay, unless explicitly disabled by env flag.
+  if (!isDemoDnaOverlayDisabled()) {
+    const demo = demoDnaForSlug(node.slug);
+    if (demo) {
+      return mergeDna(base, demo, "demo_overlay");
+    }
   }
 
+  // Last: inferred from existing node fields.
   return base;
 }

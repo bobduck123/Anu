@@ -15,7 +15,7 @@ export const SIGNATURE_REGISTRY: Record<SignatureModule, SignatureEntry> = {
   materials_board: { id: "materials_board", summary: "Tactile pinboard of materials, finishes, and origins.", implemented: true },
   before_after_slider: { id: "before_after_slider", summary: "Draggable before/after image pairs for trust rooms.", implemented: true },
 
-  gallery_wall: { id: "gallery_wall", summary: "Quiet gallery grid. Scaffolded.", implemented: false },
+  gallery_wall: { id: "gallery_wall", summary: "Museum-curated quiet hanging with paper-edged frames and museum-label captions.", implemented: true },
   audio_strip: { id: "audio_strip", summary: "Persistent audio strip with media embeds. Scaffolded.", implemented: false },
   availability_panel: { id: "availability_panel", summary: "Live availability + next openings. Scaffolded.", implemented: false },
   press_wall: { id: "press_wall", summary: "Press logos and quotes wall. Scaffolded.", implemented: false },
@@ -23,7 +23,7 @@ export const SIGNATURE_REGISTRY: Record<SignatureModule, SignatureEntry> = {
   map_memory: { id: "map_memory", summary: "Map of places worked / performed / exhibited. Scaffolded.", implemented: false },
   ritual_booking_panel: { id: "ritual_booking_panel", summary: "Care-pathway booking panel. Scaffolded.", implemented: false },
   impact_counter: { id: "impact_counter", summary: "Aggregate impact counters. Scaffolded.", implemented: false },
-  quote_oracle: { id: "quote_oracle", summary: "Rotating editorial quote/oracle. Scaffolded.", implemented: false },
+  quote_oracle: { id: "quote_oracle", summary: "Single hero-sized rotating editorial quote with selectable attribution strip.", implemented: true },
   process_reel: { id: "process_reel", summary: "Process reel — frame-by-frame studio steps. Scaffolded.", implemented: false },
   program_grid: { id: "program_grid", summary: "Program grid for civic/cultural rooms. Scaffolded.", implemented: false },
   commission_pathway: { id: "commission_pathway", summary: "Commission pathway ladder. Scaffolded.", implemented: false },

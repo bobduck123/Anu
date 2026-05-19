@@ -99,6 +99,10 @@ _OWNER_NODE_MUTABLE_FIELDS = {
     "landing_enter_label",
     "practice_statement",
     "curatorial_statement",
+    # Pass 2: owner can edit Presence DNA via the Studio DNA editor.
+    # Validation lives in normalize_presence_metadata / normalize_presence_dna.
+    "metadata",
+    "presence_dna",
 }
 
 _MEDIA_TARGETS = {

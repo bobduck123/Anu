@@ -18,6 +18,9 @@
 //   closest to colour-swap territory.
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve as resolvePath } from "node:path";
 
 import { demoProfileSlugs, demoProfileForSlug } from "./demo/profiles";
 import { resolvePresenceDna } from "./dna/overlay";
@@ -108,7 +111,48 @@ function main() {
   // Whole-set assertion: no two rooms may cross the threshold.
   assert.equal(failures, 0, `${failures} room pair(s) above similarity threshold`);
 
-  console.log("\nAll pairs distinct. Proof case passes. ✓\n");
+  // ─────────────────────────────────────────────────────────────────────
+  // Pass 2: each demo room must have a complete render plan.
+  // ─────────────────────────────────────────────────────────────────────
+  console.log("\nRequired-field check for each demo room:\n");
+  for (const slug of slugs) {
+    const node = demoProfileForSlug(slug)!;
+    const dna = resolvePresenceDna(node);
+    const theme = deriveThemeGenome(dna, node.accent_color ?? null);
+    const blueprint = fallbackBlueprint(selectBlueprint(dna));
+    const cta = ctaLabel(dna);
+    const checks: Array<[string, unknown]> = [
+      ["blueprint", blueprint],
+      ["theme.palette_mode", theme.palette_mode],
+      ["theme.typography_mode", theme.typography_mode],
+      ["theme.motion_preset", theme.motion_preset],
+      ["theme.image_treatment", theme.image_treatment],
+      ["dna.signature.signature_module", dna.signature.signature_module],
+      ["dna.composition.navigation_mode", dna.composition.navigation_mode],
+      ["cta_label", cta],
+    ];
+    for (const [name, value] of checks) {
+      assert.ok(value, `room ${slug} is missing ${name}`);
+    }
+    console.log(`  ${slug.padEnd(28)} blueprint=${blueprint} signature=${dna.signature.signature_module} nav=${dna.composition.navigation_mode} cta="${cta}"`);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Pass 2: regression — selectBlueprint must not branch on room_type.
+  // Profession is an input to inference only, never the final layout
+  // selector. We grep the source of select.ts (the canonical layout
+  // chooser) to enforce this invariant.
+  // ─────────────────────────────────────────────────────────────────────
+  console.log("\nNo-room_type-in-selector regression:");
+  const here = dirname(fileURLToPath(import.meta.url));
+  const selectSource = readFileSync(resolvePath(here, "blueprints/select.ts"), "utf8");
+  assert.ok(
+    !/room_type/i.test(selectSource),
+    "lib/presence/blueprints/select.ts must NOT reference room_type. Profession is an inference signal only.",
+  );
+  console.log("  blueprints/select.ts contains no reference to room_type ✓");
+
+  console.log("\nAll pairs distinct. Proof case passes. Required-field + regression checks pass. ✓\n");
 }
 
 main();

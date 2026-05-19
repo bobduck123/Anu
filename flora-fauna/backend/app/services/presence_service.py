@@ -335,6 +335,113 @@ def _provider_for_media_url(url: str) -> str | None:
     return None
 
 
+# ---------------------------------------------------------------------------
+# Presence DNA persistence (Pass 2).
+#
+# The backend stores Presence DNA as a JSON object at
+# node.node_metadata['presence_dna']. The frontend treats this as the
+# highest-priority source. Inside `node_metadata` we also allow other
+# forward-compatible keys (e.g. `before_after_pairs` for trust rooms);
+# unknown keys are preserved.
+# ---------------------------------------------------------------------------
+
+PRESENCE_DNA_CATEGORIES = {
+    "entity",
+    "practice",
+    "audience",
+    "goal",
+    "personality",
+    "proof",
+    "visual",
+    "composition",
+    "signature",
+}
+PRESENCE_DNA_SOURCES = {"inferred", "demo_overlay", "node_metadata", "backend_persisted"}
+PRESENCE_DNA_MAX_BYTES = 16 * 1024  # serialized size guard (16 KiB)
+PRESENCE_METADATA_MAX_BYTES = 64 * 1024
+
+
+def normalize_presence_dna(value: Any) -> dict[str, Any] | None:
+    """Validate and return a sanitized Presence DNA dict, or None.
+
+    Validation is intentionally permissive: the frontend `lib/presence/dna/types.ts`
+    is the canonical authority. The backend ensures the shape is a dict,
+    enforces top-level keys, and rejects oversize payloads. Per-field
+    enum validation is deferred to a future pass.
+    """
+    if value is None or value == "":
+        return None
+    if not isinstance(value, dict):
+        raise PresenceValidationError("presence_dna must be a JSON object.")
+    cleaned: dict[str, Any] = {}
+    for key in PRESENCE_DNA_CATEGORIES:
+        if key not in value:
+            continue
+        category_value = value[key]
+        if not isinstance(category_value, dict):
+            raise PresenceValidationError(
+                f"presence_dna.{key} must be a JSON object."
+            )
+        cleaned[key] = category_value
+    if "source" in value:
+        source = value.get("source")
+        if source is not None and source not in PRESENCE_DNA_SOURCES:
+            raise PresenceValidationError(
+                "presence_dna.source must be one of "
+                f"{sorted(PRESENCE_DNA_SOURCES)}."
+            )
+        if source is not None:
+            cleaned["source"] = source
+    if "notes" in value:
+        notes = value.get("notes")
+        if notes is not None and not (
+            isinstance(notes, list) and all(isinstance(item, str) for item in notes)
+        ):
+            raise PresenceValidationError(
+                "presence_dna.notes must be a list of strings."
+            )
+        if notes is not None:
+            cleaned["notes"] = notes[:8]
+    try:
+        size = len(json.dumps(cleaned, ensure_ascii=False))
+    except (TypeError, ValueError) as exc:
+        raise PresenceValidationError("presence_dna must be JSON-serialisable.") from exc
+    if size > PRESENCE_DNA_MAX_BYTES:
+        raise PresenceValidationError(
+            f"presence_dna exceeds {PRESENCE_DNA_MAX_BYTES} bytes."
+        )
+    return cleaned
+
+
+def normalize_presence_metadata(value: Any) -> dict[str, Any] | None:
+    """Validate the full node_metadata dict, including presence_dna.
+
+    Unknown top-level keys are preserved (forward-compatibility). Only
+    `presence_dna` gets per-category structural validation today.
+    """
+    if value is None or value == "":
+        return None
+    if not isinstance(value, dict):
+        raise PresenceValidationError("metadata must be a JSON object.")
+    cleaned: dict[str, Any] = {}
+    for key, sub in value.items():
+        if key == "presence_dna":
+            normalized_dna = normalize_presence_dna(sub)
+            if normalized_dna is not None:
+                cleaned["presence_dna"] = normalized_dna
+            continue
+        cleaned[key] = sub
+    try:
+        size = len(json.dumps(cleaned, ensure_ascii=False))
+    except (TypeError, ValueError) as exc:
+        raise PresenceValidationError("metadata must be JSON-serialisable.") from exc
+    if size > PRESENCE_METADATA_MAX_BYTES:
+        raise PresenceValidationError(
+            f"metadata exceeds {PRESENCE_METADATA_MAX_BYTES} bytes."
+        )
+    return cleaned or None
+
+
 def normalize_media_embeds(value: Any) -> list[dict[str, Any]]:
     rows = _json_list(value)
     embeds: list[dict[str, Any]] = []
@@ -568,6 +675,10 @@ def serialize_presence_node(
             "canonical_url": public_url_for_node(node),
             "image": node.social_preview_image_url or node.hero_image_url or node.cover_image_url or node.profile_image_url,
         },
+        # Presence DNA persistence. Public response exposes the full
+        # node_metadata so the DNA-driven renderer can read
+        # node.metadata.presence_dna directly.
+        "metadata": node.node_metadata or None,
     }
     if include_admin and not public:
         payload.update(
@@ -1233,6 +1344,20 @@ def validate_node_payload(data: dict[str, Any], *, partial: bool = False) -> dic
         payload["enquiry_email"] = email
     if "public_phone" in data:
         payload["public_phone"] = _clean_text(data.get("public_phone"), max_length=80)
+    # Presence DNA persistence — accept either a top-level `presence_dna`
+    # field (convenience) or the full `metadata` object. Both are folded
+    # into node_metadata. `presence_dna` takes precedence when both are
+    # provided, mirroring the frontend resolver priority.
+    if "metadata" in data or "presence_dna" in data:
+        existing_metadata = data.get("metadata") if "metadata" in data else None
+        normalized_metadata = normalize_presence_metadata(existing_metadata) or {}
+        if "presence_dna" in data:
+            dna = normalize_presence_dna(data.get("presence_dna"))
+            if dna is None:
+                normalized_metadata.pop("presence_dna", None)
+            else:
+                normalized_metadata["presence_dna"] = dna
+        payload["node_metadata"] = normalized_metadata or None
     return payload
 
 
@@ -4190,3 +4315,414 @@ def seed_presence_demo_data() -> dict[str, Any]:
         created.append(node.slug)
     db.session.flush()
     return {"tenant_id": tenant.id, "created": created}
+
+
+# ---------------------------------------------------------------------------
+# Presence DNA Pass 2 — seed the six DNA demo rooms with persisted DNA.
+#
+# These six slugs map 1:1 to the frontend demo overlay
+# (`presence-app/lib/presence/dna/demoOverlays.ts`). Once they are
+# present in the backend, the frontend resolver picks the persisted DNA
+# over the demo overlay automatically (priority: persisted > overlay >
+# inferred). The frontend demo overlay therefore becomes a no-op for
+# these slugs; it can be safely retired once the backend seed has run
+# in every environment (see PRESENCE_DNA_PASS_2_REPORT.md).
+# ---------------------------------------------------------------------------
+
+_DNA_DEMO_BLUEPRINT: list[dict[str, Any]] = [
+    {
+        "slug": "rooms-underground-dj",
+        "display_name": "Mira K.",
+        "headline": "Underground dj · Berlin / London circuit",
+        "short_bio": "DJ and selector. Berlin and London circuit. Bookings via this room only.",
+        "long_story": (
+            "Mira K. has been holding rooms since 2017. Resident at Floe (Berlin) "
+            "2021–2024, recurring sets at Pickle Factory (London), Berghain Säule, "
+            "and Trauma Bar. Sets sit between club techno, dub, and broken "
+            "weightless rhythms. Style notes: long sets only (90 minutes+), no "
+            "openers, no warm-ups — every set is the room's centre of gravity."
+        ),
+        "bio": "Mira K. plays the long, slow-build sets that turn the room before sunrise.",
+        "node_type": "creative",
+        "display_mode": "minimal_portal",
+        "room_type": "performer_music",
+        "theme_preset": "neon_night",
+        "accent_color": "#ffd84d",
+        "hero_title": "Mira K.",
+        "hero_subtitle": "Selector, resident, long-form set holder.",
+        "hero_image_url": "https://images.unsplash.com/photo-1493676304819-0d7a8d026dcf",
+        "location_label": "Berlin / London",
+        "availability_status": "Booking Q4 + winter residency",
+        "primary_cta_label": "Book the room",
+        "public_email": "bookings@mirak.fm",
+        "media_embeds": [
+            {"label": "Latest set — Trauma Bar", "url": "https://soundcloud.com/example/trauma-bar-set", "type": "audio"},
+            {"label": "Live at Floe — 2024", "url": "https://soundcloud.com/example/floe-2024", "type": "audio"},
+        ],
+        "works": [
+            {"title": "Säule — 02:40", "year": "2024", "medium": "live set", "image_url": "https://images.unsplash.com/photo-1571266028243-d220c6a3eecf"},
+            {"title": "Floe Resident — Winter 23/24", "year": "2024", "medium": "residency", "image_url": "https://images.unsplash.com/photo-1574391884720-bbc049ec09ad"},
+            {"title": "Pickle Factory — closing set", "year": "2023", "medium": "live set", "image_url": "https://images.unsplash.com/photo-1493676304819-0d7a8d026dcf"},
+            {"title": "Trauma Bar — fluid weightless", "year": "2024", "medium": "live set", "image_url": "https://images.unsplash.com/photo-1571266028243-d220c6a3eecf"},
+            {"title": "Berghain Säule — second visit", "year": "2024", "medium": "live set", "image_url": "https://images.unsplash.com/photo-1517457373958-b7bdd4587205"},
+            {"title": "Dekmantel — outdoor stage", "year": "2023", "medium": "festival set", "image_url": "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec"},
+        ],
+        "links": [
+            {"label": "Latest mix on SoundCloud", "url": "https://soundcloud.com/example", "link_type": "music"},
+            {"label": "Instagram", "url": "https://instagram.com/example", "link_type": "social"},
+            {"label": "Press kit", "url": "https://example.com/press", "link_type": "press"},
+        ],
+        "presence_dna": {
+            "entity": {"entity_type": "individual", "public_name": "Mira K.", "relationship_to_work": "performer"},
+            "practice": {"field": "music", "practice_mode": "performance", "work_rhythm": "event_based"},
+            "audience": {"primary_audience": "bookers", "audience_temperature": "warm", "decision_need": "taste"},
+            "goal": {"primary_goal": "bookings", "secondary_goals": ["press"], "conversion_style": "direct"},
+            "personality": {"temperament": "experimental", "energy": "kinetic", "status_signal": "underground"},
+            "proof": {"proof_type": ["event_history", "press"], "proof_density": "moderate", "proof_position": "midpage"},
+            "visual": {"references": [], "palette_mode": "nocturnal", "texture": "scanline", "image_treatment": "glitch"},
+            "composition": {"entry_type": "audio_first", "section_rhythm": "cinematic_chapters", "navigation_mode": "floating_index"},
+            "signature": {"signature_module": "glitch_gallery", "signature_intensity": "hero_level"},
+        },
+    },
+    {
+        "slug": "rooms-gallery-painter",
+        "display_name": "Naoko Sato",
+        "headline": "Painter · Commissioned and selected works",
+        "short_bio": "Painter, working in oil and watercolour washes on linen. Commissioned and selected works.",
+        "long_story": (
+            "I work slowly. A painting is a record of a room — the light it sat in, "
+            "the weeks it watched. Commissions begin with a long visit, sometimes "
+            "several. The work is made after, in the studio, over months."
+        ),
+        "bio": "Paintings made slowly, on linen, with washes laid down over weeks.",
+        "practice_statement": (
+            "Oil washes on raw linen. Each painting is built from many translucent "
+            "layers, each laid down and allowed to settle before the next."
+        ),
+        "node_type": "artist",
+        "display_mode": "artist_gallery",
+        "room_type": "artist_studio",
+        "theme_preset": "gallery_white",
+        "accent_color": "#1a1a17",
+        "hero_title": "Naoko Sato",
+        "hero_subtitle": "Paintings, commissions, and a small body of selected work.",
+        "hero_image_url": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968",
+        "location_label": "Lisbon · Studio Pinha",
+        "availability_status": "Accepting one commission for 2026",
+        "primary_cta_label": "Commission a work",
+        "public_email": "studio@naokosato.work",
+        "works": [
+            {"title": "Asagao", "year": "2024", "medium": "oil on linen, 160 × 110 cm", "image_url": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968"},
+            {"title": "Hane I", "year": "2024", "medium": "oil on linen, 80 × 60 cm", "image_url": "https://images.unsplash.com/photo-1578926375605-eaf7559b1458"},
+            {"title": "Yūbe", "year": "2023", "medium": "watercolour on cotton, 60 × 45 cm", "image_url": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5"},
+            {"title": "Tsubasa", "year": "2023", "medium": "oil on linen, 200 × 140 cm", "image_url": "https://images.unsplash.com/photo-1579202673506-ca3ce28943ef"},
+            {"title": "Ame", "year": "2022", "medium": "watercolour, 35 × 28 cm", "image_url": "https://images.unsplash.com/photo-1578320340437-7a3a4c1d6f4f"},
+            {"title": "Hane II", "year": "2024", "medium": "oil on linen, 80 × 60 cm", "image_url": "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3"},
+        ],
+        "services": [
+            {"title": "Private commission", "description": "A painting made over six to nine months, after a long visit to the room it will live in. One commission per year.", "price_label": "On enquiry", "duration_label": "6–9 months"},
+            {"title": "Selected works", "description": "Existing works available through the studio. Limited edition watercolours released in spring.", "price_label": "From €4,800"},
+        ],
+        "proof_items": [
+            {"client_label": "Yamamoto Collection", "testimonial": "Naoko's paintings hold a room without ever asking for attention. They are the room.", "outcome": "Private collection, Tokyo"},
+            {"client_label": "T. Almeida", "testimonial": "We waited nine months. The wait is part of the work.", "outcome": "Commission, Lisbon"},
+        ],
+        "links": [
+            {"label": "Studio Pinha", "url": "https://example.com/studio-pinha", "link_type": "website"},
+            {"label": "Press archive", "url": "https://example.com/press", "link_type": "press"},
+        ],
+        "presence_dna": {
+            "entity": {"entity_type": "individual", "public_name": "Naoko Sato", "relationship_to_work": "maker"},
+            "practice": {"field": "visual_art", "practice_mode": "commission", "work_rhythm": "project_based"},
+            "audience": {"primary_audience": "collectors", "audience_temperature": "referred", "decision_need": "taste"},
+            "goal": {"primary_goal": "commissions", "secondary_goals": ["press", "credibility"], "conversion_style": "editorial"},
+            "personality": {"temperament": "refined", "energy": "still", "status_signal": "premium"},
+            "proof": {"proof_type": ["portfolio", "press"], "proof_density": "moderate", "proof_position": "after_story"},
+            "visual": {"references": [], "palette_mode": "gallery_white", "texture": "paper", "image_treatment": "gallery_matte"},
+            "composition": {"entry_type": "work_first", "section_rhythm": "gallery_flow", "navigation_mode": "anchor_nav"},
+            "signature": {"signature_module": "gallery_wall", "signature_intensity": "featured"},
+        },
+    },
+    {
+        "slug": "rooms-material-carpenter",
+        "display_name": "Salt & Grain Studio",
+        "headline": "Furniture in salvaged hardwoods · One-piece-at-a-time workshop",
+        "short_bio": "Two-person furniture workshop. Salvaged Australian hardwoods, traditional joinery, slow finishes.",
+        "long_story": (
+            "Salt & Grain is a two-person workshop on the south coast of New South "
+            "Wales. We make commissioned furniture in salvaged Australian hardwoods. "
+            "We use traditional joinery and finish with hand-rubbed oils."
+        ),
+        "bio": "A two-person workshop making one chair, one table, one cabinet at a time.",
+        "practice_statement": (
+            "Each piece begins with a board. We choose the board, the joinery, and the "
+            "finish for the room the piece will live in. A dining table takes four to "
+            "six months from first conversation to delivery."
+        ),
+        "node_type": "tradie",
+        "display_mode": "studio_practice",
+        "room_type": "artist_studio",
+        "theme_preset": "warm_earth",
+        "accent_color": "#e0a455",
+        "hero_title": "Salt & Grain",
+        "hero_subtitle": "Furniture made one piece at a time in salvaged Australian hardwoods.",
+        "hero_image_url": "https://images.unsplash.com/photo-1503602642458-232111445657",
+        "location_label": "Milton, NSW",
+        "availability_status": "Books open for autumn 2026 commissions",
+        "primary_cta_label": "Begin a commission",
+        "public_email": "studio@saltandgrain.au",
+        "works": [
+            {"title": "Long table for Mongarlowe", "year": "2024", "medium": "Spotted gum, hand-rubbed oil, 2.8m × 0.95m", "image_url": "https://images.unsplash.com/photo-1503602642458-232111445657"},
+            {"title": "Six-board cabinet", "year": "2024", "medium": "Blackbutt, draw-bored mortise and tenon", "image_url": "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e"},
+            {"title": "Library chair", "year": "2023", "medium": "Ironbark, mortise and tenon, leather seat", "image_url": "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c"},
+            {"title": "Studio bench", "year": "2024", "medium": "Jarrah, salvaged from Hobart slipway", "image_url": "https://images.unsplash.com/photo-1538688525198-9b88f6f53126"},
+            {"title": "Reading shelf", "year": "2023", "medium": "Spotted gum, fixed shelves, mitred joinery", "image_url": "https://images.unsplash.com/photo-1505691938895-1758d7feb511"},
+            {"title": "Side table — pair", "year": "2024", "medium": "Blackbutt, tapered legs", "image_url": "https://images.unsplash.com/photo-1567538096631-e0c55bd6374c"},
+        ],
+        "services": [
+            {"title": "First conversation", "description": "We meet at the studio or at the room the piece will live in. We talk about how the room is used, the light it gets, and what the piece needs to do.", "duration_label": "1–2 visits"},
+            {"title": "Board selection and design", "description": "We choose the boards together. You sign off a working drawing. A 30% deposit secures the boards and the workshop time.", "price_label": "30% deposit", "duration_label": "1 month"},
+            {"title": "Making", "description": "The work happens in the workshop. We send photographs every two weeks. You are welcome to visit.", "duration_label": "3–5 months"},
+            {"title": "Delivery and oiling", "description": "We deliver, install, and oil the piece in place. You can return it within two years for a re-oil at no charge.", "price_label": "Included", "duration_label": "1 day"},
+        ],
+        "proof_items": [
+            {"client_label": "M. & D. Lawler, Mongarlowe", "testimonial": "We waited five months and it was the best part. The table arrived already feeling old.", "outcome": "Long table commission, 2024"},
+            {"client_label": "S. Park, Bowral", "testimonial": "Salt & Grain treat the board like it's already part of the house. That care is in the finished piece.", "outcome": "Cabinet commission, 2024"},
+        ],
+        "presence_dna": {
+            "entity": {"entity_type": "studio", "public_name": "Salt & Grain Studio", "relationship_to_work": "maker"},
+            "practice": {"field": "building_trade", "practice_mode": "craft", "work_rhythm": "project_based"},
+            "audience": {"primary_audience": "collectors", "audience_temperature": "referred", "decision_need": "taste"},
+            "goal": {"primary_goal": "commissions", "secondary_goals": ["press"], "conversion_style": "premium"},
+            "personality": {"temperament": "refined", "energy": "slow", "status_signal": "craft"},
+            "proof": {"proof_type": ["portfolio", "materials_process"], "proof_density": "moderate", "proof_position": "after_story"},
+            "visual": {"references": [], "palette_mode": "material_based", "texture": "timber", "image_treatment": "warm_portrait"},
+            "composition": {"entry_type": "material_first", "section_rhythm": "collage", "navigation_mode": "single_scroll"},
+            "signature": {"signature_module": "materials_board", "signature_intensity": "hero_level"},
+        },
+    },
+    {
+        "slug": "rooms-local-carpenter",
+        "display_name": "Dave Carpentry — Bega Valley",
+        "headline": "Local carpentry, decks, renovations · Quotes within 24 hours",
+        "short_bio": "Local Bega Valley carpenter. Decks, repairs, renovations, pergolas. Quotes within 24 hours.",
+        "bio": "Local carpenter serving the Bega Valley. Decks, pergolas, repairs, renovations. Fully licensed and insured.",
+        "node_type": "tradie",
+        "display_mode": "tradie_profile",
+        "room_type": "minimal_card",
+        "theme_preset": "warm_earth",
+        "accent_color": "#a14215",
+        "hero_title": "Quotes within 24 hours.",
+        "hero_subtitle": "Local carpenter, Bega Valley. Decks, pergolas, repairs, small renovations.",
+        "hero_image_url": "https://images.unsplash.com/photo-1503387762-592deb58ef4e",
+        "location_label": "Bega Valley, NSW",
+        "availability_status": "Available now · booking for next month",
+        "primary_cta_label": "Get a quote",
+        "public_email": "dave@davecarpentry.au",
+        "public_phone": "0455 100 200",
+        "works": [
+            {"title": "Before: Tathra deck", "year": "2024", "medium": "rebuild", "image_url": "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6"},
+            {"title": "After: Tathra deck", "year": "2024", "medium": "rebuild", "image_url": "https://images.unsplash.com/photo-1591389703635-e15a07b842d7"},
+            {"title": "Before: Bermagui pergola", "year": "2024", "medium": "build", "image_url": "https://images.unsplash.com/photo-1567016432779-094069958ea5"},
+            {"title": "After: Bermagui pergola", "year": "2024", "medium": "build", "image_url": "https://images.unsplash.com/photo-1599809275671-b5942cabc7a2"},
+            {"title": "Before: Candelo kitchen reno", "year": "2023", "medium": "renovation", "image_url": "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136"},
+            {"title": "After: Candelo kitchen reno", "year": "2023", "medium": "renovation", "image_url": "https://images.unsplash.com/photo-1565182999561-18d7dc61c393"},
+        ],
+        "services": [
+            {"title": "Decks and pergolas", "description": "Build, rebuild, repair. Hardwood and treated pine. All licensed structural work.", "price_label": "From $4,500", "duration_label": "2–3 weeks"},
+            {"title": "Small renovations", "description": "Kitchen, bathroom, laundry. Two-tradie crew, owner-builder friendly.", "price_label": "Quote on site", "duration_label": "3–6 weeks"},
+            {"title": "Repairs and odd jobs", "description": "Doors, windows, floorboards, storm repair. Booked weekly.", "price_label": "From $180", "duration_label": "Same week"},
+            {"title": "Insurance and storm work", "description": "Insurance-approved storm and water damage repair. Direct billing available.", "price_label": "Insurer billed", "duration_label": "Priority"},
+        ],
+        "proof_items": [
+            {"client_label": "J. Walker, Tathra", "testimonial": "Dave came out the day I rang. Quote the next morning. Deck done in a week. Honest pricing.", "outcome": "Deck rebuild, 2024"},
+            {"client_label": "K. Reilly, Bermagui", "testimonial": "Showed up when he said. Cleaned up after every day. We've had him back for two more jobs since.", "outcome": "Pergola build, 2024"},
+            {"client_label": "M. & T. Hughes, Candelo", "testimonial": "After the storms we got three quotes. Dave was the only one who answered. Job done in eighteen days.", "outcome": "Kitchen renovation, 2023"},
+        ],
+        "credentials": [
+            {"title": "NSW Building Licence #284551", "issuer": "NSW Fair Trading", "credential_type": "licence"},
+            {"title": "$20m Public Liability", "issuer": "Allianz", "credential_type": "insurance"},
+        ],
+        "presence_dna": {
+            "entity": {"entity_type": "individual", "public_name": "Dave Carpentry — Bega Valley", "relationship_to_work": "service_provider"},
+            "practice": {"field": "building_trade", "practice_mode": "service", "work_rhythm": "recurring"},
+            "audience": {"primary_audience": "clients", "audience_temperature": "cold", "decision_need": "trust"},
+            "goal": {"primary_goal": "enquiries", "secondary_goals": ["bookings"], "conversion_style": "direct"},
+            "personality": {"temperament": "grounded", "energy": "alive", "status_signal": "accessible"},
+            "proof": {"proof_type": ["before_after", "testimonials", "certifications"], "proof_density": "heavy", "proof_position": "early"},
+            "visual": {"references": [], "palette_mode": "warm_neutral", "texture": "none", "image_treatment": "documentary"},
+            "composition": {"entry_type": "quote_first", "section_rhythm": "service_ladder", "navigation_mode": "anchor_nav"},
+            "signature": {"signature_module": "before_after_slider", "signature_intensity": "hero_level"},
+        },
+    },
+    {
+        "slug": "rooms-community-healer",
+        "display_name": "Mara Lin",
+        "headline": "Somatic practitioner · Inner-west community",
+        "short_bio": "Somatic practitioner. Individuals, small circles, seasonal programmes. Inner-west community.",
+        "bio": "Somatic practitioner working with individuals, small circles, and seasonal programmes.",
+        "long_story": (
+            "I work somatically, with care for nervous-system regulation, trauma-"
+            "informed practice, and the slow weather of seasonal change."
+        ),
+        "practice_statement": (
+            "The work is somatic and slow. I am trained in Hakomi, Embodied Recovery "
+            "for Survivors of Sexual Abuse, and trauma-informed yoga."
+        ),
+        "node_type": "practitioner",
+        "display_mode": "practitioner_profile",
+        "room_type": "practitioner",
+        "theme_preset": "soft_healing",
+        "accent_color": "#527a52",
+        "hero_title": "Mara Lin",
+        "hero_subtitle": "Somatic practice for individuals and small circles.",
+        "hero_image_url": "https://images.unsplash.com/photo-1518609878373-06d740f60d8b",
+        "location_label": "Newtown, Sydney",
+        "availability_status": "Wait-list open for autumn circles",
+        "primary_cta_label": "Begin a conversation",
+        "public_email": "hello@maralin.care",
+        "services": [
+            {"title": "1:1 sessions", "description": "Held weekly or fortnightly. Sliding scale available; please ask.", "price_label": "Sliding $80–$160", "duration_label": "60 min"},
+            {"title": "Small circles", "description": "Four to six people, held over six weeks. Bring your own bolster.", "price_label": "$320 / 6 weeks", "duration_label": "6 weeks"},
+            {"title": "Seasonal programme", "description": "Autumn and spring. Three Sundays, an outdoor circle, and a written practice you take home.", "price_label": "$420", "duration_label": "3 Sundays"},
+        ],
+        "proof_items": [
+            {"client_label": "A. (Inner-west circle)", "testimonial": "I joined the autumn circle without knowing what I needed. I left with a steadier nervous system and a community.", "outcome": "Autumn circle, 2024"},
+            {"client_label": "R. (1:1)", "testimonial": "Mara holds the work without rushing it. The slow pace is the point.", "outcome": "1:1, ongoing"},
+        ],
+        "credentials": [
+            {"title": "Hakomi Comprehensive Training", "issuer": "Hakomi Institute", "credential_type": "certification"},
+            {"title": "ERSSA — Embodied Recovery for Survivors of Sexual Abuse", "issuer": "ERSSA", "credential_type": "certification"},
+        ],
+        "presence_dna": {
+            "entity": {"entity_type": "individual", "public_name": "Mara Lin", "relationship_to_work": "service_provider"},
+            "practice": {"field": "healing", "practice_mode": "care", "work_rhythm": "appointment_based"},
+            "audience": {"primary_audience": "community", "audience_temperature": "warm", "decision_need": "safety"},
+            "goal": {"primary_goal": "bookings", "secondary_goals": ["memberships"], "conversion_style": "soft"},
+            "personality": {"temperament": "warm", "energy": "soft", "status_signal": "community"},
+            "proof": {"proof_type": ["testimonials", "certifications"], "proof_density": "moderate", "proof_position": "near_cta"},
+            "visual": {"references": [], "palette_mode": "soft_gradient", "texture": "paper", "image_treatment": "warm_portrait"},
+            "composition": {"entry_type": "service_first", "section_rhythm": "case_study_stack", "navigation_mode": "single_scroll"},
+            "signature": {"signature_module": "ritual_booking_panel", "signature_intensity": "featured"},
+        },
+    },
+    {
+        "slug": "rooms-sharp-consultant",
+        "display_name": "Heron Strategy",
+        "headline": "Independent advisory for product-led companies entering Europe",
+        "short_bio": "Independent advisory for product-led companies entering Europe. Three to five engagements a year.",
+        "bio": "Independent advisory practice. Three to five engagements a year, exclusively for product-led companies entering the European market.",
+        "long_story": (
+            "Heron Strategy is the independent advisory practice of Hye-Jin Park. "
+            "Previously: VP Strategy at Notion (2019–2022), strategy lead at Linear "
+            "(2017–2019), and a stint in residence at Index Ventures (2022–2024)."
+        ),
+        "practice_statement": (
+            "Engagements are scoped tightly: six to twelve weeks, one principal, no "
+            "junior team, no slide deliverables. Output is one written memo, one "
+            "decision, and one set of week-by-week measures."
+        ),
+        "node_type": "consultant",
+        "display_mode": "professional_contract",
+        "room_type": "minimal_card",
+        "theme_preset": "minimal_mono",
+        "accent_color": "#0d0d0d",
+        "hero_title": "Independent advisory for product-led companies entering Europe.",
+        "hero_subtitle": "Three to five engagements a year. Booked one quarter ahead.",
+        "hero_image_url": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7",
+        "location_label": "Amsterdam · Berlin · London",
+        "availability_status": "Two engagements open for Q1 2026",
+        "primary_cta_label": "Open a project conversation",
+        "public_email": "office@heronstrategy.eu",
+        "services": [
+            {"title": "Market-entry engagement", "description": "Six to twelve weeks, one principal. Output: one written memo, one decision, one set of week-by-week measures.", "price_label": "From €38,000", "duration_label": "6–12 weeks"},
+            {"title": "Quarterly board contribution", "description": "Four meetings, one written briefing per quarter. Sized for companies that don't need a full board chair.", "price_label": "€18,000 / quarter", "duration_label": "Quarterly"},
+            {"title": "Acquisition prep (Europe-side)", "description": "Targeted six-week preparation when the acquirer is European. Includes IC narrative and one-on-one prep.", "price_label": "€42,000 fixed", "duration_label": "6 weeks"},
+        ],
+        "proof_items": [
+            {"client_label": "CEO, late-stage SaaS (anonymous)", "testimonial": "One memo, one decision. We saved a quarter and an unprofitable hire.", "outcome": "Market entry, 2024"},
+            {"client_label": "Founder, fintech, 80 staff", "testimonial": "Heron is the only advisor we've worked with who refuses to expand scope. It's the reason the work lands.", "outcome": "Quarterly board contribution, 2023–2024"},
+            {"client_label": "Board chair, growth-stage marketplace", "testimonial": "Hye-Jin's memo was the document the board referenced for the next twelve months.", "outcome": "Acquisition prep, 2024"},
+        ],
+        "links": [
+            {"label": "Selected writing", "url": "https://heronstrategy.eu/writing", "link_type": "website"},
+        ],
+        "presence_dna": {
+            "entity": {"entity_type": "individual", "public_name": "Heron Strategy", "relationship_to_work": "consultant"},
+            "practice": {"field": "consulting", "practice_mode": "advisory", "work_rhythm": "ongoing_relationship"},
+            "audience": {"primary_audience": "partners", "audience_temperature": "referred", "decision_need": "competence"},
+            "goal": {"primary_goal": "enquiries", "secondary_goals": ["credibility"], "conversion_style": "premium"},
+            "personality": {"temperament": "precise", "energy": "sharp", "status_signal": "expert"},
+            "proof": {"proof_type": ["case_studies", "client_logos"], "proof_density": "heavy", "proof_position": "near_cta"},
+            "visual": {"references": [], "palette_mode": "monochrome", "texture": "none", "image_treatment": "editorial"},
+            "composition": {"entry_type": "statement_hero", "section_rhythm": "editorial_scroll", "navigation_mode": "anchor_nav"},
+            "signature": {"signature_module": "quote_oracle", "signature_intensity": "featured"},
+        },
+    },
+]
+
+
+def seed_presence_dna_demo_data() -> dict[str, Any]:
+    """Seed the six Presence DNA demo rooms with persisted DNA in node_metadata.
+
+    Idempotent: if a slug already exists, the function updates its
+    node_metadata['presence_dna'] in place rather than re-creating the
+    node. Child rows (works, services, proof, credentials, links,
+    media_embeds) are only seeded on initial create — subsequent runs
+    leave them alone so admin edits are preserved.
+    """
+    tenant = Node.query.filter_by(slug="mudyin").first()
+    if not tenant:
+        tenant = Node(slug="mudyin", name="Mudyin Healing Centre", status="active")
+        db.session.add(tenant)
+        db.session.flush()
+
+    owner = User.query.filter_by(username="presence-demo-owner").first()
+    if not owner:
+        owner = User(
+            username="presence-demo-owner",
+            email="presence-demo-owner@example.com",
+            pseudonym="Presence Demo Owner",
+            password="hash",
+            role="node_admin",
+            node_id=tenant.id,
+            points=0,
+            level=1,
+            points_to_level_up=100,
+        )
+        db.session.add(owner)
+        db.session.flush()
+
+    summary: list[dict[str, str]] = []
+
+    for entry in _DNA_DEMO_BLUEPRINT:
+        slug = entry["slug"]
+        existing = PresenceNode.query.filter_by(slug=slug).first()
+        presence_dna = entry.get("presence_dna")
+
+        if existing:
+            metadata = dict(existing.node_metadata or {})
+            if presence_dna:
+                metadata["presence_dna"] = presence_dna
+            existing.node_metadata = metadata or None
+            summary.append({"slug": slug, "action": "metadata_updated"})
+            continue
+
+        payload = {k: v for k, v in entry.items() if k != "presence_dna"}
+        payload["tenant_id"] = tenant.id
+        payload["organisation_id"] = tenant.id
+        payload["owner_user_id"] = owner.id
+        payload["plan_type"] = payload.get("plan_type", "premium")
+        payload["status"] = "published"
+        payload["visibility"] = "public"
+        payload["public_status"] = "public"
+        # Pass DNA through validation + into node_metadata.
+        payload["presence_dna"] = presence_dna
+
+        # works / services / proof_items / credentials / links go via
+        # sync_presence_children inside create_presence_node.
+        create_presence_node(payload, actor=owner)
+        summary.append({"slug": slug, "action": "created"})
+
+    db.session.flush()
+    return {"tenant_id": tenant.id, "rooms": summary}

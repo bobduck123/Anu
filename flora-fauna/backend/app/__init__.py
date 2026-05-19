@@ -661,12 +661,17 @@ def _register_cli_commands(app):
 
     @app.cli.command("seed-presence")
     def seed_presence_cmd():
-        """Seed Presence Node templates and alpha demo nodes."""
-        from .services.presence_service import seed_presence_demo_data
+        """Seed Presence Node templates and alpha demo nodes (legacy + DNA rooms)."""
+        from .services.presence_service import (
+            seed_presence_demo_data,
+            seed_presence_dna_demo_data,
+        )
 
         summary = seed_presence_demo_data()
+        dna_summary = seed_presence_dna_demo_data()
         db.session.commit()
         click.echo(f"Seeded Presence Nodes: {summary}")
+        click.echo(f"Seeded Presence DNA demo rooms: {dna_summary}")
 
 
 def _init_database(app):
@@ -773,9 +778,13 @@ def _seed_alpha_data(app):
     if not app.config.get("ALPHA_SEED"):
         return
     try:
-        from .services.presence_service import seed_presence_demo_data
+        from .services.presence_service import (
+            seed_presence_demo_data,
+            seed_presence_dna_demo_data,
+        )
 
         seed_presence_demo_data()
+        seed_presence_dna_demo_data()
         db.session.commit()
     except Exception:
         db.session.rollback()

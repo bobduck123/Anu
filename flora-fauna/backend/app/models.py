@@ -677,6 +677,11 @@ class PresenceNode(db.Model):
     seo_title = db.Column(db.String(180), nullable=True)
     seo_description = db.Column(db.String(280), nullable=True)
     social_preview_image_url = db.Column(db.String(700), nullable=True)
+    # Presence DNA persistence (Pass 2). Stored at
+    # node_metadata['presence_dna']; serialized to the public API as the
+    # top-level "metadata" key. SQLAlchemy reserves the bare name
+    # `metadata` on Model classes, hence node_metadata here.
+    node_metadata = db.Column("node_metadata", db.JSON, nullable=True)
     created_at = db.Column(db.DateTime, default=utcnow)
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
     published_at = db.Column(db.DateTime, nullable=True)

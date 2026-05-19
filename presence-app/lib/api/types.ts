@@ -225,6 +225,11 @@ export interface PresenceNode {
   map_ready?: boolean;
   archive_ready?: boolean;
   white_label_ready?: boolean;
+  // Presence DNA persistence (Pass 2). The backend serializes
+  // node_metadata as this top-level `metadata` key. presence_dna lives
+  // at metadata.presence_dna. Other forward-compatible keys (e.g.
+  // before_after_pairs) may live alongside.
+  metadata?: Record<string, unknown> | null;
   analytics?: PresenceAnalyticsSummary;
   seo?: {
     title: string;

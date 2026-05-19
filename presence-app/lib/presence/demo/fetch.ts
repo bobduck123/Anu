@@ -10,11 +10,15 @@ import { fetchPublicNode } from "@/lib/api/public";
 import type { PresenceNode } from "@/lib/api/types";
 import { canonicalPublicUrl } from "@/lib/presence/url";
 import { demoProfileForSlug } from "./profiles";
+import { isDemoProfileFallbackDisabled } from "@/lib/presence/feature";
 
 export async function fetchDemoOrPublicNode(slug: string): Promise<PresenceNode> {
   try {
     return await fetchPublicNode(slug);
   } catch (err) {
+    if (isDemoProfileFallbackDisabled()) {
+      throw err;
+    }
     const demo = demoProfileForSlug(slug);
     if (demo) {
       // Attach the canonical public URL the same way the backend would,

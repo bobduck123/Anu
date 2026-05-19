@@ -476,6 +476,192 @@ body[data-shell="studio"] {
 .presence-materials-empty { color: var(--presence-muted); padding: 2rem; text-align: center; }
 
 /* =========================================================================
+ * Signature: gallery_wall (Pass 2)
+ *
+ * A quiet museum hanging. Generous gaps, paper-edged frames, museum
+ * labels under each piece, a thin top rule that reads as the gallery
+ * wall edge.
+ * ========================================================================= */
+.presence-signature-gallery-wall {
+  position: relative;
+  padding-top: 1.6rem;
+}
+.presence-signature-gallery-wall .wall-rule {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--presence-border) 20%, var(--presence-border) 80%, transparent);
+}
+.presence-signature-gallery-wall .wall-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 3.5rem 2.4rem;
+}
+.presence-signature-gallery-wall .wall-grid > li { grid-column: span 4; }
+.presence-signature-gallery-wall .wall-grid > li[data-span="wide"] { grid-column: span 6; }
+.presence-signature-gallery-wall .piece {
+  display: grid;
+  gap: 1.2rem;
+  color: inherit;
+  text-decoration: none;
+}
+.presence-signature-gallery-wall .piece-frame {
+  position: relative;
+  aspect-ratio: 4/5;
+  background: var(--presence-surface);
+  border: 1px solid var(--presence-border);
+  padding: 1.1rem 1.1rem 1.6rem;
+  box-shadow: 0 1px 0 var(--presence-border), 0 18px 36px rgba(0,0,0,0.05);
+}
+.presence-signature-gallery-wall .piece-frame > * {
+  position: absolute;
+  inset: 1.1rem 1.1rem 1.6rem 1.1rem;
+}
+.presence-signature-gallery-wall .museum-label {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0 0.4rem;
+  border-top: 1px solid var(--presence-border);
+  padding-top: 0.7rem;
+  font-family: var(--presence-font);
+}
+.presence-signature-gallery-wall .museum-label .catalog {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--presence-accent);
+}
+.presence-signature-gallery-wall .museum-label .title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--presence-text);
+  font-style: italic;
+}
+.presence-signature-gallery-wall .museum-label .meta {
+  font-size: 0.78rem;
+  color: var(--presence-muted);
+}
+.presence-signature-gallery-wall .museum-label .availability {
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--presence-muted);
+  margin-top: 0.3rem;
+}
+@media (max-width: 900px) {
+  .presence-signature-gallery-wall .wall-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.4rem 1.2rem; }
+  .presence-signature-gallery-wall .wall-grid > li,
+  .presence-signature-gallery-wall .wall-grid > li[data-span="wide"] { grid-column: span 1; }
+}
+@media (max-width: 540px) {
+  .presence-signature-gallery-wall .wall-grid { grid-template-columns: 1fr; }
+  .presence-signature-gallery-wall .wall-grid > li,
+  .presence-signature-gallery-wall .wall-grid > li[data-span="wide"] { grid-column: span 1; }
+}
+.presence-gallery-wall-empty { color: var(--presence-muted); padding: 2rem; text-align: center; }
+
+/* =========================================================================
+ * Signature: quote_oracle (Pass 2)
+ *
+ * One hero-sized quote; a selectable strip of attributions below.
+ * Cycles every ~9s unless hovered/focused.
+ * ========================================================================= */
+.presence-signature-quote-oracle {
+  position: relative;
+  display: grid;
+  gap: 2rem;
+  padding: 1.5rem 0;
+}
+.presence-signature-quote-oracle .oracle-mark {
+  width: 36px;
+  height: 36px;
+  color: var(--presence-accent);
+  opacity: 0.5;
+}
+.presence-signature-quote-oracle .oracle-active {
+  margin: 0;
+  font-family: var(--presence-font);
+  animation: presence-oracle-in 420ms ease;
+}
+.presence-signature-quote-oracle .oracle-quote {
+  font-size: clamp(1.4rem, 2.4vw, 1.8rem);
+  line-height: 1.45;
+  margin: 0;
+  color: var(--presence-text);
+  font-weight: 500;
+  max-width: 56rem;
+}
+.presence-signature-quote-oracle .oracle-active footer {
+  margin-top: 1rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--presence-accent);
+}
+.presence-signature-quote-oracle .oracle-active .who { font-weight: 700; }
+.presence-signature-quote-oracle .oracle-strip {
+  list-style: none;
+  margin: 0;
+  padding: 1rem 0 0;
+  border-top: 1px solid var(--presence-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.2rem;
+}
+.presence-signature-quote-oracle .oracle-strip button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: transparent;
+  border: 0;
+  padding: 0.35rem 0;
+  font: inherit;
+  color: var(--presence-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+.presence-signature-quote-oracle .oracle-strip button .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--presence-border);
+  transition: background 160ms ease, transform 160ms ease;
+}
+.presence-signature-quote-oracle .oracle-strip button:hover,
+.presence-signature-quote-oracle .oracle-strip button:focus-visible {
+  color: var(--presence-text);
+  outline: none;
+}
+.presence-signature-quote-oracle .oracle-strip button.is-active {
+  color: var(--presence-text);
+}
+.presence-signature-quote-oracle .oracle-strip button.is-active .dot {
+  background: var(--presence-accent);
+  transform: scale(1.6);
+}
+@keyframes presence-oracle-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .presence-signature-quote-oracle .oracle-active { animation: none; }
+}
+.presence-quote-oracle-empty { color: var(--presence-muted); padding: 2rem; text-align: center; }
+
+/* When the editorial room is rendering its proof via the oracle, the
+ * surrounding section can drop its default top spacing. */
+.presence-editorial-proof-as-oracle .proof-grid { display: none; }
+.presence-editorial-works-as-gallery-wall .works-grid { display: none; }
+
+/* =========================================================================
  * Signature: before/after slider
  * ========================================================================= */
 .presence-signature-ba {
@@ -675,6 +861,138 @@ body[data-shell="studio"] {
 /* Provide bottom padding so the floating nav doesn't cover content on mobile. */
 @media (max-width: 768px) {
   .presence-room { padding-bottom: 5.5rem; }
+}
+
+/* =========================================================================
+ * Studio: Presence DNA editor (Pass 2)
+ * ========================================================================= */
+.presence-dna-panel {
+  display: grid;
+  gap: 1rem;
+  background: var(--p-studio-surface);
+  border: 1px solid var(--p-studio-border);
+  border-radius: 18px;
+  padding: 1.5rem;
+  color: var(--p-studio-text);
+}
+.presence-dna-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.presence-dna-panel-head .eyebrow {
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--p-studio-accent);
+  margin: 0;
+}
+.presence-dna-panel-head h2 {
+  margin: 0.35rem 0 0.4rem;
+  font-size: 1.4rem;
+}
+.presence-dna-panel-head .sub {
+  margin: 0;
+  color: var(--p-studio-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  max-width: 38rem;
+}
+.presence-dna-prov {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 1px solid var(--p-studio-border);
+  background: rgba(255,255,255,0.04);
+}
+.presence-dna-prov.ok { color: #b5e5b6; border-color: rgba(120, 200, 130, 0.6); }
+.presence-dna-prov.warn { color: #f1d28b; border-color: rgba(220, 180, 90, 0.6); }
+.presence-dna-prov.subtle { color: var(--p-studio-muted); }
+.presence-dna-editor-label {
+  font-size: 0.74rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--p-studio-muted);
+}
+.presence-dna-editor {
+  width: 100%;
+  background: #0e0d0b;
+  color: #f7f3e8;
+  border: 1px solid var(--p-studio-border);
+  border-radius: 12px;
+  padding: 1rem;
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  resize: vertical;
+  min-height: 380px;
+}
+.presence-dna-editor:focus {
+  outline: none;
+  border-color: var(--p-studio-accent);
+  box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.25);
+}
+.presence-dna-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  font-size: 0.8rem;
+  margin: 0;
+}
+.presence-dna-status .ok { color: #9be3a0; display: inline-flex; align-items: center; gap: 0.35rem; }
+.presence-dna-status .err { color: #f0a6a6; display: inline-flex; align-items: center; gap: 0.35rem; }
+.presence-dna-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.presence-dna-primary,
+.presence-dna-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+.presence-dna-primary {
+  background: var(--p-studio-accent);
+  color: var(--p-studio-bg);
+}
+.presence-dna-secondary {
+  background: transparent;
+  color: var(--p-studio-text);
+  border-color: var(--p-studio-border);
+}
+.presence-dna-primary:disabled,
+.presence-dna-secondary:disabled { opacity: 0.55; cursor: not-allowed; }
+.presence-dna-resolved {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--p-studio-border);
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+}
+.presence-dna-resolved summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--p-studio-muted);
+}
+.presence-dna-resolved pre {
+  margin: 0.75rem 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  color: var(--p-studio-text);
+  line-height: 1.55;
+  max-height: 320px;
+  overflow: auto;
 }
 
 /* =========================================================================

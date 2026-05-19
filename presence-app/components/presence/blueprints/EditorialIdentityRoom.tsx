@@ -16,6 +16,8 @@ import { themeClasses, themeStyle } from "@/lib/presence/theme/genome";
 import GalleryBreath from "@/components/presence/behaviours/GalleryBreath";
 import EditorialSnap from "@/components/presence/behaviours/EditorialSnap";
 import TreatedImage from "@/components/presence/TreatedImage";
+import GalleryWall from "@/components/presence/signatures/GalleryWall";
+import QuoteOracle from "@/components/presence/signatures/QuoteOracle";
 import { PrimaryCta, SecondaryContact, visibleProof, visibleServices, visibleWorks, workLink, workThumb } from "./shared";
 
 interface Props {
@@ -33,6 +35,10 @@ export default function EditorialIdentityRoom({ node, dna, theme, ctaLabel }: Pr
   const heroTitle = node.hero_title || node.display_name;
   const workFirst = dna.composition.entry_type === "work_first" && works.length > 0;
   const story = node.long_story || node.bio || node.short_bio || "";
+  // Signature module routing: painter → gallery_wall, consultant → quote_oracle.
+  const sig = dna.signature.signature_module;
+  const useGalleryWall = sig === "gallery_wall" && works.length > 0;
+  const useQuoteOracle = sig === "quote_oracle" && proof.length > 0;
 
   return (
     <main
@@ -103,8 +109,24 @@ export default function EditorialIdentityRoom({ node, dna, theme, ctaLabel }: Pr
         </EditorialSnap>
       )}
 
-      {/* WORKS (only shown if not used as hero, or if there are more) */}
-      {works.length > (workFirst ? 1 : 0) && (
+      {/* WORKS — when DNA picks gallery_wall, render the signature.
+          Otherwise fall through to the standard editorial grid. */}
+      {useGalleryWall ? (
+        <section id="works" className="presence-editorial-works presence-editorial-works-as-gallery-wall">
+          <div className="works-cap">
+            <p className="eyebrow">— Selected work</p>
+            <h2 className="presence-h2">{workFirst ? "On the wall" : "The gallery wall"}</h2>
+          </div>
+          <GalleryWall
+            works={works}
+            slug={node.slug}
+            treatment={theme.image_treatment}
+            texture={theme.texture}
+            intensity={theme.motion_intensity}
+            skipFirst={workFirst}
+          />
+        </section>
+      ) : works.length > (workFirst ? 1 : 0) ? (
         <section id="works" className="presence-editorial-works">
           <div className="works-cap">
             <p className="eyebrow">— Selected work</p>
@@ -134,7 +156,7 @@ export default function EditorialIdentityRoom({ node, dna, theme, ctaLabel }: Pr
             ))}
           </div>
         </section>
-      )}
+      ) : null}
 
       {/* CASE-STUDY / SERVICES (consulting variant) */}
       {services.length > 0 && (
@@ -160,8 +182,23 @@ export default function EditorialIdentityRoom({ node, dna, theme, ctaLabel }: Pr
         </EditorialSnap>
       )}
 
-      {/* PROOF — after_story or near_cta per DNA */}
-      {proof.length > 0 && (
+      {/* PROOF — when DNA picks quote_oracle, render the rotating
+          oracle. Otherwise the standard editorial proof grid. */}
+      {useQuoteOracle ? (
+        <EditorialSnap as="section" id="proof" intensity={theme.motion_intensity} className="presence-editorial-proof presence-editorial-proof-as-oracle">
+          <p className="eyebrow">— What clients say</p>
+          <QuoteOracle
+            quotes={proof
+              .filter((p) => Boolean(p.testimonial))
+              .map((p) => ({
+                id: p.id,
+                testimonial: p.testimonial as string,
+                client_label: p.client_label ?? null,
+                outcome: p.outcome ?? null,
+              }))}
+          />
+        </EditorialSnap>
+      ) : proof.length > 0 ? (
         <EditorialSnap as="section" id="proof" intensity={theme.motion_intensity} className="presence-editorial-proof">
           <p className="eyebrow">— Notes from collaborators</p>
           <div className="proof-grid">
@@ -176,7 +213,7 @@ export default function EditorialIdentityRoom({ node, dna, theme, ctaLabel }: Pr
             ))}
           </div>
         </EditorialSnap>
-      )}
+      ) : null}
 
       {/* CONTACT */}
       <section id="contact" className="presence-editorial-contact">
