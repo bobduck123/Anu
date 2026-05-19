@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import PresenceWorldChooser from "@/components/presence/world/chooser/PresenceWorldChooser";
+import PresenceStudio from "@/components/presence/studio/PresenceStudio";
 
 export const metadata: Metadata = {
-  title: "Presence — Choose your world",
-  description: "Visual preview of every Presence engagement dynamic — chamber walk, orbit constellation, object tableau, portal cascade — plus atmosphere and motion options. Pick what you'll feel like before you build it.",
+  title: "Presence Studio — Set the direction",
+  description: "Presence is the frame. The client is the world. Five short stages to set the direction for a Presence — the place visitors enter, how they move through it, and how they reach you. Nothing is published until you say so.",
 };
 
-export default function PresenceChooserPage() {
-  return <PresenceWorldChooser />;
+export default function PresenceStudioPage() {
+  return <PresenceStudio />;
 }
