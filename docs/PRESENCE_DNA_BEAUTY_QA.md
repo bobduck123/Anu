@@ -100,6 +100,46 @@ chambers, walls, surfaces, drawers, foyers — not "sections".
     Uniqueness engine must score the pair well below the threshold
     (0.70). Today: 0.057.
 
+## Pass-4 additional checks (Presence Room Engine v1)
+
+Rooms running through `RoomGraphRenderer` (gallery_room, sound_room,
+material_studio today) must additionally pass:
+
+13. **Directional navigation works.** Forward (`ArrowUp` / `Enter` /
+    HUD forward / dock forward) advances; left/right turn; back
+    retreats. Each direction respects available exits and is disabled
+    when no exit exists.
+
+14. **Inspection works.** Tapping or clicking a `RoomObject` opens a
+    `PortalPanel`. The panel has focus on its close button on open.
+    `Escape` closes the panel. Closing returns focus to the
+    previously-focused element. The chamber state is unchanged by
+    inspect/close.
+
+15. **Retreat hierarchy.** `Escape` (when inspecting) closes the
+    panel first; otherwise retreat steps back through navigation
+    history; otherwise retreat is a no-op. Browser back triggers the
+    same hierarchy.
+
+16. **Deep linking.** Visiting `/p/<slug>#<chamber-id>` lands directly
+    on that chamber. Internal moves update the hash via
+    `history.replaceState` (no history pollution).
+
+17. **Reduced-motion fallback.** When `prefers-reduced-motion: reduce`
+    is set, the engine renders a flat accessible document with a
+    chambers TOC at the top and every chamber stacked vertically as
+    `<section>` with full content visible — no camera, no portals, no
+    HUD, no dock.
+
+18. **Mobile dock + swipe.** The bottom dock surfaces forward/left/
+    right/back as labelled buttons. Horizontal swipe gestures on the
+    chamber stage turn left/right (threshold 60px horizontal, must
+    dominate any vertical movement).
+
+19. **No body scroll dependency.** The room is the viewport. Vertical
+    scroll only exists inside opened portal panels (long text) and
+    inside the reduced-motion fallback.
+
 ## How to run the audit
 
 ```bash
