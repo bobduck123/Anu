@@ -16,10 +16,31 @@ export class PresenceApiError extends Error {
 async function parseError(res: Response): Promise<PresenceApiError> {
   const payload = await res.json().catch(() => null);
   const err = payload?.error ?? payload;
+  if (res.status === 401) {
+    return new PresenceApiError(
+      401,
+      err?.code ?? "auth_required",
+      err?.message ?? err?.msg ?? "Please sign in again to create your Presence.",
+    );
+  }
+  if (res.status === 403) {
+    return new PresenceApiError(
+      403,
+      err?.code ?? "permission_denied",
+      err?.message ?? err?.msg ?? "You do not have permission to create this Presence.",
+    );
+  }
+  if (res.status === 404) {
+    return new PresenceApiError(
+      404,
+      err?.code ?? "endpoint_unavailable",
+      err?.message ?? err?.msg ?? "The Presence setup endpoint is unavailable.",
+    );
+  }
   return new PresenceApiError(
     res.status,
     err?.code ?? "request_failed",
-    err?.message ?? `Request failed (${res.status})`,
+    err?.message ?? err?.msg ?? `Request failed (${res.status})`,
   );
 }
 
@@ -53,7 +74,7 @@ export async function apiFetch<T>(
     throw new PresenceApiError(
       0,
       "network_error",
-      "Presence backend could not be reached. Check the API URL and try again.",
+      "The Presence backend did not allow this browser request, or could not be reached. Check the API URL and allowed frontend origin.",
     );
   }
 
@@ -98,7 +119,7 @@ export async function ownerMultipartFetch<T>(
     throw new PresenceApiError(
       0,
       "network_error",
-      "Presence backend could not be reached. Check the API URL and try again.",
+      "The Presence backend did not allow this browser request, or could not be reached. Check the API URL and allowed frontend origin.",
     );
   }
 

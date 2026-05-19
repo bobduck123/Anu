@@ -317,6 +317,7 @@ def _init_jwt_error_handlers(app):
 # Production still REQUIRES CORS_ORIGINS to be set explicitly — see below.
 _DEFAULT_KNOWN_FRONTEND_ORIGINS: list[str] = [
     # Presence (the new public-world studio)
+    "https://your-presence.vercel.app",
     "https://presence-gilt.vercel.app",
     # Mudyin (existing pilot site)
     "https://mudyin.com",
@@ -339,8 +340,12 @@ def _init_cors(app):
     """Initialize CORS with strict security settings.
 
     Origin policy:
+      - Repo-owned Presence frontend aliases in
+        _DEFAULT_KNOWN_FRONTEND_ORIGINS are always included so a Vercel alias
+        migration does not block authenticated browser preflights before
+        operators update production env.
       - If CORS_ORIGINS env/config is explicitly set → operator's choice wins,
-        full stop. We never silently extend it.
+        source of truth for arbitrary origins.
       - If CORS_ORIGINS is unset and ENV == 'production' → SecurityValidationError.
         Production must list its origins explicitly so misconfigurations are loud.
       - If CORS_ORIGINS is unset and ENV != 'production' → fall back to the
@@ -364,6 +369,16 @@ def _init_cors(app):
     # so a fresh `flask run` / staging deploy is usable without invisible env.
     if not cors_origins:
         cors_origins = list(_DEFAULT_KNOWN_FRONTEND_ORIGINS) + list(_DEFAULT_LOCAL_DEV_ORIGINS)
+    else:
+        # Keep explicit env values, but append repo-owned frontends in a stable
+        # order. This preserves disallow-by-default for unknown origins while
+        # avoiding production CORS drift when the official Presence Vercel alias
+        # changes from presence-gilt to your-presence.
+        seen = set(cors_origins)
+        for origin in _DEFAULT_KNOWN_FRONTEND_ORIGINS:
+            if origin not in seen:
+                cors_origins.append(origin)
+                seen.add(origin)
 
     # Persist back into config so other modules (e.g. middleware) see the same
     # resolved list when introspecting.

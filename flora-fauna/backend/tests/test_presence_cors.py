@@ -28,6 +28,7 @@ from backend_factory import load_create_app  # noqa: E402
 
 
 PRESENCE_ORIGIN = "https://presence-gilt.vercel.app"
+YOUR_PRESENCE_ORIGIN = "https://your-presence.vercel.app"
 DISALLOWED_ORIGIN = "https://attacker.example"
 
 
@@ -103,6 +104,33 @@ def test_options_preflight_on_owner_media_upload_from_presence_frontend_succeeds
     allow_methods = (response.headers.get("Access-Control-Allow-Methods") or "").upper()
     assert "POST" in allow_methods, f"POST must be allowed for media upload: {allow_methods}"
     assert "OPTIONS" in allow_methods, f"OPTIONS must be allowed for media upload: {allow_methods}"
+
+
+def test_options_preflight_on_beta_start_from_current_presence_frontend_succeeds():
+    # Production previously allowed presence-gilt but the live frontend moved
+    # to your-presence. The repo-owned alias must be granted even when the
+    # explicit env allowlist still contains only the older Presence origin.
+    app = _build_app([PRESENCE_ORIGIN])
+    client = app.test_client()
+
+    response = client.options(
+        "/api/presence/owner/beta/start",
+        headers={
+            "Origin": YOUR_PRESENCE_ORIGIN,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "authorization,content-type",
+        },
+    )
+
+    assert response.status_code in (200, 204), (
+        f"beta/start preflight should succeed without auth, got {response.status_code}"
+    )
+    assert response.headers.get("Access-Control-Allow-Origin") == YOUR_PRESENCE_ORIGIN
+    allow_headers = (response.headers.get("Access-Control-Allow-Headers") or "").lower()
+    assert "authorization" in allow_headers
+    assert "content-type" in allow_headers
+    allow_methods = (response.headers.get("Access-Control-Allow-Methods") or "").upper()
+    assert "POST" in allow_methods
 
 
 # ---------------------------------------------------------------------------
@@ -264,3 +292,18 @@ def test_owner_routes_require_real_auth_even_with_correct_origin():
     assert response.status_code != 201, "beta/start must NOT succeed without auth"
     # CORS header still present.
     assert response.headers.get("Access-Control-Allow-Origin") == PRESENCE_ORIGIN
+
+
+def test_beta_start_requires_auth_but_returns_cors_for_current_presence_origin():
+    app = _build_app([PRESENCE_ORIGIN])
+    client = app.test_client()
+
+    response = client.post(
+        "/api/presence/owner/beta/start",
+        json={"display_name": "Cors Auth Diagnosis", "presence_type": "artist"},
+        headers={"Origin": YOUR_PRESENCE_ORIGIN},
+    )
+
+    assert response.status_code == 401
+    assert response.status_code != 201
+    assert response.headers.get("Access-Control-Allow-Origin") == YOUR_PRESENCE_ORIGIN
