@@ -30,6 +30,15 @@ from ..security.alpha import alpha_jwt_required
 from ..security.control_plane import control_plane_required, log_control_event
 from ..security.control_tenant_scope import resolve_effective_control_managed_node_ids
 from ..security.policy import get_current_user
+from ..services.presence_customisation_manifest import (
+    MANIFEST_SCHEMA_VERSION,
+    archetypes as presence_customisation_archetypes,
+    customisation_manifest,
+    normalize_customisation_selection,
+    preview_seed_from_selection,
+    recommendations_for_archetype,
+    room_worlds as presence_customisation_room_worlds,
+)
 from ..services.presence_owner_identity import (
     resolve_or_provision_presence_owner as resolve_or_provision_presence_user,
 )
@@ -403,6 +412,46 @@ def _enquiry_failed_response():
     )
 
 
+@presence_bp.route("/customisation/manifest", methods=["GET"])
+@limiter.limit("120 per minute; 600 per hour")
+def get_presence_customisation_manifest():
+    return ok(customisation_manifest())
+
+
+@presence_bp.route("/customisation/archetypes", methods=["GET"])
+@limiter.limit("120 per minute; 600 per hour")
+def get_presence_customisation_archetypes():
+    return ok({"schema_version": MANIFEST_SCHEMA_VERSION, "items": presence_customisation_archetypes()})
+
+
+@presence_bp.route("/customisation/room-worlds", methods=["GET"])
+@limiter.limit("120 per minute; 600 per hour")
+def get_presence_customisation_room_worlds():
+    return ok({"schema_version": MANIFEST_SCHEMA_VERSION, "items": presence_customisation_room_worlds()})
+
+
+@presence_bp.route("/customisation/recommendations", methods=["GET"])
+@limiter.limit("120 per minute; 600 per hour")
+def get_presence_customisation_recommendations():
+    archetype = _clean_str(request.args.get("archetype"), 80)
+    result = recommendations_for_archetype(archetype)
+    if not result.get("archetype"):
+        return error("validation_error", "Unsupported archetype.", 422, details=result)
+    return ok(result)
+
+
+@presence_bp.route("/customisation/preview-seed", methods=["POST"])
+@limiter.limit("30 per minute; 120 per hour")
+def create_presence_customisation_preview_seed():
+    payload = request.get_json(silent=True) or {}
+    if not isinstance(payload, dict):
+        return error("validation_error", "JSON object payload is required", 422)
+    preview = preview_seed_from_selection(payload)
+    if preview.get("needs_review"):
+        return error("validation_error", "Unsupported customisation combination.", 422, details=preview)
+    return ok(preview)
+
+
 @presence_bp.route("/public/<string:slug>/nfc-hit", methods=["POST"])
 @limiter.limit("60 per minute; 300 per hour")
 def submit_public_presence_nfc_hit(slug):
@@ -592,6 +641,13 @@ def _serialize_beta_application(app: "PresenceBetaApplication") -> dict:
         "status": app.status,
         "presence_status": app.presence_status,
         "schema_version": app.schema_version,
+        "room_world": app.room_world,
+        "engagement_dynamic": app.engagement_dynamic,
+        "motion_profile": app.motion_profile,
+        "object_skin_pack": app.object_skin_pack,
+        "atmosphere_pack": app.atmosphere_pack,
+        "customisation_manifest_version": app.customisation_manifest_version,
+        "customisation": app.customisation_snapshot,
         "next_step": "review",
         "created_at": app.created_at.isoformat() if app.created_at else None,
     }
@@ -664,6 +720,27 @@ def submit_beta_application():
     except PresenceValidationError as exc:
         return _validation_error(exc)
 
+    customisation = normalize_customisation_selection(payload)
+    if not customisation["valid"]:
+        return error(
+            "validation_error",
+            "Unsupported customisation combination.",
+            422,
+            details={
+                "schema_version": MANIFEST_SCHEMA_VERSION,
+                "errors": customisation["errors"],
+                "correction_hints": [item["hint"] for item in customisation["errors"]],
+                "snapshot": customisation["snapshot"],
+            },
+        )
+    resolved_customisation = customisation["resolved"]
+    customisation_snapshot = customisation["snapshot"]
+    preview_seed = preview_seed_from_selection(resolved_customisation)
+    if presence_dna is None:
+        presence_dna = preview_seed.get("presence_dna")
+    if room_graph is None:
+        room_graph = preview_seed.get("room_graph")
+
     user_id_str, _auth_email = _optional_setup_requester_identity()
     source_origin = (
         _clean_str(payload.get("source_origin"), 300)
@@ -678,7 +755,7 @@ def submit_beta_application():
         display_name=display_name,
         desired_slug=desired_slug,
         presence_type=presence_type,
-        archetype=_clean_str(payload.get("archetype"), 80),
+        archetype=resolved_customisation["archetype"],
         room_preference=_clean_str(payload.get("room_preference"), 120),
         primary_purpose=primary_purpose,
         primary_cta=primary_cta,
@@ -693,11 +770,18 @@ def submit_beta_application():
         source_origin=source_origin,
         beta_mode=beta_mode,
         status="submitted",
-        selected_room_world=_clean_str(payload.get("selected_room_world") or payload.get("room_preference"), 120),
-        atmosphere=_clean_str(payload.get("atmosphere") or visual_mood, 120),
+        room_world=resolved_customisation["room_world"],
+        selected_room_world=resolved_customisation["room_world"],
+        engagement_dynamic=resolved_customisation["engagement_dynamic"],
+        motion_profile=resolved_customisation["motion_profile"],
+        object_skin_pack=resolved_customisation["object_skin_pack"],
+        atmosphere_pack=resolved_customisation["atmosphere_pack"],
+        atmosphere=_clean_str(payload.get("atmosphere") or visual_mood, 120) or resolved_customisation["atmosphere_pack"],
         presence_dna=presence_dna,
         room_graph=room_graph,
         schema_version=schema_version,
+        customisation_manifest_version=MANIFEST_SCHEMA_VERSION,
+        customisation_snapshot=customisation_snapshot,
         presence_status="setup_request",
         notes=_clean_str(payload.get("notes"), 4000),
         metadata_json={
