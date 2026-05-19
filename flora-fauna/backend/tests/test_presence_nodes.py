@@ -781,7 +781,7 @@ def test_presence_room_enquiry_smtp_success_returns_sent(monkeypatch):
     assert "Slug: sent-room" in sent_messages[0].body
 
 
-def test_presence_room_enquiry_smtp_failure_returns_failed_without_leaking(monkeypatch):
+def test_presence_room_enquiry_smtp_failure_returns_logged_fallback_without_losing_capture(monkeypatch):
     app = _build_app()
     tenant_id, _ = _seed_fixture(app)
     app.config.update(
@@ -828,9 +828,17 @@ def test_presence_room_enquiry_smtp_failure_returns_failed_without_leaking(monke
 
     assert res.status_code == 201, res.get_json()
     body = res.get_json()["data"]
-    assert body["delivery_status"] == "failed"
-    assert body["message"] == "We could not submit your enquiry. Please try again or contact the organisation directly."
+    assert body["delivery_status"] == "logged_fallback"
+    assert body["message"] == "Thanks. Your enquiry has been received."
     assert "smtp password" not in body["message"].lower()
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceEnquiry
+
+    with app.app_context():
+        row = _db.session.query(PresenceEnquiry).filter_by(source_room_slug="failed-mail-room").one()
+        assert row.delivery_status == "logged_fallback"
+        assert row.routed_to_email == "failed-mail@example.org"
 
 
 def test_presence_room_enquiry_without_route_returns_unrouted():
@@ -930,6 +938,60 @@ def test_presence_room_enquiry_side_effect_failure_still_logs_fallback(monkeypat
     body = res.get_json()["data"]
     assert body["status"] == "new"
     assert body["delivery_status"] == "logged_fallback"
+
+
+def test_presence_room_enquiry_post_capture_failure_marks_logged_fallback(monkeypatch):
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers = _headers(app)
+
+    room = client.post(
+        "/api/control/presence/nodes",
+        json={
+            **_node_payload(tenant_id, slug="post-capture-room"),
+            "display_name": "Post Capture Room",
+            "room_type": "minimal_card",
+            "theme_preset": "clean_light",
+            "public_status": "public",
+            "enquiry_email": "post-capture@example.org",
+        },
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert room.status_code == 201, room.get_json()
+
+    from manara_backend_app.api import presence as presence_api
+
+    def fail_finalize(*_args, **_kwargs):
+        raise RuntimeError("notification subsystem unavailable")
+
+    monkeypatch.setattr(presence_api, "finalize_presence_enquiry_delivery", fail_finalize)
+
+    res = client.post(
+        "/api/presence/public/post-capture-room/enquiries",
+        json={
+            "name": "Post Capture Visitor",
+            "email": "post-capture-visitor@example.org",
+            "message": "The base enquiry should survive finalization failure.",
+            "consent": True,
+            "preferred_contact_method": "email",
+        },
+        base_url="http://public.test",
+    )
+
+    assert res.status_code == 201, res.get_json()
+    body = res.get_json()["data"]
+    assert body["status"] == "new"
+    assert body["delivery_status"] == "logged_fallback"
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import PresenceEnquiry
+
+    with app.app_context():
+        row = _db.session.query(PresenceEnquiry).filter_by(source_room_slug="post-capture-room").one()
+        assert row.delivery_status == "logged_fallback"
+        assert row.message == "The base enquiry should survive finalization failure."
 
 
 def test_presence_room_enquiry_unexpected_failure_returns_delivery_status(monkeypatch):

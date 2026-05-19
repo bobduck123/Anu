@@ -172,14 +172,11 @@ def assert_enquiry_flow() -> None:
     data = enquiry.get("data") or {}
     delivery_status = data.get("delivery_status")
     require(
-        status in {200, 201, 202, 503},
+        status in {200, 201, 202},
         f"enquiry smoke returned unexpected status: {status} {enquiry}",
     )
-    if status == 503:
-        require(delivery_status == "failed", f"503 enquiry response did not include failed delivery_status: {enquiry}")
-    else:
-        require(data.get("status") == "new", f"enquiry smoke failed: {status} {enquiry}")
-    require(delivery_status in {"sent", "logged_fallback", "failed", "unrouted"}, f"delivery_status missing: {enquiry}")
+    require(data.get("status") == "new", f"enquiry smoke failed: {status} {enquiry}")
+    require(delivery_status in {"sent", "logged_fallback", "unrouted"}, f"delivery_status not operational: {enquiry}")
     require(isinstance(data.get("message"), str) and data["message"], f"delivery message missing: {enquiry}")
 
     status, invalid = request_json(

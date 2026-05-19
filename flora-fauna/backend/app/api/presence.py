@@ -49,6 +49,7 @@ from ..services.presence_service import (
     create_presence_service,
     create_presence_variation,
     create_presence_work,
+    finalize_presence_enquiry_delivery,
     normalize_slug,
     public_url_for_node,
     pseudo_qr_svg,
@@ -324,6 +325,28 @@ def submit_public_presence_enquiry(slug):
             submitter_user=submitter_user,
         )
         db.session.commit()
+        try:
+            enquiry = PresenceEnquiry.query.get(enquiry.id) or enquiry
+            finalize_presence_enquiry_delivery(node, enquiry, request.get_json(silent=True) or {})
+            db.session.commit()
+        except Exception:
+            current_app.logger.exception(
+                "Presence enquiry post-capture delivery finalization failed",
+                extra={"node_id": node.id, "slug": node.slug, "enquiry_id": getattr(enquiry, "id", None)},
+            )
+            db.session.rollback()
+            try:
+                enquiry = PresenceEnquiry.query.get(enquiry.id) or enquiry
+                if getattr(enquiry, "delivery_status", None) not in {"sent", "logged_fallback", "unrouted"}:
+                    enquiry.delivery_status = "logged_fallback"
+                    db.session.commit()
+            except Exception:
+                current_app.logger.exception(
+                    "Presence enquiry fallback status update failed",
+                    extra={"node_id": node.id, "slug": node.slug, "enquiry_id": getattr(enquiry, "id", None)},
+                )
+                db.session.rollback()
+                return _enquiry_failed_response()
         return ok(
             {
                 "id": enquiry.id,

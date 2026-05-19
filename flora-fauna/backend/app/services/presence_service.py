@@ -10,7 +10,7 @@ from urllib.parse import quote, urlparse
 
 import bleach
 from flask import current_app, request
-from sqlalchemy import func
+from sqlalchemy import func, text
 
 from ..extensions import db
 from ..models import (
@@ -240,6 +240,7 @@ _SLUG_RE = re.compile(r"[^a-z0-9-]+")
 _MULTI_DASH_RE = re.compile(r"-{2,}")
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 _HEX_COLOR_RE = re.compile(r"^#?[0-9a-fA-F]{6}$")
+_PRESENCE_ENQUIRY_SCHEMA_REPAIR_DONE = False
 
 
 class PresenceValidationError(ValueError):
@@ -2498,6 +2499,45 @@ def _notify_owner_of_enquiry(node: PresenceNode, enquiry: PresenceEnquiry) -> No
         current_app.logger.exception("Presence enquiry notification dispatch failed")
 
 
+def _ensure_presence_enquiry_capture_schema() -> None:
+    """Best-effort additive repair for deployed enquiry-capture columns.
+
+    Vercel does not run ``db.create_all`` and earlier deployments applied the
+    Presence Rooms migration separately from the submitter-user migration. If
+    those columns are absent, SQLAlchemy cannot insert even anonymous
+    enquiries. These statements are the idempotent, additive subset required
+    for durable public enquiry capture.
+    """
+    global _PRESENCE_ENQUIRY_SCHEMA_REPAIR_DONE
+    if _PRESENCE_ENQUIRY_SCHEMA_REPAIR_DONE:
+        return
+
+    database_uri = str(current_app.config.get("SQLALCHEMY_DATABASE_URI") or "")
+    if database_uri.startswith("sqlite"):
+        _PRESENCE_ENQUIRY_SCHEMA_REPAIR_DONE = True
+        return
+
+    enabled = str(os.environ.get("PRESENCE_ENQUIRY_SCHEMA_REPAIR", "true")).strip().lower()
+    if enabled in {"0", "false", "no"}:
+        return
+
+    statements = [
+        'ALTER TABLE presence_enquiry ADD COLUMN IF NOT EXISTS submitter_user_id INTEGER REFERENCES "user"(id)',
+        "CREATE INDEX IF NOT EXISTS ix_presence_enquiry_submitter_user_id ON presence_enquiry (submitter_user_id)",
+        "ALTER TABLE presence_enquiry ALTER COLUMN email DROP NOT NULL",
+        "ALTER TABLE presence_enquiry ADD COLUMN IF NOT EXISTS source_room_slug VARCHAR(180)",
+        "ALTER TABLE presence_enquiry ADD COLUMN IF NOT EXISTS routed_to_email VARCHAR(180)",
+        "ALTER TABLE presence_enquiry ADD COLUMN IF NOT EXISTS delivery_status VARCHAR(40)",
+    ]
+    try:
+        with db.engine.begin() as connection:
+            for statement in statements:
+                connection.execute(text(statement))
+        _PRESENCE_ENQUIRY_SCHEMA_REPAIR_DONE = True
+    except Exception:
+        current_app.logger.exception("Presence enquiry schema repair failed")
+
+
 def _run_enquiry_side_effect(
     label: str,
     node: PresenceNode,
@@ -2595,11 +2635,20 @@ def _route_presence_enquiry_email(node: PresenceNode, enquiry: PresenceEnquiry) 
         mail.send(message)
         enquiry.delivery_status = "sent"
     except Exception:
-        enquiry.delivery_status = "failed"
+        enquiry.delivery_status = "logged_fallback"
         current_app.logger.exception(
-            "Presence enquiry email delivery failed",
+            "Presence enquiry email delivery failed; captured enquiry retained as logged fallback",
             extra={"node_id": node.id, "slug": node.slug, "enquiry_id": enquiry.id, "recipient": recipient},
         )
+
+
+def _enquiry_capture_context(node: PresenceNode, data: dict[str, Any]) -> tuple[dict[str, Any], str | None, int | None]:
+    payload = validate_enquiry_payload(data)
+    tag = source_tag_for_node(node, data)
+    source_tag_id = tag.id if tag else payload.get("source_tag_id")
+    source_type = _public_source_type(data, tag) or payload.get("source_type") or "public_enquiry"
+    _validate_optional_node_child_ids(node, source_tag_id=source_tag_id)
+    return payload, source_type, source_tag_id
 
 
 def create_presence_enquiry(
@@ -2608,21 +2657,58 @@ def create_presence_enquiry(
     *,
     submitter_user: "User | None" = None,
 ) -> PresenceEnquiry:
-    """Create the PresenceEnquiry record (source of truth) plus internal
-    side-effects: PresenceConnection (relationship ledger), PresenceInteraction
-    (analytics event), PresenceAnalyticsEvent, and an ANU Notification to the
-    node owner.
+    """Create the durable PresenceEnquiry record, without non-critical effects.
 
     ``submitter_user`` is the optional authenticated submitter; when present
     we link the enquiry back to their ANU User row so an owner can resolve
     enquirers to ANU identities (and, in future passes, open an internal
     direct-message thread between them).
     """
-    payload = validate_enquiry_payload(data)
-    tag = source_tag_for_node(node, data)
-    source_tag_id = tag.id if tag else payload.get("source_tag_id")
-    source_type = _public_source_type(data, tag) or payload.get("source_type") or "public_enquiry"
-    _validate_optional_node_child_ids(node, source_tag_id=source_tag_id)
+    _ensure_presence_enquiry_capture_schema()
+    payload, source_type, source_tag_id = _enquiry_capture_context(node, data)
+    submitter_id = getattr(submitter_user, "id", None) if submitter_user else None
+
+    enquiry = PresenceEnquiry(
+        node_id=node.id,
+        tenant_id=node.tenant_id,
+        organisation_id=node.organisation_id,
+        connection_id=None,
+        submitter_user_id=submitter_id,
+        source_room_slug=node.slug,
+        ip_hash=hash_request_value(request.headers.get("X-Forwarded-For") or request.remote_addr),
+        user_agent_hash=hash_request_value(request.headers.get("User-Agent")),
+        status="new",
+        delivery_status="captured",
+        **{**payload, "source_type": source_type, "source_tag_id": source_tag_id},
+    )
+    db.session.add(enquiry)
+    db.session.flush()
+    return enquiry
+
+
+def finalize_presence_enquiry_delivery(
+    node: PresenceNode,
+    enquiry: PresenceEnquiry,
+    data: dict[str, Any],
+) -> PresenceEnquiry:
+    """Run post-capture side effects and delivery routing.
+
+    This function is designed to run after the base enquiry has been committed.
+    Relationship ledger, analytics, notification, and SMTP failures must not
+    erase the durable enquiry row.
+    """
+    payload = {
+        "name": enquiry.name,
+        "email": enquiry.email,
+        "phone": enquiry.phone,
+        "company": enquiry.company,
+        "message": enquiry.message,
+        "source_type": enquiry.source_type,
+        "metadata_json": enquiry.metadata_json or {},
+    }
+    source_type = enquiry.source_type or "public_enquiry"
+    source_tag_id = enquiry.source_tag_id
+
     connection = _run_enquiry_side_effect(
         "connection",
         node,
@@ -2632,25 +2718,11 @@ def create_presence_enquiry(
             source_type=source_type,
             source_tag_id=source_tag_id,
         ),
+        enquiry=enquiry,
     )
     connection_id = getattr(connection, "id", None)
-
-    submitter_id = getattr(submitter_user, "id", None) if submitter_user else None
-
-    enquiry = PresenceEnquiry(
-        node_id=node.id,
-        tenant_id=node.tenant_id,
-        organisation_id=node.organisation_id,
-        connection_id=connection_id,
-        submitter_user_id=submitter_id,
-        source_room_slug=node.slug,
-        ip_hash=hash_request_value(request.headers.get("X-Forwarded-For") or request.remote_addr),
-        user_agent_hash=hash_request_value(request.headers.get("User-Agent")),
-        status="new",
-        **{**payload, "source_type": source_type, "source_tag_id": source_tag_id},
-    )
-    db.session.add(enquiry)
-    db.session.flush()
+    if connection_id:
+        enquiry.connection_id = connection_id
     _run_enquiry_side_effect(
         "interaction",
         node,
