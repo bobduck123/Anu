@@ -155,6 +155,71 @@ def test_public_setup_request_preserves_studio_intake_fields_in_metadata():
         assert row.customisation_snapshot["resolved"]["room_world"] == "rooms-gallery-painter"
 
 
+def test_public_setup_request_accepts_actual_presence_studio_payload_shape():
+    app = _build_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/presence/setup-requests",
+        json={
+            "display_name": "Studio Levy",
+            "contact_name": "Anouk Levy",
+            "email": "anouk@example.com",
+            "phone": "+61 400 000 000",
+            "what_youre_building": "A quiet gallery for watercolours and small commissions.",
+            "notes": "Keep the room quiet and image-led.",
+            "references": ["https://example.com/reference-one", "https://example.com/reference-two"],
+            "do_not_wants": "No autoplay audio or loud animation.",
+            "consent_to_contact": True,
+            "archetype": "artist",
+            "room_world": "rooms-gallery-painter",
+            "engagement_dynamic": "chamber_walk",
+            "motion_profile": "still",
+            "object_skin_pack": "paper-wall",
+            "atmosphere_pack": "north-light",
+            "contact_style": "enquiry",
+            "copy_tone": "Plain",
+            "customisation_manifest_version": "studio-v1-local-fallback",
+            "customisation_snapshot": {
+                "identity": {"id": "artist", "label": "Artist"},
+                "world": {"id": "gallery", "label": "The Quiet Gallery"},
+                "movement": {"id": "rooms", "label": "Walk the Rooms"},
+                "mood": {"id": "north-light", "label": "North Light"},
+                "pace": {"id": "still", "label": "Still"},
+                "material": {"id": "paper-wall", "label": "Paper & Wall"},
+                "contact": {"id": "enquiry", "label": "Open Enquiry"},
+                "tone": "Plain",
+            },
+        },
+        base_url="http://public.test",
+    )
+
+    assert response.status_code == 201, response.get_json()
+    body = response.get_json()["data"]
+    assert body["room_world"] == "rooms-gallery-painter"
+    assert body["motion_profile"] == "calm"
+    assert body["object_skin_pack"] == "gallery_frame_pack"
+    assert body["atmosphere_pack"] == "quiet_gallery"
+    assert body["customisation"]["selected_raw"]["motion_profile"] == "still"
+    assert body["customisation"]["selected_raw"]["object_skin_pack"] == "paper-wall"
+    assert body["customisation"]["selected_raw"]["atmosphere_pack"] == "north-light"
+
+    from manara_backend_app.extensions import db
+    from manara_backend_app.models import PresenceBetaApplication
+
+    with app.app_context():
+        row = db.session.query(PresenceBetaApplication).one()
+        assert row.description == "A quiet gallery for watercolours and small commissions."
+        assert row.links == ["https://example.com/reference-one", "https://example.com/reference-two"]
+        studio_intake = row.metadata_json["studio_intake"]
+        assert studio_intake["what_they_are_building"] == "A quiet gallery for watercolours and small commissions."
+        assert studio_intake["do_not_wants"] == ["No autoplay audio or loud animation."]
+        assert studio_intake["contact_style"] == "enquiry"
+        assert studio_intake["copy_tone"] == "Plain"
+        assert studio_intake["submitted_customisation_manifest_version"] == "studio-v1-local-fallback"
+        assert studio_intake["submitted_customisation_snapshot"]["world"]["label"] == "The Quiet Gallery"
+
+
 def test_public_setup_request_rejects_invalid_customisation_combination():
     app = _build_app()
     client = app.test_client()

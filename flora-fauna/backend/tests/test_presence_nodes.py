@@ -3259,7 +3259,7 @@ def test_wrong_host_presence_page_redirects_to_frontend_origin():
     response = client.get("/p/jafar", base_url="https://anu-back-end.vercel.app")
 
     assert response.status_code == 302
-    assert response.headers["Location"] == "https://presence-gilt.vercel.app/p/jafar"
+    assert response.headers["Location"] == "https://your-presence.vercel.app/p/jafar"
 
 
 def test_wrong_host_presence_page_redirect_preserves_query_string():
@@ -3270,7 +3270,7 @@ def test_wrong_host_presence_page_redirect_preserves_query_string():
     response = client.get("/p/jafar?source=nfc-card&sid=abc", base_url="https://anu-back-end.vercel.app")
 
     assert response.status_code == 302
-    assert response.headers["Location"] == "https://presence-gilt.vercel.app/p/jafar?source=nfc-card&sid=abc"
+    assert response.headers["Location"] == "https://your-presence.vercel.app/p/jafar?source=nfc-card&sid=abc"
 
 
 def test_wrong_host_presence_work_and_collection_paths_redirect():
@@ -3282,9 +3282,9 @@ def test_wrong_host_presence_work_and_collection_paths_redirect():
     collection = client.get("/p/jafar/collections/def", base_url="https://anu-back-end.vercel.app")
 
     assert work.status_code == 302
-    assert work.headers["Location"] == "https://presence-gilt.vercel.app/p/jafar/works/abc"
+    assert work.headers["Location"] == "https://your-presence.vercel.app/p/jafar/works/abc"
     assert collection.status_code == 302
-    assert collection.headers["Location"] == "https://presence-gilt.vercel.app/p/jafar/collections/def"
+    assert collection.headers["Location"] == "https://your-presence.vercel.app/p/jafar/collections/def"
 
 
 def test_wrong_host_redirect_does_not_affect_public_api_route():
@@ -3296,6 +3296,38 @@ def test_wrong_host_redirect_does_not_affect_public_api_route():
 
     assert response.status_code == 404
     assert "Location" not in response.headers
+
+
+def test_public_presence_canonical_qr_and_vcard_remap_dead_presence_gilt_origin():
+    app = _build_app()
+    app.config["PRESENCE_PUBLIC_ORIGIN"] = "https://presence-gilt.vercel.app"
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    headers = _headers(app)
+
+    created = client.post(
+        "/api/control/presence/nodes",
+        json=_node_payload(tenant_id, slug="canonical-node"),
+        headers=headers,
+        base_url="http://control.test",
+    ).get_json()["data"]
+    client.post(f"/api/control/presence/nodes/{created['id']}/publish", headers=headers, base_url="http://control.test")
+
+    public = client.get("/api/presence/public/canonical-node", base_url="http://public.test")
+    assert public.status_code == 200, public.get_json()
+    public_data = public.get_json()["data"]
+    assert public_data["public_url"] == "https://your-presence.vercel.app/presence/canonical-node"
+    assert public_data["seo"]["canonical_url"] == "https://your-presence.vercel.app/presence/canonical-node"
+
+    vcard = client.get("/api/presence/public/canonical-node/vcard", base_url="http://public.test")
+    assert vcard.status_code == 200
+    assert b"URL:https://your-presence.vercel.app/presence/canonical-node" in vcard.data
+    assert b"presence-gilt.vercel.app" not in vcard.data
+
+    qr = client.get("/api/presence/public/canonical-node/qr", base_url="http://public.test")
+    assert qr.status_code == 200
+    assert b"<title>https://your-presence.vercel.app/presence/canonical-node</title>" in qr.data
+    assert b"presence-gilt.vercel.app" not in qr.data
 
 
 def test_public_presence_list_supports_pagination_and_filters():

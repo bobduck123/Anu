@@ -241,6 +241,10 @@ _MULTI_DASH_RE = re.compile(r"-{2,}")
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 _HEX_COLOR_RE = re.compile(r"^#?[0-9a-fA-F]{6}$")
 _PRESENCE_ENQUIRY_SCHEMA_REPAIR_DONE = False
+_ACTIVE_PRESENCE_PUBLIC_ORIGIN = "https://your-presence.vercel.app"
+_DEPRECATED_PRESENCE_PUBLIC_ORIGINS = {
+    "https://presence-gilt.vercel.app": _ACTIVE_PRESENCE_PUBLIC_ORIGIN,
+}
 
 
 class PresenceValidationError(ValueError):
@@ -537,11 +541,13 @@ def configured_presence_public_origin() -> str:
         or os.environ.get("NEXT_PUBLIC_PRESENCE_PUBLIC_ORIGIN")
     )
     if configured:
-        return str(configured).strip().rstrip("/")
+        origin = str(configured).strip().rstrip("/")
+        return _DEPRECATED_PRESENCE_PUBLIC_ORIGINS.get(origin, origin)
 
     frontend_base = current_app.config.get("FRONTEND_BASE_URL") or os.environ.get("FRONTEND_BASE_URL")
     if frontend_base and "anu-back-end" not in str(frontend_base):
-        return str(frontend_base).strip().rstrip("/")
+        origin = str(frontend_base).strip().rstrip("/")
+        return _DEPRECATED_PRESENCE_PUBLIC_ORIGINS.get(origin, origin)
 
     env = (
         current_app.config.get("FLASK_ENV")
@@ -551,7 +557,7 @@ def configured_presence_public_origin() -> str:
         or ""
     )
     if str(env).strip().lower() == "production":
-        return "https://presence-gilt.vercel.app"
+        return _ACTIVE_PRESENCE_PUBLIC_ORIGIN
     return "http://localhost:3001"
 
 

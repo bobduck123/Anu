@@ -55,16 +55,25 @@ Studio intake field mapping:
 - `links` -> `presence_beta_application.links`
 - `references` / `reference_links` -> `presence_beta_application.links` when
   `links` is absent, and always preserved in `metadata_json.studio_intake.references`
-- `what_they_are_building` -> `description` when `description` is absent, and
-  preserved in `metadata_json.studio_intake.what_they_are_building`
+- `what_they_are_building` / `what_youre_building` -> `description` when
+  `description` is absent, and preserved in
+  `metadata_json.studio_intake.what_they_are_building`
 - `phone` -> `metadata_json.studio_intake.phone`
 - `do_not_wants` / `do_not_want` -> `metadata_json.studio_intake.do_not_wants`
 - `consent_to_contact` -> `metadata_json.studio_intake.consent_to_contact`
+- `contact_style` -> `metadata_json.studio_intake.contact_style`
+- `copy_tone` -> `metadata_json.studio_intake.copy_tone`
 - submitted `customisation_manifest_version` and `customisation_snapshot` are
   preserved in `metadata_json.studio_intake`
 
 The authoritative backend-resolved customisation snapshot remains
 `presence_beta_application.customisation_snapshot`.
+
+The backend also accepts the Presence Studio local-fallback option IDs and
+normalises them into the controlled manifest IDs. For example, `still` becomes
+`calm`, `paper-wall` becomes `gallery_frame_pack`, and `north-light` becomes
+`quiet_gallery`. The raw submitted option IDs remain preserved in
+`customisation_snapshot.selected_raw`.
 
 ## Operator Review Endpoints
 

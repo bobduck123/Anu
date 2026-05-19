@@ -636,15 +636,20 @@ def _setup_studio_metadata(payload: dict, *, links, customisation_snapshot: dict
     references = payload.get("references")
     if references is None:
         references = payload.get("reference_links")
+    building = (
+        payload.get("what_they_are_building")
+        or payload.get("what_youre_building")
+        or payload.get("building")
+        or payload.get("project_description")
+    )
     studio_intake = {
         "phone": _clean_str(payload.get("phone"), 80),
-        "what_they_are_building": _clean_str(
-            payload.get("what_they_are_building") or payload.get("building") or payload.get("project_description"),
-            4000,
-        ),
+        "what_they_are_building": _clean_str(building, 4000),
         "do_not_wants": _setup_json_value(payload.get("do_not_wants") or payload.get("do_not_want"), max_items=20),
         "references": _setup_json_value(references, max_items=20),
         "consent_to_contact": bool(payload.get("consent_to_contact")) if "consent_to_contact" in payload else None,
+        "contact_style": _clean_str(payload.get("contact_style"), 80),
+        "copy_tone": _clean_str(payload.get("copy_tone"), 200),
         "submitted_customisation_manifest_version": _clean_str(payload.get("customisation_manifest_version"), 120),
         "submitted_customisation_snapshot": payload.get("customisation_snapshot")
         if isinstance(payload.get("customisation_snapshot"), dict)

@@ -339,6 +339,41 @@ _MOTION_BY_ID = {item["id"]: item for item in MOTION_PROFILES}
 _SKIN_BY_ID = {item["id"]: item for item in OBJECT_SKIN_PACKS}
 _ATMOSPHERE_BY_ID = {item["id"]: item for item in ATMOSPHERE_PACKS}
 
+# Presence Studio's local fallback manifest uses human-facing IDs in its
+# backendId fields until the backend manifest adapter can consume the v1
+# backend arrays directly. Accept those aliases here so live intake preserves
+# the user's choices without rejecting otherwise valid Studio submissions.
+_STUDIO_ARCHETYPE_ALIASES = {
+    "sound": "dj",
+    "venue": "organisation",
+}
+_STUDIO_MOTION_ALIASES = {
+    "still": "calm",
+    "tactile": "calm",
+    "drifting": "playful",
+}
+_STUDIO_SKIN_ALIASES = {
+    "paper-wall": "gallery_frame_pack",
+    "signal-tile": "signal_tile_pack",
+    "wood-grain": "material_studio_pack",
+    "ceramic": "material_studio_pack",
+    "ferrous": "material_studio_pack",
+    "textile": "material_studio_pack",
+}
+_STUDIO_ATMOSPHERE_ALIASES = {
+    "north-light": "quiet_gallery",
+    "warm-workshop": "warm_material",
+    "nocturnal": "nocturnal_signal",
+    "cinematic": "nocturnal_signal",
+    "editorial": "quiet_gallery",
+}
+
+
+def _resolve_alias(value: str | None, aliases: dict[str, str]) -> str | None:
+    if value is None:
+        return None
+    return aliases.get(value, value)
+
 
 def customisation_manifest() -> dict[str, Any]:
     return deepcopy(
@@ -423,6 +458,11 @@ def normalize_customisation_selection(payload: dict[str, Any]) -> dict[str, Any]
         "object_skin_pack": _input(payload, "object_skin_pack", "skin_pack"),
         "atmosphere_pack": _input(payload, "atmosphere_pack"),
     }
+    selected_raw = deepcopy(selected)
+    selected["archetype"] = _resolve_alias(selected["archetype"], _STUDIO_ARCHETYPE_ALIASES)
+    selected["motion_profile"] = _resolve_alias(selected["motion_profile"], _STUDIO_MOTION_ALIASES)
+    selected["object_skin_pack"] = _resolve_alias(selected["object_skin_pack"], _STUDIO_SKIN_ALIASES)
+    selected["atmosphere_pack"] = _resolve_alias(selected["atmosphere_pack"], _STUDIO_ATMOSPHERE_ALIASES)
 
     defaults_applied: list[dict[str, str]] = []
     errors: list[dict[str, Any]] = []
@@ -573,6 +613,7 @@ def normalize_customisation_selection(payload: dict[str, Any]) -> dict[str, Any]
         "schema_version": SNAPSHOT_SCHEMA_VERSION,
         "manifest_version": MANIFEST_SCHEMA_VERSION,
         "selected": selected,
+        "selected_raw": selected_raw,
         "resolved": resolved,
         "defaults_applied": defaults_applied,
         "roomgraph_schema_version": ROOMGRAPH_SCHEMA_VERSION,
