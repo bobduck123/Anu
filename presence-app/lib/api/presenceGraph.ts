@@ -1,4 +1,4 @@
-import { apiFetch, ownerFetch } from "./client";
+import { apiFetch, ownerFetch } from "./client.ts";
 import type {
   Encounter,
   FieldNote,
@@ -305,4 +305,3 @@ export function generateOwnerPathFromRoom(roomId: number, token: string) {
     method: "POST",
   });
 }
-

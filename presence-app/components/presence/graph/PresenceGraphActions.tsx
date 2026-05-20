@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import {
   ArrowRight,
   Bookmark,
@@ -10,10 +10,10 @@ import {
   FolderPlus,
   Heart,
   Loader2,
-  Mask,
   PenLine,
   Plus,
   Sparkles,
+  UserRound,
 } from "lucide-react";
 import { buildSignInHref, buildSignUpHref } from "@/lib/auth/returnTo";
 import {
@@ -48,9 +48,28 @@ type AuthState = {
   checked: boolean;
 };
 
-export function PresenceGraphActions({ node }: { node: PresenceNode }) {
-  const searchParams = useSearchParams();
+type EntryContext = {
+  source: string;
+  roomKeyToken: string | null;
+  contextLabel: string | null;
+};
+
+export function PresenceGraphActions({
+  node,
+  captureOnMount = true,
+  entryContextOverride,
+}: {
+  node: PresenceNode;
+  captureOnMount?: boolean;
+  entryContextOverride?: Partial<EntryContext>;
+}) {
   const [auth, setAuth] = useState<AuthState>({ token: null, observer: null, checked: false });
+  const [entryContext, setEntryContext] = useState<EntryContext>({
+    source: "direct",
+    roomKeyToken: null,
+    contextLabel: null,
+  });
+  const [entryContextReady, setEntryContextReady] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -66,10 +85,29 @@ export function PresenceGraphActions({ node }: { node: PresenceNode }) {
   const [observerAlias, setObserverAlias] = useState("");
   const [observerBio, setObserverBio] = useState("");
 
-  const source = searchParams.get("source") || searchParams.get("utm_source") || "direct";
-  const roomKeyToken = searchParams.get("key") || searchParams.get("room_key") || searchParams.get("token");
-  const contextLabel = searchParams.get("context") || searchParams.get("campaign");
   const returnTo = typeof window === "undefined" ? `/presence/${node.slug}` : window.location.pathname + window.location.search;
+
+  useEffect(() => {
+    if (entryContextOverride) {
+      setEntryContext((current) => ({
+        ...current,
+        ...entryContextOverride,
+        source: entryContextOverride.source || current.source,
+        roomKeyToken: entryContextOverride.roomKeyToken ?? current.roomKeyToken,
+        contextLabel: entryContextOverride.contextLabel ?? current.contextLabel,
+      }));
+      setEntryContextReady(true);
+      return;
+    }
+    if (typeof window === "undefined") return;
+    const searchParams = new URLSearchParams(window.location.search);
+    setEntryContext({
+      source: searchParams.get("source") || searchParams.get("utm_source") || "direct",
+      roomKeyToken: searchParams.get("key") || searchParams.get("room_key") || searchParams.get("token"),
+      contextLabel: searchParams.get("context") || searchParams.get("campaign"),
+    });
+    setEntryContextReady(true);
+  }, [entryContextOverride?.contextLabel, entryContextOverride?.roomKeyToken, entryContextOverride?.source]);
 
   useEffect(() => {
     let cancelled = false;
@@ -94,15 +132,15 @@ export function PresenceGraphActions({ node }: { node: PresenceNode }) {
   }, []);
 
   useEffect(() => {
-    if (!node.id || !shouldCaptureEncounter(node.id, roomKeyToken)) return;
+    if (!entryContextReady || !captureOnMount || !node.id || !shouldCaptureEncounter(node.id, entryContext.roomKeyToken)) return;
     const visitorId = anonymousVisitorId();
     captureRoomEncounter(node.id, {
-      source,
-      room_key_token: roomKeyToken || undefined,
-      context_label: contextLabel || undefined,
+      source: entryContext.source,
+      room_key_token: entryContext.roomKeyToken || undefined,
+      context_label: entryContext.contextLabel || undefined,
       anonymous_visitor_id: visitorId,
     }, auth.token).catch(() => {});
-  }, [auth.token, contextLabel, node.id, roomKeyToken, source]);
+  }, [auth.token, captureOnMount, entryContext.contextLabel, entryContext.roomKeyToken, entryContext.source, entryContextReady, node.id]);
 
   const actionHint = useMemo(() => {
     if (saved) return "Saved to your Passport.";
@@ -279,7 +317,7 @@ export function PresenceGraphActions({ node }: { node: PresenceNode }) {
         <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <ActionButton label={saved ? "Saved" : "Save Room"} icon={<Bookmark className="h-4 w-4" />} busy={busy === "save"} onClick={saveCurrentRoom} />
           <ActionButton label={following ? "Following" : "Follow"} icon={<Heart className="h-4 w-4" />} busy={busy === "follow"} onClick={followCurrentRoom} />
-          <ActionButton label="Mood Board" icon={<FolderPlus className="h-4 w-4" />} busy={busy === "board"} onClick={openBoardChooser} />
+          <ActionButton label="Add to Mood Board" icon={<FolderPlus className="h-4 w-4" />} busy={busy === "board"} onClick={openBoardChooser} />
           <ActionButton label="Field Note" icon={<PenLine className="h-4 w-4" />} busy={busy === "note"} onClick={() => document.getElementById("presence-field-note")?.focus()} />
         </div>
 
@@ -399,7 +437,7 @@ export function PresenceGraphActions({ node }: { node: PresenceNode }) {
         <div className="rounded-2xl border border-[var(--room-border)] bg-[var(--room-surface)] p-4">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--room-soft)] text-[var(--room-accent)]">
-              <Mask className="h-5 w-5" />
+              <UserRound className="h-5 w-5" />
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-[var(--room-text)]">{PRESENCE_GRAPH_COPY.observerUpgrade}</h3>
@@ -434,7 +472,7 @@ export function PresenceGraphActions({ node }: { node: PresenceNode }) {
                     onClick={() => void createMask()}
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--room-accent)] px-4 py-2 text-sm font-semibold text-[var(--room-accent-text)]"
                   >
-                    {busy === "mask" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mask className="h-4 w-4" />}
+                    {busy === "mask" ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserRound className="h-4 w-4" />}
                     Create Observer Mask
                   </button>
                 </div>
@@ -454,7 +492,7 @@ function ActionButton({
   onClick,
 }: {
   label: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   busy: boolean;
   onClick: () => void | Promise<void>;
 }) {
@@ -475,4 +513,3 @@ function errorMessage(err: unknown, fallback: string) {
   if (err instanceof Error) return err.message || fallback;
   return fallback;
 }
-

@@ -9,7 +9,21 @@ import { createClient } from "@/lib/supabase/client";
 import { PRESENCE_GRAPH_COPY } from "@/lib/presence/graph/copy";
 import type { MoodBoard } from "@/lib/api/types";
 
-const BOARD_TYPES = ["general", "influences", "saved_rooms", "event", "place", "material", "sound", "mood", "editorial"];
+const BOARD_TYPES: Array<{ value: string; label: string }> = [
+  { value: "general", label: "General" },
+  { value: "influences", label: "Influences" },
+  { value: "saved_rooms", label: "Saved Rooms" },
+  { value: "event", label: "Event" },
+  { value: "place", label: "Place" },
+  { value: "material", label: "Material" },
+  { value: "sound", label: "Sound" },
+  { value: "mood", label: "Mood" },
+  { value: "editorial", label: "Editorial" },
+];
+
+function humaniseBoardType(value: string): string {
+  return BOARD_TYPES.find((t) => t.value === value)?.label ?? value.replace(/_/g, " ");
+}
 
 export function MoodBoardsClient() {
   const [token, setToken] = useState<string | null>(null);
@@ -102,7 +116,7 @@ export function MoodBoardsClient() {
                   onChange={(event) => setBoardType(event.target.value)}
                   className="rounded-2xl border border-stone-700 bg-stone-950 px-4 py-3 text-sm outline-none"
                 >
-                  {BOARD_TYPES.map((type) => <option key={type} value={type}>{type.replace(/_/g, " ")}</option>)}
+                  {BOARD_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
                 </select>
                 <button
                   type="button"
@@ -126,14 +140,28 @@ export function MoodBoardsClient() {
               </section>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
-                {boards.map((board) => (
-                  <Link key={board.id} href={`/observer/mood-boards/${board.id}`} className="rounded-3xl border border-stone-800 bg-stone-900 p-5 transition hover:border-orange-300/60">
-                    <p className="text-xs uppercase tracking-[0.18em] text-stone-500">{board.board_type.replace(/_/g, " ")}</p>
-                    <h2 className="mt-2 text-xl font-semibold">{board.title}</h2>
-                    {board.description && <p className="mt-2 text-sm leading-6 text-stone-300">{board.description}</p>}
-                    <p className="mt-4 text-xs text-stone-500">{board.visibility}</p>
-                  </Link>
-                ))}
+                {boards.map((board) => {
+                  const itemCount = board.items?.length ?? 0;
+                  return (
+                    <Link
+                      key={board.id}
+                      href={`/observer/mood-boards/${board.id}`}
+                      className="group flex flex-col gap-3 rounded-3xl border border-stone-800 bg-stone-900 p-5 transition hover:-translate-y-0.5 hover:border-orange-300/60"
+                    >
+                      <p className="text-xs uppercase tracking-[0.18em] text-stone-500">{humaniseBoardType(board.board_type)}</p>
+                      <h2 className="text-xl font-semibold">{board.title}</h2>
+                      {board.description && <p className="text-sm leading-6 text-stone-300">{board.description}</p>}
+                      <div className="mt-auto flex flex-wrap items-center gap-2 text-xs text-stone-500">
+                        <span>{itemCount === 0 ? "Empty" : `${itemCount} ${itemCount === 1 ? "item" : "items"}`}</span>
+                        <span aria-hidden>·</span>
+                        <span>{board.visibility}</span>
+                        <span className="ml-auto inline-flex items-center gap-1 text-orange-300 opacity-0 transition group-hover:opacity-100">
+                          Open <ArrowRight className="h-3 w-3" aria-hidden />
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </>

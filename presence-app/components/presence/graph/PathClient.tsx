@@ -6,7 +6,7 @@ import { ArrowRight, Compass, Loader2, MapPin, Route } from "lucide-react";
 import { choosePathFork, getPath, getPathFromMoodBoard, getPathFromRoom, recordPathTrace, startPathWalk } from "@/lib/api/presenceGraph";
 import { createClient } from "@/lib/supabase/client";
 import { buildSignInHref } from "@/lib/auth/returnTo";
-import { PRESENCE_GRAPH_COPY } from "@/lib/presence/graph/copy";
+import { PRESENCE_GRAPH_COPY, pathDirectionLabel } from "@/lib/presence/graph/copy";
 import type { PathChoice, PathWaypoint, PresencePath } from "@/lib/api/types";
 
 type PathMode =
@@ -101,6 +101,7 @@ export function PathClient({ mode }: { mode: PathMode }) {
 
   const waypoints = path.waypoints ?? [];
   const active = waypoints.find((waypoint) => waypoint.id === activeWaypointId) ?? waypoints[0];
+  const activeIndex = active ? waypoints.findIndex((waypoint) => waypoint.id === active.id) : -1;
   const choices = (path.choices ?? []).filter((choice) => !active || choice.from_waypoint_id === active.id);
   const visibleChoices = choices.length > 0 ? choices : (path.choices ?? []).slice(0, 6);
 
@@ -129,13 +130,15 @@ export function PathClient({ mode }: { mode: PathMode }) {
 
           {active && (
             <section className="rounded-3xl border border-stone-800 bg-[radial-gradient(circle_at_20%_10%,rgba(251,146,60,0.22),transparent_32%),#1c1917] p-6">
-              <p className="text-xs uppercase tracking-[0.18em] text-stone-400">Current waypoint</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-stone-400">
+                {activeIndex === 0 ? "Trailhead" : `Waypoint ${activeIndex + 1} of ${waypoints.length}`}
+              </p>
               <h2 className="mt-2 text-2xl font-semibold">{active.title || active.waypoint_type}</h2>
               {active.reason_shown && <p className="mt-3 text-sm leading-6 text-stone-300">{active.reason_shown}</p>}
               {active.waypoint_type === "room" && active.waypoint_id && (
                 <Link href={String(active.metadata?.public_url || "#")} className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-stone-700 px-4 py-2 text-sm font-semibold text-stone-100">
                   Enter Room
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4" aria-hidden />
                 </Link>
               )}
             </section>
@@ -169,22 +172,34 @@ export function PathClient({ mode }: { mode: PathMode }) {
 
           <div className="rounded-3xl border border-stone-800 bg-stone-900 p-5">
             <h2 className="flex items-center gap-2 font-semibold">
-              <Compass className="h-4 w-4 text-orange-300" />
+              <Compass className="h-4 w-4 text-orange-300" aria-hidden />
               {PRESENCE_GRAPH_COPY.paths}
             </h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {visibleChoices.map((choice) => (
-                <button
-                  key={choice.id}
-                  type="button"
-                  onClick={() => void choose(choice)}
-                  className="rounded-2xl border border-stone-800 bg-stone-950/60 p-4 text-left transition hover:border-orange-300/70"
-                >
-                  <p className="font-semibold">{choice.label}</p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.16em] text-stone-500">{choice.direction_type}</p>
-                </button>
-              ))}
-            </div>
+            {visibleChoices.length === 0 ? (
+              <p className="mt-4 rounded-2xl border border-dashed border-stone-800 bg-stone-950/40 p-4 text-sm text-stone-400">
+                Path end — no further forks. Return later, or walk a new Path from a Room or Mood Board.
+              </p>
+            ) : (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {visibleChoices.map((choice) => (
+                  <button
+                    key={choice.id}
+                    type="button"
+                    onClick={() => void choose(choice)}
+                    className="group rounded-2xl border border-stone-800 bg-stone-950/60 p-4 text-left transition hover:border-orange-300/70"
+                  >
+                    {/* Direction label uses humanised text; raw label sits as the secondary line if different */}
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-orange-300">
+                      {pathDirectionLabel(choice.direction_type)}
+                    </p>
+                    <p className="mt-2 font-semibold text-stone-50">{choice.label || pathDirectionLabel(choice.direction_type)}</p>
+                    <p className="mt-2 inline-flex items-center gap-1 text-xs text-stone-500 transition group-hover:text-orange-200">
+                      Walk this way <ArrowRight className="h-3 w-3" aria-hidden />
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </div>
