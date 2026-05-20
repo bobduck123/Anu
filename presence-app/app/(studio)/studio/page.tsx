@@ -126,10 +126,10 @@ export default function StudioIndexPage() {
             action={
               <div className="flex flex-wrap justify-center gap-3">
                 <Link
-                  href="/onboarding"
+                  href="/presence-chooser"
                   className="rounded-xl bg-[var(--p-studio-accent)] px-4 py-2 text-sm font-semibold text-stone-950 transition hover:bg-orange-300"
                 >
-                  Start onboarding
+                  Start public setup
                 </Link>
                 <Link
                   href="/gallery"

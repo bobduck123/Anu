@@ -23,7 +23,7 @@ export default function Home() {
             href="/auth/sign-in"
             className="rounded-full border border-stone-300/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-stone-700 transition hover:border-stone-900 hover:text-stone-950"
           >
-            Studio
+            Owner login
           </Link>
         </nav>
 
@@ -43,7 +43,7 @@ export default function Home() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/auth/sign-up?returnTo=%2Fonboarding"
+                href="/presence-chooser"
                 className="inline-flex items-center gap-2 rounded-2xl bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-stone-800"
               >
                 Start your Presence
@@ -103,14 +103,14 @@ export default function Home() {
                 Owner entry
               </p>
               <h2 className="mt-3 text-2xl font-semibold">
-                Enter Presence Studio
+                Open owner workspace
               </h2>
               <p className="mt-3 text-sm leading-6 text-stone-300">
                 Prepare, preview, publish, and share the public world assigned
                 to your account.
               </p>
               <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-orange-200">
-                Go to Studio
+                Go to owner workspace
                 <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
               </span>
             </Link>
@@ -119,10 +119,11 @@ export default function Home() {
       </section>
 
       <section className="border-t border-stone-200 bg-white px-5 py-10 sm:px-8">
-        <div className="mx-auto grid max-w-6xl gap-6 sm:grid-cols-3">
+        <div className="mx-auto grid max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {[
             ["Public route", "/p/your-slug"],
-            ["Owner Studio", "/studio"],
+            ["Public Studio", "/presence-chooser"],
+            ["Owner workspace", "/studio"],
             ["Plans", "/plans"],
           ].map(([label, route]) => (
             <div key={label} className="rounded-2xl border border-stone-200 p-5">

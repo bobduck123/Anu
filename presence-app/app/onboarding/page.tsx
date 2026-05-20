@@ -1,12 +1,12 @@
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 
 export const metadata: Metadata = {
-  title: "Onboarding — Presence",
+  title: "Presence Studio - Set the direction",
   description:
-    "Shape your first Presence. Seven calm questions and we generate a private draft you can customise in Studio.",
+    "Redirecting to the public Presence Studio setup flow. Nothing is published until you say so.",
 };
 
 export default function OnboardingPage() {
-  return <OnboardingWizard />;
+  redirect("/presence-chooser");
 }
