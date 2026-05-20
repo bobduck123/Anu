@@ -8,6 +8,7 @@
 
 import { API_BASE } from "@/lib/api/client";
 import { LOCAL_STUDIO_MANIFEST, type StudioManifest } from "./manifest";
+import { friendlyLabelFor } from "./backendLabels";
 
 const ENDPOINT = "/api/presence/customisation/manifest";
 
@@ -36,50 +37,154 @@ async function fetchBackendManifest(signal?: AbortSignal): Promise<StudioManifes
   }
 }
 
-/** Translate a backend response (whatever shape it ships with) into
- * the strict StudioManifest. If the backend returns a richer or
- * partial manifest, we merge with the local fallback so UI never
- * encounters missing rows. */
-function normaliseBackendManifest(data: Record<string, unknown>): StudioManifest {
-  // Conservative merge: take any backend-supplied arrays that look right;
-  // otherwise keep the local entries. We intentionally accept loose
-  // shapes from the backend and validate field-by-field rather than
-  // assuming a schema.
+// ---------------------------------------------------------------------------
+// Backend shape detection.
+//
+// The live API ships a `presence-customisation-manifest-v1` payload with
+// arrays keyed `archetypes`, `room_worlds`, `engagement_dynamics`,
+// `motion_profiles`, `atmosphere_packs`, `object_skin_packs`. The legacy
+// shape (and the local fallback) uses the UI vocabulary directly:
+// `identities`, `worlds`, `movements`, `moods`, `paces`, `materials`. The
+// adapter accepts either.
+// ---------------------------------------------------------------------------
+function isArrayWithRows(x: unknown): x is Array<Record<string, unknown>> {
+  return Array.isArray(x) && x.length > 0 && typeof x[0] === "object" && x[0] !== null;
+}
+
+function pickArray(data: Record<string, unknown>, ...keys: string[]): Array<Record<string, unknown>> | null {
+  for (const k of keys) {
+    const v = data[k];
+    if (isArrayWithRows(v)) return v;
+  }
+  return null;
+}
+
+function detectShape(data: Record<string, unknown>): "backend-v1" | "legacy" | "unknown" {
+  const sv = data.schema_version;
+  if (typeof sv === "string" && sv.includes("presence-customisation-manifest")) return "backend-v1";
+  if (pickArray(data, "archetypes")) return "backend-v1";
+  if (pickArray(data, "identities", "worlds", "movements")) return "legacy";
+  return "unknown";
+}
+
+/** Translate a backend response into the StudioManifest the UI consumes.
+ *
+ * Two shapes are accepted:
+ *
+ * 1. **Backend v1** (live API). Keys are canonical:
+ *    `archetypes`, `room_worlds`, `engagement_dynamics`,
+ *    `motion_profiles`, `atmosphere_packs`, `object_skin_packs`.
+ *    Each row carries a snake-case `id` and a technical `label`. The
+ *    adapter starts from the LOCAL fallback (so visitors get the warm
+ *    labels and the hand-built vignettes), refreshes labels through
+ *    `FRIENDLY_BACKEND_LABELS`, and confirms every local `backendId`
+ *    is present in the backend's canonical set. The result keeps the
+ *    UI surface intact while flipping `source: "backend"` and stamping
+ *    the backend `schema_version`.
+ *
+ * 2. **Legacy** (and the local fallback's own shape). Keys are
+ *    UI-shaped: `identities`, `worlds`, etc. Each row merges over the
+ *    local fallback row at the same index when an `id + label` pair
+ *    is present.
+ *
+ * Returns `null` for a clearly malformed manifest (neither shape
+ * recognised), so the caller can fall back. */
+export function normaliseBackendManifest(data: unknown): StudioManifest | null {
+  if (!data || typeof data !== "object") return null;
+  const root = data as Record<string, unknown>;
+  const shape = detectShape(root);
+  if (shape === "unknown") return null;
+
   const base = structuredCloneSafe(LOCAL_STUDIO_MANIFEST);
-  const apply = <K extends keyof StudioManifest>(key: K, fallback: StudioManifest[K]) => {
-    const incoming = data[key as string];
-    if (Array.isArray(incoming) && incoming.length > 0) {
-      // Each entry must at least have an id + a human label; otherwise
-      // we skip it and keep the local fallback row for that index.
-      const cleaned = (incoming as Array<Record<string, unknown>>)
-        .map((row, i) => {
-          const id = typeof row.id === "string" ? row.id : null;
-          const label = typeof row.label === "string"
-            ? row.label
-            : typeof row.name === "string"
-              ? row.name
-              : null;
-          if (!id || !label) return null;
-          const fb = (fallback as unknown as Array<Record<string, unknown>>)[i] ?? {};
-          // Merge incoming over local; backend wins on any field it provides.
-          return { ...fb, ...row, id, label } as unknown;
-        })
-        .filter(Boolean);
-      if (cleaned.length > 0) {
-        (base as unknown as Record<string, unknown>)[key as string] = cleaned;
-      }
-    }
-  };
-  apply("identities", base.identities);
-  apply("worlds", base.worlds);
-  apply("movements", base.movements);
-  apply("moods", base.moods);
-  apply("paces", base.paces);
-  apply("materials", base.materials);
-  apply("contacts", base.contacts);
-  base.version = typeof data.version === "string" ? data.version : "studio-v1-backend";
+
+  if (shape === "backend-v1") {
+    applyBackendV1(base, root);
+  } else {
+    applyLegacy(base, root);
+  }
+
+  base.version =
+    pickString(root.schema_version) ??
+    pickString(root.manifest_version) ??
+    pickString(root.version) ??
+    "studio-v1-backend";
   base.source = "backend";
   return base;
+}
+
+/** Backend v1 merge. Each canonical array is walked once; for every
+ * backend row we either (a) refresh the matching local row's label via
+ * the friendly dictionary, or (b) leave the local row alone if the
+ * backend offers no friendlier name. Local-only rows (e.g. our richer
+ * 5-mood palette mapped onto 3 backend atmosphere packs) are kept so
+ * the UI never loses choices. */
+function applyBackendV1(base: StudioManifest, root: Record<string, unknown>): void {
+  refreshLabelsByBackendId(base.identities, pickArray(root, "archetypes"));
+  refreshLabelsByBackendId(base.worlds, pickArray(root, "room_worlds", "roomWorlds"));
+  refreshLabelsByBackendId(base.movements, pickArray(root, "engagement_dynamics", "engagementDynamics"));
+  refreshLabelsByBackendId(base.paces, pickArray(root, "motion_profiles", "motionProfiles"));
+  refreshLabelsByBackendId(base.moods, pickArray(root, "atmosphere_packs", "atmospherePacks"));
+  refreshLabelsByBackendId(base.materials, pickArray(root, "object_skin_packs", "objectSkinPacks"));
+  // `contacts` has no backend equivalent yet — kept from local fallback.
+}
+
+/** Legacy/local-shape merge (preserves the original Pass 7 behaviour for
+ * back-compatibility with anything still emitting UI keys). */
+function applyLegacy(base: StudioManifest, root: Record<string, unknown>): void {
+  const apply = <K extends keyof StudioManifest>(key: K) => {
+    const incoming = root[key as string];
+    if (!Array.isArray(incoming) || incoming.length === 0) return;
+    const fallback = base[key] as unknown as Array<Record<string, unknown>>;
+    const cleaned = (incoming as Array<Record<string, unknown>>).map((row, i) => {
+      const id = typeof row.id === "string" ? row.id : null;
+      const label =
+        typeof row.label === "string" ? row.label :
+        typeof row.name === "string" ? row.name : null;
+      if (!id || !label) return null;
+      const fb = fallback[i] ?? {};
+      return { ...fb, ...row, id, label } as unknown;
+    }).filter(Boolean);
+    if (cleaned.length > 0) {
+      (base as unknown as Record<string, unknown>)[key as string] = cleaned;
+    }
+  };
+  apply("identities");
+  apply("worlds");
+  apply("movements");
+  apply("moods");
+  apply("paces");
+  apply("materials");
+  apply("contacts");
+}
+
+/** Walk a local-shape array and, for every row whose `backendId` is
+ * mentioned in the incoming backend rows, replace its `label` with the
+ * friendly dictionary entry (preferring the backend's own label over the
+ * bare backend id, but never preferring the bare id). Rows whose
+ * `backendId` is not in the incoming set are left alone. */
+function refreshLabelsByBackendId(
+  rows: Array<{ backendId: string; label: string }>,
+  incoming: Array<Record<string, unknown>> | null,
+): void {
+  if (!incoming) return;
+  const incomingById = new Map<string, string>();
+  for (const row of incoming) {
+    const id = typeof row.id === "string" ? row.id : null;
+    const label = typeof row.label === "string" ? row.label : null;
+    if (id) incomingById.set(id, label ?? "");
+  }
+  for (const row of rows) {
+    if (!incomingById.has(row.backendId)) continue;
+    const backendLabel = incomingById.get(row.backendId) ?? "";
+    const friendly = friendlyLabelFor(row.backendId, backendLabel || row.label);
+    if (friendly && friendly.trim().length > 0) {
+      row.label = friendly;
+    }
+  }
+}
+
+function pickString(v: unknown): string | null {
+  return typeof v === "string" && v.trim().length > 0 ? v : null;
 }
 
 function structuredCloneSafe<T>(value: T): T {

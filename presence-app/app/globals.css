@@ -4306,8 +4306,10 @@ body[data-shell="studio"] {
 .presence-studio-chips button[data-state="done"] { color: var(--studio-copper); }
 .chip-num { opacity: 0.7; }
 
-/* Mobile actions */
-.presence-studio-mobile-actions { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; gap: 10px; padding: 12px 16px calc(env(safe-area-inset-bottom, 0) + 12px); background: var(--studio-card); border-top: 1px solid var(--studio-rule); z-index: 40; box-shadow: 0 -12px 28px rgba(13,12,10,0.08); }
+/* Mobile actions — sit above the always-visible drawer handle (56px) so the
+   Back / Continue pair stays tappable. The drawer (z-index 46) already eats
+   the safe-area-inset-bottom via its own padding, so we don't add it here. */
+.presence-studio-mobile-actions { position: fixed; left: 0; right: 0; bottom: 56px; display: flex; justify-content: space-between; gap: 10px; padding: 12px 16px; background: var(--studio-card); border-top: 1px solid var(--studio-rule); z-index: 47; box-shadow: 0 -12px 28px rgba(13,12,10,0.08); }
 
 /* Preview column */
 .presence-studio-preview { border-left: 1px solid var(--studio-rule); padding: 28px 24px; background: linear-gradient(180deg, var(--studio-cream-2), var(--studio-cream)); position: sticky; top: 0; align-self: start; height: 100dvh; overflow: auto; }

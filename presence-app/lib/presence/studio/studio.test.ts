@@ -4,9 +4,17 @@
 //   npx tsx lib/presence/studio/studio.test.ts
 
 import assert from "node:assert/strict";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join, dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { LOCAL_STUDIO_MANIFEST, findIdentity, findMovement, findWorld } from "./manifest";
 import { buildSetupRequestPayload, type SetupFormFields } from "./useStudioState";
+
+// Repo-relative helpers (so the test can scan source files outside lib/).
+const here = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(here, "..", "..", "..");
+const STUDIO_COMPONENTS_DIR = join(repoRoot, "components", "presence", "studio");
 
 // Word-boundary regexes so "Commission Card" doesn't trigger "mission c".
 const BANNED_PATTERNS: RegExp[] = [
@@ -172,6 +180,74 @@ it("optional fields are omitted when empty", () => {
   assert.equal(payload.do_not_wants, undefined);
   assert.equal(payload.references, undefined);
   assert.equal(payload.motion_profile, undefined);
+});
+
+// ---------------------------------------------------------------------------
+// Component-source banned-term scan.
+//
+// The manifest test above scans manifest data. This test scans the actual
+// .tsx files we ship to the visitor so a banned term cannot smuggle into a
+// JSX literal (e.g. "Powered by chamber_walk" in a header). String literals
+// inside imports, type annotations, and `data-*` attribute values are
+// stripped before matching — those are internal and never reach the visitor.
+// ---------------------------------------------------------------------------
+
+console.log("\nComponent-source label hygiene:\n");
+
+function walkTsx(dir: string): string[] {
+  const out: string[] = [];
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    const st = statSync(p);
+    if (st.isDirectory()) out.push(...walkTsx(p));
+    else if (name.endsWith(".tsx") || name.endsWith(".ts")) out.push(p);
+  }
+  return out;
+}
+
+// Component scan uses a tightened set of HIGH-SIGNAL patterns only.
+// Single-word terms like "manifest" or "payload" are legitimate TypeScript
+// identifiers (prop names, variable names) and would produce false positives
+// without a full AST parse. The patterns below are unambiguous leaks if they
+// appear anywhere in component source: backend ids contain underscores or
+// dashes that never legitimately appear in English UI copy, and the multi-
+// word internal phrases were coined inside this team and have no UI use.
+const COMPONENT_BANNED_PATTERNS: RegExp[] = [
+  /\bchamber_walk\b/i,
+  /\borbit_constellation\b/i,
+  /\bobject_tableau\b/i,
+  /\bportal_cascade\b/i,
+  /\brooms-gallery-painter\b/i,
+  /\brooms-underground-dj\b/i,
+  /\brooms-material-carpenter\b/i,
+  /\bdata marker\b/i,
+  /\bcustomisation snapshot\b/i,
+  /\bbrand pack\b/i,
+  /\bmission [abc]\b/i,
+];
+
+// Strip imports + comments before scanning so the kebab/underscore ids that
+// legitimately appear in import paths (e.g. for adapter type imports) don't
+// register. Anything in JSX text / props / template literals still gets seen.
+function stripImportsAndComments(src: string): string {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "")
+    .replace(/^\s*import[\s\S]*?;\s*$/gm, "");
+}
+
+it("component sources do not leak high-signal internal terms", () => {
+  const files = walkTsx(STUDIO_COMPONENTS_DIR);
+  assert.ok(files.length >= 6, `expected at least 6 studio component files, found ${files.length}`);
+  const failures: string[] = [];
+  for (const file of files) {
+    const cleaned = stripImportsAndComments(readFileSync(file, "utf8"));
+    for (const pattern of COMPONENT_BANNED_PATTERNS) {
+      const m = cleaned.match(pattern);
+      if (m) failures.push(`${file.replace(repoRoot, "")} → ${pattern} (token: "${m[0]}")`);
+    }
+  }
+  assert.deepEqual(failures, [], `Component source leaks:\n  ${failures.join("\n  ")}`);
 });
 
 console.log(`\n${passed} Presence Studio tests passed ✓\n`);

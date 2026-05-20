@@ -119,11 +119,16 @@ service-role key in this app.
 
 Required Supabase URL settings for production:
 
-- Site URL: `https://presence-gilt.vercel.app`
-- Redirect URL: `https://presence-gilt.vercel.app/auth/callback`
-- Redirect URL: `https://presence-gilt.vercel.app/auth/reset-password`
-- Redirect URL: `https://presence-gilt.vercel.app/auth/verify-email`
-- Redirect URL: `https://presence-gilt.vercel.app/onboarding`
+- Site URL: `https://your-presence.vercel.app`
+- Redirect URL: `https://your-presence.vercel.app/auth/callback`
+- Redirect URL: `https://your-presence.vercel.app/auth/reset-password`
+- Redirect URL: `https://your-presence.vercel.app/auth/verify-email`
+- Redirect URL: `https://your-presence.vercel.app/presence-chooser`
+
+(The legacy host `presence-gilt.vercel.app` is now remapped to
+`your-presence.vercel.app` by `activePresenceOrigin()` — see
+`lib/presence/url.ts`. Update Supabase to the new origin to avoid
+silent redirects.)
 
 Testing without email verification:
 

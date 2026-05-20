@@ -77,7 +77,7 @@ export function PreviewStage({ resolved }: { resolved: ResolvedSelection }) {
           <span>{resolved.movement?.label ?? "Choose movement"}</span>
         </div>
         <div className="mini-caption-bottom">
-          {resolved.identity ? `For ${resolved.identity.label.toLowerCase()}.` : <span style={{ opacity: 0.5 }}>Your place</span>}
+          {resolved.identity ? `For the ${resolved.identity.label.toLowerCase()}.` : <span style={{ opacity: 0.5 }}>Your place</span>}
         </div>
       </div>
     </div>

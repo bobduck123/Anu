@@ -129,7 +129,7 @@ export const LOCAL_STUDIO_MANIFEST: StudioManifest = {
       recommended_contact: "enquiry",
     },
     {
-      id: "sound", backendId: "sound", label: "Sound artist",
+      id: "sound", backendId: "dj", label: "Sound artist",
       tagline: "I work in sound — performance, recording, programming.",
       plain: "DJs, producers, performers, labels, programmers. People whose practice happens at night, in venues, on records.",
       practices: ["DJ", "Producer", "Performer", "Label", "Programmer"],
@@ -165,7 +165,7 @@ export const LOCAL_STUDIO_MANIFEST: StudioManifest = {
       recommended_contact: "calendar",
     },
     {
-      id: "venue", backendId: "venue", label: "Venue or programme",
+      id: "venue", backendId: "organisation", label: "Venue or programme",
       tagline: "We run a space. We programme things.",
       plain: "Venues, festivals, residencies, labels, collectives. Identities that hold many other identities.",
       practices: ["Venue", "Festival", "Residency", "Collective", "Label"],
@@ -241,26 +241,37 @@ export const LOCAL_STUDIO_MANIFEST: StudioManifest = {
       demoHref: "/dynamics/cascade",
     },
   ],
+  // Moods → backend `atmosphere_packs`. The backend canonical set is
+  // {quiet_gallery, nocturnal_signal, warm_material}; the local
+  // palette is richer (5 entries) so multiple local moods collapse
+  // onto a backend canonical id. Visitor still picks the precise
+  // local mood; backend sees the canonical bucket plus the precise
+  // human selection in `customisation_snapshot.selected_raw.mood`.
   moods: [
-    { id: "north-light", backendId: "north-light", label: "North Light", sub: "Daylight from a high window. Quiet.", swatches: ["#fbfaf6","#ece6d8","#1a1814"], wash: "linear-gradient(180deg,#ffffff,#ece6d8)" },
-    { id: "warm-workshop", backendId: "warm-workshop", label: "Warm Workshop", sub: "Amber bench-light, sawdust, low ceiling.", swatches: ["#2d1f12","#c47a3a","#f3e6cf"], wash: "radial-gradient(circle at 22% 28%,rgba(224,164,85,0.22),transparent 50%),linear-gradient(135deg,#1c1109,#2d1f12 60%,#23170d)" },
-    { id: "nocturnal", backendId: "nocturnal", label: "Nocturnal", sub: "Bioluminescent dark. Bass present.", swatches: ["#06060b","#ffd84d","#7dd0ff"], wash: "radial-gradient(circle at 18% 20%,rgba(255,216,77,0.18),transparent 36%),linear-gradient(160deg,#06060b,#0e0f1a 55%,#07070b)" },
-    { id: "cinematic", backendId: "cinematic", label: "Cinematic", sub: "Black room. One warm key light.", swatches: ["#0e0e10","#d8a44a","#f0eee9"], wash: "radial-gradient(circle at 30% 18%,rgba(216,164,74,0.22),transparent 40%),linear-gradient(140deg,#08080a,#181820 60%,#0e0e10)" },
-    { id: "editorial", backendId: "editorial", label: "Editorial", sub: "Newsprint, sharp greys, paper-thin.", swatches: ["#fbfbfb","#0d0d0d","#b8b8b6"], wash: "linear-gradient(180deg,#fbfbfb,#e9e7e2)" },
+    { id: "north-light", backendId: "quiet_gallery", label: "North Light", sub: "Daylight from a high window. Quiet.", swatches: ["#fbfaf6","#ece6d8","#1a1814"], wash: "linear-gradient(180deg,#ffffff,#ece6d8)" },
+    { id: "warm-workshop", backendId: "warm_material", label: "Warm Workshop", sub: "Amber bench-light, sawdust, low ceiling.", swatches: ["#2d1f12","#c47a3a","#f3e6cf"], wash: "radial-gradient(circle at 22% 28%,rgba(224,164,85,0.22),transparent 50%),linear-gradient(135deg,#1c1109,#2d1f12 60%,#23170d)" },
+    { id: "nocturnal", backendId: "nocturnal_signal", label: "Nocturnal", sub: "Bioluminescent dark. Bass present.", swatches: ["#06060b","#ffd84d","#7dd0ff"], wash: "radial-gradient(circle at 18% 20%,rgba(255,216,77,0.18),transparent 36%),linear-gradient(160deg,#06060b,#0e0f1a 55%,#07070b)" },
+    { id: "cinematic", backendId: "quiet_gallery", label: "Cinematic", sub: "Black room. One warm key light.", swatches: ["#0e0e10","#d8a44a","#f0eee9"], wash: "radial-gradient(circle at 30% 18%,rgba(216,164,74,0.22),transparent 40%),linear-gradient(140deg,#08080a,#181820 60%,#0e0e10)" },
+    { id: "editorial", backendId: "quiet_gallery", label: "Editorial", sub: "Newsprint, sharp greys, paper-thin.", swatches: ["#fbfbfb","#0d0d0d","#b8b8b6"], wash: "linear-gradient(180deg,#fbfbfb,#e9e7e2)" },
   ],
+  // Paces → backend `motion_profiles`. Backend canonical set is
+  // {calm, cinematic, kinetic, minimal, ritual, playful}.
   paces: [
-    { id: "still", backendId: "still", label: "Still", hint: "Almost no movement. Gallery-quiet.", ease: "cubic-bezier(0.2, 0.7, 0.1, 1)", strength: 0.18 },
-    { id: "tactile", backendId: "tactile", label: "Tactile", hint: "Weighted. Things have mass.", ease: "cubic-bezier(0.32, 0.72, 0, 1)", strength: 0.32 },
+    { id: "still", backendId: "calm", label: "Still", hint: "Almost no movement. Gallery-quiet.", ease: "cubic-bezier(0.2, 0.7, 0.1, 1)", strength: 0.18 },
+    { id: "tactile", backendId: "ritual", label: "Tactile", hint: "Weighted. Things have mass.", ease: "cubic-bezier(0.32, 0.72, 0, 1)", strength: 0.32 },
     { id: "cinematic", backendId: "cinematic", label: "Cinematic", hint: "Camera-like. Slow, deliberate.", ease: "cubic-bezier(0.45, 0, 0.15, 1)", strength: 0.5 },
-    { id: "drifting", backendId: "drifting", label: "Drifting", hint: "Slow rotational ease. Hypnotic.", ease: "cubic-bezier(0.5, 0.0, 0.2, 1)", strength: 0.65 },
+    { id: "drifting", backendId: "ritual", label: "Drifting", hint: "Slow rotational ease. Hypnotic.", ease: "cubic-bezier(0.5, 0.0, 0.2, 1)", strength: 0.65 },
   ],
+  // Materials → backend `object_skin_packs`. Backend canonical set
+  // is {gallery_frame_pack, signal_tile_pack, material_studio_pack}.
+  // The richer local palette collapses onto these three.
   materials: [
-    { id: "paper-wall", backendId: "paper-wall", label: "Paper & Wall", sub: "Rag paper, matte black, plaster.", swatches: ["#f8f4ec","#0d0c0a","#b94522"] },
-    { id: "wood-grain", backendId: "wood-grain", label: "Wood Grain", sub: "Oak, walnut, maple. Honest grain.", swatches: ["#3a2818","#e0a455","#f3e6cf"] },
-    { id: "ceramic", backendId: "ceramic", label: "Ceramic", sub: "Matte glaze, slip, soft edges.", swatches: ["#efe6d8","#a7896a","#2a1f15"] },
-    { id: "signal-tile", backendId: "signal-tile", label: "Signal Tile", sub: "Lithographic ink, screen print, neon.", swatches: ["#0e0d0b","#d8a44a","#efe9da"] },
-    { id: "ferrous", backendId: "ferrous", label: "Ferrous", sub: "Raw steel, oiled iron, lead grey.", swatches: ["#1a1814","#7a6f5a","#cdbfa3"] },
-    { id: "textile", backendId: "textile", label: "Textile", sub: "Linen, leather, brass, thread.", swatches: ["#d6c7a8","#5a3a1d","#8e7146"] },
+    { id: "paper-wall", backendId: "gallery_frame_pack", label: "Paper & Wall", sub: "Rag paper, matte black, plaster.", swatches: ["#f8f4ec","#0d0c0a","#b94522"] },
+    { id: "wood-grain", backendId: "material_studio_pack", label: "Wood Grain", sub: "Oak, walnut, maple. Honest grain.", swatches: ["#3a2818","#e0a455","#f3e6cf"] },
+    { id: "ceramic", backendId: "material_studio_pack", label: "Ceramic", sub: "Matte glaze, slip, soft edges.", swatches: ["#efe6d8","#a7896a","#2a1f15"] },
+    { id: "signal-tile", backendId: "signal_tile_pack", label: "Signal Tile", sub: "Lithographic ink, screen print, neon.", swatches: ["#0e0d0b","#d8a44a","#efe9da"] },
+    { id: "ferrous", backendId: "material_studio_pack", label: "Ferrous", sub: "Raw steel, oiled iron, lead grey.", swatches: ["#1a1814","#7a6f5a","#cdbfa3"] },
+    { id: "textile", backendId: "material_studio_pack", label: "Textile", sub: "Linen, leather, brass, thread.", swatches: ["#d6c7a8","#5a3a1d","#8e7146"] },
   ],
   contacts: [
     { id: "enquiry", backendId: "enquiry", label: "Open Enquiry", sub: "A short note. You reply when you can.", bestFor: ["Artists", "Practitioners early-stage"], previewFields: ["Their name", "What they're after", "A few lines"] },
