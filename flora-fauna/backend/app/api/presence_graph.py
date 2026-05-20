@@ -123,7 +123,7 @@ def _current_observer_or_error():
     user = get_current_user()
     if not user:
         return None, error("unauthorized", "Authentication required.", 401)
-    return get_or_create_observer_for_user(user, _json_payload()), None
+    return get_or_create_observer_for_user(user, {}), None
 
 
 def _resolve_owner_user():
@@ -763,4 +763,3 @@ def observer_report_field_note(note_id):
     except PresenceValidationError as exc:
         db.session.rollback()
         return _validation_error(exc)
-

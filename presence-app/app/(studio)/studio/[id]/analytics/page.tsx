@@ -6,17 +6,20 @@ import StudioShell from "@/components/studio/StudioShell";
 import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
 import { Loading } from "@/components/ui";
 import { getAnalytics } from "@/lib/api/owner";
-import type { PresenceAnalyticsSummary } from "@/lib/api/types";
+import { getRoomGraphAnalytics } from "@/lib/api/presenceGraph";
+import type { PresenceAnalyticsSummary, RoomGraphAnalytics } from "@/lib/api/types";
 
 export default function StudioAnalyticsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const nodeId = Number(id);
   const { node, token, loading, error, authRequired } = useOwnerNode(nodeId);
   const [analytics, setAnalytics] = useState<PresenceAnalyticsSummary | null>(null);
+  const [graphAnalytics, setGraphAnalytics] = useState<RoomGraphAnalytics | null>(null);
 
   useEffect(() => {
     if (!token) return;
     getAnalytics(nodeId, token).then(setAnalytics).catch(console.error);
+    getRoomGraphAnalytics(nodeId, token).then(setGraphAnalytics).catch(console.error);
   }, [nodeId, token]);
 
   if (loading) return <Loading label="Loading signals..." />;
@@ -68,6 +71,41 @@ export default function StudioAnalyticsPage({ params }: { params: Promise<{ id: 
                     <span className="text-sm font-medium text-[var(--p-studio-accent)]">{src.count}</span>
                   </div>
                 ))}
+              </section>
+            )}
+
+            {graphAnalytics && (
+              <section className="flex flex-col gap-3">
+                <h3 className="text-xs font-semibold text-[var(--p-studio-muted)] uppercase tracking-widest">
+                  Presence Pass activity
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: "Room entries", value: graphAnalytics.encounters_count },
+                    { label: "Rooms saved", value: graphAnalytics.saved_rooms_count },
+                    { label: "Field Notes", value: graphAnalytics.field_notes_count },
+                    { label: "Path activity", value: graphAnalytics.path_activity_count },
+                  ].map((stat) => (
+                    <div key={stat.label} className="rounded-xl border border-[var(--p-studio-border)] bg-[var(--p-studio-surface)] p-4">
+                      <span className="text-2xl font-semibold text-[var(--p-studio-text)]">{stat.value}</span>
+                      <p className="mt-1 text-xs text-[var(--p-studio-muted)]">{stat.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {graphAnalytics.room_key_performance.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-xs font-semibold text-[var(--p-studio-muted)] uppercase tracking-widest">
+                      Best performing Room Keys
+                    </p>
+                    {graphAnalytics.room_key_performance.slice(0, 6).map((key) => (
+                      <div key={key.id} className="flex items-center justify-between rounded-xl border border-[var(--p-studio-border)] bg-[var(--p-studio-surface)] p-3">
+                        <span className="text-sm text-[var(--p-studio-text)]">{key.campaign_label || key.key_type.replace(/_/g, " ")}</span>
+                        <span className="text-sm font-medium text-[var(--p-studio-accent)]">{key.encounters_count ?? 0}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </section>
             )}
 

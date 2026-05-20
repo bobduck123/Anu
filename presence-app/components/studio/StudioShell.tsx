@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, Globe, LayoutDashboard, Image, FolderOpen, Inbox, QrCode, BarChart2, Settings, LogOut, Sparkles } from "lucide-react";
+import { ArrowLeft, Globe, LayoutDashboard, Image, FolderOpen, Inbox, QrCode, BarChart2, Settings, LogOut, Sparkles, CreditCard } from "lucide-react";
 import type { PresenceNode } from "@/lib/api/types";
 import { StatusPill } from "@/components/ui";
 import { canonicalPublicUrl } from "@/lib/presence/url";
@@ -13,6 +13,7 @@ const NAV_TABS = [
   { label: "Collections", icon: FolderOpen, sub: "collections" },
   { label: "Enquiries", icon: Inbox, sub: "enquiries" },
   { label: "DNA", icon: Sparkles, sub: "dna" },
+  { label: "Passes", icon: CreditCard, sub: "passes" },
   { label: "QR & NFC", icon: QrCode, sub: "qr" },
   { label: "Analytics", icon: BarChart2, sub: "analytics" },
   { label: "Settings", icon: Settings, sub: "settings" },

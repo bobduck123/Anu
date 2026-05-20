@@ -22,6 +22,7 @@ import {
   Users,
 } from "lucide-react";
 import { PublicEnquiryDialog } from "@/components/portfolio/PublicEnquiryDialog";
+import { PresenceGraphActions } from "@/components/presence/graph/PresenceGraphActions";
 import { API_BASE } from "@/lib/api/client";
 import type {
   PresenceCollection,
@@ -168,17 +169,20 @@ export default function PresenceRoomRenderer({ node }: PresenceRoomRendererProps
       style={theme}
       data-presence-room={roomType ?? "unknown"}
     >
-      {roomType === "artist_studio" ? (
-        <ArtistStudioRoom node={node} />
-      ) : roomType === "practitioner" ? (
-        <PractitionerRoom node={node} />
-      ) : roomType === "performer_music" ? (
-        <PerformerMusicRoom node={node} />
-      ) : roomType === "organisation" ? (
-        <OrganisationRoom node={node} />
-      ) : (
-        <MinimalCardRoom node={node} />
-      )}
+      <div>
+        {roomType === "artist_studio" ? (
+          <ArtistStudioRoom node={node} />
+        ) : roomType === "practitioner" ? (
+          <PractitionerRoom node={node} />
+        ) : roomType === "performer_music" ? (
+          <PerformerMusicRoom node={node} />
+        ) : roomType === "organisation" ? (
+          <OrganisationRoom node={node} />
+        ) : (
+          <MinimalCardRoom node={node} />
+        )}
+        <PresenceGraphActions node={node} />
+      </div>
     </main>
   );
 }

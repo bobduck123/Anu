@@ -24,6 +24,10 @@ export function canonicalPublicUrl(slug: string): string {
   return `${PRESENCE_PUBLIC_ORIGIN}/presence/${encodeURIComponent(slug)}`;
 }
 
+export function roomKeyPublicUrl(token: string): string {
+  return `${PRESENCE_PUBLIC_ORIGIN}/r/${encodeURIComponent(token)}`;
+}
+
 export function displayPublicUrl(slug: string): string {
   return canonicalPublicUrl(slug).replace(/^https?:\/\//, "");
 }

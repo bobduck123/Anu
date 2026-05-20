@@ -291,3 +291,265 @@ export interface PublicPresenceCollectionDetail {
   collection: PresenceCollection;
   works: PresenceWork[];
 }
+
+export type PresencePassType =
+  | "phone"
+  | "nfc_card"
+  | "qr"
+  | "wallet"
+  | "badge"
+  | "sticker"
+  | "poster"
+  | "short_link";
+
+export type PresencePassStatus = "active" | "paused" | "revoked";
+export type RoomKeyType = "nfc" | "qr" | "short_link" | "wallet" | "badge" | "sticker" | "poster" | "direct";
+export type RoomKeyStatus = "active" | "paused" | "revoked";
+
+export interface PresencePass {
+  id: number;
+  room_id: number;
+  owner_id?: number | null;
+  pass_type: PresencePassType | string;
+  label: string;
+  status: PresencePassStatus | string;
+  default_room_key_id?: number | null;
+  metadata?: Record<string, unknown>;
+  room_keys?: RoomKey[];
+  created_at?: string | null;
+  updated_at?: string | null;
+  copy?: string;
+}
+
+export interface RoomKey {
+  id: number;
+  room_id: number;
+  presence_pass_id?: number | null;
+  key_type: RoomKeyType | string;
+  public_token?: string;
+  campaign_label?: string | null;
+  physical_batch_id?: string | null;
+  status: RoomKeyStatus | string;
+  metadata?: Record<string, unknown>;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface Encounter {
+  id: number;
+  room_id: number;
+  room_key_id?: number | null;
+  visitor_type: "guest" | "observer" | "room_owner" | "unknown" | string;
+  source: string;
+  context_label?: string | null;
+  privacy_level: "aggregate_only" | "observer_known" | "revealed" | string;
+  created_at?: string | null;
+}
+
+export interface RoomKeyEntryPayload {
+  message: string;
+  room: PresenceNode;
+  public_url: string;
+  room_key?: RoomKey | null;
+  encounter?: Encounter | null;
+  available_actions: string[];
+  observer_upgrade?: string;
+  status?: string;
+}
+
+export interface ObserverProfile {
+  id: number;
+  user_id?: number | null;
+  alias: string;
+  mask_name?: string | null;
+  avatar_key?: string | null;
+  bio_fragment?: string | null;
+  status: string;
+  visibility: "public_mask" | "private" | "limited" | string;
+  self_promotion_locked: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+  copy?: string;
+}
+
+export interface RoomConnection {
+  id: number;
+  room_id: number;
+  observer_id?: number | null;
+  status: "entered" | "saved" | "followed" | "crossed_paths" | "revealed" | "enquired" | "blocked" | string;
+  saved_at?: string | null;
+  followed_at?: string | null;
+  revealed_at?: string | null;
+  last_interaction_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  metadata?: Record<string, unknown>;
+  room?: PresenceNode;
+}
+
+export interface PassportStamp {
+  id: number;
+  observer_id: number;
+  room_id?: number | null;
+  encounter_id?: number | null;
+  path_id?: number | null;
+  stamp_type: "entered" | "saved" | "noted" | "crossed_paths" | "returned" | "followed_path" | "enquired" | string;
+  label?: string | null;
+  metadata?: Record<string, unknown>;
+  created_at?: string | null;
+}
+
+export type MoodBoardType =
+  | "general"
+  | "influences"
+  | "saved_rooms"
+  | "event"
+  | "place"
+  | "material"
+  | "sound"
+  | "mood"
+  | "editorial";
+
+export interface MoodBoard {
+  id: number;
+  owner_type: "observer" | "room" | string;
+  observer_id?: number | null;
+  room_id?: number | null;
+  title: string;
+  description?: string | null;
+  visibility: "private" | "public" | "room_public" | "unlisted" | string;
+  board_type: MoodBoardType | string;
+  cover_item_id?: number | null;
+  status: "active" | "archived" | string;
+  items?: MoodBoardItem[];
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface MoodBoardItem {
+  id: number;
+  mood_board_id: number;
+  item_type: "room" | "field_note" | "external_link" | "image" | "reference" | "event" | "place" | "work" | "tag" | "text" | string;
+  item_id?: number | null;
+  external_url?: string | null;
+  title?: string | null;
+  description?: string | null;
+  image_url?: string | null;
+  tags?: string[];
+  position_index?: number | null;
+  source_context?: string | null;
+  added_by_observer_id?: number | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface FieldNote {
+  id: number;
+  author_observer_id: number;
+  room_id?: number | null;
+  path_id?: number | null;
+  encounter_id?: number | null;
+  mood_board_id?: number | null;
+  body?: string | null;
+  visibility: "public" | "room_owner_only" | "private" | string;
+  status: "active" | "hidden" | "flagged" | "removed" | string;
+  moderation_state: "clean" | "pending" | "flagged" | "actioned" | string;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface Signal {
+  id: number;
+  observer_id: number;
+  target_type: "room" | "field_note" | "mood_board" | "path" | "mood_board_item" | string;
+  target_id: number;
+  signal_type: "resonated" | "saved_for_later" | "would_book" | "inspiring" | "want_to_visit" | "useful" | "beautiful" | "important" | string;
+  created_at?: string | null;
+}
+
+export interface PresencePath {
+  id: number;
+  title: string;
+  description?: string | null;
+  path_type: string;
+  trailhead_type: string;
+  trailhead_id?: number | null;
+  generated_by: string;
+  visibility: string;
+  status: string;
+  mood_tags?: string[];
+  place_tags?: string[];
+  metadata?: Record<string, unknown>;
+  waypoints?: PathWaypoint[];
+  choices?: PathChoice[];
+  copy?: string;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface PathWaypoint {
+  id: number;
+  path_id: number;
+  waypoint_type: "room" | "field_note" | "mood_board_item" | "mood_board" | "event" | "place" | "reference" | "text" | string;
+  waypoint_id?: number | null;
+  title?: string | null;
+  reason_shown?: string | null;
+  order_index: number;
+  metadata?: Record<string, unknown>;
+  created_at?: string | null;
+}
+
+export interface PathChoice {
+  id: number;
+  path_id: number;
+  from_waypoint_id: number;
+  label: string;
+  direction_type: string;
+  next_path_id?: number | null;
+  next_waypoint_id?: number | null;
+  metadata?: Record<string, unknown>;
+  created_at?: string | null;
+}
+
+export interface PathWalk {
+  id: number;
+  observer_id: number;
+  path_id: number;
+  started_at?: string | null;
+  completed_at?: string | null;
+  abandoned_at?: string | null;
+  saved: boolean;
+  conversion_event?: string | null;
+  metadata?: Record<string, unknown>;
+}
+
+export interface PathTrace {
+  id: number;
+  observer_id: number;
+  path_id: number;
+  waypoint_id?: number | null;
+  trace_type: string;
+  metadata?: Record<string, unknown>;
+  created_at?: string | null;
+}
+
+export interface WorldReadinessMetric {
+  id?: number;
+  scope_type?: string;
+  scope_id?: string | null;
+  status: "hidden" | "forming" | "preview" | "ready" | "open" | string;
+  readiness_score?: number;
+  computed_at?: string | null;
+  message: string;
+}
+
+export interface RoomGraphAnalytics {
+  room_id: number;
+  slug: string;
+  encounters_count: number;
+  saved_rooms_count: number;
+  field_notes_count: number;
+  path_activity_count: number;
+  signals: Record<string, number>;
+  room_key_performance: Array<RoomKey & { encounters_count?: number }>;
+}
