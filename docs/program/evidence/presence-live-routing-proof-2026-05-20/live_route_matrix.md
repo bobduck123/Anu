@@ -89,7 +89,8 @@ Confirmed:
 
 - Production domain serving the app: `your-presence.vercel.app`
 - Production content reflects commit `86dded0`.
-- `origin/main` and `origin/feature/presence-ecosystem-alpha` both resolve to `86dded077a8715f0ad45c72d955051884d09db37`.
+- Production route behavior reflects routing commit `86dded077a8715f0ad45c72d955051884d09db37`.
+- The feature branch later advanced with this docs-only evidence commit.
 - Build root is inferred as `presence-app` from the live Next routes and chunks.
 
 Not directly available from this workspace:

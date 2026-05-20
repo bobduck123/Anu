@@ -14,13 +14,13 @@
     "project_name": "not available from local repo or public response headers",
     "vercel_cli_available": false,
     "local_vercel_project_link": "none found",
-    "deployed_branch": "inferred: main or feature/presence-ecosystem-alpha; both remote refs point to 86dded0",
+    "deployed_branch": "inferred: main or feature/presence-ecosystem-alpha; production route behavior reflects routing commit 86dded0",
     "build_root": "inferred: presence-app",
     "evidence": [
       "presence-app has no local .vercel project link and no vercel.json.",
       "vercel CLI is not installed in this workspace.",
       "Production routes and Next chunks match the presence-app Next application.",
-      "origin/main and origin/feature/presence-ecosystem-alpha both resolve to 86dded077a8715f0ad45c72d955051884d09db37."
+      "At route verification time, production route behavior reflected 86dded077a8715f0ad45c72d955051884d09db37. The feature branch later advanced with the docs-only evidence commit."
     ]
   },
   "public_cta_path": {
