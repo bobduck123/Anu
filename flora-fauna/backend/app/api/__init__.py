@@ -70,6 +70,7 @@ from .dumb_dumb import dumb_dumb_bp
 from .domain_resolution import domain_resolution_bp
 from .presence import presence_bp, control_presence_bp
 from .presence_owner import presence_owner_bp
+from .presence_graph import admin_presence_graph_bp, observer_bp, paths_bp, presence_graph_bp
 
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -143,5 +144,9 @@ api_bp.register_blueprint(cultural_control_bp)
 api_bp.register_blueprint(dumb_dumb_bp)
 api_bp.register_blueprint(domain_resolution_bp)
 api_bp.register_blueprint(presence_bp)
+api_bp.register_blueprint(presence_graph_bp)
 api_bp.register_blueprint(control_presence_bp)
 api_bp.register_blueprint(presence_owner_bp)
+api_bp.register_blueprint(observer_bp)
+api_bp.register_blueprint(paths_bp)
+api_bp.register_blueprint(admin_presence_graph_bp)

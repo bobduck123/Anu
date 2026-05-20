@@ -1264,6 +1264,430 @@ class PresenceAnalyticsEvent(db.Model):
     created_at = db.Column(db.DateTime, default=utcnow)
 
 
+class PresencePass(db.Model):
+    __tablename__ = "presence_pass"
+    __table_args__ = (
+        db.Index("ix_presence_pass_room", "room_id"),
+        db.Index("ix_presence_pass_owner", "owner_id"),
+        db.Index("ix_presence_pass_status", "status"),
+        db.Index("ix_presence_pass_type", "pass_type"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    owner_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    pass_type = db.Column(db.String(40), nullable=False, default="qr")
+    label = db.Column(db.String(160), nullable=False)
+    status = db.Column(db.String(40), nullable=False, default="active")
+    default_room_key_id = db.Column(db.Integer, nullable=True)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    room = db.relationship("PresenceNode", backref=db.backref("presence_passes", lazy=True, cascade="all, delete-orphan"))
+    owner = db.relationship("User", backref=db.backref("presence_passes", lazy=True))
+
+
+class RoomKey(db.Model):
+    __tablename__ = "room_key"
+    __table_args__ = (
+        db.UniqueConstraint("public_token", name="uq_room_key_public_token"),
+        db.Index("ix_room_key_room", "room_id"),
+        db.Index("ix_room_key_presence_pass", "presence_pass_id"),
+        db.Index("ix_room_key_status", "status"),
+        db.Index("ix_room_key_type", "key_type"),
+        db.Index("ix_room_key_created_at", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    presence_pass_id = db.Column(db.Integer, db.ForeignKey("presence_pass.id"), nullable=True)
+    key_type = db.Column(db.String(40), nullable=False, default="direct")
+    public_token = db.Column(db.String(160), nullable=False)
+    campaign_label = db.Column(db.String(160), nullable=True)
+    physical_batch_id = db.Column(db.String(120), nullable=True)
+    status = db.Column(db.String(40), nullable=False, default="active")
+    created_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    room = db.relationship("PresenceNode", backref=db.backref("room_keys", lazy=True, cascade="all, delete-orphan"))
+    presence_pass = db.relationship("PresencePass", backref=db.backref("room_keys", lazy=True, cascade="all, delete-orphan"), foreign_keys=[presence_pass_id])
+    creator = db.relationship("User", backref=db.backref("created_room_keys", lazy=True))
+
+
+class ObserverProfile(db.Model):
+    __tablename__ = "observer_profile"
+    __table_args__ = (
+        db.UniqueConstraint("alias", name="uq_observer_profile_alias"),
+        db.UniqueConstraint("user_id", name="uq_observer_profile_user"),
+        db.Index("ix_observer_profile_user", "user_id"),
+        db.Index("ix_observer_profile_status", "status"),
+        db.Index("ix_observer_profile_visibility", "visibility"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    alias = db.Column(db.String(80), nullable=False)
+    mask_name = db.Column(db.String(120), nullable=True)
+    avatar_key = db.Column(db.String(120), nullable=True)
+    bio_fragment = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(40), nullable=False, default="active")
+    visibility = db.Column(db.String(40), nullable=False, default="public_mask")
+    self_promotion_locked = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    user = db.relationship("User", backref=db.backref("observer_profile", uselist=False))
+
+
+class Encounter(db.Model):
+    __tablename__ = "encounter"
+    __table_args__ = (
+        db.Index("ix_encounter_room_created", "room_id", "created_at"),
+        db.Index("ix_encounter_room_key", "room_key_id"),
+        db.Index("ix_encounter_observer", "observer_id"),
+        db.Index("ix_encounter_source", "source"),
+        db.Index("ix_encounter_privacy", "privacy_level"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    room_key_id = db.Column(db.Integer, db.ForeignKey("room_key.id"), nullable=True)
+    visitor_type = db.Column(db.String(40), nullable=False, default="guest")
+    observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=True)
+    anonymous_visitor_id = db.Column(db.String(120), nullable=True)
+    source = db.Column(db.String(40), nullable=False, default="unknown")
+    context_label = db.Column(db.String(160), nullable=True)
+    location_id = db.Column(db.Integer, nullable=True)
+    event_id = db.Column(db.Integer, nullable=True)
+    referrer = db.Column(db.String(700), nullable=True)
+    user_agent_hash = db.Column(db.String(96), nullable=True)
+    ip_hash = db.Column(db.String(96), nullable=True)
+    privacy_level = db.Column(db.String(40), nullable=False, default="aggregate_only")
+    created_at = db.Column(db.DateTime, default=utcnow)
+
+    room = db.relationship("PresenceNode", backref=db.backref("encounters", lazy=True, cascade="all, delete-orphan"))
+    room_key = db.relationship("RoomKey", backref=db.backref("encounters", lazy=True))
+    observer = db.relationship("ObserverProfile", backref=db.backref("encounters", lazy=True))
+
+
+class RoomConnection(db.Model):
+    __tablename__ = "room_connection"
+    __table_args__ = (
+        db.UniqueConstraint("observer_id", "room_id", name="uq_room_connection_observer_room"),
+        db.Index("ix_room_connection_room", "room_id"),
+        db.Index("ix_room_connection_observer", "observer_id"),
+        db.Index("ix_room_connection_status", "status"),
+        db.Index("ix_room_connection_last_interaction", "last_interaction_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=False)
+    first_encounter_id = db.Column(db.Integer, db.ForeignKey("encounter.id"), nullable=True)
+    status = db.Column(db.String(40), nullable=False, default="entered")
+    saved_at = db.Column(db.DateTime, nullable=True)
+    followed_at = db.Column(db.DateTime, nullable=True)
+    revealed_at = db.Column(db.DateTime, nullable=True)
+    last_interaction_at = db.Column(db.DateTime, nullable=True)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    room = db.relationship("PresenceNode", backref=db.backref("room_connections", lazy=True, cascade="all, delete-orphan"))
+    observer = db.relationship("ObserverProfile", backref=db.backref("room_connections", lazy=True, cascade="all, delete-orphan"))
+    first_encounter = db.relationship("Encounter")
+
+
+class PassportStamp(db.Model):
+    __tablename__ = "passport_stamp"
+    __table_args__ = (
+        db.Index("ix_passport_stamp_observer_created", "observer_id", "created_at"),
+        db.Index("ix_passport_stamp_room", "room_id"),
+        db.Index("ix_passport_stamp_path", "path_id"),
+        db.Index("ix_passport_stamp_type", "stamp_type"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=True)
+    encounter_id = db.Column(db.Integer, db.ForeignKey("encounter.id"), nullable=True)
+    path_id = db.Column(db.Integer, nullable=True)
+    stamp_type = db.Column(db.String(40), nullable=False)
+    label = db.Column(db.String(180), nullable=True)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+
+    observer = db.relationship("ObserverProfile", backref=db.backref("passport_stamps", lazy=True, cascade="all, delete-orphan"))
+    room = db.relationship("PresenceNode", backref=db.backref("passport_stamps", lazy=True))
+    encounter = db.relationship("Encounter", backref=db.backref("passport_stamps", lazy=True))
+
+
+class MoodBoard(db.Model):
+    __tablename__ = "mood_board"
+    __table_args__ = (
+        db.Index("ix_mood_board_owner", "owner_type", "observer_id", "room_id"),
+        db.Index("ix_mood_board_visibility", "visibility"),
+        db.Index("ix_mood_board_status", "status"),
+        db.Index("ix_mood_board_type", "board_type"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    owner_type = db.Column(db.String(40), nullable=False)
+    observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=True)
+    title = db.Column(db.String(180), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    visibility = db.Column(db.String(40), nullable=False, default="private")
+    board_type = db.Column(db.String(40), nullable=False, default="general")
+    cover_item_id = db.Column(db.Integer, nullable=True)
+    status = db.Column(db.String(40), nullable=False, default="active")
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    observer = db.relationship("ObserverProfile", backref=db.backref("mood_boards", lazy=True, cascade="all, delete-orphan"))
+    room = db.relationship("PresenceNode", backref=db.backref("mood_boards", lazy=True, cascade="all, delete-orphan"))
+
+
+class MoodBoardItem(db.Model):
+    __tablename__ = "mood_board_item"
+    __table_args__ = (
+        db.Index("ix_mood_board_item_board", "mood_board_id"),
+        db.Index("ix_mood_board_item_type", "item_type"),
+        db.Index("ix_mood_board_item_position", "mood_board_id", "position_index"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    mood_board_id = db.Column(db.Integer, db.ForeignKey("mood_board.id"), nullable=False)
+    item_type = db.Column(db.String(40), nullable=False)
+    item_id = db.Column(db.Integer, nullable=True)
+    external_url = db.Column(db.String(700), nullable=True)
+    title = db.Column(db.String(180), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    image_url = db.Column(db.String(700), nullable=True)
+    tags_json = db.Column(db.JSON, nullable=True)
+    position_index = db.Column(db.Integer, nullable=True)
+    source_context = db.Column(db.String(240), nullable=True)
+    added_by_observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    mood_board = db.relationship("MoodBoard", backref=db.backref("items", lazy=True, cascade="all, delete-orphan"))
+    added_by_observer = db.relationship("ObserverProfile", backref=db.backref("added_mood_board_items", lazy=True))
+
+
+class FieldNote(db.Model):
+    __tablename__ = "field_note"
+    __table_args__ = (
+        db.Index("ix_field_note_author", "author_observer_id"),
+        db.Index("ix_field_note_room", "room_id"),
+        db.Index("ix_field_note_path", "path_id"),
+        db.Index("ix_field_note_status", "status"),
+        db.Index("ix_field_note_moderation", "moderation_state"),
+        db.Index("ix_field_note_created_at", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    author_observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=True)
+    path_id = db.Column(db.Integer, nullable=True)
+    encounter_id = db.Column(db.Integer, db.ForeignKey("encounter.id"), nullable=True)
+    mood_board_id = db.Column(db.Integer, db.ForeignKey("mood_board.id"), nullable=True)
+    body = db.Column(db.Text, nullable=False)
+    visibility = db.Column(db.String(40), nullable=False, default="public")
+    status = db.Column(db.String(40), nullable=False, default="active")
+    moderation_state = db.Column(db.String(40), nullable=False, default="clean")
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    author_observer = db.relationship("ObserverProfile", backref=db.backref("field_notes", lazy=True, cascade="all, delete-orphan"))
+    room = db.relationship("PresenceNode", backref=db.backref("field_notes", lazy=True, cascade="all, delete-orphan"))
+    encounter = db.relationship("Encounter", backref=db.backref("field_notes", lazy=True))
+    mood_board = db.relationship("MoodBoard", backref=db.backref("field_notes", lazy=True))
+
+
+class Signal(db.Model):
+    __tablename__ = "signal"
+    __table_args__ = (
+        db.UniqueConstraint("observer_id", "target_type", "target_id", "signal_type", name="uq_signal_observer_target_type"),
+        db.Index("ix_signal_observer", "observer_id"),
+        db.Index("ix_signal_target", "target_type", "target_id"),
+        db.Index("ix_signal_type", "signal_type"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=False)
+    target_type = db.Column(db.String(40), nullable=False)
+    target_id = db.Column(db.Integer, nullable=False)
+    signal_type = db.Column(db.String(40), nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow)
+
+    observer = db.relationship("ObserverProfile", backref=db.backref("signals", lazy=True, cascade="all, delete-orphan"))
+
+
+class Path(db.Model):
+    __tablename__ = "path"
+    __table_args__ = (
+        db.Index("ix_path_type", "path_type"),
+        db.Index("ix_path_trailhead", "trailhead_type", "trailhead_id"),
+        db.Index("ix_path_visibility_status", "visibility", "status"),
+        db.Index("ix_path_created_at", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(180), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    path_type = db.Column(db.String(40), nullable=False, default="generated")
+    trailhead_type = db.Column(db.String(40), nullable=False, default="room")
+    trailhead_id = db.Column(db.Integer, nullable=True)
+    generated_by = db.Column(db.String(40), nullable=False, default="system")
+    visibility = db.Column(db.String(40), nullable=False, default="unlisted")
+    status = db.Column(db.String(40), nullable=False, default="active")
+    mood_tags_json = db.Column(db.JSON, nullable=True)
+    place_tags_json = db.Column(db.JSON, nullable=True)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+
+class PathWaypoint(db.Model):
+    __tablename__ = "path_waypoint"
+    __table_args__ = (
+        db.Index("ix_path_waypoint_path_order", "path_id", "order_index"),
+        db.Index("ix_path_waypoint_type", "waypoint_type"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    path_id = db.Column(db.Integer, db.ForeignKey("path.id"), nullable=False)
+    waypoint_type = db.Column(db.String(40), nullable=False)
+    waypoint_id = db.Column(db.Integer, nullable=True)
+    title = db.Column(db.String(180), nullable=True)
+    reason_shown = db.Column(db.Text, nullable=True)
+    order_index = db.Column(db.Integer, nullable=False, default=0)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+
+    path = db.relationship("Path", backref=db.backref("waypoints", lazy=True, cascade="all, delete-orphan"))
+
+
+class PathChoice(db.Model):
+    __tablename__ = "path_choice"
+    __table_args__ = (
+        db.Index("ix_path_choice_path", "path_id"),
+        db.Index("ix_path_choice_from", "from_waypoint_id"),
+        db.Index("ix_path_choice_direction", "direction_type"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    path_id = db.Column(db.Integer, db.ForeignKey("path.id"), nullable=False)
+    from_waypoint_id = db.Column(db.Integer, db.ForeignKey("path_waypoint.id"), nullable=False)
+    label = db.Column(db.String(120), nullable=False)
+    direction_type = db.Column(db.String(40), nullable=False)
+    next_path_id = db.Column(db.Integer, db.ForeignKey("path.id"), nullable=True)
+    next_waypoint_id = db.Column(db.Integer, db.ForeignKey("path_waypoint.id"), nullable=True)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+
+    path = db.relationship("Path", foreign_keys=[path_id], backref=db.backref("choices", lazy=True, cascade="all, delete-orphan"))
+    from_waypoint = db.relationship("PathWaypoint", foreign_keys=[from_waypoint_id], backref=db.backref("choices_from", lazy=True))
+    next_waypoint = db.relationship("PathWaypoint", foreign_keys=[next_waypoint_id])
+
+
+class PathWalk(db.Model):
+    __tablename__ = "path_walk"
+    __table_args__ = (
+        db.Index("ix_path_walk_observer", "observer_id"),
+        db.Index("ix_path_walk_path", "path_id"),
+        db.Index("ix_path_walk_started", "started_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=False)
+    path_id = db.Column(db.Integer, db.ForeignKey("path.id"), nullable=False)
+    started_at = db.Column(db.DateTime, default=utcnow)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    abandoned_at = db.Column(db.DateTime, nullable=True)
+    saved = db.Column(db.Boolean, default=False, nullable=False)
+    conversion_event = db.Column(db.String(80), nullable=True)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+
+    observer = db.relationship("ObserverProfile", backref=db.backref("path_walks", lazy=True, cascade="all, delete-orphan"))
+    path = db.relationship("Path", backref=db.backref("walks", lazy=True, cascade="all, delete-orphan"))
+
+
+class PathTrace(db.Model):
+    __tablename__ = "path_trace"
+    __table_args__ = (
+        db.Index("ix_path_trace_observer", "observer_id"),
+        db.Index("ix_path_trace_path", "path_id"),
+        db.Index("ix_path_trace_waypoint", "waypoint_id"),
+        db.Index("ix_path_trace_type", "trace_type"),
+        db.Index("ix_path_trace_created", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=False)
+    path_id = db.Column(db.Integer, db.ForeignKey("path.id"), nullable=False)
+    waypoint_id = db.Column(db.Integer, db.ForeignKey("path_waypoint.id"), nullable=True)
+    trace_type = db.Column(db.String(40), nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+
+    observer = db.relationship("ObserverProfile", backref=db.backref("path_traces", lazy=True, cascade="all, delete-orphan"))
+    path = db.relationship("Path", backref=db.backref("traces", lazy=True, cascade="all, delete-orphan"))
+    waypoint = db.relationship("PathWaypoint", backref=db.backref("traces", lazy=True))
+
+
+class ModerationFlag(db.Model):
+    __tablename__ = "moderation_flag"
+    __table_args__ = (
+        db.Index("ix_moderation_flag_reporter_user", "reporter_user_id"),
+        db.Index("ix_moderation_flag_reporter_observer", "reporter_observer_id"),
+        db.Index("ix_moderation_flag_target", "target_type", "target_id"),
+        db.Index("ix_moderation_flag_status", "status"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    reporter_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    reporter_observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=True)
+    target_type = db.Column(db.String(40), nullable=False)
+    target_id = db.Column(db.Integer, nullable=False)
+    reason = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(40), nullable=False, default="open")
+    admin_notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    reporter_user = db.relationship("User", backref=db.backref("moderation_flags", lazy=True))
+    reporter_observer = db.relationship("ObserverProfile", backref=db.backref("moderation_flags", lazy=True))
+
+
+class WorldReadinessMetric(db.Model):
+    __tablename__ = "world_readiness_metric"
+    __table_args__ = (
+        db.Index("ix_world_readiness_scope", "scope_type", "scope_id"),
+        db.Index("ix_world_readiness_status", "status"),
+        db.Index("ix_world_readiness_computed", "computed_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    scope_type = db.Column(db.String(40), nullable=False, default="global")
+    scope_id = db.Column(db.String(120), nullable=True)
+    active_rooms_count = db.Column(db.Integer, nullable=False, default=0)
+    active_observers_count = db.Column(db.Integer, nullable=False, default=0)
+    encounters_count = db.Column(db.Integer, nullable=False, default=0)
+    saved_rooms_count = db.Column(db.Integer, nullable=False, default=0)
+    mood_boards_count = db.Column(db.Integer, nullable=False, default=0)
+    field_notes_count = db.Column(db.Integer, nullable=False, default=0)
+    paths_count = db.Column(db.Integer, nullable=False, default=0)
+    cross_room_connections_count = db.Column(db.Integer, nullable=False, default=0)
+    readiness_score = db.Column(db.Numeric(6, 3), nullable=False, default=0)
+    status = db.Column(db.String(40), nullable=False, default="hidden")
+    computed_at = db.Column(db.DateTime, default=utcnow)
+
+
 class PartnerKey(db.Model):
     __table_args__ = (
         db.UniqueConstraint('node_id', 'key_id', name='uq_partner_key_node_key'),

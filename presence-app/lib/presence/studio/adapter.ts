@@ -8,7 +8,10 @@
 
 import { API_BASE } from "@/lib/api/client";
 import { LOCAL_STUDIO_MANIFEST, type StudioManifest } from "./manifest";
-import { friendlyLabelFor } from "./backendLabels";
+// `friendlyLabelFor` is exported separately for callers that need to render
+// a label for a bare backend id (e.g. future backend-only rows). The
+// adapter itself preserves local labels — see applyBackendV1.
+export { friendlyLabelFor, FRIENDLY_BACKEND_LABELS } from "./backendLabels";
 
 const ENDPOINT = "/api/presence/customisation/manifest";
 
@@ -112,20 +115,53 @@ export function normaliseBackendManifest(data: unknown): StudioManifest | null {
   return base;
 }
 
-/** Backend v1 merge. Each canonical array is walked once; for every
- * backend row we either (a) refresh the matching local row's label via
- * the friendly dictionary, or (b) leave the local row alone if the
- * backend offers no friendlier name. Local-only rows (e.g. our richer
- * 5-mood palette mapped onto 3 backend atmosphere packs) are kept so
- * the UI never loses choices. */
+/** Backend v1 merge. The local rows already carry the warm UI labels
+ * we want; the backend response confirms each `backendId` is a known
+ * canonical AND lets us stamp the right manifest version and provenance.
+ *
+ * We intentionally do NOT overwrite local labels with backend labels here.
+ * Backend labels are correct but technical ("Underground DJ", "Gallery
+ * Frame Pack"); the local manifest's richer palette also COLLAPSES multiple
+ * local rows onto the same backend canonical id (e.g. "Cinematic" and
+ * "Editorial" moods both map to `quiet_gallery`), so blindly applying the
+ * backend label would erase the precise local distinction.
+ *
+ * The `FRIENDLY_BACKEND_LABELS` dictionary remains exported (see
+ * `backendLabels.ts`) for the rare case where the UI needs to render a
+ * label for a bare backend id that has no local row.
+ *
+ * Local-only rows are kept untouched so the UI never loses choices. */
 function applyBackendV1(base: StudioManifest, root: Record<string, unknown>): void {
-  refreshLabelsByBackendId(base.identities, pickArray(root, "archetypes"));
-  refreshLabelsByBackendId(base.worlds, pickArray(root, "room_worlds", "roomWorlds"));
-  refreshLabelsByBackendId(base.movements, pickArray(root, "engagement_dynamics", "engagementDynamics"));
-  refreshLabelsByBackendId(base.paces, pickArray(root, "motion_profiles", "motionProfiles"));
-  refreshLabelsByBackendId(base.moods, pickArray(root, "atmosphere_packs", "atmospherePacks"));
-  refreshLabelsByBackendId(base.materials, pickArray(root, "object_skin_packs", "objectSkinPacks"));
+  validateLocalBackendIds(base.identities, pickArray(root, "archetypes"), "archetypes");
+  validateLocalBackendIds(base.worlds, pickArray(root, "room_worlds", "roomWorlds"), "room_worlds");
+  validateLocalBackendIds(base.movements, pickArray(root, "engagement_dynamics", "engagementDynamics"), "engagement_dynamics");
+  validateLocalBackendIds(base.paces, pickArray(root, "motion_profiles", "motionProfiles"), "motion_profiles");
+  validateLocalBackendIds(base.moods, pickArray(root, "atmosphere_packs", "atmospherePacks"), "atmosphere_packs");
+  validateLocalBackendIds(base.materials, pickArray(root, "object_skin_packs", "objectSkinPacks"), "object_skin_packs");
   // `contacts` has no backend equivalent yet — kept from local fallback.
+}
+
+/** Best-effort sanity check: every local row's `backendId` should still
+ * exist in the backend's canonical set. We don't throw or rewrite when a
+ * mismatch is found — the studio still works on local fallback ids,
+ * and the backend remaps unknown ids gracefully — but a console.warn in
+ * dev surfaces drift quickly so it can be reconciled. */
+function validateLocalBackendIds(
+  rows: Array<{ backendId: string }>,
+  incoming: Array<Record<string, unknown>> | null,
+  slot: string,
+): void {
+  if (!incoming) return;
+  const known = new Set<string>();
+  for (const r of incoming) {
+    if (typeof r.id === "string") known.add(r.id);
+  }
+  if (typeof console === "undefined" || process.env.NODE_ENV === "production") return;
+  for (const row of rows) {
+    if (!known.has(row.backendId)) {
+      console.warn(`[studio adapter] local ${slot} row backendId "${row.backendId}" is not in the backend canonical set; submissions may be remapped.`);
+    }
+  }
 }
 
 /** Legacy/local-shape merge (preserves the original Pass 7 behaviour for
@@ -155,32 +191,6 @@ function applyLegacy(base: StudioManifest, root: Record<string, unknown>): void 
   apply("paces");
   apply("materials");
   apply("contacts");
-}
-
-/** Walk a local-shape array and, for every row whose `backendId` is
- * mentioned in the incoming backend rows, replace its `label` with the
- * friendly dictionary entry (preferring the backend's own label over the
- * bare backend id, but never preferring the bare id). Rows whose
- * `backendId` is not in the incoming set are left alone. */
-function refreshLabelsByBackendId(
-  rows: Array<{ backendId: string; label: string }>,
-  incoming: Array<Record<string, unknown>> | null,
-): void {
-  if (!incoming) return;
-  const incomingById = new Map<string, string>();
-  for (const row of incoming) {
-    const id = typeof row.id === "string" ? row.id : null;
-    const label = typeof row.label === "string" ? row.label : null;
-    if (id) incomingById.set(id, label ?? "");
-  }
-  for (const row of rows) {
-    if (!incomingById.has(row.backendId)) continue;
-    const backendLabel = incomingById.get(row.backendId) ?? "";
-    const friendly = friendlyLabelFor(row.backendId, backendLabel || row.label);
-    if (friendly && friendly.trim().length > 0) {
-      row.label = friendly;
-    }
-  }
 }
 
 function pickString(v: unknown): string | null {
