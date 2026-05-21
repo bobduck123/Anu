@@ -119,6 +119,47 @@ export default function Home() {
       </section>
 
       <section className="border-t border-stone-200 bg-white px-5 py-10 sm:px-8">
+        <div className="mx-auto max-w-6xl grid gap-3 sm:grid-cols-3 mb-10">
+          <Link
+            href="/observer/garden"
+            className="group rounded-3xl border border-stone-200 p-5 transition hover:-translate-y-0.5 hover:border-stone-900/60"
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-500">Observer · Gardens</p>
+            <p className="mt-3 text-2xl font-semibold text-stone-950">Open your Garden</p>
+            <p className="mt-2 text-sm leading-6 text-stone-600">
+              A Garden, not a feed. Seeds from Rooms, Halls, Paths, and people you share space with.
+            </p>
+            <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-stone-950 transition group-hover:gap-2">
+              Enter Garden <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
+          <Link
+            href="/halls"
+            className="group rounded-3xl border border-stone-900 bg-stone-950 p-5 text-white transition hover:-translate-y-0.5"
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-300">Halls</p>
+            <p className="mt-3 text-2xl font-semibold">Halls — where we gather</p>
+            <p className="mt-2 text-sm leading-6 text-stone-300">
+              Town Halls, Salons, Market Halls, Listening Halls. Step in, post on the Noticeboard, walk to a Stall.
+            </p>
+            <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-orange-200 transition group-hover:gap-2">
+              Browse Halls <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
+          <Link
+            href="/world"
+            className="group rounded-3xl border border-stone-200 p-5 transition hover:-translate-y-0.5 hover:border-stone-900/60"
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-500">World · forming</p>
+            <p className="mt-3 text-2xl font-semibold text-stone-950">The map is forming</p>
+            <p className="mt-2 text-sm leading-6 text-stone-600">
+              Rooms become Paths become a shared map. Watch what is growing.
+            </p>
+            <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-stone-950 transition group-hover:gap-2">
+              See what's forming <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
+        </div>
         <div className="mx-auto grid max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {[
             ["Public route", "/p/your-slug"],

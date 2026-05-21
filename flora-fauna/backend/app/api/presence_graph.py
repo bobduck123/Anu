@@ -44,6 +44,11 @@ from ..services.presence_path_service import (
     serialize_path_walk,
     start_path_walk,
 )
+from ..services.presence_shared_space_service import (
+    derive_shared_space_from_path_walk,
+    derive_shared_space_from_room_entry,
+    record_shared_space,
+)
 from ..services.presence_service import (
     PresenceValidationError,
     create_presence_enquiry,
@@ -167,6 +172,8 @@ def resolve_public_room_key(public_token):
         return err
     observer = _current_optional_observer()
     encounter = capture_encounter(room, {"source": room_key.key_type}, room_key=room_key, observer=observer)
+    if observer:
+        derive_shared_space_from_room_entry(encounter)
     db.session.commit()
     return ok(room_key_entry_payload(room, room_key, encounter))
 
@@ -184,6 +191,8 @@ def capture_room_encounter(room_id):
     observer = _current_optional_observer()
     try:
         encounter = capture_encounter(room, data, room_key=room_key, observer=observer)
+        if observer:
+            derive_shared_space_from_room_entry(encounter)
         db.session.commit()
         return ok({"encounter": serialize_encounter(encounter), "room_id": room.id, "available_actions": ["save", "follow", "field_note", "mood_board", "enquiry"]}, 201)
     except PresenceValidationError as exc:
@@ -258,6 +267,7 @@ def observer_save_room(room_id):
     if err:
         return err
     row = save_room(observer, room)
+    record_shared_space(space_type="room", space_id=room.id, observer=observer, room=room, strength=60, metadata={"source": "room_save", "connection_id": row.id})
     db.session.commit()
     return ok({"connection": serialize_room_connection(row)}, 201)
 
@@ -272,6 +282,7 @@ def observer_follow_room(room_id):
     if err:
         return err
     row = follow_room(observer, room)
+    record_shared_space(space_type="room", space_id=room.id, observer=observer, room=room, strength=60, metadata={"source": "room_follow", "connection_id": row.id})
     db.session.commit()
     return ok({"connection": serialize_room_connection(row)}, 201)
 
@@ -438,6 +449,7 @@ def observer_start_path_walk(path_id):
     if err:
         return err
     walk = start_path_walk(observer, path, _json_payload())
+    derive_shared_space_from_path_walk(walk)
     db.session.commit()
     return ok(serialize_path_walk(walk), 201)
 

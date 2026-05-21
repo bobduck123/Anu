@@ -71,11 +71,11 @@ export default function PresenceWorldPage() {
           </div>
         </section>
 
-        {/* What is forming — names the four ingredients the visitor can add right now */}
+        {/* What is forming — names the ingredients the visitor can add right now */}
         <section className="rounded-3xl border border-stone-800 bg-stone-900 p-6 sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-300">What is forming</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-            Four ingredients the World is built from.
+            Six ingredients the World is built from.
           </h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {[
@@ -91,13 +91,23 @@ export default function PresenceWorldPage() {
               },
               {
                 icon: NotebookPen,
-                title: "Mood Boards & Field Notes",
-                copy: "Visitors who become Observers shape the World by collecting Rooms into maps of taste and leaving traces inside them.",
+                title: "Gardens",
+                copy: "Each Observer Mask tends a Garden — Seeds from Rooms, Halls, Paths, and Mood Boards growing into Observations.",
               },
               {
                 icon: Footprints,
                 title: "Paths",
                 copy: "Walks between Rooms, with waypoints, directions, and forks. Paths become the geometry the World will eventually open along.",
+              },
+              {
+                icon: Compass,
+                title: "Halls",
+                copy: "Shared digital gathering spaces. Town Halls, Salons, Markets with Stalls, Listening Halls. Each Hall thickens the soil.",
+              },
+              {
+                icon: NotebookPen,
+                title: "Mood Boards & Field Notes",
+                copy: "Visitors who become Observers shape the World by collecting Rooms into maps of taste and leaving traces inside them.",
               },
             ].map((item) => (
               <article

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight, Compass, Loader2, MapPin, Route } from "lucide-react";
 import { choosePathFork, getPath, getPathFromMoodBoard, getPathFromRoom, recordPathTrace, startPathWalk } from "@/lib/api/presenceGraph";
+import { getPathFromHall } from "@/lib/api/halls";
 import { createClient } from "@/lib/supabase/client";
 import { buildSignInHref } from "@/lib/auth/returnTo";
 import { PRESENCE_GRAPH_COPY, pathDirectionLabel } from "@/lib/presence/graph/copy";
@@ -12,7 +13,8 @@ import type { PathChoice, PathWaypoint, PresencePath } from "@/lib/api/types";
 type PathMode =
   | { type: "id"; id: number }
   | { type: "room"; id: number }
-  | { type: "mood_board"; id: number };
+  | { type: "mood_board"; id: number }
+  | { type: "hall"; id: number };
 
 export function PathClient({ mode }: { mode: PathMode }) {
   const [path, setPath] = useState<PresencePath | null>(null);
@@ -34,7 +36,9 @@ export function PathClient({ mode }: { mode: PathMode }) {
             ? await getPathFromRoom(mode.id)
             : mode.type === "mood_board"
               ? await getPathFromMoodBoard(mode.id)
-              : await getPath(mode.id);
+              : mode.type === "hall"
+                ? await getPathFromHall(mode.id)
+                : await getPath(mode.id);
         if (!cancelled) {
           setPath(result);
           setActiveWaypointId(result.waypoints?.[0]?.id ?? null);

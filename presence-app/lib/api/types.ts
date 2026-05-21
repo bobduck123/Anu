@@ -553,3 +553,381 @@ export interface RoomGraphAnalytics {
   signals: Record<string, number>;
   room_key_performance: Array<RoomKey & { encounters_count?: number }>;
 }
+
+// ─── Presence Gardens ───────────────────────────────────────────────────────
+//
+// A Garden is the Observer social layer — Seeds grow into Observations,
+// Observations are nurtured, pruned, or composted. The Garden is NOT a feed.
+
+export type SeedState =
+  | "active"
+  | "recently_watered"
+  | "wilting"
+  | "composted"
+  | "pruned"
+  | "blocked";
+
+export type SeedKind =
+  | "mask"
+  | "room"
+  | "hall"
+  | "path"
+  | "mood_board"
+  | "field";
+
+export interface GardenSeed {
+  id: number;
+  observer_id: number;
+  garden_id?: number | null;
+  // Frontend canonical names
+  seed_kind: SeedKind | string;
+  state: SeedState | string;
+  strength: number; // 0..1 — used to colour the leading rule
+  reason: string;
+  // Backend canonical aliases (canonical contract serializes both)
+  seed_type?: SeedKind | string | null;
+  seed_id?: number | null;
+  source_type?: string | null;     // mood_board_overlap, room_save, hall_join, path_walk
+  current_weight?: number | null;  // 0..100
+  status?: SeedState | string | null;
+  reason_label?: string | null;
+  primary_action?: "open" | "nurture" | "walk_path" | string | null;
+  // Source descriptors
+  source_label: string;
+  source_id?: number | null;
+  source_slug?: string | null;
+  source_image_url?: string | null;
+  last_shared_space?: string | null;
+  last_nurtured_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  href?: string | null;
+}
+
+export type ObservationKind =
+  | "text"
+  | "room"
+  | "path"
+  | "field"
+  | "mood"
+  | "echo"
+  | "find"
+  | "walk_log"
+  | "guestbook"
+  | "hall";
+
+export interface ObservationAuthor {
+  observer_id: number;
+  alias: string;
+  mask_name?: string | null;
+  avatar_key?: string | null;
+}
+
+export interface ObservationSource {
+  source_kind: "room" | "hall" | "path" | "mood_board" | "mask" | string;
+  source_id?: number | null;
+  source_slug?: string | null;
+  source_label?: string | null;
+  reason_shown?: string | null;
+  // crossed paths / seed strength annotation
+  seed_state?: SeedState | string | null;
+}
+
+export interface Observation {
+  id: number;
+  observer_id: number;
+  // Backend alias for observer_id, sometimes the only one populated
+  author_observer_id?: number | null;
+  // Frontend canonical kind name
+  observation_kind: ObservationKind | string;
+  // Backend canonical alias
+  observation_type?: ObservationKind | string | null;
+  body: string;
+  body_format?: "plain" | "display" | string;
+  author?: ObservationAuthor;
+  source?: ObservationSource | null;
+  // `mask_only` may surface as backend `garden`
+  visibility: "public" | "mask_only" | "garden" | "private" | string;
+  moderation_state?: "clean" | "pending" | "flagged" | "actioned" | string;
+  echoed_from_id?: number | null;
+  echoed_from?: ObservationAuthor | null;
+  nurture_count: number;
+  echo_count: number;
+  reply_count?: number;
+  has_nurtured?: boolean;
+  has_echoed?: boolean;
+  has_saved?: boolean;
+  image_url?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface ObservationEcho {
+  id: number;
+  observation_id: number;
+  // Backend canonical alias
+  source_observation_id?: number | null;
+  observer_id: number;
+  // Frontend / backend canonical body field aliases — both come back
+  message?: string | null;
+  commentary?: string | null;
+  // Snippet of the source Observation so an Echoed-from card can render
+  // without a second round-trip. Backend hides body if source is removed.
+  source_attribution?: {
+    id: number;
+    author_observer_id: number;
+    body: string | null;
+  } | null;
+  created_at?: string | null;
+}
+
+export interface GardenNurture {
+  id: number;
+  observer_id: number;
+  target_kind: "seed" | "observation";
+  target_id: number;
+  created_at?: string | null;
+}
+
+export interface GardenPrune {
+  id: number;
+  observer_id: number;
+  target_kind: "seed" | "observation" | "mask";
+  target_id: number;
+  reason?: string | null;
+  created_at?: string | null;
+}
+
+export interface SharedSpace {
+  id: number;
+  observer_id: number;
+  other_kind: "mask" | "room" | "hall" | "path";
+  other_id: number;
+  other_label: string;
+  other_slug?: string | null;
+  context_label?: string | null;
+  last_overlap_at?: string | null;
+}
+
+export type GardenSectionId =
+  | "new_growth"
+  | "recently_watered"
+  | "crossed_paths"
+  | "from_rooms"
+  | "from_mood_boards"
+  | "quiet_shoots"
+  | "wilting_seeds"
+  | "compost";
+
+export interface GardenSection {
+  id: GardenSectionId | string;
+  title: string;
+  blurb: string;
+  observations?: Observation[];
+  seeds?: GardenSeed[];
+  shared_spaces?: SharedSpace[];
+}
+
+export interface GardenHome {
+  observer: ObserverProfile;
+  sections: GardenSection[];
+}
+
+export interface PublicMask {
+  observer: ObserverProfile;
+  pinned_observation?: Observation | null;
+  pinned_mood_board_id?: number | null;
+  current_path_id?: number | null;
+  current_path_label?: string | null;
+  public_mood_boards?: MoodBoard[];
+  recent_observations: Observation[];
+  echoes: Observation[];
+  field_notes?: FieldNote[];
+  rooms_returned_to?: Array<{ slug: string; display_name: string }>;
+  seeds_kept_close?: GardenSeed[];
+  guestbook_enabled?: boolean;
+}
+
+// ─── Presence Halls ─────────────────────────────────────────────────────────
+//
+// A Hall is a shared digital gathering space. Type, status, zones, and
+// participants flow through these contracts. V1 does not require realtime
+// multiplayer movement; the UI is poll-safe.
+
+export type HallType =
+  | "town_hall"
+  | "market_hall"
+  | "studio_hall"
+  | "listening_hall"
+  | "learning_hall"
+  | "salon"
+  | "lobby"
+  | "guild_hall"
+  | "afterparty";
+
+export type HallStatus = "scheduled" | "live" | "ended" | "archived";
+
+export type HallVisibility = "public" | "unlisted" | "invite" | "private";
+
+export type HallZoneKind =
+  | "lobby"
+  | "stage"
+  | "table"
+  | "stall"
+  | "noticeboard"
+  | "portal";
+
+export interface HallZone {
+  id: number;
+  hall_id: number;
+  zone_kind: HallZoneKind | string;
+  title: string;
+  blurb?: string | null;
+  capacity?: number | null;
+  participants_here?: number;
+  order_index?: number;
+  // stalls point at Rooms; portals point at Rooms/Gardens/Paths/Mood Boards/Halls
+  links_to_kind?: "room" | "path" | "mood_board" | "garden" | "hall" | null;
+  links_to_id?: number | null;
+  links_to_slug?: string | null;
+  links_to_label?: string | null;
+  metadata?: Record<string, unknown>;
+}
+
+export interface HallSession {
+  id: number;
+  hall_id: number;
+  title: string;
+  description?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  status: HallStatus | string;
+  host_label?: string | null;
+}
+
+export interface HallParticipant {
+  id: number;
+  hall_id: number;
+  observer_id?: number | null;
+  alias?: string | null;
+  mask_name?: string | null;
+  avatar_key?: string | null;
+  role: "host" | "speaker" | "observer" | "guest" | string;
+  joined_at?: string | null;
+  current_zone_id?: number | null;
+}
+
+export interface HallPortal {
+  id: number;
+  hall_id: number;
+  zone_id?: number | null;
+  label: string;
+  destination_kind: "room" | "garden" | "path" | "mood_board" | "hall";
+  destination_id?: number | null;
+  destination_slug?: string | null;
+}
+
+export interface HallStall {
+  id: number;
+  hall_id: number;
+  zone_id?: number | null;
+  room_id: number;
+  room_slug: string;
+  room_display_name: string;
+  short_pitch?: string | null;
+  visit_count?: number;
+}
+
+export interface PresenceHall {
+  id: number;
+  slug: string;
+  title: string;
+  description?: string | null;
+  rules?: string | null;
+  // Backend canonical alias for `rules`
+  rules_text?: string | null;
+  hall_type: HallType | string;
+  status: HallStatus | string;
+  // Backend stores `invite_only`; frontend may send `invite`
+  visibility: HallVisibility | string;
+  host_room_id?: number | null;
+  host_room_slug?: string | null;
+  host_room_display_name?: string | null;
+  host_mask_id?: number | null;
+  host_mask_alias?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  participants_count?: number;
+  observations_count?: number;
+  cover_image_url?: string | null;
+  zones?: HallZone[];
+  sessions?: HallSession[];
+  stalls?: HallStall[];
+  portals?: HallPortal[];
+  noticeboard?: Observation[];
+  recent_observations?: Observation[];
+  created_at?: string | null;
+  updated_at?: string | null;
+  copy?: string | null;
+}
+
+export interface HallModerationAction {
+  id: number;
+  hall_id: number;
+  target_kind: "observation" | "participant";
+  target_id: number;
+  action: "hide" | "remove" | "warn" | "ban" | string;
+  actor_observer_id?: number | null;
+  reason?: string | null;
+  created_at?: string | null;
+}
+
+export interface HallAnalytics {
+  hall_id: number;
+  participants_joined: number;
+  guests: number;
+  observers: number;
+  observations_posted: number;
+  // Canonical alias for observations_posted
+  observations_shared?: number;
+  rooms_entered: number;
+  stall_visits: number;
+  portal_clicks: number;
+  seeds_created: number;
+  paths_generated: number;
+  // Canonical alias for paths_generated
+  paths_opened?: number;
+  // Canonical alias for participants_joined
+  people_gathered?: number;
+  enquiries?: number;
+  source_breakdown?: Array<{ source: string; count: number }>;
+  top_stalls?: Array<{ room_slug: string; room_display_name: string; visits: number }>;
+  most_visited_stall?: {
+    stall_id?: number;
+    room_slug: string;
+    room_display_name: string;
+    visits: number;
+  } | null;
+  most_used_portal?: {
+    portal_id: number;
+    label: string;
+    clicks: number;
+    destination_kind?: string;
+    destination_slug?: string;
+  } | null;
+}
+
+export interface HallParticipantStatus {
+  // Canonical backend join response
+  id?: number;
+  hall_id: number;
+  observer_id?: number | null;
+  role?: "participant" | "host" | "speaker" | "observer" | "guest" | string;
+  status?: "joined" | "left" | string;
+  identity_type?: "mask" | "guest" | string;
+  alias?: string | null;
+  mask_name?: string | null;
+  participant?: HallParticipant | null;
+  joined: boolean;
+  available_actions: string[];
+}

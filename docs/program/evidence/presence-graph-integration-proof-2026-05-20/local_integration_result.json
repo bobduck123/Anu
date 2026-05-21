@@ -1,0 +1,84 @@
+{
+  "date": "2026-05-20",
+  "scope": "Presence Graph local/backend integration proof",
+  "layers": {
+    "mocked_browser_acceptance": {
+      "status": "preserved",
+      "fixture": "presence-app/tests/fixtures/presenceGraph.json",
+      "tests": "presence-app/tests/e2e/presence-pass-paths.spec.ts",
+      "note": "Mocked browser proof remains a fast frontend acceptance layer and is not a replacement for backend integration."
+    },
+    "local_backend_integration": {
+      "status": "pass",
+      "seed": "flora-fauna/backend/tests/presence_graph_seed.py",
+      "tests": "flora-fauna/backend/tests/test_presence_graph_integration_proof.py",
+      "commands": [
+        {
+          "command": "python -m pytest tests/test_presence_graph_integration_proof.py -q",
+          "working_directory": "flora-fauna/backend",
+          "result": "3 passed",
+          "warnings": [
+            "SQLAlchemy LegacyAPIWarning for Query.get in existing code paths",
+            "Pytest cache warning: could not create backend .pytest_cache path due access denied"
+          ]
+        },
+        {
+          "command": "python -m pytest tests/test_presence_pass_paths.py -q",
+          "working_directory": "flora-fauna/backend",
+          "result": "5 passed",
+          "warnings": [
+            "SQLAlchemy LegacyAPIWarning for Query.get in existing code paths",
+            "Pytest cache warning: could not create backend .pytest_cache path due access denied"
+          ]
+        },
+        {
+          "command": "python -m py_compile scripts\\presence_graph_hosted_smoke.py",
+          "working_directory": ".",
+          "result": "pass"
+        }
+      ]
+    },
+    "hosted_integration": {
+      "status": "prepared_blocked",
+      "script": "scripts/presence_graph_hosted_smoke.py",
+      "blocker": "Hosted proof requires seeded hosted graph identifiers and real observer/owner/control auth tokens."
+    }
+  },
+  "seed_contents": {
+    "presence_rooms": 3,
+    "observers": 2,
+    "mood_boards": 3,
+    "presence_passes": 1,
+    "room_keys": 1,
+    "campaign_context": "Graph Test NFC Card",
+    "existing_encounters": 1,
+    "paths": {
+      "from_room": 1,
+      "from_mood_board": 1
+    },
+    "analytics_events": [
+      "encounter",
+      "saved connection",
+      "passport stamps",
+      "path trace",
+      "room key performance"
+    ]
+  },
+  "proved_locally": [
+    "RoomKey resolves and captures an encounter",
+    "Encounter source, token, and campaign context are preserved",
+    "Direct encounter capture route persists a guest encounter",
+    "Observer passport reads entered/saved stamps",
+    "Observer mood boards list and item add persist",
+    "Path from Room returns waypoints and choices",
+    "Path from Mood Board returns waypoints and choices",
+    "Path walk, trace, and fork choice persist for an observer",
+    "Owner pass list returns pass/key data",
+    "Owner analytics returns encounters, saves, path activity, and key performance",
+    "World readiness remains hidden/forming/preview-safe under control auth",
+    "Unauthenticated observer and owner routes remain protected",
+    "Wrong owner cannot read another owner's analytics",
+    "Frontend mocked fixture critical shape matches real backend critical shape"
+  ],
+  "secret_values_printed": false
+}

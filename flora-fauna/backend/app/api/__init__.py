@@ -71,6 +71,17 @@ from .domain_resolution import domain_resolution_bp
 from .presence import presence_bp, control_presence_bp
 from .presence_owner import presence_owner_bp
 from .presence_graph import admin_presence_graph_bp, observer_bp, paths_bp, presence_graph_bp
+from .presence_gardens_halls import (
+    admin_presence_garden_hall_bp,
+    garden_alias_bp,
+    gardens_bp,
+    hall_paths_bp,
+    halls_bp,
+    masks_bp,
+    observations_alias_bp,
+    observer_garden_bp,
+    presence_hall_owner_bp,
+)
 
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -150,3 +161,12 @@ api_bp.register_blueprint(presence_owner_bp)
 api_bp.register_blueprint(observer_bp)
 api_bp.register_blueprint(paths_bp)
 api_bp.register_blueprint(admin_presence_graph_bp)
+api_bp.register_blueprint(observer_garden_bp)
+api_bp.register_blueprint(garden_alias_bp)
+api_bp.register_blueprint(gardens_bp)
+api_bp.register_blueprint(observations_alias_bp)
+api_bp.register_blueprint(masks_bp)
+api_bp.register_blueprint(halls_bp)
+api_bp.register_blueprint(presence_hall_owner_bp)
+api_bp.register_blueprint(hall_paths_bp)
+api_bp.register_blueprint(admin_presence_garden_hall_bp)

@@ -23,6 +23,10 @@ function resetState() {
     nextItemId: 902,
     nextPassId: 302,
     nextKeyId: 202,
+    // Hall activity event counters used by the analytics endpoint to mirror
+    // the real backend's hall_activity_event aggregation.
+    hallStallVisits: 0,
+    hallPortalClicks: 0,
   };
 }
 
@@ -313,8 +317,554 @@ const server = createServer(async (req, res) => {
     return sendData(res, key);
   }
 
+  // ─── Gardens + Observations ───────────────────────────────────────────────
+  if (url.pathname === "/api/garden/home" && req.method === "GET") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    return sendData(res, fixtures.gardenHome ?? buildEmptyGarden());
+  }
+
+  if (url.pathname === "/api/garden/seeds" && req.method === "GET") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    return sendData(res, { items: fixtures.gardenSeeds ?? [] });
+  }
+
+  if (url.pathname === "/api/garden/shared-spaces" && req.method === "GET") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    return sendData(res, { items: [] });
+  }
+
+  const seedActionMatch = url.pathname.match(/^\/api\/garden\/seeds\/(\d+)\/(nurture|prune|compost|block)$/);
+  if (seedActionMatch && req.method === "POST") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    const id = Number(seedActionMatch[1]);
+    const action = seedActionMatch[2];
+    const stateMap = {
+      nurture: "recently_watered",
+      prune: "pruned",
+      compost: "composted",
+      block: "blocked",
+    };
+    const state = stateMap[action];
+    const strength = action === "nurture" ? 0.9 : 0.2;
+    // Canonical contract: serialize both frontend and backend names.
+    const seed = {
+      id,
+      garden_id: 1,
+      observer_id: 1,
+      seed_kind: "room",
+      seed_type: "room",
+      seed_id: 101,
+      source_id: 101,
+      source_label: "Watered Seed",
+      source_type: "mood_board_overlap",
+      source_slug: "garden-hall-room",
+      state,
+      status: state,
+      strength,
+      current_weight: strength * 100,
+      reason: "Test seed reason",
+      reason_label: "Test seed reason",
+      primary_action: "open",
+      href: "/r/garden-hall-room",
+    };
+    return sendData(res, { seed });
+  }
+
+  if (url.pathname === "/api/observations" && req.method === "POST") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    // Server-side self-promotion guardrail mirror (matches contract).
+    if (typeof body.body === "string" && /(book me|hire me|http|@\w+\.com)/i.test(body.body)) {
+      return send(res, 400, {
+        ok: false,
+        error: {
+          code: "validation_error",
+          message:
+            "Observation cannot include commercial links, booking/contact prompts, services, or portfolio-style business positioning.",
+          details: {
+            reason: "observer_business_profile_attempt",
+            upgrade_required: true,
+            upgrade_target: "presence_room",
+            message:
+              "Observer Masks are personal and social. To publish services, booking details, portfolios, commercial links, or business contact points, create or upgrade to a Presence Room.",
+            allowed_actions: ["create_presence_room", "link_existing_room"],
+          },
+        },
+      });
+    }
+    const id = Math.floor(Math.random() * 1000) + 500;
+    const kind = body.observation_kind || body.observation_type || "text";
+    const vis = body.visibility === "mask_only" ? "garden" : body.visibility || "public";
+    return sendData(res, {
+      id,
+      observer_id: 1,
+      author_observer_id: 1,
+      observation_kind: kind,
+      observation_type: kind,
+      body: body.body,
+      body_format: body.body_format || "plain",
+      visibility: vis,
+      nurture_count: 0,
+      echo_count: 0,
+      has_nurtured: false,
+      author: { observer_id: 1, alias: "test-observer-mask", mask_name: "test-observer-mask" },
+      source: body.hall_id
+        ? { source_kind: "hall", source_id: body.hall_id, source_slug: body.source_slug || null, source_label: null }
+        : body.source_kind
+          ? { source_kind: body.source_kind, source_id: body.source_id, source_slug: body.source_slug || null, source_label: null }
+          : null,
+      created_at: new Date().toISOString(),
+    }, 201);
+  }
+
+  const obsActionMatch = url.pathname.match(/^\/api\/observations\/(\d+)\/(nurture|echoes|report)$/);
+  if (obsActionMatch) {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    const id = Number(obsActionMatch[1]);
+    if (obsActionMatch[2] === "nurture") {
+      if (req.method === "POST") {
+        return sendData(res, {
+          observation: {
+            id,
+            observer_id: 1,
+            author_observer_id: 1,
+            observation_kind: "text",
+            observation_type: "text",
+            body: "ok",
+            visibility: "public",
+            nurture_count: 1,
+            echo_count: 0,
+            has_nurtured: true,
+          },
+        });
+      }
+      if (req.method === "DELETE") {
+        return sendData(res, {
+          observation: {
+            id,
+            observer_id: 1,
+            author_observer_id: 1,
+            observation_kind: "text",
+            observation_type: "text",
+            body: "ok",
+            visibility: "public",
+            nurture_count: 0,
+            echo_count: 0,
+            has_nurtured: false,
+          },
+        });
+      }
+    }
+    if (obsActionMatch[2] === "echoes" && req.method === "POST") {
+      const message = (body.message || body.commentary || "").toString();
+      // Self-promotion guardrail also applies to Echo commentary per contract.
+      if (message && /(book me|hire me|http|@\w+\.com)/i.test(message)) {
+        return send(res, 400, {
+          ok: false,
+          error: {
+            code: "validation_error",
+            message: "Echo commentary cannot include commercial links.",
+            details: {
+              reason: "observer_business_profile_attempt",
+              upgrade_required: true,
+              upgrade_target: "presence_room",
+            },
+          },
+        });
+      }
+      return sendData(
+        res,
+        {
+          id: id + 1000,
+          observation_id: id,
+          source_observation_id: id,
+          observer_id: 2,
+          message: message || null,
+          commentary: message || null,
+          source_attribution: {
+            id,
+            author_observer_id: 1,
+            body: "Source Observation body snippet.",
+          },
+          created_at: new Date().toISOString(),
+        },
+        201,
+      );
+    }
+    if (obsActionMatch[2] === "report" && req.method === "POST") {
+      return sendData(res, { received: true }, 201);
+    }
+  }
+
+  // ─── Mood Board → Seed (canonical contract) ───────────────────────────────
+  const moodBoardSeedMatch = url.pathname.match(
+    /^\/api\/observer\/mood-boards\/(\d+)\/items\/(\d+)\/seed$/,
+  );
+  if (moodBoardSeedMatch && req.method === "POST") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    const boardId = Number(moodBoardSeedMatch[1]);
+    const itemId = Number(moodBoardSeedMatch[2]);
+    return sendData(res, {
+      seed: {
+        id: 9100 + itemId,
+        garden_id: 1,
+        observer_id: 1,
+        seed_kind: "room",
+        seed_type: "room",
+        seed_id: itemId,
+        source_id: itemId,
+        source_type: "mood_board_overlap",
+        source_label: "Planted from your Mood Board",
+        source_slug: `mb-${boardId}-item-${itemId}`,
+        state: "recently_watered",
+        status: "recently_watered",
+        strength: 0.8,
+        current_weight: 80,
+        reason: "Added from your Mood Board.",
+        reason_label: "Added from your Mood Board.",
+        primary_action: "open",
+      },
+      reason_label: "Added from your Mood Board.",
+      garden_home_update_hint: "from_mood_boards",
+    }, 201);
+  }
+
+  const maskMatch = url.pathname.match(/^\/api\/masks\/([^/]+)$/);
+  if (maskMatch && req.method === "GET") {
+    return sendData(res, fixtures.publicMask ?? buildMaskFixture(decodeURIComponent(maskMatch[1])));
+  }
+
+  // ─── Halls ────────────────────────────────────────────────────────────────
+  if (url.pathname === "/api/halls" && req.method === "GET") {
+    return sendData(res, fixtures.hallsList ?? buildHallsList());
+  }
+
+  const hallDetailMatch = url.pathname.match(/^\/api\/halls\/([^/]+)$/);
+  if (hallDetailMatch && req.method === "GET") {
+    return sendData(res, fixtures.hall ?? buildHallFixture(decodeURIComponent(hallDetailMatch[1])));
+  }
+
+  const hallParticipantsMatch = url.pathname.match(/^\/api\/halls\/([^/]+)\/participants$/);
+  if (hallParticipantsMatch && req.method === "GET") {
+    return sendData(res, { items: fixtures.hallParticipants ?? [] });
+  }
+
+  const hallObsMatch = url.pathname.match(/^\/api\/halls\/([^/]+)\/observations$/);
+  if (hallObsMatch && req.method === "GET") {
+    return sendData(res, { items: fixtures.hallObservations ?? [] });
+  }
+
+  const hallJoinMatch = url.pathname.match(/^\/api\/halls\/([^/]+)\/(join|leave)$/);
+  if (hallJoinMatch && req.method === "POST") {
+    const joined = hallJoinMatch[2] === "join";
+    // Per contract, guest join is allowed when no Authorization header is
+    // present. We require a token only for the canonical Observer join.
+    if (!hasAuth(req) && !joined) {
+      return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    }
+    const isGuest = !hasAuth(req);
+    return sendData(res, {
+      id: isGuest ? null : 7001,
+      hall_id: 1,
+      observer_id: isGuest ? null : 1,
+      role: "participant",
+      status: joined ? "joined" : "left",
+      identity_type: isGuest ? "guest" : "mask",
+      alias: isGuest ? null : "test-observer-mask",
+      mask_name: isGuest ? null : "test-observer-mask",
+      participant: joined
+        ? {
+            id: 7001,
+            hall_id: 1,
+            observer_id: isGuest ? null : 1,
+            alias: isGuest ? null : "test-observer-mask",
+            mask_name: isGuest ? null : "test-observer-mask",
+            role: "participant",
+            joined_at: new Date().toISOString(),
+          }
+        : null,
+      joined,
+      available_actions: joined ? ["post_observation", "visit_stall", "open_portal"] : [],
+    });
+  }
+
+  // Dedicated Hall Observation create (per contract).
+  const hallObservationCreateMatch = url.pathname.match(
+    /^\/api\/halls\/([^/]+)\/observations$/,
+  );
+  if (hallObservationCreateMatch && req.method === "POST") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    const slug = hallObservationCreateMatch[1];
+    const id = Math.floor(Math.random() * 1000) + 800;
+    return sendData(res, {
+      id,
+      observer_id: 1,
+      author_observer_id: 1,
+      observation_kind: body.observation_kind || "hall",
+      observation_type: body.observation_kind || "hall",
+      body: body.body,
+      visibility: body.visibility === "mask_only" ? "garden" : body.visibility || "public",
+      nurture_count: 0,
+      echo_count: 0,
+      has_nurtured: false,
+      author: { observer_id: 1, alias: "test-observer-mask", mask_name: "test-observer-mask" },
+      source: { source_kind: "hall", source_id: 1, source_slug: slug, source_label: null },
+      created_at: new Date().toISOString(),
+    }, 201);
+  }
+
+  // Hall portal click and stall visit events.
+  const portalClickMatch = url.pathname.match(
+    /^\/api\/halls\/([^/]+)\/portals\/(\d+)\/click$/,
+  );
+  if (portalClickMatch && req.method === "POST") {
+    state.hallPortalClicks = (state.hallPortalClicks || 0) + 1;
+    return sendData(res, {
+      id: Math.floor(Math.random() * 10_000),
+      hall_id: 1,
+      event_type: "portal_click",
+      portal_id: Number(portalClickMatch[2]),
+      observer_id: hasAuth(req) ? 1 : null,
+      created_at: new Date().toISOString(),
+    }, 201);
+  }
+  const stallVisitMatch = url.pathname.match(
+    /^\/api\/halls\/([^/]+)\/stalls\/(\d+)\/visit$/,
+  );
+  if (stallVisitMatch && req.method === "POST") {
+    state.hallStallVisits = (state.hallStallVisits || 0) + 1;
+    return sendData(res, {
+      id: Math.floor(Math.random() * 10_000),
+      hall_id: 1,
+      event_type: "stall_visit",
+      stall_id: Number(stallVisitMatch[2]),
+      observer_id: hasAuth(req) ? 1 : null,
+      created_at: new Date().toISOString(),
+    }, 201);
+  }
+
+  // Hall trailhead Paths.
+  const pathFromHallMatch = url.pathname.match(/^\/api\/paths\/from-hall\/(\d+)$/);
+  if (pathFromHallMatch && req.method === "GET") {
+    return sendData(res, buildHallTrailheadPath(Number(pathFromHallMatch[1])));
+  }
+  const pathGenFromHallMatch = url.pathname.match(/^\/api\/paths\/generate\/from-hall\/(\d+)$/);
+  if (pathGenFromHallMatch && req.method === "POST") {
+    return sendData(res, buildHallTrailheadPath(Number(pathGenFromHallMatch[1])), 201);
+  }
+
+  // Owner Hall studio
+  if (url.pathname === "/api/presence/owner/halls" && req.method === "GET") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    return sendData(res, { items: fixtures.ownerHalls ?? [] });
+  }
+
+  if (url.pathname === "/api/presence/owner/halls" && req.method === "POST") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    const hall = {
+      id: 9001,
+      slug: `studio-hall-${Date.now()}`,
+      title: body.title,
+      description: body.description || null,
+      hall_type: body.hall_type || "salon",
+      status: "scheduled",
+      visibility: body.visibility || "public",
+      host_room_id: body.host_room_id,
+      zones: [],
+      sessions: [],
+      stalls: [],
+      portals: [],
+    };
+    return sendData(res, hall, 201);
+  }
+
+  const ownerHallMatch = url.pathname.match(/^\/api\/presence\/owner\/halls\/(\d+)$/);
+  if (ownerHallMatch && req.method === "GET") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    return sendData(res, fixtures.ownerHall ?? buildOwnerHall(Number(ownerHallMatch[1])));
+  }
+
+  const ownerHallAnalyticsMatch = url.pathname.match(/^\/api\/presence\/owner\/halls\/(\d+)\/analytics$/);
+  if (ownerHallAnalyticsMatch && req.method === "GET") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    const stallVisits = state.hallStallVisits ?? 3;
+    const portalClicks = state.hallPortalClicks ?? 1;
+    return sendData(res, {
+      hall_id: Number(ownerHallAnalyticsMatch[1]),
+      participants_joined: 4,
+      people_gathered: 4,
+      observers: 3,
+      guests: 1,
+      observations_posted: 2,
+      observations_shared: 2,
+      rooms_entered: 5,
+      stall_visits: stallVisits,
+      portal_clicks: portalClicks,
+      seeds_created: 2,
+      paths_generated: 1,
+      paths_opened: 1,
+      enquiries: 0,
+      top_stalls: [
+        { room_slug: fixtures.room.slug, room_display_name: fixtures.room.display_name, visits: stallVisits },
+      ],
+      most_visited_stall: {
+        stall_id: 1,
+        room_slug: fixtures.room.slug,
+        room_display_name: fixtures.room.display_name,
+        visits: stallVisits,
+      },
+      most_used_portal: {
+        portal_id: 1,
+        label: "To the Listening Hall",
+        clicks: portalClicks,
+        destination_kind: "hall",
+        destination_slug: "listening-hall-april",
+      },
+      source_breakdown: [
+        { source: "garden_seed", count: 2 },
+        { source: "direct", count: 2 },
+      ],
+    });
+  }
+
   return sendError(res, 404, "not_found", `No mock route for ${req.method} ${url.pathname}`);
 });
+
+function buildEmptyGarden() {
+  return {
+    observer: { id: 1, alias: "test-observer-mask", visibility: "public_mask", self_promotion_locked: true, status: "active" },
+    sections: [
+      { id: "new_growth", title: "New Growth", blurb: "Fresh Observations from strong Seeds.", observations: [] },
+      { id: "recently_watered", title: "Recently Watered", blurb: "Seeds you watered.", seeds: [] },
+      { id: "crossed_paths", title: "Crossed Paths", blurb: "Recent overlaps.", shared_spaces: [] },
+      { id: "from_rooms", title: "From Rooms You Entered", blurb: "Rooted in places.", observations: [] },
+      { id: "wilting_seeds", title: "Wilting Seeds", blurb: "Fading.", seeds: [] },
+    ],
+  };
+}
+
+function buildMaskFixture(alias) {
+  return {
+    observer: { id: 1, alias, mask_name: alias, visibility: "public_mask", self_promotion_locked: true, status: "active", bio_fragment: "Walking quietly through Rooms." },
+    recent_observations: [
+      {
+        id: 4242,
+        observer_id: 1,
+        author_observer_id: 1,
+        observation_kind: "text",
+        observation_type: "text",
+        body: "A quiet observation about the walk this morning.",
+        body_format: "plain",
+        visibility: "public",
+        nurture_count: 0,
+        echo_count: 0,
+        has_nurtured: false,
+        author: { observer_id: 1, alias, mask_name: alias },
+        source: null,
+        created_at: new Date().toISOString(),
+      },
+    ],
+    echoes: [],
+    public_mood_boards: [],
+    seeds_kept_close: [],
+    rooms_returned_to: [],
+  };
+}
+
+function buildHallsList() {
+  return {
+    items: [
+      {
+        id: 1, slug: "open-studio-friday", title: "Open Studio Friday", hall_type: "studio_hall", status: "live",
+        visibility: "public", participants_count: 6, observations_count: 4, host_room_id: fixtures.room.id, host_room_slug: fixtures.room.slug, host_room_display_name: fixtures.room.display_name,
+        description: "Doors open. Stop by.",
+      },
+      {
+        id: 2, slug: "listening-hall-april", title: "Listening Hall — April", hall_type: "listening_hall", status: "scheduled",
+        visibility: "public", participants_count: 0, observations_count: 0, host_room_id: fixtures.room.id, host_room_slug: fixtures.room.slug, host_room_display_name: fixtures.room.display_name,
+        starts_at: new Date(Date.now() + 86_400_000).toISOString(),
+      },
+    ],
+    total: 2, live_count: 1, scheduled_count: 1,
+  };
+}
+
+function buildHallFixture(slug) {
+  return {
+    id: 1, slug, title: "Open Studio Friday", hall_type: "studio_hall", status: "live",
+    visibility: "public", participants_count: 6, observations_count: 4,
+    description: "A studio open to anyone. Walk in, see what's on the bench, talk if you want.",
+    host_room_id: fixtures.room.id, host_room_slug: fixtures.room.slug, host_room_display_name: fixtures.room.display_name,
+    zones: [
+      { id: 1, hall_id: 1, zone_kind: "lobby", title: "Lobby", blurb: "Soft entry.", order_index: 1, participants_here: 3 },
+      { id: 2, hall_id: 1, zone_kind: "stage", title: "Welcome Stage", blurb: "Quick hello, then look around.", order_index: 2 },
+      { id: 3, hall_id: 1, zone_kind: "table", title: "Material Table", blurb: "Talking about pigment.", order_index: 3 },
+      { id: 4, hall_id: 1, zone_kind: "stall", title: "Pigment Stall", blurb: "Step into the Stall.", order_index: 4, links_to_kind: "room", links_to_slug: fixtures.room.slug },
+      { id: 5, hall_id: 1, zone_kind: "noticeboard", title: "Notes from the bench", blurb: "Pinned Observations.", order_index: 5 },
+      { id: 6, hall_id: 1, zone_kind: "portal", title: "To the Listening Hall", blurb: "Step through.", order_index: 6, links_to_kind: "hall", links_to_slug: "listening-hall-april" },
+    ],
+    sessions: [
+      { id: 1, hall_id: 1, title: "Opening notes", status: "scheduled" },
+    ],
+    stalls: [
+      { id: 1, hall_id: 1, room_id: fixtures.room.id, room_slug: fixtures.room.slug, room_display_name: fixtures.room.display_name, short_pitch: "Studio open today.", visit_count: 3 },
+    ],
+    portals: [
+      { id: 1, hall_id: 1, label: "To the Listening Hall", destination_kind: "hall", destination_slug: "listening-hall-april" },
+    ],
+    recent_observations: [],
+    noticeboard: [],
+  };
+}
+
+function buildOwnerHall(id) {
+  return {
+    ...buildHallFixture("open-studio-friday"),
+    id,
+  };
+}
+
+function buildHallTrailheadPath(hallId) {
+  return {
+    id: 5000 + hallId,
+    title: "From the Open Studio",
+    description: "A short walk through the Hall and out into related Rooms.",
+    path_type: "hall_trailhead",
+    trailhead_type: "hall",
+    trailhead_id: hallId,
+    generated_by: "system",
+    visibility: "public",
+    status: "active",
+    waypoints: [
+      {
+        id: 1,
+        path_id: 5000 + hallId,
+        waypoint_type: "hall",
+        waypoint_id: hallId,
+        title: "The Hall itself",
+        reason_shown: "Trailhead from this Hall.",
+        order_index: 0,
+      },
+      {
+        id: 2,
+        path_id: 5000 + hallId,
+        waypoint_type: "room",
+        waypoint_id: fixtures.room.id,
+        title: fixtures.room.display_name,
+        reason_shown: "Host Room of the Hall.",
+        order_index: 1,
+      },
+    ],
+    choices: [
+      {
+        id: 1,
+        path_id: 5000 + hallId,
+        from_waypoint_id: 1,
+        label: "Follow similar Rooms",
+        direction_type: "similar_rooms",
+      },
+    ],
+  };
+}
 
 server.listen(port, "127.0.0.1", () => {
   console.log(`Presence mock API listening on http://127.0.0.1:${port}`);

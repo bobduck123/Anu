@@ -7,6 +7,8 @@ from sqlalchemy import or_
 from ..extensions import db
 from ..models import (
     FieldNote,
+    HallPortal,
+    HallStall,
     MoodBoard,
     MoodBoardItem,
     PassportStamp,
@@ -15,6 +17,7 @@ from ..models import (
     PathTrace,
     PathWalk,
     PathWaypoint,
+    PresenceHall,
     PresenceNode,
     RoomConnection,
 )
@@ -24,11 +27,11 @@ from .presence_social_service import clean_str, json_object, passport_stamp, val
 
 
 PATH_TYPES = {"mood", "place", "influence", "material", "sound", "people", "event", "editorial", "generated", "encounter"}
-TRAILHEAD_TYPES = {"room", "mood_board", "event", "place", "encounter", "tag", "influence", "observer"}
+TRAILHEAD_TYPES = {"room", "mood_board", "hall", "event", "place", "encounter", "tag", "influence", "observer"}
 PATH_GENERATORS = {"system", "editor", "observer", "room_owner"}
 PATH_VISIBILITIES = {"private", "public", "unlisted", "system"}
 PATH_STATUSES = {"draft", "active", "archived"}
-WAYPOINT_TYPES = {"room", "field_note", "mood_board_item", "mood_board", "event", "place", "reference", "text"}
+WAYPOINT_TYPES = {"room", "field_note", "mood_board_item", "mood_board", "hall", "event", "place", "reference", "text"}
 CHOICE_DIRECTIONS = {"sound", "material", "place", "people", "influence", "event", "mood", "surprise", "collaborator", "saved_by"}
 TRACE_TYPES = {"view", "enter_room", "save", "signal", "field_note", "linger", "skip", "return", "fork_chosen"}
 
@@ -203,6 +206,64 @@ def generate_path_from_mood_board(board: MoodBoard, *, generated_by: str = "syst
         if order >= 10:
             break
     _add_standard_choices(path, waypoints, board_mode=True)
+    return path
+
+
+def generate_path_from_hall(hall: PresenceHall, *, generated_by: str = "system", visibility: str = "unlisted") -> Path:
+    path = create_path(
+        {
+            "title": f"Path from {hall.title}",
+            "description": "A trailhead from a Presence Hall.",
+            "path_type": "generated",
+            "trailhead_type": "hall",
+            "trailhead_id": hall.id,
+            "generated_by": generated_by,
+            "visibility": visibility,
+            "metadata": {"source": "hall", "hall_id": hall.id},
+        }
+    )
+    db.session.flush()
+    waypoints: list[PathWaypoint] = [
+        add_waypoint(
+            path,
+            "hall",
+            waypoint_id=hall.id,
+            title=hall.title,
+            reason_shown="Trailhead Hall.",
+            order_index=0,
+            metadata={"slug": hall.slug, "hall_type": hall.hall_type},
+        )
+    ]
+    order = 1
+    for stall in HallStall.query.filter_by(hall_id=hall.id, status="active").order_by(HallStall.id.asc()).limit(5).all():
+        if stall.room:
+            waypoints.append(
+                add_waypoint(
+                    path,
+                    "room",
+                    waypoint_id=stall.room_id,
+                    title=stall.room.display_name,
+                    reason_shown="Room storefront inside this Hall.",
+                    order_index=order,
+                    metadata={"public_url": public_url_for_node(stall.room), "stall_id": stall.id},
+                )
+            )
+            order += 1
+    for portal in HallPortal.query.filter_by(hall_id=hall.id, status="active").order_by(HallPortal.id.asc()).limit(5).all():
+        if portal.target_type == "room" and portal.target_id:
+            room = public_room_query().filter_by(id=portal.target_id).first()
+            if room:
+                waypoints.append(add_waypoint(path, "room", waypoint_id=room.id, title=room.display_name, reason_shown=f"Portal: {portal.label}.", order_index=order, metadata={"portal_id": portal.id}))
+                order += 1
+        elif portal.target_type == "mood_board" and portal.target_id:
+            waypoints.append(add_waypoint(path, "mood_board", waypoint_id=portal.target_id, title=portal.label, reason_shown="Mood Board portal from this Hall.", order_index=order, metadata={"portal_id": portal.id}))
+            order += 1
+        elif portal.target_type == "path" and portal.target_id:
+            waypoints.append(add_waypoint(path, "reference", waypoint_id=portal.target_id, title=portal.label, reason_shown="Path portal from this Hall.", order_index=order, metadata={"portal_id": portal.id, "target_type": "path"}))
+            order += 1
+    if len(waypoints) == 1 and hall.attached_room:
+        waypoints.append(add_waypoint(path, "room", waypoint_id=hall.attached_room_id, title=hall.attached_room.display_name, reason_shown="Attached Room for this Hall.", order_index=order, metadata={"public_url": public_url_for_node(hall.attached_room)}))
+    _add_standard_choices(path, waypoints)
     return path
 
 
@@ -425,4 +486,3 @@ def _int_or_none(value: Any) -> int | None:
         return int(value) if value not in (None, "") else None
     except (TypeError, ValueError):
         return None
-

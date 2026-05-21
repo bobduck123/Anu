@@ -1664,6 +1664,447 @@ class ModerationFlag(db.Model):
     reporter_observer = db.relationship("ObserverProfile", backref=db.backref("moderation_flags", lazy=True))
 
 
+class PresenceGarden(db.Model):
+    __tablename__ = "presence_garden"
+    __table_args__ = (
+        db.UniqueConstraint("observer_id", name="uq_presence_garden_default_observer"),
+        db.UniqueConstraint("slug", name="uq_presence_garden_slug"),
+        db.Index("ix_presence_garden_observer", "observer_id"),
+        db.Index("ix_presence_garden_visibility_status", "visibility", "status"),
+        db.Index("ix_presence_garden_slug", "slug"),
+        db.Index("ix_presence_garden_created_at", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=False)
+    title = db.Column(db.String(180), nullable=False)
+    slug = db.Column(db.String(180), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    visibility = db.Column(db.String(40), nullable=False, default="private")
+    theme_key = db.Column(db.String(80), nullable=True)
+    pinned_observation_id = db.Column(db.Integer, nullable=True)
+    pinned_mood_board_id = db.Column(db.Integer, db.ForeignKey("mood_board.id"), nullable=True)
+    status = db.Column(db.String(40), nullable=False, default="active")
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    observer = db.relationship("ObserverProfile", backref=db.backref("presence_garden", uselist=False))
+    pinned_mood_board = db.relationship("MoodBoard")
+
+
+class Observation(db.Model):
+    __tablename__ = "observation"
+    __table_args__ = (
+        db.Index("ix_observation_author", "author_observer_id"),
+        db.Index("ix_observation_garden_created", "garden_id", "created_at"),
+        db.Index("ix_observation_hall_created", "hall_id", "created_at"),
+        db.Index("ix_observation_room", "room_id"),
+        db.Index("ix_observation_path", "path_id"),
+        db.Index("ix_observation_mood_board", "mood_board_id"),
+        db.Index("ix_observation_visibility_status", "visibility", "status"),
+        db.Index("ix_observation_moderation", "moderation_state"),
+        db.Index("ix_observation_created_at", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    author_observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=False)
+    garden_id = db.Column(db.Integer, db.ForeignKey("presence_garden.id"), nullable=True)
+    hall_id = db.Column(db.Integer, db.ForeignKey("presence_hall.id"), nullable=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=True)
+    path_id = db.Column(db.Integer, db.ForeignKey("path.id"), nullable=True)
+    mood_board_id = db.Column(db.Integer, db.ForeignKey("mood_board.id"), nullable=True)
+    observation_type = db.Column(db.String(40), nullable=False, default="text")
+    body = db.Column(db.Text, nullable=False)
+    title = db.Column(db.String(180), nullable=True)
+    visibility = db.Column(db.String(40), nullable=False, default="garden")
+    status = db.Column(db.String(40), nullable=False, default="active")
+    moderation_state = db.Column(db.String(40), nullable=False, default="clean")
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    author_observer = db.relationship("ObserverProfile", backref=db.backref("observations", lazy=True, cascade="all, delete-orphan"))
+    garden = db.relationship("PresenceGarden", backref=db.backref("observations", lazy=True, cascade="all, delete-orphan"))
+    hall = db.relationship("PresenceHall", backref=db.backref("observations", lazy=True, cascade="all, delete-orphan"))
+    room = db.relationship("PresenceNode", backref=db.backref("observations", lazy=True))
+    path = db.relationship("Path", backref=db.backref("observations", lazy=True))
+    mood_board = db.relationship("MoodBoard", backref=db.backref("observations", lazy=True))
+
+
+class ObservationEcho(db.Model):
+    __tablename__ = "observation_echo"
+    __table_args__ = (
+        db.Index("ix_observation_echo_observer", "observer_id"),
+        db.Index("ix_observation_echo_target_garden", "target_garden_id"),
+        db.Index("ix_observation_echo_source_observation", "source_observation_id"),
+        db.Index("ix_observation_echo_status", "status"),
+        db.Index("ix_observation_echo_created_at", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=False)
+    source_observation_id = db.Column(db.Integer, db.ForeignKey("observation.id"), nullable=True)
+    source_room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=True)
+    source_mood_board_id = db.Column(db.Integer, db.ForeignKey("mood_board.id"), nullable=True)
+    source_path_id = db.Column(db.Integer, db.ForeignKey("path.id"), nullable=True)
+    source_hall_id = db.Column(db.Integer, db.ForeignKey("presence_hall.id"), nullable=True)
+    commentary = db.Column(db.Text, nullable=True)
+    target_garden_id = db.Column(db.Integer, db.ForeignKey("presence_garden.id"), nullable=False)
+    visibility = db.Column(db.String(40), nullable=False, default="public")
+    status = db.Column(db.String(40), nullable=False, default="active")
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    observer = db.relationship("ObserverProfile", backref=db.backref("observation_echoes", lazy=True, cascade="all, delete-orphan"))
+    source_observation = db.relationship("Observation", backref=db.backref("echoes", lazy=True))
+    source_room = db.relationship("PresenceNode")
+    source_mood_board = db.relationship("MoodBoard")
+    source_path = db.relationship("Path")
+    source_hall = db.relationship("PresenceHall")
+    target_garden = db.relationship("PresenceGarden", backref=db.backref("echoes", lazy=True, cascade="all, delete-orphan"))
+
+
+class GardenSeed(db.Model):
+    __tablename__ = "garden_seed"
+    __table_args__ = (
+        db.UniqueConstraint("garden_id", "seed_type", "seed_id", name="uq_garden_seed_target"),
+        db.Index("ix_garden_seed_garden", "garden_id"),
+        db.Index("ix_garden_seed_type_id", "seed_type", "seed_id"),
+        db.Index("ix_garden_seed_source", "source_type", "source_ref_id"),
+        db.Index("ix_garden_seed_status_weight", "status", "current_weight"),
+        db.Index("ix_garden_seed_last_shared", "last_shared_space_at"),
+        db.Index("ix_garden_seed_updated_at", "updated_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    garden_id = db.Column(db.Integer, db.ForeignKey("presence_garden.id"), nullable=False)
+    seed_type = db.Column(db.String(40), nullable=False)
+    seed_id = db.Column(db.Integer, nullable=True)
+    source_type = db.Column(db.String(60), nullable=False, default="manual")
+    source_ref_id = db.Column(db.String(120), nullable=True)
+    base_strength = db.Column(db.Numeric(10, 3), nullable=False, default=20)
+    current_weight = db.Column(db.Numeric(10, 3), nullable=False, default=20)
+    half_life_days = db.Column(db.Numeric(10, 3), nullable=False, default=7)
+    nurture_multiplier = db.Column(db.Numeric(10, 3), nullable=False, default=1)
+    quality_score = db.Column(db.Numeric(10, 3), nullable=False, default=1)
+    last_shared_space_at = db.Column(db.DateTime, nullable=True)
+    last_nurtured_at = db.Column(db.DateTime, nullable=True)
+    status = db.Column(db.String(40), nullable=False, default="active")
+    reason_label = db.Column(db.String(240), nullable=True)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    garden = db.relationship("PresenceGarden", backref=db.backref("seeds", lazy=True, cascade="all, delete-orphan"))
+
+
+class GardenNurture(db.Model):
+    __tablename__ = "garden_nurture"
+    __table_args__ = (
+        db.Index("ix_garden_nurture_garden", "garden_id"),
+        db.Index("ix_garden_nurture_seed", "seed_id"),
+        db.Index("ix_garden_nurture_observer", "observer_id"),
+        db.Index("ix_garden_nurture_type_created", "nurture_type", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    garden_id = db.Column(db.Integer, db.ForeignKey("presence_garden.id"), nullable=False)
+    seed_id = db.Column(db.Integer, db.ForeignKey("garden_seed.id"), nullable=False)
+    observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=False)
+    nurture_type = db.Column(db.String(60), nullable=False)
+    strength_delta = db.Column(db.Numeric(10, 3), nullable=False, default=5)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+
+    garden = db.relationship("PresenceGarden", backref=db.backref("nurtures", lazy=True, cascade="all, delete-orphan"))
+    seed = db.relationship("GardenSeed", backref=db.backref("nurtures", lazy=True, cascade="all, delete-orphan"))
+    observer = db.relationship("ObserverProfile", backref=db.backref("garden_nurtures", lazy=True))
+
+
+class GardenPrune(db.Model):
+    __tablename__ = "garden_prune"
+    __table_args__ = (
+        db.Index("ix_garden_prune_garden", "garden_id"),
+        db.Index("ix_garden_prune_seed", "seed_id"),
+        db.Index("ix_garden_prune_target", "target_type", "target_id"),
+        db.Index("ix_garden_prune_type", "prune_type"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    garden_id = db.Column(db.Integer, db.ForeignKey("presence_garden.id"), nullable=False)
+    seed_id = db.Column(db.Integer, db.ForeignKey("garden_seed.id"), nullable=True)
+    target_type = db.Column(db.String(40), nullable=False)
+    target_id = db.Column(db.Integer, nullable=False)
+    prune_type = db.Column(db.String(40), nullable=False)
+    reason = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    garden = db.relationship("PresenceGarden", backref=db.backref("prunes", lazy=True, cascade="all, delete-orphan"))
+    seed = db.relationship("GardenSeed", backref=db.backref("prunes", lazy=True, cascade="all, delete-orphan"))
+
+
+class SharedSpace(db.Model):
+    __tablename__ = "shared_space"
+    __table_args__ = (
+        db.Index("ix_shared_space_type_id", "space_type", "space_id"),
+        db.Index("ix_shared_space_observer", "observer_id"),
+        db.Index("ix_shared_space_room", "room_id"),
+        db.Index("ix_shared_space_hall", "hall_id"),
+        db.Index("ix_shared_space_path", "path_id"),
+        db.Index("ix_shared_space_event", "event_id"),
+        db.Index("ix_shared_space_occurred_at", "occurred_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    space_type = db.Column(db.String(60), nullable=False)
+    space_id = db.Column(db.Integer, nullable=True)
+    observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=True)
+    hall_id = db.Column(db.Integer, db.ForeignKey("presence_hall.id"), nullable=True)
+    path_id = db.Column(db.Integer, db.ForeignKey("path.id"), nullable=True)
+    event_id = db.Column(db.Integer, db.ForeignKey("event.id"), nullable=True)
+    strength = db.Column(db.Numeric(10, 3), nullable=False, default=20)
+    occurred_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+
+    observer = db.relationship("ObserverProfile", backref=db.backref("shared_spaces", lazy=True))
+    room = db.relationship("PresenceNode", backref=db.backref("shared_spaces", lazy=True))
+    hall = db.relationship("PresenceHall", backref=db.backref("shared_spaces", lazy=True))
+    path = db.relationship("Path", backref=db.backref("shared_spaces", lazy=True))
+    event = db.relationship("Event", backref=db.backref("presence_shared_spaces", lazy=True))
+
+
+class PresenceHall(db.Model):
+    __tablename__ = "presence_hall"
+    __table_args__ = (
+        db.UniqueConstraint("slug", name="uq_presence_hall_slug"),
+        db.Index("ix_presence_hall_host_room", "host_room_id"),
+        db.Index("ix_presence_hall_host_observer", "host_observer_id"),
+        db.Index("ix_presence_hall_visibility_status", "visibility", "status"),
+        db.Index("ix_presence_hall_type", "hall_type"),
+        db.Index("ix_presence_hall_starts", "starts_at"),
+        db.Index("ix_presence_hall_slug", "slug"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    host_type = db.Column(db.String(40), nullable=False)
+    host_room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=True)
+    host_observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=True)
+    title = db.Column(db.String(180), nullable=False)
+    slug = db.Column(db.String(180), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    hall_type = db.Column(db.String(40), nullable=False, default="custom")
+    visibility = db.Column(db.String(40), nullable=False, default="public")
+    status = db.Column(db.String(40), nullable=False, default="draft")
+    capacity = db.Column(db.Integer, nullable=True)
+    starts_at = db.Column(db.DateTime, nullable=True)
+    ends_at = db.Column(db.DateTime, nullable=True)
+    theme_key = db.Column(db.String(80), nullable=True)
+    rules_text = db.Column(db.Text, nullable=True)
+    attached_room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=True)
+    attached_path_id = db.Column(db.Integer, db.ForeignKey("path.id"), nullable=True)
+    attached_mood_board_id = db.Column(db.Integer, db.ForeignKey("mood_board.id"), nullable=True)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    host_room = db.relationship("PresenceNode", foreign_keys=[host_room_id], backref=db.backref("hosted_halls", lazy=True))
+    host_observer = db.relationship("ObserverProfile", backref=db.backref("hosted_halls", lazy=True))
+    attached_room = db.relationship("PresenceNode", foreign_keys=[attached_room_id])
+    attached_path = db.relationship("Path")
+    attached_mood_board = db.relationship("MoodBoard")
+
+
+class HallSession(db.Model):
+    __tablename__ = "hall_session"
+    __table_args__ = (
+        db.Index("ix_hall_session_hall", "hall_id"),
+        db.Index("ix_hall_session_status", "status"),
+        db.Index("ix_hall_session_starts", "starts_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    hall_id = db.Column(db.Integer, db.ForeignKey("presence_hall.id"), nullable=False)
+    title = db.Column(db.String(180), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    session_type = db.Column(db.String(40), nullable=False, default="custom")
+    status = db.Column(db.String(40), nullable=False, default="scheduled")
+    starts_at = db.Column(db.DateTime, nullable=False)
+    ends_at = db.Column(db.DateTime, nullable=True)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    hall = db.relationship("PresenceHall", backref=db.backref("sessions", lazy=True, cascade="all, delete-orphan"))
+
+
+class HallParticipant(db.Model):
+    __tablename__ = "hall_participant"
+    __table_args__ = (
+        db.Index("ix_hall_participant_hall", "hall_id"),
+        db.Index("ix_hall_participant_session", "session_id"),
+        db.Index("ix_hall_participant_observer", "observer_id"),
+        db.Index("ix_hall_participant_guest", "guest_token"),
+        db.Index("ix_hall_participant_status", "status"),
+        db.Index("ix_hall_participant_last_seen", "last_seen_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    hall_id = db.Column(db.Integer, db.ForeignKey("presence_hall.id"), nullable=False)
+    session_id = db.Column(db.Integer, db.ForeignKey("hall_session.id"), nullable=True)
+    observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=True)
+    guest_token = db.Column(db.String(160), nullable=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=True)
+    role = db.Column(db.String(40), nullable=False, default="participant")
+    status = db.Column(db.String(40), nullable=False, default="joined")
+    joined_at = db.Column(db.DateTime, default=utcnow)
+    last_seen_at = db.Column(db.DateTime, nullable=True)
+    left_at = db.Column(db.DateTime, nullable=True)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+
+    hall = db.relationship("PresenceHall", backref=db.backref("participants", lazy=True, cascade="all, delete-orphan"))
+    session = db.relationship("HallSession", backref=db.backref("participants", lazy=True, cascade="all, delete-orphan"))
+    observer = db.relationship("ObserverProfile", backref=db.backref("hall_participations", lazy=True))
+    room = db.relationship("PresenceNode", backref=db.backref("hall_participations", lazy=True))
+
+
+class HallZone(db.Model):
+    __tablename__ = "hall_zone"
+    __table_args__ = (
+        db.Index("ix_hall_zone_hall", "hall_id"),
+        db.Index("ix_hall_zone_type", "zone_type"),
+        db.Index("ix_hall_zone_status", "status"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    hall_id = db.Column(db.Integer, db.ForeignKey("presence_hall.id"), nullable=False)
+    zone_type = db.Column(db.String(40), nullable=False, default="custom")
+    title = db.Column(db.String(180), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    position_json = db.Column(db.JSON, nullable=True)
+    capacity = db.Column(db.Integer, nullable=True)
+    status = db.Column(db.String(40), nullable=False, default="active")
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    hall = db.relationship("PresenceHall", backref=db.backref("zones", lazy=True, cascade="all, delete-orphan"))
+
+
+class HallPortal(db.Model):
+    __tablename__ = "hall_portal"
+    __table_args__ = (
+        db.Index("ix_hall_portal_hall", "hall_id"),
+        db.Index("ix_hall_portal_zone", "zone_id"),
+        db.Index("ix_hall_portal_target", "target_type", "target_id"),
+        db.Index("ix_hall_portal_status", "status"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    hall_id = db.Column(db.Integer, db.ForeignKey("presence_hall.id"), nullable=False)
+    zone_id = db.Column(db.Integer, db.ForeignKey("hall_zone.id"), nullable=True)
+    target_type = db.Column(db.String(40), nullable=False)
+    target_id = db.Column(db.Integer, nullable=True)
+    external_url = db.Column(db.String(700), nullable=True)
+    label = db.Column(db.String(160), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(40), nullable=False, default="active")
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    hall = db.relationship("PresenceHall", backref=db.backref("portals", lazy=True, cascade="all, delete-orphan"))
+    zone = db.relationship("HallZone", backref=db.backref("portals", lazy=True))
+
+
+class HallStall(db.Model):
+    __tablename__ = "hall_stall"
+    __table_args__ = (
+        db.UniqueConstraint("hall_id", "room_id", name="uq_hall_stall_room"),
+        db.Index("ix_hall_stall_hall", "hall_id"),
+        db.Index("ix_hall_stall_zone", "zone_id"),
+        db.Index("ix_hall_stall_room", "room_id"),
+        db.Index("ix_hall_stall_status", "status"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    hall_id = db.Column(db.Integer, db.ForeignKey("presence_hall.id"), nullable=False)
+    zone_id = db.Column(db.Integer, db.ForeignKey("hall_zone.id"), nullable=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    placement_type = db.Column(db.String(40), nullable=False, default="standard")
+    status = db.Column(db.String(40), nullable=False, default="active")
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    hall = db.relationship("PresenceHall", backref=db.backref("stalls", lazy=True, cascade="all, delete-orphan"))
+    zone = db.relationship("HallZone", backref=db.backref("stalls", lazy=True))
+    room = db.relationship("PresenceNode", backref=db.backref("hall_stalls", lazy=True))
+
+
+class HallModerationAction(db.Model):
+    __tablename__ = "hall_moderation_action"
+    __table_args__ = (
+        db.Index("ix_hall_moderation_hall", "hall_id"),
+        db.Index("ix_hall_moderation_actor_user", "actor_user_id"),
+        db.Index("ix_hall_moderation_actor_observer", "actor_observer_id"),
+        db.Index("ix_hall_moderation_target", "target_type", "target_id"),
+        db.Index("ix_hall_moderation_action_type", "action_type"),
+        db.Index("ix_hall_moderation_created_at", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    hall_id = db.Column(db.Integer, db.ForeignKey("presence_hall.id"), nullable=False)
+    actor_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    actor_observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=True)
+    target_type = db.Column(db.String(40), nullable=False)
+    target_id = db.Column(db.Integer, nullable=False)
+    action_type = db.Column(db.String(40), nullable=False)
+    reason = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+
+    hall = db.relationship("PresenceHall", backref=db.backref("moderation_actions", lazy=True, cascade="all, delete-orphan"))
+    actor_user = db.relationship("User", backref=db.backref("hall_moderation_actions", lazy=True))
+    actor_observer = db.relationship("ObserverProfile", backref=db.backref("hall_moderation_actions", lazy=True))
+
+
+class HallActivityEvent(db.Model):
+    __tablename__ = "hall_activity_event"
+    __table_args__ = (
+        db.Index("ix_hall_activity_event_hall", "hall_id"),
+        db.Index("ix_hall_activity_event_type", "event_type"),
+        db.Index("ix_hall_activity_event_observer", "observer_id"),
+        db.Index("ix_hall_activity_event_portal", "portal_id"),
+        db.Index("ix_hall_activity_event_stall", "stall_id"),
+        db.Index("ix_hall_activity_event_session", "session_id"),
+        db.Index("ix_hall_activity_event_created_at", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    hall_id = db.Column(db.Integer, db.ForeignKey("presence_hall.id"), nullable=False)
+    event_type = db.Column(db.String(40), nullable=False)
+    observer_id = db.Column(db.Integer, db.ForeignKey("observer_profile.id"), nullable=True)
+    guest_token = db.Column(db.String(160), nullable=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=True)
+    portal_id = db.Column(db.Integer, db.ForeignKey("hall_portal.id"), nullable=True)
+    stall_id = db.Column(db.Integer, db.ForeignKey("hall_stall.id"), nullable=True)
+    session_id = db.Column(db.Integer, db.ForeignKey("hall_session.id"), nullable=True)
+    source = db.Column(db.String(80), nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+
+    hall = db.relationship("PresenceHall", backref=db.backref("activity_events", lazy=True, cascade="all, delete-orphan"))
+    observer = db.relationship("ObserverProfile", backref=db.backref("hall_activity_events", lazy=True))
+    room = db.relationship("PresenceNode", backref=db.backref("hall_activity_events", lazy=True))
+    portal = db.relationship("HallPortal", backref=db.backref("activity_events", lazy=True))
+    stall = db.relationship("HallStall", backref=db.backref("activity_events", lazy=True))
+    session = db.relationship("HallSession", backref=db.backref("activity_events", lazy=True))
+
+
 class WorldReadinessMetric(db.Model):
     __tablename__ = "world_readiness_metric"
     __table_args__ = (

@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, Loader2, Trash2 } from "lucide-react";
+import { ArrowRight, Loader2, Sprout, Trash2 } from "lucide-react";
 import { buildSignInHref } from "@/lib/auth/returnTo";
 import { generatePathFromMoodBoard, getMoodBoard, removeMoodBoardItem } from "@/lib/api/presenceGraph";
+import { plantMoodBoardItemAsSeed } from "@/lib/api/gardens";
 import { createClient } from "@/lib/supabase/client";
 import type { MoodBoard, PresencePath } from "@/lib/api/types";
 
@@ -14,6 +15,9 @@ export function MoodBoardDetailClient({ boardId }: { boardId: number }) {
   const [generatedPath, setGeneratedPath] = useState<PresencePath | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Per-item state: which item is being planted and which were just planted.
+  const [plantingItemId, setPlantingItemId] = useState<number | null>(null);
+  const [plantedItemIds, setPlantedItemIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     let cancelled = false;
@@ -44,6 +48,24 @@ export function MoodBoardDetailClient({ boardId }: { boardId: number }) {
     if (!token || !board) return;
     await removeMoodBoardItem(board.id, itemId, token);
     setBoard({ ...board, items: (board.items ?? []).filter((item) => item.id !== itemId) });
+  }
+
+  async function plantItem(itemId: number) {
+    if (!token || !board) return;
+    setPlantingItemId(itemId);
+    setError(null);
+    try {
+      await plantMoodBoardItemAsSeed(board.id, itemId, token);
+      setPlantedItemIds((prev) => {
+        const next = new Set(prev);
+        next.add(itemId);
+        return next;
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not plant this item as a Seed.");
+    } finally {
+      setPlantingItemId(null);
+    }
   }
 
   async function generatePath() {
@@ -104,17 +126,51 @@ export function MoodBoardDetailClient({ boardId }: { boardId: number }) {
           </section>
         ) : (
           <section className="grid gap-3 sm:grid-cols-2">
-            {(board.items ?? []).map((item) => (
-              <article key={item.id} className="rounded-3xl border border-stone-800 bg-stone-900 p-5">
-                <p className="text-xs uppercase tracking-[0.18em] text-stone-500">{item.item_type.replace(/_/g, " ")}</p>
-                <h2 className="mt-2 text-lg font-semibold">{item.title || `Item ${item.id}`}</h2>
-                {item.description && <p className="mt-2 text-sm leading-6 text-stone-300">{item.description}</p>}
-                <button type="button" onClick={() => void removeItem(item.id)} className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-stone-400 hover:text-red-200">
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Remove
-                </button>
-              </article>
-            ))}
+            {(board.items ?? []).map((item) => {
+              const planted = plantedItemIds.has(item.id);
+              const planting = plantingItemId === item.id;
+              return (
+                <article key={item.id} className="rounded-3xl border border-stone-800 bg-stone-900 p-5">
+                  <p className="text-xs uppercase tracking-[0.18em] text-stone-500">{item.item_type.replace(/_/g, " ")}</p>
+                  <h2 className="mt-2 text-lg font-semibold">{item.title || `Item ${item.id}`}</h2>
+                  {item.description && <p className="mt-2 text-sm leading-6 text-stone-300">{item.description}</p>}
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => void plantItem(item.id)}
+                      disabled={planting || planted}
+                      data-action="plant-in-garden"
+                      data-mood-board-item-id={item.id}
+                      className="inline-flex items-center gap-2 rounded-xl border border-emerald-700/60 bg-emerald-950/30 px-3 py-2 text-xs font-semibold text-emerald-200 transition hover:border-emerald-300 disabled:opacity-60 disabled:cursor-default"
+                      aria-label={planted ? "Seed already planted" : "Plant this item in your Garden"}
+                    >
+                      <Sprout className="h-3.5 w-3.5" />
+                      {planted ? "Planted in Garden" : planting ? "Planting…" : "Plant in Garden"}
+                    </button>
+                    {planted && (
+                      <Link
+                        href="/observer/garden#from_mood_boards"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-orange-200"
+                      >
+                        Open your Garden
+                        <ArrowRight className="h-3 w-3" />
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => void removeItem(item.id)}
+                      className="ml-auto inline-flex items-center gap-2 text-xs font-semibold text-stone-400 hover:text-red-200"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Remove
+                    </button>
+                  </div>
+                  {planted && (
+                    <p className="mt-3 text-xs italic text-emerald-200/80">This Seed grew from your Mood Board.</p>
+                  )}
+                </article>
+              );
+            })}
           </section>
         )}
       </div>
