@@ -709,6 +709,42 @@ class PresenceNode(db.Model):
     analytics_events = db.relationship("PresenceAnalyticsEvent", backref="node", lazy=True, cascade="all, delete-orphan")
 
 
+class PresencePlanEntitlement(db.Model):
+    __tablename__ = "presence_plan_entitlement"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "user_id",
+            "plan_code",
+            "source",
+            name="uq_presence_plan_entitlement_user_plan_source",
+        ),
+        db.Index("ix_presence_plan_entitlement_user_status", "user_id", "status"),
+        db.Index("ix_presence_plan_entitlement_plan_code", "plan_code"),
+        db.Index("ix_presence_plan_entitlement_source", "source"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    plan_code = db.Column(db.String(120), nullable=False)
+    status = db.Column(db.String(40), nullable=False, default="active")
+    billing_mode = db.Column(db.String(80), nullable=False)
+    price_cents = db.Column(db.Integer, nullable=False, default=0)
+    currency = db.Column(db.String(12), nullable=True)
+    starts_at = db.Column(db.DateTime, default=utcnow, nullable=False)
+    ends_at = db.Column(db.DateTime, nullable=True)
+    lifetime = db.Column(db.Boolean, default=False, nullable=False)
+    source = db.Column(db.String(120), nullable=False)
+    reason = db.Column(db.String(180), nullable=True)
+    metadata_json = db.Column("metadata", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+
+    user = db.relationship(
+        "User",
+        backref=db.backref("presence_plan_entitlements", lazy=True),
+    )
+
+
 class PresenceNodeSection(db.Model):
     __tablename__ = "presence_node_section"
     __table_args__ = (

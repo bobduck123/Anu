@@ -1,0 +1,168 @@
+{
+  "generated_at": "2026-05-22T06:55:43Z",
+  "inputs": {
+    "backend_url": "https://anu-back-end.vercel.app",
+    "expected_enquiry": "capture_only",
+    "frontend_url": "https://your-presence.vercel.app",
+    "room_slug": "ggm-christina-goddard"
+  },
+  "name": "ggm_post_onboarding_smoke",
+  "notes": [
+    "The smoke performs safe tagged pilot interactions only; it does not alter the external GGM static site.",
+    "V2 and realtime claims are checked as launch posture, not as product promises."
+  ],
+  "result": "pass",
+  "secret_values_printed": false,
+  "steps": [
+    {
+      "data": {
+        "payload_shape": [
+          "brand",
+          "component",
+          "contract_version",
+          "database_checked",
+          "database_mode",
+          "database_target",
+          "dependencies",
+          "readiness",
+          "ready",
+          "service",
+          "status",
+          "stripe_mode",
+          "timestamp",
+          "version"
+        ]
+      },
+      "http_status": 200,
+      "latency_ms": 1797,
+      "name": "backend_health",
+      "reason": "Hosted backend health answered before pilot smoke.",
+      "response_shape_matched": true,
+      "route": "/health",
+      "status": "pass"
+    },
+    {
+      "data": {},
+      "http_status": 200,
+      "latency_ms": 1485,
+      "name": "public_room_exists",
+      "reason": "GGM Presence Room is public.",
+      "response_shape_matched": true,
+      "route": "/api/presence/public/ggm-christina-goddard",
+      "status": "pass"
+    },
+    {
+      "data": {},
+      "http_status": 200,
+      "latency_ms": 3760,
+      "name": "frontend_public_room_route",
+      "reason": "Frontend public Room route returned HTML.",
+      "response_shape_matched": true,
+      "route": "/presence/ggm-christina-goddard",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "encounters_count": 2
+      },
+      "http_status": 200,
+      "latency_ms": 1467,
+      "name": "owner_analytics_baseline",
+      "reason": "Owner analytics baseline captured.",
+      "response_shape_matched": true,
+      "route": "/api/presence/owner/rooms/11/analytics",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "encounter_id": 11
+      },
+      "http_status": 200,
+      "latency_ms": 1190,
+      "name": "roomkey_entry",
+      "reason": "RoomKey entry resolves to GGM and captures entry.",
+      "response_shape_matched": true,
+      "route": "/api/presence/keys/<roomkey-token>/resolve",
+      "status": "pass"
+    },
+    {
+      "data": {},
+      "http_status": 404,
+      "latency_ms": 1451,
+      "name": "invalid_roomkey",
+      "reason": "Invalid RoomKey fails safely.",
+      "response_shape_matched": true,
+      "route": "/api/presence/keys/<invalid-roomkey-token>/resolve",
+      "status": "pass"
+    },
+    {
+      "data": {},
+      "http_status": 200,
+      "latency_ms": 1827,
+      "name": "frontend_roomkey_route_exists",
+      "reason": "Frontend RoomKey route is deployed; backend valid-token proof is recorded above.",
+      "response_shape_matched": true,
+      "route": "/r/<roomkey-token>",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "delivery_status": "logged_fallback",
+        "expected_enquiry": "capture_only"
+      },
+      "http_status": 201,
+      "latency_ms": 1566,
+      "name": "enquiry_route",
+      "reason": "Enquiry route matched the pilot routing posture.",
+      "response_shape_matched": true,
+      "route": "/api/presence/public/ggm-christina-goddard/enquiries",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "after": 3,
+        "before": 2
+      },
+      "http_status": 200,
+      "latency_ms": 1171,
+      "name": "owner_analytics_updated",
+      "reason": "Owner analytics reflects post-onboarding RoomKey entry.",
+      "response_shape_matched": true,
+      "route": "/api/presence/owner/rooms/11/analytics",
+      "status": "pass"
+    },
+    {
+      "data": {},
+      "http_status": 200,
+      "latency_ms": 2322,
+      "name": "world_forming_frontend",
+      "reason": "World remains a forming frontend surface.",
+      "response_shape_matched": true,
+      "route": "/world",
+      "status": "pass"
+    },
+    {
+      "data": {},
+      "http_status": null,
+      "latency_ms": null,
+      "name": "rollback_checklist_exists",
+      "reason": "GGM rollback/disable checklist exists.",
+      "response_shape_matched": true,
+      "route": "docs\\program\\PRESENCE_FIRST_PILOT_GGM_ROLLBACK_DISABLE_CHECKLIST_2026-05-22.md",
+      "status": "pass"
+    },
+    {
+      "data": {},
+      "http_status": null,
+      "latency_ms": null,
+      "name": "deferred_surfaces_posture",
+      "reason": "GGM Hall, Path, and Observer save verification remain deferred unless the pilot plan enables them.",
+      "response_shape_matched": true,
+      "route": "GGM room plan",
+      "status": "pass"
+    }
+  ],
+  "summary": {
+    "pass": 12
+  }
+}
