@@ -163,6 +163,65 @@ def test_garden_creation_public_fetch_observations_and_self_promotion_guard():
     assert listed_after_delete.get_json()["data"]["items"] == []
 
 
+def test_garden_invalid_token_uses_presence_auth_contract():
+    app = _build_app()
+    client = app.test_client()
+
+    invalid = client.get(
+        "/api/garden/home",
+        headers={"Authorization": "Bearer invalid-presence-garden-token"},
+        base_url="http://public.test",
+    )
+
+    assert invalid.status_code == 401, invalid.get_json()
+    assert invalid.get_json()["error"]["code"] == "invalid_token"
+
+
+def test_public_halls_empty_state_is_safe_for_unauthenticated_list():
+    app = _build_app()
+    client = app.test_client()
+
+    response = client.get("/api/halls", base_url="http://public.test")
+
+    assert response.status_code == 200, response.get_json()
+    assert response.get_json()["data"] == {
+        "items": [],
+        "total": 0,
+        "live_count": 0,
+        "scheduled_count": 0,
+    }
+
+
+def test_public_hall_shape_handles_absent_optional_children():
+    app = _build_app()
+    ids = _seed(app)
+    client = app.test_client()
+    owner_headers = _auth_headers(app, "owner-a")
+
+    created = client.post(
+        f"/api/presence/owner/rooms/{ids['room_a']}/halls",
+        json={"title": "Minimal Public Hall", "visibility": "public", "hall_type": "salon", "status": "scheduled"},
+        headers=owner_headers,
+        base_url="http://public.test",
+    )
+    assert created.status_code == 201, created.get_json()
+    hall = created.get_json()["data"]
+
+    listed = client.get("/api/halls", base_url="http://public.test")
+    assert listed.status_code == 200, listed.get_json()
+    listed_hall = next(row for row in listed.get_json()["data"]["items"] if row["id"] == hall["id"])
+    assert listed_hall["slug"] == hall["slug"]
+    assert listed_hall["participants_count"] == 0
+    assert listed_hall["observations_count"] == 0
+
+    detail = client.get(f"/api/halls/{hall['slug']}", base_url="http://public.test")
+    assert detail.status_code == 200, detail.get_json()
+    assert detail.get_json()["data"]["zones"] == []
+    assert detail.get_json()["data"]["sessions"] == []
+    assert detail.get_json()["data"]["stalls"] == []
+    assert detail.get_json()["data"]["portals"] == []
+
+
 def test_echo_seed_decay_nurture_prune_compost_and_garden_home_sections():
     app = _build_app()
     ids = _seed(app)
