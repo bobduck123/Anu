@@ -854,7 +854,7 @@ class SmokeRun:
                     "host_room_id": room_id,
                     "title": f"launch_smoke draft Hall {int(time.time())}",
                     "slug": f"launch-smoke-hall-{int(time.time())}",
-                    "hall_type": "studio",
+                    "hall_type": "studio_hall",
                     "visibility": "private",
                     "status": "draft",
                     "rules_text": "launch_smoke fixture - archive after proof",

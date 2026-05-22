@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import wraps
 from typing import Iterable, Sequence
 
@@ -229,6 +229,12 @@ def _claims_expiry(claims: dict) -> datetime | None:
         return None
 
 
+def _as_utc_naive(value: datetime | None) -> datetime | None:
+    if value is None or value.tzinfo is None:
+        return value
+    return value.astimezone(timezone.utc).replace(tzinfo=None)
+
+
 def record_control_token_grant(
     *,
     jti: str,
@@ -287,8 +293,8 @@ def _is_control_token_grant_active(claims: dict, user_id: int | None) -> bool:
         return False
     if row.user_id and user_id and row.user_id != user_id:
         return False
-    now = now_utc()
-    expiry = row.expires_at or _claims_expiry(claims)
+    now = _as_utc_naive(now_utc())
+    expiry = _as_utc_naive(row.expires_at or _claims_expiry(claims))
     if expiry and expiry < now:
         return False
     return True
