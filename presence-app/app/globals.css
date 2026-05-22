@@ -5280,3 +5280,717 @@ textarea.presence-studio-input { resize: vertical; min-height: 80px; }
 @media (min-width: 640px) {
   .hall-top-join { display: flex !important; }
 }
+
+/* Landing page top-nav: hide secondary destinations on phone viewports.
+ * The hero already has direct CTAs into every section, so the top frame
+ * stays clean below 640px. */
+@media (max-width: 639px) {
+  .presence-top-nav-link { display: none; }
+}
+
+/* =========================================================================
+ * Presence flagship surfaces — landing, gallery, design-lab.
+ * Grounded in the Visual System Bible v0.4: verbs over sections, designed
+ * proof, cinematic threshold, mobile-native rhythm.
+ * ========================================================================= */
+
+/* Shell — paper or stage with grain, full-bleed safe areas. */
+.presence-shell {
+  min-height: 100dvh;
+  background:
+    radial-gradient(120% 80% at 50% -10%, color-mix(in oklab, var(--presence-bone) 50%, transparent), transparent 60%),
+    linear-gradient(180deg, var(--presence-paper) 0%, var(--presence-paper-2) 100%);
+  color: var(--presence-on-paper);
+  font-family: var(--presence-f-ui);
+  position: relative;
+}
+.presence-shell.is-stage {
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(255,250,235,0.04), transparent 60%),
+    linear-gradient(180deg, var(--presence-stage) 0%, var(--presence-stage-2) 100%);
+  color: var(--presence-on-stage);
+}
+
+/* Atmospheric film signal field — a slow, subtle drift. Pure CSS so it
+   stays inside Tier-1 of the Atmosphere Engine (no JS, no Canvas). */
+.presence-signal-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+.presence-signal-field::before,
+.presence-signal-field::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(220px 220px at 12% 18%, color-mix(in oklab, var(--presence-vermilion) 12%, transparent), transparent 70%),
+    radial-gradient(260px 260px at 78% 26%, color-mix(in oklab, var(--presence-brass) 10%, transparent), transparent 70%),
+    radial-gradient(180px 180px at 30% 78%, color-mix(in oklab, var(--presence-moss) 14%, transparent), transparent 70%),
+    radial-gradient(220px 220px at 84% 86%, color-mix(in oklab, var(--presence-cobalt) 8%, transparent), transparent 70%);
+  filter: blur(40px);
+  opacity: 0.7;
+  animation: presence-signal-drift 30s linear infinite;
+}
+.presence-signal-field::after {
+  background:
+    radial-gradient(160px 160px at 70% 10%, color-mix(in oklab, var(--presence-copper) 12%, transparent), transparent 70%),
+    radial-gradient(180px 180px at 20% 60%, color-mix(in oklab, var(--presence-moss-soft) 14%, transparent), transparent 70%);
+  animation-duration: 44s;
+  animation-direction: reverse;
+  opacity: 0.45;
+}
+@keyframes presence-signal-drift {
+  0%   { transform: translate3d(-3%, -2%, 0) rotate(0deg); }
+  50%  { transform: translate3d(3%, 2%, 0) rotate(1deg); }
+  100% { transform: translate3d(-3%, -2%, 0) rotate(0deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .presence-signal-field::before,
+  .presence-signal-field::after { animation: none; }
+}
+
+/* Threshold — the opening hero. Uses paper grain on top, ink stage below,
+   horizontal hairline rule between. */
+.presence-threshold {
+  position: relative;
+  padding: clamp(56px, 9vw, 120px) clamp(20px, 5vw, 56px) clamp(48px, 8vw, 96px);
+  isolation: isolate;
+  overflow: hidden;
+}
+.presence-threshold.is-stage {
+  background: var(--presence-stage);
+  color: var(--presence-on-stage);
+}
+.presence-threshold .threshold-eyebrow {
+  font-family: var(--presence-f-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-mute);
+  margin: 0 0 18px;
+}
+.presence-shell.is-stage .threshold-eyebrow,
+.presence-threshold.is-stage .threshold-eyebrow { color: var(--presence-on-stage-mute); }
+
+.presence-threshold .threshold-display {
+  font-family: var(--presence-f-display);
+  font-size: clamp(48px, 8vw, 120px);
+  line-height: 0.92;
+  letter-spacing: -0.025em;
+  margin: 0;
+  text-wrap: balance;
+}
+.presence-threshold .threshold-display em {
+  font-style: italic;
+  color: var(--presence-vermilion);
+}
+.presence-shell.is-stage .threshold-display em,
+.presence-threshold.is-stage .threshold-display em { color: var(--presence-brass); }
+.presence-threshold .threshold-lede {
+  margin-top: 18px;
+  max-width: 60ch;
+  font-size: clamp(16px, 1.6vw, 19px);
+  line-height: 1.5;
+  color: var(--presence-on-paper-mute);
+  font-family: var(--presence-f-ui);
+}
+.presence-threshold.is-stage .threshold-lede { color: var(--presence-on-stage-mute); }
+
+/* Threshold actions row */
+.presence-threshold .threshold-actions {
+  margin-top: clamp(20px, 3vw, 32px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Section primitives shared by landing + gallery + design-lab */
+.presence-stack-section {
+  padding: clamp(56px, 8vw, 120px) clamp(20px, 5vw, 56px);
+  max-width: 1240px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+.presence-stack-section.is-tight { padding-top: clamp(32px, 4vw, 64px); padding-bottom: clamp(32px, 4vw, 64px); }
+
+.presence-stack-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--presence-f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-mute);
+}
+.presence-stack-eyebrow .num {
+  font-variant-numeric: tabular-nums;
+  color: var(--presence-vermilion);
+}
+.presence-shell.is-stage .presence-stack-eyebrow .num { color: var(--presence-brass); }
+
+.presence-stack-title {
+  font-family: var(--presence-f-display);
+  font-size: clamp(32px, 4.5vw, 56px);
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  margin: 14px 0 16px;
+  text-wrap: balance;
+  max-width: 22ch;
+}
+.presence-stack-title em { color: var(--presence-vermilion); font-style: italic; }
+.presence-shell.is-stage .presence-stack-title em { color: var(--presence-brass); }
+.presence-stack-blurb {
+  font-size: clamp(15px, 1.4vw, 17px);
+  line-height: 1.55;
+  color: var(--presence-on-paper-mute);
+  max-width: 56ch;
+  margin: 0;
+}
+
+/* Layer cards — one per Presence layer (Rooms, Gardens, Halls, Paths, World) */
+.presence-layer-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  margin-top: clamp(28px, 4vw, 40px);
+}
+.presence-layer-card {
+  position: relative;
+  background: var(--presence-bone);
+  border: 1px solid var(--presence-rule);
+  border-radius: var(--presence-r-2);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+  isolation: isolate;
+  text-decoration: none;
+  color: inherit;
+  transition: transform var(--presence-dur-glide) var(--presence-ease-cinema),
+              border-color var(--presence-dur-glide) var(--presence-ease-cinema),
+              box-shadow var(--presence-dur-glide) var(--presence-ease-cinema);
+}
+.presence-layer-card::before {
+  content: "";
+  position: absolute;
+  inset: auto -30% -50% -30%;
+  height: 120px;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--accent, var(--presence-vermilion)) 18%, transparent), transparent 80%);
+  z-index: -1;
+  opacity: 0.7;
+  transition: opacity var(--presence-dur-glide) var(--presence-ease-cinema);
+}
+.presence-layer-card[data-layer="rooms"]   { --accent: var(--rooms-accent); }
+.presence-layer-card[data-layer="gardens"] { --accent: var(--garden-accent); }
+.presence-layer-card[data-layer="halls"]   { --accent: var(--halls-accent); }
+.presence-layer-card[data-layer="paths"]   { --accent: var(--presence-brass); }
+.presence-layer-card[data-layer="world"]   { --accent: var(--presence-cobalt); }
+.presence-layer-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: var(--presence-sh-2);
+}
+.presence-layer-card:hover::before { opacity: 1; }
+.presence-layer-card .layer-verb {
+  font-family: var(--presence-f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.presence-layer-card .layer-name {
+  font-family: var(--presence-f-display);
+  font-size: clamp(26px, 2.6vw, 32px);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  margin: 0;
+}
+.presence-layer-card .layer-blurb {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--presence-on-paper-mute);
+  margin: 0;
+}
+.presence-layer-card .layer-action {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+/* Problem rows — for the "dead links, scattered profiles…" section */
+.presence-problem-row {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  margin-top: clamp(24px, 3vw, 36px);
+}
+.presence-problem-row .item {
+  border-top: 1px solid var(--presence-rule);
+  padding: 16px 0 0;
+}
+.presence-problem-row .item .label {
+  font-family: var(--presence-f-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-dim);
+}
+.presence-problem-row .item .body {
+  font-size: 14.5px;
+  line-height: 1.5;
+  margin: 8px 0 0;
+  color: var(--presence-on-paper);
+  font-family: var(--presence-f-display);
+}
+
+/* Marquee strip — anti-corporate, editorial. */
+.presence-marquee {
+  margin-top: clamp(32px, 5vw, 56px);
+  padding: 18px 0;
+  border-top: 1px solid var(--presence-rule);
+  border-bottom: 1px solid var(--presence-rule);
+  overflow: hidden;
+}
+.presence-marquee-track {
+  display: inline-flex;
+  white-space: nowrap;
+  gap: 56px;
+  animation: presence-marquee 38s linear infinite;
+  font-family: var(--presence-f-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-mute);
+}
+.presence-marquee-track > span { display: inline-block; }
+.presence-marquee-track > span .dot {
+  display: inline-block;
+  width: 5px; height: 5px;
+  margin: 0 14px 2px;
+  border-radius: 50%;
+  background: var(--presence-vermilion);
+}
+@keyframes presence-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .presence-marquee-track { animation: none; }
+}
+
+/* Beta gallery — exhibition grid that doesn't feel like a grid */
+.presence-gallery-grid {
+  display: grid;
+  gap: clamp(14px, 1.6vw, 20px);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  margin-top: clamp(28px, 4vw, 40px);
+}
+.presence-gallery-grid.is-feature {
+  grid-template-columns: minmax(0, 1.4fr) repeat(auto-fill, minmax(240px, 1fr));
+}
+.presence-room-card {
+  position: relative;
+  background: var(--presence-bone);
+  border: 1px solid var(--presence-rule);
+  border-radius: var(--presence-r-2);
+  overflow: hidden;
+  isolation: isolate;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+  transition: transform var(--presence-dur-glide) var(--presence-ease-cinema),
+              border-color var(--presence-dur-glide) var(--presence-ease-cinema),
+              box-shadow var(--presence-dur-glide) var(--presence-ease-cinema);
+}
+.presence-room-card .card-art {
+  position: relative;
+  flex: 1;
+  min-height: 180px;
+  background: var(--presence-stage);
+  overflow: hidden;
+}
+.presence-room-card .card-art::before {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(255,250,235,0.08), transparent 60%),
+    radial-gradient(80% 60% at 50% 100%, rgba(0,0,0,0.45), transparent 60%);
+}
+.presence-room-card .card-art[data-tone="quiet"] {
+  background: linear-gradient(180deg, #fbfaf6 0%, #ece6d8 100%);
+}
+.presence-room-card .card-art[data-tone="sound"] {
+  background: radial-gradient(circle at 30% 40%, rgba(255,216,77,0.12), transparent 50%), linear-gradient(160deg, #06060b 0%, #131022 60%, #06060b);
+}
+.presence-room-card .card-art[data-tone="wood"] {
+  background: radial-gradient(circle at 30% 30%, rgba(224,164,85,0.16), transparent 50%), linear-gradient(160deg, #1c1109 0%, #2d1f12 60%, #1c1109);
+}
+.presence-room-card .card-art[data-tone="archive"] {
+  background: linear-gradient(180deg, #efe6d8 0%, #cfc5ad 100%);
+}
+.presence-room-card .card-art[data-tone="market"] {
+  background: linear-gradient(160deg, #221814 0%, #422714 50%, #1c1109 100%);
+}
+.presence-room-card .card-body {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--presence-bone);
+}
+.presence-room-card .card-eyebrow {
+  font-family: var(--presence-f-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-mute);
+}
+.presence-room-card .card-name {
+  font-family: var(--presence-f-display);
+  font-size: 24px;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  margin: 0;
+}
+.presence-room-card .card-summary {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--presence-on-paper-mute);
+  margin: 0;
+}
+.presence-room-card .card-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.presence-room-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--presence-rule-strong);
+  box-shadow: var(--presence-sh-2);
+}
+.presence-room-card.is-feature .card-art { min-height: 280px; }
+.presence-room-card.is-feature .card-name { font-size: 32px; }
+.presence-room-card.is-feature { min-height: 460px; }
+
+/* Status pill — Live / Beta / Preview / Coming */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--presence-f-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  background: color-mix(in oklab, var(--presence-on-paper) 88%, transparent);
+  color: var(--presence-bone);
+  border: 1px solid color-mix(in oklab, var(--presence-ink) 30%, transparent);
+}
+.status-pill[data-status="live"]    { background: var(--halls-accent); border-color: var(--halls-accent); }
+.status-pill[data-status="beta"]    { background: var(--presence-brass); color: var(--presence-ink); border-color: var(--presence-brass); }
+.status-pill[data-status="preview"] { background: transparent; color: var(--presence-vermilion); border-color: var(--presence-vermilion); }
+.status-pill[data-status="coming"]  { background: transparent; color: var(--presence-on-paper-mute); border-color: var(--presence-rule-strong); }
+
+/* V2 preview banner — clearly marks design-lab content as non-production. */
+.v2-banner {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 18px;
+  margin: 0 auto 28px;
+  max-width: 1200px;
+  border: 1px dashed var(--presence-brass);
+  background: color-mix(in oklab, var(--presence-brass) 8%, transparent);
+  border-radius: var(--presence-r-2);
+  color: var(--presence-on-paper);
+}
+.v2-banner .v2-tag {
+  font-family: var(--presence-f-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  background: var(--presence-brass);
+  color: var(--presence-ink);
+  border-radius: 999px;
+}
+.v2-banner .v2-msg {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--presence-on-paper-mute);
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Spatial Hall preview (V2 prototype) — purely decorative SVG-like field. */
+.v2-spatial-hall {
+  position: relative;
+  aspect-ratio: 16/9;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(255,250,235,0.06), transparent 60%),
+    linear-gradient(180deg, var(--presence-stage) 0%, var(--presence-stage-2) 60%, #06060b 100%);
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: var(--presence-r-2);
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--presence-on-stage);
+}
+.v2-spatial-hall .floor {
+  position: absolute;
+  inset: 60% 0 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,250,235,0.04) 0 1px, transparent 1px 60px),
+    linear-gradient(180deg, #08070a 0%, #0e0c0a 100%);
+  transform: perspective(800px) rotateX(58deg);
+  transform-origin: top;
+}
+.v2-spatial-hall .stage-light {
+  position: absolute;
+  left: 30%; right: 30%; top: 8%;
+  height: 50%;
+  background: radial-gradient(ellipse at 50% 0%, color-mix(in oklab, var(--halls-accent) 30%, transparent), transparent 70%);
+  pointer-events: none;
+}
+.v2-spatial-hall .stage {
+  position: absolute;
+  left: 36%; right: 36%; top: 38%;
+  height: 12%;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--presence-bone) 14%, transparent), transparent);
+  border-radius: 999px / 100%;
+  border: 1px solid var(--presence-rule-dark);
+}
+.v2-spatial-hall .mask {
+  position: absolute;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--presence-brass);
+  border: 1px solid rgba(255,250,235,0.4);
+  box-shadow: 0 0 14px color-mix(in oklab, var(--presence-brass) 50%, transparent);
+}
+.v2-spatial-hall .mask.is-vermilion { background: var(--presence-vermilion); box-shadow: 0 0 14px color-mix(in oklab, var(--presence-vermilion) 50%, transparent); }
+.v2-spatial-hall .mask.is-moss { background: var(--presence-moss-soft); box-shadow: 0 0 14px color-mix(in oklab, var(--presence-moss-soft) 50%, transparent); }
+.v2-spatial-hall .label {
+  position: absolute;
+  font-family: var(--presence-f-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--presence-on-stage-mute);
+  pointer-events: none;
+}
+
+/* Garden seed lifecycle preview (V2) — six dots in a row, each a state. */
+.v2-seed-lifecycle {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  padding: 24px;
+  background: var(--presence-bone);
+  border: 1px solid var(--presence-rule);
+  border-radius: var(--presence-r-2);
+}
+.v2-seed-lifecycle .state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  text-align: left;
+}
+.v2-seed-lifecycle .dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--seed-active);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--seed-active) 14%, transparent);
+}
+.v2-seed-lifecycle .state[data-state="recently_watered"] .dot { background: var(--seed-watered); box-shadow: 0 0 0 4px color-mix(in oklab, var(--seed-watered) 18%, transparent); }
+.v2-seed-lifecycle .state[data-state="wilting"]    .dot { background: var(--seed-wilting);   box-shadow: 0 0 0 4px color-mix(in oklab, var(--seed-wilting) 18%, transparent); opacity: 0.85; }
+.v2-seed-lifecycle .state[data-state="composted"]  .dot { background: var(--seed-composted); opacity: 0.7; }
+.v2-seed-lifecycle .state[data-state="pruned"]     .dot { background: var(--seed-pruned); opacity: 0.55; }
+.v2-seed-lifecycle .state[data-state="blocked"]    .dot { background: var(--presence-ink); opacity: 0.7; }
+.v2-seed-lifecycle .state .label {
+  font-family: var(--presence-f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-mute);
+}
+.v2-seed-lifecycle .state .blurb {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--presence-on-paper-mute);
+  font-family: var(--presence-f-display);
+}
+
+/* Market Hall stall preview (V2) — Rooms-as-storefronts in a Hall row. */
+.v2-stall-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 24px;
+  background: var(--presence-stage-2);
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: var(--presence-r-2);
+}
+.v2-stall-row .stall {
+  background: var(--presence-stage);
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: var(--presence-r-2);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 140px;
+}
+.v2-stall-row .stall::before {
+  content: "";
+  position: absolute;
+  inset: -30% -30% 50% -30%;
+  background: radial-gradient(ellipse, color-mix(in oklab, var(--rooms-accent) 18%, transparent), transparent 70%);
+  z-index: -1;
+}
+.v2-stall-row .stall .stall-name {
+  font-family: var(--presence-f-display);
+  font-size: 17px;
+  letter-spacing: -0.005em;
+  color: var(--presence-on-stage);
+  margin: 0;
+}
+.v2-stall-row .stall .stall-mode {
+  font-family: var(--presence-f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--presence-on-stage-mute);
+}
+.v2-stall-row .stall .stall-action {
+  margin-top: auto;
+  font-family: var(--presence-f-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--rooms-accent);
+}
+
+/* World preview cluster (V2) — symbolic districts, not a real map. */
+.v2-world-cluster {
+  position: relative;
+  aspect-ratio: 4/3;
+  background:
+    radial-gradient(80% 60% at 50% 50%, rgba(255,250,235,0.04), transparent 70%),
+    linear-gradient(180deg, #06060b 0%, #0d0c0a 100%);
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: var(--presence-r-2);
+  overflow: hidden;
+  isolation: isolate;
+}
+.v2-world-cluster .district {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed color-mix(in oklab, var(--presence-on-stage) 16%, transparent);
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--district-accent, var(--presence-brass)) 18%, transparent), transparent 80%);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--presence-f-display);
+  font-size: 14px;
+  color: var(--presence-on-stage);
+}
+.v2-world-cluster .district[data-kind="rooms"]   { --district-accent: var(--rooms-accent);  width: 36%; height: 36%; left: 8%; top: 18%; }
+.v2-world-cluster .district[data-kind="gardens"] { --district-accent: var(--garden-accent); width: 30%; height: 30%; right: 6%; top: 12%; }
+.v2-world-cluster .district[data-kind="halls"]   { --district-accent: var(--halls-accent);  width: 34%; height: 34%; right: 18%; bottom: 10%; }
+.v2-world-cluster .district[data-kind="paths"]   { --district-accent: var(--presence-brass);width: 30%; height: 30%; left: 14%; bottom: 6%; }
+.v2-world-cluster .path-line {
+  position: absolute;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--presence-brass) 40%, transparent), transparent 80%);
+  height: 1px;
+  pointer-events: none;
+}
+.v2-world-cluster .locked {
+  position: absolute;
+  inset: auto 0 16px 0;
+  text-align: center;
+  font-family: var(--presence-f-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--presence-on-stage-mute);
+}
+
+/* Listening Hall preview (V2) — stage + audience masks. */
+.v2-listening-hall {
+  position: relative;
+  aspect-ratio: 16/10;
+  background:
+    radial-gradient(60% 40% at 50% 30%, color-mix(in oklab, var(--halls-accent) 22%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--presence-stage) 0%, var(--presence-stage-2) 100%);
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: var(--presence-r-2);
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--presence-on-stage);
+}
+.v2-listening-hall .platform {
+  position: absolute;
+  inset: 28% 34% auto 34%;
+  height: 80px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--presence-bone) 8%, transparent), transparent);
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: 6px;
+}
+.v2-listening-hall .platform-host {
+  position: absolute;
+  left: 50%; top: 32%;
+  transform: translate(-50%, 0);
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--presence-brass);
+  box-shadow: 0 0 26px color-mix(in oklab, var(--presence-brass) 60%, transparent);
+}
+.v2-listening-hall .audience {
+  position: absolute;
+  inset: auto 8% 8% 8%;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 6px;
+}
+.v2-listening-hall .audience .mask {
+  height: 12px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--presence-on-stage) 30%, transparent);
+}
+
+/* Inline link in landing/gallery — small underline shimmer */
+.presence-link-underline {
+  position: relative;
+  color: inherit;
+  text-decoration: none;
+  font-weight: 500;
+}
+.presence-link-underline::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -2px;
+  height: 1px;
+  background: currentColor;
+  transform-origin: left;
+  transition: transform var(--presence-dur-tap) var(--presence-ease-tactile);
+}
+.presence-link-underline:hover::after { transform: scaleX(0.6); }

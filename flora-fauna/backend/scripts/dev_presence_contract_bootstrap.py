@@ -232,6 +232,7 @@ def seed_contract_data(app) -> dict[str, Any]:
         from manara_backend_app.models import (
             GardenSeed,
             HallActivityEvent,
+            HallParticipant,
             MoodBoard,
             MoodBoardItem,
             Node,
@@ -594,8 +595,10 @@ def seed_contract_data(app) -> dict[str, Any]:
             )
         db.session.flush()
 
-        join_hall(hall, observer=observer, data={"role": "participant", "session_id": session.id})
-        join_hall(hall, guest_token="presence-contract-guest", data={"session_id": session.id})
+        if not HallParticipant.query.filter_by(hall_id=hall.id, session_id=session.id, observer_id=observer.id).first():
+            join_hall(hall, observer=observer, data={"role": "participant", "session_id": session.id})
+        if not HallParticipant.query.filter_by(hall_id=hall.id, session_id=session.id, guest_token="presence-contract-guest").first():
+            join_hall(hall, guest_token="presence-contract-guest", data={"session_id": session.id})
         if not Observation.query.filter_by(hall_id=hall.id, body="A contract Hall Observation.").first():
             create_observation(
                 observer,
@@ -607,17 +610,19 @@ def seed_contract_data(app) -> dict[str, Any]:
                 },
                 hall=hall,
             )
-        record_hall_activity_event(hall, "join", observer=observer, session_id=session.id, source="fixture", metadata={"contract_fixture": True})
-        record_hall_activity_event(hall, "portal_click", observer=observer, portal_id=portal.id, source="fixture", metadata={"contract_fixture": True})
-        record_hall_activity_event(hall, "stall_visit", observer=observer, room_id=room.id, stall_id=stall.id, source="fixture", metadata={"contract_fixture": True})
+        _record_fixture_hall_event(record_hall_activity_event, HallActivityEvent, hall, "join", observer=observer, session_id=session.id)
+        _record_fixture_hall_event(record_hall_activity_event, HallActivityEvent, hall, "portal_click", observer=observer, portal_id=portal.id)
+        _record_fixture_hall_event(record_hall_activity_event, HallActivityEvent, hall, "stall_visit", observer=observer, room_id=room.id, stall_id=stall.id)
 
-        record_shared_space(
-            space_type="mood_board",
-            space_id=mood_board.id,
-            observer=observer,
-            strength=45,
-            metadata={"mood_board_id": mood_board.id, "contract_fixture": True},
-        )
+        mood_shared_space = SharedSpace.query.filter_by(space_type="mood_board", space_id=mood_board.id, observer_id=observer.id).first()
+        if not mood_shared_space:
+            record_shared_space(
+                space_type="mood_board",
+                space_id=mood_board.id,
+                observer=observer,
+                strength=45,
+                metadata={"mood_board_id": mood_board.id, "contract_fixture": True},
+            )
         db.session.flush()
 
         db.session.commit()
@@ -715,6 +720,20 @@ def _hall_session_by_title(hall_id: int, title: str):
     from manara_backend_app.models import HallSession
 
     return HallSession.query.filter_by(hall_id=hall_id, title=title).first()
+
+
+def _record_fixture_hall_event(record_event, HallActivityEvent, hall, event_type: str, **kwargs):
+    criteria = {
+        "hall_id": hall.id,
+        "event_type": event_type,
+        "source": "fixture",
+    }
+    for key in ("portal_id", "stall_id", "session_id"):
+        if kwargs.get(key) is not None:
+            criteria[key] = kwargs[key]
+    if HallActivityEvent.query.filter_by(**criteria).first():
+        return None
+    return record_event(hall, event_type, source="fixture", metadata={"contract_fixture": True}, **kwargs)
 
 
 def create_public_token(username: str) -> str:

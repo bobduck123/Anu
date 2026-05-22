@@ -1,182 +1,628 @@
 import Link from "next/link";
-import { ArrowRight, Compass, DoorOpen, Grid3X3, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  Compass,
+  DoorOpen,
+  Footprints,
+  Sparkles,
+  Sprout,
+  Users,
+} from "lucide-react";
 
-const principles = [
-  "Artists and creative practices",
-  "Practitioners and cultural workers",
-  "Venues, collectives, and organisations",
+export const metadata = {
+  title: "Presence — not a profile, a place people can enter.",
+  description:
+    "Presence is where your digital storefront, social garden, and shared hall come together. Rooms, Gardens, Halls, Paths — one Presence network.",
+};
+
+const LAYERS = [
+  {
+    id: "rooms",
+    verb: "Enter",
+    name: "Rooms",
+    blurb:
+      "Premium public spaces for artists, practitioners, venues, organisations, and personal practices. Tap an NFC card or scan a QR — your Room opens.",
+    href: "/presence-chooser",
+    action: "Open a Room",
+  },
+  {
+    id: "gardens",
+    verb: "Be known by taste",
+    name: "Gardens",
+    blurb:
+      "An Observer Mask cultivates a Garden — Seeds from Rooms you entered, Halls you joined, Paths you walked. Not a feed. A social ecosystem.",
+    href: "/observer/garden",
+    action: "Open your Garden",
+  },
+  {
+    id: "halls",
+    verb: "Gather",
+    name: "Halls",
+    blurb:
+      "Town squares, salons, market halls, listening halls. Shared digital gathering spaces with zones — Lobby, Stage, Tables, Stalls, Noticeboards, Portals.",
+    href: "/halls",
+    action: "Browse Halls",
+  },
+  {
+    id: "paths",
+    verb: "Move",
+    name: "Paths",
+    blurb:
+      "Paths are exploration. Choose a direction — follow the mood, follow the place, follow the influences, follow people from this Hall, surprise me.",
+    href: "/world",
+    action: "See how Paths grow",
+  },
+  {
+    id: "world",
+    verb: "Open later",
+    name: "World",
+    blurb:
+      "The Presence World is forming. Rooms become Paths become a shared cultural map — when enough places, paths, and traces have taken root.",
+    href: "/world",
+    action: "World, forming",
+  },
+] as const;
+
+const PROBLEMS = [
+  {
+    label: "01 · Dead links",
+    body: "Linktree-style hubs that flatten cultural work into a list of squares.",
+  },
+  {
+    label: "02 · Scattered social",
+    body: "Profiles across five platforms, each owned by someone else's feed algorithm.",
+  },
+  {
+    label: "03 · Boring portfolios",
+    body: "Beige Squarespace templates that hide the practice they're supposed to introduce.",
+  },
+  {
+    label: "04 · Stateless feeds",
+    body: "Social spaces with no memory of where you've been or what you've cared about.",
+  },
+  {
+    label: "05 · Disconnected encounters",
+    body: "NFC business cards that point at a website that points at nothing else.",
+  },
 ];
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <main className="min-h-dvh overflow-hidden bg-[var(--p-bg)] text-[var(--p-text)]">
-      <section className="relative px-5 py-8 sm:px-8 lg:px-12">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_15%,rgba(194,65,12,0.14),transparent_30%),linear-gradient(135deg,#faf9f7_0%,#f1ede6_55%,#e9dfd3_100%)]" />
-        <nav className="mx-auto flex max-w-6xl items-center justify-between">
-          <Link
-            href="/"
-            className="text-sm font-semibold uppercase tracking-[0.28em] text-stone-900"
-          >
-            Presence
+    <main className="presence-shell">
+      <div className="presence-signal-field" aria-hidden />
+
+      {/* Top frame */}
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "14px 24px",
+          background:
+            "color-mix(in oklab, var(--presence-paper) 86%, transparent)",
+          borderBottom: "1px solid var(--presence-rule)",
+          backdropFilter: "blur(10px)",
+        }}
+      >
+        <Link
+          href="/"
+          className="garden-brand"
+          aria-label="Presence — home"
+          style={{ textDecoration: "none" }}
+        >
+          <span className="glyph" aria-hidden />
+          <span>Presence</span>
+        </Link>
+        <nav
+          aria-label="Primary"
+          style={{ display: "flex", gap: 20, alignItems: "center" }}
+        >
+          <Link href="/gallery" className="presence-eyebrow hidden sm:inline-block" style={{ textDecoration: "none", color: "var(--presence-on-paper)" }}>
+            Gallery
           </Link>
-          <Link
-            href="/auth/sign-in"
-            className="rounded-full border border-stone-300/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-stone-700 transition hover:border-stone-900 hover:text-stone-950"
-          >
-            Owner login
+          <Link href="/halls" className="presence-eyebrow hidden sm:inline-block" style={{ textDecoration: "none", color: "var(--presence-on-paper)" }}>
+            Halls
+          </Link>
+          <Link href="/observer/garden" className="presence-eyebrow hidden sm:inline-block" style={{ textDecoration: "none", color: "var(--presence-on-paper)" }}>
+            Garden
+          </Link>
+          <Link href="/world" className="presence-eyebrow hidden sm:inline-block" style={{ textDecoration: "none", color: "var(--presence-on-paper)" }}>
+            World
+          </Link>
+          <Link href="/auth/sign-in" className="presence-btn is-ghost is-small" style={{ marginLeft: 6 }}>
+            Sign in
           </Link>
         </nav>
+      </header>
 
-        <div className="mx-auto grid max-w-6xl gap-10 py-16 lg:grid-cols-[1.04fr_0.96fr] lg:items-end lg:py-24">
-          <div className="max-w-2xl">
-            <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-stone-300/80 bg-white/45 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-stone-600">
-              <Sparkles className="h-3.5 w-3.5 text-[var(--p-accent)]" />
-              Public worlds, not generic pages
-            </p>
-            <h1 className="text-5xl font-semibold leading-[0.96] tracking-tight text-stone-950 sm:text-6xl lg:text-7xl">
-              Presence builds public worlds for cultural work.
-            </h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-stone-700 sm:text-lg">
-              Beautiful enough to use immediately, structured enough to become
-              part of a future network for artists, practitioners, venues, and
-              cultural organisations.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/presence-chooser"
-                className="inline-flex items-center gap-2 rounded-2xl bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-stone-800"
-              >
-                Start your Presence
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/beta"
-                className="inline-flex items-center gap-2 rounded-2xl border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-800 transition hover:border-stone-950"
-              >
-                Public beta
-              </Link>
-            </div>
-            <div className="mt-8 flex flex-wrap gap-3">
-              {principles.map((item) => (
-                <span
-                  key={item}
-                  className="rounded-full border border-stone-300/70 bg-white/50 px-4 py-2 text-xs font-medium text-stone-700"
-                >
-                  {item}
+      {/* Threshold — opening hero */}
+      <section className="presence-threshold presence-grain" aria-labelledby="hero-title">
+        <p className="threshold-eyebrow">
+          <span aria-hidden style={{ color: "var(--presence-vermilion)" }}>
+            ●
+          </span>{" "}
+          Presence · cultural world interface · v1 beta
+        </p>
+        <h1 id="hero-title" className="threshold-display">
+          Not a profile.
+          <br />
+          <em>A place</em> people can enter.
+        </h1>
+        <p className="threshold-lede">
+          Presence is where your digital storefront, social garden, and shared
+          hall come together. Tap an NFC card. Scan a QR poster. Walk a Path
+          between Rooms. Plant a Seed in a Garden. Gather in a Hall.
+        </p>
+        <div className="threshold-actions">
+          <Link href="/presence-chooser" className="presence-btn">
+            Create a Presence Room <ArrowRight size={14} aria-hidden />
+          </Link>
+          <Link href="/gallery" className="presence-btn is-ghost">
+            Enter the Beta Gallery
+          </Link>
+          <Link
+            href="/observer/garden"
+            className="presence-btn is-ghost"
+            style={{ display: "inline-flex" }}
+          >
+            Join as Observer
+          </Link>
+        </div>
+
+        <div className="presence-marquee" aria-hidden>
+          <div className="presence-marquee-track">
+            {[
+              "Rooms let you be entered",
+              "Gardens let you be known by taste",
+              "Halls let you gather",
+              "Paths let you move",
+              "The World opens later",
+            ]
+              .concat([
+                "Rooms let you be entered",
+                "Gardens let you be known by taste",
+                "Halls let you gather",
+                "Paths let you move",
+                "The World opens later",
+              ])
+              .map((line, i) => (
+                <span key={`${line}-${i}`}>
+                  {line}
+                  <span className="dot" />
                 </span>
               ))}
-            </div>
-          </div>
-
-          <div className="grid gap-4">
-            <Link
-              href="/gallery"
-              className="group rounded-[2rem] border border-stone-300/80 bg-white/70 p-6 shadow-xl shadow-stone-900/5 backdrop-blur transition hover:-translate-y-0.5 hover:border-stone-950/40"
-            >
-              <div className="mb-8 flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-950 text-white">
-                <Grid3X3 className="h-5 w-5" />
-              </div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-500">
-                Public entry
-              </p>
-              <h2 className="mt-3 text-2xl font-semibold text-stone-950">
-                Explore Presence Gallery
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-stone-600">
-                View selected public Presences as pilot artists, practitioners,
-                venues, and organisations are published.
-              </p>
-              <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-stone-950">
-                Open gallery
-                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-              </span>
-            </Link>
-
-            <Link
-              href="/studio"
-              className="group rounded-[2rem] border border-stone-900 bg-stone-950 p-6 text-white shadow-2xl shadow-stone-950/20 transition hover:-translate-y-0.5"
-            >
-              <div className="mb-8 flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--p-studio-accent)] text-stone-950">
-                <DoorOpen className="h-5 w-5" />
-              </div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-400">
-                Owner entry
-              </p>
-              <h2 className="mt-3 text-2xl font-semibold">
-                Open owner workspace
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-stone-300">
-                Prepare, preview, publish, and share the public world assigned
-                to your account.
-              </p>
-              <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-orange-200">
-                Go to owner workspace
-                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-              </span>
-            </Link>
           </div>
         </div>
       </section>
 
-      <section className="border-t border-stone-200 bg-white px-5 py-10 sm:px-8">
-        <div className="mx-auto max-w-6xl grid gap-3 sm:grid-cols-3 mb-10">
-          <Link
-            href="/observer/garden"
-            className="group rounded-3xl border border-stone-200 p-5 transition hover:-translate-y-0.5 hover:border-stone-900/60"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-500">Observer · Gardens</p>
-            <p className="mt-3 text-2xl font-semibold text-stone-950">Open your Garden</p>
-            <p className="mt-2 text-sm leading-6 text-stone-600">
-              A Garden, not a feed. Seeds from Rooms, Halls, Paths, and people you share space with.
-            </p>
-            <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-stone-950 transition group-hover:gap-2">
-              Enter Garden <ArrowRight className="h-4 w-4" />
-            </span>
-          </Link>
-          <Link
-            href="/halls"
-            className="group rounded-3xl border border-stone-900 bg-stone-950 p-5 text-white transition hover:-translate-y-0.5"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-300">Halls</p>
-            <p className="mt-3 text-2xl font-semibold">Halls — where we gather</p>
-            <p className="mt-2 text-sm leading-6 text-stone-300">
-              Town Halls, Salons, Market Halls, Listening Halls. Step in, post on the Noticeboard, walk to a Stall.
-            </p>
-            <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-orange-200 transition group-hover:gap-2">
-              Browse Halls <ArrowRight className="h-4 w-4" />
-            </span>
-          </Link>
-          <Link
-            href="/world"
-            className="group rounded-3xl border border-stone-200 p-5 transition hover:-translate-y-0.5 hover:border-stone-900/60"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-500">World · forming</p>
-            <p className="mt-3 text-2xl font-semibold text-stone-950">The map is forming</p>
-            <p className="mt-2 text-sm leading-6 text-stone-600">
-              Rooms become Paths become a shared map. Watch what is growing.
-            </p>
-            <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-stone-950 transition group-hover:gap-2">
-              See what's forming <ArrowRight className="h-4 w-4" />
-            </span>
-          </Link>
-        </div>
-        <div className="mx-auto grid max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            ["Public route", "/p/your-slug"],
-            ["Public Studio", "/presence-chooser"],
-            ["Owner workspace", "/studio"],
-            ["Plans", "/plans"],
-          ].map(([label, route]) => (
-            <div key={label} className="rounded-2xl border border-stone-200 p-5">
-              <Compass className="mb-4 h-4 w-4 text-[var(--p-accent)]" />
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
-                {label}
-              </p>
-              <p className="mt-2 font-mono text-sm text-stone-900">{route}</p>
+      {/* The Problem */}
+      <section className="presence-stack-section">
+        <span className="presence-stack-eyebrow">
+          <span className="num">01</span> The problem
+        </span>
+        <h2 className="presence-stack-title">
+          The web flattened culture
+          <br />
+          into <em>tabs and feeds.</em>
+        </h2>
+        <p className="presence-stack-blurb">
+          Real practices — artists, practitioners, venues, organisations,
+          collectives, tradespeople — get reduced to a Wix template or a
+          Linktree hub. The encounters that actually matter happen offline,
+          and then there&apos;s nowhere for them to take root.
+        </p>
+        <div className="presence-problem-row">
+          {PROBLEMS.map((p) => (
+            <div className="item" key={p.label}>
+              <p className="label">{p.label}</p>
+              <p className="body">{p.body}</p>
             </div>
           ))}
         </div>
       </section>
+
+      {/* The Presence Stack */}
+      <section className="presence-stack-section">
+        <span className="presence-stack-eyebrow">
+          <span className="num">02</span> The Presence stack
+        </span>
+        <h2 className="presence-stack-title">
+          Five layers, one
+          <br />
+          <em>cultural world.</em>
+        </h2>
+        <p className="presence-stack-blurb">
+          Each layer has a primary verb. Each layer is designed, not generic.
+          Each layer connects to the next. You can adopt them in order — start
+          with a Room, grow into a Garden, host a Hall.
+        </p>
+        <div className="presence-layer-grid">
+          {LAYERS.map((layer) => (
+            <Link
+              key={layer.id}
+              href={layer.href}
+              className="presence-layer-card"
+              data-layer={layer.id}
+            >
+              <span className="layer-verb">
+                <span aria-hidden style={{ marginRight: 8 }}>
+                  {layer.id === "rooms" && <DoorOpen size={12} />}
+                  {layer.id === "gardens" && <Sprout size={12} />}
+                  {layer.id === "halls" && <Users size={12} />}
+                  {layer.id === "paths" && <Footprints size={12} />}
+                  {layer.id === "world" && <Compass size={12} />}
+                </span>
+                {layer.verb}
+              </span>
+              <h3 className="layer-name">{layer.name}</h3>
+              <p className="layer-blurb">{layer.blurb}</p>
+              <span className="layer-action">
+                {layer.action} <ArrowRight size={14} aria-hidden />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Room-first business value (Rooms) */}
+      <section className="presence-stack-section">
+        <span className="presence-stack-eyebrow">
+          <span className="num">03</span> Rooms · storefronts
+        </span>
+        <h2 className="presence-stack-title">
+          Your Room is a living
+          <br />
+          <em>business card</em> with a memory.
+        </h2>
+        <p className="presence-stack-blurb">
+          Presence Rooms are premium public spaces designed for artists,
+          practitioners, consultants, venues, organisations, and personal
+          practices. Tap an NFC card or scan a QR — the Room opens, the
+          encounter is captured, and the visitor can save, walk a Path, or
+          send an enquiry.
+        </p>
+        <div
+          style={{
+            marginTop: 32,
+            display: "grid",
+            gap: 14,
+            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+          }}
+        >
+          {[
+            ["NFC / QR / badge entry", "Tap, scan, or share. Every Room Key is trackable."],
+            ["Portfolio & services", "Works, collections, programmes, and offerings — designed, not listed."],
+            ["Enquiries & bookings", "Contact is the next action in the world, not a generic form."],
+            ["Real-time analytics", "Encounters, saves, Paths, Hall visits — visitor identity stays private."],
+            ["Real-world bridge", "An NFC tap in a gallery becomes a digital relationship."],
+          ].map(([label, body]) => (
+            <article
+              key={label}
+              style={{
+                borderTop: "1px solid var(--presence-rule)",
+                paddingTop: 14,
+              }}
+            >
+              <p className="presence-eyebrow" style={{ margin: 0 }}>
+                {label}
+              </p>
+              <p
+                style={{
+                  margin: "8px 0 0",
+                  fontSize: 14.5,
+                  lineHeight: 1.5,
+                  color: "var(--presence-on-paper-mute)",
+                }}
+              >
+                {body}
+              </p>
+            </article>
+          ))}
+        </div>
+        <div style={{ marginTop: 28 }}>
+          <Link href="/presence-chooser" className="presence-btn">
+            Build your Room <ArrowRight size={14} aria-hidden />
+          </Link>
+        </div>
+      </section>
+
+      {/* Gardens */}
+      <section
+        className="presence-stack-section"
+        style={{
+          background:
+            "linear-gradient(180deg, color-mix(in oklab, var(--garden-accent) 5%, transparent) 0%, transparent 100%)",
+          marginTop: 32,
+          maxWidth: "none",
+          paddingLeft: "max(20px, calc((100vw - 1200px) / 2 + 20px))",
+          paddingRight: "max(20px, calc((100vw - 1200px) / 2 + 20px))",
+        }}
+      >
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <span className="presence-stack-eyebrow">
+            <span className="num">04</span> Gardens · social ecosystem
+          </span>
+          <h2 className="presence-stack-title">
+            A Garden grows from
+            <br />
+            <em>where you&apos;ve been.</em>
+          </h2>
+          <p className="presence-stack-blurb">
+            Observer Masks cultivate Gardens. Seeds arrive from Rooms you
+            entered, Halls you joined, Mood Boards you tended, and people you
+            crossed paths with. Nurture them, prune them, let them wilt or
+            compost. Observations are what you noticed along the way.
+          </p>
+          <div
+            style={{
+              marginTop: 32,
+              display: "grid",
+              gap: 14,
+              gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+            }}
+          >
+            {[
+              ["Observer Masks", "Move through Gardens and Rooms without becoming a business profile."],
+              ["Observations", "Text, finds, walks, mood — cultural fragments, not feed posts."],
+              ["Seeds & nurture", "Active, watered, wilting, composted — a visible ecology."],
+              ["Mood Boards → Seeds", "Pin a Room, plant it in your Garden. Maps of taste become Paths."],
+              ["Echoes with attribution", "Carry an Observation into your own Garden, with credit."],
+              ["Crossed Paths", "Rooms and Masks you brush past keep showing up."],
+            ].map(([label, body]) => (
+              <article
+                key={label}
+                style={{
+                  borderTop: "1px solid var(--presence-rule)",
+                  paddingTop: 14,
+                }}
+              >
+                <p className="presence-eyebrow" style={{ margin: 0 }}>
+                  {label}
+                </p>
+                <p
+                  style={{
+                    margin: "8px 0 0",
+                    fontSize: 14.5,
+                    lineHeight: 1.5,
+                    color: "var(--presence-on-paper-mute)",
+                  }}
+                >
+                  {body}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Halls */}
+      <section className="presence-stack-section">
+        <span className="presence-stack-eyebrow">
+          <span className="num">05</span> Halls · gathering
+        </span>
+        <h2 className="presence-stack-title">
+          Halls are where
+          <br />
+          your Room <em>opens its doors.</em>
+        </h2>
+        <p className="presence-stack-blurb">
+          A Hall is a Town Square, a Salon, a Market with Stalls, a Listening
+          Hall, a Studio open day, an Afterparty. Step into the Lobby. Listen
+          on the Stage. Sit at a Table. Browse Stalls — each a Presence Room
+          you can step into. Read the Noticeboard. Walk through a Portal to a
+          related Room, Garden, or Hall.
+        </p>
+        <div
+          style={{
+            marginTop: 28,
+            display: "grid",
+            gap: 14,
+            gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+          }}
+        >
+          {[
+            "Town Hall",
+            "Market Hall",
+            "Studio Hall",
+            "Listening Hall",
+            "Salon",
+            "Guild Hall",
+            "Afterparty",
+            "Lobby",
+          ].map((type) => (
+            <div
+              key={type}
+              className="presence-card"
+              style={{
+                padding: 16,
+                background: "var(--presence-bone)",
+              }}
+            >
+              <p className="presence-eyebrow" style={{ margin: 0 }}>
+                Hall type
+              </p>
+              <p
+                className="presence-display"
+                style={{
+                  margin: "8px 0 0",
+                  fontSize: 22,
+                  lineHeight: 1.05,
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {type}
+              </p>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 28 }}>
+          <Link href="/halls" className="presence-btn is-halls">
+            Browse Halls <ArrowRight size={14} aria-hidden />
+          </Link>
+        </div>
+      </section>
+
+      {/* Beta gallery teaser */}
+      <section className="presence-stack-section">
+        <span className="presence-stack-eyebrow">
+          <span className="num">06</span> Beta gallery
+        </span>
+        <h2 className="presence-stack-title">
+          The first Rooms,
+          <br />
+          <em>taking shape.</em>
+        </h2>
+        <p className="presence-stack-blurb">
+          A curated walk through Presence Rooms under construction — artists,
+          practitioners, venues, and organisations building their first
+          cultural worlds. Step into a Room. See what is forming.
+        </p>
+        <div style={{ marginTop: 24, display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <Link href="/gallery" className="presence-btn is-accent">
+            Open the gallery <ArrowRight size={14} aria-hidden />
+          </Link>
+          <Link href="/design-lab" className="presence-btn is-ghost">
+            <Sparkles size={14} aria-hidden /> Design lab · V2 previews
+          </Link>
+        </div>
+      </section>
+
+      {/* Final CTA — stage band */}
+      <section
+        style={{
+          background: "var(--presence-stage)",
+          color: "var(--presence-on-stage)",
+          padding: "clamp(48px, 7vw, 96px) clamp(20px, 5vw, 56px)",
+          borderTop: "1px solid var(--presence-rule-dark)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: "-30% -10% -10% -10%",
+            background:
+              "radial-gradient(ellipse at 30% 40%, color-mix(in oklab, var(--presence-vermilion) 30%, transparent), transparent 70%), radial-gradient(ellipse at 80% 80%, color-mix(in oklab, var(--presence-brass) 20%, transparent), transparent 70%)",
+            filter: "blur(60px)",
+            opacity: 0.5,
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          style={{ position: "relative", maxWidth: 1200, margin: "0 auto" }}
+        >
+          <p
+            className="presence-eyebrow on-stage"
+            style={{ marginBottom: 14 }}
+          >
+            Begin
+          </p>
+          <h2
+            className="presence-display"
+            style={{
+              fontSize: "clamp(40px, 6vw, 80px)",
+              letterSpacing: "-0.02em",
+              lineHeight: 1.02,
+              margin: 0,
+              maxWidth: "16ch",
+              textWrap: "balance",
+              color: "var(--presence-on-stage)",
+            }}
+          >
+            Open a Room. Tend a Garden.{" "}
+            <em style={{ color: "var(--presence-brass)" }}>Hold a Hall.</em>
+          </h2>
+          <div
+            style={{
+              marginTop: 28,
+              display: "flex",
+              gap: 10,
+              flexWrap: "wrap",
+            }}
+          >
+            <Link
+              href="/presence-chooser"
+              className="presence-btn on-stage"
+              style={{ background: "var(--presence-brass)", color: "var(--presence-ink)", borderColor: "var(--presence-brass)" }}
+            >
+              Create your Room <ArrowRight size={14} aria-hidden />
+            </Link>
+            <Link
+              href="/observer/garden"
+              className="presence-btn on-stage is-ghost"
+            >
+              Join as Observer
+            </Link>
+            <Link
+              href="/halls"
+              className="presence-btn on-stage is-ghost"
+            >
+              Browse Halls
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer
+        style={{
+          background: "var(--presence-paper-2)",
+          padding: "40px 24px",
+          borderTop: "1px solid var(--presence-rule)",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: "0 auto",
+            display: "flex",
+            gap: 24,
+            flexWrap: "wrap",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontFamily: "var(--presence-f-display)",
+                fontSize: 22,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Presence
+            </div>
+            <p
+              className="presence-eyebrow"
+              style={{ marginTop: 10 }}
+            >
+              Not a profile · a place people can enter
+            </p>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: 18,
+              flexWrap: "wrap",
+              fontSize: 13,
+              color: "var(--presence-on-paper-mute)",
+            }}
+          >
+            <Link href="/gallery" style={{ color: "inherit", textDecoration: "none" }}>Beta gallery</Link>
+            <Link href="/halls" style={{ color: "inherit", textDecoration: "none" }}>Halls</Link>
+            <Link href="/observer/garden" style={{ color: "inherit", textDecoration: "none" }}>Garden</Link>
+            <Link href="/observer/passport" style={{ color: "inherit", textDecoration: "none" }}>Passport</Link>
+            <Link href="/observer/mood-boards" style={{ color: "inherit", textDecoration: "none" }}>Mood Boards</Link>
+            <Link href="/world" style={{ color: "inherit", textDecoration: "none" }}>World</Link>
+            <Link href="/design-lab" style={{ color: "inherit", textDecoration: "none" }}>Design lab</Link>
+            <Link href="/plans" style={{ color: "inherit", textDecoration: "none" }}>Plans</Link>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
