@@ -172,6 +172,18 @@ def _has_trace_leak(payload: Any) -> bool:
     return any(marker in text for marker in ("traceback", "stack trace", "werkzeug", "sqlalchemy.exc", 'file "'))
 
 
+def _has_raw_private_identity_key(payload: Any) -> bool:
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            if str(key).lower() in {"email", "user_id"}:
+                return True
+            if _has_raw_private_identity_key(value):
+                return True
+    if isinstance(payload, list):
+        return any(_has_raw_private_identity_key(value) for value in payload)
+    return False
+
+
 def _public_hall_id(hall: dict[str, Any]) -> int | None:
     hall_id = hall.get("id")
     return hall_id if isinstance(hall_id, int) else None
@@ -425,8 +437,21 @@ class SmokeRun:
                 self.state["hall_id"] = self.args.hall_id or _public_hall_id(data)
                 self.state["portal_id"] = self.args.portal_id or next(iter(_ids_from_hall(data, "portals")), None)
                 self.state["stall_id"] = self.args.stall_id or next(iter(_ids_from_hall(data, "stalls")), None)
+            self.request_check(
+                "public_hall_participants_identity_safe",
+                "/api/halls/<hall-slug>/participants",
+                "GET",
+                f"/api/halls/{hall_slug}/participants",
+                {200},
+                lambda response: _is_ok_envelope(response)
+                and isinstance(_data(response.payload).get("items"), list)
+                and not _has_raw_private_identity_key(_data(response.payload).get("items")),
+                pass_reason="Public Hall participants omitted raw user id and email fields.",
+                fail_reason="Public Hall participants leaked raw private identity fields or broke contract.",
+            )
         else:
             self.blocked_step("public_hall_detail", "/api/halls/<hall-slug>", "No public Hall slug was provided or discoverable.", missing_env=["PRESENCE_HOSTED_HALL_SLUG"])
+            self.blocked_step("public_hall_participants_identity_safe", "/api/halls/<hall-slug>/participants", "No public Hall slug was provided or discoverable.", missing_env=["PRESENCE_HOSTED_HALL_SLUG"])
         if self.args.mask_alias:
             self.request_check(
                 "public_mask",
@@ -453,6 +478,43 @@ class SmokeRun:
         else:
             self.blocked_step("public_mask", "/api/masks/<alias>", "Set a public smoke Mask alias.", missing_env=["PRESENCE_HOSTED_MASK_ALIAS"])
             self.blocked_step("public_garden", "/api/gardens/<alias>", "Set a public smoke Garden alias.", missing_env=["PRESENCE_HOSTED_MASK_ALIAS"])
+        if self.args.private_mask_alias:
+            self.request_check(
+                "private_mask_not_public",
+                "/api/masks/<private-alias>",
+                "GET",
+                f"/api/masks/{self.args.private_mask_alias}",
+                {404},
+                lambda response: not _has_trace_leak(response.payload),
+                pass_reason="Private smoke Mask alias did not leak publicly.",
+                fail_reason="Private smoke Mask alias leaked or returned an unsafe response.",
+            )
+            self.request_check(
+                "private_garden_not_public",
+                "/api/gardens/<private-alias>",
+                "GET",
+                f"/api/gardens/{self.args.private_mask_alias}",
+                {404},
+                lambda response: not _has_trace_leak(response.payload),
+                pass_reason="Private smoke Garden alias did not leak publicly.",
+                fail_reason="Private smoke Garden alias leaked or returned an unsafe response.",
+            )
+        else:
+            self.blocked_step("private_mask_not_public", "/api/masks/<private-alias>", "Set a private smoke Mask alias.", missing_env=["PRESENCE_HOSTED_PRIVATE_MASK_ALIAS"])
+            self.blocked_step("private_garden_not_public", "/api/gardens/<private-alias>", "Set a private smoke Garden alias.", missing_env=["PRESENCE_HOSTED_PRIVATE_MASK_ALIAS"])
+        if self.args.private_hall_slug:
+            self.request_check(
+                "private_hall_not_public",
+                "/api/halls/<private-hall-slug>",
+                "GET",
+                f"/api/halls/{self.args.private_hall_slug}",
+                {403, 404},
+                lambda response: not _has_trace_leak(response.payload),
+                pass_reason="Private smoke Hall detail did not leak publicly.",
+                fail_reason="Private smoke Hall detail leaked or returned an unsafe response.",
+            )
+        else:
+            self.blocked_step("private_hall_not_public", "/api/halls/<private-hall-slug>", "Set a private smoke Hall slug.", missing_env=["PRESENCE_HOSTED_PRIVATE_HALL_SLUG"])
         if self.args.public_room_slug:
             self.request_check(
                 "public_room",
@@ -502,6 +564,7 @@ class SmokeRun:
                 ("observer_garden_home", "/api/garden/home"),
                 ("observer_observation", "/api/observations"),
                 ("observer_echo", "/api/observations/<observation-id>/echoes"),
+                ("observer_report_observation", "/api/observations/<observation-id>/report"),
                 ("observer_self_promotion_guard", "/api/observations"),
                 ("observer_list_seeds", "/api/garden/seeds"),
                 ("observer_nurture_seed", "/api/garden/seeds/<seed-id>/nurture"),
@@ -543,6 +606,7 @@ class SmokeRun:
             for step, route in [
                 ("observer_observation", "/api/observations"),
                 ("observer_echo", "/api/observations/<observation-id>/echoes"),
+                ("observer_report_observation", "/api/observations/<observation-id>/report"),
                 ("observer_self_promotion_guard", "/api/observations"),
                 ("observer_nurture_seed", "/api/garden/seeds/<seed-id>/nurture"),
                 ("observer_prune_seed", "/api/garden/seeds/<seed-id>/prune"),
@@ -585,8 +649,22 @@ class SmokeRun:
                 pass_reason="Observer fixture created an Echo with commentary.",
                 fail_reason="Observer fixture Echo did not match the commentary contract.",
             )
+            self.request_check(
+                "observer_report_observation",
+                "/api/observations/<observation-id>/report",
+                "POST",
+                f"/api/observations/{observation_id}/report",
+                {201},
+                lambda response: _is_ok_envelope(response)
+                and _data(response.payload).get("received") is True,
+                token=token,
+                json_body={"reason": "launch_smoke fixture moderation report."},
+                pass_reason="Observer fixture reported smoke content through moderation.",
+                fail_reason="Observer fixture moderation report did not match contract.",
+            )
         else:
             self.blocked_step("observer_echo", "/api/observations/<observation-id>/echoes", "Observation create did not yield an id.")
+            self.blocked_step("observer_report_observation", "/api/observations/<observation-id>/report", "Observation create did not yield an id.")
         self.request_check(
             "observer_self_promotion_guard",
             "/api/observations",
@@ -979,6 +1057,8 @@ def _args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--portal-id", type=int, default=_int_env("PRESENCE_HOSTED_HALL_PORTAL_ID"))
     parser.add_argument("--stall-id", type=int, default=_int_env("PRESENCE_HOSTED_HALL_STALL_ID"))
     parser.add_argument("--mask-alias", default=_env("PRESENCE_HOSTED_MASK_ALIAS"))
+    parser.add_argument("--private-mask-alias", default=_env("PRESENCE_HOSTED_PRIVATE_MASK_ALIAS"))
+    parser.add_argument("--private-hall-slug", default=_env("PRESENCE_HOSTED_PRIVATE_HALL_SLUG"))
     parser.add_argument("--public-room-slug", default=_env("PRESENCE_HOSTED_PUBLIC_ROOM_SLUG"))
     parser.add_argument(
         "--room-key-token",

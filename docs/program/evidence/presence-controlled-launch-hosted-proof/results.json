@@ -1,0 +1,203 @@
+{
+  "date": "2026-05-22",
+  "decision": "GO",
+  "launch_mode": "controlled paid pilots only",
+  "readiness": {
+    "controlled_launch_percent": 100,
+    "v1_percent": 94,
+    "v2_percent": 15
+  },
+  "targets": [
+    {
+      "name": "presence-backend",
+      "url": "https://anu-back-end.vercel.app",
+      "resolved_url": "https://anu-back-iaz41iurx-emadhatu-2110s-projects.vercel.app",
+      "environment": "vercel production",
+      "project": "anu-back-end",
+      "branch": "feature/presence-ecosystem-alpha local HEAD and pushed branch",
+      "commit": "8948ce5 local CLI deploy provenance",
+      "deployment_id": "dpl_4jFrV9vH1ZqaBr4qTD53G62eodUD",
+      "protection": "public production smoke required no bypass",
+      "provider_git_clone_line": false
+    },
+    {
+      "name": "presence-frontend",
+      "url": "https://your-presence.vercel.app",
+      "resolved_url": "https://presence-3g9imnyzw-emadhatu-2110s-projects.vercel.app",
+      "environment": "vercel production",
+      "project": "presence",
+      "branch": "feature/presence-ecosystem-alpha",
+      "commit": "8948ce5",
+      "deployment_id": "dpl_EbGwYZZKhDpQCEVv8oUqb7TtnVVW",
+      "protection": "public production smoke required no bypass",
+      "provider_git_clone_line": true
+    }
+  ],
+  "gate_scores": {
+    "deployment_correctness": 100,
+    "env_correctness": 100,
+    "db_migration_readiness": 100,
+    "backend_health": 100,
+    "api_contract_readiness": 100,
+    "frontend_backend_integration": 100,
+    "public_room_nfc_entry_readiness": 100,
+    "garden_readiness": 100,
+    "hall_readiness": 100,
+    "owner_studio_readiness": 100,
+    "safety_privacy_readiness": 100,
+    "observability_readiness": 90,
+    "browser_mobile_readiness": 95,
+    "pilot_operations_readiness": 100,
+    "rollback_readiness": 100
+  },
+  "env_audit": {
+    "secret_values_printed": false,
+    "backend_provider_inventory": "vercel env ls production completed",
+    "frontend_provider_inventory": "vercel env ls production completed",
+    "backend_required_runtime_families": {
+      "postgres_url_family": "present",
+      "secret_key_family": "present_safe_length",
+      "jwt_split_secret_family": "present_safe_length",
+      "control_plane_secret_family": "present_safe_length",
+      "cors_frontend_origin": "hosted_behavior_pass",
+      "debug_trace_leak": "not_observed"
+    },
+    "frontend_required_build_families": {
+      "api_base": "updated_redeployed_hosted_behavior_pass",
+      "presence_api_base_alias": "updated_redeployed_hosted_behavior_pass",
+      "supabase_public_auth": "updated_redeployed_sign_in_configured_gate_pass",
+      "world_v2_posture": "hidden_preview_behavior_pass"
+    },
+    "note": "The pulled frontend env audit copy continued to redact public frontend env bodies as empty-looking quoted values; provider update and hosted behavior were used as proof."
+  },
+  "db_migration_proof": {
+    "provider_family": "supabase_postgresql",
+    "query_path": "pooled hosted postgres safe inspection",
+    "database": "postgres",
+    "schema": "public",
+    "pooled_port_family": 6543,
+    "tables_present": [
+      "presence_garden",
+      "observation",
+      "observation_echo",
+      "garden_seed",
+      "garden_nurture",
+      "garden_prune",
+      "shared_space",
+      "presence_hall",
+      "hall_session",
+      "hall_participant",
+      "hall_zone",
+      "hall_portal",
+      "hall_stall",
+      "hall_moderation_action",
+      "hall_activity_event"
+    ],
+    "migration_path": "flora-fauna/backend/migrations/versions/20260521_presence_gardens_halls_backend.sql",
+    "local_postgres_proof": "docs/program/evidence/presence-gardens-halls-postgres-contract-proof/",
+    "hosted_destructive_reset_run": false,
+    "hosted_sql_migration_applied_in_this_pass": false,
+    "backup_restore_plan": "Record Supabase backup or PITR restore point before future hosted SQL migration; restore through provider path rather than destructive reset."
+  },
+  "blocker_resolution": {
+    "api_halls_500_root_cause": "Hosted Vercel log showed psycopg2 UndefinedTable for relation presence_hall on the failing production surface.",
+    "api_halls_fix_result": "Current hosted schema inventory contains Gardens/Halls tables and current production backend returns canonical 200 Hall list envelope.",
+    "auth_hardening_result": "Hosted invalid Garden bearer now returns canonical 401.",
+    "control_token_expiry_result": "Hosted authenticated World readiness succeeds after UTC-naive expiry normalization."
+  },
+  "fixtures": {
+    "provisioner": "flora-fauna/backend/scripts/provision_presence_controlled_launch_hosted.py",
+    "ignored_env_handoff": ".env.presence-controlled-launch.hosted.local",
+    "tokens_printed": false,
+    "fixture_family": [
+      "observer",
+      "private second observer",
+      "mask",
+      "public garden",
+      "private garden",
+      "owner room",
+      "roomkey",
+      "public hall zones portal stall session path",
+      "private foreign hall and room",
+      "mood board plant item",
+      "admin control token"
+    ]
+  },
+  "hosted_results": {
+    "backend_smoke": {
+      "artifact_json": "hosted-backend-smoke.json",
+      "artifact_markdown": "hosted-backend-smoke.md",
+      "backend_url": "https://anu-back-end.vercel.app",
+      "frontend_origin": "https://your-presence.vercel.app",
+      "summary": {
+        "pass": 49,
+        "fail": 0,
+        "blocked": 0
+      }
+    },
+    "frontend_chromium": {
+      "frontend_url": "https://your-presence.vercel.app",
+      "backend_url": "https://anu-back-end.vercel.app",
+      "projects": [
+        "chromium-desktop",
+        "chromium-mobile"
+      ],
+      "passed": 20,
+      "failed": 0
+    },
+    "firefox_webkit": {
+      "attempted": true,
+      "result": "local Playwright browser executables unavailable"
+    }
+  },
+  "safety_privacy": {
+    "world_hidden_forming": "pass",
+    "v2_preview_only": "pass",
+    "observer_self_promotion_guard": "pass",
+    "private_mask_garden_not_public": "pass",
+    "private_hall_not_public": "pass",
+    "public_hall_participant_raw_email_user_id_check": "pass",
+    "owner_isolation": "pass",
+    "admin_negative_and_control_positive": "pass",
+    "moderation_report_fixture": "pass",
+    "hosted_mock_or_localhost_api_dependency": "not_observed"
+  },
+  "pilot_operations": {
+    "checklist": "docs/program/PRESENCE_CONTROLLED_LAUNCH_PILOT_CHECKLIST_2026-05-21.md",
+    "manual_onboarding_path": "documented",
+    "support_incident_rollback": "documented",
+    "pricing_package_note": "required per pilot placeholder recorded",
+    "candidate_tracker": "first five placeholder recorded"
+  },
+  "observability": {
+    "vercel_provider_logs": "accessible",
+    "backend_function_logs": "accessible and used",
+    "smoke_json_markdown": "stored",
+    "cors_auth_failures": "diagnosable",
+    "supabase_db_log_console": "not opened from workspace",
+    "external_monitoring_sentry": "not proven"
+  },
+  "bugs_fixed": [
+    "Presence invalid bearer aliases return canonical 401 hosted auth behavior.",
+    "Control-token grant expiry comparison normalizes hosted aware timestamps.",
+    "Owner draft Hall smoke uses studio_hall and archives the fixture draft.",
+    "Frontend hosted sign-in configured gate added after production auth env redeploy.",
+    "Backend smoke now covers private surfaces, moderation report, and public Hall participant privacy."
+  ],
+  "remaining_limitations": [
+    "Controlled launch does not make World or V2 ready.",
+    "Firefox and WebKit hosted smoke remain to run when Playwright browsers or devices are available.",
+    "Supabase DB log-console and external monitoring proof remain observability follow-up.",
+    "Enquiry/contact routing must be confirmed for each selected pilot Room before it is promised active."
+  ],
+  "blockers": [],
+  "launch_start_steps": [
+    "Freeze tested production aliases and deployment IDs.",
+    "Select first pilot and record package, pricing, support owner, rollback owner, Room scope, and Hall scope.",
+    "Verify hosted auth, Studio, public Room, RoomKey NFC or QR, and analytics during supervised onboarding.",
+    "Enable enquiry/contact only after selected Room routing is confirmed.",
+    "Keep World hidden/forming and keep V2 previews non-production.",
+    "Rerun hosted backend and Chromium smoke after any env, deployment, DB, fixture, or auth-policy change."
+  ],
+  "secret_values_printed": false
+}

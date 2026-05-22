@@ -71,6 +71,19 @@ test("Garden route stays Observer-gated without hosted auth", async ({ page }) =
   );
 });
 
+test("Studio sign-in is configured for hosted pilot onboarding", async ({
+  page,
+}) => {
+  await probeRoute(page, {
+    path: "/auth/sign-in",
+    bodyText: /Presence Studio|Sign in/i,
+  });
+  await expect(page.locator("body")).not.toContainText(
+    /authentication is not configured/i,
+  );
+  await expect(page.getByRole("button", { name: /Enter Studio/i })).toBeEnabled();
+});
+
 test("RoomKey fixture renders from hosted contracts", async ({ page }) => {
   requiredFixture(
     roomKeyToken,
