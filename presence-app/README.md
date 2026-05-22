@@ -29,6 +29,7 @@ npm install
 # .env.local
 NEXT_PUBLIC_API_BASE=http://localhost:5000
 NEXT_PUBLIC_APP_URL=http://localhost:3001
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 # Alias support also exists for NEXT_PUBLIC_PRESENCE_API_BASE_URL
 # and NEXT_PUBLIC_PRESENCE_PUBLIC_ORIGIN.
 NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
@@ -62,7 +63,8 @@ Auth:
 - `/auth/callback` - Supabase callback exchange
 - `/auth/sign-out` - signs out and returns home
 - `/auth/forgot-password` - reset email flow
-- `/auth/reset-password` - new password flow
+- `/auth/update-password` - password recovery email target and new password flow
+- `/auth/reset-password` - legacy new password route
 
 Owner Studio:
 - `/studio` - auth gate or owned-node list
@@ -99,6 +101,7 @@ Required production env vars:
 
 - `NEXT_PUBLIC_API_BASE` or `NEXT_PUBLIC_PRESENCE_API_BASE_URL`
 - `NEXT_PUBLIC_APP_URL` or `NEXT_PUBLIC_PRESENCE_PUBLIC_ORIGIN`
+- `NEXT_PUBLIC_SITE_URL`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
@@ -121,7 +124,7 @@ Required Supabase URL settings for production:
 
 - Site URL: `https://your-presence.vercel.app`
 - Redirect URL: `https://your-presence.vercel.app/auth/callback`
-- Redirect URL: `https://your-presence.vercel.app/auth/reset-password`
+- Redirect URL: `https://your-presence.vercel.app/auth/update-password`
 - Redirect URL: `https://your-presence.vercel.app/auth/verify-email`
 - Redirect URL: `https://your-presence.vercel.app/presence-chooser`
 

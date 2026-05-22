@@ -95,6 +95,21 @@ def _headers(app, *, scopes=None):
     return {"Authorization": f"Bearer {token}", "X-Control-Plane-Secret": CONTROL_SECRET}
 
 
+def _public_headers(app):
+    with app.app_context():
+        token = create_access_token(
+            identity="dna-admin",
+            additional_claims={
+                "aud": "public",
+                "token_use": "public",
+                "role": "platform_admin",
+                "username": "dna-admin",
+            },
+            expires_delta=timedelta(minutes=30),
+        )
+    return {"Authorization": f"Bearer {token}"}
+
+
 def _node_payload(tenant_id, **extra):
     base = {
         "tenant_id": tenant_id,
@@ -167,6 +182,94 @@ def test_update_replaces_presence_dna():
     updated = patch.get_json()["data"]
     assert updated["metadata"]["presence_dna"]["signature"]["signature_module"] == "quote_oracle"
     assert updated["metadata"]["presence_dna"]["signature"]["signature_intensity"] == "hero_level"
+
+
+def test_custom_presence_style_dna_owner_full_public_safe_and_optional():
+    app = _build_app()
+    tenant_id = _seed_tenant(app)
+    client = app.test_client()
+    headers = _headers(app)
+    custom_presence = {
+        "schema_version": "custom-presence-style-dna-v1",
+        "custom_renderer_key": "ggm-faithful-room-v1",
+        "fidelity_status": "source_dna_extracted",
+        "source_site_reference": {
+            "reference_id": "ggm-source-site",
+            "label": "GGM static portfolio",
+            "public_url": "https://example.test/ggm",
+            "filesystem_path": "C:\\Dev\\ggm",
+        },
+        "public_style_dna": {
+            "palette": {"paper": "#f4f4f4", "ink": "#111111"},
+            "entry": "artwork_first",
+        },
+        "style_dna": {
+            "palette": {"paper": "#f4f4f4", "ink": "#111111"},
+            "source": {"filesystem_path": "C:\\Dev\\ggm"},
+            "motion": {"hero": "dither_morph"},
+        },
+        "source_site_internal": {"filesystem_path": "C:\\Dev\\ggm"},
+        "fidelity": {"status": "owner_review_pending", "visual_parity": "required"},
+    }
+
+    create = client.post(
+        "/api/control/presence/nodes",
+        json=_node_payload(
+            tenant_id,
+            slug="custom-style-dna",
+            metadata={"custom_presence": custom_presence},
+        ),
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert create.status_code == 201, create.get_json()
+    node_id = create.get_json()["data"]["id"]
+    assert create.get_json()["data"]["metadata"]["custom_presence"]["style_dna"]["source"]["filesystem_path"] == "C:\\Dev\\ggm"
+
+    publish = client.post(
+        f"/api/control/presence/nodes/{node_id}/publish",
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert publish.status_code == 200
+
+    public = client.get("/api/presence/public/custom-style-dna")
+    assert public.status_code == 200, public.get_json()
+    public_custom = public.get_json()["data"]["metadata"]["custom_presence"]
+    assert public_custom["custom_renderer_key"] == "ggm-faithful-room-v1"
+    assert public_custom["style_dna"]["entry"] == "artwork_first"
+    assert "public_style_dna" not in public_custom
+    assert "style_dna" not in public_custom["source_site_reference"]
+    assert "filesystem_path" not in public_custom["source_site_reference"]
+    assert "source_site_internal" not in public_custom
+    assert public_custom["style_dna"] != custom_presence["style_dna"]
+
+    owner = client.get(
+        f"/api/presence/owner/nodes/{node_id}",
+        headers=_public_headers(app),
+        base_url="http://public.test",
+    )
+    assert owner.status_code == 200, owner.get_json()
+    owner_custom = owner.get_json()["data"]["metadata"]["custom_presence"]
+    assert owner_custom["style_dna"]["source"]["filesystem_path"] == "C:\\Dev\\ggm"
+    assert owner_custom["fidelity"]["status"] == "owner_review_pending"
+
+    legacy = client.post(
+        "/api/control/presence/nodes",
+        json=_node_payload(tenant_id, slug="custom-style-legacy"),
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert legacy.status_code == 201
+    legacy_id = legacy.get_json()["data"]["id"]
+    assert client.post(
+        f"/api/control/presence/nodes/{legacy_id}/publish",
+        headers=headers,
+        base_url="http://control.test",
+    ).status_code == 200
+    legacy_public = client.get("/api/presence/public/custom-style-legacy")
+    assert legacy_public.status_code == 200
+    assert not (legacy_public.get_json()["data"].get("metadata") or {}).get("custom_presence")
 
 
 def test_invalid_presence_dna_rejected():

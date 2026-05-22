@@ -363,6 +363,19 @@ PRESENCE_DNA_CATEGORIES = {
 PRESENCE_DNA_SOURCES = {"inferred", "demo_overlay", "node_metadata", "backend_persisted"}
 PRESENCE_DNA_MAX_BYTES = 16 * 1024  # serialized size guard (16 KiB)
 PRESENCE_METADATA_MAX_BYTES = 64 * 1024
+_CUSTOM_PRESENCE_PUBLIC_KEYS = {
+    "schema_version",
+    "custom_renderer_key",
+    "renderer_key",
+    "fidelity_status",
+    "updated_at",
+}
+_CUSTOM_PRESENCE_PUBLIC_SOURCE_KEYS = {
+    "reference_id",
+    "label",
+    "public_url",
+    "origin_url",
+}
 
 
 def normalize_presence_dna(value: Any) -> dict[str, Any] | None:
@@ -434,6 +447,8 @@ def normalize_presence_metadata(value: Any) -> dict[str, Any] | None:
             if normalized_dna is not None:
                 cleaned["presence_dna"] = normalized_dna
             continue
+        if key == "custom_presence" and sub is not None and not isinstance(sub, dict):
+            raise PresenceValidationError("metadata.custom_presence must be a JSON object.")
         cleaned[key] = sub
     try:
         size = len(json.dumps(cleaned, ensure_ascii=False))
@@ -444,6 +459,38 @@ def normalize_presence_metadata(value: Any) -> dict[str, Any] | None:
             f"metadata exceeds {PRESENCE_METADATA_MAX_BYTES} bytes."
         )
     return cleaned or None
+
+
+def public_presence_metadata(value: Any) -> dict[str, Any] | None:
+    metadata = dict(value or {}) if isinstance(value, dict) else {}
+    custom = metadata.get("custom_presence")
+    if not isinstance(custom, dict):
+        return metadata or None
+
+    public_custom = {
+        key: custom[key]
+        for key in _CUSTOM_PRESENCE_PUBLIC_KEYS
+        if key in custom and custom.get(key) is not None
+    }
+    public_style = custom.get("public_style_dna")
+    if isinstance(public_style, dict):
+        public_custom["style_dna"] = public_style
+
+    source_reference = custom.get("source_site_reference")
+    if isinstance(source_reference, dict):
+        public_reference = {
+            key: source_reference[key]
+            for key in _CUSTOM_PRESENCE_PUBLIC_SOURCE_KEYS
+            if key in source_reference and source_reference.get(key) is not None
+        }
+        if public_reference:
+            public_custom["source_site_reference"] = public_reference
+
+    if public_custom:
+        metadata["custom_presence"] = public_custom
+    else:
+        metadata.pop("custom_presence", None)
+    return metadata or None
 
 
 def normalize_media_embeds(value: Any) -> list[dict[str, Any]]:
@@ -681,10 +728,11 @@ def serialize_presence_node(
             "canonical_url": public_url_for_node(node),
             "image": node.social_preview_image_url or node.hero_image_url or node.cover_image_url or node.profile_image_url,
         },
-        # Presence DNA persistence. Public response exposes the full
-        # node_metadata so the DNA-driven renderer can read
-        # node.metadata.presence_dna directly.
-        "metadata": node.node_metadata or None,
+        # Presence DNA remains public for the DNA-driven renderer. Custom
+        # ingestion metadata exposes only its explicit public style subset.
+        "metadata": public_presence_metadata(node.node_metadata)
+        if public
+        else node.node_metadata or None,
     }
     if include_admin and not public:
         payload.update(
