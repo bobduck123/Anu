@@ -8,6 +8,8 @@ import { resolveRoomKey } from "@/lib/api/presenceGraph";
 import { PresenceApiError } from "@/lib/api/client";
 import { PRESENCE_GRAPH_COPY, roomKeyTypeLabel } from "@/lib/presence/graph/copy";
 import type { RoomKeyEntryPayload } from "@/lib/api/types";
+import { isGgmFaithfulRoom } from "@/lib/presence/ggm/activate";
+import GgmFaithfulRoom from "@/components/presence/ggm/GgmFaithfulRoom";
 import { PresenceGraphActions } from "./PresenceGraphActions";
 
 export function RoomKeyEntry({ token }: { token: string }) {
@@ -81,6 +83,13 @@ export function RoomKeyEntry({ token }: { token: string }) {
   const hero = room.hero_image_url || room.cover_image_url || room.profile_image_url;
   const sourceLabel = roomKeyTypeLabel(payload.room_key?.key_type ?? null);
   const campaign = payload.room_key?.campaign_label ?? null;
+
+  // GGM RoomKey entry — render the faithful Room with an "Opened via …"
+  // chip at the top instead of the generic dark stone shell. The visitor
+  // should immediately see Christina's work, not a Presence-system page.
+  if (isGgmFaithfulRoom(room)) {
+    return <GgmFaithfulRoom node={room} roomKeySourceLabel={sourceLabel} />;
+  }
 
   return (
     <main className="min-h-dvh bg-stone-950 pb-28 text-stone-50 sm:pb-0">

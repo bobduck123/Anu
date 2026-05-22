@@ -145,6 +145,25 @@ def _public_token(app, username: str, role: str) -> str:
         )
 
 
+def _supabase_public_token(app, *, subject: str, email: str) -> str:
+    from flask_jwt_extended import create_access_token
+
+    with app.app_context():
+        return create_access_token(
+            identity=subject,
+            additional_claims={
+                "aud": "public",
+                "token_use": "public",
+                "requires_mfa": False,
+                "role": "authenticated",
+                "email": email,
+                "user_metadata": {"display_name": "GGM pilot admin smoke"},
+                "app_metadata": {"provider": "email"},
+            },
+            expires_delta=timedelta(minutes=10),
+        )
+
+
 def _write_result(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -186,7 +205,13 @@ def main(argv: list[str] | None = None) -> int:
             "room_slug": room.slug,
             "normal_negative_user_id": getattr(normal_user, "id", None),
         }
-        admin_token = _public_token(app, user.username, user.role)
+        if not user.global_subject_id:
+            raise RuntimeError("Expected GGM pilot admin app account to be bound to Supabase subject.")
+        admin_token = _supabase_public_token(
+            app,
+            subject=user.global_subject_id,
+            email=user.email,
+        )
         normal_token = _public_token(app, normal_user.username, normal_user.role) if normal_user else None
 
     steps: list[dict[str, Any]] = []
@@ -323,7 +348,7 @@ def main(argv: list[str] | None = None) -> int:
         },
         "steps": steps,
         "entitlement_api": "no hosted account/plan API found; verified by DB/service script",
-        "login_posture": "short-lived signed hosted JWT route smoke; interactive account sign-in not performed",
+        "login_posture": "short-lived subject-shaped hosted JWT route smoke; interactive account sign-in not performed",
         "tokens_printed": False,
         "secret_values_printed": False,
     }

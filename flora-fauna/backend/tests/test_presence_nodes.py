@@ -2102,6 +2102,50 @@ def test_owner_nodes_existing_user_without_nodes_returns_empty_list():
     assert response.get_json()["data"] == []
 
 
+def test_privileged_owner_requires_bound_supabase_subject_before_email_hydration():
+    app = _build_app()
+    tenant_id, _ = _seed_fixture(app)
+    client = app.test_client()
+    email = "subject-repair-admin@example.com"
+    current_subject = "subject-repair-current-supabase"
+    stale_subject = "subject-repair-stale-supabase"
+    user_id = _create_owner_user(
+        app,
+        username="subject-repair-admin",
+        pseudonym="Subject Repair Admin",
+        email=email,
+        node_id=tenant_id,
+        role="platform_admin",
+    )
+
+    from manara_backend_app.extensions import db as _db
+    from manara_backend_app.models import User
+
+    with app.app_context():
+        user = _db.session.get(User, user_id)
+        user.global_subject_id = stale_subject
+        _db.session.commit()
+
+    mismatched = client.get(
+        "/api/presence/owner/nodes",
+        headers=_supabase_owner_headers(app, sub=current_subject, email=email),
+        base_url="http://public.test",
+    )
+    assert mismatched.status_code == 401, mismatched.get_json()
+
+    with app.app_context():
+        user = _db.session.get(User, user_id)
+        user.global_subject_id = current_subject
+        _db.session.commit()
+
+    repaired = client.get(
+        "/api/presence/owner/nodes",
+        headers=_supabase_owner_headers(app, sub=current_subject, email=email),
+        base_url="http://public.test",
+    )
+    assert repaired.status_code == 200, repaired.get_json()
+
+
 def test_owner_identity_upsert_is_idempotent():
     app = _build_app()
     _seed_fixture(app)

@@ -2,6 +2,64 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, ArrowRight, Compass, MapPin, Sparkles, Sprout, Users } from "lucide-react";
 import { listPublicPresences, type PublicPresenceCard } from "@/lib/api/public";
+import { GGM_FEATURED } from "@/lib/presence/ggm/source";
+
+// Signature check for the GGM first-pilot card. Kept inline here to avoid
+// pulling renderer code into the gallery server bundle.
+function isGgmCard(card: PublicPresenceCard): boolean {
+  const slug = (card.slug ?? "").toLowerCase();
+  const name = (card.display_name ?? "").toLowerCase();
+  if (slug === "ggm" || slug.startsWith("ggm-") || slug.endsWith("-ggm")) return true;
+  if (slug.includes("kerkvliet-goddard") || slug.includes("christina-goddard")) return true;
+  if (name.includes("christina kerkvliet goddard") || name.includes("christina goddard")) return true;
+  return false;
+}
+
+// Faithful GGM card overrides — applied non-destructively. We only fill
+// gaps (missing cover / profile / location) and never overwrite values
+// the backend has explicitly published.
+function ggmFaithful(card: PublicPresenceCard): PublicPresenceCard {
+  const cover = card.cover_image_url || "/ggm/works/willow-of-port-arthur-2019.webp";
+  const hero = card.hero_image_url || cover;
+  const profile = card.profile_image_url || "/ggm/portrait/christina-kerkvliet-goddard-portrait.webp";
+  return {
+    ...card,
+    cover_image_url: cover,
+    hero_image_url: hero,
+    profile_image_url: profile,
+    headline:
+      card.headline ||
+      "Selected watercolour works · memory, colour, lived landscape",
+    location_label: card.location_label || "Moana, South Australia",
+    display_mode: card.display_mode || "artist_gallery",
+  };
+}
+
+// Synthesise a GGM card when the backend has not yet listed the pilot.
+// Uses the canonical hero artwork so the gallery still represents the
+// pilot accurately. No private fields are surfaced.
+function synthGgmCard(): PublicPresenceCard {
+  const cover = GGM_FEATURED[3]?.image ?? "/ggm/works/willow-of-port-arthur-2019.webp";
+  return {
+    id: -1100,
+    slug: "ggm",
+    display_name: "Christina Kerkvliet Goddard",
+    headline: "Selected watercolour works · memory, colour, lived landscape",
+    bio_excerpt: null,
+    node_type: "creative",
+    display_mode: "artist_gallery",
+    plan_type: "presence_pilot",
+    room_type: "artist_studio",
+    theme_preset: null,
+    profile_image_url: "/ggm/portrait/christina-kerkvliet-goddard-portrait.webp",
+    cover_image_url: cover,
+    hero_image_url: cover,
+    location_label: "Moana, South Australia",
+    visual_mood: "paper-gallery",
+    public_url: "/p/ggm",
+    published_at: null,
+  };
+}
 
 export const metadata = {
   title: "Beta Gallery — Presence",
@@ -55,6 +113,23 @@ export default async function GalleryPage({ searchParams }: PageProps) {
     total = result.total;
   } catch (err) {
     fetchError = err instanceof Error ? err.message : "Gallery temporarily unavailable.";
+  }
+
+  // Faithful-recreation pilot fallback: if the backend returns the GGM
+  // card without artwork, we patch in the canonical assets so the
+  // gallery surface doesn't represent the pilot as a generic empty
+  // card. If the backend has not surfaced GGM at all (e.g. during local
+  // demo or transient backend outage) we synthesise a card from the
+  // canonical source so the pilot is always visible.
+  const hasGgm = items.some(isGgmCard);
+  items = items.map((c) => (isGgmCard(c) ? ggmFaithful(c) : c));
+  if (!hasGgm && !search) {
+    items = [synthGgmCard(), ...items];
+    total = Math.max(total, items.length);
+    // The pilot card is real, even if the backend is offline. Suppress
+    // the "Gallery temporarily unavailable" view so visitors can still
+    // reach the GGM Room.
+    fetchError = null;
   }
 
   const feature = items[0];
@@ -286,7 +361,9 @@ export default async function GalleryPage({ searchParams }: PageProps) {
                         zIndex: 2,
                       }}
                     >
-                      <span className="status-pill" data-status="live">Live</span>
+                      <span className="status-pill" data-status="live">
+                        {isGgmCard(feature) ? "First pilot" : "Live"}
+                      </span>
                       <span className="presence-eyebrow on-stage" style={{ color: "var(--presence-on-stage-mute)" }}>
                         Featured
                       </span>

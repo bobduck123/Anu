@@ -351,6 +351,96 @@ const DEMOS: Record<string, PresenceNode> = {
     ],
     collections: [],
   } as unknown as PresenceNode,
+
+  // -------------------------------------------------------------------------
+  // GGM first-pilot — Christina Kerkvliet Goddard
+  //
+  // This demo entry only fires when the backend has not yet seeded the GGM
+  // pilot Room. It carries the `ggm-faithful-room-v1` renderer key so the
+  // frontend PresenceDnaRenderer dispatches to the GGM faithful surface
+  // (see lib/presence/ggm/activate.ts).
+  //
+  // Note: the asset URLs all live under /public/ggm so this entry never
+  // depends on a network-hosted asset host.
+  // -------------------------------------------------------------------------
+  "ggm": {
+    id: -1100,
+    slug: "ggm",
+    display_name: "Christina Kerkvliet Goddard",
+    headline: "Christina Kerkvliet Goddard · selected watercolour works",
+    bio: "Born in Victoria and raised in South Australia, Christina grew up around the active art scene of the 1960s and 70s. Her practice moves between drawing, craft, painting, and installation while staying rooted in close observation of daily life.",
+    short_bio: "Australian artist working across memory, colour, and lived landscape.",
+    long_story:
+      "Her work explores convergences, chance encounters, and life-cycles — ways in which memory appears briefly through colour, place, and material. The Memory Colours body of work brings these concerns into visual form through layered line, atmosphere, and emotional resonance.",
+    node_type: "creative",
+    display_mode: "artist_gallery",
+    status: "published",
+    visibility: "public",
+    room_type: "artist_studio",
+    accent_color: "#111111",
+    hero_title: "Colour as Memory",
+    hero_subtitle: "Selected watercolour works",
+    hero_image_url: "/ggm/works/willow-of-port-arthur-2019.webp",
+    cover_image_url: "/ggm/works/willow-of-port-arthur-2019.webp",
+    profile_image_url: "/ggm/portrait/christina-kerkvliet-goddard-portrait.webp",
+    location_label: "Moana, South Australia",
+    practice_statement:
+      "Memory Colours revisits and haunts its sites of episode as a way to present how colour can generate memory.",
+    public_email: "christina.8@bigpond.com",
+    primary_cta_label: "Begin a conversation",
+    primary_cta_url: null,
+    works: [
+      work(1101, "Bridle Road", "2005", "Watercolour on paper", "ggm-bridle"),
+      work(1102, "Thomas Road", "2007", "Watercolour on paper", "ggm-thomas"),
+      work(1103, "Goodnight Kiss", "2007", "Watercolour on paper", "ggm-goodnight"),
+      work(1104, "Gothic Tapestry", "2008", "Watercolour on paper", "ggm-gothic"),
+      work(1105, "Burgundy Peaches", "2008", "Watercolour on paper", "ggm-burgundy"),
+      work(1106, "Last Dash", "2009", "Watercolour on paper", "ggm-last-dash"),
+      work(1107, "Empty Nest", "2014", "Watercolour on paper", "ggm-empty-nest"),
+      work(1108, "Willow of Port Arthur", "2019", "Watercolour on paper", "ggm-willow"),
+    ].map((w, i) => {
+      const slugs = [
+        "bridle-road-2005",
+        "thomas-road-2007",
+        "goodnight-kiss-2007",
+        "gothic-tapestry-2008",
+        "burgundy-peaches-2008",
+        "last-dash-2009",
+        "empty-nest-2014",
+        "willow-of-port-arthur-2019",
+      ];
+      return {
+        ...w,
+        image_url: `/ggm/works/${slugs[i]}.webp`,
+        thumbnail_url: `/ggm/thumbs/${slugs[i]}.webp`,
+      };
+    }),
+    links: [
+      {
+        id: 1110,
+        label: "Source portfolio (Vercel mock-up)",
+        url: "https://christina-goddard.vercel.app/",
+        is_visible: true,
+      },
+      {
+        id: 1111,
+        label: "Art Scene Today profile",
+        url: "http://artscenetoday.com/juried-exhibitions/coloring_outside_the_lines/christina_kerkvliet_goddard/",
+        is_visible: true,
+      },
+    ],
+    services: [],
+    collections: [],
+    proof_items: [],
+    credentials: [],
+    metadata: {
+      custom_presence: {
+        style_dna: {
+          renderer_key: "ggm-faithful-room-v1",
+        },
+      },
+    },
+  } as unknown as PresenceNode,
 };
 
 export function demoProfileForSlug(slug: string | null | undefined): PresenceNode | null {

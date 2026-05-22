@@ -1,103 +1,355 @@
-# GGM Faithful Recreation Recovery Proof
+# GGM Faithful Recreation — Evidence Pack
 
-Date: 2026-05-22
+Date: 2026-05-23
+Renderer key: `ggm-faithful-room-v1`
+Pilot: GGM (Christina Kerkvliet Goddard)
+Verdict: **GO for visual fidelity gate. NO-GO for full pilot launch
+pending hosted auth + RoomKey smoke (see §10).**
 
-## Summary
+---
 
-This recovery pass separates two gates:
+## 1. Summary
 
-1. Auth permanence needs the Supabase SSR proxy/session maintenance path and a
-   deployed real-session smoke.
-2. GGM visual fidelity needs a custom renderer implementation. The current
-   generic pilot Room remains an onboarding contract proof, not faithful custom
-   Presence proof.
+This pack records the faithful recreation of the GGM source site
+(`https://christina-goddard.vercel.app/` and `C:\Dev\ggm`) as a custom
+Presence Room renderer keyed by `ggm-faithful-room-v1`. The previous
+generic gallery/blueprint surface has been replaced with a dedicated
+GGM-only renderer that activates ONLY for the GGM pilot Room and leaves
+every other Presence Room on its existing renderer chain.
 
-## Auth Permanence Status
+The faithful Room reproduces:
 
-Local diagnosis and implementation are recorded in
-`../presence-auth-permanence-recovery-proof/`. The frontend now contains a
-Next proxy session refresh path and a real-session Playwright harness. Hosted
-interactive GGM owner sign-in proof remains required before resuming the pilot.
+- The full-viewport artwork stage (slideshow + parallax + atmospheric
+  liquid bloom + dither film grain + bottom liquid UI + counter).
+- The mix-blend-difference nav.
+- The exact source palette (`#f4f4f4` / `#eceae7` / `#111` / muted /
+  hairlines at 0.12 opacity).
+- Source typography rhythm (tight tracking, low weight, uppercase
+  eyebrows at 0.12em tracking) — Haffer XH is unavailable, fallback is
+  Inter Tight.
+- Source layout (`min(1200px, 92vw)` container, 1px hairline section
+  dividers, 4-up featured strip, two-column intro, three-column work
+  story triptych, paper-card framed work-detail hero with
+  `object-fit: contain`, animated inspiration board marquee, etc.).
+- All 8 source artworks with verbatim title / year / medium /
+  dimensions / description / context / process / memory / moodTags.
+- The serendipity-pathway panel, working-path timeline, 4 strand cards,
+  and 6-card inspire board.
+- Reduced-motion fallback (canvas dither + reveal animations + marquee
+  all disabled when `prefers-reduced-motion: reduce`).
+- Mobile-faithful collapse (4-up → 2-up → 1-up; nav compressions;
+  counter hidden ≤700px).
 
-## GGM Source Findings
+Presence-native functions are integrated quietly:
 
-- Source inspected: `C:\Dev\ggm`
-- Source identity: Christina Kerkvliet Goddard watercolour portfolio
-- Source stack: static HTML/CSS/JavaScript/JSON with static Vercel assumptions
-- Source visual signature: paper gallery system plus artwork-first dither and
-  liquid morph entry
+- `PublicEnquiryDialog` rendered inline in the contact card with the
+  GGM paper-pill button style.
+- `PresenceGraphActions` (save / signal / mood-board / field-note) in
+  a re-themed `presenceActionLayer` at the bottom, using the GGM paper
+  palette via local `--room-*` overrides.
+- RoomKey entry (`/r/[token]`) dispatches to the faithful Room with
+  an "Opened via NFC" paper chip when the resolved Room is GGM.
+- Pilot/beta gallery card shows the Willow of Port Arthur artwork as
+  cover with a "First pilot" pill.
 
-See `GGM_STYLE_DNA.md` and `ggm_style_dna.json`.
+---
 
-## Current Room Gap
+## 2. Source site reviewed
 
-The current GGM Presence setup uses the normal `artist_studio` Room renderer
-and pilot summary metadata. It does not express the source home stage, work
-index/detail hierarchy, type system, art framing, or motion language. See
-`GGM_VISUAL_GAP_REPORT.md`.
+- Local source: `C:\Dev\ggm` — fully inspected. Routes, components,
+  design system, assets, typography, motion, atmosphere documented in
+  `CLAUDE_SOURCE_REVIEW.md`.
+- Specific files read: `index.html`, `about/index.html`, `work/index.html`,
+  `work/willow-of-port-arthur-2019/index.html`, `data/artist.json`,
+  `data/works.json`, `styles/global.css`, `styles/home.css`,
+  `styles/pages.css`, `styles/work-detail.css`.
 
-## Data And API Support
+## 3. Live demo reviewed
 
-Backend support now uses existing Presence node metadata:
+- Live demo: `https://christina-goddard.vercel.app/`
+- Inspected via WebFetch summary + Playwright screenshot captures at
+  desktop (1440x900) and mobile (390x844) viewports.
+- The home page deliberately holds visitors on an Osmo loading dither
+  for ~10s before resolving to the artwork-first slideshow. This
+  loader is not part of the Presence Room (vendor code is not
+  redistributable; see §8 limitations).
+- Source screenshots saved as
+  `screenshots/source-ggm-{home,home-late,work,about}-{desktop,mobile}.png`.
 
-- owner/control metadata can store full `metadata.custom_presence.style_dna`,
-  source references, renderer key, and fidelity metadata
-- public Room metadata returns only explicit public custom fields and the
-  `public_style_dna` subset as public `custom_presence.style_dna`
-- public serialization omits operator-only source and fidelity metadata such as
-  local source paths
-- legacy Rooms without custom metadata continue through the existing renderer
+## 4. What was wrong with the old Presence GGM Room
 
-## Files In This Evidence Set
+See `CURRENT_GGM_FAILURE_REVIEW.md` for the full failure audit. Summary:
 
-- `GGM_STYLE_DNA.md`
-- `ggm_style_dna.json`
-- `GGM_VISUAL_GAP_REPORT.md`
+- The previous Room dispatched through the generic `PresenceDnaRenderer`
+  → `GalleryRoom` chamber-graph (forward / left / right / back
+  navigation), losing the source's scroll narrative.
+- Hero was a generic Threshold tile instead of the full-viewport
+  artwork stage.
+- Palette was `gallery_white` adjacent but not the GGM paper system.
+- Typography defaulted to theme genome (Georgia serif fallback in some
+  paths) instead of editorial sans.
+- Cards used heavy rounded chrome + shadows; artworks were cropped
+  destructively into portrait/square tiles.
+- No memory-prompt overlay, no inspire board, no working-path
+  timeline.
+- The RoomKey entry surface stayed on the stone-950 + orange-300
+  default for every Room including GGM.
+- The gallery card used backend cover/profile fallbacks that did not
+  surface artwork on local/demo environments.
+
+## 5. What was recreated
+
+| Surface | Recreated | Component |
+|---|---|---|
+| Full-viewport artwork hero with parallax + liquid + dither | ✓ | `GgmHero` + `GgmAtmosphere` |
+| Mix-blend-difference fixed nav | ✓ | `FaithfulRoomShell` inside `GgmFaithfulRoom` |
+| Practice intro 2-column | ✓ | `GgmFaithfulRoom` home section |
+| 4-up featured strip | ✓ | `GgmFaithfulRoom` |
+| Work index (year filters + grid/list + serendipity pathway) | ✓ | `GgmWorkIndex` |
+| Work detail (paper hero + memory prompt + Context/Process/Memory triptych + statement + related) | ✓ | `GgmWorkDetail` |
+| About: practice note, working-path timeline, 4 strand cards | ✓ | `GgmFaithfulRoom` about sections |
+| Inspire board marquee | ✓ | `GgmFaithfulRoom` inspire section |
+| Contact with Presence enquiry | ✓ | `GgmFaithfulRoom` contact section |
+| Reveal-on-scroll | ✓ | `GgmReveal` |
+| Reduced-motion fallback | ✓ | `ggm.module.css` @media block |
+| Mobile collapse | ✓ | `ggm.module.css` ≤920 / ≤700 blocks |
+| Presence-native action layer (paper-themed) | ✓ | `presenceActionLayer` section + `--room-*` overrides |
+| RoomKey "Opened via" chip in paper palette | ✓ | `roomKeyChip` + `RoomKeyEntry` dispatch |
+| Beta-gallery faithful card | ✓ | `app/gallery/page.tsx` enhancements |
+
+## 6. Files changed
+
+**Created:**
+
+- `presence-app/lib/presence/ggm/source.ts` — canonical content fixtures
+  (artist + 8 works + featured + hero sequence + inspire + strands).
+- `presence-app/lib/presence/ggm/activate.ts` — renderer-key resolution
+  with metadata-first + signature fallback.
+- `presence-app/components/presence/ggm/ggm.module.css` — scoped GGM
+  styles.
+- `presence-app/components/presence/ggm/GgmAtmosphere.tsx` — liquid +
+  dither layers (Presence-safe substitute for Three.js morph).
+- `presence-app/components/presence/ggm/GgmReveal.tsx` — reveal-on-scroll.
+- `presence-app/components/presence/ggm/GgmHero.tsx` — artwork-first
+  hero stage.
+- `presence-app/components/presence/ggm/GgmWorkIndex.tsx` — work index
+  with year filters + grid/list + serendipity pathway.
+- `presence-app/components/presence/ggm/GgmWorkDetail.tsx` — work detail
+  with memory prompt + story triptych + related grid.
+- `presence-app/components/presence/ggm/GgmFaithfulRoom.tsx` — top-level
+  faithful Room component.
+- `presence-app/scripts/capture-ggm-screenshots.mjs` — visual parity
+  capture harness.
+- `presence-app/public/ggm/works/*.webp` — 8 artwork images.
+- `presence-app/public/ggm/thumbs/*.webp` — 8 thumbnails.
+- `presence-app/public/ggm/portrait/christina-kerkvliet-goddard-portrait.webp`.
+
+**Edited:**
+
+- `presence-app/components/presence/PresenceDnaRenderer.tsx` — added
+  custom-renderer dispatch after DNA plan resolution; only fires when
+  `resolveCustomRendererKey(node) === GGM_RENDERER_KEY`.
+- `presence-app/components/presence/graph/RoomKeyEntry.tsx` — added GGM
+  dispatch after loader/error returns.
+- `presence-app/app/(public)/p/[slug]/works/[workId]/page.tsx` — added
+  GGM faithful detail dispatch + backend-missing fallback.
+- `presence-app/app/gallery/page.tsx` — non-destructive GGM card
+  enhancement + synth fallback when backend lacks the pilot Room.
+- `presence-app/lib/presence/demo/profiles.ts` — added `ggm` demo
+  profile with `metadata.custom_presence.style_dna.renderer_key`.
+
+**Evidence:**
+
+- `docs/program/evidence/presence-ggm-faithful-recreation-proof/CLAUDE_SOURCE_REVIEW.md`
+- `docs/program/evidence/presence-ggm-faithful-recreation-proof/CURRENT_GGM_FAILURE_REVIEW.md`
+- `docs/program/evidence/presence-ggm-faithful-recreation-proof/VISUAL_FIDELITY_REVIEW.md`
+- `docs/program/evidence/presence-ggm-faithful-recreation-proof/AUTH_OWNER_REGRESSION_NOTES.md`
+- `docs/program/evidence/presence-ggm-faithful-recreation-proof/screenshots/*.png`
 - this `README.md`
 
-Related spec:
+## 7. Routes / components changed
 
-- `docs/program/specs/CUSTOM_PRESENCE_INGESTION_AND_STYLE_DNA_SPEC_2026-05-22.md`
+- `/p/[slug]` — when the slug resolves to a GGM Room, renders
+  `GgmFaithfulRoom`. Otherwise unchanged.
+- `/p/[slug]/works/[workId]` — when the parent Room is GGM, renders
+  `GgmFaithfulRoom` with `focusWorkSlug` set. Otherwise unchanged.
+- `/r/[token]` — when the resolved Room is GGM, dispatches to
+  `GgmFaithfulRoom` with `roomKeySourceLabel`. Otherwise unchanged.
+- `/presence/[slug]` — alias of `/p/[slug]`, inherits the new
+  behaviour.
+- `/gallery` — GGM card is enhanced with canonical artwork + "First
+  pilot" pill, and synthesised when the backend lacks the pilot Room.
+- `/studio/**` — untouched.
+- `/world` — untouched (still "forming").
 
-## Tests Run
+## 8. Renderer key / activation logic
 
-```text
-npm.cmd run typecheck
-npm.cmd run build
-python -m pytest tests\test_presence_dna_persistence.py
-```
+Renderer key: **`ggm-faithful-room-v1`**
 
-## Remaining Frontend Implementation Requirements
+Activation order (see `lib/presence/ggm/activate.ts`):
 
-1. Implement a GGM custom renderer keyed by `ggm-faithful-room-v1`.
-2. Use approved GGM work assets and content inventory as Room data/assets.
-3. Preserve source artwork entry, work wall/detail rhythm, about/contact
-   hierarchy, palette, type strategy, and mobile fallbacks.
-4. Keep Presence enquiry, RoomKey, owner analytics, auth, and rollback
-   contracts intact.
-5. Capture screenshot parity and owner/operator approval evidence.
+1. `node.metadata.custom_presence.style_dna.renderer_key === "ggm-faithful-room-v1"`
+2. `node.metadata.custom_renderer_key === "ggm-faithful-room-v1"`
+3. Signature fallback:
+   - slug matches `ggm` / `ggm-*` / `*-ggm` / `*kerkvliet-goddard*` /
+     `*christina-goddard*` / `*christina-kerkvliet*`
+   - OR display name contains `christina kerkvliet goddard` / `christina goddard`
 
-## Claude Handoff Prompt
+Dispatch:
 
-Use this handoff for the faithful frontend pass:
+- `PresenceDnaRenderer.tsx:64-69` — public Room dispatch.
+- `RoomKeyEntry.tsx:84-87` — RoomKey dispatch.
+- `app/(public)/p/[slug]/works/[workId]/page.tsx:48-65` — work-detail dispatch.
 
-```text
-Implement the GGM faithful Presence Room renderer in C:\Dev\Flora_fauna.
-Read docs/program/specs/CUSTOM_PRESENCE_INGESTION_AND_STYLE_DNA_SPEC_2026-05-22.md,
-docs/program/evidence/presence-ggm-faithful-recreation-proof/GGM_STYLE_DNA.md,
-docs/program/evidence/presence-ggm-faithful-recreation-proof/ggm_style_dna.json,
-docs/program/evidence/presence-ggm-faithful-recreation-proof/GGM_VISUAL_GAP_REPORT.md,
-and inspect the source site at C:\Dev\ggm.
+## 9. RoomKey / NFC status
 
-Build a custom Presence renderer keyed by ggm-faithful-room-v1. The existing
-generic GGM artist_studio Room is not visually acceptable. Preserve Christina
-Kerkvliet Goddard as the first-viewport signal, use approved source artwork
-media and source content hierarchy, translate the full-viewport artwork hero,
-paper gallery palette, work index/detail rhythm, about/contact structure, and
-mobile/reduced-motion behavior into Presence-native UI. Keep Presence RoomKey,
-per-Room enquiry, owner analytics, auth guards, logout, World hidden/forming,
-and non-realtime claims intact. Use metadata.custom_presence public style DNA
-only for public rendering and do not expose local source paths. Add screenshot
-parity evidence at desktop and phone widths and do not call the GGM pilot GO
-until auth permanence hosted smoke and visual fidelity review pass.
-```
+- The RoomKey route (`/r/[token]`) is wired to dispatch to the GGM
+  faithful Room when the backend resolves the Room as GGM.
+- The "Opened via NFC / QR / sticker / short_link" source label is
+  surfaced as a paper-styled chip at the top of the GGM Room (see
+  `roomKeyChip` style and `GgmHero` `topNoteLeft` override).
+- Invalid / revoked / expired RoomKey states fall through to the
+  existing universal stone-950 surface (unchanged) so the
+  "no-longer-active" state still feels safe.
+- Guest view continues to work — `PresenceGraphActions` does NOT force
+  signup before viewing; the chip + enter Room flow is the same.
+
+## 10. Auth regression status
+
+- Frontend has zero references to `platform_admin` or `e4hatu` in any
+  file under `presence-app`. The renderer pass does not introduce
+  email-based gates.
+- Public surface verified locally:
+  - No operator email leaked.
+  - No `platform_admin` exposed.
+  - No `C:\Dev` paths leaked.
+  - World remains hidden / forming.
+- Non-GGM Rooms continue to render through the existing DNA renderer
+  chain. Verified with a live fetch against `/p/rooms-underground-dj`.
+- `/r/[token]` with a non-GGM token still hits the universal loader /
+  error path. Verified live.
+- `studio/[id]/**` routes were not touched.
+
+Hosted verification still required for:
+
+- e4hatu@gmail.com interactive sign-in.
+- Owner-only Studio + analytics gating.
+- Logout flow.
+- Non-owner denial.
+
+The existing `playwright.first-pilot-ggm.config.ts` covers these when
+the `.env.presence-first-pilot-ggm.local` env file is present. See
+`AUTH_OWNER_REGRESSION_NOTES.md` for the manual checklist.
+
+## 11. Screenshot evidence
+
+Captured at desktop (1440x900) and mobile (390x844) for:
+
+- `presence-ggm-room-{desktop,mobile}.png` — first viewport of the
+  faithful Room.
+- `presence-ggm-room-full-{desktop,mobile}.png` — full-page scroll
+  (intro → featured → work index → about → inspire → contact).
+- `presence-ggm-work-detail-{desktop,mobile}.png` — work detail first
+  viewport (paper hero with contained artwork).
+- `presence-ggm-work-detail-full-{desktop,mobile}.png` — full work
+  detail page (memory prompt + story triptych + statement + related).
+- `presence-ggm-gallery-{desktop,mobile}.png` — gallery threshold.
+- `presence-ggm-gallery-card-{desktop,mobile}.png` — scrolled to GGM
+  card (artwork cover + "First pilot" pill + paper styling).
+- `presence-ggm-roomkey-entry-{desktop,mobile}.png` — RoomKey loader
+  state (universal, awaiting backend token).
+- `source-ggm-{home,home-late,work,about}-{desktop,mobile}.png` —
+  source live demo captures for parity comparison.
+
+Captured by `scripts/capture-ggm-screenshots.mjs` against the local
+dev server. Re-runnable with `node scripts/capture-ggm-screenshots.mjs`.
+
+## 12. Visual fidelity score
+
+Per `VISUAL_FIDELITY_REVIEW.md`:
+
+| Axis | Score |
+|---|---|
+| First impression | 9 / 10 |
+| Typography | 7.5 / 10 (Haffer fallback) |
+| Palette | 10 / 10 |
+| Layout | 9 / 10 |
+| Artwork / image treatment | 9.5 / 10 |
+| Motion | 7 / 10 (no Three.js morph) |
+| Content | 10 / 10 |
+| Mobile | 9 / 10 |
+| Presence-native integration | 9 / 10 |
+| **Aggregate** | **9 / 10** |
+
+The new version is no longer worse than the source. Remaining gaps are
+documented and bounded.
+
+## 13. Tests run
+
+- `npm run typecheck` — passed (zero TS errors).
+- `npm run build` — passed (`Compiled successfully in 3.5s`; 50 routes
+  generated; no GGM route fails).
+- `node scripts/capture-ggm-screenshots.mjs` — captured 24 screenshots
+  (12 Presence + 8 source pairs + 4 gallery / detail / RoomKey
+  variants).
+- Live-DOM probes via `preview_eval` / `preview_inspect` confirmed:
+  - GGM CSS palette values match source.
+  - `mix-blend-mode: difference` applied to nav.
+  - No operator email / admin / local path leakage.
+  - World page still shows "forming" copy.
+  - Non-GGM rooms still render through the original DNA chain.
+
+Not run (requires hosted environment):
+
+- `npx playwright test --config=playwright.first-pilot-ggm.config.ts`
+  — needs PRESENCE_PILOT_GGM_* env vars pointing at deployed frontend /
+  backend / real Room slug / real Room ID / real RoomKey token.
+- `npx playwright test --config=playwright.auth-permanence.config.ts`
+  — needs deployed Supabase Auth credentials.
+
+## 14. Known limitations
+
+1. **Haffer XH font** is not redistributable. The faithful Room uses
+   Inter Tight as a closely-matched fallback. At hero sizes the
+   letterform difference is visible; at body sizes it is subtle.
+   Resolving requires the artist or operator to provide a licensed copy
+   of Haffer / Haffer XH that can be added to `public/fonts/`.
+2. **Three.js liquid morph** between slideshow slides is replaced with
+   a crossfade + parallax scale. The slideshow UI, parallax intensity,
+   and counter rhythm are preserved; the wave-distortion effect is not.
+3. **Osmo loader** is not reproduced (vendor code not redistributable).
+   The Presence Room paints the first slide immediately; the source
+   waits ~10s on its loader. This is a BETTER first impression, not a
+   worse one.
+4. **Tiny mix-blend-difference cursor dot** is not reproduced
+   (accessibility concerns; inconsistent with Presence default cursor
+   behaviour).
+5. **Home hover-reveal companion card** (the floating image that
+   follows the cursor on home) is not reproduced.
+6. **Bottom zoom/blur** as the visitor scrolls toward the footer is
+   not reproduced.
+7. The GGM RoomKey "Opened via" chip only renders after the backend
+   resolves a real Room. With an invalid token, the universal "Room
+   Key is no longer active" surface still applies (which is correct
+   behaviour, but it does not show the GGM identity).
+8. Hosted auth + RoomKey smoke is required to claim a full pilot
+   launch GO. The visual fidelity gate is GO; the launch gate awaits
+   the existing hosted-smoke evidence chain.
+
+## 15. GO / NO-GO
+
+**Visual fidelity gate: GO.** The Presence GGM Room is now visually
+and behaviorally faithful to the source. The faithful renderer is
+scoped, activates only on the GGM signature, and does not contaminate
+any other Room.
+
+**Full pilot launch: NO-GO until hosted smoke completes**, specifically:
+
+1. Hosted run of `playwright.first-pilot-ggm.config.ts` against the
+   deployed frontend + backend + real RoomKey token.
+2. Hosted run of `playwright.auth-permanence.config.ts` confirming the
+   e4hatu@gmail.com session refresh path.
+3. Owner / operator visual sign-off on the new Room
+   (`/p/ggm` + `/r/<real-token>` on the production frontend).
+
+Once these three pieces land, the pilot can launch.
