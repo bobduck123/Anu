@@ -48,11 +48,19 @@ import { canonicalPublicUrl } from "@/lib/presence/url";
 import { assetSafetyMessage, validateAssetUrl } from "@/lib/editor/assetValidator";
 import { buildReadinessReport, type ReadinessReport } from "@/lib/editor/readiness";
 import { applyRoomDnaPreset, ROOM_DNA_PRESETS } from "@/lib/editor/presets";
+import {
+  applyCanonicalBundle,
+  getCanonicalAssetBundle,
+  isAssetConfigEmpty,
+  type CanonicalAssetBundle,
+} from "@/lib/editor/canonicalAssets";
 import BeforeAfterComparison from "./BeforeAfterComparison";
 import PublishConfirmDialog from "./PublishConfirmDialog";
 import ReadinessPanel from "./ReadinessPanel";
+import PresenceCanvasMode from "./PresenceCanvasMode";
 
 type TabId =
+  | "canvas"
   | "overview"
   | "scenes"
   | "work-wall"
@@ -90,6 +98,7 @@ interface EditableWork {
 }
 
 const TABS: Array<{ id: TabId; label: string; icon: typeof Sparkles }> = [
+  { id: "canvas", label: "Canvas", icon: Palette },
   { id: "overview", label: "Overview", icon: Sparkles },
   { id: "scenes", label: "Scenes", icon: SlidersHorizontal },
   { id: "work-wall", label: "Work Wall", icon: ImageIcon },
@@ -138,7 +147,7 @@ export default function PresenceStudioEditorApp({
   const [overview, setOverview] = useState<PresenceEditorOverview | null>(null);
   const [config, setConfig] = useState<PresenceEditableConfig | null>(null);
   const [baseSnapshot, setBaseSnapshot] = useState("");
-  const [activeTab, setActiveTab] = useState<TabId>("overview");
+  const [activeTab, setActiveTab] = useState<TabId>("canvas");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -193,6 +202,28 @@ export default function PresenceStudioEditorApp({
     setConfig((current) => next(cloneConfig(current ?? createFallbackConfig(node))));
     setNotice(null);
     setActionError(null);
+  }
+
+  // Canonical asset sync — the live room renders artworks via renderer
+  // fallbacks (e.g. GGM_WORKS for the GGM renderer) but the editable
+  // config may have an empty asset_config. Offer a one-click import so
+  // the editor reflects what the visitor sees.
+  const canonicalBundle = useMemo<CanonicalAssetBundle | null>(
+    () => getCanonicalAssetBundle(node),
+    [node],
+  );
+  const assetConfigEmpty = useMemo(
+    () => (config ? isAssetConfigEmpty(config) : false),
+    [config],
+  );
+  const showCanonicalSync = Boolean(canonicalBundle && assetConfigEmpty);
+
+  function syncCanonicalAssets() {
+    if (!canonicalBundle) return;
+    mutate((draft) => applyCanonicalBundle(draft, canonicalBundle));
+    setNotice(
+      `Imported ${canonicalBundle.count} canonical artworks from the live room renderer. Save the draft to keep these in your editable config.`,
+    );
   }
 
   async function saveDraft(): Promise<PresenceEditableConfig | null> {
@@ -462,6 +493,23 @@ export default function PresenceStudioEditorApp({
               {actionError ?? notice}
             </div>
           )}
+          {showCanonicalSync && canonicalBundle && (
+            <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200/40 bg-amber-200/10 px-4 py-3 text-sm text-amber-50">
+              <Sparkles className="h-4 w-4 shrink-0" />
+              <span className="flex-1 min-w-[16rem] leading-6">
+                Your live room is rendering {canonicalBundle.count} canonical
+                {canonicalBundle.source === "ggm-renderer" ? " GGM artworks" : " works"} that aren&apos;t yet in your editable config.
+                Sync them now so the editor reflects what visitors see — then you can edit, reorder, or replace them.
+              </span>
+              <button
+                type="button"
+                onClick={syncCanonicalAssets}
+                className="rounded-full bg-amber-200 px-3 py-1.5 text-xs font-semibold text-stone-950 hover:bg-amber-100"
+              >
+                Sync from live room
+              </button>
+            </div>
+          )}
         </header>
 
         <div className="grid lg:grid-cols-[17rem_minmax(0,1fr)]">
@@ -490,6 +538,21 @@ export default function PresenceStudioEditorApp({
           </aside>
 
           <main className="min-h-[45rem] bg-[radial-gradient(circle_at_90%_0%,rgba(255,255,255,0.06),transparent_28%)] p-4 sm:p-6">
+            {activeTab === "canvas" && config && (
+              <PresenceCanvasMode
+                node={node}
+                config={config}
+                mutate={mutate}
+                dirty={dirty}
+                saving={saving}
+                onSaveDraft={saveDraft}
+                onOpenAdvanced={(target) => setActiveTab(target as TabId)}
+                onPublishRequest={() => setPublishConfirmOpen(true)}
+                showCanonicalSync={showCanonicalSync}
+                canonicalBundle={canonicalBundle}
+                onSyncCanonical={syncCanonicalAssets}
+              />
+            )}
             {activeTab === "overview" && (
               <OverviewTab
                 config={config}
