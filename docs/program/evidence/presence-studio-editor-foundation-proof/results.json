@@ -1,0 +1,108 @@
+{
+  "name": "presence_studio_editor_foundation",
+  "date": "2026-05-23",
+  "status": "passed",
+  "summary": "Added the backend/data foundation for a versioned, owner-only Presence Studio editor. Public Room responses now expose only the active published editable config.",
+  "data_model_api_changes": {
+    "model_added": "PresenceEditableConfig",
+    "migration_added": "flora-fauna/backend/migrations/versions/20260523_presence_editable_config.sql",
+    "service_added": "flora-fauna/backend/app/services/presence_editor_config.py",
+    "owner_endpoints_added": [
+      "GET /api/presence/owner/rooms/<room_id>/editor",
+      "GET /api/presence/owner/rooms/<room_id>/editor/draft",
+      "POST /api/presence/owner/rooms/<room_id>/editor/draft",
+      "PATCH /api/presence/owner/rooms/<room_id>/editor/draft",
+      "POST /api/presence/owner/rooms/<room_id>/editor/preview",
+      "POST /api/presence/owner/rooms/<room_id>/editor/publish",
+      "POST /api/presence/owner/rooms/<room_id>/editor/rollback",
+      "GET /api/presence/owner/rooms/<room_id>/editor/history",
+      "GET /api/presence/owner/rooms/<room_id>/assets",
+      "POST /api/presence/owner/rooms/<room_id>/assets/attach"
+    ],
+    "public_serialization": [
+      "/api/presence/public/<slug> includes published editable_config only",
+      "/api/presence/keys/<token>/resolve includes published editable_config only"
+    ]
+  },
+  "ggm_editable_config_mapping": {
+    "mapping_doc": "docs/program/evidence/presence-studio-editor-foundation-proof/GGM_CONFIG_MAPPING.md",
+    "example_config": "docs/program/evidence/presence-studio-editor-foundation-proof/ggm_editable_config.example.json",
+    "renderer_key": "ggm-faithful-room-v1",
+    "covered_sections": [
+      "Artwork Field",
+      "Work Wall",
+      "Practice Studio",
+      "Calling Card",
+      "Motion/style",
+      "Visual style",
+      "RoomKey",
+      "Assets",
+      "Enquiry"
+    ]
+  },
+  "owner_only_permission_result": {
+    "owner_can_edit": true,
+    "non_owner_denied": true,
+    "anonymous_denied": true,
+    "platform_admin_support_access": "allowed by existing owner-room policy",
+    "platform_admin_support_audited": true,
+    "hardcoded_owner_email_permission": false
+  },
+  "public_redaction_result": {
+    "published_config_public": true,
+    "draft_config_public": false,
+    "owner_email_public": false,
+    "platform_admin_public": false,
+    "internal_lifetime_free_public": false,
+    "local_filesystem_paths_public": false,
+    "raw_secret_public": false,
+    "audit_metadata_public": false,
+    "auth_subject_public": false
+  },
+  "preview_publish_rollback_result": {
+    "one_active_draft_per_room": true,
+    "one_active_published_config_per_room": true,
+    "preview_requires_owner_auth": true,
+    "preview_overwrites_published": false,
+    "publish_archives_previous_published": true,
+    "rollback_creates_new_published_version": true,
+    "history_retained": true
+  },
+  "asset_handling_result": {
+    "owner_asset_listing": true,
+    "attach_public_relative_asset": true,
+    "reject_local_filesystem_path": true,
+    "reject_file_url": true,
+    "reject_script_like_content": true,
+    "unpublished_assets_public": false
+  },
+  "tests_run": [
+    {
+      "command": "python -m pytest tests\\test_presence_studio_editor_foundation.py tests\\test_presence_dna_persistence.py tests\\test_presence_pass_paths.py -q",
+      "workdir": "C:\\Dev\\Flora_fauna\\flora-fauna\\backend",
+      "result": "16 passed",
+      "warnings": [
+        "Existing SQLAlchemy Query.get() deprecation warnings",
+        ".pytest_cache permission warning"
+      ]
+    },
+    {
+      "command": "python -m json.tool docs\\program\\evidence\\presence-studio-editor-foundation-proof\\ggm_editable_config.example.json",
+      "workdir": "C:\\Dev\\Flora_fauna",
+      "result": "passed"
+    },
+    {
+      "command": "python -m compileall -q app\\services\\presence_editor_config.py app\\api\\presence_graph.py app\\services\\presence_service.py app\\services\\presence_pass_service.py app\\models.py",
+      "workdir": "C:\\Dev\\Flora_fauna\\flora-fauna\\backend",
+      "result": "passed"
+    }
+  ],
+  "known_limitations": [
+    "Studio editor UI is not implemented in this pass.",
+    "GGM frontend renderer still needs to consume node.editable_config and fall back to current constants only for missing fields.",
+    "The GGM example config was created as a contract artifact/test payload; hosted production database seeding was not run.",
+    "Preview is authenticated owner-context only; there is no public draft preview endpoint.",
+    "Migration was added but not applied to hosted infrastructure."
+  ],
+  "claude_frontend_handoff_prompt": "You are Claude working on the Presence Studio frontend/editor. Do not redesign the public GGM Room. Build the owner-only Studio UI on top of the new backend contract. Use the owner editor endpoints under /api/presence/owner/rooms/<room_id>/editor, /editor/draft, /editor/preview, /editor/publish, /editor/rollback, /editor/history, /assets, and /assets/attach. Use docs/program/evidence/presence-studio-editor-foundation-proof/GGM_CONFIG_MAPPING.md and ggm_editable_config.example.json as the schema reference. Build owner-only tabs for Scenes, Work Wall, Practice/About, Calling Card, Style DNA, Motion/Texture, RoomKey, Assets, Preview/Publish, and History/Rollback. Never expose draft config, private owner/operator emails, platform_admin, internal_lifetime_free, auth subjects, audit metadata, local filesystem paths, or raw secrets. Treat locked_fields as visible reasons, not editable inputs. Preview must call the authenticated owner preview endpoint and be clearly marked as draft preview. Publish must be explicit. Rollback must create a new published version from a selected prior version. Public GGM renderer should prefer node.editable_config when present and fall back to current GGM constants only for missing fields. Do not claim the Studio editor is complete until the UI reads/writes all core config sections and the GGM renderer consumes the published config."
+}

@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, Globe, LayoutDashboard, Image, FolderOpen, Inbox, QrCode, BarChart2, Settings, LogOut, Sparkles, CreditCard, Users } from "lucide-react";
+import { ArrowLeft, Globe, LayoutDashboard, Image, FolderOpen, Inbox, QrCode, BarChart2, Settings, LogOut, Sparkles, CreditCard, Users, SlidersHorizontal } from "lucide-react";
 import type { PresenceNode } from "@/lib/api/types";
 import { StatusPill } from "@/components/ui";
 import { canonicalPublicUrl } from "@/lib/presence/url";
 
 const NAV_TABS = [
   { label: "Overview", icon: LayoutDashboard, sub: "" },
+  { label: "Editor", icon: SlidersHorizontal, sub: "editor" },
   { label: "Works", icon: Image, sub: "works" },
   { label: "Collections", icon: FolderOpen, sub: "collections" },
   { label: "Halls", icon: Users, sub: "halls" },

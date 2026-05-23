@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 from flask_jwt_extended import verify_jwt_in_request
 
 from ..extensions import db, limiter
@@ -17,9 +17,25 @@ from ..models import (
     Signal,
 )
 from ..security.alpha import alpha_jwt_required
-from ..security.control_plane import control_plane_required
+from ..security.control_plane import control_plane_required, log_control_event
 from ..security.policy import get_current_user
 from ..services.presence_owner_identity import resolve_or_provision_presence_owner
+from ..services.presence_editor_config import (
+    PresenceEditorConfigError,
+    attach_asset_to_draft,
+    build_default_editable_config,
+    collect_room_assets,
+    draft_config_for_room,
+    ensure_draft_config,
+    history_for_room,
+    preview_payload_for_room,
+    published_config_for_room,
+    publish_draft_config,
+    rollback_published_config,
+    serialize_editor_config,
+    serialize_public_editable_config,
+    update_draft_config,
+)
 from ..services.presence_pass_service import (
     capture_encounter,
     create_pass,
@@ -104,6 +120,31 @@ def _json_payload() -> dict:
 
 def _validation_error(exc: PresenceValidationError):
     return error("validation_error", str(exc), 400, details=getattr(exc, "details", None) or None)
+
+
+def _editor_validation_error(exc: PresenceEditorConfigError):
+    return error("validation_error", str(exc), 422, details=getattr(exc, "details", None) or None)
+
+
+def _audit_platform_admin_editor_access(action: str, actor, room: PresenceNode, payload: dict | None = None) -> None:
+    if getattr(actor, "role", None) != "platform_admin":
+        return
+    if room.owner_user_id and room.owner_user_id == getattr(actor, "id", None):
+        return
+    try:
+        log_control_event(
+            action,
+            getattr(actor, "id", None),
+            "presence_editable_config",
+            str(room.id),
+            {"room_id": room.id, **(payload or {})},
+        )
+    except Exception:
+        current_app.logger.warning(
+            "Presence editor platform-admin audit write failed",
+            exc_info=True,
+            extra={"room_id": room.id, "action": action},
+        )
 
 
 def _load_public_room(room_id: int):
@@ -559,6 +600,190 @@ def owner_room_key_detail(room_id, key_id):
     except PresenceValidationError as exc:
         db.session.rollback()
         return _validation_error(exc)
+
+
+@presence_graph_bp.route("/owner/rooms/<int:room_id>/editor", methods=["GET"])
+@alpha_jwt_required()
+def owner_room_editor(room_id):
+    room, err = _load_owned_room(room_id)
+    if err:
+        return err
+    actor = _resolve_owner_user()
+    _audit_platform_admin_editor_access("presence.editor.read", actor, room)
+    draft = draft_config_for_room(room)
+    published = published_config_for_room(room)
+    return ok(
+        {
+            "room": {
+                "id": room.id,
+                "slug": room.slug,
+                "display_name": room.display_name,
+                "owner_user_id": room.owner_user_id,
+            },
+            "draft": serialize_editor_config(draft),
+            "published": serialize_editor_config(published),
+            "published_public_config": serialize_public_editable_config(published),
+            "suggested_config": build_default_editable_config(room) if not draft and not published else None,
+            "history": [serialize_editor_config(row) for row in history_for_room(room)[:20]],
+            "assets": collect_room_assets(room),
+        }
+    )
+
+
+@presence_graph_bp.route("/owner/rooms/<int:room_id>/editor/draft", methods=["GET", "POST", "PATCH"])
+@alpha_jwt_required()
+def owner_room_editor_draft(room_id):
+    room, err = _load_owned_room(room_id)
+    if err:
+        return err
+    actor = _resolve_owner_user()
+    if request.method == "GET":
+        draft = draft_config_for_room(room)
+        _audit_platform_admin_editor_access("presence.editor.draft.read", actor, room)
+        return ok({"draft": serialize_editor_config(draft)})
+
+    try:
+        if request.method == "POST" and not _json_payload():
+            draft, created = ensure_draft_config(room, actor)
+        else:
+            draft, created = update_draft_config(room, actor, _json_payload(), partial=request.method == "PATCH")
+        db.session.commit()
+        _audit_platform_admin_editor_access(
+            "presence.editor.draft.update",
+            actor,
+            room,
+            {"config_id": draft.id, "version": draft.version, "created": created},
+        )
+        return ok({"draft": serialize_editor_config(draft), "created": created}, 201 if created else 200)
+    except PresenceEditorConfigError as exc:
+        db.session.rollback()
+        return _editor_validation_error(exc)
+
+
+@presence_graph_bp.route("/owner/rooms/<int:room_id>/editor/preview", methods=["POST"])
+@alpha_jwt_required()
+def owner_room_editor_preview(room_id):
+    room, err = _load_owned_room(room_id)
+    if err:
+        return err
+    actor = _resolve_owner_user()
+    try:
+        payload = preview_payload_for_room(room, actor)
+        db.session.commit()
+        _audit_platform_admin_editor_access(
+            "presence.editor.preview",
+            actor,
+            room,
+            {"config_id": (payload.get("draft") or {}).get("id"), "version": (payload.get("draft") or {}).get("version")},
+        )
+        return ok(payload)
+    except PresenceEditorConfigError as exc:
+        db.session.rollback()
+        return _editor_validation_error(exc)
+
+
+@presence_graph_bp.route("/owner/rooms/<int:room_id>/editor/publish", methods=["POST"])
+@alpha_jwt_required()
+def owner_room_editor_publish(room_id):
+    room, err = _load_owned_room(room_id)
+    if err:
+        return err
+    actor = _resolve_owner_user()
+    try:
+        published = publish_draft_config(room, actor)
+        db.session.commit()
+        _audit_platform_admin_editor_access(
+            "presence.editor.publish",
+            actor,
+            room,
+            {"config_id": published.id, "version": published.version},
+        )
+        return ok(
+            {
+                "published": serialize_editor_config(published),
+                "public_config": serialize_public_editable_config(published),
+            }
+        )
+    except PresenceEditorConfigError as exc:
+        db.session.rollback()
+        return _editor_validation_error(exc)
+
+
+@presence_graph_bp.route("/owner/rooms/<int:room_id>/editor/rollback", methods=["POST"])
+@alpha_jwt_required()
+def owner_room_editor_rollback(room_id):
+    room, err = _load_owned_room(room_id)
+    if err:
+        return err
+    actor = _resolve_owner_user()
+    payload = _json_payload()
+    try:
+        restored = rollback_published_config(
+            room,
+            actor,
+            version=payload.get("version"),
+            config_id=payload.get("config_id") or payload.get("id"),
+        )
+        db.session.commit()
+        _audit_platform_admin_editor_access(
+            "presence.editor.rollback",
+            actor,
+            room,
+            {"config_id": restored.id, "version": restored.version},
+        )
+        return ok(
+            {
+                "published": serialize_editor_config(restored),
+                "public_config": serialize_public_editable_config(restored),
+            }
+        )
+    except (PresenceEditorConfigError, TypeError, ValueError) as exc:
+        db.session.rollback()
+        return _editor_validation_error(PresenceEditorConfigError(str(exc)))
+
+
+@presence_graph_bp.route("/owner/rooms/<int:room_id>/editor/history", methods=["GET"])
+@alpha_jwt_required()
+def owner_room_editor_history(room_id):
+    room, err = _load_owned_room(room_id)
+    if err:
+        return err
+    actor = _resolve_owner_user()
+    _audit_platform_admin_editor_access("presence.editor.history.read", actor, room)
+    return ok({"items": [serialize_editor_config(row) for row in history_for_room(room)]})
+
+
+@presence_graph_bp.route("/owner/rooms/<int:room_id>/assets", methods=["GET"])
+@alpha_jwt_required()
+def owner_room_assets(room_id):
+    room, err = _load_owned_room(room_id)
+    if err:
+        return err
+    actor = _resolve_owner_user()
+    _audit_platform_admin_editor_access("presence.editor.assets.read", actor, room)
+    return ok({"items": collect_room_assets(room)})
+
+
+@presence_graph_bp.route("/owner/rooms/<int:room_id>/assets/attach", methods=["POST"])
+@alpha_jwt_required()
+def owner_room_attach_asset(room_id):
+    room, err = _load_owned_room(room_id)
+    if err:
+        return err
+    actor = _resolve_owner_user()
+    try:
+        draft = attach_asset_to_draft(room, actor, _json_payload())
+        db.session.commit()
+        _audit_platform_admin_editor_access(
+            "presence.editor.assets.attach",
+            actor,
+            room,
+            {"config_id": draft.id, "version": draft.version},
+        )
+        return ok({"draft": serialize_editor_config(draft), "assets": collect_room_assets(room)}, 201)
+    except PresenceEditorConfigError as exc:
+        db.session.rollback()
+        return _editor_validation_error(exc)
 
 
 @presence_graph_bp.route("/owner/rooms/<int:room_id>/analytics", methods=["GET"])

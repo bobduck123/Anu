@@ -707,6 +707,47 @@ class PresenceNode(db.Model):
     handovers = db.relationship("PresenceWorkHandover", backref="node", lazy=True, cascade="all, delete-orphan")
     enquiries = db.relationship("PresenceEnquiry", backref="node", lazy=True, cascade="all, delete-orphan")
     analytics_events = db.relationship("PresenceAnalyticsEvent", backref="node", lazy=True, cascade="all, delete-orphan")
+    editable_configs = db.relationship("PresenceEditableConfig", backref="room", lazy=True, cascade="all, delete-orphan")
+
+
+class PresenceEditableConfig(db.Model):
+    __tablename__ = "presence_editable_config"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "room_id",
+            "version",
+            name="uq_presence_editable_config_room_version",
+        ),
+        db.Index("ix_presence_editable_config_room", "room_id"),
+        db.Index("ix_presence_editable_config_status", "status"),
+        db.Index("ix_presence_editable_config_renderer", "renderer_key"),
+        db.Index("ix_presence_editable_config_published_at", "published_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    version = db.Column(db.Integer, nullable=False, default=1)
+    status = db.Column(db.String(40), nullable=False, default="draft")
+    renderer_key = db.Column(db.String(120), nullable=True)
+    scene_config_json = db.Column("scene_config", db.JSON, nullable=True)
+    style_dna_json = db.Column("style_dna", db.JSON, nullable=True)
+    motion_config_json = db.Column("motion_config", db.JSON, nullable=True)
+    asset_config_json = db.Column("asset_config", db.JSON, nullable=True)
+    content_config_json = db.Column("content_config", db.JSON, nullable=True)
+    roomkey_config_json = db.Column("roomkey_config", db.JSON, nullable=True)
+    enquiry_config_json = db.Column("enquiry_config", db.JSON, nullable=True)
+    locked_fields_json = db.Column("locked_fields", db.JSON, nullable=True)
+    created_by_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    updated_by_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    published_by_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+    published_at = db.Column(db.DateTime, nullable=True)
+    archived_at = db.Column(db.DateTime, nullable=True)
+
+    created_by = db.relationship("User", foreign_keys=[created_by_user_id])
+    updated_by = db.relationship("User", foreign_keys=[updated_by_user_id])
+    published_by = db.relationship("User", foreign_keys=[published_by_user_id])
 
 
 class PresencePlanEntitlement(db.Model):

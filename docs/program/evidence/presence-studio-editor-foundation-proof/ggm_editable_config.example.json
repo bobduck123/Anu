@@ -1,0 +1,295 @@
+{
+  "schema_version": "presence-editable-config-v1",
+  "renderer_key": "ggm-faithful-room-v1",
+  "scene_config": {
+    "scenes": [
+      {
+        "id": "artwork_field",
+        "number": "01",
+        "label": "Artwork Field",
+        "subtitle": "liquid slideshow",
+        "title": "Colour as Memory",
+        "statement": "Christina Kerkvliet Goddard - selected watercolour works",
+        "primary_artwork_slug": "willow-of-port-arthur-2019",
+        "hero_sequence": [
+          "willow-of-port-arthur-2019",
+          "bridle-road-2005",
+          "thomas-road-2007",
+          "gothic-tapestry-2008",
+          "empty-nest-2014"
+        ],
+        "intro_copy": "Australian artist working across memory, colour, and lived landscape.",
+        "action_labels": {
+          "primary": "Begin a conversation",
+          "work_advance": "Show next artwork"
+        },
+        "roomkey_provenance_text": "Opened via NFC/QR"
+      },
+      {
+        "id": "work_wall",
+        "number": "02",
+        "label": "Work Wall",
+        "subtitle": "selected watercolours",
+        "artwork_order": [
+          "willow-of-port-arthur-2019",
+          "bridle-road-2005",
+          "thomas-road-2007",
+          "goodnight-kiss-2007",
+          "gothic-tapestry-2008",
+          "burgundy-peaches-2008",
+          "last-dash-2009",
+          "empty-nest-2014"
+        ],
+        "selected_work_slug": "willow-of-port-arthur-2019",
+        "caption_mode": "title_year_medium",
+        "work_detail_behaviour": "route_or_inline_detail"
+      },
+      {
+        "id": "practice_studio",
+        "number": "03",
+        "label": "Practice Studio",
+        "subtitle": "workbench, notes, references",
+        "about_title": "Who is Christina",
+        "note_cards_enabled": true
+      },
+      {
+        "id": "calling_card",
+        "number": "04",
+        "label": "Calling Card",
+        "subtitle": "an invitation",
+        "contact_title": "Begin a conversation",
+        "enquiry_cta": "Begin a conversation"
+      }
+    ]
+  },
+  "style_dna": {
+    "palette": {
+      "bg": "#f4f4f4",
+      "paper": "#eceae7",
+      "ink": "#111111",
+      "muted": "#6a6a6a",
+      "line": "rgba(0, 0, 0, 0.12)",
+      "accent": "#ffffff",
+      "hero_stage_bg": "#eaeaea",
+      "liquid_wash_cool": "rgba(83, 146, 164, 0.2)",
+      "liquid_wash_warm": "rgba(176, 111, 90, 0.14)"
+    },
+    "background_treatment": "paper_field_with_atmospheric_liquid_bloom",
+    "frame_treatment": "hairline_no_rounded_gallery_cards",
+    "typography": {
+      "heading_stack": "Inter Tight, Helvetica Neue, Arial, sans-serif",
+      "body_stack": "Inter, Helvetica Neue, Arial, sans-serif",
+      "heading_weight": 400,
+      "body_weight": 400,
+      "heading_tracking": "-0.03em",
+      "eyebrow_tracking": "0.12em",
+      "safe_font_policy": "Use Haffer only if redistributable files are supplied; otherwise use safe editorial sans fallback."
+    },
+    "texture_tokens": {
+      "dither_canvas": true,
+      "film_grain": true,
+      "paper_surface": true
+    },
+    "spacing": {
+      "max_width": "min(1200px, 92vw)",
+      "scene_padding": "clamp(3rem, 8vh, 6rem)",
+      "scene_rhythm": "full_viewport_stage_then_scrollable_scenes"
+    },
+    "artwork_treatment": {
+      "hero_fit": "cover",
+      "detail_fit": "contain",
+      "hover_scale": 1.06,
+      "work_detail_background": "#eceae7"
+    }
+  },
+  "motion_config": {
+    "liquid_style": "ripple",
+    "liquid_intensity": 0.95,
+    "morph_speed_ms": 1100,
+    "distortion_scale": 1,
+    "dither_strength": 0.62,
+    "film_grain_strength": 0.42,
+    "blur_amount": 0.5,
+    "transition_style": "liquid_crossfade",
+    "scene_transition_duration_ms": 900,
+    "parallax_depth": 0.5,
+    "custom_cursor_enabled": true,
+    "heavy_motion_enabled": true,
+    "reduced_motion_fallback": true
+  },
+  "asset_config": {
+    "hero_image": {
+      "url": "/ggm/works/willow-of-port-arthur-2019.webp",
+      "alt_text": "Willow of Port Arthur, 2019. Watercolour on paper."
+    },
+    "portrait_image": {
+      "url": "/ggm/portrait/christina-kerkvliet-goddard-portrait.webp",
+      "alt_text": "Portrait of Christina Kerkvliet Goddard"
+    },
+    "artworks": [
+      {
+        "slug": "bridle-road-2005",
+        "title": "Bridle Road",
+        "year": "2005",
+        "medium": "Watercolour on paper",
+        "dimensions": "41 x 61 cm",
+        "url": "/ggm/works/bridle-road-2005.webp",
+        "thumbnail_url": "/ggm/thumbs/bridle-road-2005.webp",
+        "alt_text": "Bridle Road, 2005. Watercolour on paper.",
+        "sort_order": 2
+      },
+      {
+        "slug": "thomas-road-2007",
+        "title": "Thomas Road",
+        "year": "2007",
+        "medium": "Watercolour on paper",
+        "dimensions": "Unknown",
+        "url": "/ggm/works/thomas-road-2007.webp",
+        "thumbnail_url": "/ggm/thumbs/thomas-road-2007.webp",
+        "alt_text": "Thomas Road, 2007. Watercolour on paper.",
+        "sort_order": 3
+      },
+      {
+        "slug": "goodnight-kiss-2007",
+        "title": "Goodnight Kiss",
+        "year": "2007",
+        "medium": "Watercolour on paper",
+        "dimensions": "Unknown",
+        "url": "/ggm/works/goodnight-kiss-2007.webp",
+        "thumbnail_url": "/ggm/thumbs/goodnight-kiss-2007.webp",
+        "alt_text": "Goodnight Kiss, 2007. Watercolour on paper.",
+        "sort_order": 4
+      },
+      {
+        "slug": "gothic-tapestry-2008",
+        "title": "Gothic Tapestry",
+        "year": "2008",
+        "medium": "Watercolour on paper",
+        "dimensions": "81 x 131 cm",
+        "url": "/ggm/works/gothic-tapestry-2008.webp",
+        "thumbnail_url": "/ggm/thumbs/gothic-tapestry-2008.webp",
+        "alt_text": "Gothic Tapestry, 2008. Watercolour on paper.",
+        "sort_order": 5
+      },
+      {
+        "slug": "burgundy-peaches-2008",
+        "title": "Burgundy Peaches",
+        "year": "2008",
+        "medium": "Watercolour on paper",
+        "dimensions": "81 x 131 cm",
+        "url": "/ggm/works/burgundy-peaches-2008.webp",
+        "thumbnail_url": "/ggm/thumbs/burgundy-peaches-2008.webp",
+        "alt_text": "Burgundy Peaches, 2008. Watercolour on paper.",
+        "sort_order": 6
+      },
+      {
+        "slug": "last-dash-2009",
+        "title": "Last Dash",
+        "year": "2009",
+        "medium": "Watercolour on paper",
+        "dimensions": "49 x 39 cm",
+        "url": "/ggm/works/last-dash-2009.webp",
+        "thumbnail_url": "/ggm/thumbs/last-dash-2009.webp",
+        "alt_text": "Last Dash, 2009. Watercolour on paper.",
+        "sort_order": 7
+      },
+      {
+        "slug": "empty-nest-2014",
+        "title": "Empty Nest",
+        "year": "2014",
+        "medium": "Watercolour on paper",
+        "dimensions": "88 x 105 cm",
+        "url": "/ggm/works/empty-nest-2014.webp",
+        "thumbnail_url": "/ggm/thumbs/empty-nest-2014.webp",
+        "alt_text": "Empty Nest, 2014. Watercolour on paper.",
+        "sort_order": 8
+      },
+      {
+        "slug": "willow-of-port-arthur-2019",
+        "title": "Willow of Port Arthur",
+        "year": "2019",
+        "medium": "Watercolour on paper",
+        "dimensions": "93 x 104 cm",
+        "url": "/ggm/works/willow-of-port-arthur-2019.webp",
+        "thumbnail_url": "/ggm/thumbs/willow-of-port-arthur-2019.webp",
+        "alt_text": "Willow of Port Arthur, 2019. Watercolour on paper.",
+        "sort_order": 1
+      }
+    ],
+    "texture_assets": [],
+    "public_assets_only": true
+  },
+  "content_config": {
+    "display_name": "Christina Kerkvliet Goddard",
+    "headline": "Australian artist working across memory, colour, and lived landscape",
+    "hero_title": "Colour as Memory",
+    "hero_subtitle": "selected watercolour works",
+    "about": {
+      "biography": "Born in Victoria and raised in South Australia, Christina grew up around the active art scene of the 1960s and 70s.",
+      "artist_statement": "Memory Colours revisits and haunts its sites of episode as a way to present how colour can generate memory.",
+      "process_notes": "Layered watercolour, line, atmosphere, landscape, and remembered encounter.",
+      "studio_fragments": [
+        "memory colours",
+        "life-cycles",
+        "nature episodes",
+        "independent inquiry"
+      ],
+      "timeline": [
+        { "when": "Early years", "what": "Drawing, craft instincts, and immersion in South Australian visual culture." },
+        { "when": "Formal study", "what": "Certificate of Art, followed by BA of Visual Arts." },
+        { "when": "Practice period", "what": "Community contribution, commissions, and experimental exhibitions." },
+        { "when": "2009", "what": "Accepted into RMIT's Master of Fine Art program." },
+        { "when": "2011", "what": "Art Scene Today Spring competition - 3rd Place Winner." }
+      ],
+      "strands": [
+        { "title": "Memory colours", "body": "Colour as a trigger for recollection, emotional episode, and narrative permeability." },
+        { "title": "Life-cycles", "body": "Nest, branch, path, and seasonal shifts as recurring forms of generational relation." },
+        { "title": "Outsider position", "body": "A practice that values independent inquiry and cross-disciplinary material language." },
+        { "title": "Nature episodes", "body": "Brief encounters in the everyday natural environment translated into layered mark-fields." }
+      ]
+    },
+    "contact": {
+      "contact_title": "Calling Card",
+      "contact_copy": "Use the Presence enquiry form to begin a conversation.",
+      "contact_posture": "presence_enquiry_form",
+      "availability_status": "Enquiries accepted through Presence",
+      "external_links": [
+        {
+          "label": "Reference portfolio",
+          "url": "https://christina-goddard.vercel.app/",
+          "link_type": "website"
+        },
+        {
+          "label": "Artist reference profile",
+          "url": "http://artscenetoday.com/juried-exhibitions/coloring_outside_the_lines/christina_kerkvliet_goddard/",
+          "link_type": "reference"
+        }
+      ]
+    }
+  },
+  "roomkey_config": {
+    "entry_label": "Opened via RoomKey",
+    "provenance_chip_text": "Opened via NFC/QR",
+    "guest_entry_copy": "You have entered Christina Kerkvliet Goddard's Presence Room.",
+    "invalid_copy": "This Room Key is not available.",
+    "paused_copy": "This Room Key is paused.",
+    "revoked_copy": "This Room Key has been revoked.",
+    "show_save_to_garden": true
+  },
+  "enquiry_config": {
+    "cta_label": "Begin a conversation",
+    "copy": "Use the Presence enquiry form to contact the Room owner.",
+    "delivery_posture": "backend_enquiry_capture",
+    "private_email_publicly_exposed": false
+  },
+  "locked_fields": {
+    "renderer_shell": {
+      "locked": true,
+      "reason": "Commissioned renderer chrome and shader contract; owner controls content, asset, style-token, motion-token, RoomKey, and enquiry configuration through PresenceEditableConfig."
+    },
+    "reduced_motion_fallback": {
+      "system_controlled": true,
+      "reason": "Accessibility fallback must remain available."
+    }
+  }
+}

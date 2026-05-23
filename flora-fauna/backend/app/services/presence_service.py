@@ -41,6 +41,7 @@ from ..models import (
     User,
 )
 from ..time_utils import now_utc
+from .presence_editor_config import public_config_for_room, renderer_key_for_room
 
 
 PRESENCE_NODE_STATUSES = {
@@ -865,6 +866,14 @@ def serialize_presence_node(
                     "handovers": [serialize_handover(item) for item in sorted(node.handovers, key=lambda row: (row.updated_at or now_utc()), reverse=True)[:50]],
                 }
             )
+    if public:
+        editable_config = public_config_for_room(node)
+        payload["editable_config"] = editable_config
+        payload["renderer_key"] = (
+            editable_config.get("renderer_key")
+            if isinstance(editable_config, dict) and editable_config.get("renderer_key")
+            else renderer_key_for_room(node)
+        )
     return payload
 
 

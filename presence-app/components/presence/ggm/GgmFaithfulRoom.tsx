@@ -33,6 +33,7 @@ import { GgmStudioScene } from "./GgmStudioScene";
 import { GgmCallingCard } from "./GgmCallingCard";
 import { GgmReveal } from "./GgmReveal";
 import { GgmWorkDetail } from "./GgmWorkDetail";
+import { buildGgmEditableModel, type GgmEditableModel } from "@/lib/presence/ggm/editable";
 import styles from "./ggm.module.css";
 
 interface GgmFaithfulRoomProps {
@@ -81,15 +82,16 @@ function coerceWork(w: PresenceWork, idx: number): GgmWork {
 }
 
 export default function GgmFaithfulRoom(props: GgmFaithfulRoomProps) {
+  const model = useMemo(() => buildGgmEditableModel(props.node), [props.node]);
   return (
-    <GgmMotionProvider>
-      <Room {...props} />
+    <GgmMotionProvider initialSettings={model.motion} localStorageEnabled={!model.config}>
+      <Room {...props} model={model} />
     </GgmMotionProvider>
   );
 }
 
-function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps) {
-  const works = useMemo(() => buildWorks(node), [node]);
+function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: GgmFaithfulRoomProps & { model: GgmEditableModel }) {
+  const works = model.works;
 
   const hrefForWork = (w: GgmWork) =>
     `/p/${encodeURIComponent(node.slug)}/works/${encodeURIComponent(w.slug)}`;
@@ -103,7 +105,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
       const next = idx < works.length - 1 ? works[idx + 1] : works[0];
       const related = works.filter((w) => w.slug !== focus.slug).slice(0, 3);
       return (
-        <div className={styles.ggm}>
+        <div className={styles.ggm} style={model.styleVars}>
           <nav className={styles.nav} aria-label="Primary">
             <Link className={styles.navBrand} href={`/p/${encodeURIComponent(node.slug)}`}>
               {node.display_name}
@@ -118,7 +120,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
               prev={prev}
               next={next}
               related={related}
-              statementQuote={node.practice_statement ?? GGM_ARTIST.statementQuote}
+              statementQuote={model.artist.statementQuote}
               hrefForWork={hrefForWork}
               backHref={`/p/${encodeURIComponent(node.slug)}`}
             />
@@ -128,28 +130,25 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
     }
   }
 
-  const brand = node.display_name ?? GGM_ARTIST.name;
-  const caption = node.headline ?? GGM_ARTIST.heroCaption;
-  const aboutIntro = node.bio ?? node.short_bio ?? GGM_ARTIST.aboutIntro;
-  const aboutBody = node.long_story ?? GGM_ARTIST.aboutBody;
-  const externalPortfolio = pickExternalPortfolio(node);
+  const brand = model.copy.brand;
+  const caption = model.copy.artworkCaption;
+  const aboutIntro = model.copy.aboutIntro;
+  const aboutBody = model.copy.aboutBody;
+  const externalPortfolio = model.contact.externalLink ?? pickExternalPortfolio(node);
 
   // Scene 01 cycles through the FULL ordered hero sequence (all 8
   // works, ordered as in source GGM_HERO_SEQUENCE + the rest).
   const heroSlides = useMemo<GgmWork[]>(() => {
-    const orderedFromSequence = GGM_HERO_SEQUENCE.map((h) => works.find((w) => w.slug === h.slug)).filter(
-      (w): w is GgmWork => Boolean(w),
-    );
-    const seen = new Set(orderedFromSequence.map((w) => w.slug));
-    const rest = works.filter((w) => !seen.has(w.slug));
-    const combined = [...orderedFromSequence, ...rest];
-    return combined.length > 0 ? combined : works;
-  }, [works]);
+    return model.heroSlides.length > 0 ? model.heroSlides : works;
+  }, [model.heroSlides, works]);
 
   // Scene 02 wall shows ALL works in a varied, scrollable composition.
   const wallWorks = useMemo<GgmWork[]>(() => works, [works]);
 
   const heroImages = useMemo(() => heroSlides.map((w) => w.image), [heroSlides]);
+  const roomKeyLabel = roomKeySourceLabel && model.roomKey.provenanceChipText
+    ? model.roomKey.provenanceChipText.replace(/^opened via\s*/i, "")
+    : roomKeySourceLabel;
 
   const scenes: SceneDef[] = useMemo<SceneDef[]>(() => [
     {
@@ -179,6 +178,8 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
         <WorkWallSurface
           works={wallWorks}
           hrefForWork={hrefForWork}
+          title={model.copy.wallTitle}
+          lead={model.copy.wallLead}
         />
       ),
     },
@@ -191,11 +192,11 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
       surface: "studio",
       content: () => (
         <GgmStudioScene
-          artist={GGM_ARTIST}
+          artist={model.artist}
           aboutIntro={aboutIntro}
           aboutBody={aboutBody}
-          strands={GGM_STRANDS}
-          inspire={GGM_INSPIRE}
+          strands={model.practice.strands}
+          inspire={model.practice.inspire}
         />
       ),
     },
@@ -208,14 +209,18 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
       surface: "card",
       content: () => (
         <GgmCallingCard
-          artist={GGM_ARTIST}
+          artist={model.artist}
           externalLink={externalPortfolio}
+          contactTitle={model.copy.callingTitle}
+          contactCopy={model.copy.callingCopy}
+          availability={model.contact.availability}
+          showDirectEmail={model.contact.showDirectEmail}
           enquiryAction={
             <PublicEnquiryDialog
               slug={node.slug}
               displayName={brand}
               nodeType={node.node_type}
-              triggerLabel="Begin a conversation"
+              triggerLabel={model.copy.enquiryCta}
             />
           }
         />
@@ -228,11 +233,12 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
   ]);
 
   return (
-    <div className={styles.ggm}>
+    <div className={styles.ggm} style={model.styleVars}>
       <GgmStage
-        node={node}
+        node={{ ...node, display_name: brand }}
         scenes={scenes}
-        roomKeySourceLabel={roomKeySourceLabel}
+        roomKeySourceLabel={roomKeyLabel}
+        roomKeyProvenanceText={model.roomKey.provenanceChipText}
       />
       <span className={styles.srOnly}>
         <a href={GGM_LIVE_DEMO_URL}>Source portfolio: christina-goddard.vercel.app</a>
@@ -297,9 +303,11 @@ function ArtworkFieldContent({
 interface WorkWallSurfaceProps {
   works: GgmWork[];
   hrefForWork: (w: GgmWork) => string;
+  title: string;
+  lead: string;
 }
 
-function WorkWallSurface({ works, hrefForWork }: WorkWallSurfaceProps) {
+function WorkWallSurface({ works, hrefForWork, title, lead }: WorkWallSurfaceProps) {
   // Group works by year so we can drop year-marker rules between
   // sections — reads like a hung gallery walk-through.
   const grouped = useMemo(() => {
@@ -324,13 +332,8 @@ function WorkWallSurface({ works, hrefForWork }: WorkWallSurfaceProps) {
             <span className={styles.blockEyebrowNumber}>02</span>
             Work Wall
           </p>
-          <h2 className={styles.wallV2Title}>
-            A viewing tray of selected watercolour works.
-          </h2>
-          <p className={styles.wallV2Lead}>
-            Hung in chronological pockets. Scroll the tray to walk the wall.
-            Tap any plate for the work's room.
-          </p>
+          <h2 className={styles.wallV2Title}>{title}</h2>
+          <p className={styles.wallV2Lead}>{lead}</p>
         </div>
         <p className={styles.wallV2Meta}>
           {String(works.length).padStart(2, "0")} works · {grouped[0]?.[0]} — {grouped[grouped.length - 1]?.[0]}

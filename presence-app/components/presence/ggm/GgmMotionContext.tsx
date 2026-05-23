@@ -84,20 +84,32 @@ export function useGgmMotion(): GgmMotionContextValue {
 
 interface GgmMotionProviderProps {
   children: ReactNode;
+  initialSettings?: Partial<GgmMotionSettings>;
+  localStorageEnabled?: boolean;
 }
 
-export function GgmMotionProvider({ children }: GgmMotionProviderProps) {
-  const [settings, setSettings] = useState<GgmMotionSettings>(GGM_MOTION_DEFAULTS);
+function normaliseSettings(initialSettings?: Partial<GgmMotionSettings>): GgmMotionSettings {
+  return { ...GGM_MOTION_DEFAULTS, ...(initialSettings ?? {}) };
+}
+
+export function GgmMotionProvider({
+  children,
+  initialSettings,
+  localStorageEnabled = true,
+}: GgmMotionProviderProps) {
+  const [settings, setSettings] = useState<GgmMotionSettings>(() => normaliseSettings(initialSettings));
   const [reducedMotion, setReducedMotion] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const raw = localStorageEnabled ? window.localStorage.getItem(STORAGE_KEY) : null;
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<GgmMotionSettings>;
-        setSettings({ ...GGM_MOTION_DEFAULTS, ...parsed });
+        setSettings(normaliseSettings({ ...initialSettings, ...parsed }));
+      } else {
+        setSettings(normaliseSettings(initialSettings));
       }
     } catch {
       // ignore — defaults are fine.
@@ -108,18 +120,18 @@ export function GgmMotionProvider({ children }: GgmMotionProviderProps) {
     mql.addEventListener("change", onChange);
     setHydrated(true);
     return () => mql.removeEventListener("change", onChange);
-  }, []);
+  }, [initialSettings, localStorageEnabled]);
 
   // Persist whenever settings change (after first hydrate).
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || !localStorageEnabled) return;
     if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     } catch {
       // ignore.
     }
-  }, [settings, hydrated]);
+  }, [settings, hydrated, localStorageEnabled]);
 
   const setSetting: GgmMotionContextValue["setSetting"] = useCallback((key, value) => {
     setSettings((prev) => ({ ...prev, [key]: value }));

@@ -23,6 +23,10 @@ function resetState() {
     nextItemId: 902,
     nextPassId: 302,
     nextKeyId: 202,
+    editorDraft: null,
+    editorPublished: buildEditorConfig("published", 1),
+    nextEditorVersion: 2,
+    editorAssets: buildEditorAssets(),
     // Hall activity event counters used by the analytics endpoint to mirror
     // the real backend's hall_activity_event aggregation.
     hallStallVisits: 0,
@@ -265,6 +269,89 @@ const server = createServer(async (req, res) => {
   if (url.pathname === "/api/presence/owner/nodes/101" && req.method === "GET") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     return sendData(res, fixtures.room);
+  }
+
+  if (url.pathname === "/api/presence/owner/rooms/101/editor" && req.method === "GET") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    return sendData(res, {
+      room: { id: fixtures.room.id, slug: fixtures.room.slug, display_name: fixtures.room.display_name, owner_user_id: fixtures.room.owner_user_id },
+      draft: state.editorDraft,
+      published: state.editorPublished,
+      published_public_config: redactEditorConfig(state.editorPublished),
+      suggested_config: state.editorDraft || state.editorPublished ? null : buildEditorConfig("draft", 1),
+      history: [state.editorDraft, state.editorPublished].filter(Boolean),
+      assets: state.editorAssets,
+    });
+  }
+
+  if (url.pathname === "/api/presence/owner/rooms/101/editor/draft") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (req.method === "GET") return sendData(res, { draft: state.editorDraft });
+    if (req.method === "POST" || req.method === "PATCH") {
+      const base = state.editorDraft || state.editorPublished || buildEditorConfig("draft", state.nextEditorVersion++);
+      state.editorDraft = {
+        ...base,
+        ...body,
+        id: base.id || 9500 + state.nextEditorVersion,
+        version: base.version || state.nextEditorVersion++,
+        status: "draft",
+        updated_at: new Date().toISOString(),
+      };
+      return sendData(res, { draft: state.editorDraft, created: req.method === "POST" }, req.method === "POST" ? 201 : 200);
+    }
+  }
+
+  if (url.pathname === "/api/presence/owner/rooms/101/editor/preview" && req.method === "POST") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (!state.editorDraft) state.editorDraft = buildEditorConfig("draft", state.nextEditorVersion++);
+    return sendData(res, {
+      created_draft: false,
+      preview: true,
+      expires_at: Math.floor(Date.now() / 1000) + 900,
+      preview_token: "mock-preview-token",
+      preview_url: "/studio/101/preview?presencePreviewToken=mock-preview-token",
+      editable_config: { ...redactEditorConfig(state.editorDraft), status: "preview" },
+      draft: state.editorDraft,
+    });
+  }
+
+  if (url.pathname === "/api/presence/owner/rooms/101/editor/publish" && req.method === "POST") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (!state.editorDraft) return sendError(res, 422, "validation_error", "No draft config exists for this Room.");
+    state.editorPublished = { ...state.editorDraft, status: "published", published_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+    state.editorDraft = null;
+    return sendData(res, { published: state.editorPublished, public_config: redactEditorConfig(state.editorPublished) });
+  }
+
+  if (url.pathname === "/api/presence/owner/rooms/101/editor/rollback" && req.method === "POST") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    state.editorPublished = { ...buildEditorConfig("published", state.nextEditorVersion++), scene_config: state.editorPublished.scene_config };
+    return sendData(res, { published: state.editorPublished, public_config: redactEditorConfig(state.editorPublished) });
+  }
+
+  if (url.pathname === "/api/presence/owner/rooms/101/editor/history" && req.method === "GET") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    return sendData(res, { items: [state.editorDraft, state.editorPublished].filter(Boolean) });
+  }
+
+  if (url.pathname === "/api/presence/owner/rooms/101/assets" && req.method === "GET") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    return sendData(res, { items: state.editorAssets });
+  }
+
+  if (url.pathname === "/api/presence/owner/rooms/101/assets/attach" && req.method === "POST") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (/^file:|^data:|localhost|127\.0\.0\.1|^[a-zA-Z]:[\\/]/i.test(body.url || "")) {
+      return sendError(res, 422, "validation_error", "Unsafe asset URL.");
+    }
+    if (!state.editorDraft) state.editorDraft = buildEditorConfig("draft", state.nextEditorVersion++);
+    const asset = { url: body.url, alt_text: body.alt_text || body.alt || "Attached asset", source: "editable_config:draft", slot: body.slot || "attached_assets", asset_type: body.asset_type || "image" };
+    state.editorAssets.push(asset);
+    state.editorDraft.asset_config = {
+      ...(state.editorDraft.asset_config || {}),
+      attached_assets: [...(state.editorDraft.asset_config?.attached_assets || []), asset],
+    };
+    return sendData(res, { draft: state.editorDraft, assets: state.editorAssets }, 201);
   }
 
   if (url.pathname === "/api/presence/owner/nodes/101/analytics" && req.method === "GET") {
@@ -863,6 +950,132 @@ function buildHallTrailheadPath(hallId) {
         direction_type: "similar_rooms",
       },
     ],
+  };
+}
+
+function buildEditorConfig(status = "published", version = 1) {
+  const now = new Date().toISOString();
+  return {
+    id: 9400 + version,
+    room_id: fixtures.room.id,
+    schema_version: "presence-editable-config-v1",
+    version,
+    status,
+    renderer_key: "ggm-faithful-room-v1",
+    scene_config: {
+      scenes: [
+        {
+          id: "artwork_field",
+          number: "01",
+          label: "Artwork Field",
+          title: "Colour as Memory",
+          subtitle: "liquid slideshow",
+          statement: "Christina Kerkvliet Goddard - selected watercolour works",
+          primary_artwork_slug: "willow-of-port-arthur-2019",
+          intro_copy: "Australian artist working across memory, colour, and lived landscape.",
+          action_labels: { primary: "Begin a conversation", work_advance: "Show next artwork" },
+          roomkey_provenance_text: "Opened via NFC/QR",
+        },
+        {
+          id: "work_wall",
+          number: "02",
+          label: "Work Wall",
+          artwork_order: ["willow-of-port-arthur-2019", "bridle-road-2005"],
+          selected_work_slug: "willow-of-port-arthur-2019",
+          work_detail_behaviour: "route_or_inline_detail",
+        },
+        { id: "practice_studio", number: "03", label: "Practice Studio", about_title: "Who is Christina", note_cards_enabled: true },
+        { id: "calling_card", number: "04", label: "Calling Card", contact_title: "Begin a conversation", enquiry_cta: "Begin a conversation" },
+      ],
+    },
+    style_dna: {
+      palette: { bg: "#f4f4f4", paper: "#eceae7", ink: "#111111", muted: "#6a6a6a", accent: "#ffffff" },
+      typography: { heading_stack: "Inter, Helvetica Neue, Arial, sans-serif", body_stack: "Inter, Helvetica Neue, Arial, sans-serif" },
+      background_treatment: "paper_field_with_atmospheric_liquid_bloom",
+      frame_treatment: "hairline_no_rounded_gallery_cards",
+    },
+    motion_config: {
+      liquid_style: "ripple",
+      liquid_intensity: 0.95,
+      morph_speed_ms: 1100,
+      distortion_scale: 1,
+      dither_strength: 0.62,
+      film_grain_strength: 0.42,
+      blur_amount: 0.5,
+      transition_style: "liquid_crossfade",
+      heavy_motion_enabled: true,
+      custom_cursor_enabled: true,
+      reduced_motion_fallback: true,
+    },
+    asset_config: {
+      hero_image: { url: "/ggm/works/willow-of-port-arthur-2019.webp", alt_text: "Willow of Port Arthur" },
+      artworks: [
+        { slug: "willow-of-port-arthur-2019", title: "Willow of Port Arthur", year: "2019", medium: "Watercolour on paper", dimensions: "93 x 104 cm", url: "/ggm/works/willow-of-port-arthur-2019.webp", thumbnail_url: "/ggm/thumbs/willow-of-port-arthur-2019.webp", alt_text: "Willow of Port Arthur", is_visible: true },
+        { slug: "bridle-road-2005", title: "Bridle Road", year: "2005", medium: "Watercolour on paper", dimensions: "41 x 61 cm", url: "/ggm/works/bridle-road-2005.webp", thumbnail_url: "/ggm/thumbs/bridle-road-2005.webp", alt_text: "Bridle Road", is_visible: true },
+      ],
+      public_assets_only: true,
+    },
+    content_config: {
+      display_name: fixtures.room.display_name,
+      headline: fixtures.room.headline,
+      about: {
+        biography: "Born in Victoria and raised in South Australia.",
+        artist_statement: "Memory Colours revisits and haunts its sites of episode.",
+        process_notes: "Layered watercolour, line, atmosphere, landscape, and remembered encounter.",
+        strands: [
+          { title: "Memory colours", body: "Colour as a trigger for recollection." },
+          { title: "Life-cycles", body: "Nest, branch, path, and seasonal shifts." },
+        ],
+      },
+      contact: {
+        contact_title: "Calling Card",
+        contact_copy: "Use the Presence enquiry form to begin a conversation.",
+        contact_posture: "presence_enquiry_form",
+        availability_status: "Enquiries accepted through Presence",
+        external_links: [{ label: "Reference portfolio", url: "https://christina-goddard.vercel.app/", link_type: "website" }],
+      },
+    },
+    roomkey_config: {
+      entry_label: "Opened via RoomKey",
+      provenance_chip_text: "Opened via NFC/QR",
+      guest_entry_copy: "You have entered Christina Kerkvliet Goddard's Presence Room.",
+      invalid_copy: "This Room Key is not available.",
+      revoked_copy: "This Room Key has been revoked.",
+      show_save_to_garden: true,
+    },
+    enquiry_config: { cta_label: "Begin a conversation", delivery_posture: "backend_enquiry_capture" },
+    locked_fields: { renderer_shell: { locked: true, reason: "Commissioned renderer chrome and shader contract." } },
+    created_at: now,
+    updated_at: now,
+    published_at: status === "published" ? now : null,
+    archived_at: null,
+  };
+}
+
+function buildEditorAssets() {
+  return [
+    { url: "/ggm/works/willow-of-port-arthur-2019.webp", alt_text: "Willow of Port Arthur", source: "presence_work", slot: "hero_image", asset_type: "image" },
+    { url: "/ggm/works/bridle-road-2005.webp", alt_text: "Bridle Road", source: "presence_work", slot: "artwork_images", asset_type: "image" },
+    { url: "/ggm/thumbs/willow-of-port-arthur-2019.webp", alt_text: "Willow thumbnail", source: "presence_work", slot: "thumbnails", asset_type: "thumbnail" },
+  ];
+}
+
+function redactEditorConfig(config) {
+  if (!config) return null;
+  return {
+    schema_version: config.schema_version,
+    version: config.version,
+    status: "published",
+    renderer_key: config.renderer_key,
+    published_at: config.published_at,
+    scene_config: config.scene_config,
+    style_dna: config.style_dna,
+    motion_config: config.motion_config,
+    asset_config: config.asset_config,
+    content_config: config.content_config,
+    roomkey_config: config.roomkey_config,
+    enquiry_config: config.enquiry_config,
+    locked_fields: config.locked_fields,
   };
 }
 

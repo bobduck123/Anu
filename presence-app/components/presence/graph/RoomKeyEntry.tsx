@@ -79,7 +79,9 @@ export function RoomKeyEntry({ token }: { token: string }) {
     );
   }
 
-  const room = payload.room;
+  const room = payload.editable_config && !payload.room.editable_config
+    ? { ...payload.room, editable_config: payload.editable_config }
+    : payload.room;
   const hero = room.hero_image_url || room.cover_image_url || room.profile_image_url;
   const sourceLabel = roomKeyTypeLabel(payload.room_key?.key_type ?? null);
   const campaign = payload.room_key?.campaign_label ?? null;

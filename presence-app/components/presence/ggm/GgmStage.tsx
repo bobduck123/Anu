@@ -70,6 +70,7 @@ interface GgmStageProps {
   /** When set, the Room was opened from a RoomKey tap; surfaced as a
    *  tiny provenance mark, not a banner. */
   roomKeySourceLabel?: string | null;
+  roomKeyProvenanceText?: string | null;
 }
 
 const ADVANCE_COOLDOWN_MS = 280;
@@ -79,6 +80,7 @@ export function GgmStage({
   scenes,
   initialScene = 0,
   roomKeySourceLabel,
+  roomKeyProvenanceText,
 }: GgmStageProps) {
   const [active, setActive] = useState(initialScene);
   // Per-scene slide index. Resets to 0 when the active scene changes.

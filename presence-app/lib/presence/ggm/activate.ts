@@ -78,6 +78,13 @@ function isGgmSignature(node: PresenceNode): boolean {
  * should fall through to the regular DNA renderer chain.
  */
 export function resolveCustomRendererKey(node: PresenceNode): string | null {
+  const fromEditableConfig = node.editable_config?.renderer_key;
+  if (typeof fromEditableConfig === "string" && fromEditableConfig.length > 0) {
+    return fromEditableConfig;
+  }
+  if (typeof node.renderer_key === "string" && node.renderer_key.length > 0) {
+    return node.renderer_key;
+  }
   const meta = readMetadata(node);
   const fromCustomPresence = meta.custom_presence?.style_dna?.renderer_key;
   if (typeof fromCustomPresence === "string" && fromCustomPresence.length > 0) {

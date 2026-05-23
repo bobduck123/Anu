@@ -17,9 +17,23 @@ interface GgmCallingCardProps {
   enquiryAction?: ReactNode;
   // Optional external portfolio link (e.g. ckgoddard.com.au).
   externalLink?: { label: string; href: string } | null;
+  contactTitle?: string;
+  contactCopy?: string;
+  availability?: string | null;
+  showDirectEmail?: boolean;
+  practiceLine?: string;
 }
 
-export function GgmCallingCard({ artist, enquiryAction, externalLink }: GgmCallingCardProps) {
+export function GgmCallingCard({
+  artist,
+  enquiryAction,
+  externalLink,
+  contactTitle,
+  contactCopy,
+  availability,
+  showDirectEmail = true,
+  practiceLine = "Memory · colour · lived landscape",
+}: GgmCallingCardProps) {
   return (
     <div className={styles.callingShell}>
       <p className={`${styles.blockEyebrow} ${styles.blockRevealChild}`} style={{ ["--i" as never]: 0 }}>
@@ -42,7 +56,7 @@ export function GgmCallingCard({ artist, enquiryAction, externalLink }: GgmCalli
           ✱ 2026
         </div>
 
-        <p className={styles.callingCardEyebrow}>An invitation</p>
+        <p className={styles.callingCardEyebrow}>{contactTitle || "An invitation"}</p>
         <h2 className={styles.callingCardName}>{artist.name}</h2>
         <p className={styles.callingCardRole}>{artist.subtitle}</p>
 
@@ -55,10 +69,12 @@ export function GgmCallingCard({ artist, enquiryAction, externalLink }: GgmCalli
             <small>Practice</small>
             <span>Memory · colour · lived landscape</span>
           </div>
-          <div className={styles.callingCardLine}>
-            <small>Direct</small>
-            <a href={`mailto:${artist.contactEmail}`}>{artist.contactEmail}</a>
-          </div>
+          {showDirectEmail && artist.contactEmail && (
+            <div className={styles.callingCardLine}>
+              <small>Direct</small>
+              <a href={`mailto:${artist.contactEmail}`}>{artist.contactEmail}</a>
+            </div>
+          )}
           {externalLink && (
             <div className={styles.callingCardLine}>
               <small>External</small>
@@ -72,7 +88,7 @@ export function GgmCallingCard({ artist, enquiryAction, externalLink }: GgmCalli
         {enquiryAction && (
           <div className={styles.callingCardActions}>
             {enquiryAction}
-            <a href={`mailto:${artist.contactEmail}`}>Write directly</a>
+            {showDirectEmail && artist.contactEmail && <a href={`mailto:${artist.contactEmail}`}>Write directly</a>}
           </div>
         )}
       </article>
@@ -81,7 +97,7 @@ export function GgmCallingCard({ artist, enquiryAction, externalLink }: GgmCalli
         className={`${styles.callingFootnote} ${styles.blockRevealChild}`}
         style={{ ["--i" as never]: 2 }}
       >
-        Interested in exhibitions, projects, or commissions
+        {availability || contactCopy || "Interested in exhibitions, projects, or commissions"}
       </p>
     </div>
   );

@@ -9,6 +9,7 @@ from flask import current_app, request
 from ..extensions import db
 from ..models import Encounter, PresenceNode, PresencePass, RoomKey
 from ..time_utils import now_utc
+from .presence_editor_config import public_config_for_room
 from .presence_service import PresenceValidationError, public_url_for_node, serialize_public_card
 
 
@@ -188,6 +189,7 @@ def room_key_entry_payload(room: PresenceNode, room_key: RoomKey | None, encount
         "message": "Youve entered this Room.",
         "room": serialize_public_card(room),
         "public_url": public_url_for_node(room),
+        "editable_config": public_config_for_room(room),
         "room_key": serialize_room_key(room_key, include_token=False) if room_key else None,
         "encounter": serialize_encounter(encounter) if encounter else None,
         "available_actions": ["save", "follow", "field_note", "mood_board", "enquiry"],

@@ -1,0 +1,114 @@
+{
+  "summary": "Built the owner-only Presence Studio editor app foundation and wired the GGM public renderer to published editable config.",
+  "date": "2026-05-23",
+  "route_added": "/studio/[roomId]/editor",
+  "endpoints_consumed": [
+    "GET /api/presence/owner/rooms/<room_id>/editor",
+    "GET /api/presence/owner/rooms/<room_id>/editor/draft",
+    "POST /api/presence/owner/rooms/<room_id>/editor/draft",
+    "PATCH /api/presence/owner/rooms/<room_id>/editor/draft",
+    "POST /api/presence/owner/rooms/<room_id>/editor/preview",
+    "POST /api/presence/owner/rooms/<room_id>/editor/publish",
+    "POST /api/presence/owner/rooms/<room_id>/editor/rollback",
+    "GET /api/presence/owner/rooms/<room_id>/editor/history",
+    "GET /api/presence/owner/rooms/<room_id>/assets",
+    "POST /api/presence/owner/rooms/<room_id>/assets/attach"
+  ],
+  "features": {
+    "typed_api_client": true,
+    "owner_route": true,
+    "loading_auth_forbidden_error_states": true,
+    "draft_load_create_save": true,
+    "ggm_scene_editor": true,
+    "work_wall_editor": true,
+    "practice_about_editor": true,
+    "calling_card_editor": true,
+    "style_dna_controls": true,
+    "motion_texture_controls": true,
+    "roomkey_editor": true,
+    "assets_tab": true,
+    "preview_publish": true,
+    "history_rollback": true,
+    "validation_readiness": true,
+    "public_renderer_published_config_consumption": true,
+    "roomkey_published_config_consumption": true
+  },
+  "security": {
+    "owner_only_route_uses_existing_studio_auth": true,
+    "editor_helpers_use_owner_api_namespace": true,
+    "public_draft_preview_endpoint_introduced": false,
+    "public_renderer_ignores_non_published_editable_config": true,
+    "unsafe_asset_url_warnings": [
+      "local filesystem paths",
+      "file URLs",
+      "unsafe data URLs",
+      "script-like URLs",
+      "localhost/internal hosts",
+      "directory traversal"
+    ],
+    "private_owner_email_exposed": false,
+    "platform_admin_exposed": false,
+    "internal_lifetime_free_exposed": false,
+    "auth_subjects_exposed": false,
+    "audit_metadata_exposed": false
+  },
+  "tests": [
+    {
+      "command": "cmd /c npm run typecheck",
+      "cwd": "presence-app",
+      "result": "passed"
+    },
+    {
+      "command": "cmd /c npm run build",
+      "cwd": "presence-app",
+      "result": "passed",
+      "warnings": [
+        "Next.js Turbopack inferred workspace root from the parent workspace lockfile because multiple lockfiles exist."
+      ]
+    },
+    {
+      "command": "node --test --experimental-strip-types lib\\api\\editor.test.ts lib\\api\\presenceGraph.test.ts",
+      "cwd": "presence-app",
+      "result": "passed",
+      "passed": 4,
+      "warnings": [
+        "Node reparsed TS test files as ES modules because package type is not set."
+      ]
+    },
+    {
+      "command": "npx playwright test tests/e2e/presence-studio-editor.spec.ts",
+      "cwd": "presence-app",
+      "result": "passed",
+      "passed": 1
+    },
+    {
+      "command": "python -m pytest tests\\test_presence_studio_editor_foundation.py tests\\test_presence_pass_paths.py -q",
+      "cwd": "flora-fauna/backend",
+      "result": "passed",
+      "passed": 9,
+      "warnings": [
+        "Existing SQLAlchemy Query.get() legacy warnings.",
+        "Pytest cache permission warning."
+      ]
+    }
+  ],
+  "screenshots": [
+    "docs/program/evidence/presence-studio-editor-app-upgrade-proof/screenshots/studio-editor-overview.png",
+    "docs/program/evidence/presence-studio-editor-app-upgrade-proof/screenshots/studio-editor-scenes.png",
+    "docs/program/evidence/presence-studio-editor-app-upgrade-proof/screenshots/studio-editor-preview.png"
+  ],
+  "hosted_readiness": {
+    "local_migration_exists": true,
+    "migration": "backend/migrations/versions/20260523_presence_editable_config.sql",
+    "hosted_migration_verified": false,
+    "note": "Hosted infrastructure must apply the migration before editor persistence is expected to work in hosted environments."
+  },
+  "known_limitations": [
+    "No full-screen authenticated draft renderer preview route yet.",
+    "No full upload/crop/transform media workflow yet.",
+    "Frontend validation is not generated from a shared backend schema yet.",
+    "Some stored style/motion tokens are disabled or coming soon until renderer wiring exists.",
+    "Screenshot proof uses mock auth/backend, not hosted owner auth.",
+    "Non-GGM renderer editable config mapping remains out of scope."
+  ]
+}

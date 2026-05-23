@@ -93,6 +93,111 @@ export interface PresenceWork {
   updated_at?: string | null;
 }
 
+export type PresenceEditableConfigStatus =
+  | "draft"
+  | "published"
+  | "archived"
+  | "preview"
+  | string;
+
+export interface PresenceEditableConfig {
+  id?: number;
+  room_id?: number;
+  schema_version?: string;
+  version?: number;
+  status?: PresenceEditableConfigStatus;
+  renderer_key?: string | null;
+  scene_config?: Record<string, unknown>;
+  style_dna?: Record<string, unknown>;
+  motion_config?: Record<string, unknown>;
+  asset_config?: Record<string, unknown>;
+  content_config?: Record<string, unknown>;
+  roomkey_config?: Record<string, unknown>;
+  enquiry_config?: Record<string, unknown>;
+  locked_fields?: Record<string, unknown>;
+  created_by_user_id?: number | null;
+  updated_by_user_id?: number | null;
+  published_by_user_id?: number | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  published_at?: string | null;
+  archived_at?: string | null;
+}
+
+export interface PresenceEditorAsset {
+  url: string;
+  source?: string | null;
+  slot?: string | null;
+  asset_type?: "image" | "thumbnail" | "texture" | string;
+  alt_text?: string | null;
+}
+
+export interface PresenceEditorRoomSummary {
+  id: number;
+  slug: string;
+  display_name: string;
+  owner_user_id?: number | null;
+}
+
+export interface PresenceEditorOverview {
+  room: PresenceEditorRoomSummary;
+  draft: PresenceEditableConfig | null;
+  published: PresenceEditableConfig | null;
+  published_public_config: PresenceEditableConfig | null;
+  suggested_config?: Record<string, unknown> | null;
+  history: PresenceEditableConfig[];
+  assets: PresenceEditorAsset[];
+}
+
+export interface PresenceEditorDraftResponse {
+  draft: PresenceEditableConfig | null;
+  created?: boolean;
+}
+
+export interface PresenceEditorPreviewResponse {
+  created_draft?: boolean;
+  preview: boolean;
+  expires_at: number;
+  preview_token: string;
+  preview_url: string;
+  editable_config: PresenceEditableConfig | null;
+  draft: PresenceEditableConfig | null;
+}
+
+export interface PresenceEditorPublishResponse {
+  published: PresenceEditableConfig;
+  public_config: PresenceEditableConfig | null;
+}
+
+export interface PresenceEditorHistoryResponse {
+  items: PresenceEditableConfig[];
+}
+
+export interface PresenceEditorAssetsResponse {
+  items: PresenceEditorAsset[];
+}
+
+export interface PresenceEditorAttachAssetInput {
+  slot:
+    | "hero_image"
+    | "artwork_images"
+    | "thumbnails"
+    | "texture_assets"
+    | "portrait_image"
+    | "social_preview"
+    | "attached_assets"
+    | string;
+  asset_type?: "image" | "thumbnail" | "texture" | string;
+  url: string;
+  alt_text?: string;
+  alt?: string;
+}
+
+export interface PresenceEditorAttachAssetResponse {
+  draft: PresenceEditableConfig;
+  assets: PresenceEditorAsset[];
+}
+
 export interface PresenceAvailabilityChip {
   id?: number;
   label: string;
@@ -225,6 +330,8 @@ export interface PresenceNode {
   map_ready?: boolean;
   archive_ready?: boolean;
   white_label_ready?: boolean;
+  renderer_key?: string | null;
+  editable_config?: PresenceEditableConfig | null;
   // Presence DNA persistence (Pass 2). The backend serializes
   // node_metadata as this top-level `metadata` key. presence_dna lives
   // at metadata.presence_dna. Other forward-compatible keys (e.g.
@@ -350,6 +457,7 @@ export interface RoomKeyEntryPayload {
   message: string;
   room: PresenceNode;
   public_url: string;
+  editable_config?: PresenceEditableConfig | null;
   room_key?: RoomKey | null;
   encounter?: Encounter | null;
   available_actions: string[];
