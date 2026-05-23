@@ -1,50 +1,32 @@
 "use client";
 
-// GgmStage — minimal scene-state model (v4 UX reset).
+// GgmStage — v5 (arrows-only + internal slideshow).
 //
-// What's gone:
-//   - Sidebar / left rail
-//   - Mobile bottom dock with brand + numbered dots + Motion pill
-//   - Visible chapter index
-//   - Per-scene right-edge labels
-//   - Internal scene scrollbars
-//   - Page-level scroll (the document is locked to a single 100svh stage)
+// Navigation model (per the explicit UX direction):
+//   - On-screen arrows (← / →) at the bottom-left / bottom-right of
+//     the viewing frame switch the active scene.
+//   - Arrow keys (← / → / ↑ / ↓) on the keyboard switch the scene.
+//   - Number keys 1–4 jump to a scene directly.
+//   - Wheel / trackpad: NOT bound to scene navigation. Wheel events
+//     belong to the active scene's internal scroll only.
+//   - Touch swipe: also NOT bound to scene navigation; visitors on
+//     phones use the on-screen arrows or the edge ticks.
+//   - Edge ticks remain available for direct jumps (visual scene
+//     index).
 //
-// What replaces it:
-//   - The Room is a single fixed 100svh "viewing frame" that fills the
-//     viewport. Inside the frame the active scene composition is
-//     rendered; switching scene swaps the composition mechanically
-//     while the WebGL liquid morph runs.
-//   - A discreet bottom-center scene counter — "01  — ARTWORK FIELD" /
-//     "04" — sits in mix-blend-difference so it reads off whatever
-//     artwork is showing. Counter and label fade at idle and brighten
-//     during a transition or on hover.
-//   - Four tiny right-edge tick marks (no labels) — each marks one
-//     scene. Clickable, keyboard-focusable, but visually a single hair
-//     wider for the active one. No text appears next to them unless
-//     hovered.
-//   - A subtle bottom-right "→" / "↓ next" affordance that on hover
-//     reveals the next scene's name.
-//   - Keyboard arrows / number keys / wheel / swipe still work.
-//
-// Scroll model:
-//   - The page itself never scrolls (`overflow: hidden` on body via
-//     the Room root). Wheel and touch are treated as discrete
-//     gestures: one gesture = one scene advance, with a 320ms cooldown.
-//   - Scene content is sized to fit inside the frame; if a scene's
-//     composition exceeds the frame on small viewports, the inside
-//     of the stage gets a single non-snapping scroll, not the page.
-//
-// Settings:
-//   - The motion-settings trigger is hidden by default. It only
-//     renders when the URL has `?preview=1` or `?devmotion=1`, OR
-//     the visitor holds Shift+P. This keeps it out of the public
-//     visual hierarchy while keeping it accessible to owners /
-//     operators / curators who know the gesture.
+// Internal slideshow:
+//   - A scene can declare an `images: string[]` array (1+ entries).
+//   - The stage maintains a per-scene image index. When the active
+//     scene's images.length > 1, the scene receives a `slideAdvance()`
+//     callback it can wire to a click target (Scene 01 uses this to
+//     advance through the hero artworks via the WebGL liquid morph).
+//   - The flat WebGL canvas image list is computed across all scenes
+//     so morphs play between consecutive textures.
 
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -61,12 +43,24 @@ export interface SceneDef {
   number: string;
   label: string;
   sub: string;
-  backgroundImage: string;
-  /** Surface theme: applies the paper background under the scene
-   *  composition. `undefined` (field) lets the canvas show through. */
+  /** One or more background images. Scene 01 has the full hero
+   *  sequence; other scenes typically have one image. */
+  images: string[];
+  /** Surface theme that wraps the scene content. `undefined` = the
+   *  field (canvas-only) scene. */
   surface?: "wall" | "studio" | "card";
-  content: () => ReactNode;
-  overlay?: () => ReactNode;
+  /** Renderer for the scene content. Receives the per-scene slide
+   *  index + an advance callback (only meaningful when images.length>1). */
+  content: (ctx: SceneRenderContext) => ReactNode;
+  /** Optional overlay rendered above the scene content. */
+  overlay?: (ctx: SceneRenderContext) => ReactNode;
+}
+
+export interface SceneRenderContext {
+  slideIndex: number;
+  slideCount: number;
+  slideAdvance: () => void;
+  slideGoTo: (i: number) => void;
 }
 
 interface GgmStageProps {
@@ -78,8 +72,7 @@ interface GgmStageProps {
   roomKeySourceLabel?: string | null;
 }
 
-const ADVANCE_COOLDOWN_MS = 320;
-const WHEEL_THRESHOLD = 32;
+const ADVANCE_COOLDOWN_MS = 280;
 
 export function GgmStage({
   node,
@@ -88,30 +81,74 @@ export function GgmStage({
   roomKeySourceLabel,
 }: GgmStageProps) {
   const [active, setActive] = useState(initialScene);
-  const [hoverNav, setHoverNav] = useState(false);
+  // Per-scene slide index. Resets to 0 when the active scene changes.
+  const [slideIndices, setSlideIndices] = useState<number[]>(() => scenes.map(() => 0));
+  const [hoverNext, setHoverNext] = useState(false);
+  const [hoverPrev, setHoverPrev] = useState(false);
   const advanceLockRef = useRef(false);
   const { effective } = useGgmMotion();
   const settingsVisible = useSettingsPreview();
 
   const total = scenes.length;
   const scene = scenes[active] ?? scenes[0];
+  const slideIndex = slideIndices[active] ?? 0;
 
-  const goTo = useCallback((idx: number) => {
+  // Flat image list — one entry per scene-image pair, in scene order.
+  // The WebGL canvas activeIndex picks one of these.
+  const { flatImages, sceneRanges } = useMemo(() => {
+    const flat: string[] = [];
+    const ranges: Array<{ start: number; count: number }> = [];
+    for (const s of scenes) {
+      ranges.push({ start: flat.length, count: s.images.length });
+      flat.push(...s.images);
+    }
+    return { flatImages: flat, sceneRanges: ranges };
+  }, [scenes]);
+
+  const range = sceneRanges[active] ?? { start: 0, count: 1 };
+  const canvasActiveIndex = range.start + slideIndex;
+
+  const goToScene = useCallback((idx: number) => {
     if (advanceLockRef.current) return;
     const nextIdx = ((idx % total) + total) % total;
     if (nextIdx === active) return;
     advanceLockRef.current = true;
     setActive(nextIdx);
+    // Reset incoming scene's slide to 0 so each scene re-enters at
+    // its first image. (Outgoing scene's slide index is preserved in
+    // case the visitor returns and we want to revisit later.)
+    setSlideIndices((prev) => {
+      const next = [...prev];
+      next[nextIdx] = 0;
+      return next;
+    });
     window.setTimeout(() => {
       advanceLockRef.current = false;
     }, ADVANCE_COOLDOWN_MS);
   }, [active, total]);
 
-  const next = useCallback(() => goTo(active + 1), [active, goTo]);
-  const prev = useCallback(() => goTo(active - 1), [active, goTo]);
+  const nextScene = useCallback(() => goToScene(active + 1), [active, goToScene]);
+  const prevScene = useCallback(() => goToScene(active - 1), [active, goToScene]);
 
-  // Lock body scroll while the Room is mounted (the document should
-  // not visibly scroll — the scene is the experience).
+  const slideAdvance = useCallback(() => {
+    setSlideIndices((prev) => {
+      const next = [...prev];
+      const count = scenes[active]?.images.length ?? 1;
+      next[active] = (next[active] + 1) % count;
+      return next;
+    });
+  }, [active, scenes]);
+
+  const slideGoTo = useCallback((i: number) => {
+    setSlideIndices((prev) => {
+      const next = [...prev];
+      const count = scenes[active]?.images.length ?? 1;
+      next[active] = ((i % count) + count) % count;
+      return next;
+    });
+  }, [active, scenes]);
+
+  // Lock body scroll while the Room is mounted.
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
     const prevHtmlOverflow = document.documentElement.style.overflow;
@@ -123,8 +160,7 @@ export function GgmStage({
     };
   }, []);
 
-  // Keyboard: arrows, page keys, number keys for direct scene jumps.
-  // Also handle Shift+P to toggle preview mode for the settings menu.
+  // Keyboard navigation.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.target instanceof HTMLElement) {
@@ -133,96 +169,54 @@ export function GgmStage({
         if (editable || tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       }
       switch (e.key) {
-        case "ArrowDown":
         case "ArrowRight":
+        case "ArrowDown":
         case "PageDown":
-        case " ":
           e.preventDefault();
-          next();
+          nextScene();
           break;
-        case "ArrowUp":
         case "ArrowLeft":
+        case "ArrowUp":
         case "PageUp":
           e.preventDefault();
-          prev();
+          prevScene();
           break;
         case "Home":
           e.preventDefault();
-          goTo(0);
+          goToScene(0);
           break;
         case "End":
           e.preventDefault();
-          goTo(total - 1);
+          goToScene(total - 1);
           break;
         default:
           if (/^[1-9]$/.test(e.key)) {
             const i = Number(e.key) - 1;
             if (i < total) {
               e.preventDefault();
-              goTo(i);
+              goToScene(i);
             }
           }
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [next, prev, goTo, total]);
+  }, [nextScene, prevScene, goToScene, total]);
 
-  // Wheel input. Accumulate small ticks so a single trackpad gesture
-  // doesn't blast past multiple scenes.
-  useEffect(() => {
-    let accum = 0;
-    let lastTick = 0;
-    function onWheel(e: WheelEvent) {
-      e.preventDefault();
-      const now = performance.now();
-      accum += e.deltaY;
-      if (now - lastTick < 340) return;
-      if (Math.abs(accum) < WHEEL_THRESHOLD) return;
-      if (accum > 0) next();
-      else prev();
-      accum = 0;
-      lastTick = now;
-    }
-    window.addEventListener("wheel", onWheel, { passive: false });
-    return () => window.removeEventListener("wheel", onWheel);
-  }, [next, prev]);
+  const isLastScene = active === total - 1;
+  const isFirstScene = active === 0;
+  const nextLabel = isLastScene ? scenes[0]?.label : scenes[active + 1]?.label;
+  const prevLabel = isFirstScene ? scenes[total - 1]?.label : scenes[active - 1]?.label;
 
-  // Touch swipe.
-  useEffect(() => {
-    let startY = 0;
-    let startX = 0;
-    let active = false;
-    function onStart(e: TouchEvent) {
-      const t = e.touches[0];
-      if (!t) return;
-      startY = t.clientY;
-      startX = t.clientX;
-      active = true;
-    }
-    function onEnd(e: TouchEvent) {
-      if (!active) return;
-      active = false;
-      const t = e.changedTouches[0];
-      if (!t) return;
-      const dy = startY - t.clientY;
-      const dx = startX - t.clientX;
-      // Treat vertical-dominant swipes only.
-      if (Math.abs(dy) < 48 || Math.abs(dx) > Math.abs(dy)) return;
-      if (dy > 0) next();
-      else prev();
-    }
-    window.addEventListener("touchstart", onStart, { passive: true });
-    window.addEventListener("touchend", onEnd, { passive: true });
-    return () => {
-      window.removeEventListener("touchstart", onStart);
-      window.removeEventListener("touchend", onEnd);
-    };
-  }, [next, prev]);
-
-  const images = scenes.map((s) => s.backgroundImage);
-  const isFinalScene = active === total - 1;
-  const nextLabel = isFinalScene ? scenes[0]?.label : scenes[active + 1]?.label;
+  const ctx: SceneRenderContext = useMemo(
+    () => ({
+      slideIndex,
+      slideCount: scene?.images.length ?? 1,
+      slideAdvance,
+      slideGoTo,
+    }),
+    [slideIndex, scene, slideAdvance, slideGoTo],
+  );
 
   return (
     <main className={styles.room} aria-label={`${node.display_name} room`}>
@@ -243,8 +237,8 @@ export function GgmStage({
       <div className={styles.frame}>
         <div className={styles.frameCanvasLayer}>
           <GgmLiquidCanvas
-            images={images}
-            activeIndex={active}
+            images={flatImages}
+            activeIndex={canvasActiveIndex}
             style={effective.liquidStyle}
             transitionMs={effective.liquidDurationMs}
             intensity={effective.liquidIntensity}
@@ -252,48 +246,45 @@ export function GgmStage({
           />
         </div>
 
-        {/* Stable frame corner marks */}
         <span className={styles.frameCornerTL} aria-hidden />
         <span className={styles.frameCornerTR} aria-hidden />
         <span className={styles.frameCornerBL} aria-hidden />
         <span className={styles.frameCornerBR} aria-hidden />
 
-        {/* Active scene composition */}
-        <SceneSurface scene={scene} key={scene.id}>
-          {scene.content()}
+        <SceneSurface scene={scene} ctx={ctx} key={scene.id}>
+          {scene.content(ctx)}
         </SceneSurface>
 
         {scene.overlay && (
           <div className={styles.frameOverlay}>
-            {scene.overlay()}
+            {scene.overlay(ctx)}
           </div>
         )}
       </div>
 
-      {/* Bottom-center scene counter — the only persistent navigation
-          label. Reads off the artwork via mix-blend-difference. */}
-      <div
-        className={styles.sceneCounter}
-        aria-live="polite"
-        onMouseEnter={() => setHoverNav(true)}
-        onMouseLeave={() => setHoverNav(false)}
-      >
+      {/* Bottom-center scene counter. */}
+      <div className={styles.sceneCounter} aria-live="polite">
         <span className={styles.sceneCounterNum}>{scene.number}</span>
         <span className={styles.sceneCounterSep}>—</span>
         <span className={styles.sceneCounterLabel}>{scene.label}</span>
         <span className={styles.sceneCounterTotal}>
           / {String(total).padStart(2, "0")}
         </span>
+        {scene.images.length > 1 && (
+          <span className={styles.sceneCounterSlide}>
+            ✱ {String(slideIndex + 1).padStart(2, "0")} / {String(scene.images.length).padStart(2, "0")}
+          </span>
+        )}
       </div>
 
-      {/* Edge tick marks — one per scene, no labels. */}
+      {/* Right-edge tick marks. */}
       <nav className={styles.edgeMarks} aria-label="Scenes">
         {scenes.map((s, i) => (
           <button
             key={s.id}
             type="button"
             className={`${styles.edgeMark} ${i === active ? styles.edgeMarkActive : ""}`}
-            onClick={() => goTo(i)}
+            onClick={() => goToScene(i)}
             aria-label={`${s.number} ${s.label}`}
             aria-current={i === active ? "true" : undefined}
             data-hover
@@ -301,23 +292,38 @@ export function GgmStage({
         ))}
       </nav>
 
-      {/* Bottom-right next affordance. Reveals next scene name on hover. */}
+      {/* Left "previous" arrow. */}
       <button
         type="button"
-        className={`${styles.nextAffordance} ${hoverNav ? styles.nextAffordanceHover : ""}`}
-        onClick={next}
-        onMouseEnter={() => setHoverNav(true)}
-        onMouseLeave={() => setHoverNav(false)}
-        aria-label={isFinalScene ? "Return to start" : `Next — ${nextLabel}`}
+        className={`${styles.prevAffordance} ${hoverPrev ? styles.affordanceHover : ""}`}
+        onClick={prevScene}
+        onMouseEnter={() => setHoverPrev(true)}
+        onMouseLeave={() => setHoverPrev(false)}
+        aria-label={isFirstScene ? `Previous — ${prevLabel} (wraps)` : `Previous — ${prevLabel}`}
         data-hover
       >
-        <span className={styles.nextAffordanceLabel}>
-          {isFinalScene ? "Return" : nextLabel}
+        <span className={styles.affordanceArrow} aria-hidden>←</span>
+        <span className={styles.affordanceLabel}>
+          {isFirstScene ? "Last" : prevLabel}
         </span>
-        <span className={styles.nextAffordanceArrow} aria-hidden>→</span>
       </button>
 
-      {/* Preview-gated settings menu */}
+      {/* Right "next" arrow. */}
+      <button
+        type="button"
+        className={`${styles.nextAffordance} ${hoverNext ? styles.affordanceHover : ""}`}
+        onClick={nextScene}
+        onMouseEnter={() => setHoverNext(true)}
+        onMouseLeave={() => setHoverNext(false)}
+        aria-label={isLastScene ? "Return to start" : `Next — ${nextLabel}`}
+        data-hover
+      >
+        <span className={styles.affordanceLabel}>
+          {isLastScene ? "Return" : nextLabel}
+        </span>
+        <span className={styles.affordanceArrow} aria-hidden>→</span>
+      </button>
+
       {settingsVisible && (
         <div className={styles.settingsFloat}>
           <GgmSettingsMenu />
@@ -327,9 +333,9 @@ export function GgmStage({
   );
 }
 
-// ── Scene surface ───────────────────────────────────────────────────────────
+// ── Scene surface ──────────────────────────────────────────────────────────
 
-function SceneSurface({ scene, children }: { scene: SceneDef; children: ReactNode }) {
+function SceneSurface({ scene, children }: { scene: SceneDef; ctx: SceneRenderContext; children: ReactNode }) {
   const [revealed, setRevealed] = useState(false);
   useEffect(() => {
     setRevealed(false);
@@ -357,12 +363,6 @@ function SceneSurface({ scene, children }: { scene: SceneDef; children: ReactNod
 }
 
 // ── Settings preview gate ───────────────────────────────────────────────────
-//
-// The settings menu is only rendered when:
-//   - URL has ?preview=1 or ?devmotion=1, OR
-//   - The visitor holds Shift+P at any point in the session.
-// In both cases the visibility persists for the rest of the session
-// (via in-memory state — no localStorage, no cookie).
 
 function useSettingsPreview(): boolean {
   const [visible, setVisible] = useState(false);
@@ -374,7 +374,6 @@ function useSettingsPreview(): boolean {
     }
     function onKey(e: KeyboardEvent) {
       if (e.shiftKey && (e.key === "P" || e.key === "p")) {
-        // Only toggle when typed in body, not in an input.
         const t = e.target as HTMLElement | null;
         if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
         setVisible((v) => !v);

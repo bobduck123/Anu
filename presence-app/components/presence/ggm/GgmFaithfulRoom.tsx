@@ -1,17 +1,17 @@
 "use client";
 
-// GGM Faithful Room — v4 (UX reset).
+// GGM Faithful Room — v5 (slideshow + scrollable wall + arrows nav).
 //
-// The Room is a single fixed 100svh viewing frame with four scenes.
-// No sidebar. No persistent dock. No system chrome. The brand floats
-// top-left in mix-blend-difference (faithful to the source's nav
-// signature). Presence-native enquiry and graph actions are folded
-// quietly into the Calling Card scene — they no longer hold a
-// persistent strip below the stage.
+// Scene 01 is a click-to-advance slideshow: clicking the artwork (or
+// the on-stage "advance" affordance) cycles through ALL hero artworks
+// via the WebGL liquid morph.
+// Scene 02 is the creatively scrollable Work Wall — varied tile sizes,
+// year markers, hidden internal scrollbars.
+// Scene 03 is the Practice Studio (workbench composition).
+// Scene 04 is the Calling Card object.
 //
-// /r/[token] dispatches into this same component with a
-// `roomKeySourceLabel` prop; the chip appears as a tiny provenance
-// mark, not a banner.
+// Scenes are navigated only by the on-screen ← / → arrows and the
+// keyboard arrows. Wheel + touch belong to scene-internal scroll.
 
 import { useMemo } from "react";
 import Image from "next/image";
@@ -20,7 +20,6 @@ import type { PresenceNode, PresenceWork } from "@/lib/api/types";
 import { PublicEnquiryDialog } from "@/components/portfolio/PublicEnquiryDialog";
 import {
   GGM_ARTIST,
-  GGM_FEATURED,
   GGM_HERO_SEQUENCE,
   GGM_INSPIRE,
   GGM_LIVE_DEMO_URL,
@@ -81,12 +80,6 @@ function coerceWork(w: PresenceWork, idx: number): GgmWork {
   };
 }
 
-// Work-wall layout grammar (8 slots, repeats to cover any count).
-const WALL_VARIANTS = [
-  styles.wallTile1, styles.wallTile2, styles.wallTile3, styles.wallTile4,
-  styles.wallTile5, styles.wallTile6, styles.wallTile7, styles.wallTile8,
-];
-
 export default function GgmFaithfulRoom(props: GgmFaithfulRoomProps) {
   return (
     <GgmMotionProvider>
@@ -101,7 +94,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
   const hrefForWork = (w: GgmWork) =>
     `/p/${encodeURIComponent(node.slug)}/works/${encodeURIComponent(w.slug)}`;
 
-  // Focused work-detail mode — no stage, dedicated detail surface.
+  // Focused work-detail mode.
   if (focusWorkSlug) {
     const focus = works.find((w) => w.slug === focusWorkSlug);
     if (focus) {
@@ -139,37 +132,39 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
   const caption = node.headline ?? GGM_ARTIST.heroCaption;
   const aboutIntro = node.bio ?? node.short_bio ?? GGM_ARTIST.aboutIntro;
   const aboutBody = node.long_story ?? GGM_ARTIST.aboutBody;
-  const statementQuote = node.practice_statement ?? GGM_ARTIST.statementQuote;
   const externalPortfolio = pickExternalPortfolio(node);
 
-  const heroSlides = useMemo(() => {
-    const ordered = GGM_HERO_SEQUENCE.map((h) => works.find((w) => w.slug === h.slug)).filter(
+  // Scene 01 cycles through the FULL ordered hero sequence (all 8
+  // works, ordered as in source GGM_HERO_SEQUENCE + the rest).
+  const heroSlides = useMemo<GgmWork[]>(() => {
+    const orderedFromSequence = GGM_HERO_SEQUENCE.map((h) => works.find((w) => w.slug === h.slug)).filter(
       (w): w is GgmWork => Boolean(w),
     );
-    return ordered.length > 0 ? ordered : works.slice(0, 5);
+    const seen = new Set(orderedFromSequence.map((w) => w.slug));
+    const rest = works.filter((w) => !seen.has(w.slug));
+    const combined = [...orderedFromSequence, ...rest];
+    return combined.length > 0 ? combined : works;
   }, [works]);
 
-  const wallWorks = useMemo(() => {
-    const featuredSlugs = GGM_FEATURED.map((f) => f.slug);
-    const featured = featuredSlugs
-      .map((s) => works.find((w) => w.slug === s))
-      .filter((w): w is GgmWork => Boolean(w));
-    const rest = works.filter((w) => !featuredSlugs.includes(w.slug));
-    return [...featured, ...rest];
-  }, [works]);
+  // Scene 02 wall shows ALL works in a varied, scrollable composition.
+  const wallWorks = useMemo<GgmWork[]>(() => works, [works]);
+
+  const heroImages = useMemo(() => heroSlides.map((w) => w.image), [heroSlides]);
 
   const scenes: SceneDef[] = useMemo<SceneDef[]>(() => [
     {
       id: "field",
       number: "01",
       label: "Artwork Field",
-      sub: "liquid surface",
-      backgroundImage: heroSlides[0]?.image ?? GGM_WORKS[0].image,
+      sub: "liquid slideshow",
+      images: heroImages,
       surface: undefined,
-      content: () => (
+      content: (ctx) => (
         <ArtworkFieldContent
-          slide={heroSlides[0] ?? null}
+          slides={heroSlides}
+          slideIndex={ctx.slideIndex}
           caption={caption}
+          onAdvance={ctx.slideAdvance}
         />
       ),
     },
@@ -178,7 +173,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
       number: "02",
       label: "Work Wall",
       sub: "selected watercolours",
-      backgroundImage: heroSlides[1]?.image ?? GGM_WORKS[1].image,
+      images: [wallWorks[1]?.image ?? GGM_WORKS[1].image],
       surface: "wall",
       content: () => (
         <WorkWallSurface
@@ -192,7 +187,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
       number: "03",
       label: "Practice Studio",
       sub: "workbench, notes, references",
-      backgroundImage: heroSlides[2]?.image ?? GGM_WORKS[2].image,
+      images: [wallWorks[2]?.image ?? GGM_WORKS[2].image],
       surface: "studio",
       content: () => (
         <GgmStudioScene
@@ -209,7 +204,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
       number: "04",
       label: "Calling Card",
       sub: "an invitation",
-      backgroundImage: heroSlides[3]?.image ?? GGM_WORKS[3].image,
+      images: [wallWorks[3]?.image ?? GGM_WORKS[3].image],
       surface: "card",
       content: () => (
         <GgmCallingCard
@@ -227,14 +222,10 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
       ),
     },
   ], [
-    heroSlides, wallWorks, brand, caption, aboutIntro, aboutBody,
+    heroImages, heroSlides, wallWorks, brand, caption, aboutIntro, aboutBody,
     externalPortfolio, node.slug, node.node_type,
     hrefForWork,
   ]);
-
-  // statementQuote is intentionally read only inside the Calling Card scene
-  // and the focus-detail branch above. Suppress lint by referencing it once.
-  void statementQuote;
 
   return (
     <div className={styles.ggm}>
@@ -243,12 +234,6 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
         scenes={scenes}
         roomKeySourceLabel={roomKeySourceLabel}
       />
-      {/* Source provenance footer is rendered inside the Calling Card
-          scene — no persistent footer outside the stage. The live
-          source link still lives in the rendered Calling Card. */}
-      {/* Render the source URL one final time as a hidden semantic
-          landmark so screen readers can reach it even when scene 04
-          is not active. */}
       <span className={styles.srOnly}>
         <a href={GGM_LIVE_DEMO_URL}>Source portfolio: christina-goddard.vercel.app</a>
       </span>
@@ -256,33 +241,58 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
   );
 }
 
-// ── Scene 01 content — Artwork Field ───────────────────────────────────────
-//
-// The artwork is the WebGL canvas behind the scene; this layer carries
-// only the most discreet identifying text (work title + caption) so
-// the visitor isn't asked to read.
+// ── Scene 01 — Artwork Field (click-to-advance slideshow overlay) ──────────
+
+interface ArtworkFieldContentProps {
+  slides: GgmWork[];
+  slideIndex: number;
+  caption: string;
+  onAdvance: () => void;
+}
 
 function ArtworkFieldContent({
-  slide,
+  slides,
+  slideIndex,
   caption,
-}: {
-  slide: GgmWork | null;
-  caption: string;
-}) {
+  onAdvance,
+}: ArtworkFieldContentProps) {
+  const slide = slides[slideIndex] ?? slides[0] ?? null;
   return (
-    <div className={styles.fieldContent}>
-      {slide && (
-        <p className={styles.fieldWorkTitle}>
-          {slide.title}
-          <span className={styles.fieldWorkYear}>{slide.year}</span>
-        </p>
-      )}
-      <p className={styles.fieldCaption}>{caption}</p>
-    </div>
+    <button
+      type="button"
+      className={styles.fieldClickPlate}
+      onClick={onAdvance}
+      aria-label={
+        slide
+          ? `Show next artwork — currently ${slide.title}`
+          : "Advance artwork"
+      }
+      data-hover
+    >
+      <span className={styles.fieldContent}>
+        {slide && (
+          <span className={styles.fieldWorkTitle}>
+            {slide.title}
+            <span className={styles.fieldWorkYear}>{slide.year}</span>
+          </span>
+        )}
+        <span className={styles.fieldCaption}>
+          {caption}
+        </span>
+        <span className={styles.fieldClickHint} aria-hidden>
+          ✱ Click anywhere — {String(slideIndex + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
+        </span>
+      </span>
+    </button>
   );
 }
 
-// ── Scene 02 surface — Work Wall ───────────────────────────────────────────
+// ── Scene 02 — Creatively scrollable Work Wall ────────────────────────────
+//
+// Composition: a "viewing tray" with one large featured plate at top,
+// followed by varied paired rows + occasional full-bleed wide plates +
+// year markers between sections. Scroll lives inside the frame; the
+// page itself never scrolls.
 
 interface WorkWallSurfaceProps {
   works: GgmWork[];
@@ -290,44 +300,130 @@ interface WorkWallSurfaceProps {
 }
 
 function WorkWallSurface({ works, hrefForWork }: WorkWallSurfaceProps) {
+  // Group works by year so we can drop year-marker rules between
+  // sections — reads like a hung gallery walk-through.
+  const grouped = useMemo(() => {
+    const map = new Map<number, GgmWork[]>();
+    for (const w of works) {
+      const arr = map.get(w.year) ?? [];
+      arr.push(w);
+      map.set(w.year, arr);
+    }
+    return Array.from(map.entries()).sort((a, b) => a[0] - b[0]);
+  }, [works]);
+
+  // Pick a feature work for the top of the wall (last hero in the
+  // ordered sequence — Willow of Port Arthur is the strongest).
+  const feature = works[works.length - 1] ?? works[0];
+
   return (
-    <div className={styles.wallShell}>
-      <header className={styles.wallHead}>
+    <div className={styles.wallV2Shell}>
+      <header className={styles.wallV2Head}>
         <div>
           <p className={styles.blockEyebrow}>
             <span className={styles.blockEyebrowNumber}>02</span>
             Work Wall
           </p>
-          <h2>Selected watercolour works.</h2>
+          <h2 className={styles.wallV2Title}>
+            A viewing tray of selected watercolour works.
+          </h2>
+          <p className={styles.wallV2Lead}>
+            Hung in chronological pockets. Scroll the tray to walk the wall.
+            Tap any plate for the work's room.
+          </p>
         </div>
-        <p className={styles.wallHeadMeta}>
-          {works.length.toString().padStart(2, "0")} works · 2005 — 2019
+        <p className={styles.wallV2Meta}>
+          {String(works.length).padStart(2, "0")} works · {grouped[0]?.[0]} — {grouped[grouped.length - 1]?.[0]}
         </p>
       </header>
 
-      <div className={styles.wallGrid}>
-        {works.map((w, i) => (
-          <Link
-            key={w.id}
-            href={hrefForWork(w)}
-            className={`${styles.wallTile} ${WALL_VARIANTS[i % WALL_VARIANTS.length]}`}
-            data-hover
+      {feature && (
+        <Link
+          href={hrefForWork(feature)}
+          className={styles.wallV2Feature}
+          data-hover
+          aria-label={`${feature.title} (${feature.year}) — open work`}
+        >
+          <Image
+            src={feature.image}
+            alt={feature.alt}
+            fill
+            sizes="(max-width: 920px) 100vw, 1100px"
+            priority
+          />
+          <div className={styles.wallV2FeatureMeta}>
+            <span className={styles.wallV2FeatureBadge}>Feature plate</span>
+            <h3>{feature.title}</h3>
+            <p>
+              {feature.year} · {feature.dimensions !== "Unknown" ? `${feature.dimensions} · ` : ""}{feature.medium}
+            </p>
+            <p className={styles.wallV2FeatureDesc}>{feature.description}</p>
+          </div>
+        </Link>
+      )}
+
+      {grouped.map(([year, list], yearIdx) => (
+        <section key={year} className={styles.wallV2Year}>
+          <header className={styles.wallV2YearHead}>
+            <span className={styles.wallV2YearMark} aria-hidden />
+            <h3 className={styles.wallV2YearLabel}>{year}</h3>
+            <span className={styles.wallV2YearCount}>
+              {list.length === 1 ? "1 work" : `${list.length} works`}
+            </span>
+          </header>
+          <div
+            className={`${styles.wallV2Row} ${rowVariantFor(yearIdx, list.length)}`}
           >
-            <Image
-              src={w.thumb}
-              alt={w.alt}
-              fill
-              sizes="(max-width: 920px) 100vw, 50vw"
-            />
-            <div className={styles.wallTileMeta}>
-              <span>{w.title}</span>
-              <small>{w.year}</small>
-            </div>
-          </Link>
-        ))}
-      </div>
+            {list.map((w, i) => (
+              <Link
+                key={w.id}
+                href={hrefForWork(w)}
+                className={`${styles.wallV2Plate} ${plateSizeFor(yearIdx, i, list.length)}`}
+                data-hover
+              >
+                <Image
+                  src={w.image}
+                  alt={w.alt}
+                  fill
+                  sizes="(max-width: 920px) 100vw, 50vw"
+                />
+                <div className={styles.wallV2PlateMeta}>
+                  <span className={styles.wallV2PlateTitle}>{w.title}</span>
+                  <span className={styles.wallV2PlateDims}>
+                    {w.dimensions !== "Unknown" ? w.dimensions : w.medium}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      <footer className={styles.wallV2Foot}>
+        <p>End of tray — use the arrows to leave the wall.</p>
+      </footer>
     </div>
   );
+}
+
+// Variation helper — different row dispositions per year group so the
+// wall doesn't read as a grid.
+function rowVariantFor(yearIdx: number, count: number): string {
+  if (count === 1) return styles.wallV2RowSingle;
+  switch (yearIdx % 4) {
+    case 0: return styles.wallV2RowPairLR;
+    case 1: return styles.wallV2RowPairRL;
+    case 2: return styles.wallV2RowTrio;
+    default: return styles.wallV2RowOffset;
+  }
+}
+
+function plateSizeFor(yearIdx: number, i: number, _count: number): string {
+  // Alternate large + small within a row for visual interest.
+  const k = (yearIdx + i) % 3;
+  if (k === 0) return styles.wallV2PlateLg;
+  if (k === 1) return styles.wallV2PlateMd;
+  return styles.wallV2PlateSm;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────

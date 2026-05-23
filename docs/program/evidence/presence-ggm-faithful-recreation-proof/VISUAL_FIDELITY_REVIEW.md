@@ -3,7 +3,7 @@
 Date: 2026-05-23
 Reviewer: Claude (post-renderer)
 Renderer key: `ggm-faithful-room-v1`
-Latest pass: **v4 (UX reset — minimal navigation, mechanical scene cards)**
+Latest pass: **v5 (Scene 1 slideshow + scrollable wall + arrows-only nav)**
 Screenshots: `./screenshots/` (v1 root, `v2-blocks/`, `v3-scenes/`)
 
 ## V3 verdict
@@ -408,5 +408,85 @@ All under `screenshots/v4-minimal/`. Same 7 states × 2 viewports
 The mechanical scene-card idea has finally landed. The Room reads as
 "one art object whose face changes" rather than as a navigable app.
 Recommend GO on visual sign-off.
+
+---
+
+## V5 — Scene 1 slideshow + scrollable wall + arrows-only nav
+
+### V5 — What changed vs v4
+
+- **Scene 1 is now a click-to-advance slideshow.** A transparent
+  click plate fills the artwork; tapping anywhere advances to the
+  next hero artwork via the WebGL liquid morph. The slide indicator
+  appears in the bottom-center counter as
+  `✱ 01 / 08`. All 8 source works cycle in source order.
+- **Scene 2 is a proper viewing tray** instead of a static grid.
+  A feature plate at the top (Willow of Port Arthur in 16:9), then
+  year-grouped sections with varied row dispositions (single /
+  pair-LR / pair-RL / trio / offset) and three plate sizes
+  (large / medium / small) so the wall reads as a hung walk-through
+  rather than a uniform grid. The wall is taller than the frame
+  and scrolls internally; scrollbars are hidden.
+- **Navigation is now arrows-only.** The wheel and touch-swipe
+  scene listeners are removed — wheel + touch belong to scene-
+  internal scroll. Two on-screen arrows live at the bottom edge:
+  `←` bottom-left (previous) and `→` bottom-right (next). Each
+  reveals the destination scene's name on hover. Keyboard arrows
+  (← / → / ↑ / ↓), `PageUp` / `PageDown`, `Home` / `End`, and
+  `1–4` direct jumps still work. Edge ticks still work as a
+  visual scene index.
+- Scenes can no longer scroll INTO each other; scenes are sealed
+  destinations. The Studio + Wall + Card scenes scroll internally
+  for tall content; the document never scrolls.
+
+### V5 — Scorecard delta
+
+| Axis | V4 | V5 | Notes |
+|---|---|---|---|
+| First impression | 10 | 10 | Slideshow re-uses the liquid morph the visitor sees on entry |
+| Layout | 10 | 10 | Same |
+| Image treatment | 9.8 | **9.9** | Scene 2 viewing tray hangs works with year markers |
+| Motion | 9.7 | **9.85** | Slideshow + scrollable wall both run the liquid + scroll smoothly without competing |
+| Mobile | 9.8 | 9.8 | Same |
+| Calm / clarity | 9.5 | **9.7** | Arrows-only nav removes the ambiguous wheel-to-advance behaviour |
+| **Aggregate** | 9.8 | **9.85** | |
+
+### V5 — Verification
+
+- ✓ `npm run typecheck` — clean
+- ✓ `npm run build` — clean (50 routes; GGM intact)
+- ✓ 20 v5 screenshots captured (Scene 1 slides 01/03/05; Scene 2 top/mid/bottom scroll states; Scenes 3/4; previous/next hover states — desktop + mobile each)
+- ✓ Live DOM probe at `/p/ggm-christina-goddard`:
+  - `fieldClickPlate`, `prevAffordance`, `nextAffordance` present
+  - no `rail`, no `mobileDock`
+- ✓ Non-GGM regression (`/p/rooms-underground-dj`): zero contamination
+- ✓ RoomKey regression (`/r/test-stub`): universal loader unchanged
+- ✓ World page still "forming"
+
+### V5 — Screenshots
+
+All under `screenshots/v5-slideshow-wall/`:
+
+| File | Shows |
+|---|---|
+| `01-field-slide-01-{desktop,mobile}.png` | Scene 1 first slide — Willow of Port Arthur |
+| `01-field-slide-03-{desktop,mobile}.png` | After 2 clicks — Thomas Road, morph completed |
+| `01-field-slide-05-{desktop,mobile}.png` | After 4 clicks — Empty Nest, morph completed |
+| `02-wall-top-{desktop,mobile}.png` | Wall scrolled to top — header + feature plate + 2005 |
+| `02-wall-mid-{desktop,mobile}.png` | Wall scrolled mid — 2007 wide plate |
+| `02-wall-bottom-{desktop,mobile}.png` | Wall scrolled near bottom — 2008 pair + 2009 |
+| `03-studio-{desktop,mobile}.png` | Scene 3 — Practice Studio |
+| `04-card-{desktop,mobile}.png` | Scene 4 — Calling Card |
+| `05-prev-hover-{desktop,mobile}.png` | Wall scene with previous-arrow target visible |
+| `06-next-hover-{desktop,mobile}.png` | Field scene with next-arrow target visible |
+
+### V5 — GO
+
+The slideshow + scrollable wall + arrows-only navigation match the
+explicit UX direction: Scene 1 cycles through hero works on click,
+Scene 2 is a creative scrollable wall, Scenes 3 & 4 remain the
+Studio + Calling Card destinations, and the scenes are now sealed
+from each other — only arrows / keys / edge ticks switch them. The
+liquid morph stays the connective tissue. Recommend GO.
 
 

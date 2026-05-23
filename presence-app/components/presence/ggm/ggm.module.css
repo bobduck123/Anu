@@ -2979,3 +2979,334 @@
     transition: none !important;
   }
 }
+
+/* ============================================================================
+   V5 LAYER — Scene 1 slideshow + scrollable wall + arrows-only nav
+============================================================================ */
+
+/* ── Scene 1 — click-to-advance plate ─────────────────────────────────── */
+.fieldClickPlate {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  display: block;
+}
+
+.fieldClickPlate:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: -8px;
+}
+
+.fieldClickHint {
+  display: inline-block;
+  margin-top: 0.45rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+/* ── Scene counter slide indicator ────────────────────────────────────── */
+.sceneCounterSlide {
+  margin-left: 0.8rem;
+  font-family: var(--ggm-display-family);
+  font-size: 0.72rem;
+  opacity: 0.7;
+  text-transform: none;
+  letter-spacing: -0.01em;
+}
+
+/* ── Previous + Next affordances (twin arrows) ────────────────────────── */
+.prevAffordance,
+.nextAffordance {
+  position: fixed;
+  z-index: 32;
+  bottom: clamp(0.9rem, 1.6vw, 1.2rem);
+  background: transparent;
+  border: 0;
+  color: #fff;
+  mix-blend-mode: difference;
+  font-family: var(--ggm-body-family);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.3rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.7;
+  transition: opacity 0.32s ease, transform 0.32s cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+
+.prevAffordance { left: clamp(1rem, 2vw, 1.6rem); }
+.nextAffordance { right: clamp(1rem, 2vw, 1.6rem); }
+
+.prevAffordance:hover,
+.prevAffordance:focus-visible,
+.nextAffordance:hover,
+.nextAffordance:focus-visible,
+.affordanceHover {
+  opacity: 1;
+  outline: none;
+}
+
+.affordanceLabel {
+  font-family: var(--ggm-display-family);
+  font-size: 0.78rem;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: opacity 0.32s ease, max-width 0.32s cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+
+.prevAffordance:hover .affordanceLabel,
+.prevAffordance:focus-visible .affordanceLabel,
+.nextAffordance:hover .affordanceLabel,
+.nextAffordance:focus-visible .affordanceLabel,
+.affordanceHover .affordanceLabel {
+  opacity: 1;
+  max-width: 14rem;
+}
+
+.affordanceArrow {
+  font-family: var(--ggm-display-family);
+  font-size: 1rem;
+  transform: translateY(-1px);
+}
+
+/* ── Scene 2 — V2 scrollable wall ─────────────────────────────────────── */
+.wallV2Shell {
+  position: relative;
+  width: 100%;
+  padding: clamp(2.4rem, 4vw, 4rem) clamp(1.4rem, 3vw, 3rem) clamp(3rem, 5vw, 5rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2rem, 3vw, 3rem);
+}
+
+.wallV2Head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.4rem;
+  align-items: end;
+  border-bottom: 1px solid var(--ggm-line);
+  padding-bottom: 1.4rem;
+}
+
+.wallV2Title {
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  line-height: 0.94;
+  letter-spacing: -0.03em;
+  max-width: 22ch;
+  margin-top: 0.6rem;
+}
+
+.wallV2Lead {
+  margin-top: 0.9rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #2d2d2d;
+  max-width: 56ch;
+}
+
+.wallV2Meta {
+  text-align: right;
+  color: var(--ggm-muted);
+  font-size: 0.74rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Feature plate — fills 16/9, sits above the year-grouped rows. */
+.wallV2Feature {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--ggm-paper);
+  border: 1px solid var(--ggm-line);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  isolation: isolate;
+}
+
+.wallV2Feature img {
+  object-fit: cover;
+  transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.wallV2Feature:hover img { transform: scale(1.03); }
+
+.wallV2FeatureMeta {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: clamp(1.2rem, 2vw, 1.8rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  background: linear-gradient(transparent 0%, rgba(0, 0, 0, 0.78) 78%);
+  color: #fff;
+}
+
+.wallV2FeatureBadge {
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.wallV2FeatureMeta h3 {
+  font-family: var(--ggm-display-family);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.wallV2FeatureMeta p {
+  font-size: 0.84rem;
+  letter-spacing: 0.04em;
+  opacity: 0.92;
+}
+
+.wallV2FeatureDesc {
+  max-width: 58ch;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  opacity: 0.88;
+}
+
+/* Year sections */
+.wallV2Year {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.wallV2YearHead {
+  display: grid;
+  grid-template-columns: 6rem 1fr auto;
+  gap: 1rem;
+  align-items: baseline;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--ggm-line);
+}
+
+.wallV2YearMark {
+  height: 1px;
+  background: var(--ggm-ink);
+  margin-bottom: 0.35rem;
+}
+
+.wallV2YearLabel {
+  font-family: var(--ggm-display-family);
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+
+.wallV2YearCount {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ggm-muted);
+}
+
+/* Row layouts — varied per year so the wall doesn't read as a grid. */
+.wallV2Row {
+  display: grid;
+  gap: clamp(0.8rem, 1.2vw, 1.2rem);
+}
+
+.wallV2RowSingle  { grid-template-columns: minmax(0, 1fr); }
+.wallV2RowPairLR  { grid-template-columns: 1.4fr 1fr; }
+.wallV2RowPairRL  { grid-template-columns: 1fr 1.4fr; }
+.wallV2RowTrio    { grid-template-columns: 1fr 1.6fr 1fr; }
+.wallV2RowOffset  { grid-template-columns: 0.9fr 1.1fr; padding-left: 4%; }
+
+.wallV2Plate {
+  position: relative;
+  display: block;
+  background: var(--ggm-paper);
+  border: 1px solid var(--ggm-line);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.32s cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+
+.wallV2Plate:hover { transform: translateY(-3px); }
+
+.wallV2Plate img {
+  object-fit: cover;
+  transition: transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.wallV2Plate:hover img { transform: scale(1.04); }
+
+.wallV2PlateLg { aspect-ratio: 4 / 3; }
+.wallV2PlateMd { aspect-ratio: 5 / 4; }
+.wallV2PlateSm { aspect-ratio: 4 / 5; }
+
+.wallV2PlateMeta {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 0.7rem 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  background: linear-gradient(transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+  color: #fff;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.wallV2PlateTitle {
+  font-family: var(--ggm-display-family);
+  letter-spacing: -0.01em;
+}
+
+.wallV2PlateDims {
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.wallV2Foot {
+  text-align: center;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ggm-muted);
+  padding: 1.5rem 0 0;
+  border-top: 1px solid var(--ggm-line);
+}
+
+/* Mobile — wall collapses to single column inside the frame. */
+@media (max-width: 920px) {
+  .wallV2Head { grid-template-columns: 1fr; }
+  .wallV2Meta { text-align: left; }
+  .wallV2RowPairLR,
+  .wallV2RowPairRL,
+  .wallV2RowOffset { grid-template-columns: 1fr; padding-left: 0; }
+  .wallV2RowTrio { grid-template-columns: 1fr 1fr; }
+  .wallV2YearHead { grid-template-columns: 1fr auto; }
+  .wallV2YearMark { display: none; }
+}
+
+@media (max-width: 700px) {
+  .wallV2RowTrio { grid-template-columns: 1fr; }
+  .wallV2Shell { padding: 1.4rem 1rem 2rem; gap: 1.4rem; }
+  .affordanceLabel { display: none; }
+}

@@ -17,10 +17,12 @@ const OUT_V2 = `${OUT}/v2-blocks`;
 
 const OUT_V3 = `${OUT}/v3-scenes`;
 const OUT_V4 = `${OUT}/v4-minimal`;
+const OUT_V5 = `${OUT}/v5-slideshow-wall`;
 if (!fs.existsSync(OUT)) fs.mkdirSync(OUT, { recursive: true });
 if (!fs.existsSync(OUT_V2)) fs.mkdirSync(OUT_V2, { recursive: true });
 if (!fs.existsSync(OUT_V3)) fs.mkdirSync(OUT_V3, { recursive: true });
 if (!fs.existsSync(OUT_V4)) fs.mkdirSync(OUT_V4, { recursive: true });
+if (!fs.existsSync(OUT_V5)) fs.mkdirSync(OUT_V5, { recursive: true });
 
 const VIEWPORTS = [
   { id: "desktop", width: 1440, height: 900 },
@@ -66,6 +68,17 @@ const TARGETS = [
   { id: "v4-minimal/05-preview-settings", url: `${PRESENCE_BASE}/p/ggm-christina-goddard?preview=1`, waitFor: 2400, openSettings: true },
   { id: "v4-minimal/06-reduced-motion", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2200, reducedMotion: true },
   { id: "v4-minimal/07-roomkey-entry-loader", url: `${PRESENCE_BASE}/r/ggm-pilot-stub`, waitFor: 1500 },
+  // V5 — Scene 1 slideshow + scrollable wall + arrows-only nav.
+  { id: "v5-slideshow-wall/01-field-slide-01", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2400 },
+  { id: "v5-slideshow-wall/01-field-slide-03", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2200, clickArtwork: 2 },
+  { id: "v5-slideshow-wall/01-field-slide-05", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2200, clickArtwork: 4 },
+  { id: "v5-slideshow-wall/02-wall-top", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2400, advance: 1 },
+  { id: "v5-slideshow-wall/02-wall-mid", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2400, advance: 1, scrollSceneY: 700 },
+  { id: "v5-slideshow-wall/02-wall-bottom", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2400, advance: 1, scrollSceneY: 2400 },
+  { id: "v5-slideshow-wall/03-studio", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2400, advance: 2 },
+  { id: "v5-slideshow-wall/04-card", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2400, advance: 3 },
+  { id: "v5-slideshow-wall/05-prev-hover", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2200, advance: 1, hoverPrev: true },
+  { id: "v5-slideshow-wall/06-next-hover", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2200, hoverNext: true },
   // Source site (live demo) — the source uses an Osmo loader + Three.js
   // WebGL slideshow which takes ~6s to fully resolve before the artwork
   // is visible. We give the home page extra wait time.
@@ -115,6 +128,37 @@ async function capture(browser, target, viewport) {
         if (btn) btn.click();
       });
       await page.waitForTimeout(600);
+    }
+    if (typeof target.clickArtwork === "number") {
+      // Scene 1 slideshow — click the artwork N times to advance.
+      for (let n = 0; n < target.clickArtwork; n++) {
+        await page.evaluate(() => {
+          const btn = document.querySelector('[class*="fieldClickPlate"]');
+          if (btn) btn.click();
+        });
+        await page.waitForTimeout(1400);
+      }
+    }
+    if (typeof target.scrollSceneY === "number") {
+      await page.evaluate((y) => {
+        const layer = document.querySelector('[class*="frameSurfaceWall"], [class*="frameSurfaceStudio"], [class*="frameSurfaceCard"]');
+        if (layer) (layer).scrollTop = y;
+      }, target.scrollSceneY);
+      await page.waitForTimeout(500);
+    }
+    if (target.hoverNext) {
+      await page.evaluate(() => {
+        const btn = document.querySelector('[class*="nextAffordance"]');
+        if (btn) btn.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+      });
+      await page.waitForTimeout(500);
+    }
+    if (target.hoverPrev) {
+      await page.evaluate(() => {
+        const btn = document.querySelector('[class*="prevAffordance"]');
+        if (btn) btn.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+      });
+      await page.waitForTimeout(500);
     }
     const file = path.join(OUT, `${target.id}-${viewport.id}.png`);
     await page.screenshot({ path: file, fullPage: !!target.fullPage });
