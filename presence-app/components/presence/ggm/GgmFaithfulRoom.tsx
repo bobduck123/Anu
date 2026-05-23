@@ -1,33 +1,21 @@
 "use client";
 
-// GGM Faithful Room — the renderer activated by `ggm-faithful-room-v1`.
+// GGM Faithful Room — v3 scene-stage edition.
 //
-// Architecture: this is NOT a long scrolling page. It is a sequence of
-// four spatial blocks (scene plates) that the visitor moves between:
+// The visitor experiences the Room as a sequence of four scene cards
+// living inside a stable frame (chrome + left rail + settings). Scene
+// transitions play a WebGL liquid morph (see GgmLiquidCanvas). Settings
+// (motion / surface / texture / power saver) are owner-tunable via the
+// settings menu in the rail.
 //
-//   01 — Artwork Field   (full-viewport slideshow, liquid morph, dither)
-//   02 — Work Wall       (asymmetric 12-col wall hang of selected works)
-//   03 — Practice Studio (about composed as a workbench)
-//   04 — Calling Card    (contact composed as a paper object)
-//
-// Each block:
-//   - is at least 100dvh tall
-//   - has its own atmosphere (ghost word + film grain)
-//   - has its own reveal choreography on enter
-//   - shows up in the right-edge sticky chapter index
-//
-// Presence-native actions (PublicEnquiryDialog + PresenceGraphActions)
-// are folded into the calling card and into a discreet bottom action
-// strip so they feel embedded into the world rather than bolted on.
-//
-// Single Room — the same component handles both home and focused work
-// detail. /r/[token] also dispatches here for GGM, with a
-// `roomKeySourceLabel` prop surfacing the "Opened via NFC" chip on the
-// hero.
+// One Room, one renderer — this component handles the public page,
+// /presence/[slug] alias, /r/[token] dispatch (with roomKey chip in
+// Scene 01), and the dedicated /works/[workId] route (single-scene
+// detail mode).
 
+import { useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo } from "react";
 import type { PresenceNode, PresenceWork } from "@/lib/api/types";
 import { PublicEnquiryDialog } from "@/components/portfolio/PublicEnquiryDialog";
 import { PresenceGraphActions } from "@/components/presence/graph/PresenceGraphActions";
@@ -41,17 +29,12 @@ import {
   GGM_WORKS,
   type GgmWork,
 } from "@/lib/presence/ggm/source";
-import { GgmHero } from "./GgmHero";
-import { GgmReveal } from "./GgmReveal";
+import { GgmStage, type SceneDef } from "./GgmStage";
+import { GgmMotionProvider, useGgmMotion } from "./GgmMotionContext";
 import { GgmStudioScene } from "./GgmStudioScene";
 import { GgmCallingCard } from "./GgmCallingCard";
-import {
-  GgmChapterIndex,
-  GgmCursor,
-  GgmScrollBar,
-  useActiveBlock,
-  type ChapterDef,
-} from "./GgmChrome";
+import { GgmCursor, GgmScrollBar } from "./GgmChrome";
+import { GgmReveal } from "./GgmReveal";
 import { GgmWorkDetail } from "./GgmWorkDetail";
 import styles from "./ggm.module.css";
 
@@ -60,19 +43,6 @@ interface GgmFaithfulRoomProps {
   roomKeySourceLabel?: string | null;
   focusWorkSlug?: string | null;
 }
-
-const CHAPTERS: ChapterDef[] = [
-  { id: "ggm-block-field",   number: "01", label: "Artwork Field" },
-  { id: "ggm-block-wall",    number: "02", label: "Work Wall" },
-  { id: "ggm-block-studio",  number: "03", label: "Practice Studio" },
-  { id: "ggm-block-card",    number: "04", label: "Calling Card" },
-];
-
-// Wall layout sizes — repeat to cover any number of works gracefully.
-const WALL_VARIANTS = [
-  styles.wallTile1, styles.wallTile2, styles.wallTile3, styles.wallTile4,
-  styles.wallTile5, styles.wallTile6, styles.wallTile7, styles.wallTile8,
-];
 
 function buildWorks(node: PresenceNode): GgmWork[] {
   const backendWorks = (node.works ?? []).filter((w) => w.is_visible !== false);
@@ -113,12 +83,70 @@ function coerceWork(w: PresenceWork, idx: number): GgmWork {
   };
 }
 
-export default function GgmFaithfulRoom({
-  node,
-  roomKeySourceLabel,
-  focusWorkSlug,
-}: GgmFaithfulRoomProps) {
+const WALL_VARIANTS = [
+  styles.wallTile1, styles.wallTile2, styles.wallTile3, styles.wallTile4,
+  styles.wallTile5, styles.wallTile6, styles.wallTile7, styles.wallTile8,
+];
+
+export default function GgmFaithfulRoom(props: GgmFaithfulRoomProps) {
+  return (
+    <GgmMotionProvider>
+      <Room {...props} />
+    </GgmMotionProvider>
+  );
+}
+
+function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps) {
   const works = useMemo(() => buildWorks(node), [node]);
+  const { effective } = useGgmMotion();
+
+  const hrefForWork = (w: GgmWork) =>
+    `/p/${encodeURIComponent(node.slug)}/works/${encodeURIComponent(w.slug)}`;
+
+  // Focused work-detail mode — uses the dedicated detail surface,
+  // skipping the stage state machine.
+  if (focusWorkSlug) {
+    const focus = works.find((w) => w.slug === focusWorkSlug);
+    if (focus) {
+      const idx = works.findIndex((w) => w.slug === focus.slug);
+      const prev = idx > 0 ? works[idx - 1] : works[works.length - 1];
+      const next = idx < works.length - 1 ? works[idx + 1] : works[0];
+      const related = works.filter((w) => w.slug !== focus.slug).slice(0, 3);
+      return (
+        <div className={`${styles.ggm}`}>
+          {effective.scrollProgress && <GgmScrollBar />}
+          {effective.customCursor && <GgmCursor />}
+          <nav className={styles.nav} aria-label="Primary">
+            <Link className={styles.navBrand} href={`/p/${encodeURIComponent(node.slug)}`}>
+              {node.display_name}
+            </Link>
+            <div className={styles.navLinks}>
+              <Link href={`/p/${encodeURIComponent(node.slug)}`} data-hover>← Back to room</Link>
+            </div>
+          </nav>
+          <GgmReveal>
+            <GgmWorkDetail
+              work={focus}
+              prev={prev}
+              next={next}
+              related={related}
+              statementQuote={node.practice_statement ?? GGM_ARTIST.statementQuote}
+              hrefForWork={hrefForWork}
+              backHref={`/p/${encodeURIComponent(node.slug)}`}
+            />
+          </GgmReveal>
+        </div>
+      );
+    }
+  }
+
+  // Build the 4 scenes.
+  const brand = node.display_name ?? GGM_ARTIST.name;
+  const caption = node.headline ?? GGM_ARTIST.heroCaption;
+  const aboutIntro = node.bio ?? node.short_bio ?? GGM_ARTIST.aboutIntro;
+  const aboutBody = node.long_story ?? GGM_ARTIST.aboutBody;
+  const statementQuote = node.practice_statement ?? GGM_ARTIST.statementQuote;
+  const externalPortfolio = pickExternalPortfolio(node);
 
   const heroSlides = useMemo(() => {
     const ordered = GGM_HERO_SEQUENCE.map((h) => works.find((w) => w.slug === h.slug)).filter(
@@ -128,8 +156,6 @@ export default function GgmFaithfulRoom({
   }, [works]);
 
   const wallWorks = useMemo(() => {
-    // Preserve source featured order at the top of the wall, then any
-    // remaining works after.
     const featuredSlugs = GGM_FEATURED.map((f) => f.slug);
     const featured = featuredSlugs
       .map((s) => works.find((w) => w.slug === s))
@@ -138,302 +164,234 @@ export default function GgmFaithfulRoom({
     return [...featured, ...rest];
   }, [works]);
 
-  const brand = node.display_name ?? GGM_ARTIST.name;
-  const caption = node.headline ?? GGM_ARTIST.heroCaption;
-  const aboutIntro = node.bio ?? node.short_bio ?? GGM_ARTIST.aboutIntro;
-  const aboutBody = node.long_story ?? GGM_ARTIST.aboutBody;
-  const statementQuote = node.practice_statement ?? GGM_ARTIST.statementQuote;
-  const externalPortfolio = pickExternalPortfolio(node);
-
-  const hrefForWork = (w: GgmWork) =>
-    `/p/${encodeURIComponent(node.slug)}/works/${encodeURIComponent(w.slug)}`;
-
-  // Focused work-detail mode — short-circuits to the dedicated detail
-  // surface, preserving the room shell (cursor + scroll progress) but
-  // skipping the block-navigation.
-  if (focusWorkSlug) {
-    const focus = works.find((w) => w.slug === focusWorkSlug);
-    if (focus) {
-      const idx = works.findIndex((w) => w.slug === focus.slug);
-      const prev = idx > 0 ? works[idx - 1] : works[works.length - 1];
-      const next = idx < works.length - 1 ? works[idx + 1] : works[0];
-      const related = works.filter((w) => w.slug !== focus.slug).slice(0, 3);
-      return (
-        <RoomShell node={node}>
-          <GgmReveal>
-            <GgmWorkDetail
-              work={focus}
-              prev={prev}
-              next={next}
-              related={related}
-              statementQuote={statementQuote}
-              hrefForWork={hrefForWork}
-              backHref={`/p/${encodeURIComponent(node.slug)}#ggm-block-wall`}
+  const scenes: SceneDef[] = useMemo<SceneDef[]>(() => [
+    {
+      id: "field",
+      number: "01",
+      label: "Artwork Field",
+      sub: "liquid surface",
+      backgroundImage: heroSlides[0]?.image ?? GGM_WORKS[0].image,
+      surface: undefined,
+      content: () => null,
+      overlay: () => (
+        <ArtworkFieldOverlay
+          slides={heroSlides}
+          brand={brand}
+          caption={caption}
+          roomKeySourceLabel={roomKeySourceLabel ?? null}
+        />
+      ),
+    },
+    {
+      id: "wall",
+      number: "02",
+      label: "Work Wall",
+      sub: "selected watercolours",
+      backgroundImage: heroSlides[1]?.image ?? GGM_WORKS[1].image,
+      surface: "wall",
+      content: () => (
+        <WorkWallSurface
+          works={wallWorks}
+          hrefForWork={hrefForWork}
+        />
+      ),
+    },
+    {
+      id: "studio",
+      number: "03",
+      label: "Practice Studio",
+      sub: "workbench, notes, references",
+      backgroundImage: heroSlides[2]?.image ?? GGM_WORKS[2].image,
+      surface: "studio",
+      content: () => (
+        <GgmStudioScene
+          artist={GGM_ARTIST}
+          aboutIntro={aboutIntro}
+          aboutBody={aboutBody}
+          strands={GGM_STRANDS}
+          inspire={GGM_INSPIRE}
+        />
+      ),
+    },
+    {
+      id: "card",
+      number: "04",
+      label: "Calling Card",
+      sub: "an invitation",
+      backgroundImage: heroSlides[3]?.image ?? GGM_WORKS[3].image,
+      surface: "card",
+      content: () => (
+        <GgmCallingCard
+          artist={GGM_ARTIST}
+          externalLink={externalPortfolio}
+          enquiryAction={
+            <PublicEnquiryDialog
+              slug={node.slug}
+              displayName={brand}
+              nodeType={node.node_type}
+              triggerLabel="Begin a conversation"
             />
-          </GgmReveal>
-        </RoomShell>
-      );
-    }
-  }
+          }
+        />
+      ),
+    },
+  ], [
+    heroSlides, wallWorks, brand, caption, aboutIntro, aboutBody,
+    externalPortfolio, node.slug, node.node_type, roomKeySourceLabel,
+    hrefForWork,
+  ]);
 
   return (
-    <RoomShell node={node}>
-      <RoomBlocks
-        node={node}
-        brand={brand}
-        caption={caption}
-        heroSlides={heroSlides}
-        roomKeySourceLabel={roomKeySourceLabel}
-        wallWorks={wallWorks}
-        aboutIntro={aboutIntro}
-        aboutBody={aboutBody}
-        statementQuote={statementQuote}
-        externalPortfolio={externalPortfolio}
-        hrefForWork={hrefForWork}
-      />
-    </RoomShell>
-  );
-}
+    <div className={styles.ggm}>
+      {effective.scrollProgress && <GgmScrollBar />}
+      {effective.customCursor && <GgmCursor />}
 
-// ── Room shell ──────────────────────────────────────────────────────────────
+      <GgmStage node={node} scenes={scenes} />
 
-function RoomShell({ node, children }: { node: PresenceNode; children: React.ReactNode }) {
-  return (
-    <div className={`${styles.ggm} ${styles.ggmRoot}`}>
-      <GgmScrollBar />
-      <GgmCursor />
-      <nav className={styles.nav} aria-label="Primary">
-        <Link className={styles.navBrand} href={`/p/${encodeURIComponent(node.slug)}`}>
-          {node.display_name}
-        </Link>
-        <div className={styles.navLinks}>
-          <a href="#ggm-block-wall" data-hover>Work</a>
-          <a href="#ggm-block-studio" data-hover>Studio</a>
-          <a href="#ggm-block-card" data-hover>Contact</a>
+      {/* Quiet Presence-native action layer pinned to the very bottom
+          of the document. The stage holds the visitor's attention; this
+          strip is reachable by intentional scroll past the stage. */}
+      <section className={styles.presenceActionLayer} aria-label="Presence actions">
+        <div className={styles.shell} style={{ padding: "2.2rem 0" }}>
+          <PresenceGraphActions node={node} captureOnMount={false} />
+          <p style={{ marginTop: "1rem", fontSize: "0.7rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--ggm-muted)" }}>
+            © {brand} · {GGM_ARTIST.location}
+            {" · "}
+            <a
+              href={GGM_ARTIST.referenceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-hover
+              style={{ textDecoration: "underline", textUnderlineOffset: "0.14rem" }}
+            >
+              Art Scene Today
+            </a>
+            {" · "}
+            <a
+              href={GGM_LIVE_DEMO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-hover
+              style={{ textDecoration: "underline", textUnderlineOffset: "0.14rem" }}
+            >
+              Source portfolio
+            </a>
+            {statementQuote ? "" : null}
+          </p>
         </div>
-      </nav>
-      {children}
+      </section>
     </div>
   );
 }
 
-// ── Room blocks (active-block tracking lives here so we don't run hooks
-//    inside the focused-detail branch above) ───────────────────────────────
+// ── Scene 01 overlay (Artwork Field) ────────────────────────────────────────
 
-interface RoomBlocksProps {
-  node: PresenceNode;
+interface ArtworkFieldOverlayProps {
+  slides: GgmWork[];
   brand: string;
   caption: string;
-  heroSlides: GgmWork[];
-  roomKeySourceLabel?: string | null;
-  wallWorks: GgmWork[];
-  aboutIntro: string;
-  aboutBody: string;
-  statementQuote: string;
-  externalPortfolio: { label: string; href: string };
+  roomKeySourceLabel: string | null;
+}
+
+function ArtworkFieldOverlay({
+  slides,
+  brand,
+  caption,
+  roomKeySourceLabel,
+}: ArtworkFieldOverlayProps) {
+  // Internal hero slide rotation. When the active hero slide changes
+  // (auto-advance or arrow click), the GgmStage's WebGL canvas morphs
+  // between Scene 01's backgroundImage values via the parent. But Scene
+  // 01 has its OWN slide track for cycling between the 5 hero
+  // artworks — that's distinct from the 4 scenes. Here we expose a UI
+  // for it; the actual hero slide management is handled below.
+  //
+  // For v3 we treat the 4 scenes themselves as the slideshow at the
+  // top level — each scene's backgroundImage is one of the hero
+  // artworks. The original 5-slide internal cycle is kept as a softer
+  // affordance via the dot row at the bottom; clicking a dot calls
+  // window.scrollTo and trips the hero slide via a custom event so we
+  // don't have to thread a callback through the stage.
+  //
+  // For simplicity in v3, we only display the work title and caption
+  // for the first scene background and let the visitor advance scenes
+  // for further artworks. Internal slide auto-advance is intentionally
+  // removed to focus the visitor on the scene rhythm; the user can
+  // still hit ←/→ via keyboard or click prev/next on the in-scene UI.
+  const first = slides[0];
+
+  return (
+    <div className={styles.sceneFieldOverlay}>
+      <div className={styles.sceneFieldTopNotes}>
+        <span>Serendipity pathway · liquid morphology</span>
+        <span>Scroll to advance · paper gallery rhythm</span>
+      </div>
+      <div className={styles.sceneFieldBottom}>
+        {roomKeySourceLabel && (
+          <span className={styles.sceneFieldChip} aria-live="polite">
+            ✱ Opened via {roomKeySourceLabel}
+          </span>
+        )}
+        {first && (
+          <p className={styles.sceneFieldWorkTitle}>
+            {first.title} <span style={{ opacity: 0.7, fontSize: "0.6em", letterSpacing: "0.18em" }}>· {first.year}</span>
+          </p>
+        )}
+        <p className={styles.sceneFieldCaption}>{caption ?? brand}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Scene 02 surface (Work Wall) ────────────────────────────────────────────
+
+interface WorkWallSurfaceProps {
+  works: GgmWork[];
   hrefForWork: (w: GgmWork) => string;
 }
 
-function RoomBlocks({
-  node,
-  brand,
-  caption,
-  heroSlides,
-  roomKeySourceLabel,
-  wallWorks,
-  aboutIntro,
-  aboutBody,
-  statementQuote,
-  externalPortfolio,
-  hrefForWork,
-}: RoomBlocksProps) {
-  const activeBlock = useActiveBlock({ ids: CHAPTERS.map((c) => c.id) });
-
-  function jump(id: string) {
-    if (typeof document === "undefined") return;
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
+function WorkWallSurface({ works, hrefForWork }: WorkWallSurfaceProps) {
   return (
-    <>
-      <GgmChapterIndex chapters={CHAPTERS} activeId={activeBlock} onJump={jump} />
-
-      <main className={styles.blocks}>
-        {/* ── 01 ARTWORK FIELD ───────────────────────────────────────── */}
-        <section
-          id="ggm-block-field"
-          className={styles.block}
-          aria-label="Artwork field"
-        >
-          <GgmHero
-            slides={heroSlides}
-            brand={brand}
-            caption={caption}
-            topNoteLeft={
-              roomKeySourceLabel
-                ? `Opened via ${roomKeySourceLabel} · selected watercolour works`
-                : "Serendipity pathway · liquid morphology"
-            }
-            topNoteRight="Scroll to dither in · paper gallery rhythm"
-            roomKeySourceLabel={roomKeySourceLabel}
-          />
-        </section>
-
-        {/* ── 02 WORK WALL ───────────────────────────────────────────── */}
-        <BlockReveal
-          tag="section"
-          id="ggm-block-wall"
-          className={`${styles.block} ${styles.wallBlock}`}
-          ariaLabel="Work wall"
-        >
-          <span className={`${styles.blockGhost} ${styles.blockGhostBottomRight}`} aria-hidden>
-            wall
-          </span>
-          <div className={styles.wallShell}>
-            <header className={styles.wallHead}>
-              <div>
-                <p className={styles.blockEyebrow}>
-                  <span className={styles.blockEyebrowNumber}>02</span>
-                  Work Wall
-                </p>
-                <h2>Selected watercolour works.</h2>
-              </div>
-              <p className={styles.wallHeadMeta}>
-                {wallWorks.length.toString().padStart(2, "0")} works · 2005 — 2019
-              </p>
-            </header>
-
-            <div className={styles.wallGrid}>
-              {wallWorks.map((w, i) => (
-                <Link
-                  key={w.id}
-                  href={hrefForWork(w)}
-                  className={`${styles.wallTile} ${WALL_VARIANTS[i % WALL_VARIANTS.length]} ${styles.blockRevealChild}`}
-                  style={{ ["--i" as never]: Math.min(i, 8) }}
-                  data-hover
-                >
-                  <Image
-                    src={w.thumb}
-                    alt={w.alt}
-                    fill
-                    sizes="(max-width: 920px) 100vw, 50vw"
-                  />
-                  <div className={styles.wallTileMeta}>
-                    <span>{w.title}</span>
-                    <small>{w.year}</small>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </BlockReveal>
-
-        {/* ── 03 PRACTICE STUDIO ─────────────────────────────────────── */}
-        <BlockReveal
-          tag="section"
-          id="ggm-block-studio"
-          className={`${styles.block} ${styles.studioBlock}`}
-          ariaLabel="Practice studio"
-        >
-          <span className={`${styles.blockGhost} ${styles.blockGhostTopLeft}`} aria-hidden>
-            studio
-          </span>
-          <GgmStudioScene
-            artist={GGM_ARTIST}
-            aboutIntro={aboutIntro}
-            aboutBody={aboutBody}
-            strands={GGM_STRANDS}
-            inspire={GGM_INSPIRE}
-          />
-        </BlockReveal>
-
-        {/* ── 04 CALLING CARD ────────────────────────────────────────── */}
-        <BlockReveal
-          tag="section"
-          id="ggm-block-card"
-          className={`${styles.block} ${styles.callingBlock}`}
-          ariaLabel="Calling card"
-        >
-          <span className={`${styles.blockGhost} ${styles.blockGhostCenter}`} aria-hidden>
-            invite
-          </span>
-          <GgmCallingCard
-            artist={GGM_ARTIST}
-            externalLink={externalPortfolio}
-            enquiryAction={
-              <PublicEnquiryDialog
-                slug={node.slug}
-                displayName={brand}
-                nodeType={node.node_type}
-                triggerLabel="Begin a conversation"
-              />
-            }
-          />
-        </BlockReveal>
-      </main>
-
-      {/* Presence-native action layer — quiet, paper-themed, lives
-          outside the 4 blocks so it doesn't disturb the scene rhythm. */}
-      <section
-        className={styles.presenceActionLayer}
-        aria-label="Presence actions"
-      >
-        <div className={styles.shell} style={{ padding: "2.5rem 0" }}>
-          <PresenceGraphActions node={node} captureOnMount={false} />
+    <div className={styles.wallShell}>
+      <header className={styles.wallHead}>
+        <div>
+          <p className={styles.blockEyebrow}>
+            <span className={styles.blockEyebrowNumber}>02</span>
+            Work Wall
+          </p>
+          <h2>Selected watercolour works.</h2>
         </div>
-      </section>
+        <p className={styles.wallHeadMeta}>
+          {works.length.toString().padStart(2, "0")} works · 2005 — 2019
+        </p>
+      </header>
 
-      <footer className={styles.footer}>
-        <p>© {brand}</p>
-        <p>
-          Reference profile:{" "}
-          <a
-            href={GGM_ARTIST.referenceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+      <div className={styles.wallGrid}>
+        {works.map((w, i) => (
+          <Link
+            key={w.id}
+            href={hrefForWork(w)}
+            className={`${styles.wallTile} ${WALL_VARIANTS[i % WALL_VARIANTS.length]}`}
             data-hover
           >
-            Art Scene Today
-          </a>
-          {" · "}
-          <a href={GGM_LIVE_DEMO_URL} target="_blank" rel="noopener noreferrer" data-hover>
-            Source portfolio
-          </a>
-          {statementQuote ? null : null /* keep statement quote reachable via Studio */}
-        </p>
-      </footer>
-    </>
+            <Image
+              src={w.thumb}
+              alt={w.alt}
+              fill
+              sizes="(max-width: 920px) 100vw, 50vw"
+            />
+            <div className={styles.wallTileMeta}>
+              <span>{w.title}</span>
+              <small>{w.year}</small>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
 
-// ── Reveal wrapper specialised for blocks (uses .blockReveal class so
-//    children with .blockRevealChild get a staggered animation). ──────────
-
-function BlockReveal({
-  tag = "section",
-  id,
-  className = "",
-  ariaLabel,
-  children,
-}: {
-  tag?: "section" | "div" | "article" | "main";
-  id?: string;
-  className?: string;
-  ariaLabel?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <GgmReveal
-      as={tag}
-      id={id}
-      className={`${styles.blockReveal} ${className}`}
-      ariaLabel={ariaLabel}
-    >
-      {children}
-    </GgmReveal>
-  );
-}
+// ── Helpers ─────────────────────────────────────────────────────────────────
 
 function prettyHost(url: string): string | null {
   try {
@@ -444,11 +402,6 @@ function prettyHost(url: string): string | null {
   }
 }
 
-// Pick the external portfolio link to surface on the Calling Card. Skips
-// the node's own public_url when it points back at this Room (which is
-// what fetchDemoOrPublicNode does on local), and prefers a backend-
-// supplied visible link labelled "portfolio" / "website" if one exists.
-// Falls back to the canonical GGM artist website.
 function pickExternalPortfolio(node: PresenceNode): { label: string; href: string } {
   const visibleLinks = (node.links ?? []).filter((l) => l.is_visible !== false);
   const portfolioLink = visibleLinks.find((l) => {

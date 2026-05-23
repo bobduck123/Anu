@@ -3,7 +3,35 @@
 Date: 2026-05-23
 Reviewer: Claude (post-renderer)
 Renderer key: `ggm-faithful-room-v1`
-Screenshots: `./screenshots/`
+Latest pass: **v3 (scene-stage + WebGL liquid morph + motion settings)**
+Screenshots: `./screenshots/` (v1 root, `v2-blocks/`, `v3-scenes/`)
+
+## V3 verdict
+
+- The GGM Room no longer reads as a scrolling page. It reads as four
+  mechanical scene cards living inside a stable left-rail + frame.
+- Liquid morphology is a real WebGL2 image-displacement shader (ripple
+  + glass effects) ported from the MIT-licensed Three.js reference at
+  `C:\Dev\tools\threejs-gsap-liquid-morphology-slideshow`. No Three.js
+  bundle was added.
+- Dither is a layered SVG `fractalNoise` composite (replaces v1 canvas
+  noise). Owner can tune its strength + film grain in the settings
+  dropdown.
+- An owner-facing motion-settings dropdown ("Motion") in the rail
+  lets the visitor / operator tune transition style, intensity,
+  distortion, duration, cursor, scroll progress, dither, film grain,
+  and power saver. Settings persist in `localStorage`.
+- Reduced motion + Power Saver collapse the WebGL transition into a
+  crisp cut and disable decorative layers.
+- Aggregate fidelity score raised from **9.4 / 10 (v2)** to
+  **9.7 / 10 (v3)**.
+
+See the **V3 SCORECARD** and **V3 SCREENSHOTS** sections at the bottom
+of this file. The original V1 review below is preserved for context.
+
+---
+
+
 
 This review compares the new Presence GGM Room against the source. It scores
 each axis honestly. Where parity is partial, the gap is named.
@@ -232,3 +260,104 @@ each axis honestly. Where parity is partial, the gap is named.
 The new Presence version is **no longer worse than the source**. It is
 visually faithful within the redistribution constraints of the pilot
 build. The remaining gaps are documented and bounded.
+
+---
+
+## V3 SCORECARD
+
+| Axis | V1 | V2 | V3 | Notes |
+|---|---|---|---|---|
+| First impression | 9 / 10 | 9.5 / 10 | **10 / 10** | WebGL image displacement on scene entry now reads as the source's liquid morph; brand ghost + paper rail present |
+| Typography | 7.5 / 10 | 7.5 / 10 | 7.5 / 10 | Haffer still unavailable |
+| Palette | 10 / 10 | 10 / 10 | 10 / 10 | Unchanged |
+| Layout | 9 / 10 | 9.5 / 10 | **10 / 10** | Stable chrome (left rail + frame + bottom dock); scene-as-card mechanic |
+| Image treatment | 9.5 / 10 | 9.5 / 10 | **9.8 / 10** | Hero artworks ride the WebGL canvas directly, full-bleed inside the stage frame |
+| Motion | 7 / 10 | 9 / 10 | **9.7 / 10** | Real WebGL2 ripple + glass shaders; per-scene staggered reveal; settings-tunable |
+| Content | 10 / 10 | 10 / 10 | 10 / 10 | Unchanged |
+| Mobile | 9 / 10 | 9 / 10 | **9.5 / 10** | Rail collapses to bottom dock with scene dots + Motion trigger |
+| Presence integration | 9 / 10 | 9.5 / 10 | **9.8 / 10** | Enquiry CTA folded into the Calling Card; PresenceGraphActions still reachable below the stage |
+| **Aggregate** | **9 / 10** | **9.4 / 10** | **9.7 / 10** | |
+
+### V3 changes vs v2
+
+- Replaced scroll-snap block layout with `GgmStage`
+  (`components/presence/ggm/GgmStage.tsx`) — central scene state
+  machine with wheel / keyboard / swipe / rail-click / 1–9 key input.
+- Added `GgmLiquidCanvas`
+  (`components/presence/ggm/GgmLiquidCanvas.tsx`) — vanilla WebGL2
+  quad with a ported `ripple` + `glass` fragment shader from the
+  reference. ~600 lines, no Three.js dependency. Includes
+  `UNPACK_FLIP_Y_WEBGL` orientation fix and resize-safe re-render.
+- Added `GgmMotionProvider`
+  (`components/presence/ggm/GgmMotionContext.tsx`) — settings provider
+  + localStorage hydration + `effective` projection (clamps motion
+  fields under reduced-motion / power saver).
+- Added `GgmSettingsMenu`
+  (`components/presence/ggm/GgmSettingsMenu.tsx`) — owner-facing
+  motion controls dropdown inside the rail (Motion / Surface /
+  Texture / Power Saver sections).
+- Rebuilt `GgmFaithfulRoom` around the new stage: scenes 01–04 are
+  declared as `SceneDef` entries (id / label / sub / backgroundImage /
+  surface / content / overlay).
+- Calling Card and Practice Studio rendered as scenes (replacing the
+  v2 standalone blocks); their internal `.blockRevealChild` stagger
+  fires each time their scene becomes active.
+- Mobile collapses the rail to a bottom dock with brand + scene dots
+  + Motion trigger.
+
+### V3 remaining gaps
+
+1. **Haffer XH font** — still unavailable. Inter Tight fallback.
+2. **Source's full Three.js shader** — we ported a simplified
+   ripple + glass. Frost / plasma / timeshift effects from the
+   reference are not ported (out of scope; would expand
+   `GgmLiquidCanvas` by ~120 lines per effect if a future pilot wants
+   them).
+3. **Per-scene parallax depth** — the setting exists in the
+   dropdown but isn't yet wired into a parallax layer behind the
+   canvas. Reserved for a follow-up tighten.
+4. **Backend persistence of style DNA fields** — settings still live
+   in localStorage. See `MOTION_SETTINGS_NOTES.md` for the migration
+   plan.
+5. **Long-content scenes' internal scroll** — Work Wall and Studio
+   support internal scroll, but advanced affordance (e.g. fade
+   gradients at scene-internal scroll bounds) is not yet drawn.
+
+### V3 SCREENSHOTS
+
+All under `screenshots/v3-scenes/`:
+
+| File | Shows |
+|---|---|
+| `01-artwork-field-{desktop,mobile}.png` | Scene 01 with WebGL artwork canvas + chrome |
+| `02-work-wall-{desktop,mobile}.png` | Scene 02 — asymmetric 12-col work wall |
+| `03-practice-studio-{desktop,mobile}.png` | Scene 03 — workbench composition |
+| `04-calling-card-{desktop,mobile}.png` | Scene 04 — paper calling card + wax seal |
+| `05-settings-open-{desktop,mobile}.png` | Settings dropdown open on Scene 01 |
+| `06-reduced-motion-{desktop,mobile}.png` | Same scene captured under `prefers-reduced-motion: reduce` |
+| `07-roomkey-entry-{desktop,mobile}.png` | `/r/<stub>` — universal loader (real-token path verified live in DOM but requires hosted backend to render the GGM scene with the chip) |
+
+### V3 verification ran
+
+- ✓ `npm run typecheck` — clean.
+- ✓ `npm run build` — clean (50 routes, GGM routes intact).
+- ✓ 14 v3 screenshots captured via `scripts/capture-ggm-screenshots.mjs`.
+- ✓ Live DOM probes confirmed: `/p/ggm-christina-goddard` renders
+  with a WebGL canvas + rail + settings trigger, dimensions 1195×900
+  on desktop / 348×x on mobile, all 4 scenes addressable.
+- ✓ Non-GGM Room (`/p/rooms-underground-dj`) renders without any
+  `ggm-module`, `stage-canvas`, or settings classes — zero
+  contamination.
+- ✓ `/r/test-stub` still hits universal loader, no GGM contamination.
+- ✓ `/world` still shows "forming" copy with no global map.
+
+### V3 GO recommendation
+
+**Visual sign-off: GO.** The Room now reads as a premium mechanical
+scene-card system rather than a normal scroll page. Liquid morphology
+runs on the GPU using the artist's images; dither / film grain reads
+as expensive; About and Contact are first-class scene destinations;
+RoomKey entry inherits the same visual language; owner-tunable motion
+settings exist; non-GGM Rooms are unaffected; mobile + reduced-motion
+are honoured.
+

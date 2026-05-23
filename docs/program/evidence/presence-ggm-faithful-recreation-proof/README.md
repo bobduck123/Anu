@@ -1,10 +1,27 @@
 # GGM Faithful Recreation — Evidence Pack
 
 Date: 2026-05-23
-Renderer key: `ggm-faithful-room-v1`
+Renderer key: `ggm-faithful-room-v1` (single GGM Room across v1 → v2 → v3)
 Pilot: GGM (Christina Kerkvliet Goddard)
+Canonical slug: `ggm-christina-goddard`
+Latest pass: **v3 — premium motion + scene-stage**
 Verdict: **GO for visual fidelity gate. NO-GO for full pilot launch
 pending hosted auth + RoomKey smoke (see §10).**
+
+## Evidence files (read in this order)
+
+1. `CLAUDE_SOURCE_REVIEW.md` — source-site immersion review (v1).
+2. `CURRENT_GGM_FAILURE_REVIEW.md` — pre-renderer audit (v1).
+3. `GGM_STYLE_DNA.md` + `ggm_style_dna.json` — pre-existing style DNA fixtures.
+4. `GGM_VISUAL_GAP_REPORT.md` — pre-existing gap report.
+5. `V2_UPGRADE_REVIEW.md` — v2 (block model) changes.
+6. `MOTION_REFERENCE_REVIEW.md` — v3 motion-grammar study + porting strategy.
+7. `MOTION_SETTINGS_NOTES.md` — v3 motion settings dropdown notes.
+8. `STYLE_DNA_SYSTEMIC_NOTES.md` — v3 reusable-pattern notes.
+9. `AUTH_OWNER_REGRESSION_NOTES.md` — auth / owner regression notes.
+10. `VISUAL_FIDELITY_REVIEW.md` — full scorecard across v1 → v2 → v3.
+11. `CUSTOM_PRESENCE_STYLE_DNA.md` — v2 reusable pattern doc (superseded by `STYLE_DNA_SYSTEMIC_NOTES.md`).
+12. `screenshots/` — pairs of source-vs-Presence + v2 blocks + v3 scenes.
 
 ---
 

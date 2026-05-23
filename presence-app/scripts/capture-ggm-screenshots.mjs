@@ -15,8 +15,10 @@ const OUT = process.env.PRESENCE_QA_OUT ||
   "C:/Dev/Flora_fauna/docs/program/evidence/presence-ggm-faithful-recreation-proof/screenshots";
 const OUT_V2 = `${OUT}/v2-blocks`;
 
+const OUT_V3 = `${OUT}/v3-scenes`;
 if (!fs.existsSync(OUT)) fs.mkdirSync(OUT, { recursive: true });
 if (!fs.existsSync(OUT_V2)) fs.mkdirSync(OUT_V2, { recursive: true });
+if (!fs.existsSync(OUT_V3)) fs.mkdirSync(OUT_V3, { recursive: true });
 
 const VIEWPORTS = [
   { id: "desktop", width: 1440, height: 900 },
@@ -46,6 +48,14 @@ const TARGETS = [
   { id: "v2-blocks/04-calling-card",    url: `${PRESENCE_BASE}/p/ggm-christina-goddard#ggm-block-card`, waitFor: 1500 },
   // Reduced motion check
   { id: "v2-blocks/01-artwork-field-reduced", url: `${PRESENCE_BASE}/p/ggm-christina-goddard#ggm-block-field`, waitFor: 1500, reducedMotion: true },
+  // V3 scene-stage captures — one per scene + settings dropdown + reduced motion.
+  { id: "v3-scenes/01-artwork-field", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2200 },
+  { id: "v3-scenes/02-work-wall",     url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2400, jumpScene: 1 },
+  { id: "v3-scenes/03-practice-studio", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2400, jumpScene: 2 },
+  { id: "v3-scenes/04-calling-card",  url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2400, jumpScene: 3 },
+  { id: "v3-scenes/05-settings-open", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2200, openSettings: true },
+  { id: "v3-scenes/06-reduced-motion", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2000, reducedMotion: true },
+  { id: "v3-scenes/07-roomkey-entry", url: `${PRESENCE_BASE}/r/ggm-pilot-stub`, waitFor: 1500 },
   // Source site (live demo) — the source uses an Osmo loader + Three.js
   // WebGL slideshow which takes ~6s to fully resolve before the artwork
   // is visible. We give the home page extra wait time.
@@ -69,6 +79,22 @@ async function capture(browser, target, viewport) {
     if (typeof target.scrollY === "number") {
       await page.evaluate((y) => window.scrollTo(0, y), target.scrollY);
       await page.waitForTimeout(500);
+    }
+    if (typeof target.jumpScene === "number") {
+      const idx = target.jumpScene;
+      await page.evaluate((i) => {
+        const items = Array.from(document.querySelectorAll('[class*="railItem"]'));
+        const btn = items[i];
+        if (btn) (btn).click();
+      }, idx);
+      await page.waitForTimeout(1600);
+    }
+    if (target.openSettings) {
+      await page.evaluate(() => {
+        const btn = document.querySelector('[class*="settingsTrigger"]');
+        if (btn) btn.click();
+      });
+      await page.waitForTimeout(600);
     }
     const file = path.join(OUT, `${target.id}-${viewport.id}.png`);
     await page.screenshot({ path: file, fullPage: !!target.fullPage });

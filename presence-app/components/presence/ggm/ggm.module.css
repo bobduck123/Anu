@@ -1934,3 +1934,674 @@
   .heroRoomKeyChip { top: 4.4rem; font-size: 0.62rem; letter-spacing: 0.16em; }
   .callingCardLine { grid-template-columns: 1fr; gap: 0.2rem; }
 }
+
+/* ============================================================================
+   V3 LAYER — Scene stage + motion settings
+   - Stage layout (left rail + central frame)
+   - Settings dropdown
+   - Liquid canvas layer
+   - Scene cards (frame around active scene)
+============================================================================ */
+
+/* ── Left rail (replaces the v2 right-edge chapter strip on desktop) ──── */
+.rail {
+  position: fixed;
+  z-index: 35;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: clamp(180px, 16vw, 230px);
+  padding: clamp(1.4rem, 2vw, 1.8rem) clamp(1.1rem, 1.8vw, 1.4rem);
+  background: rgba(244, 244, 244, 0.88);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid var(--ggm-line);
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  font-family: var(--ggm-body-family);
+  color: var(--ggm-ink);
+}
+
+.railBrand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-decoration: none;
+  color: var(--ggm-ink);
+}
+
+.railBrandMark {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--ggm-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--ggm-display-family);
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+}
+
+.railBrandName {
+  font-family: var(--ggm-display-family);
+  font-size: 0.94rem;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  margin-top: 0.4rem;
+}
+
+.railBrandSub {
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ggm-muted);
+}
+
+.railList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.railItem {
+  background: transparent;
+  border: 0;
+  padding: 0.55rem 0.65rem;
+  display: grid;
+  grid-template-columns: 2.4rem 1fr;
+  gap: 0.55rem;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+  color: var(--ggm-muted);
+  font-family: var(--ggm-body-family);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-left: 1px solid transparent;
+  transition: color 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+}
+
+.railItem:hover { color: var(--ggm-ink); }
+
+.railItemActive {
+  color: var(--ggm-ink);
+  border-left-color: var(--ggm-ink);
+  background: var(--ggm-paper);
+}
+
+.railNum {
+  font-family: var(--ggm-display-family);
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--ggm-ink);
+}
+
+.railLabel {
+  display: flex;
+  flex-direction: column;
+}
+
+.railLabelTitle {
+  font-size: 0.74rem;
+  letter-spacing: 0.18em;
+}
+
+.railLabelSub {
+  margin-top: 0.18rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: none;
+  color: var(--ggm-muted);
+  font-style: italic;
+}
+
+.railFoot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+/* ── Settings menu ───────────────────────────────────────────────────── */
+.settingsRoot {
+  position: relative;
+}
+
+.settingsTrigger {
+  background: transparent;
+  border: 1px solid var(--ggm-line);
+  color: var(--ggm-ink);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: var(--ggm-body-family);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: background 0.22s ease, color 0.22s ease, border-color 0.22s ease;
+}
+
+.settingsTrigger:hover,
+.settingsTriggerOpen {
+  background: var(--ggm-ink);
+  color: var(--ggm-bg);
+  border-color: var(--ggm-ink);
+}
+
+.settingsPanel {
+  position: absolute;
+  bottom: calc(100% + 0.6rem);
+  left: 0;
+  width: 320px;
+  background: var(--ggm-paper);
+  border: 1px solid var(--ggm-ink);
+  box-shadow: 0 22px 50px -16px rgba(0, 0, 0, 0.32), 0 6px 14px -4px rgba(0, 0, 0, 0.18);
+  padding: 1.1rem 1.2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  z-index: 41;
+}
+
+.settingsHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--ggm-line);
+}
+
+.settingsEyebrow {
+  margin: 0;
+  font-size: 0.62rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ggm-muted);
+}
+
+.settingsTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+  font-family: var(--ggm-display-family);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.settingsNote {
+  margin: 0.35rem 0 0;
+  font-size: 0.68rem;
+  color: #6a4a2a;
+  font-style: italic;
+}
+
+.settingsGroup {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.settingsGroup legend {
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ggm-muted);
+  padding: 0 0 0.2rem;
+  border-bottom: 1px solid var(--ggm-line);
+  width: 100%;
+}
+
+.settingsRow,
+.settingsRowToggle {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  font-size: 0.78rem;
+  font-family: var(--ggm-body-family);
+  color: #2d2d2d;
+  padding: 0.18rem 0;
+}
+
+.settingsRow > span,
+.settingsRowToggle > span {
+  letter-spacing: 0.02em;
+}
+
+.settingsRow select {
+  border: 1px solid var(--ggm-line);
+  background: #fff;
+  padding: 0.3rem 0.45rem;
+  font-family: var(--ggm-body-family);
+  font-size: 0.78rem;
+  color: var(--ggm-ink);
+  border-radius: 4px;
+}
+
+.settingsRangeWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settingsRangeWrap input[type="range"] {
+  width: 110px;
+  accent-color: var(--ggm-ink);
+}
+
+.settingsRangeReadout {
+  font-family: var(--ggm-display-family);
+  font-size: 0.72rem;
+  color: var(--ggm-muted);
+  width: 4rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.settingsRowToggle input[type="checkbox"] {
+  accent-color: var(--ggm-ink);
+  width: 1rem;
+  height: 1rem;
+}
+
+.settingsCaption {
+  margin: 0;
+  font-size: 0.68rem;
+  color: var(--ggm-muted);
+  line-height: 1.4;
+}
+
+.settingsFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--ggm-line);
+}
+
+.settingsResetBtn,
+.settingsCloseBtn {
+  border: 1px solid var(--ggm-line);
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-family: var(--ggm-body-family);
+  cursor: pointer;
+  color: var(--ggm-ink);
+}
+
+.settingsCloseBtn {
+  background: var(--ggm-ink);
+  color: var(--ggm-bg);
+  border-color: var(--ggm-ink);
+}
+
+.settingsFootnote {
+  margin: 0;
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  color: var(--ggm-muted);
+  font-style: italic;
+}
+
+/* ── Stage ───────────────────────────────────────────────────────────── */
+.stage {
+  position: relative;
+  margin-left: clamp(180px, 16vw, 230px);
+  min-height: 100dvh;
+  background: var(--ggm-bg);
+  overflow: hidden;
+}
+
+.stageFrame {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.stageCanvasLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.stageGrainLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+}
+
+.stageSceneLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.stageCornerTL,
+.stageCornerTR,
+.stageCornerBL,
+.stageCornerBR {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: rgba(0, 0, 0, 0.45);
+  border-style: solid;
+  border-width: 0;
+  z-index: 5;
+  pointer-events: none;
+  mix-blend-mode: difference;
+  color: #fff;
+}
+
+.stageCornerTL { top: 18px; left: 18px; border-top-width: 1px; border-left-width: 1px; }
+.stageCornerTR { top: 18px; right: 18px; border-top-width: 1px; border-right-width: 1px; }
+.stageCornerBL { bottom: 18px; left: 18px; border-bottom-width: 1px; border-left-width: 1px; }
+.stageCornerBR { bottom: 18px; right: 18px; border-bottom-width: 1px; border-right-width: 1px; }
+
+.stageBadge {
+  position: absolute;
+  z-index: 6;
+  top: 18px;
+  right: 50%;
+  transform: translateX(50%);
+  mix-blend-mode: difference;
+  color: #fff;
+  font-family: var(--ggm-body-family);
+  font-size: 0.62rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.stageNumber {
+  position: absolute;
+  z-index: 6;
+  bottom: 22px;
+  left: 22px;
+  mix-blend-mode: difference;
+  color: #fff;
+  font-family: var(--ggm-display-family);
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  pointer-events: none;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.stageNumberSlash {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.stageHintRow {
+  position: absolute;
+  z-index: 6;
+  bottom: 22px;
+  right: 22px;
+  display: flex;
+  gap: 0.4rem;
+  mix-blend-mode: difference;
+  color: #fff;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.stageHintKey {
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+  padding: 0.12rem 0.36rem;
+  font-family: var(--ggm-display-family);
+  font-size: 0.62rem;
+  letter-spacing: 0;
+}
+
+/* ── Scene-specific layers (inside the stage scene layer) ────────────── */
+.sceneContent {
+  position: relative;
+  z-index: 4;
+  width: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.sceneContentTinted {
+  background: linear-gradient(180deg, rgba(244, 244, 244, 0.0) 0%, rgba(244, 244, 244, 0.78) 65%);
+}
+
+.sceneFieldOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(4.5rem, 6vw, 6rem) clamp(1.4rem, 2vw, 2rem) clamp(3rem, 5vw, 5rem);
+  color: #fff;
+  mix-blend-mode: difference;
+}
+
+.sceneFieldTopNotes {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--ggm-body-family);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.92;
+  gap: 1rem;
+}
+
+.sceneFieldBottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  text-align: center;
+}
+
+.sceneFieldWorkTitle {
+  font-family: var(--ggm-display-family);
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+  font-weight: 400;
+  margin: 0;
+}
+
+.sceneFieldCaption {
+  font-family: var(--ggm-body-family);
+  font-size: 1rem;
+  opacity: 0.95;
+  margin: 0;
+}
+
+.sceneFieldChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 auto 0.4rem;
+  padding: 0.28rem 0.8rem;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--ggm-ink);
+  border-radius: 999px;
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  mix-blend-mode: normal;
+  pointer-events: auto;
+}
+
+.sceneFieldActions {
+  position: absolute;
+  bottom: clamp(3rem, 5vw, 5rem);
+  left: clamp(1.4rem, 2vw, 2rem);
+  right: clamp(1.4rem, 2vw, 2rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  z-index: 7;
+  mix-blend-mode: normal;
+  pointer-events: auto;
+  flex-wrap: wrap;
+}
+
+.sceneFieldArrow {
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(12, 12, 14, 0.5);
+  color: #fff;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.92rem;
+  cursor: pointer;
+  font-family: var(--ggm-body-family);
+}
+
+.sceneFieldDots {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.sceneFieldDot {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.86);
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: var(--ggm-body-family);
+}
+
+.sceneFieldDotActive {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 1);
+  color: var(--ggm-ink);
+}
+
+/* Wall / Studio / Calling-card scene shells render with paper. The
+   stage canvas sits behind them but is semi-occluded by their own
+   surface — this gives the stable-frame, replacing-card feel. */
+.sceneSurfaceWall {
+  background: var(--ggm-bg);
+  padding: clamp(3rem, 5vw, 5rem) clamp(1.5rem, 3vw, 2.4rem);
+}
+
+.sceneSurfaceStudio {
+  background: var(--ggm-paper-warm);
+  padding: clamp(3rem, 5vw, 5rem) clamp(1.5rem, 3vw, 2.4rem);
+}
+
+.sceneSurfaceCard {
+  background: var(--ggm-bg);
+  padding: clamp(3rem, 5vw, 5rem) clamp(1.5rem, 3vw, 2.4rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile bottom dock ─ replaces the rail. */
+.mobileDock {
+  display: none;
+}
+
+@media (max-width: 920px) {
+  .rail { display: none; }
+  .stage { margin-left: 0; }
+  .mobileDock {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 35;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    padding: 0.6rem 0.9rem;
+    background: rgba(244, 244, 244, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--ggm-line);
+  }
+  .mobileDockBrand {
+    font-family: var(--ggm-display-family);
+    font-size: 0.78rem;
+    letter-spacing: -0.01em;
+  }
+  .mobileDockDots {
+    display: flex;
+    gap: 0.32rem;
+  }
+  .mobileDockDot {
+    border: 1px solid var(--ggm-line);
+    background: transparent;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    font-family: var(--ggm-display-family);
+    font-size: 0.66rem;
+    color: var(--ggm-ink);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mobileDockDotActive {
+    background: var(--ggm-ink);
+    color: var(--ggm-bg);
+    border-color: var(--ggm-ink);
+  }
+  .stageFrame { height: calc(100dvh - 54px); }
+  .stageBadge { top: 12px; }
+}
+
+@media (max-width: 700px) {
+  .sceneFieldActions { gap: 0.4rem; }
+  .sceneFieldArrow { width: 1.9rem; height: 1.9rem; }
+  .sceneFieldDot { padding: 0.22rem 0.4rem; font-size: 0.52rem; }
+  .stageHintRow { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stageGrainLayer { display: none; }
+  .stage *,
+  .stage *::before,
+  .stage *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
