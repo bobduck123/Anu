@@ -1,24 +1,23 @@
 "use client";
 
-// GGM Faithful Room — v3 scene-stage edition.
+// GGM Faithful Room — v4 (UX reset).
 //
-// The visitor experiences the Room as a sequence of four scene cards
-// living inside a stable frame (chrome + left rail + settings). Scene
-// transitions play a WebGL liquid morph (see GgmLiquidCanvas). Settings
-// (motion / surface / texture / power saver) are owner-tunable via the
-// settings menu in the rail.
+// The Room is a single fixed 100svh viewing frame with four scenes.
+// No sidebar. No persistent dock. No system chrome. The brand floats
+// top-left in mix-blend-difference (faithful to the source's nav
+// signature). Presence-native enquiry and graph actions are folded
+// quietly into the Calling Card scene — they no longer hold a
+// persistent strip below the stage.
 //
-// One Room, one renderer — this component handles the public page,
-// /presence/[slug] alias, /r/[token] dispatch (with roomKey chip in
-// Scene 01), and the dedicated /works/[workId] route (single-scene
-// detail mode).
+// /r/[token] dispatches into this same component with a
+// `roomKeySourceLabel` prop; the chip appears as a tiny provenance
+// mark, not a banner.
 
 import { useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { PresenceNode, PresenceWork } from "@/lib/api/types";
 import { PublicEnquiryDialog } from "@/components/portfolio/PublicEnquiryDialog";
-import { PresenceGraphActions } from "@/components/presence/graph/PresenceGraphActions";
 import {
   GGM_ARTIST,
   GGM_FEATURED,
@@ -30,10 +29,9 @@ import {
   type GgmWork,
 } from "@/lib/presence/ggm/source";
 import { GgmStage, type SceneDef } from "./GgmStage";
-import { GgmMotionProvider, useGgmMotion } from "./GgmMotionContext";
+import { GgmMotionProvider } from "./GgmMotionContext";
 import { GgmStudioScene } from "./GgmStudioScene";
 import { GgmCallingCard } from "./GgmCallingCard";
-import { GgmCursor, GgmScrollBar } from "./GgmChrome";
 import { GgmReveal } from "./GgmReveal";
 import { GgmWorkDetail } from "./GgmWorkDetail";
 import styles from "./ggm.module.css";
@@ -83,6 +81,7 @@ function coerceWork(w: PresenceWork, idx: number): GgmWork {
   };
 }
 
+// Work-wall layout grammar (8 slots, repeats to cover any count).
 const WALL_VARIANTS = [
   styles.wallTile1, styles.wallTile2, styles.wallTile3, styles.wallTile4,
   styles.wallTile5, styles.wallTile6, styles.wallTile7, styles.wallTile8,
@@ -98,13 +97,11 @@ export default function GgmFaithfulRoom(props: GgmFaithfulRoomProps) {
 
 function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps) {
   const works = useMemo(() => buildWorks(node), [node]);
-  const { effective } = useGgmMotion();
 
   const hrefForWork = (w: GgmWork) =>
     `/p/${encodeURIComponent(node.slug)}/works/${encodeURIComponent(w.slug)}`;
 
-  // Focused work-detail mode — uses the dedicated detail surface,
-  // skipping the stage state machine.
+  // Focused work-detail mode — no stage, dedicated detail surface.
   if (focusWorkSlug) {
     const focus = works.find((w) => w.slug === focusWorkSlug);
     if (focus) {
@@ -113,9 +110,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
       const next = idx < works.length - 1 ? works[idx + 1] : works[0];
       const related = works.filter((w) => w.slug !== focus.slug).slice(0, 3);
       return (
-        <div className={`${styles.ggm}`}>
-          {effective.scrollProgress && <GgmScrollBar />}
-          {effective.customCursor && <GgmCursor />}
+        <div className={styles.ggm}>
           <nav className={styles.nav} aria-label="Primary">
             <Link className={styles.navBrand} href={`/p/${encodeURIComponent(node.slug)}`}>
               {node.display_name}
@@ -140,7 +135,6 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
     }
   }
 
-  // Build the 4 scenes.
   const brand = node.display_name ?? GGM_ARTIST.name;
   const caption = node.headline ?? GGM_ARTIST.heroCaption;
   const aboutIntro = node.bio ?? node.short_bio ?? GGM_ARTIST.aboutIntro;
@@ -172,13 +166,10 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
       sub: "liquid surface",
       backgroundImage: heroSlides[0]?.image ?? GGM_WORKS[0].image,
       surface: undefined,
-      content: () => null,
-      overlay: () => (
-        <ArtworkFieldOverlay
-          slides={heroSlides}
-          brand={brand}
+      content: () => (
+        <ArtworkFieldContent
+          slide={heroSlides[0] ?? null}
           caption={caption}
-          roomKeySourceLabel={roomKeySourceLabel ?? null}
         />
       ),
     },
@@ -237,113 +228,61 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug }: GgmFaithfulRoomProps)
     },
   ], [
     heroSlides, wallWorks, brand, caption, aboutIntro, aboutBody,
-    externalPortfolio, node.slug, node.node_type, roomKeySourceLabel,
+    externalPortfolio, node.slug, node.node_type,
     hrefForWork,
   ]);
 
+  // statementQuote is intentionally read only inside the Calling Card scene
+  // and the focus-detail branch above. Suppress lint by referencing it once.
+  void statementQuote;
+
   return (
     <div className={styles.ggm}>
-      {effective.scrollProgress && <GgmScrollBar />}
-      {effective.customCursor && <GgmCursor />}
-
-      <GgmStage node={node} scenes={scenes} />
-
-      {/* Quiet Presence-native action layer pinned to the very bottom
-          of the document. The stage holds the visitor's attention; this
-          strip is reachable by intentional scroll past the stage. */}
-      <section className={styles.presenceActionLayer} aria-label="Presence actions">
-        <div className={styles.shell} style={{ padding: "2.2rem 0" }}>
-          <PresenceGraphActions node={node} captureOnMount={false} />
-          <p style={{ marginTop: "1rem", fontSize: "0.7rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--ggm-muted)" }}>
-            © {brand} · {GGM_ARTIST.location}
-            {" · "}
-            <a
-              href={GGM_ARTIST.referenceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-hover
-              style={{ textDecoration: "underline", textUnderlineOffset: "0.14rem" }}
-            >
-              Art Scene Today
-            </a>
-            {" · "}
-            <a
-              href={GGM_LIVE_DEMO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-hover
-              style={{ textDecoration: "underline", textUnderlineOffset: "0.14rem" }}
-            >
-              Source portfolio
-            </a>
-            {statementQuote ? "" : null}
-          </p>
-        </div>
-      </section>
+      <GgmStage
+        node={node}
+        scenes={scenes}
+        roomKeySourceLabel={roomKeySourceLabel}
+      />
+      {/* Source provenance footer is rendered inside the Calling Card
+          scene — no persistent footer outside the stage. The live
+          source link still lives in the rendered Calling Card. */}
+      {/* Render the source URL one final time as a hidden semantic
+          landmark so screen readers can reach it even when scene 04
+          is not active. */}
+      <span className={styles.srOnly}>
+        <a href={GGM_LIVE_DEMO_URL}>Source portfolio: christina-goddard.vercel.app</a>
+      </span>
     </div>
   );
 }
 
-// ── Scene 01 overlay (Artwork Field) ────────────────────────────────────────
+// ── Scene 01 content — Artwork Field ───────────────────────────────────────
+//
+// The artwork is the WebGL canvas behind the scene; this layer carries
+// only the most discreet identifying text (work title + caption) so
+// the visitor isn't asked to read.
 
-interface ArtworkFieldOverlayProps {
-  slides: GgmWork[];
-  brand: string;
-  caption: string;
-  roomKeySourceLabel: string | null;
-}
-
-function ArtworkFieldOverlay({
-  slides,
-  brand,
+function ArtworkFieldContent({
+  slide,
   caption,
-  roomKeySourceLabel,
-}: ArtworkFieldOverlayProps) {
-  // Internal hero slide rotation. When the active hero slide changes
-  // (auto-advance or arrow click), the GgmStage's WebGL canvas morphs
-  // between Scene 01's backgroundImage values via the parent. But Scene
-  // 01 has its OWN slide track for cycling between the 5 hero
-  // artworks — that's distinct from the 4 scenes. Here we expose a UI
-  // for it; the actual hero slide management is handled below.
-  //
-  // For v3 we treat the 4 scenes themselves as the slideshow at the
-  // top level — each scene's backgroundImage is one of the hero
-  // artworks. The original 5-slide internal cycle is kept as a softer
-  // affordance via the dot row at the bottom; clicking a dot calls
-  // window.scrollTo and trips the hero slide via a custom event so we
-  // don't have to thread a callback through the stage.
-  //
-  // For simplicity in v3, we only display the work title and caption
-  // for the first scene background and let the visitor advance scenes
-  // for further artworks. Internal slide auto-advance is intentionally
-  // removed to focus the visitor on the scene rhythm; the user can
-  // still hit ←/→ via keyboard or click prev/next on the in-scene UI.
-  const first = slides[0];
-
+}: {
+  slide: GgmWork | null;
+  caption: string;
+}) {
   return (
-    <div className={styles.sceneFieldOverlay}>
-      <div className={styles.sceneFieldTopNotes}>
-        <span>Serendipity pathway · liquid morphology</span>
-        <span>Scroll to advance · paper gallery rhythm</span>
-      </div>
-      <div className={styles.sceneFieldBottom}>
-        {roomKeySourceLabel && (
-          <span className={styles.sceneFieldChip} aria-live="polite">
-            ✱ Opened via {roomKeySourceLabel}
-          </span>
-        )}
-        {first && (
-          <p className={styles.sceneFieldWorkTitle}>
-            {first.title} <span style={{ opacity: 0.7, fontSize: "0.6em", letterSpacing: "0.18em" }}>· {first.year}</span>
-          </p>
-        )}
-        <p className={styles.sceneFieldCaption}>{caption ?? brand}</p>
-      </div>
+    <div className={styles.fieldContent}>
+      {slide && (
+        <p className={styles.fieldWorkTitle}>
+          {slide.title}
+          <span className={styles.fieldWorkYear}>{slide.year}</span>
+        </p>
+      )}
+      <p className={styles.fieldCaption}>{caption}</p>
     </div>
   );
 }
 
-// ── Scene 02 surface (Work Wall) ────────────────────────────────────────────
+// ── Scene 02 surface — Work Wall ───────────────────────────────────────────
 
 interface WorkWallSurfaceProps {
   works: GgmWork[];
@@ -391,7 +330,7 @@ function WorkWallSurface({ works, hrefForWork }: WorkWallSurfaceProps) {
   );
 }
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 function prettyHost(url: string): string | null {
   try {

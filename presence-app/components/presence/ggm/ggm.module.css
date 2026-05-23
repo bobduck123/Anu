@@ -2605,3 +2605,377 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================================================
+   V4 LAYER — UX RESET
+   - Single fixed 100svh viewing room (no rail, no dock, no admin chrome)
+   - Brand mark top-left in mix-blend-difference (faithful to source)
+   - Scene counter bottom-center
+   - 4 right-edge tick marks
+   - Subtle bottom-right next affordance
+   - Preview-gated settings floats at bottom-left when enabled
+   - Frame corner marks for the viewing-lightbox feel
+============================================================================ */
+
+.room {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100svh;
+  background: var(--ggm-bg);
+  overflow: hidden;
+  isolation: isolate;
+  font-family: var(--ggm-body-family);
+  color: var(--ggm-ink);
+}
+
+.brandMark {
+  position: fixed;
+  z-index: 30;
+  top: clamp(1rem, 1.6vw, 1.4rem);
+  left: clamp(1rem, 2vw, 1.8rem);
+  display: inline-block;
+  color: #fff;
+  mix-blend-mode: difference;
+  font-family: var(--ggm-body-family);
+  font-size: 0.86rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 0.2rem 0.3rem;
+  pointer-events: auto;
+}
+
+.provenanceMark {
+  position: fixed;
+  z-index: 30;
+  top: clamp(1rem, 1.6vw, 1.4rem);
+  right: clamp(1rem, 2vw, 1.8rem);
+  margin: 0;
+  color: #fff;
+  mix-blend-mode: difference;
+  font-family: var(--ggm-body-family);
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* ── Frame (the viewing lightbox) ────────────────────────────────────── */
+.frame {
+  position: absolute;
+  inset: clamp(2.6rem, 4vw, 3.4rem);
+  border-radius: 0;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.frameCanvasLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.frameCornerTL,
+.frameCornerTR,
+.frameCornerBL,
+.frameCornerBR {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: rgba(255, 255, 255, 0.95);
+  border-style: solid;
+  border-width: 0;
+  z-index: 6;
+  pointer-events: none;
+  mix-blend-mode: difference;
+}
+
+.frameCornerTL { top: 12px; left: 12px; border-top-width: 1px; border-left-width: 1px; }
+.frameCornerTR { top: 12px; right: 12px; border-top-width: 1px; border-right-width: 1px; }
+.frameCornerBL { bottom: 12px; left: 12px; border-bottom-width: 1px; border-left-width: 1px; }
+.frameCornerBR { bottom: 12px; right: 12px; border-bottom-width: 1px; border-right-width: 1px; }
+
+.frameOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.frameScene {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.frameSurfaceField {
+  background: transparent;
+}
+
+.frameSurfaceWall,
+.frameSurfaceStudio,
+.frameSurfaceCard {
+  /* Non-field surfaces use a paper background that occludes the canvas
+     beneath; the canvas still morphs underneath when transitioning. */
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.frameSurfaceWall  { background: var(--ggm-bg); }
+.frameSurfaceStudio { background: var(--ggm-paper-warm); }
+.frameSurfaceCard  { background: var(--ggm-bg); align-items: center; }
+
+/* Hide scrollbars inside the frame on all browsers — content scrolls
+   when it must, but without visible scrollbars. */
+.frameSurfaceWall::-webkit-scrollbar,
+.frameSurfaceStudio::-webkit-scrollbar,
+.frameSurfaceCard::-webkit-scrollbar { display: none; }
+.frameSurfaceWall, .frameSurfaceStudio, .frameSurfaceCard {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* ── Field scene content (work title + caption only) ─────────────────── */
+.fieldContent {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 clamp(1rem, 2vw, 2rem) clamp(3rem, 6vw, 4.6rem);
+  color: #fff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  text-align: center;
+  gap: 0.35rem;
+}
+
+.fieldWorkTitle {
+  font-family: var(--ggm-display-family);
+  font-size: clamp(1.7rem, 3.2vw, 2.8rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+}
+
+.fieldWorkYear {
+  font-family: var(--ggm-body-family);
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  opacity: 0.78;
+  text-transform: none;
+}
+
+.fieldCaption {
+  margin: 0;
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+  opacity: 0.92;
+}
+
+/* ── Scene counter (bottom-center, mix-blend-difference) ─────────────── */
+.sceneCounter {
+  position: fixed;
+  bottom: clamp(0.9rem, 1.6vw, 1.2rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 32;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  color: #fff;
+  mix-blend-mode: difference;
+  font-family: var(--ggm-body-family);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  transition: opacity 0.32s ease;
+  pointer-events: auto;
+  cursor: default;
+  white-space: nowrap;
+}
+
+.sceneCounter:hover,
+.sceneCounter:focus-within {
+  opacity: 1;
+}
+
+.sceneCounterNum {
+  font-family: var(--ggm-display-family);
+  font-size: 0.92rem;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.sceneCounterSep {
+  opacity: 0.6;
+}
+
+.sceneCounterLabel {
+  letter-spacing: 0.24em;
+}
+
+.sceneCounterTotal {
+  font-family: var(--ggm-display-family);
+  font-size: 0.72rem;
+  opacity: 0.6;
+}
+
+/* ── Edge tick marks (right edge, no labels) ─────────────────────────── */
+.edgeMarks {
+  position: fixed;
+  z-index: 32;
+  top: 50%;
+  right: clamp(0.6rem, 1.4vw, 1.1rem);
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  pointer-events: auto;
+}
+
+.edgeMark {
+  width: 14px;
+  height: 1px;
+  padding: 6px 0;
+  background-clip: content-box;
+  background-color: #fff;
+  mix-blend-mode: difference;
+  border: 0;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.22s ease, width 0.32s cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+
+.edgeMark:hover,
+.edgeMark:focus-visible {
+  opacity: 1;
+  width: 22px;
+  outline: none;
+}
+
+.edgeMarkActive {
+  width: 28px;
+  opacity: 1;
+}
+
+.edgeMarkActive:hover {
+  width: 28px;
+}
+
+/* ── Bottom-right next affordance ────────────────────────────────────── */
+.nextAffordance {
+  position: fixed;
+  z-index: 32;
+  bottom: clamp(0.9rem, 1.6vw, 1.2rem);
+  right: clamp(1rem, 2vw, 1.6rem);
+  background: transparent;
+  border: 0;
+  color: #fff;
+  mix-blend-mode: difference;
+  font-family: var(--ggm-body-family);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.3rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.7;
+  transition: opacity 0.32s ease, transform 0.32s cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+
+.nextAffordance:hover,
+.nextAffordance:focus-visible,
+.nextAffordanceHover {
+  opacity: 1;
+  outline: none;
+}
+
+.nextAffordanceLabel {
+  font-family: var(--ggm-display-family);
+  font-size: 0.78rem;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: opacity 0.32s ease, max-width 0.32s cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+
+.nextAffordance:hover .nextAffordanceLabel,
+.nextAffordance:focus-visible .nextAffordanceLabel,
+.nextAffordanceHover .nextAffordanceLabel {
+  opacity: 1;
+  max-width: 14rem;
+}
+
+.nextAffordanceArrow {
+  font-family: var(--ggm-display-family);
+  font-size: 1rem;
+  transform: translateY(-1px);
+}
+
+/* ── Preview-gated settings float ────────────────────────────────────── */
+.settingsFloat {
+  position: fixed;
+  z-index: 33;
+  bottom: clamp(0.9rem, 1.6vw, 1.2rem);
+  left: clamp(1rem, 2vw, 1.6rem);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Mobile (≤700) — keep the same minimal model but tighter ─────────── */
+@media (max-width: 920px) {
+  .frame { inset: clamp(2rem, 3vw, 2.6rem); }
+  .edgeMarks { right: 0.5rem; }
+  .brandMark { font-size: 0.72rem; letter-spacing: 0.14em; }
+  .fieldWorkTitle { font-size: clamp(1.3rem, 5vw, 1.8rem); }
+  .fieldCaption { font-size: 0.78rem; }
+}
+
+@media (max-width: 700px) {
+  .frame { inset: 1.4rem; }
+  .edgeMarks { gap: 0.4rem; }
+  .edgeMark { width: 10px; padding: 5px 0; }
+  .edgeMarkActive { width: 20px; }
+  .nextAffordance { font-size: 0.6rem; letter-spacing: 0.18em; }
+  .nextAffordanceLabel { display: none; }
+  .sceneCounter { font-size: 0.62rem; gap: 0.4rem; }
+  .sceneCounterNum, .sceneCounterTotal { font-size: 0.78rem; }
+  .frameCornerTL, .frameCornerTR, .frameCornerBL, .frameCornerBR { width: 16px; height: 16px; }
+}
+
+/* Reduced motion — calmer transitions, same minimal layout. */
+@media (prefers-reduced-motion: reduce) {
+  .frameScene,
+  .nextAffordanceLabel,
+  .edgeMark {
+    transition: none !important;
+  }
+}

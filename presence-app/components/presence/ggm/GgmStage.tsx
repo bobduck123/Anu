@@ -1,35 +1,54 @@
 "use client";
 
-// GgmStage — the central scene-stage state machine for the GGM Room.
+// GgmStage — minimal scene-state model (v4 UX reset).
 //
-// Replaces the v2 scroll-snap block layout with a Maanara-style stable
-// frame: the page chrome (left rail, settings, footer action strip)
-// stays put while the central stage swaps between scenes via a WebGL
-// liquid morph driven by GgmLiquidCanvas.
+// What's gone:
+//   - Sidebar / left rail
+//   - Mobile bottom dock with brand + numbered dots + Motion pill
+//   - Visible chapter index
+//   - Per-scene right-edge labels
+//   - Internal scene scrollbars
+//   - Page-level scroll (the document is locked to a single 100svh stage)
 //
-// Interaction model:
-//   - wheel / trackpad scroll up/down       → advance / retreat one scene
-//   - keyboard ArrowDown / PageDown / Space → advance
-//   - keyboard ArrowUp / PageUp             → retreat
-//   - touch swipe up/down                   → advance / retreat
-//   - left rail / mobile dock buttons       → jump to scene N
-//   - native page scroll is kept for accessibility but is hijacked when
-//     a scene is currently filling the stage.
+// What replaces it:
+//   - The Room is a single fixed 100svh "viewing frame" that fills the
+//     viewport. Inside the frame the active scene composition is
+//     rendered; switching scene swaps the composition mechanically
+//     while the WebGL liquid morph runs.
+//   - A discreet bottom-center scene counter — "01  — ARTWORK FIELD" /
+//     "04" — sits in mix-blend-difference so it reads off whatever
+//     artwork is showing. Counter and label fade at idle and brighten
+//     during a transition or on hover.
+//   - Four tiny right-edge tick marks (no labels) — each marks one
+//     scene. Clickable, keyboard-focusable, but visually a single hair
+//     wider for the active one. No text appears next to them unless
+//     hovered.
+//   - A subtle bottom-right "→" / "↓ next" affordance that on hover
+//     reveals the next scene's name.
+//   - Keyboard arrows / number keys / wheel / swipe still work.
 //
-// Each Scene declares: id, label, sub, backgroundImage (used as the
-// WebGL morph texture), render(props) returns the React subtree drawn
-// on top of the canvas. Scene 01 (Artwork Field) doesn't render any
-// content layer because its visual IS the artwork, with overlay UI.
+// Scroll model:
+//   - The page itself never scrolls (`overflow: hidden` on body via
+//     the Room root). Wheel and touch are treated as discrete
+//     gestures: one gesture = one scene advance, with a 320ms cooldown.
+//   - Scene content is sized to fit inside the frame; if a scene's
+//     composition exceeds the frame on small viewports, the inside
+//     of the stage gets a single non-snapping scroll, not the page.
+//
+// Settings:
+//   - The motion-settings trigger is hidden by default. It only
+//     renders when the URL has `?preview=1` or `?devmotion=1`, OR
+//     the visitor holds Shift+P. This keeps it out of the public
+//     visual hierarchy while keeping it accessible to owners /
+//     operators / curators who know the gesture.
 
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
-/* eslint-disable react-hooks/exhaustive-deps */
 import Link from "next/link";
 import type { PresenceNode } from "@/lib/api/types";
 import { GgmLiquidCanvas } from "./GgmLiquidCanvas";
@@ -43,13 +62,10 @@ export interface SceneDef {
   label: string;
   sub: string;
   backgroundImage: string;
-  /** Optional surface theme applied to the scene content layer. */
+  /** Surface theme: applies the paper background under the scene
+   *  composition. `undefined` (field) lets the canvas show through. */
   surface?: "wall" | "studio" | "card";
-  /** Returns the React subtree rendered above the canvas. May be null
-   *  for the artwork-only scene (overlay UI lives in `overlay`). */
   content: () => ReactNode;
-  /** Optional fixed overlay drawn on top of the scene content
-   *  (used by Scene 01 for the hero overlay UI). */
   overlay?: () => ReactNode;
 }
 
@@ -57,39 +73,58 @@ interface GgmStageProps {
   node: PresenceNode;
   scenes: SceneDef[];
   initialScene?: number;
+  /** When set, the Room was opened from a RoomKey tap; surfaced as a
+   *  tiny provenance mark, not a banner. */
+  roomKeySourceLabel?: string | null;
 }
 
-const ADVANCE_COOLDOWN_MS = 280;
+const ADVANCE_COOLDOWN_MS = 320;
+const WHEEL_THRESHOLD = 32;
 
-export function GgmStage({ node, scenes, initialScene = 0 }: GgmStageProps) {
+export function GgmStage({
+  node,
+  scenes,
+  initialScene = 0,
+  roomKeySourceLabel,
+}: GgmStageProps) {
   const [active, setActive] = useState(initialScene);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [hoverNav, setHoverNav] = useState(false);
   const advanceLockRef = useRef(false);
   const { effective } = useGgmMotion();
+  const settingsVisible = useSettingsPreview();
 
   const total = scenes.length;
   const scene = scenes[active] ?? scenes[0];
-  const images = useMemo(() => scenes.map((s) => s.backgroundImage), [scenes]);
 
-  const goTo = useCallback(
-    (idx: number) => {
-      if (advanceLockRef.current) return;
-      const next = ((idx % total) + total) % total;
-      if (next === active) return;
-      advanceLockRef.current = true;
-      setIsTransitioning(true);
-      setActive(next);
-      window.setTimeout(() => {
-        advanceLockRef.current = false;
-      }, ADVANCE_COOLDOWN_MS);
-    },
-    [active, total],
-  );
+  const goTo = useCallback((idx: number) => {
+    if (advanceLockRef.current) return;
+    const nextIdx = ((idx % total) + total) % total;
+    if (nextIdx === active) return;
+    advanceLockRef.current = true;
+    setActive(nextIdx);
+    window.setTimeout(() => {
+      advanceLockRef.current = false;
+    }, ADVANCE_COOLDOWN_MS);
+  }, [active, total]);
 
   const next = useCallback(() => goTo(active + 1), [active, goTo]);
   const prev = useCallback(() => goTo(active - 1), [active, goTo]);
 
-  // Keyboard nav.
+  // Lock body scroll while the Room is mounted (the document should
+  // not visibly scroll — the scene is the experience).
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, []);
+
+  // Keyboard: arrows, page keys, number keys for direct scene jumps.
+  // Also handle Shift+P to toggle preview mode for the settings menu.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.target instanceof HTMLElement) {
@@ -99,12 +134,14 @@ export function GgmStage({ node, scenes, initialScene = 0 }: GgmStageProps) {
       }
       switch (e.key) {
         case "ArrowDown":
+        case "ArrowRight":
         case "PageDown":
         case " ":
           e.preventDefault();
           next();
           break;
         case "ArrowUp":
+        case "ArrowLeft":
         case "PageUp":
           e.preventDefault();
           prev();
@@ -131,167 +168,168 @@ export function GgmStage({ node, scenes, initialScene = 0 }: GgmStageProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [next, prev, goTo, total]);
 
-  // Wheel navigation — only consume the wheel when the scene content
-  // is at its scroll boundaries. This lets long scenes (Work Wall,
-  // Practice Studio) scroll internally first; once the internal scroll
-  // reaches its edge, an extra wheel tick advances the scene.
-  const sceneLayerRef = useRef<HTMLDivElement | null>(null);
+  // Wheel input. Accumulate small ticks so a single trackpad gesture
+  // doesn't blast past multiple scenes.
   useEffect(() => {
-    const el = sceneLayerRef.current;
-    if (!el) return;
     let accum = 0;
     let lastTick = 0;
     function onWheel(e: WheelEvent) {
-      const layer = sceneLayerRef.current;
-      if (!layer) return;
-      const atTop = layer.scrollTop <= 1;
-      const atBottom = layer.scrollTop + layer.clientHeight >= layer.scrollHeight - 1;
-      const advance = e.deltaY > 0 && atBottom;
-      const retreat = e.deltaY < 0 && atTop;
-      if (!advance && !retreat) return;
       e.preventDefault();
       const now = performance.now();
       accum += e.deltaY;
-      if (now - lastTick < 320) return;
-      if (Math.abs(accum) < 32) return;
-      if (accum > 0) {
-        next();
-      } else {
-        prev();
-      }
+      if (now - lastTick < 340) return;
+      if (Math.abs(accum) < WHEEL_THRESHOLD) return;
+      if (accum > 0) next();
+      else prev();
       accum = 0;
       lastTick = now;
     }
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
+    window.addEventListener("wheel", onWheel, { passive: false });
+    return () => window.removeEventListener("wheel", onWheel);
   }, [next, prev]);
 
   // Touch swipe.
   useEffect(() => {
-    const el = sceneLayerRef.current;
-    if (!el) return;
     let startY = 0;
-    let startScroll = 0;
+    let startX = 0;
+    let active = false;
     function onStart(e: TouchEvent) {
-      startY = e.touches[0]?.clientY ?? 0;
-      startScroll = sceneLayerRef.current?.scrollTop ?? 0;
+      const t = e.touches[0];
+      if (!t) return;
+      startY = t.clientY;
+      startX = t.clientX;
+      active = true;
     }
     function onEnd(e: TouchEvent) {
-      const layer = sceneLayerRef.current;
-      if (!layer) return;
-      const endY = e.changedTouches[0]?.clientY ?? startY;
-      const dy = startY - endY;
-      // Only treat as a scene-advance gesture if the user wasn't
-      // scrolling the inner content.
-      const atTop = layer.scrollTop <= 1;
-      const atBottom = layer.scrollTop + layer.clientHeight >= layer.scrollHeight - 1;
-      const scrolledInside = Math.abs(layer.scrollTop - startScroll) > 6;
-      if (scrolledInside) return;
-      if (Math.abs(dy) < 56) return;
-      if (dy > 0 && atBottom) next();
-      else if (dy < 0 && atTop) prev();
+      if (!active) return;
+      active = false;
+      const t = e.changedTouches[0];
+      if (!t) return;
+      const dy = startY - t.clientY;
+      const dx = startX - t.clientX;
+      // Treat vertical-dominant swipes only.
+      if (Math.abs(dy) < 48 || Math.abs(dx) > Math.abs(dy)) return;
+      if (dy > 0) next();
+      else prev();
     }
-    el.addEventListener("touchstart", onStart, { passive: true });
-    el.addEventListener("touchend", onEnd, { passive: true });
+    window.addEventListener("touchstart", onStart, { passive: true });
+    window.addEventListener("touchend", onEnd, { passive: true });
     return () => {
-      el.removeEventListener("touchstart", onStart);
-      el.removeEventListener("touchend", onEnd);
+      window.removeEventListener("touchstart", onStart);
+      window.removeEventListener("touchend", onEnd);
     };
   }, [next, prev]);
 
-  // Whenever the active scene changes, scroll the layer to the top.
-  useEffect(() => {
-    const el = sceneLayerRef.current;
-    if (el) el.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-  }, [active]);
-
-  function onTransitionEnd() {
-    setIsTransitioning(false);
-  }
+  const images = scenes.map((s) => s.backgroundImage);
+  const isFinalScene = active === total - 1;
+  const nextLabel = isFinalScene ? scenes[0]?.label : scenes[active + 1]?.label;
 
   return (
-    <>
-      <Rail
-        node={node}
-        scenes={scenes}
-        activeIndex={active}
-        onJump={goTo}
-      />
-      <MobileDock
-        node={node}
-        scenes={scenes}
-        activeIndex={active}
-        onJump={goTo}
-      />
-      <main className={styles.stage} aria-label={`${node.display_name} room`}>
-        <div className={styles.stageFrame}>
-          <div className={styles.stageCanvasLayer}>
-            <GgmLiquidCanvas
-              images={images}
-              activeIndex={active}
-              style={effective.liquidStyle}
-              transitionMs={effective.liquidDurationMs}
-              intensity={effective.liquidIntensity}
-              distortion={effective.liquidDistortion}
-              onTransitionEnd={onTransitionEnd}
-            />
-          </div>
+    <main className={styles.room} aria-label={`${node.display_name} room`}>
+      <Link
+        href={`/p/${encodeURIComponent(node.slug)}`}
+        className={styles.brandMark}
+        data-hover
+      >
+        {node.display_name}
+      </Link>
 
-          {/* Stage chrome */}
-          <span className={styles.stageCornerTL} aria-hidden />
-          <span className={styles.stageCornerTR} aria-hidden />
-          <span className={styles.stageCornerBL} aria-hidden />
-          <span className={styles.stageCornerBR} aria-hidden />
+      {roomKeySourceLabel && (
+        <p className={styles.provenanceMark} aria-live="polite">
+          ✱ Opened via {roomKeySourceLabel}
+        </p>
+      )}
 
-          <p className={styles.stageBadge} aria-hidden>
-            {scene.label}
-          </p>
-          <p className={styles.stageNumber} aria-hidden>
-            <span>{scene.number}</span>
-            <span className={styles.stageNumberSlash}>
-              / {String(total).padStart(2, "0")}
-            </span>
-          </p>
-          <div className={styles.stageHintRow} aria-hidden>
-            <span>
-              <kbd className={styles.stageHintKey}>↑</kbd>
-              <kbd className={styles.stageHintKey} style={{ marginLeft: 4 }}>↓</kbd>
-              {" scene"}
-            </span>
-          </div>
-
-          {/* Active scene content layer */}
-          <div
-            ref={sceneLayerRef}
-            className={styles.stageSceneLayer}
-            data-scene={scene.id}
-            data-transitioning={isTransitioning ? "true" : "false"}
-            tabIndex={-1}
-          >
-            <SceneSurface scene={scene}>
-              {scene.content()}
-            </SceneSurface>
-          </div>
-
-          {/* Persistent scene overlay (artwork field bottom controls etc.) */}
-          {scene.overlay && (
-            <div style={{ position: "absolute", inset: 0, zIndex: 5, pointerEvents: "none" }}>
-              {scene.overlay()}
-            </div>
-          )}
+      <div className={styles.frame}>
+        <div className={styles.frameCanvasLayer}>
+          <GgmLiquidCanvas
+            images={images}
+            activeIndex={active}
+            style={effective.liquidStyle}
+            transitionMs={effective.liquidDurationMs}
+            intensity={effective.liquidIntensity}
+            distortion={effective.liquidDistortion}
+          />
         </div>
-      </main>
-    </>
+
+        {/* Stable frame corner marks */}
+        <span className={styles.frameCornerTL} aria-hidden />
+        <span className={styles.frameCornerTR} aria-hidden />
+        <span className={styles.frameCornerBL} aria-hidden />
+        <span className={styles.frameCornerBR} aria-hidden />
+
+        {/* Active scene composition */}
+        <SceneSurface scene={scene} key={scene.id}>
+          {scene.content()}
+        </SceneSurface>
+
+        {scene.overlay && (
+          <div className={styles.frameOverlay}>
+            {scene.overlay()}
+          </div>
+        )}
+      </div>
+
+      {/* Bottom-center scene counter — the only persistent navigation
+          label. Reads off the artwork via mix-blend-difference. */}
+      <div
+        className={styles.sceneCounter}
+        aria-live="polite"
+        onMouseEnter={() => setHoverNav(true)}
+        onMouseLeave={() => setHoverNav(false)}
+      >
+        <span className={styles.sceneCounterNum}>{scene.number}</span>
+        <span className={styles.sceneCounterSep}>—</span>
+        <span className={styles.sceneCounterLabel}>{scene.label}</span>
+        <span className={styles.sceneCounterTotal}>
+          / {String(total).padStart(2, "0")}
+        </span>
+      </div>
+
+      {/* Edge tick marks — one per scene, no labels. */}
+      <nav className={styles.edgeMarks} aria-label="Scenes">
+        {scenes.map((s, i) => (
+          <button
+            key={s.id}
+            type="button"
+            className={`${styles.edgeMark} ${i === active ? styles.edgeMarkActive : ""}`}
+            onClick={() => goTo(i)}
+            aria-label={`${s.number} ${s.label}`}
+            aria-current={i === active ? "true" : undefined}
+            data-hover
+          />
+        ))}
+      </nav>
+
+      {/* Bottom-right next affordance. Reveals next scene name on hover. */}
+      <button
+        type="button"
+        className={`${styles.nextAffordance} ${hoverNav ? styles.nextAffordanceHover : ""}`}
+        onClick={next}
+        onMouseEnter={() => setHoverNav(true)}
+        onMouseLeave={() => setHoverNav(false)}
+        aria-label={isFinalScene ? "Return to start" : `Next — ${nextLabel}`}
+        data-hover
+      >
+        <span className={styles.nextAffordanceLabel}>
+          {isFinalScene ? "Return" : nextLabel}
+        </span>
+        <span className={styles.nextAffordanceArrow} aria-hidden>→</span>
+      </button>
+
+      {/* Preview-gated settings menu */}
+      {settingsVisible && (
+        <div className={styles.settingsFloat}>
+          <GgmSettingsMenu />
+        </div>
+      )}
+    </main>
   );
 }
 
-// ── Scene surface wrapper — provides the right tinted background and
-//    layout depending on the scene's surface kind. ─────────────────────
+// ── Scene surface ───────────────────────────────────────────────────────────
 
 function SceneSurface({ scene, children }: { scene: SceneDef; children: ReactNode }) {
-  // Trigger the .blockReveal entry animation each time this scene
-  // becomes active. We mount with .revealed off, then flip to on next
-  // frame so the staggered .blockRevealChild children animate in.
   const [revealed, setRevealed] = useState(false);
   useEffect(() => {
     setRevealed(false);
@@ -301,105 +339,49 @@ function SceneSurface({ scene, children }: { scene: SceneDef; children: ReactNod
     return () => cancelAnimationFrame(id);
   }, [scene.id]);
 
-  const cls = (() => {
+  const surfaceCls = (() => {
     switch (scene.surface) {
-      case "wall": return styles.sceneSurfaceWall;
-      case "studio": return styles.sceneSurfaceStudio;
-      case "card": return styles.sceneSurfaceCard;
-      default: return undefined;
+      case "wall": return styles.frameSurfaceWall;
+      case "studio": return styles.frameSurfaceStudio;
+      case "card": return styles.frameSurfaceCard;
+      default: return styles.frameSurfaceField;
     }
   })();
   const revealCls = `${styles.blockReveal} ${revealed ? styles.revealed : ""}`;
-  if (!cls) {
-    // Field scene — no surface; the canvas shows through. We still
-    // wrap in a reveal so any content scene chooses to put UI on the
-    // content layer participates in the staggered entry.
-    return (
-      <div className={`${styles.sceneContent} ${revealCls}`}>
-        {children}
-      </div>
-    );
-  }
+
   return (
-    <div className={`${styles.sceneContent} ${cls} ${revealCls}`}>
+    <div className={`${styles.frameScene} ${surfaceCls} ${revealCls}`}>
       {children}
     </div>
   );
 }
 
-// ── Left rail (desktop) ───────────────────────────────────────────────────
+// ── Settings preview gate ───────────────────────────────────────────────────
+//
+// The settings menu is only rendered when:
+//   - URL has ?preview=1 or ?devmotion=1, OR
+//   - The visitor holds Shift+P at any point in the session.
+// In both cases the visibility persists for the rest of the session
+// (via in-memory state — no localStorage, no cookie).
 
-interface RailProps {
-  node: PresenceNode;
-  scenes: SceneDef[];
-  activeIndex: number;
-  onJump: (i: number) => void;
-}
-
-function Rail({ node, scenes, activeIndex, onJump }: RailProps) {
-  return (
-    <aside className={styles.rail} aria-label="Room navigation">
-      <Link href={`/p/${encodeURIComponent(node.slug)}`} className={styles.railBrand}>
-        <span className={styles.railBrandMark} aria-hidden>✱</span>
-        <span className={styles.railBrandName}>{node.display_name}</span>
-        <span className={styles.railBrandSub}>Presence Room</span>
-      </Link>
-
-      <nav className={styles.railList} aria-label="Scenes">
-        {scenes.map((s, i) => {
-          const active = i === activeIndex;
-          return (
-            <button
-              key={s.id}
-              type="button"
-              className={`${styles.railItem} ${active ? styles.railItemActive : ""}`}
-              onClick={() => onJump(i)}
-              aria-current={active ? "true" : undefined}
-              data-hover
-            >
-              <span className={styles.railNum}>{s.number}</span>
-              <span className={styles.railLabel}>
-                <span className={styles.railLabelTitle}>{s.label}</span>
-                <span className={styles.railLabelSub}>{s.sub}</span>
-              </span>
-            </button>
-          );
-        })}
-      </nav>
-
-      <div className={styles.railFoot}>
-        <GgmSettingsMenu />
-      </div>
-    </aside>
-  );
-}
-
-// ── Mobile bottom dock ──────────────────────────────────────────────────────
-
-function MobileDock({ node, scenes, activeIndex, onJump }: RailProps) {
-  return (
-    <nav className={styles.mobileDock} aria-label="Room scenes">
-      <Link href={`/p/${encodeURIComponent(node.slug)}`} className={styles.mobileDockBrand}>
-        {node.display_name.split(" ")[0]}
-      </Link>
-      <div className={styles.mobileDockDots}>
-        {scenes.map((s, i) => {
-          const active = i === activeIndex;
-          return (
-            <button
-              key={s.id}
-              type="button"
-              className={`${styles.mobileDockDot} ${active ? styles.mobileDockDotActive : ""}`}
-              onClick={() => onJump(i)}
-              aria-current={active ? "true" : undefined}
-              aria-label={`${s.number} ${s.label}`}
-            >
-              {s.number}
-            </button>
-          );
-        })}
-      </div>
-      <GgmSettingsMenu />
-    </nav>
-  );
+function useSettingsPreview(): boolean {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const search = window.location.search ?? "";
+    if (/[?&](preview|devmotion)=1/.test(search)) {
+      setVisible(true);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.shiftKey && (e.key === "P" || e.key === "p")) {
+        // Only toggle when typed in body, not in an input.
+        const t = e.target as HTMLElement | null;
+        if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+        setVisible((v) => !v);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  return visible;
 }

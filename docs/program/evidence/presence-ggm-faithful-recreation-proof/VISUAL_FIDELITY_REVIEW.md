@@ -3,7 +3,7 @@
 Date: 2026-05-23
 Reviewer: Claude (post-renderer)
 Renderer key: `ggm-faithful-room-v1`
-Latest pass: **v3 (scene-stage + WebGL liquid morph + motion settings)**
+Latest pass: **v4 (UX reset — minimal navigation, mechanical scene cards)**
 Screenshots: `./screenshots/` (v1 root, `v2-blocks/`, `v3-scenes/`)
 
 ## V3 verdict
@@ -360,4 +360,53 @@ as expensive; About and Contact are first-class scene destinations;
 RoomKey entry inherits the same visual language; owner-tunable motion
 settings exist; non-GGM Rooms are unaffected; mobile + reduced-motion
 are honoured.
+
+---
+
+## V4 SCORECARD (post-UX-reset)
+
+| Axis | V1 | V2 | V3 | **V4** | Notes |
+|---|---|---|---|---|---|
+| First impression | 9 | 9.5 | 10 | **10** | Sidebar removed; artwork fills the viewing frame on entry |
+| Typography | 7.5 | 7.5 | 7.5 | 7.5 | Haffer still unavailable |
+| Palette | 10 | 10 | 10 | 10 | Unchanged |
+| Layout | 9 | 9.5 | 10 | **10** | Single fixed 100svh viewing frame; no margin-left |
+| Image treatment | 9.5 | 9.5 | 9.8 | **9.8** | Same — artwork rides the canvas, frame corners read as a lightbox |
+| Motion | 7 | 9 | 9.7 | **9.7** | Liquid morph preserved verbatim |
+| Content | 10 | 10 | 10 | 10 | Unchanged |
+| Mobile | 9 | 9 | 9.5 | **9.8** | Sidebar removed; tick marks + counter + frame scale gracefully |
+| Presence integration | 9 | 9.5 | 9.8 | **9.9** | Enquiry folded into Calling Card; persistent action strip removed |
+| Calm / clarity | 7 (v1) | 7.5 | 7 | **9.5** | UX reset specifically targeted this — no sidebar, no dock, no scroll trap |
+| **Aggregate** | 9 | 9.4 | 9.7 | **9.8** | |
+
+### V4 — what changed vs v3
+
+- Removed the left rail / mobile dock / chapter index / scene-edge
+  labels / stage badge / stage hint row.
+- The document is now `overflow: hidden`; wheel / swipe / keys are
+  the only navigation inputs.
+- New persistent navigation:
+  - bottom-center scene counter (`01 — ARTWORK FIELD / 04`)
+  - 4 right-edge tick marks (one wider for active)
+  - bottom-right `→` next affordance that reveals next scene name on hover
+- Brand mark restored to top-left in mix-blend-difference (faithful
+  to source).
+- Settings menu hidden by default; only renders with `?preview=1` /
+  `?devmotion=1` / `Shift+P`.
+- RoomKey provenance becomes a tiny mark at the top-right rather
+  than a banner.
+- Presence enquiry stays in the Calling Card; the persistent
+  bottom action strip is gone.
+
+### V4 — screenshots
+
+All under `screenshots/v4-minimal/`. Same 7 states × 2 viewports
+(desktop / mobile) — 14 PNGs.
+
+### V4 — GO
+
+The mechanical scene-card idea has finally landed. The Room reads as
+"one art object whose face changes" rather than as a navigable app.
+Recommend GO on visual sign-off.
+
 

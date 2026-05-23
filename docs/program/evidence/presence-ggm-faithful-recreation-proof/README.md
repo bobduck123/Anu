@@ -4,7 +4,7 @@ Date: 2026-05-23
 Renderer key: `ggm-faithful-room-v1` (single GGM Room across v1 → v2 → v3)
 Pilot: GGM (Christina Kerkvliet Goddard)
 Canonical slug: `ggm-christina-goddard`
-Latest pass: **v3 — premium motion + scene-stage**
+Latest pass: **v4 — UX reset (minimal navigation, mechanical scene cards)**
 Verdict: **GO for visual fidelity gate. NO-GO for full pilot launch
 pending hosted auth + RoomKey smoke (see §10).**
 
@@ -21,7 +21,8 @@ pending hosted auth + RoomKey smoke (see §10).**
 9. `AUTH_OWNER_REGRESSION_NOTES.md` — auth / owner regression notes.
 10. `VISUAL_FIDELITY_REVIEW.md` — full scorecard across v1 → v2 → v3.
 11. `CUSTOM_PRESENCE_STYLE_DNA.md` — v2 reusable pattern doc (superseded by `STYLE_DNA_SYSTEMIC_NOTES.md`).
-12. `screenshots/` — pairs of source-vs-Presence + v2 blocks + v3 scenes.
+12. `SCENE_NAVIGATION_REDESIGN.md` — v4 UX-reset rationale (this pass).
+13. `screenshots/` — pairs of source-vs-Presence + v2 blocks + v3 scenes + **v4 minimal**.
 
 ---
 

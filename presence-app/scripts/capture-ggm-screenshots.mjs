@@ -16,9 +16,11 @@ const OUT = process.env.PRESENCE_QA_OUT ||
 const OUT_V2 = `${OUT}/v2-blocks`;
 
 const OUT_V3 = `${OUT}/v3-scenes`;
+const OUT_V4 = `${OUT}/v4-minimal`;
 if (!fs.existsSync(OUT)) fs.mkdirSync(OUT, { recursive: true });
 if (!fs.existsSync(OUT_V2)) fs.mkdirSync(OUT_V2, { recursive: true });
 if (!fs.existsSync(OUT_V3)) fs.mkdirSync(OUT_V3, { recursive: true });
+if (!fs.existsSync(OUT_V4)) fs.mkdirSync(OUT_V4, { recursive: true });
 
 const VIEWPORTS = [
   { id: "desktop", width: 1440, height: 900 },
@@ -56,6 +58,14 @@ const TARGETS = [
   { id: "v3-scenes/05-settings-open", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2200, openSettings: true },
   { id: "v3-scenes/06-reduced-motion", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2000, reducedMotion: true },
   { id: "v3-scenes/07-roomkey-entry", url: `${PRESENCE_BASE}/r/ggm-pilot-stub`, waitFor: 1500 },
+  // V4 minimal-nav captures.
+  { id: "v4-minimal/01-artwork-field", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2400 },
+  { id: "v4-minimal/02-work-wall",     url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2600, advance: 1 },
+  { id: "v4-minimal/03-practice-studio", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2600, advance: 2 },
+  { id: "v4-minimal/04-calling-card",  url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2600, advance: 3 },
+  { id: "v4-minimal/05-preview-settings", url: `${PRESENCE_BASE}/p/ggm-christina-goddard?preview=1`, waitFor: 2400, openSettings: true },
+  { id: "v4-minimal/06-reduced-motion", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2200, reducedMotion: true },
+  { id: "v4-minimal/07-roomkey-entry-loader", url: `${PRESENCE_BASE}/r/ggm-pilot-stub`, waitFor: 1500 },
   // Source site (live demo) — the source uses an Osmo loader + Three.js
   // WebGL slideshow which takes ~6s to fully resolve before the artwork
   // is visible. We give the home page extra wait time.
@@ -88,6 +98,16 @@ async function capture(browser, target, viewport) {
         if (btn) (btn).click();
       }, idx);
       await page.waitForTimeout(1600);
+    }
+    if (typeof target.advance === "number") {
+      // V4 minimal nav — use the number-key jump (1–4) to land
+      // directly on the target scene. Number keys are wired in
+      // GgmStage and aren't subject to wheel-cooldown timing.
+      const idx = target.advance;
+      await page.focus("body");
+      await page.keyboard.press(String(idx + 1));
+      // Wait for the liquid transition + scene reveal to settle.
+      await page.waitForTimeout(1700);
     }
     if (target.openSettings) {
       await page.evaluate(() => {
