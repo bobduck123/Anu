@@ -7,7 +7,6 @@ import {
   ArrowDown,
   ArrowLeftRight,
   ArrowUp,
-  CheckCircle2,
   Clock3,
   Eye,
   Globe,
@@ -46,6 +45,12 @@ import type {
   PresenceNode,
 } from "@/lib/api/types";
 import { canonicalPublicUrl } from "@/lib/presence/url";
+import { assetSafetyMessage, validateAssetUrl } from "@/lib/editor/assetValidator";
+import { buildReadinessReport, type ReadinessReport } from "@/lib/editor/readiness";
+import { applyRoomDnaPreset, ROOM_DNA_PRESETS } from "@/lib/editor/presets";
+import BeforeAfterComparison from "./BeforeAfterComparison";
+import PublishConfirmDialog from "./PublishConfirmDialog";
+import ReadinessPanel from "./ReadinessPanel";
 
 type TabId =
   | "overview"
@@ -82,12 +87,6 @@ interface EditableWork {
   alt_text?: string | null;
   sort_order?: number;
   is_visible?: boolean;
-}
-
-interface ValidationIssue {
-  id: string;
-  severity: "error" | "warning" | "info";
-  label: string;
 }
 
 const TABS: Array<{ id: TabId; label: string; icon: typeof Sparkles }> = [
@@ -151,7 +150,9 @@ export default function PresenceStudioEditorApp({
   const [actionError, setActionError] = useState<string | null>(null);
   const [previewPayload, setPreviewPayload] = useState<PresenceEditorPreviewResponse | null>(null);
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
+  const [mobilePreviewReviewed, setMobilePreviewReviewed] = useState(false);
   const [attachForm, setAttachForm] = useState({ slot: "attached_assets", url: "", alt_text: "" });
+  const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
 
   const loadEditor = useCallback(async () => {
     setLoading(true);
@@ -175,9 +176,18 @@ export default function PresenceStudioEditorApp({
   }, [loadEditor]);
 
   const dirty = useMemo(() => Boolean(config && snapshot(config) !== baseSnapshot), [config, baseSnapshot]);
-  const issues = useMemo(() => (config ? buildValidationIssues(config, overview, dirty) : []), [config, overview, dirty]);
-  const blockingIssues = issues.filter((issue) => issue.severity === "error");
+  const readiness = useMemo(
+    () => (config ? buildReadinessReport({ config, overview, node, dirty, mobilePreviewReviewed }) : null),
+    [config, dirty, mobilePreviewReviewed, node, overview],
+  );
+  const issues = readiness?.issues ?? [];
+  const blockingIssues = readiness?.critical ?? [];
   const publicUrl = canonicalPublicUrl(node.slug);
+
+  function setPreviewModeTracked(mode: "desktop" | "mobile") {
+    setPreviewMode(mode);
+    if (mode === "mobile") setMobilePreviewReviewed(true);
+  }
 
   function mutate(next: (draft: PresenceEditableConfig) => PresenceEditableConfig) {
     setConfig((current) => next(cloneConfig(current ?? createFallbackConfig(node))));
@@ -234,12 +244,6 @@ export default function PresenceStudioEditorApp({
 
   async function runPublish() {
     if (!config) return;
-    const confirmed = window.confirm(
-      dirty
-        ? "Save this draft and publish it live? The current published config will be archived."
-        : "Publish this draft live? The current published config will be archived.",
-    );
-    if (!confirmed) return;
     setPublishing(true);
     setActionError(null);
     try {
@@ -249,6 +253,7 @@ export default function PresenceStudioEditorApp({
       }
       const result = await publishPresenceEditorDraft(nodeId, token);
       const published = normalizeConfig(result.published, node);
+      setPublishConfirmOpen(false);
       setOverview((current) =>
         current
           ? {
@@ -416,11 +421,15 @@ export default function PresenceStudioEditorApp({
             </button>
             <button className={buttonClass("secondary")} disabled={previewing} onClick={() => void runPreview()}>
               {previewing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
-              Preview
+              Preview panel
             </button>
-            <button className={buttonClass("publish")} disabled={publishing || blockingIssues.length > 0} onClick={() => void runPublish()}>
+            <Link className={buttonClass("secondary")} href={`/studio/${nodeId}/editor/preview`}>
+              <Eye className="h-4 w-4" />
+              Full preview
+            </Link>
+            <button className={buttonClass("publish")} disabled={publishing || blockingIssues.length > 0} onClick={() => setPublishConfirmOpen(true)}>
               {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Publish
+              Open room to visitors
             </button>
             <a className={buttonClass("ghost")} href={publicUrl} target="_blank" rel="noopener noreferrer">
               <Globe className="h-4 w-4" />
@@ -429,14 +438,14 @@ export default function PresenceStudioEditorApp({
             <div className="ml-auto flex flex-wrap items-center gap-2">
               <Pill tone={dirty ? "warn" : "good"}>{dirty ? "Unsaved changes" : "Saved state"}</Pill>
               <Pill tone={blockingIssues.length ? "danger" : issues.length ? "warn" : "good"}>
-                {issues.length} validation {issues.length === 1 ? "issue" : "issues"}
+                Readiness {readiness?.percentage ?? 0}%
               </Pill>
               <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1">
                 {(["desktop", "mobile"] as const).map((mode) => (
                   <button
                     key={mode}
                     type="button"
-                    onClick={() => setPreviewMode(mode)}
+                    onClick={() => setPreviewModeTracked(mode)}
                     className={`rounded-full px-3 py-1 text-xs font-semibold capitalize transition ${
                       previewMode === mode ? "bg-amber-200 text-stone-950" : "text-stone-300 hover:text-stone-50"
                     }`}
@@ -486,7 +495,7 @@ export default function PresenceStudioEditorApp({
                 config={config}
                 overview={overview}
                 node={node}
-                issues={issues}
+                readiness={readiness}
                 onSelectTab={setActiveTab}
               />
             )}
@@ -522,9 +531,9 @@ export default function PresenceStudioEditorApp({
                 overview={overview}
                 previewPayload={previewPayload}
                 previewMode={previewMode}
-                issues={issues}
+                readiness={readiness}
                 onPreview={runPreview}
-                onPublish={runPublish}
+                onPublish={() => setPublishConfirmOpen(true)}
                 previewing={previewing}
                 publishing={publishing}
               />
@@ -541,6 +550,15 @@ export default function PresenceStudioEditorApp({
           </main>
         </div>
       </div>
+      <PublishConfirmDialog
+        open={publishConfirmOpen}
+        publishing={publishing}
+        readiness={readiness}
+        draftVersion={overview?.draft?.version ?? config.version}
+        publishedVersion={overview?.published?.version}
+        onCancel={() => setPublishConfirmOpen(false)}
+        onConfirm={() => void runPublish()}
+      />
     </div>
   );
 }
@@ -549,13 +567,13 @@ function OverviewTab({
   config,
   overview,
   node,
-  issues,
+  readiness,
   onSelectTab,
 }: {
   config: PresenceEditableConfig;
   overview: PresenceEditorOverview | null;
   node: PresenceNode;
-  issues: ValidationIssue[];
+  readiness: ReadinessReport | null;
   onSelectTab: (tab: TabId) => void;
 }) {
   const artworkField = sceneById(config, "artwork_field");
@@ -597,21 +615,7 @@ function OverviewTab({
 
       <aside className="grid gap-4">
         <Panel title="Readiness">
-          <div className="flex flex-col gap-2">
-            {issues.length === 0 ? (
-              <p className="flex items-center gap-2 text-sm text-emerald-200">
-                <CheckCircle2 className="h-4 w-4" />
-                No blocking validation issues.
-              </p>
-            ) : (
-              issues.map((issue) => (
-                <div key={issue.id} className="flex gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs">
-                  <AlertTriangle className={issue.severity === "error" ? "h-4 w-4 shrink-0 text-red-300" : "h-4 w-4 shrink-0 text-amber-200"} />
-                  <span>{issue.label}</span>
-                </div>
-              ))
-            )}
-          </div>
+          {readiness ? <ReadinessPanel report={readiness} onNavigate={(tabId) => onSelectTab(tabId as TabId)} /> : <p className="text-sm text-stone-400">Readiness is loading.</p>}
         </Panel>
         <Panel title="State">
           <div className="grid gap-2 text-xs text-stone-300">
@@ -873,22 +877,39 @@ function StyleTab({ config, mutate }: { config: PresenceEditableConfig; mutate: 
   const artwork = asRecord(style.artwork_treatment);
   return (
     <div className="grid gap-5">
-      <Panel title="Palette">
-        <div className="grid gap-4 md:grid-cols-3">
-          {["bg", "paper", "ink", "muted", "accent", "hero_stage_bg"].map((key) => (
-            <ColorField key={key} label={key.replace(/_/g, " ")} value={textValue(palette[key])} onChange={(value) => updateStyle(mutate, { palette: { ...palette, [key]: value } })} />
+      <Panel title="Room DNA presets" intro="Only presets that map to renderer-visible palette, typography, and liquid motion tokens are enabled. Stored-only renderer ideas remain disabled below.">
+        <div className="grid gap-3 md:grid-cols-3">
+          {ROOM_DNA_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              className="rounded-3xl border border-white/10 bg-white/[0.04] p-3 text-left transition hover:border-amber-200/40"
+              onClick={() => mutate((draft) => applyRoomDnaPreset(draft, preset))}
+            >
+              <span className="block h-16 rounded-2xl border border-white/10" style={{ background: preset.swatch }} />
+              <span className="mt-3 block text-sm font-semibold text-stone-50">{preset.name}</span>
+              <span className="mt-1 block text-xs leading-5 text-stone-400">{preset.description}</span>
+            </button>
           ))}
         </div>
       </Panel>
-      <Panel title="Typography and rhythm">
+      <Panel title="Mood palette" intro="These colours are wired into the GGM public renderer through CSS variables.">
+        <div className="grid gap-4 md:grid-cols-3">
+          {["bg", "paper", "paper_warm", "ink", "muted", "line", "hero_stage_bg"].map((key) => (
+            <ColorField key={key} label={key.replace(/_/g, " ")} value={textValue(palette[key])} onChange={(value) => updateStyle(mutate, { palette: { ...palette, [key]: value } })} />
+          ))}
+          <ColorField label="accent (coming soon)" value={textValue(palette.accent)} disabled note="Stored only. The current GGM renderer does not consume this as a distinct accent token." onChange={() => undefined} />
+        </div>
+      </Panel>
+      <Panel title="Typography and room controls">
         <div className="grid gap-4 lg:grid-cols-2">
           <SelectField label="Heading stack" value={textValue(typography.heading_stack) || SAFE_FONTS[0]} options={SAFE_FONTS} onChange={(value) => updateStyle(mutate, { typography: { ...typography, heading_stack: value } })} />
           <SelectField label="Body stack" value={textValue(typography.body_stack) || SAFE_FONTS[0]} options={SAFE_FONTS} onChange={(value) => updateStyle(mutate, { typography: { ...typography, body_stack: value } })} />
-          <TextField label="Background treatment" value={textValue(style.background_treatment)} onChange={(value) => updateStyle(mutate, { background_treatment: value })} />
-          <TextField label="Frame treatment" value={textValue(style.frame_treatment)} onChange={(value) => updateStyle(mutate, { frame_treatment: value })} />
-          <TextField label="Texture treatment" value={textValue(recordAt(style.texture_tokens, "treatment"))} onChange={(value) => updateStyle(mutate, { texture_tokens: { ...asRecord(style.texture_tokens), treatment: value } })} />
-          <TextField label="Scene rhythm" value={textValue(spacing.scene_rhythm)} onChange={(value) => updateStyle(mutate, { spacing: { ...spacing, scene_rhythm: value } })} />
-          <TextField label="Artwork treatment" value={textValue(artwork.hero_fit ?? style.artwork_treatment)} onChange={(value) => updateStyle(mutate, { artwork_treatment: { ...artwork, hero_fit: value } })} />
+          <TextField label="Background treatment (coming soon)" value={textValue(style.background_treatment)} disabled note="Stored token. Current public renderer does not branch background treatment yet." onChange={() => undefined} />
+          <TextField label="Frame treatment (coming soon)" value={textValue(style.frame_treatment)} disabled note="Stored token. The commissioned frame remains locked for this renderer." onChange={() => undefined} />
+          <TextField label="Texture treatment (coming soon)" value={textValue(recordAt(style.texture_tokens, "treatment"))} disabled note="Stored token. Film texture is controlled by wired motion controls." onChange={() => undefined} />
+          <TextField label="Scene rhythm (coming soon)" value={textValue(spacing.scene_rhythm)} disabled note="Stored token. Scene rhythm is not yet a renderer branch." onChange={() => undefined} />
+          <TextField label="Artwork treatment (coming soon)" value={textValue(artwork.hero_fit ?? style.artwork_treatment)} disabled note="Stored token. Artwork fit is still governed by the public renderer." onChange={() => undefined} />
         </div>
       </Panel>
     </div>
@@ -899,7 +920,7 @@ function MotionTab({ config, mutate }: { config: PresenceEditableConfig; mutate:
   const motion = asRecord(config.motion_config);
   return (
     <div className="grid gap-5">
-      <Panel title="Liquid, dither, and film" intro="Only wired renderer settings are active. Parallax depth is held as a disabled token until the public renderer wires it functionally.">
+      <Panel title="Liquid, dither, and film" intro="Enabled controls are wired into the GGM renderer. Disabled controls are stored-only tokens or future renderer work. Heavy motion is opt-in.">
         <div className="grid gap-4 md:grid-cols-2">
           <SelectField label="Transition style" value={textValue(motion.transition_style) || "liquid_crossfade"} options={["liquid_crossfade", "ripple", "glass", "dissolve", "cut"]} onChange={(value) => updateMotion(mutate, { transition_style: value, liquid_style: value === "liquid_crossfade" ? "ripple" : value })} />
           <RangeField label="Morph speed ms" min={240} max={2400} step={20} value={numberValue(motion.morph_speed_ms ?? motion.scene_transition_duration_ms, 1100)} onChange={(value) => updateMotion(mutate, { morph_speed_ms: value, scene_transition_duration_ms: value })} />
@@ -908,10 +929,10 @@ function MotionTab({ config, mutate }: { config: PresenceEditableConfig; mutate:
           <RangeField label="Dither strength" min={0} max={1} step={0.01} value={numberValue(motion.dither_strength, 0.62)} onChange={(value) => updateMotion(mutate, { dither_strength: value })} />
           <RangeField label="Film grain strength" min={0} max={1} step={0.01} value={numberValue(motion.film_grain_strength, 0.42)} onChange={(value) => updateMotion(mutate, { film_grain_strength: value })} />
           <RangeField label="Blur amount" min={0} max={1} step={0.01} value={numberValue(motion.blur_amount, 0.5)} onChange={(value) => updateMotion(mutate, { blur_amount: value })} />
-          <RangeField label="Parallax depth (not wired)" min={0} max={1} step={0.01} value={numberValue(motion.parallax_depth, 0.5)} onChange={() => undefined} disabled note="Stored as a future token; current public renderer does not apply it." />
-          <ToggleField label="Heavy motion enabled" checked={booleanValue(motion.heavy_motion_enabled, true)} onChange={(value) => updateMotion(mutate, { heavy_motion_enabled: value })} />
-          <ToggleField label="Custom cursor enabled" checked={booleanValue(motion.custom_cursor_enabled, true)} onChange={(value) => updateMotion(mutate, { custom_cursor_enabled: value })} />
-          <ToggleField label="Reduced-motion fallback" checked={booleanValue(motion.reduced_motion_fallback, true)} onChange={(value) => updateMotion(mutate, { reduced_motion_fallback: value })} />
+          <RangeField label="Parallax depth (not wired)" min={0} max={1} step={0.01} value={numberValue(motion.parallax_depth, 0.5)} onChange={() => undefined} disabled note="Coming soon. The current public renderer does not apply parallax depth." />
+          <ToggleField label="Heavy motion opt-in" checked={booleanValue(motion.heavy_motion_enabled, false)} onChange={(value) => updateMotion(mutate, { heavy_motion_enabled: value })} note="When off, the renderer caps liquid intensity, distortion, grain, and blur." />
+          <ToggleField label="Custom cursor (coming soon)" checked={booleanValue(motion.custom_cursor_enabled, false)} onChange={() => undefined} disabled note="Stored token only. The GGM public renderer does not currently draw a custom cursor." />
+          <ToggleField label="Reduced-motion fallback" checked disabled onChange={() => undefined} note="System-controlled accessibility fallback is always on and cannot be disabled by owners." />
         </div>
       </Panel>
     </div>
@@ -983,12 +1004,7 @@ function AssetsTab({
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {assets.map((asset) => (
             <article key={`${asset.url}-${asset.slot}`} className="rounded-3xl border border-white/10 bg-white/[0.04] p-3">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-black/30">
-                {asset.url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={asset.url} alt={asset.alt_text ?? asset.slot ?? "Presence asset"} className="h-full w-full object-cover" />
-                ) : null}
-              </div>
+              <AssetPreview url={asset.url} alt={asset.alt_text ?? asset.slot ?? "Presence asset"} />
               <p className="mt-3 truncate text-sm font-semibold">{asset.alt_text || asset.slot || "Asset"}</p>
               <p className="mt-1 truncate text-xs text-stone-500">{asset.url}</p>
               {unsafeAssetReason(asset.url) && <p className="mt-2 text-xs text-red-300">{unsafeAssetReason(asset.url)}</p>}
@@ -1005,6 +1021,14 @@ function AssetsTab({
         </div>
       </section>
       <aside className="grid gap-4 content-start">
+        <Panel title="Upload image">
+          <div className="rounded-2xl border border-dashed border-white/15 bg-black/20 p-4 text-sm text-stone-400">
+            <p className="font-semibold text-stone-200">Disabled for editor beta</p>
+            <p className="mt-2 leading-6">
+              The existing media upload endpoint mutates live node/work media. The Presence editor needs a draft-scoped asset upload endpoint before file upload, crop, and focal point editing can be safely enabled here.
+            </p>
+          </div>
+        </Panel>
         <Panel title="Current hero">
           <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
             <p className="truncate text-xs text-stone-400">{textValue(hero.url) || "No hero selected"}</p>
@@ -1028,12 +1052,32 @@ function AssetsTab({
   );
 }
 
+function AssetPreview({ url, alt }: { url: string; alt: string }) {
+  const [broken, setBroken] = useState(false);
+  const safety = validateAssetUrl(url);
+  return (
+    <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+      {url && safety.isValid ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt={alt} className="h-full w-full object-cover" onError={() => setBroken(true)} />
+      ) : (
+        <div className="flex h-full items-center justify-center px-3 text-center text-xs text-stone-500">Asset cannot be previewed</div>
+      )}
+      {(broken || !safety.isValid) && (
+        <div className="absolute inset-x-2 bottom-2 rounded-xl border border-red-300/30 bg-red-950/80 px-2 py-1 text-[11px] text-red-100">
+          {broken ? "Image did not load." : safety.errors[0]}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PreviewPublishTab({
   config,
   overview,
   previewPayload,
   previewMode,
-  issues,
+  readiness,
   onPreview,
   onPublish,
   previewing,
@@ -1043,9 +1087,9 @@ function PreviewPublishTab({
   overview: PresenceEditorOverview | null;
   previewPayload: PresenceEditorPreviewResponse | null;
   previewMode: "desktop" | "mobile";
-  issues: ValidationIssue[];
+  readiness: ReadinessReport | null;
   onPreview: () => Promise<void>;
-  onPublish: () => Promise<void>;
+  onPublish: () => void;
   previewing: boolean;
   publishing: boolean;
 }) {
@@ -1066,12 +1110,17 @@ function PreviewPublishTab({
               {previewing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
               Generate preview
             </button>
-            <button className={buttonClass("publish")} disabled={publishing || issues.some((issue) => issue.severity === "error")} onClick={() => void onPublish()}>
+            <Link className={buttonClass("secondary")} href={`/studio/${config.room_id}/editor/preview`}>
+              <Eye className="h-4 w-4" />
+              Full preview
+            </Link>
+            <button className={buttonClass("publish")} disabled={publishing || Boolean(readiness?.hasBlockingIssues)} onClick={onPublish}>
               {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Publish
+              Open room to visitors
             </button>
           </div>
         </div>
+        <BeforeAfterComparison publishedConfig={overview?.published_public_config ?? overview?.published} draftConfig={config} />
         <div className={`mx-auto w-full ${previewMode === "mobile" ? "max-w-sm" : "max-w-5xl"}`}>
           <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#f4f4f4] text-[#111] shadow-2xl">
             <div className="border-b border-black/10 bg-[#eceae7] px-5 py-4">
@@ -1101,24 +1150,30 @@ function PreviewPublishTab({
         </div>
       </section>
       <aside className="grid gap-4 content-start">
-        <Panel title="Preview token">
+        <Panel title="Authenticated preview state">
           {previewPayload ? (
             <div className="grid gap-2 text-xs text-stone-300">
               <KeyValue label="Mode" value={previewPayload.editable_config?.status ?? "preview"} />
               <KeyValue label="Expires" value={formatTimestamp(previewPayload.expires_at)} />
-              <KeyValue label="Preview URL" value={previewPayload.preview_url} />
+              <KeyValue label="Access" value="Owner session only" />
             </div>
           ) : (
-            <p className="text-sm text-stone-400">Generate preview to mint a short-lived authenticated preview token.</p>
+            <p className="text-sm text-stone-400">Generate preview through the authenticated owner endpoint. Preview access is not shared publicly.</p>
           )}
         </Panel>
         <Panel title="Publish state">
           <div className="grid gap-2 text-xs text-stone-300">
             <KeyValue label="Draft" value={overview?.draft ? `v${overview.draft.version ?? "?"}` : "missing"} />
             <KeyValue label="Published" value={overview?.published ? `v${overview.published.version ?? "?"}` : "missing"} />
-            <KeyValue label="Blocking issues" value={String(issues.filter((issue) => issue.severity === "error").length)} />
+            <KeyValue label="Critical readiness issues" value={String(readiness?.critical.length ?? 0)} />
+            <KeyValue label="Changed fields" value={String(readiness?.changedCount ?? 0)} />
           </div>
         </Panel>
+        {readiness && (
+          <Panel title="Readiness before publish">
+            <ReadinessPanel report={readiness} />
+          </Panel>
+        )}
       </aside>
     </div>
   );
@@ -1254,23 +1309,25 @@ function KeyValue({ label, value }: { label: string; value: string | null | unde
   );
 }
 
-function TextField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+function TextField({ label, value, disabled, note, onChange }: { label: string; value: string; disabled?: boolean; note?: string; onChange: (value: string) => void }) {
   return (
     <label className="grid gap-1.5">
       <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">{label}</span>
-      <input value={value} onChange={(event) => onChange(event.target.value)} className={inputClass()} />
+      <input value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)} className={inputClass(disabled ? "opacity-60" : "")} />
+      {note && <span className="text-xs leading-5 text-stone-500">{note}</span>}
     </label>
   );
 }
 
-function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+function ColorField({ label, value, disabled, note, onChange }: { label: string; value: string; disabled?: boolean; note?: string; onChange: (value: string) => void }) {
   return (
     <label className="grid gap-1.5">
       <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">{label}</span>
       <div className="flex gap-2">
-        <input type="color" value={/^#[0-9a-fA-F]{6}$/.test(value) ? value : "#111111"} onChange={(event) => onChange(event.target.value)} className="h-11 w-12 rounded-xl border border-white/10 bg-white/5 p-1" />
-        <input value={value} onChange={(event) => onChange(event.target.value)} className={inputClass("flex-1")} />
+        <input type="color" disabled={disabled} value={/^#[0-9a-fA-F]{6}$/.test(value) ? value : "#111111"} onChange={(event) => onChange(event.target.value)} className="h-11 w-12 rounded-xl border border-white/10 bg-white/5 p-1 disabled:opacity-50" />
+        <input disabled={disabled} value={value} onChange={(event) => onChange(event.target.value)} className={inputClass("flex-1 disabled:opacity-50")} />
       </div>
+      {note && <span className="text-xs leading-5 text-stone-500">{note}</span>}
     </label>
   );
 }
@@ -1289,24 +1346,29 @@ function SelectField({
   value,
   options,
   labels = {},
+  disabled,
+  note,
   onChange,
 }: {
   label: string;
   value: string;
   options: string[];
   labels?: Record<string, string>;
+  disabled?: boolean;
+  note?: string;
   onChange: (value: string) => void;
 }) {
   return (
     <label className="grid gap-1.5">
       <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)} className={inputClass()}>
+      <select value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)} className={inputClass(disabled ? "opacity-60" : "")}>
         {options.map((option) => (
           <option key={option} value={option}>
             {labels[option] ?? option}
           </option>
         ))}
       </select>
+      {note && <span className="text-xs leading-5 text-stone-500">{note}</span>}
     </label>
   );
 }
@@ -1342,11 +1404,14 @@ function RangeField({
   );
 }
 
-function ToggleField({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
+function ToggleField({ label, checked, disabled, note, onChange }: { label: string; checked: boolean; disabled?: boolean; note?: string; onChange: (checked: boolean) => void }) {
   return (
-    <label className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-2">
-      <span className="text-sm text-stone-300">{label}</span>
-      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="h-5 w-5 accent-amber-200" />
+    <label className="grid gap-1.5 rounded-2xl border border-white/10 bg-black/20 px-3 py-2">
+      <span className="flex items-center justify-between gap-3">
+        <span className="text-sm text-stone-300">{label}</span>
+        <input type="checkbox" checked={checked} disabled={disabled} onChange={(event) => onChange(event.target.checked)} className="h-5 w-5 accent-amber-200 disabled:opacity-50" />
+      </span>
+      {note && <span className="text-xs leading-5 text-stone-500">{note}</span>}
     </label>
   );
 }
@@ -1480,7 +1545,7 @@ function createFallbackConfig(node: PresenceNode): PresenceEditableConfig {
       ],
     },
     style_dna: {
-      palette: { bg: "#f4f4f4", paper: "#eceae7", ink: "#111111", muted: "#6a6a6a", accent: node.accent_color || "#ffffff" },
+      palette: { bg: "#f4f4f4", paper: "#eceae7", paper_warm: "#e7e1d7", ink: "#111111", muted: "#6a6a6a", line: "#d7d2c8", hero_stage_bg: "#eaeaea", accent: node.accent_color || "#ffffff" },
       background_treatment: "paper_field_with_atmospheric_liquid_bloom",
       frame_treatment: "hairline_no_rounded_gallery_cards",
       typography: { heading_stack: SAFE_FONTS[0], body_stack: SAFE_FONTS[0] },
@@ -1498,8 +1563,8 @@ function createFallbackConfig(node: PresenceNode): PresenceEditableConfig {
       transition_style: "liquid_crossfade",
       scene_transition_duration_ms: 900,
       parallax_depth: 0.5,
-      custom_cursor_enabled: true,
-      heavy_motion_enabled: true,
+      custom_cursor_enabled: false,
+      heavy_motion_enabled: false,
       reduced_motion_fallback: true,
     },
     asset_config: {
@@ -1554,41 +1619,6 @@ function toConfigInput(config: PresenceEditableConfig): PresenceEditorConfigInpu
     enquiry_config: asRecord(config.enquiry_config),
     locked_fields: asRecord(config.locked_fields),
   };
-}
-
-function buildValidationIssues(config: PresenceEditableConfig, overview: PresenceEditorOverview | null, dirty: boolean): ValidationIssue[] {
-  const issues: ValidationIssue[] = [];
-  const artwork = sceneById(config, "artwork_field");
-  const hero = asRecord(recordAt(config.asset_config, "hero_image"));
-  const works = arrayOfRecords(recordAt(config.asset_config, "artworks"));
-  const contact = asRecord(recordAt(config.content_config, "contact"));
-  const enquiry = asRecord(config.enquiry_config);
-  const motion = asRecord(config.motion_config);
-  if (!textValue(artwork.title)) issues.push({ id: "missing_title", severity: "error", label: "Scene 01 title is missing." });
-  if (!textValue(hero.url) && !works.some((work) => textValue(work.url || work.image_url))) issues.push({ id: "missing_primary_image", severity: "error", label: "Primary hero image or work image is missing." });
-  if (textValue(hero.url) && !textValue(hero.alt_text)) issues.push({ id: "missing_hero_alt", severity: "warning", label: "Hero image alt text is missing." });
-  for (const work of works) {
-    if (textValue(work.url || work.image_url) && !textValue(work.alt_text)) {
-      issues.push({ id: `alt_${textValue(work.slug)}`, severity: "warning", label: `Alt text missing for ${textValue(work.title) || "a work"}.` });
-      break;
-    }
-  }
-  for (const url of collectAssetUrls(config)) {
-    const reason = unsafeAssetReason(url);
-    if (reason) issues.push({ id: `unsafe_${url}`, severity: "error", label: reason });
-  }
-  const links = arrayOfRecords(contact.external_links);
-  for (const link of links) {
-    const url = textValue(link.url);
-    if (url && !isHttpUrl(url)) issues.push({ id: `bad_link_${url}`, severity: "warning", label: `External link is not a valid public http(s) URL: ${url}` });
-  }
-  if (!textValue(enquiry.cta_label) && !textValue(sceneById(config, "calling_card").enquiry_cta)) issues.push({ id: "missing_cta", severity: "warning", label: "Primary enquiry CTA is missing." });
-  if (!textValue(enquiry.delivery_posture)) issues.push({ id: "missing_enquiry_routing", severity: "warning", label: "Enquiry delivery posture is not set." });
-  if (booleanValue(motion.heavy_motion_enabled, false)) issues.push({ id: "heavy_motion", severity: "info", label: "Heavy motion is enabled. Reduced-motion fallback remains required." });
-  if (dirty) issues.push({ id: "unsaved_changes", severity: "info", label: "There are unpublished local draft changes." });
-  if (overview?.draft && overview?.published && overview.draft.version !== overview.published.version) issues.push({ id: "draft_public_mismatch", severity: "info", label: "Draft and published versions differ." });
-  if (!overview?.published) issues.push({ id: "missing_published", severity: "warning", label: "No published editable config exists yet. Public room will fall back to renderer constants until publish." });
-  return issues;
 }
 
 function sceneById(config: PresenceEditableConfig, id: string): Record<string, unknown> {
@@ -1697,48 +1727,9 @@ function getWorks(config: PresenceEditableConfig, node: PresenceNode): EditableW
   });
 }
 
-function collectAssetUrls(config: PresenceEditableConfig): string[] {
-  const urls = new Set<string>();
-  const walk = (value: unknown, key = "") => {
-    if (typeof value === "string" && /url|href|src|image|thumb|asset/i.test(key)) urls.add(value);
-    if (Array.isArray(value)) value.forEach((item) => walk(item, key));
-    if (value && typeof value === "object") {
-      Object.entries(value as Record<string, unknown>).forEach(([childKey, child]) => walk(child, childKey));
-    }
-  };
-  walk(config.asset_config, "asset_config");
-  return Array.from(urls);
-}
-
 function unsafeAssetReason(value: string | null | undefined): string | null {
-  const url = String(value ?? "").trim();
-  if (!url) return null;
-  if (/^[a-zA-Z]:[\\/]/.test(url) || url.startsWith("\\\\") || /^file:/i.test(url) || /^\/(Users|home|var|etc|tmp|private)\//i.test(url)) {
-    return "Local filesystem paths and file URLs are not allowed.";
-  }
-  if (/^data:/i.test(url)) return "Inline data URLs are not allowed for public assets.";
-  if (/^javascript:/i.test(url)) return "Script-like URLs are not allowed.";
-  if (url.startsWith("/")) return url.includes("..") ? "Asset paths cannot traverse directories." : null;
-  try {
-    const parsed = new URL(url);
-    if (!["http:", "https:"].includes(parsed.protocol)) return "Asset URL must be http(s) or a safe public asset path.";
-    const host = parsed.hostname.toLowerCase();
-    if (["localhost", "127.0.0.1", "0.0.0.0", "::1"].includes(host) || host.endsWith(".local") || host.endsWith(".internal")) {
-      return "Localhost and internal hosts are not allowed as public assets.";
-    }
-    return null;
-  } catch {
-    return "Asset URL must be http(s) or a safe public asset path.";
-  }
-}
-
-function isHttpUrl(value: string) {
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
+  if (!String(value ?? "").trim()) return null;
+  return assetSafetyMessage(value);
 }
 
 function cloneConfig<T>(value: T): T {

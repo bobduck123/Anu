@@ -1,0 +1,23 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { validateAssetUrl } from "./assetValidator.ts";
+
+test("validateAssetUrl accepts https and root-relative public assets", () => {
+  assert.equal(validateAssetUrl("https://cdn.example.com/work.webp").isValid, true);
+  assert.equal(validateAssetUrl("/ggm/works/work.webp").isValid, true);
+});
+
+test("validateAssetUrl blocks local paths, internal hosts, script payloads, and raw tokens", () => {
+  for (const value of [
+    "file://blocked-private-image.png",
+    "Z:\\blocked\\private.png",
+    "https://localhost/image.png",
+    "http://127.0.0.1:5000/image.png",
+    "javascript:alert(1)",
+    "data:image/png;base64,abc",
+    "https://cdn.example.com/image.png?token=secret",
+    "/assets/../private.png",
+  ]) {
+    assert.equal(validateAssetUrl(value).isValid, false, value);
+  }
+});

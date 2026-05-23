@@ -47,10 +47,10 @@ export const GGM_MOTION_DEFAULTS: GgmMotionSettings = {
   filmGrainStrength: 0.42,
   blurAmount: 0.5,
   parallaxDepth: 0.5,
-  customCursor: true,
+  customCursor: false,
   scrollProgress: true,
   powerSaver: false,
-  heavyMotion: true,
+  heavyMotion: false,
 };
 
 const STORAGE_KEY = "ggm:motion-settings:v1";
@@ -155,6 +155,17 @@ export function GgmMotionProvider({
         parallaxDepth: 0,
         customCursor: false,
         scrollProgress: settings.scrollProgress,
+      };
+    }
+    if (!settings.heavyMotion) {
+      return {
+        ...settings,
+        liquidIntensity: Math.min(settings.liquidIntensity, 0.58),
+        liquidDistortion: Math.min(settings.liquidDistortion, 0.55),
+        liquidDurationMs: Math.max(settings.liquidDurationMs, 1150),
+        ditherStrength: Math.min(settings.ditherStrength, 0.38),
+        filmGrainStrength: Math.min(settings.filmGrainStrength, 0.32),
+        blurAmount: Math.min(settings.blurAmount, 0.28),
       };
     }
     return settings;

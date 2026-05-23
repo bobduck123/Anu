@@ -70,7 +70,8 @@ const server = createServer(async (req, res) => {
   if (url.pathname === "/api/presence/keys/test-room-key-token/resolve" && req.method === "GET") {
     return sendData(res, {
       message: "Youve entered this Room.",
-      room: fixtures.room,
+      room: publicRoomFixture(),
+      editable_config: redactEditorConfig(state.editorPublished),
       public_url: fixtures.room.public_url,
       room_key: fixtures.roomKey,
       encounter: null,
@@ -97,7 +98,7 @@ const server = createServer(async (req, res) => {
   }
 
   if (url.pathname === "/api/presence/public/test-presence-room" && req.method === "GET") {
-    return sendData(res, fixtures.room);
+    return sendData(res, publicRoomFixture());
   }
 
   if (url.pathname === "/api/presence/public/rooms-gallery-painter" && req.method === "GET") {
@@ -268,11 +269,13 @@ const server = createServer(async (req, res) => {
 
   if (url.pathname === "/api/presence/owner/nodes/101" && req.method === "GET") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
-    return sendData(res, fixtures.room);
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
+    return sendData(res, publicRoomFixture());
   }
 
   if (url.pathname === "/api/presence/owner/rooms/101/editor" && req.method === "GET") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     return sendData(res, {
       room: { id: fixtures.room.id, slug: fixtures.room.slug, display_name: fixtures.room.display_name, owner_user_id: fixtures.room.owner_user_id },
       draft: state.editorDraft,
@@ -286,6 +289,7 @@ const server = createServer(async (req, res) => {
 
   if (url.pathname === "/api/presence/owner/rooms/101/editor/draft") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     if (req.method === "GET") return sendData(res, { draft: state.editorDraft });
     if (req.method === "POST" || req.method === "PATCH") {
       const base = state.editorDraft || state.editorPublished || buildEditorConfig("draft", state.nextEditorVersion++);
@@ -303,6 +307,7 @@ const server = createServer(async (req, res) => {
 
   if (url.pathname === "/api/presence/owner/rooms/101/editor/preview" && req.method === "POST") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     if (!state.editorDraft) state.editorDraft = buildEditorConfig("draft", state.nextEditorVersion++);
     return sendData(res, {
       created_draft: false,
@@ -317,6 +322,7 @@ const server = createServer(async (req, res) => {
 
   if (url.pathname === "/api/presence/owner/rooms/101/editor/publish" && req.method === "POST") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     if (!state.editorDraft) return sendError(res, 422, "validation_error", "No draft config exists for this Room.");
     state.editorPublished = { ...state.editorDraft, status: "published", published_at: new Date().toISOString(), updated_at: new Date().toISOString() };
     state.editorDraft = null;
@@ -325,22 +331,26 @@ const server = createServer(async (req, res) => {
 
   if (url.pathname === "/api/presence/owner/rooms/101/editor/rollback" && req.method === "POST") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     state.editorPublished = { ...buildEditorConfig("published", state.nextEditorVersion++), scene_config: state.editorPublished.scene_config };
     return sendData(res, { published: state.editorPublished, public_config: redactEditorConfig(state.editorPublished) });
   }
 
   if (url.pathname === "/api/presence/owner/rooms/101/editor/history" && req.method === "GET") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     return sendData(res, { items: [state.editorDraft, state.editorPublished].filter(Boolean) });
   }
 
   if (url.pathname === "/api/presence/owner/rooms/101/assets" && req.method === "GET") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     return sendData(res, { items: state.editorAssets });
   }
 
   if (url.pathname === "/api/presence/owner/rooms/101/assets/attach" && req.method === "POST") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     if (/^file:|^data:|localhost|127\.0\.0\.1|^[a-zA-Z]:[\\/]/i.test(body.url || "")) {
       return sendError(res, 422, "validation_error", "Unsafe asset URL.");
     }
@@ -989,7 +999,7 @@ function buildEditorConfig(status = "published", version = 1) {
       ],
     },
     style_dna: {
-      palette: { bg: "#f4f4f4", paper: "#eceae7", ink: "#111111", muted: "#6a6a6a", accent: "#ffffff" },
+      palette: { bg: "#f4f4f4", paper: "#eceae7", paper_warm: "#e7e1d7", ink: "#111111", muted: "#6a6a6a", line: "#d7d2c8", hero_stage_bg: "#eaeaea", accent: "#ffffff" },
       typography: { heading_stack: "Inter, Helvetica Neue, Arial, sans-serif", body_stack: "Inter, Helvetica Neue, Arial, sans-serif" },
       background_treatment: "paper_field_with_atmospheric_liquid_bloom",
       frame_treatment: "hairline_no_rounded_gallery_cards",
@@ -1003,8 +1013,8 @@ function buildEditorConfig(status = "published", version = 1) {
       film_grain_strength: 0.42,
       blur_amount: 0.5,
       transition_style: "liquid_crossfade",
-      heavy_motion_enabled: true,
-      custom_cursor_enabled: true,
+      heavy_motion_enabled: false,
+      custom_cursor_enabled: false,
       reduced_motion_fallback: true,
     },
     asset_config: {
@@ -1060,6 +1070,14 @@ function buildEditorAssets() {
   ];
 }
 
+function publicRoomFixture() {
+  return {
+    ...fixtures.room,
+    renderer_key: state.editorPublished?.renderer_key || fixtures.room.renderer_key || "ggm-faithful-room-v1",
+    editable_config: redactEditorConfig(state.editorPublished),
+  };
+}
+
 function redactEditorConfig(config) {
   if (!config) return null;
   return {
@@ -1106,6 +1124,10 @@ function record(req, url, body) {
 
 function hasAuth(req) {
   return Boolean(req.headers.authorization);
+}
+
+function isForbiddenAuth(req) {
+  return String(req.headers.authorization || "").includes("non-owner-token");
 }
 
 function sendData(res, data, status = 200) {

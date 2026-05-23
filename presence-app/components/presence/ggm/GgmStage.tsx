@@ -93,6 +93,11 @@ export function GgmStage({
 
   const total = scenes.length;
   const scene = scenes[active] ?? scenes[0];
+  const canvasBlurPx = Math.round(effective.blurAmount * 5 * 100) / 100;
+  const canvasStyle = canvasBlurPx > 0
+    ? { filter: `blur(${canvasBlurPx}px)`, transform: "scale(1.015)" }
+    : undefined;
+  const grainOpacity = Math.min(0.62, Math.max(0, effective.ditherStrength * 0.34 + effective.filmGrainStrength * 0.28));
   const slideIndex = slideIndices[active] ?? 0;
 
   // Flat image list — one entry per scene-image pair, in scene order.
@@ -237,7 +242,7 @@ export function GgmStage({
       )}
 
       <div className={styles.frame}>
-        <div className={styles.frameCanvasLayer}>
+        <div className={styles.frameCanvasLayer} style={canvasStyle}>
           <GgmLiquidCanvas
             images={flatImages}
             activeIndex={canvasActiveIndex}
@@ -247,6 +252,8 @@ export function GgmStage({
             distortion={effective.liquidDistortion}
           />
         </div>
+
+        <span className={styles.frameGrainLayer} style={{ opacity: grainOpacity }} aria-hidden />
 
         <span className={styles.frameCornerTL} aria-hidden />
         <span className={styles.frameCornerTR} aria-hidden />
