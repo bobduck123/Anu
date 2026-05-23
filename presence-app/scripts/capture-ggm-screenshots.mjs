@@ -13,8 +13,10 @@ const PRESENCE_BASE = process.env.PRESENCE_QA_BASE || "http://localhost:3001";
 const SOURCE_BASE = process.env.GGM_SOURCE_BASE || "https://christina-goddard.vercel.app";
 const OUT = process.env.PRESENCE_QA_OUT ||
   "C:/Dev/Flora_fauna/docs/program/evidence/presence-ggm-faithful-recreation-proof/screenshots";
+const OUT_V2 = `${OUT}/v2-blocks`;
 
 if (!fs.existsSync(OUT)) fs.mkdirSync(OUT, { recursive: true });
+if (!fs.existsSync(OUT_V2)) fs.mkdirSync(OUT_V2, { recursive: true });
 
 const VIEWPORTS = [
   { id: "desktop", width: 1440, height: 900 },
@@ -23,12 +25,12 @@ const VIEWPORTS = [
 
 const TARGETS = [
   // GGM faithful Presence Room — first viewport (hero parity).
-  { id: "presence-ggm-room", url: `${PRESENCE_BASE}/p/ggm`, waitFor: 1800 },
+  { id: "presence-ggm-room", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 1800 },
   // Full page scroll-through so the practice intro, featured strip,
   // work index, and about sections are all in evidence.
-  { id: "presence-ggm-room-full", url: `${PRESENCE_BASE}/p/ggm`, waitFor: 2200, fullPage: true },
-  { id: "presence-ggm-work-detail", url: `${PRESENCE_BASE}/p/ggm/works/willow-of-port-arthur-2019`, waitFor: 1500 },
-  { id: "presence-ggm-work-detail-full", url: `${PRESENCE_BASE}/p/ggm/works/willow-of-port-arthur-2019`, waitFor: 2200, fullPage: true },
+  { id: "presence-ggm-room-full", url: `${PRESENCE_BASE}/p/ggm-christina-goddard`, waitFor: 2200, fullPage: true },
+  { id: "presence-ggm-work-detail", url: `${PRESENCE_BASE}/p/ggm-christina-goddard/works/willow-of-port-arthur-2019`, waitFor: 1500 },
+  { id: "presence-ggm-work-detail-full", url: `${PRESENCE_BASE}/p/ggm-christina-goddard/works/willow-of-port-arthur-2019`, waitFor: 2200, fullPage: true },
   { id: "presence-ggm-gallery", url: `${PRESENCE_BASE}/gallery`, waitFor: 1200 },
   // Scroll the gallery so the GGM card area is on screen.
   { id: "presence-ggm-gallery-card", url: `${PRESENCE_BASE}/gallery`, waitFor: 1600, scrollY: 900 },
@@ -37,6 +39,13 @@ const TARGETS = [
   // Room. Here we capture the loader/guest state so the entry surface
   // shape is documented even without a real token.
   { id: "presence-ggm-roomkey-entry", url: `${PRESENCE_BASE}/r/ggm-pilot-stub`, waitFor: 1200 },
+  // V2 block captures — one per scene plate.
+  { id: "v2-blocks/01-artwork-field", url: `${PRESENCE_BASE}/p/ggm-christina-goddard#ggm-block-field`, waitFor: 1800 },
+  { id: "v2-blocks/02-work-wall",      url: `${PRESENCE_BASE}/p/ggm-christina-goddard#ggm-block-wall`, waitFor: 1500 },
+  { id: "v2-blocks/03-practice-studio", url: `${PRESENCE_BASE}/p/ggm-christina-goddard#ggm-block-studio`, waitFor: 1500 },
+  { id: "v2-blocks/04-calling-card",    url: `${PRESENCE_BASE}/p/ggm-christina-goddard#ggm-block-card`, waitFor: 1500 },
+  // Reduced motion check
+  { id: "v2-blocks/01-artwork-field-reduced", url: `${PRESENCE_BASE}/p/ggm-christina-goddard#ggm-block-field`, waitFor: 1500, reducedMotion: true },
   // Source site (live demo) — the source uses an Osmo loader + Three.js
   // WebGL slideshow which takes ~6s to fully resolve before the artwork
   // is visible. We give the home page extra wait time.
@@ -49,7 +58,7 @@ const TARGETS = [
 async function capture(browser, target, viewport) {
   const context = await browser.newContext({
     viewport: { width: viewport.width, height: viewport.height },
-    reducedMotion: "no-preference",
+    reducedMotion: target.reducedMotion ? "reduce" : "no-preference",
     deviceScaleFactor: 1,
   });
   const page = await context.newPage();

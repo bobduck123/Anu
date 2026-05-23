@@ -5,10 +5,12 @@ import { listPublicPresences, type PublicPresenceCard } from "@/lib/api/public";
 import { GGM_FEATURED } from "@/lib/presence/ggm/source";
 
 // Signature check for the GGM first-pilot card. Kept inline here to avoid
-// pulling renderer code into the gallery server bundle.
+// pulling renderer code into the gallery server bundle. Mirrors the
+// signature rules in lib/presence/ggm/activate.ts.
 function isGgmCard(card: PublicPresenceCard): boolean {
   const slug = (card.slug ?? "").toLowerCase();
   const name = (card.display_name ?? "").toLowerCase();
+  if (slug === "ggm-christina-goddard") return true;
   if (slug === "ggm" || slug.startsWith("ggm-") || slug.endsWith("-ggm")) return true;
   if (slug.includes("kerkvliet-goddard") || slug.includes("christina-goddard")) return true;
   if (name.includes("christina kerkvliet goddard") || name.includes("christina goddard")) return true;
@@ -42,7 +44,7 @@ function synthGgmCard(): PublicPresenceCard {
   const cover = GGM_FEATURED[3]?.image ?? "/ggm/works/willow-of-port-arthur-2019.webp";
   return {
     id: -1100,
-    slug: "ggm",
+    slug: "ggm-christina-goddard",
     display_name: "Christina Kerkvliet Goddard",
     headline: "Selected watercolour works · memory, colour, lived landscape",
     bio_excerpt: null,
@@ -56,7 +58,7 @@ function synthGgmCard(): PublicPresenceCard {
     hero_image_url: cover,
     location_label: "Moana, South Australia",
     visual_mood: "paper-gallery",
-    public_url: "/p/ggm",
+    public_url: "/p/ggm-christina-goddard",
     published_at: null,
   };
 }

@@ -5,6 +5,16 @@
 // intersects the viewport. Reduced-motion is short-circuited (the CSS
 // already overrides the rule to opaque, but we also skip the observer so
 // no work is done).
+//
+// Two reveal modes are supported:
+//   - default: applies `.reveal` + `.revealed` (legacy paragraph reveal)
+//   - block:   applies `.blockReveal` + `.revealed` and lets children
+//              with `.blockRevealChild` participate in a staggered
+//              choreography (used by the 4-block model).
+//
+// The `block` mode is selected automatically when the caller passes
+// `className` containing `blockReveal` — the wrapper then skips the
+// `.reveal` base class to avoid double-binding.
 
 import { useEffect, useRef, useState, createElement, type ReactNode } from "react";
 import styles from "./ggm.module.css";
@@ -16,9 +26,16 @@ interface RevealProps {
   as?: GgmRevealTag;
   className?: string;
   id?: string;
+  ariaLabel?: string;
 }
 
-export function GgmReveal({ children, as = "div", className, id }: RevealProps) {
+export function GgmReveal({
+  children,
+  as = "div",
+  className,
+  id,
+  ariaLabel,
+}: RevealProps) {
   const ref = useRef<HTMLElement | null>(null);
   const [shown, setShown] = useState(false);
 
@@ -46,13 +63,21 @@ export function GgmReveal({ children, as = "div", className, id }: RevealProps) 
     return () => obs.disconnect();
   }, []);
 
-  const cls = [styles.reveal, shown ? styles.revealed : "", className]
+  const isBlockMode = (className ?? "").includes(styles.blockReveal);
+  const baseCls = isBlockMode ? "" : styles.reveal;
+
+  const cls = [baseCls, shown ? styles.revealed : "", className]
     .filter(Boolean)
     .join(" ");
 
   return createElement(
     as,
-    { ref, className: cls, id },
+    {
+      ref,
+      className: cls,
+      id,
+      "aria-label": ariaLabel,
+    },
     children,
   );
 }

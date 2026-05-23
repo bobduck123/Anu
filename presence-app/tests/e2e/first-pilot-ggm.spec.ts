@@ -22,10 +22,10 @@ test("GGM RoomKey entry is a deployed guest path", async ({ page }) => {
   await probe(
     page,
     `/r/${encodeURIComponent(roomKeyToken)}`,
-    /Christina|Opened via|Enter Room/i,
+    /Opened via|Selected portfolio|Watercolour as site, memory/i,
   );
   await expect(page.locator("body")).not.toContainText(
-    /mock-presence-api|localhost:5105|Traceback/i,
+    /mock-presence-api|localhost:5105|Traceback|Step into the gallery|Use the arrow keys, click the HUD/i,
   );
 });
 
@@ -63,6 +63,38 @@ test("GGM public Room and RoomKey use hosted backend API", async ({ page }) => {
     expect(url.origin).toBe(backendURL.origin);
     expect(url.origin).not.toMatch(/localhost|127\.0\.0\.1/i);
   }
+});
+
+test("GGM faithful hosted surfaces stay scoped to the pilot Room", async ({
+  page,
+}) => {
+  required(roomSlug, "PRESENCE_PILOT_GGM_ROOM_SLUG");
+
+  await probe(
+    page,
+    `/p/${encodeURIComponent(roomSlug)}`,
+    /Selected portfolio|Watercolour as site, memory/i,
+  );
+  await expect(page.locator("body")).not.toContainText(
+    /Step into the gallery|Use the arrow keys, click the HUD/i,
+  );
+
+  await probe(
+    page,
+    `/p/${encodeURIComponent(roomSlug)}/works/willow-of-port-arthur-2019`,
+    /Willow of Port Arthur/i,
+  );
+  await expect(page.locator("body")).toContainText(/Memory prompt overlay/i);
+
+  await page.goto("/gallery", { waitUntil: "networkidle" });
+  const ggmCard = page.locator(`a[href="/p/${roomSlug}"]`).first();
+  await expect(ggmCard).toBeVisible();
+  await expect(ggmCard).toContainText(/Christina|First pilot/i);
+
+  await probe(page, "/p/rooms-independent-artist", /Mara Vale/i);
+  await expect(page.locator("body")).not.toContainText(
+    /Christina Kerkvliet Goddard|Memory prompt overlay/i,
+  );
 });
 
 async function probe(page: Page, path: string, bodyText: RegExp) {

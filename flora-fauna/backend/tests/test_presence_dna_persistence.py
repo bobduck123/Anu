@@ -217,7 +217,13 @@ def test_custom_presence_style_dna_owner_full_public_safe_and_optional():
         json=_node_payload(
             tenant_id,
             slug="custom-style-dna",
-            metadata={"custom_presence": custom_presence},
+            metadata={
+                "custom_presence": custom_presence,
+                "pilot_admin_provisioning": {
+                    "target_owner_user_id": 44,
+                    "created_by": "provision_presence_pilot_admin",
+                },
+            },
         ),
         headers=headers,
         base_url="http://control.test",
@@ -243,6 +249,7 @@ def test_custom_presence_style_dna_owner_full_public_safe_and_optional():
     assert "filesystem_path" not in public_custom["source_site_reference"]
     assert "source_site_internal" not in public_custom
     assert public_custom["style_dna"] != custom_presence["style_dna"]
+    assert "pilot_admin_provisioning" not in public.get_json()["data"]["metadata"]
 
     owner = client.get(
         f"/api/presence/owner/nodes/{node_id}",
@@ -253,6 +260,7 @@ def test_custom_presence_style_dna_owner_full_public_safe_and_optional():
     owner_custom = owner.get_json()["data"]["metadata"]["custom_presence"]
     assert owner_custom["style_dna"]["source"]["filesystem_path"] == "C:\\Dev\\ggm"
     assert owner_custom["fidelity"]["status"] == "owner_review_pending"
+    assert owner.get_json()["data"]["metadata"]["pilot_admin_provisioning"]["target_owner_user_id"] == 44
 
     legacy = client.post(
         "/api/control/presence/nodes",

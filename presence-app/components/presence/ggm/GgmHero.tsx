@@ -8,7 +8,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import type { GgmWork } from "@/lib/presence/ggm/source";
-import { GgmDitherLayer, GgmLiquidField } from "./GgmAtmosphere";
+import {
+  GgmDitherLayer,
+  GgmLiquidField,
+  GgmLiquidMorphDefs,
+  useLiquidMorph,
+} from "./GgmAtmosphere";
 import styles from "./ggm.module.css";
 
 interface GgmHeroProps {
@@ -18,6 +23,10 @@ interface GgmHeroProps {
   topNoteLeft?: string;
   topNoteRight?: string;
   interval?: number;
+  // Optional eyebrow chip rendered above the hero — used by the
+  // RoomKey entry dispatch to surface "Opened via NFC" without
+  // breaking the artwork-first first impression.
+  roomKeySourceLabel?: string | null;
 }
 
 export function GgmHero({
@@ -27,10 +36,12 @@ export function GgmHero({
   topNoteLeft = "Serendipity pathway · liquid morphology",
   topNoteRight = "Scroll to dither in · scroll-snap to morph",
   interval = 7000,
+  roomKeySourceLabel,
 }: GgmHeroProps) {
   const [index, setIndex] = useState(0);
   const reducedMotionRef = useRef(false);
   const total = slides.length;
+  const { morph, trigger: triggerMorph } = useLiquidMorph(1200);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -43,14 +54,18 @@ export function GgmHero({
     if (reducedMotionRef.current) return;
     if (total <= 1) return;
     const id = window.setInterval(() => {
-      setIndex((i) => (i + 1) % total);
+      setIndex((i) => {
+        triggerMorph();
+        return (i + 1) % total;
+      });
     }, interval);
     return () => window.clearInterval(id);
-  }, [total, interval]);
+  }, [total, interval, triggerMorph]);
 
   const goto = useCallback((i: number) => {
+    triggerMorph();
     setIndex(((i % total) + total) % total);
-  }, [total]);
+  }, [total, triggerMorph]);
 
   const next = useCallback(() => goto(index + 1), [goto, index]);
   const prev = useCallback(() => goto(index - 1), [goto, index]);
@@ -74,12 +89,15 @@ export function GgmHero({
 
   return (
     <section className={styles.hero} aria-label={`${brand} — featured works`}>
+      <GgmLiquidMorphDefs morph={morph} id="ggm-liquid-morph" />
+
       <div className={styles.heroSlider} aria-hidden={total === 0}>
         {slides.map((slide, i) => (
           <div
             key={slide.id}
             className={`${styles.heroSlide} ${i === index ? styles.heroSlideActive : ""}`}
             aria-hidden={i !== index}
+            style={i === index && morph > 0.02 ? { filter: "url(#ggm-liquid-morph)" } : undefined}
           >
             <Image
               src={slide.image}
@@ -95,7 +113,17 @@ export function GgmHero({
 
       <div className={styles.heroAtmosphere}>
         <GgmLiquidField />
-        <GgmDitherLayer strength={0.34} />
+        <GgmDitherLayer strength={0.62} />
+      </div>
+
+      {roomKeySourceLabel && (
+        <span className={styles.heroRoomKeyChip} aria-live="polite">
+          ✱ Opened via {roomKeySourceLabel}
+        </span>
+      )}
+
+      <div className={styles.heroBrandGhost} aria-hidden>
+        {brand}
       </div>
 
       <div className={styles.heroContent}>

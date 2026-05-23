@@ -363,9 +363,9 @@ const DEMOS: Record<string, PresenceNode> = {
   // Note: the asset URLs all live under /public/ggm so this entry never
   // depends on a network-hosted asset host.
   // -------------------------------------------------------------------------
-  "ggm": {
+  "ggm-christina-goddard": {
     id: -1100,
-    slug: "ggm",
+    slug: "ggm-christina-goddard",
     display_name: "Christina Kerkvliet Goddard",
     headline: "Christina Kerkvliet Goddard · selected watercolour works",
     bio: "Born in Victoria and raised in South Australia, Christina grew up around the active art scene of the 1960s and 70s. Her practice moves between drawing, craft, painting, and installation while staying rooted in close observation of daily life.",

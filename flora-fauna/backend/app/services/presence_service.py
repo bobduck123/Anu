@@ -376,6 +376,11 @@ _CUSTOM_PRESENCE_PUBLIC_SOURCE_KEYS = {
     "public_url",
     "origin_url",
 }
+_PRESENCE_PUBLIC_PRIVATE_METADATA_KEYS = {
+    # Provisioning notes preserve ownership/audit context for operators,
+    # but the public Room contract must not expose internal user linkage.
+    "pilot_admin_provisioning",
+}
 
 
 def normalize_presence_dna(value: Any) -> dict[str, Any] | None:
@@ -463,6 +468,8 @@ def normalize_presence_metadata(value: Any) -> dict[str, Any] | None:
 
 def public_presence_metadata(value: Any) -> dict[str, Any] | None:
     metadata = dict(value or {}) if isinstance(value, dict) else {}
+    for key in _PRESENCE_PUBLIC_PRIVATE_METADATA_KEYS:
+        metadata.pop(key, None)
     custom = metadata.get("custom_presence")
     if not isinstance(custom, dict):
         return metadata or None

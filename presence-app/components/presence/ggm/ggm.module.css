@@ -1081,6 +1081,7 @@
   .nav { top: 0.8rem; }
   .navLinks { gap: 0.7rem; font-size: 0.74rem; }
   .navBrand { font-size: 0.8rem; }
+  .roomKeyChip { display: none; }
   .heroP { font-size: 0.96rem; max-width: 90vw; }
   .heroWorkTitle { font-size: clamp(1.05rem, 5.4vw, 1.45rem); }
   .heroCounter { display: none; }
@@ -1107,12 +1108,829 @@
   }
 
   .liquidField,
-  .ditherLayer { display: none; }
+  .ditherLayer,
+  .ditherFilm { display: none; }
 
-  .reveal {
+  .reveal,
+  .blockReveal {
     opacity: 1;
     transform: none;
   }
 
-  .inspireTrack { animation: none; }
+  .inspireTrack,
+  .timelineRail { animation: none; }
+
+  .fxCursor { display: none !important; }
+}
+
+/* ============================================================================
+   PREMIUM UPGRADE LAYER (v2)
+   - SVG-based dither film (replaces old canvas dither)
+   - Block navigation (4 scene plates with sticky chapter index)
+   - Per-block ghost text
+   - Studio scene (about-as-workbench)
+   - Calling card scene (contact-as-object)
+   - Custom cursor + scroll progress
+   - Per-block reveal animations
+============================================================================ */
+
+/* SVG dither film — replaces .ditherLayer. Two layered SVG noises with
+   different baseFrequencies blended through CSS so the result reads as
+   intentional film grain + halftone rather than as a single noise overlay. */
+.ditherFilm {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background-image:
+    url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.07 0 0 0 0 0.07 0 0 0 0 0.07 0 0 0 0.82 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 320'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.34' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.92 0 0 0 0 0.88 0 0 0 0 0.82 0 0 0 0.4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
+  background-size: 240px 240px, 320px 320px;
+  background-position: 0 0, 60px 100px;
+  mix-blend-mode: soft-light;
+  opacity: 0.36;
+}
+
+.ditherFilmContrast {
+  mix-blend-mode: overlay;
+  opacity: 0.28;
+}
+
+/* ── Block navigation system ────────────────────────────────────────────── */
+
+/* The block container does NOT enable scroll-snap on the html element
+   because that would conflict with anchor navigation and accessibility
+   in the rest of the app. Instead each block is sized to 100dvh and
+   uses `scroll-snap-stop: always` on the section, with the snap
+   container set on a per-Room wrapper. The body scroll is preserved. */
+.ggmRoot {
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+}
+
+.blocks {
+  position: relative;
+}
+
+.block {
+  position: relative;
+  min-height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: normal;
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Each block carries its own atmosphere — a tiny film grain plus an
+   optional ghost word behind content. */
+.block::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.07 0 0 0 0 0.07 0 0 0 0 0.07 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  mix-blend-mode: soft-light;
+  opacity: 0.22;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.blockBody {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.blockEyebrow {
+  position: relative;
+  z-index: 3;
+  margin: 0;
+  padding: clamp(1.4rem, 2vw, 2rem) 0 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.32em;
+  font-size: 0.7rem;
+  color: var(--ggm-muted);
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.blockEyebrowNumber {
+  font-family: var(--ggm-display-family);
+  letter-spacing: 0;
+  font-size: 0.86rem;
+  color: var(--ggm-ink);
+}
+
+/* Massive background ghost word per block — sets the spatial identity. */
+.blockGhost {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  font-family: var(--ggm-display-family);
+  font-size: clamp(180px, 32vw, 460px);
+  font-weight: 400;
+  line-height: 0.78;
+  letter-spacing: -0.06em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.07);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.blockGhostTopLeft   { top: -6%; left: -2%; }
+.blockGhostBottomRight { bottom: -8%; right: -4%; text-align: right; }
+.blockGhostBottomLeft { bottom: -8%; left: -2%; }
+.blockGhostCenter    { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+/* Sticky chapter index — runs along the right edge, syncs to active block. */
+.chapterIndex {
+  position: fixed;
+  z-index: 40;
+  right: clamp(0.9rem, 2vw, 1.6rem);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  pointer-events: none;
+}
+
+.chapterIndexItem {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: transparent;
+  border: 0;
+  padding: 0.15rem 0.2rem;
+  color: var(--ggm-ink);
+  font-family: var(--ggm-body-family);
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  cursor: pointer;
+  mix-blend-mode: difference;
+  color: #fff;
+  opacity: 0.55;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.chapterIndexItem:hover { opacity: 0.95; transform: translateX(-2px); }
+
+.chapterIndexItemActive {
+  opacity: 1;
+}
+
+.chapterIndexRule {
+  display: inline-block;
+  width: 1.4rem;
+  height: 1px;
+  background: currentColor;
+  transition: width 0.3s cubic-bezier(0.2, 0.85, 0.3, 1);
+  opacity: 0.65;
+}
+
+.chapterIndexItemActive .chapterIndexRule {
+  width: 2.8rem;
+  opacity: 1;
+}
+
+.chapterIndexLabel {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hairline scroll progress at the top edge of the viewport. */
+.scrollProgress {
+  position: fixed;
+  z-index: 41;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+}
+
+.scrollProgressBar {
+  height: 100%;
+  background: var(--ggm-ink);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 0.08s linear;
+}
+
+/* Custom cursor — small dot, paper-aware via mix-blend-difference. */
+.fxCursor {
+  position: fixed;
+  z-index: 999;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 999px;
+  background: #fff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+
+.fxCursorVisible { opacity: 0.95; }
+
+.fxCursorLarge {
+  transform: scale(3.6);
+}
+
+/* ── Block 1 — Artwork Field (additional polish over existing .hero) ───── */
+.heroSlideFilter {
+  filter: url(#ggm-liquid-morph);
+}
+
+.heroBrandGhost {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  left: clamp(0.9rem, 2vw, 1.8rem);
+  bottom: clamp(5.2rem, 9vw, 7rem);
+  font-family: var(--ggm-display-family);
+  font-size: clamp(56px, 9vw, 156px);
+  font-weight: 400;
+  line-height: 0.86;
+  letter-spacing: -0.04em;
+  color: rgba(255, 255, 255, 0.06);
+  text-transform: none;
+  max-width: 18ch;
+}
+
+.heroRoomKeyChip {
+  position: absolute;
+  z-index: 6;
+  top: clamp(4.6rem, 6vw, 5.6rem);
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.8rem;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--ggm-ink);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Block 2 — Work Wall ─────────────────────────────────────────────── */
+.wallBlock {
+  background: var(--ggm-bg);
+  padding-top: clamp(5rem, 8vw, 7rem);
+  padding-bottom: clamp(4rem, 6vw, 6rem);
+}
+
+.wallShell {
+  width: var(--ggm-max);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1.6rem, 3vw, 2.6rem);
+  position: relative;
+  z-index: 2;
+}
+
+.wallHead {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.6rem;
+  align-items: end;
+  border-bottom: 1px solid var(--ggm-line);
+  padding-bottom: 1.2rem;
+}
+
+.wallHead h2 {
+  font-size: clamp(2.4rem, 6vw, 4.8rem);
+  line-height: 0.92;
+  max-width: 14ch;
+}
+
+.wallHeadMeta {
+  text-align: right;
+  color: var(--ggm-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.wallGrid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+/* A few hand-placed sizes — irregular like a wall hang. */
+.wallTile {
+  position: relative;
+  overflow: hidden;
+  background: var(--ggm-paper);
+  border: 1px solid var(--ggm-line);
+  transition: transform 0.32s cubic-bezier(0.2, 0.85, 0.3, 1);
+  display: block;
+}
+.wallTile:hover { transform: translateY(-3px); }
+
+.wallTile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.wallTile:hover img { transform: scale(1.04); }
+
+.wallTileMeta {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 0.8rem 0.95rem;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.72));
+  color: #fff;
+  font-size: 0.86rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.wallTileMeta small {
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.88;
+}
+
+/* 12-col placements — a deliberately asymmetric hang. */
+.wallTile1 { grid-column: span 7; aspect-ratio: 7/5; }
+.wallTile2 { grid-column: span 5; aspect-ratio: 5/5; }
+.wallTile3 { grid-column: span 4; aspect-ratio: 4/5; }
+.wallTile4 { grid-column: span 5; aspect-ratio: 5/4; }
+.wallTile5 { grid-column: span 3; aspect-ratio: 3/4; }
+.wallTile6 { grid-column: span 6; aspect-ratio: 6/4; }
+.wallTile7 { grid-column: span 6; aspect-ratio: 6/4; }
+.wallTile8 { grid-column: span 12; aspect-ratio: 12/5; }
+
+/* ── Block 3 — Practice Studio (about) ────────────────────────────────── */
+.studioBlock {
+  background: var(--ggm-paper-warm);
+  padding: clamp(5rem, 8vw, 7rem) 0 clamp(4rem, 6vw, 6rem);
+}
+
+.studioShell {
+  width: var(--ggm-max);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 0.42fr 0.58fr;
+  gap: clamp(1.6rem, 3vw, 3rem);
+  position: relative;
+  z-index: 2;
+}
+
+.studioLeft h2 {
+  font-size: clamp(2.4rem, 6vw, 5rem);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  margin-bottom: 1rem;
+  max-width: 12ch;
+}
+
+.studioNote {
+  background: var(--ggm-paper);
+  border: 1px solid var(--ggm-line);
+  padding: 1.4rem 1.6rem;
+  position: relative;
+  box-shadow: 0 18px 36px -16px rgba(0, 0, 0, 0.18);
+  transform: rotate(-0.6deg);
+  margin-bottom: 1.4rem;
+}
+
+.studioNote::before {
+  content: "✱";
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  transform: translateX(-50%);
+  color: #9a3412;
+  font-size: 1rem;
+}
+
+.studioNote p {
+  font-family: var(--ggm-display-family);
+  font-size: clamp(1rem, 1.2vw, 1.18rem);
+  line-height: 1.45;
+  color: #222;
+}
+
+.studioStrands {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.studioStrand {
+  background: var(--ggm-paper);
+  border: 1px solid var(--ggm-line);
+  padding: 0.95rem 1rem;
+  position: relative;
+}
+
+.studioStrand h3 {
+  font-size: 1.05rem;
+  margin-bottom: 0.4rem;
+}
+
+.studioStrand p {
+  font-size: 0.86rem;
+  color: #2e2e2e;
+  line-height: 1.5;
+}
+
+.studioRight {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.studioTimeline {
+  background: var(--ggm-paper);
+  border: 1px solid var(--ggm-line);
+  padding: 1.2rem 1.4rem;
+  position: relative;
+}
+
+.studioTimelineHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ggm-line);
+  padding-bottom: 0.7rem;
+  margin-bottom: 0.9rem;
+}
+
+.studioTimelineHead h3 {
+  font-size: 1.4rem;
+  letter-spacing: -0.02em;
+}
+
+.studioTimelineHead small {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ggm-muted);
+}
+
+.studioTimelineList {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.studioTimelineItem {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 0.6rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--ggm-line);
+}
+
+.studioTimelineItem:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.studioTimelineItem small {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ggm-muted);
+}
+
+.studioTimelineItem p {
+  color: #262626;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.studioInspire {
+  background: var(--ggm-paper);
+  border: 1px solid var(--ggm-line);
+  padding: 1.1rem 1rem 0.8rem;
+}
+
+.studioInspireHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 0.2rem 0.8rem;
+  border-bottom: 1px solid var(--ggm-line);
+  margin-bottom: 0.8rem;
+}
+
+.studioInspireHead h3 { font-size: 1.18rem; letter-spacing: -0.02em; }
+.studioInspireHead small {
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ggm-muted);
+}
+
+.studioInspireRail {
+  overflow: hidden;
+  position: relative;
+  padding: 0.4rem 0 0.6rem;
+}
+
+.timelineRail {
+  display: flex;
+  gap: 1rem;
+  width: max-content;
+  animation: studioInspireGlide 54s linear infinite;
+}
+
+.studioInspireTile {
+  flex: 0 0 auto;
+  width: 150px;
+  position: relative;
+  background: var(--ggm-paper-warm);
+  border: 1px solid var(--ggm-line);
+  padding: 0.4rem;
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.08);
+}
+
+.studioInspireTile::before {
+  content: "✱";
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  transform: translateX(-50%);
+  color: #9a3412;
+  font-size: 0.85rem;
+}
+
+.studioInspireTile img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+}
+
+.studioInspireTile p {
+  margin-top: 0.45rem;
+  font-size: 0.72rem;
+  color: #2d2d2d;
+  letter-spacing: 0.02em;
+}
+
+@keyframes studioInspireGlide {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* ── Block 4 — Calling card (contact-as-object) ──────────────────────── */
+.callingBlock {
+  background: var(--ggm-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(5rem, 8vw, 8rem) 0;
+}
+
+.callingShell {
+  width: min(620px, 92vw);
+  position: relative;
+  z-index: 2;
+}
+
+.callingCard {
+  position: relative;
+  background: linear-gradient(155deg, #fbf6ec 0%, #f3ecdc 100%);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  padding: clamp(2.2rem, 4vw, 3.4rem) clamp(2rem, 4vw, 3rem);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 18px 50px -16px rgba(0, 0, 0, 0.28),
+    0 4px 12px -4px rgba(0, 0, 0, 0.18);
+  transform: rotate(-0.4deg);
+  isolation: isolate;
+}
+
+.callingCard::before {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  pointer-events: none;
+}
+
+.callingCardCornerTL,
+.callingCardCornerTR,
+.callingCardCornerBL,
+.callingCardCornerBR {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: rgba(0, 0, 0, 0.4);
+  border-style: solid;
+  border-width: 0;
+  z-index: 1;
+}
+
+.callingCardCornerTL { top: 8px; left: 8px; border-top-width: 1px; border-left-width: 1px; }
+.callingCardCornerTR { top: 8px; right: 8px; border-top-width: 1px; border-right-width: 1px; }
+.callingCardCornerBL { bottom: 8px; left: 8px; border-bottom-width: 1px; border-left-width: 1px; }
+.callingCardCornerBR { bottom: 8px; right: 8px; border-bottom-width: 1px; border-right-width: 1px; }
+
+.callingCardEyebrow {
+  font-size: 0.66rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ggm-muted);
+  margin-bottom: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.callingCardEyebrow::before,
+.callingCardEyebrow::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.callingCardName {
+  font-family: var(--ggm-display-family);
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  margin-bottom: 0.6rem;
+}
+
+.callingCardRole {
+  font-family: var(--ggm-display-family);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: #3a3a3a;
+  margin-bottom: 1.8rem;
+  max-width: 36ch;
+  line-height: 1.4;
+}
+
+.callingCardLines {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.96rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.18);
+  padding-top: 1.2rem;
+}
+
+.callingCardLine {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 0.6rem;
+  align-items: baseline;
+}
+
+.callingCardLine small {
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ggm-muted);
+}
+
+.callingCardLine a {
+  color: var(--ggm-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.16rem;
+}
+
+.callingCardSeal {
+  position: absolute;
+  top: -28px;
+  right: -28px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #b54a3a, #7a2818 80%);
+  color: #fbecd2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-family: var(--ggm-display-family);
+  font-weight: 500;
+  transform: rotate(8deg);
+  box-shadow:
+    inset 0 0 0 4px rgba(255, 235, 200, 0.16),
+    0 8px 20px -6px rgba(0, 0, 0, 0.45);
+  line-height: 1.15;
+  padding: 0 0.6rem;
+  z-index: 4;
+}
+
+.callingCardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.6rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.18);
+  padding-top: 1.4rem;
+}
+
+.callingCardActions :global(button),
+.callingCardActions a {
+  border: 1px solid var(--ggm-ink);
+  background: transparent;
+  color: var(--ggm-ink);
+  border-radius: 999px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  cursor: pointer;
+  font-family: var(--ggm-body-family);
+  transition: background 0.22s ease, color 0.22s ease;
+  text-decoration: none;
+}
+
+.callingCardActions :global(button):hover,
+.callingCardActions a:hover {
+  background: var(--ggm-ink);
+  color: var(--ggm-bg);
+}
+
+.callingFootnote {
+  margin-top: clamp(1.6rem, 3vw, 2.4rem);
+  text-align: center;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ggm-muted);
+}
+
+/* ── Block reveals ─────────────────────────────────────────────────────── */
+.blockReveal {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0);
+  transition: opacity 1s cubic-bezier(0.2, 0.75, 0.2, 1),
+              transform 1s cubic-bezier(0.2, 0.75, 0.2, 1);
+}
+
+.blockReveal.revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Stagger child reveals through inline --i custom property. */
+.blockRevealChild {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition: opacity 0.85s cubic-bezier(0.2, 0.75, 0.2, 1),
+              transform 0.85s cubic-bezier(0.2, 0.75, 0.2, 1);
+  transition-delay: calc(var(--i, 0) * 90ms);
+}
+
+.blockReveal.revealed .blockRevealChild {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* ── Mobile / tablet (block model) ──────────────────────────────────────── */
+@media (max-width: 920px) {
+  .chapterIndex { display: none; }
+  .blockGhost { font-size: clamp(120px, 38vw, 220px); }
+  .wallShell, .studioShell, .callingShell { width: 92vw; }
+  .wallGrid { display: grid; grid-template-columns: 1fr; gap: 0.7rem; }
+  .wallTile1, .wallTile2, .wallTile3, .wallTile4, .wallTile5, .wallTile6, .wallTile7, .wallTile8 {
+    grid-column: span 12;
+    aspect-ratio: 6/5;
+  }
+  .studioShell { grid-template-columns: 1fr; }
+  .studioStrands { grid-template-columns: 1fr; }
+  .callingCardSeal { top: -16px; right: -10px; width: 86px; height: 86px; font-size: 0.56rem; }
+  .heroBrandGhost { font-size: clamp(46px, 11vw, 96px); bottom: clamp(6.2rem, 11vw, 8rem); }
+}
+
+@media (max-width: 700px) {
+  .block { min-height: auto; padding: 3rem 0; scroll-snap-align: none; }
+  .ggmRoot { scroll-snap-type: none; }
+  .heroBrandGhost { display: none; }
+  .heroRoomKeyChip { top: 4.4rem; font-size: 0.62rem; letter-spacing: 0.16em; }
+  .callingCardLine { grid-template-columns: 1fr; gap: 0.2rem; }
 }

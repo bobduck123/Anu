@@ -9,6 +9,7 @@ from presence_pilot_smoke_common import (
     data_dict,
     env,
     json_shape,
+    issue_hosted_subject_owner_token,
     load_env_file,
     missing_step,
     request_json,
@@ -20,6 +21,7 @@ from presence_pilot_smoke_common import (
 SCRIPT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_ENV = SCRIPT_ROOT / ".env.presence-first-pilot-ggm.local"
 DEFAULT_EVIDENCE = SCRIPT_ROOT / "docs/program/evidence/presence-first-pilot-ggm-onboarding-proof"
+DEFAULT_BACKEND_ENV = SCRIPT_ROOT / "flora-fauna/backend/.env.presence-controlled-launch.backend-production.local"
 
 
 def _encounters(backend_url: str, room_id: str, owner_token: str, timeout: int) -> tuple[int, int | None, int]:
@@ -40,7 +42,12 @@ def run(args: argparse.Namespace) -> dict:
     room_id = args.room_id or env("PRESENCE_PILOT_GGM_ROOM_ID")
     token = args.roomkey_token or env("PRESENCE_PILOT_GGM_ROOMKEY_TOKEN")
     revoked = args.revoked_roomkey_token or env("PRESENCE_PILOT_GGM_REVOKED_ROOMKEY_TOKEN")
-    owner_token = args.owner_token or env("PRESENCE_PILOT_GGM_OWNER_TOKEN")
+    owner_token = (
+        issue_hosted_subject_owner_token(args.owner_email, args.backend_env_file)
+        if args.owner_email
+        else args.owner_token or env("PRESENCE_PILOT_GGM_OWNER_TOKEN")
+    )
+    owner_token_source = "hosted_subject" if args.owner_email else "ignored_env_or_arg"
     for name, value in (
         ("PRESENCE_PILOT_GGM_BACKEND_URL", backend_url),
         ("PRESENCE_PILOT_GGM_ROOM_SLUG", room_slug),
@@ -171,7 +178,13 @@ def run(args: argparse.Namespace) -> dict:
     ]
     return build_result(
         "ggm_roomkey_verification",
-        inputs={"backend_url": backend_url, "frontend_url": frontend_url, "room_slug": room_slug, "room_id_present": bool(room_id)},
+        inputs={
+            "backend_url": backend_url,
+            "frontend_url": frontend_url,
+            "room_slug": room_slug,
+            "room_id_present": bool(room_id),
+            "owner_token_source": owner_token_source,
+        },
         steps=steps,
         notes=notes,
     )
@@ -187,6 +200,8 @@ def args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--roomkey-token")
     parser.add_argument("--revoked-roomkey-token")
     parser.add_argument("--owner-token")
+    parser.add_argument("--owner-email", help="Issue a short-lived server-side token for the current bound hosted owner.")
+    parser.add_argument("--backend-env-file", type=Path, default=DEFAULT_BACKEND_ENV)
     parser.add_argument("--timeout", type=int, default=25)
     parser.add_argument("--json-output", type=Path, default=DEFAULT_EVIDENCE / "ggm_roomkey_verification.json")
     parser.add_argument("--markdown-output", type=Path, default=DEFAULT_EVIDENCE / "ggm_roomkey_verification.md")

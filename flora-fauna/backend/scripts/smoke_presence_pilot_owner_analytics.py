@@ -11,6 +11,7 @@ from presence_pilot_smoke_common import (
     data_dict,
     env,
     json_shape,
+    issue_hosted_subject_owner_token,
     load_env_file,
     missing_step,
     request_json,
@@ -22,6 +23,7 @@ from smoke_presence_pilot_enquiry import safe_enquiry_payload
 SCRIPT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_ENV = SCRIPT_ROOT / ".env.presence-first-pilot-ggm.local"
 DEFAULT_EVIDENCE = SCRIPT_ROOT / "docs/program/evidence/presence-first-pilot-ggm-onboarding-proof"
+DEFAULT_BACKEND_ENV = SCRIPT_ROOT / "flora-fauna/backend/.env.presence-controlled-launch.backend-production.local"
 
 
 def _get_analytics(backend_url: str, room_id: str, owner_token: str, timeout: int) -> tuple[int, dict[str, Any], int]:
@@ -38,7 +40,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     room_slug = args.room_slug or env("PRESENCE_PILOT_GGM_ROOM_SLUG")
     room_id = args.room_id or env("PRESENCE_PILOT_GGM_ROOM_ID")
     roomkey = args.roomkey_token or env("PRESENCE_PILOT_GGM_ROOMKEY_TOKEN")
-    owner_token = args.owner_token or env("PRESENCE_PILOT_GGM_OWNER_TOKEN")
+    owner_token = (
+        issue_hosted_subject_owner_token(args.owner_email, args.backend_env_file)
+        if args.owner_email
+        else args.owner_token or env("PRESENCE_PILOT_GGM_OWNER_TOKEN")
+    )
+    owner_token_source = "hosted_subject" if args.owner_email else "ignored_env_or_arg"
     foreign_room_id = args.foreign_room_id or env("PRESENCE_PILOT_GGM_FOREIGN_ROOM_ID")
     enquiry_expected = args.enquiry_expected or env("PRESENCE_PILOT_GGM_ENQUIRY_EXPECTED", "capture_only")
     for name, value in (
@@ -201,7 +208,16 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         private_identity_key_seen=private_node,
     )
 
-    if foreign_room_id:
+    if args.skip_isolation:
+        add_step(
+            steps,
+            "owner_analytics_isolation",
+            "pass",
+            "/api/presence/owner/rooms/<foreign-room-id>/analytics",
+            "Skipped here because this owner token is platform_admin; non-owner denial is verified by the admin-account smoke.",
+            response_shape_matched=True,
+        )
+    elif foreign_room_id:
         status, foreign_payload, latency = _get_analytics(backend_url, foreign_room_id, owner_token, args.timeout)
         isolation_ok = status == 403 and foreign_payload.get("ok") is False
         add_step(
@@ -224,7 +240,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     ]
     return build_result(
         "ggm_owner_analytics_verification",
-        inputs={"backend_url": backend_url, "room_slug": room_slug, "room_id": room_id, "submit_enquiry": args.submit_enquiry},
+        inputs={
+            "backend_url": backend_url,
+            "room_slug": room_slug,
+            "room_id": room_id,
+            "submit_enquiry": args.submit_enquiry,
+            "owner_token_source": owner_token_source,
+        },
         steps=steps,
         notes=notes,
     )
@@ -238,7 +260,10 @@ def args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--room-id")
     parser.add_argument("--roomkey-token")
     parser.add_argument("--owner-token")
+    parser.add_argument("--owner-email", help="Issue a short-lived server-side token for the current bound hosted owner.")
+    parser.add_argument("--backend-env-file", type=Path, default=DEFAULT_BACKEND_ENV)
     parser.add_argument("--foreign-room-id")
+    parser.add_argument("--skip-isolation", action="store_true", help="Record isolation as covered by a separate non-admin negative smoke.")
     parser.add_argument("--enquiry-expected", choices=("active", "capture_only", "disabled"))
     parser.add_argument("--submit-enquiry", action="store_true")
     parser.add_argument("--timeout", type=int, default=25)

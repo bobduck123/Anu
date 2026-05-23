@@ -1,0 +1,85 @@
+{
+  "account": {
+    "global_subject_bound": true,
+    "normal_negative_user_id": 21,
+    "role": "platform_admin",
+    "room_id": 11,
+    "room_slug": "ggm-christina-goddard",
+    "user_id": 1
+  },
+  "backend_url": "https://anu-back-end.vercel.app",
+  "entitlement_api": "no hosted account/plan API found; verified by DB/service script",
+  "login_posture": "short-lived subject-shaped hosted JWT route smoke; interactive account sign-in not performed",
+  "secret_values_printed": false,
+  "steps": [
+    {
+      "latency_ms": 1181,
+      "name": "hosted_healthz",
+      "pass": true,
+      "reason": "production backend health endpoint",
+      "route": "/healthz",
+      "status": 200
+    },
+    {
+      "latency_ms": 1536,
+      "name": "owner_studio",
+      "pass": true,
+      "reason": "pilot admin owner route",
+      "route": "/api/presence/owner/nodes/11",
+      "status": 200
+    },
+    {
+      "latency_ms": 1479,
+      "name": "owner_analytics",
+      "pass": true,
+      "reason": "pilot admin owner route",
+      "route": "/api/presence/owner/rooms/11/analytics",
+      "status": 200
+    },
+    {
+      "latency_ms": 1180,
+      "name": "owner_room_keys",
+      "pass": true,
+      "reason": "pilot admin owner route",
+      "route": "/api/presence/owner/rooms/11/keys",
+      "status": 200
+    },
+    {
+      "latency_ms": 1555,
+      "name": "public_room_admin_redaction",
+      "pass": true,
+      "reason": "public Room response does not leak account email or admin role",
+      "route": "/api/presence/public/ggm-christina-goddard",
+      "status": 200
+    },
+    {
+      "latency_ms": 1232,
+      "name": "control_token_issue",
+      "pass": true,
+      "reason": "platform admin public token can request bounded control token",
+      "route": "/auth/control-token",
+      "status": 200
+    },
+    {
+      "latency_ms": 1513,
+      "name": "control_world_readiness",
+      "pass": true,
+      "reason": "admin protected endpoint accepts account control token and World stays hidden/forming",
+      "route": "/api/admin/presence/world-readiness",
+      "status": 200
+    },
+    {
+      "latency_ms": 1475,
+      "name": "old_fixture_owner_analytics_denied",
+      "pass": true,
+      "reason": "previous fixture owner is not the GGM owner after provisioning",
+      "route": "/api/presence/owner/rooms/11/analytics",
+      "status": 403
+    }
+  ],
+  "summary": {
+    "fail": 0,
+    "pass": 8
+  },
+  "tokens_printed": false
+}

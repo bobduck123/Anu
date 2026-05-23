@@ -1,0 +1,132 @@
+{
+  "generated_at": "2026-05-22T21:40:19Z",
+  "inputs": {
+    "backend_url": "https://anu-back-end.vercel.app",
+    "frontend_url": "https://your-presence.vercel.app",
+    "owner_token_source": "hosted_subject",
+    "room_id_present": true,
+    "room_slug": "ggm-christina-goddard"
+  },
+  "name": "ggm_roomkey_verification",
+  "notes": [
+    "The active RoomKey token is read from an ignored local env file or process env and is never written to evidence.",
+    "The RoomKey entry payload includes the Observer upgrade prompt; it does not require guest auth before the public Room is shown."
+  ],
+  "result": "pass",
+  "secret_values_printed": false,
+  "steps": [
+    {
+      "data": {
+        "payload_shape": [
+          "data",
+          "ok",
+          "request_id"
+        ]
+      },
+      "http_status": 200,
+      "latency_ms": 1559,
+      "name": "public_room_guest_read",
+      "reason": "Guest can open the public GGM Room.",
+      "response_shape_matched": true,
+      "route": "/api/presence/public/ggm-christina-goddard",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "encounters_count": 19
+      },
+      "http_status": 200,
+      "latency_ms": 1199,
+      "name": "roomkey_analytics_baseline",
+      "reason": "Owner analytics baseline captured before RoomKey resolve.",
+      "response_shape_matched": true,
+      "route": "/api/presence/owner/rooms/11/analytics",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "available_actions": [
+          "save",
+          "follow",
+          "field_note",
+          "mood_board",
+          "enquiry"
+        ],
+        "encounter_id": 28,
+        "payload_shape": [
+          "data",
+          "ok",
+          "request_id"
+        ],
+        "room_id": 11
+      },
+      "http_status": 200,
+      "latency_ms": 1518,
+      "name": "active_roomkey_resolve",
+      "reason": "Active QR RoomKey resolves to GGM and captures an aggregate encounter.",
+      "response_shape_matched": true,
+      "route": "/api/presence/keys/<roomkey-token>/resolve",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "payload_shape": [
+          "error",
+          "ok",
+          "request_id"
+        ]
+      },
+      "http_status": 404,
+      "latency_ms": 1433,
+      "name": "invalid_roomkey_safe_failure",
+      "reason": "Invalid RoomKey fails with safe JSON not-found response.",
+      "response_shape_matched": true,
+      "route": "/api/presence/keys/<invalid-roomkey-token>/resolve",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "payload_shape": [
+          "error",
+          "ok",
+          "request_id"
+        ]
+      },
+      "http_status": 410,
+      "latency_ms": 1426,
+      "name": "revoked_roomkey_safe_failure",
+      "reason": "Revoked proof RoomKey fails safely.",
+      "response_shape_matched": true,
+      "route": "/api/presence/keys/<revoked-roomkey-token>/resolve",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "after": 21,
+        "before": 19
+      },
+      "http_status": 200,
+      "latency_ms": 1489,
+      "name": "roomkey_owner_analytics_increment",
+      "reason": "Owner Room analytics reflects the RoomKey entry.",
+      "response_shape_matched": true,
+      "route": "/api/presence/owner/rooms/11/analytics",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "frontend_url_present": true
+      },
+      "http_status": null,
+      "latency_ms": null,
+      "name": "qr_payload_format",
+      "reason": "QR payload format points at the frontend RoomKey entry route and keeps the token out of evidence.",
+      "response_shape_matched": true,
+      "route": "https://your-presence.vercel.app/r/<roomkey-token>",
+      "status": "pass"
+    }
+  ],
+  "summary": {
+    "pass": 7
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "date": "2026-05-23",
+  "decision": "NO-GO",
+  "renderer_key": "ggm-faithful-room-v1",
+  "targets": {
+    "room_id": 11,
+    "canonical_room_slug": "ggm-christina-goddard",
+    "short_hosted_alias": "not_enabled",
+    "frontend_alias": "production Presence frontend",
+    "backend_alias": "production Presence backend"
+  },
+  "deployments": {
+    "frontend_git_renderer": {
+      "deployment_id": "dpl_XnAHJDXuhV28WNmqq6MpuVmjDF5w",
+      "commit": "b7b4321",
+      "branch": "feature/presence-ecosystem-alpha",
+      "result": "ready"
+    },
+    "frontend_mobile_roomkey_hotfix": {
+      "deployment_id": "dpl_DQKuwDT1f4LhKDWk6JcG9MBZ3ZpP",
+      "base_head": "b7b4321",
+      "source": "local worktree production deploy",
+      "result": "ready and aliased"
+    },
+    "backend_public_metadata_redaction": {
+      "deployment_id": "dpl_FxnCDPYiTzWBiiX95hVv9saLDoee",
+      "base_head": "b7b4321",
+      "source": "local worktree production deploy",
+      "result": "ready and aliased"
+    }
+  },
+  "scores": {
+    "hosted_visual_fidelity": 95,
+    "hosted_roomkey_nfc_readiness": 100,
+    "hosted_owner_auth_readiness": 65,
+    "hosted_studio_readiness": 75,
+    "hosted_analytics_readiness": 90,
+    "hosted_enquiry_readiness": 85,
+    "route_canonical_slug_readiness": 100,
+    "backend_renderer_metadata_readiness": 100,
+    "non_ggm_regression_readiness": 100,
+    "first_pilot_launch_readiness": 82
+  },
+  "gates": {
+    "explicit_renderer_metadata": "pass",
+    "hosted_faithful_public_room": "pass",
+    "hosted_work_detail": "pass",
+    "hosted_gallery_card": "pass",
+    "hosted_roomkey_faithful_renderer": "pass",
+    "roomkey_invalid_revoked_safe": "pass",
+    "current_owner_api_studio_analytics_passes": "pass",
+    "current_owner_browser_session_flow": "pending",
+    "public_redaction": "pass",
+    "non_owner_negative": "pass",
+    "non_ggm_regression": "pass",
+    "world_forming": "pass",
+    "enquiry_posture": "capture_only_pass",
+    "operator_visual_signoff": "pending",
+    "committed_deploy_trail": "pending"
+  },
+  "artifacts": {
+    "renderer_metadata": "renderer_metadata_result.json",
+    "roomkey": "roomkey_nfc_results.json",
+    "owner_auth": "owner_auth_results.json",
+    "owner_analytics": "owner_analytics_results.json",
+    "enquiry": "enquiry_posture_results.json",
+    "screenshots": "screenshots/"
+  },
+  "blockers": [
+    "Run a clean hosted e4hatu browser owner proof through Studio, analytics, passes, public Room, return to Studio, and logout.",
+    "Complete hosted owner/operator visual sign-off for public Room, mobile RoomKey entry, analytics, and capture-only enquiry posture.",
+    "Commit and push the local cutover patches and re-smoke the committed production deployment."
+  ],
+  "secret_values_printed": false
+}

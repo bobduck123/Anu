@@ -1,21 +1,30 @@
 "use client";
 
-// Atmosphere layers that sit behind / in front of the GGM artwork:
-//  - LiquidField: a CSS radial blob that tracks cursor position (purely
-//    decorative). Reads cursor coords via a pointermove listener on the
-//    parent and writes them as --mx / --my custom properties.
-//  - DitherLayer: a low-frame-rate canvas that paints a soft monochrome
-//    dither pattern, blended on top via mix-blend-mode: soft-light.
+// Atmosphere layers for the GGM faithful Room.
 //
-// Both layers respect prefers-reduced-motion (the CSS rules already hide
-// them; the canvas is also short-circuited to avoid spinning rAF).
+// The source site uses a Three.js WebGL slideshow with liquid morphology
+// between artworks plus a soft dither film grain. We can't ship Three.js
+// (license + bundle), so this module composes a Presence-safe substitute
+// that still reads as premium:
 //
-// This is a deliberate Presence-safe substitute for the source's Three.js
-// liquid morph: it preserves the source visual signal (warm + cool radial
-// bloom, soft dither film grain) without bundling Three.js.
+//   - LiquidField : a CSS radial bloom that tracks cursor position.
+//   - DitherFilm  : an SVG fractalNoise + halftone composite, applied via
+//                   CSS `background-image`. Static, GPU-cheap, screenshot
+//                   stable. Reads as film grain because two noise
+//                   frequencies are layered with different blend modes.
+//   - LiquidMorphDefs : reusable SVG <defs> with a feTurbulence +
+//                   feDisplacementMap filter. The hero slideshow applies
+//                   this filter to the active artwork while a transition
+//                   is in progress, producing genuine wave displacement
+//                   without Three.js. See useLiquidMorph().
+//
+// Every layer respects prefers-reduced-motion: under that media query
+// the CSS rules disable visible motion and we also skip rAF loops.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./ggm.module.css";
+
+// ── Liquid field (cursor-tracked radial bloom) ──────────────────────────────
 
 export function GgmLiquidField() {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -42,7 +51,6 @@ export function GgmLiquidField() {
       el!.style.setProperty("--mx", `${mx}%`);
       el!.style.setProperty("--my", `${my}%`);
       if (Math.abs(dx) < 0.2 && Math.abs(dy) < 0.2) {
-        // Reached steady state — stop the rAF until the next pointer move.
         running = false;
         return;
       }
@@ -71,71 +79,121 @@ export function GgmLiquidField() {
   return <div ref={ref} className={styles.liquidField} aria-hidden />;
 }
 
-interface DitherProps {
+// ── Dither film (SVG turbulence + halftone composite) ───────────────────────
+//
+// Layered noise: a fine 0.85 baseFrequency fractalNoise (the film grain)
+// and a coarser 0.32 baseFrequency turbulence (the halftone macro
+// pattern). Both are encoded as data: URIs inside the CSS module, so
+// they have zero runtime overhead and screenshot cleanly. Strength
+// parameter is preserved for compatibility with existing callers.
+
+interface DitherFilmProps {
   strength?: number;
 }
 
-export function GgmDitherLayer({ strength = 0.34 }: DitherProps) {
-  const ref = useRef<HTMLCanvasElement | null>(null);
+export function GgmDitherLayer({ strength = 1 }: DitherFilmProps) {
+  // The strength prop maps to overall opacity. The CSS module already
+  // sets a sensible baseline; we just modulate it.
+  const opacity = Math.max(0, Math.min(1, strength)) * 0.6 + 0.18;
+  return (
+    <div
+      className={styles.ditherFilm}
+      style={{ opacity }}
+      aria-hidden
+    />
+  );
+}
+
+// ── Liquid morph SVG defs (reusable filter for the hero slideshow) ──────────
+
+interface LiquidMorphDefsProps {
+  /** The hook's morph value; 0 = rest, 1 = peak distortion. */
+  morph: number;
+  /** Filter id — must be unique per defs instance. */
+  id?: string;
+}
+
+/**
+ * Inline SVG <defs> that other elements can reference via
+ * `filter: url(#ggm-liquid-morph)`. Animates the feDisplacementMap
+ * `scale` between 0 and ~110 driven by React state on the hero
+ * slideshow, producing a real wave distortion between slides.
+ */
+export function GgmLiquidMorphDefs({ morph, id = "ggm-liquid-morph" }: LiquidMorphDefsProps) {
+  const scale = Math.max(0, Math.min(1, morph)) * 90;
+  // Seed nudges so successive transitions feel different rather than
+  // playing the exact same wave each time.
+  return (
+    <svg
+      aria-hidden
+      width="0"
+      height="0"
+      style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
+    >
+      <defs>
+        <filter id={id} x="-10%" y="-10%" width="120%" height="120%" colorInterpolationFilters="sRGB">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.012 0.024"
+            numOctaves="2"
+            seed={Math.floor(scale * 13) % 97}
+            result="t"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="t"
+            scale={scale}
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
+        </filter>
+      </defs>
+    </svg>
+  );
+}
+
+// ── Liquid morph hook — animates the morph value across a transition ────────
+
+interface UseLiquidMorphResult {
+  morph: number;
+  trigger: () => void;
+}
+
+/**
+ * Returns a `morph` value (0–1) that follows an asymmetric easing curve
+ * each time `trigger()` is called. Used by GgmHero to animate the
+ * feDisplacementMap scale across a slide transition. Under reduced
+ * motion it stays at 0 and the trigger is a no-op.
+ */
+export function useLiquidMorph(durationMs = 1100): UseLiquidMorphResult {
+  const [morph, setMorph] = useState(0);
+  const reducedMotionRef = useRef(false);
 
   useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
     if (typeof window === "undefined") return;
-    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mql.matches) return;
+    reducedMotionRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // The source's dither effect reads as static film grain when blended
-    // with soft-light at low opacity — the human eye does not need it to
-    // animate. We paint a single noise field per mount + resize. This
-    // keeps the page screenshot-stable (no rAF spin), matches the
-    // perceived source signal, and uses ~constant CPU instead of a
-    // 12.5fps full-screen pixel write.
-    function paint() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
-      const w = canvas!.clientWidth | 0;
-      const h = canvas!.clientHeight | 0;
-      if (w <= 0 || h <= 0) return;
-      // Render to a smaller internal buffer; the soft-light blend hides
-      // the upscaling. Cheap, screenshot-friendly.
-      const bw = Math.max(1, Math.floor(w * dpr * 0.5));
-      const bh = Math.max(1, Math.floor(h * dpr * 0.5));
-      canvas!.width = bw;
-      canvas!.height = bh;
-      const img = ctx!.createImageData(bw, bh);
-      const data = img.data;
-      const len = data.length;
-      const s = Math.max(0, Math.min(1, strength));
-      for (let i = 0; i < len; i += 4) {
-        const n = (Math.random() - 0.5) * 255 * s;
-        const v = Math.max(0, Math.min(255, 128 + n));
-        data[i] = v;
-        data[i + 1] = v;
-        data[i + 2] = v;
-        data[i + 3] = 60 + Math.random() * 30;
+  function trigger() {
+    if (reducedMotionRef.current) return;
+    const start = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / durationMs);
+      // Asymmetric curve: rises fast to ~0.85, then settles back to 0.
+      const peak = t < 0.45
+        ? Math.sin((t / 0.45) * (Math.PI / 2)) * 0.92
+        : Math.cos(((t - 0.45) / 0.55) * (Math.PI / 2)) * 0.92;
+      setMorph(Math.max(0, peak));
+      if (t < 1) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        setMorph(0);
       }
-      ctx!.putImageData(img, 0, 0);
-    }
-
-    paint();
-
-    // Repaint on resize so the noise field still fills the layer. Throttle
-    // so a rubber-band drag doesn't spam.
-    let timer: number | null = null;
-    const ro = new ResizeObserver(() => {
-      if (timer) window.clearTimeout(timer);
-      timer = window.setTimeout(paint, 120) as unknown as number;
-    });
-    ro.observe(canvas);
-
-    return () => {
-      if (timer) window.clearTimeout(timer);
-      ro.disconnect();
     };
-  }, [strength]);
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }
 
-  return <canvas ref={ref} className={styles.ditherLayer} aria-hidden />;
+  return { morph, trigger };
 }

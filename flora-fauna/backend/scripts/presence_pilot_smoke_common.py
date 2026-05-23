@@ -3,12 +3,16 @@ from __future__ import annotations
 import ast
 import json
 import os
+import sys
 import time
 import urllib.error
 import urllib.request
 from dataclasses import asdict, dataclass, field
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
+
+from sqlalchemy.engine import make_url
 
 
 @dataclass
@@ -48,6 +52,59 @@ def env(name: str, default: str | None = None) -> str | None:
         return None
     value = str(value).strip()
     return value or None
+
+
+def issue_hosted_subject_owner_token(email: str, backend_env_file: Path) -> str:
+    """Issue a short-lived server-side smoke token for a bound hosted app user.
+
+    Pilot ownership can move after fixture setup. This keeps hosted owner
+    smokes on the current app-user/Supabase-subject binding without writing a
+    token into evidence or weakening route authorization.
+    """
+    load_env_file(backend_env_file)
+    raw = next(
+        (
+            os.environ.get(name)
+            for name in ("PRESENCE_PILOT_GGM_DATABASE_URL", "POSTGRES_URL", "DATABASE_URL")
+            if os.environ.get(name)
+        ),
+        None,
+    )
+    if not raw:
+        raise RuntimeError("Set POSTGRES_URL or PRESENCE_PILOT_GGM_DATABASE_URL before owner subject-token smoke.")
+    normalized = f"postgresql://{raw[len('postgres://') :]}" if raw.startswith("postgres://") else raw
+    url = make_url(normalized).difference_update_query(["supa", "pgbouncer"])
+    if not url.get_backend_name().startswith("postgresql"):
+        raise RuntimeError("Owner subject-token smoke requires the hosted PostgreSQL target.")
+
+    backend_root = Path(__file__).resolve().parents[1]
+    if str(backend_root) not in sys.path:
+        sys.path.insert(0, str(backend_root))
+    database_url = url.render_as_string(hide_password=False)
+    os.environ["DATABASE_URL"] = database_url
+    from backend_factory import load_create_app
+
+    app = load_create_app()({"SQLALCHEMY_DATABASE_URI": database_url, "AUTO_CREATE_ALL": False})
+    with app.app_context():
+        from flask_jwt_extended import create_access_token
+        from manara_backend_app.models import User
+
+        user = User.query.filter_by(email=email.lower()).first()
+        if not user or not user.global_subject_id:
+            raise RuntimeError("Hosted owner smoke requires one bound app user for the requested email.")
+        return create_access_token(
+            identity=user.global_subject_id,
+            additional_claims={
+                "aud": "public",
+                "token_use": "public",
+                "requires_mfa": False,
+                "role": "authenticated",
+                "email": user.email,
+                "user_metadata": {"display_name": "GGM pilot owner smoke"},
+                "app_metadata": {"provider": "email"},
+            },
+            expires_delta=timedelta(minutes=10),
+        )
 
 
 def data_value(payload: dict[str, Any]) -> Any:

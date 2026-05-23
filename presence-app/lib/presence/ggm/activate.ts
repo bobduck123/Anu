@@ -38,9 +38,21 @@ function readMetadata(node: PresenceNode): CustomRendererMetadata {
   return m as CustomRendererMetadata;
 }
 
+/**
+ * Canonical public slug for the GGM pilot Room.
+ *
+ * This is the only slug that should appear in marketing, NFC tags, QR
+ * posters, or social shares. Older slugs such as `ggm` are kept as
+ * activation signatures so RoomKey tokens previously minted against them
+ * still resolve to the faithful renderer, but new content should always
+ * use `ggm-christina-goddard`.
+ */
+export const GGM_CANONICAL_SLUG = "ggm-christina-goddard" as const;
+
 function isGgmSignature(node: PresenceNode): boolean {
   const slug = (node.slug ?? "").toLowerCase();
   const name = (node.display_name ?? "").toLowerCase();
+  if (slug === GGM_CANONICAL_SLUG) return true;
   if (slug === "ggm" || slug.startsWith("ggm-") || slug.endsWith("-ggm") || slug.includes("/ggm")) {
     return true;
   }
