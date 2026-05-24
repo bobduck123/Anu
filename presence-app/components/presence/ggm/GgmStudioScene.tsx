@@ -10,18 +10,22 @@
 // On mobile the columns stack and the rail remains scrollable.
 
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import type { GgmArtist, InspireCard } from "@/lib/presence/ggm/source";
 import styles from "./ggm.module.css";
 
 interface GgmStudioSceneProps {
   artist: GgmArtist;
+  practiceTitle?: string;
   aboutIntro: string;
   aboutBody: string;
+  processNotes?: string;
   strands: Array<{ title: string; body: string }>;
   inspire: InspireCard[];
+  elementStyles?: Record<string, CSSProperties>;
 }
 
-export function GgmStudioScene({ artist, aboutIntro, aboutBody, strands, inspire }: GgmStudioSceneProps) {
+export function GgmStudioScene({ artist, practiceTitle, aboutIntro, aboutBody, processNotes, strands, inspire, elementStyles = {} }: GgmStudioSceneProps) {
   return (
     <div className={styles.studioShell}>
       <div className={styles.studioLeft}>
@@ -29,16 +33,17 @@ export function GgmStudioScene({ artist, aboutIntro, aboutBody, strands, inspire
           <span className={styles.blockEyebrowNumber}>03</span>
           Practice Studio
         </p>
-        <h2 className={styles.blockRevealChild} style={{ ["--i" as never]: 0 }}>
-          Who is {firstName(artist.name)}.
+        <h2 className={styles.blockRevealChild} style={{ ...elementStyles["practice-title"], ["--i" as never]: 0 }}>
+          {practiceTitle || `Who is ${firstName(artist.name)}.`}
         </h2>
 
         <article
           className={`${styles.studioNote} ${styles.blockRevealChild}`}
           style={{ ["--i" as never]: 1 }}
         >
-          <p>{aboutIntro}</p>
-          {aboutBody && <p style={{ marginTop: "0.7rem" }}>{aboutBody}</p>}
+          <p style={elementStyles.biography}>{aboutIntro}</p>
+          {aboutBody && <p style={{ marginTop: "0.7rem", ...elementStyles["main-statement"] }}>{aboutBody}</p>}
+          {processNotes && <p style={{ marginTop: "0.7rem", ...elementStyles["process-notes"] }}>{processNotes}</p>}
         </article>
 
         <div className={styles.studioStrands}>

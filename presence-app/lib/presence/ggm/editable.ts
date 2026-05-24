@@ -12,6 +12,7 @@ import {
   type GgmWork,
   type InspireCard,
 } from "./source";
+import { textStyleCss } from "@/lib/editor/canvasModel";
 
 export interface GgmEditableModel {
   config: PresenceEditableConfig | null;
@@ -29,6 +30,7 @@ export interface GgmEditableModel {
     wallLead: string;
     aboutIntro: string;
     aboutBody: string;
+    processNotes: string;
     practiceTitle: string;
     callingTitle: string;
     callingCopy: string;
@@ -49,6 +51,7 @@ export interface GgmEditableModel {
   };
   motion: Partial<GgmMotionSettings>;
   styleVars: CSSProperties;
+  elementStyles: Record<string, CSSProperties>;
 }
 
 export function buildGgmEditableModel(node: PresenceNode): GgmEditableModel {
@@ -66,7 +69,7 @@ export function buildGgmEditableModel(node: PresenceNode): GgmEditableModel {
   const practiceScene = sceneById(scenes, "practice_studio");
   const callingScene = sceneById(scenes, "calling_card");
   const works = buildWorks(node, config);
-  const heroSlides = buildHeroSlides(works, artworkScene);
+  const heroSlides = applyHeroImage(buildHeroSlides(works, artworkScene), record(config?.asset_config));
   const artist = buildArtist(node, content, about);
   const contactPosture = text(contact.contact_posture) || "legacy_public_email";
 
@@ -104,9 +107,9 @@ export function buildGgmEditableModel(node: PresenceNode): GgmEditableModel {
       aboutBody:
         text(about.artist_statement) ||
         text(about.practice_statement) ||
-        text(about.process_notes) ||
         node.long_story ||
         GGM_ARTIST.aboutBody,
+      processNotes: text(about.process_notes),
       practiceTitle: text(practiceScene.about_title) || "Practice Studio",
       callingTitle: text(contact.contact_title) || text(callingScene.contact_title) || "Calling Card",
       callingCopy: text(contact.contact_copy) || "Use the Presence enquiry form to begin a conversation.",
@@ -135,6 +138,7 @@ export function buildGgmEditableModel(node: PresenceNode): GgmEditableModel {
     },
     motion: buildMotion(config),
     styleVars: buildStyleVars(styleDna),
+    elementStyles: buildElementStyles(styleDna, works),
   };
 }
 
@@ -225,6 +229,21 @@ function buildHeroSlides(works: GgmWork[], artworkScene: Record<string, unknown>
   return [...defaultOrder, ...works.filter((work) => !seen.has(work.slug))];
 }
 
+function applyHeroImage(slides: GgmWork[], assetConfig: Record<string, unknown>): GgmWork[] {
+  const hero = record(assetConfig.hero_image);
+  const url = text(hero.url);
+  if (!url || slides.length === 0) return slides;
+  return [
+    {
+      ...slides[0],
+      image: url,
+      thumb: url,
+      alt: text(hero.alt_text) || slides[0].alt,
+    },
+    ...slides.slice(1),
+  ];
+}
+
 function buildArtist(node: PresenceNode, content: Record<string, unknown>, about: Record<string, unknown>): GgmArtist {
   const timeline = arrayRecords(about.timeline)
     .map((item) => ({ when: text(item.when), what: text(item.what) }))
@@ -296,6 +315,45 @@ function buildStyleVars(styleDna: Record<string, unknown>): CSSProperties {
   setVar(vars, "--ggm-display-family", text(typography.heading_stack));
   setVar(vars, "--ggm-body-family", text(typography.body_stack));
   return vars as CSSProperties;
+}
+
+function buildElementStyles(styleDna: Record<string, unknown>, works: GgmWork[]): Record<string, CSSProperties> {
+  const configured = record(styleDna.element_styles);
+  const palette = record(styleDna.palette);
+  const ids = [
+    "hero-title",
+    "hero-caption",
+    "main-statement",
+    "practice-title",
+    "biography",
+    "process-notes",
+    "calling-title",
+    "calling-body",
+    "invitation-cta",
+    ...works.flatMap((work) => [`work-title:${work.slug}`, `work-caption:${work.slug}`]),
+  ];
+  return Object.fromEntries(ids.map((id) => {
+    const style = readStyle(configured[id]);
+    const visibleStyle = id === "hero-title" || id === "hero-caption" ? { ...style, color: undefined } : style;
+    return [id, textStyleCss(visibleStyle, palette)];
+  }));
+}
+
+function readStyle(value: unknown) {
+  const style = record(value);
+  return {
+    size: pick(style.size, ["small", "medium", "large", "feature"]),
+    weight: pick(style.weight, ["light", "regular", "bold"]),
+    color: pick(style.color, ["ink", "muted", "paper", "accent"]),
+    align: pick(style.align, ["left", "center", "right"]),
+    fontMood: pick(style.font_mood, ["editorial", "display", "soft", "mono"]),
+    italic: style.italic === true,
+    underline: style.underline === true,
+  };
+}
+
+function pick<T extends string>(value: unknown, choices: readonly T[]): T | undefined {
+  return choices.includes(value as T) ? value as T : undefined;
 }
 
 function setVar(vars: Record<string, string>, key: string, value: string) {

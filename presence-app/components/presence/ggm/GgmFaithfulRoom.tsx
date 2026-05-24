@@ -14,6 +14,7 @@
 // keyboard arrows. Wheel + touch belong to scene-internal scroll.
 
 import { useMemo } from "react";
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { PresenceNode, PresenceWork } from "@/lib/api/types";
@@ -134,6 +135,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: GgmFaithfulRoo
   const caption = model.copy.artworkCaption;
   const aboutIntro = model.copy.aboutIntro;
   const aboutBody = model.copy.aboutBody;
+  const processNotes = model.copy.processNotes;
   const externalPortfolio = model.contact.externalLink ?? pickExternalPortfolio(node);
 
   // Scene 01 cycles through the FULL ordered hero sequence (all 8
@@ -162,7 +164,10 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: GgmFaithfulRoo
         <ArtworkFieldContent
           slides={heroSlides}
           slideIndex={ctx.slideIndex}
+          title={model.copy.artworkTitle}
           caption={caption}
+          titleStyle={model.elementStyles["hero-title"]}
+          captionStyle={model.elementStyles["hero-caption"]}
           onAdvance={ctx.slideAdvance}
         />
       ),
@@ -180,6 +185,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: GgmFaithfulRoo
           hrefForWork={hrefForWork}
           title={model.copy.wallTitle}
           lead={model.copy.wallLead}
+          elementStyles={model.elementStyles}
         />
       ),
     },
@@ -193,10 +199,13 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: GgmFaithfulRoo
       content: () => (
         <GgmStudioScene
           artist={model.artist}
+          practiceTitle={model.copy.practiceTitle}
           aboutIntro={aboutIntro}
           aboutBody={aboutBody}
+          processNotes={processNotes}
           strands={model.practice.strands}
           inspire={model.practice.inspire}
+          elementStyles={model.elementStyles}
         />
       ),
     },
@@ -215,6 +224,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: GgmFaithfulRoo
           contactCopy={model.copy.callingCopy}
           availability={model.contact.availability}
           showDirectEmail={model.contact.showDirectEmail}
+          elementStyles={model.elementStyles}
           enquiryAction={
             <PublicEnquiryDialog
               slug={node.slug}
@@ -227,7 +237,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: GgmFaithfulRoo
       ),
     },
   ], [
-    heroImages, heroSlides, wallWorks, brand, caption, aboutIntro, aboutBody,
+    heroImages, heroSlides, wallWorks, brand, caption, aboutIntro, aboutBody, processNotes,
     externalPortfolio, node.slug, node.node_type,
     hrefForWork,
   ]);
@@ -252,14 +262,20 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: GgmFaithfulRoo
 interface ArtworkFieldContentProps {
   slides: GgmWork[];
   slideIndex: number;
+  title: string;
   caption: string;
+  titleStyle?: CSSProperties;
+  captionStyle?: CSSProperties;
   onAdvance: () => void;
 }
 
 function ArtworkFieldContent({
   slides,
   slideIndex,
+  title,
   caption,
+  titleStyle,
+  captionStyle,
   onAdvance,
 }: ArtworkFieldContentProps) {
   const slide = slides[slideIndex] ?? slides[0] ?? null;
@@ -277,12 +293,12 @@ function ArtworkFieldContent({
     >
       <span className={styles.fieldContent}>
         {slide && (
-          <span className={styles.fieldWorkTitle}>
-            {slide.title}
+          <span className={styles.fieldWorkTitle} style={titleStyle}>
+            {title || slide.title}
             <span className={styles.fieldWorkYear}>{slide.year}</span>
           </span>
         )}
-        <span className={styles.fieldCaption}>
+        <span className={styles.fieldCaption} style={captionStyle}>
           {caption}
         </span>
         <span className={styles.fieldClickHint} aria-hidden>
@@ -305,9 +321,10 @@ interface WorkWallSurfaceProps {
   hrefForWork: (w: GgmWork) => string;
   title: string;
   lead: string;
+  elementStyles?: Record<string, CSSProperties>;
 }
 
-function WorkWallSurface({ works, hrefForWork, title, lead }: WorkWallSurfaceProps) {
+function WorkWallSurface({ works, hrefForWork, title, lead, elementStyles = {} }: WorkWallSurfaceProps) {
   // Group works by year so we can drop year-marker rules between
   // sections — reads like a hung gallery walk-through.
   const grouped = useMemo(() => {
@@ -360,7 +377,7 @@ function WorkWallSurface({ works, hrefForWork, title, lead }: WorkWallSurfacePro
             <p>
               {feature.year} · {feature.dimensions !== "Unknown" ? `${feature.dimensions} · ` : ""}{feature.medium}
             </p>
-            <p className={styles.wallV2FeatureDesc}>{feature.description}</p>
+            <p className={styles.wallV2FeatureDesc} style={elementStyles[`work-caption:${feature.slug}`]}>{feature.description}</p>
           </div>
         </Link>
       )}
@@ -391,7 +408,7 @@ function WorkWallSurface({ works, hrefForWork, title, lead }: WorkWallSurfacePro
                   sizes="(max-width: 920px) 100vw, 50vw"
                 />
                 <div className={styles.wallV2PlateMeta}>
-                  <span className={styles.wallV2PlateTitle}>{w.title}</span>
+                  <span className={styles.wallV2PlateTitle} style={elementStyles[`work-title:${w.slug}`]}>{w.title}</span>
                   <span className={styles.wallV2PlateDims}>
                     {w.dimensions !== "Unknown" ? w.dimensions : w.medium}
                   </span>

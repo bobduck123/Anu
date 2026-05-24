@@ -6,7 +6,7 @@
 // the canonical contact lines, and (when enabled) the Presence enquiry
 // CTA integrated as a paper pill button at the foot of the card.
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { GgmArtist } from "@/lib/presence/ggm/source";
 import styles from "./ggm.module.css";
 
@@ -22,6 +22,7 @@ interface GgmCallingCardProps {
   availability?: string | null;
   showDirectEmail?: boolean;
   practiceLine?: string;
+  elementStyles?: Record<string, CSSProperties>;
 }
 
 export function GgmCallingCard({
@@ -33,6 +34,7 @@ export function GgmCallingCard({
   availability,
   showDirectEmail = true,
   practiceLine = "Memory · colour · lived landscape",
+  elementStyles = {},
 }: GgmCallingCardProps) {
   return (
     <div className={styles.callingShell}>
@@ -56,7 +58,7 @@ export function GgmCallingCard({
           ✱ 2026
         </div>
 
-        <p className={styles.callingCardEyebrow}>{contactTitle || "An invitation"}</p>
+        <p className={styles.callingCardEyebrow} style={elementStyles["calling-title"]}>{contactTitle || "An invitation"}</p>
         <h2 className={styles.callingCardName}>{artist.name}</h2>
         <p className={styles.callingCardRole}>{artist.subtitle}</p>
 
@@ -86,7 +88,7 @@ export function GgmCallingCard({
         </div>
 
         {enquiryAction && (
-          <div className={styles.callingCardActions}>
+          <div className={styles.callingCardActions} style={elementStyles["invitation-cta"]}>
             {enquiryAction}
             {showDirectEmail && artist.contactEmail && <a href={`mailto:${artist.contactEmail}`}>Write directly</a>}
           </div>
@@ -95,10 +97,15 @@ export function GgmCallingCard({
 
       <p
         className={`${styles.callingFootnote} ${styles.blockRevealChild}`}
-        style={{ ["--i" as never]: 2 }}
+        style={{ ...elementStyles["calling-body"], ["--i" as never]: 2 }}
       >
-        {availability || contactCopy || "Interested in exhibitions, projects, or commissions"}
+        {contactCopy || "Interested in exhibitions, projects, or commissions"}
       </p>
+      {availability && (
+        <p className={`${styles.callingFootnote} ${styles.blockRevealChild}`} style={{ ["--i" as never]: 3 }}>
+          {availability}
+        </p>
+      )}
     </div>
   );
 }

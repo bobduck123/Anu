@@ -148,6 +148,7 @@ export default function PresenceStudioEditorApp({
   const [config, setConfig] = useState<PresenceEditableConfig | null>(null);
   const [baseSnapshot, setBaseSnapshot] = useState("");
   const [activeTab, setActiveTab] = useState<TabId>("canvas");
+  const [advancedVisible, setAdvancedVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -218,20 +219,17 @@ export default function PresenceStudioEditorApp({
   );
   const showCanonicalSync = Boolean(canonicalBundle && assetConfigEmpty);
 
-  function syncCanonicalAssets() {
+  async function syncCanonicalAssets() {
     if (!canonicalBundle) return;
-    mutate((draft) => applyCanonicalBundle(draft, canonicalBundle));
-    setNotice(
-      `Imported ${canonicalBundle.count} canonical artworks from the live room renderer. Save the draft to keep these in your editable config.`,
-    );
+    await commitCanvasChange((draft) => applyCanonicalBundle(draft, canonicalBundle));
   }
 
-  async function saveDraft(): Promise<PresenceEditableConfig | null> {
-    if (!config) return null;
+  async function saveDraft(candidate: PresenceEditableConfig | null = config): Promise<PresenceEditableConfig | null> {
+    if (!candidate) return null;
     setSaving(true);
     setActionError(null);
     try {
-      const payload = toConfigInput(config);
+      const payload = toConfigInput(candidate);
       const response = overview?.draft
         ? await patchPresenceEditorDraft(nodeId, token, payload)
         : await createPresenceEditorDraft(nodeId, token, payload);
@@ -243,7 +241,7 @@ export default function PresenceStudioEditorApp({
           ? { ...current, draft, history: [draft, ...current.history.filter((item) => item.id !== draft.id)] }
           : current,
       );
-      setNotice(response.created ? "Draft created and saved." : "Draft saved.");
+      setNotice(response.created ? "Draft room created. All changes saved." : "All changes saved to your draft room.");
       return draft;
     } catch (err) {
       setActionError(errorMessage(err));
@@ -251,6 +249,20 @@ export default function PresenceStudioEditorApp({
     } finally {
       setSaving(false);
     }
+  }
+
+  async function commitCanvasChange(next: (draft: PresenceEditableConfig) => PresenceEditableConfig): Promise<boolean> {
+    if (!config || saving) return false;
+    const changed = next(cloneConfig(config));
+    setConfig(changed);
+    setNotice(null);
+    setActionError(null);
+    return Boolean(await saveDraft(changed));
+  }
+
+  function openAdvanced(target: string) {
+    setAdvancedVisible(true);
+    setActiveTab(target as TabId);
   }
 
   async function runPreview() {
@@ -298,7 +310,7 @@ export default function PresenceStudioEditorApp({
       );
       setConfig(published);
       setBaseSnapshot(snapshot(published));
-      setNotice("Published config is live. Previous published config was archived by the backend.");
+      setNotice("Your live room is open to visitors. Your earlier live version remains available to restore.");
       await onNodeReload?.();
     } catch (err) {
       setActionError(errorMessage(err));
@@ -403,7 +415,7 @@ export default function PresenceStudioEditorApp({
     return (
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-16 text-[var(--p-studio-muted)]">
         <Loader2 className="h-7 w-7 animate-spin" />
-        <p className="text-sm">Loading editor contract and draft state...</p>
+        <p className="text-sm">Opening your draft room...</p>
       </div>
     );
   }
@@ -413,8 +425,8 @@ export default function PresenceStudioEditorApp({
       <div className="mx-auto max-w-2xl px-4 py-10">
         <StateCard
           tone="error"
-          title="Presence editor unavailable"
-          body={loadError ?? "The editor contract could not be loaded."}
+          title="Studio is unavailable"
+          body={loadError ?? "Your draft room could not be opened."}
           action={<button className={buttonClass("secondary")} onClick={() => void loadEditor()}>Retry</button>}
         />
       </div>
@@ -428,31 +440,40 @@ export default function PresenceStudioEditorApp({
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-amber-200/70">
-                Presence Studio Editor
+                {advancedVisible ? "Presence Studio / Advanced controls" : "Presence Studio / Canvas"}
               </p>
               <h1 className="mt-2 text-3xl font-semibold tracking-tight text-stone-50 sm:text-5xl">
                 {node.display_name}
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-stone-300">
-                Owner-only creative control plane for scenes, works, copy, assets, RoomKey entry, style DNA, motion, preview, publish, and rollback.
+                {advancedVisible
+                  ? "Detailed controls for staff and power users. Return to Canvas for the calm editing path."
+                  : "Pilot mode: shape your room here. Your changes save as a draft until you open the room to visitors."}
               </p>
             </div>
-            <div className="grid gap-2 text-xs sm:grid-cols-2 lg:min-w-[25rem]">
-              <StatusMetric label="Renderer" value={config.renderer_key || node.renderer_key || "renderer fallback"} />
-              <StatusMetric label="Draft" value={overview?.draft ? `v${overview.draft.version ?? "?"}` : "missing"} tone={overview?.draft ? "good" : "warn"} />
-              <StatusMetric label="Published" value={overview?.published ? `v${overview.published.version ?? "?"}` : "missing"} tone={overview?.published ? "good" : "warn"} />
-              <StatusMetric label="Last saved" value={formatDate(config.updated_at) ?? "not saved"} />
-            </div>
+            {advancedVisible ? (
+              <div className="grid gap-2 text-xs sm:grid-cols-2 lg:min-w-[25rem]">
+                <StatusMetric label="Renderer" value={config.renderer_key || node.renderer_key || "renderer fallback"} />
+                <StatusMetric label="Draft" value={overview?.draft ? `v${overview.draft.version ?? "?"}` : "missing"} tone={overview?.draft ? "good" : "warn"} />
+                <StatusMetric label="Published" value={overview?.published ? `v${overview.published.version ?? "?"}` : "missing"} tone={overview?.published ? "good" : "warn"} />
+                <StatusMetric label="Last saved" value={formatDate(config.updated_at) ?? "not saved"} />
+              </div>
+            ) : (
+              <div className="rounded-3xl border border-amber-200/20 bg-amber-200/10 px-4 py-3 text-xs leading-5 text-amber-50 lg:max-w-[22rem]">
+                <p className="font-semibold">Draft room</p>
+                <p className="mt-1 text-amber-50/80">Nothing reaches visitors until you choose <span className="font-semibold">Open room to visitors</span>.</p>
+              </div>
+            )}
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-2">
             <button className={buttonClass("primary")} disabled={saving} onClick={() => void saveDraft()}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {overview?.draft ? "Save Draft" : "Create Draft"}
+              {overview?.draft ? "Save draft" : "Create draft"}
             </button>
             <button className={buttonClass("secondary")} disabled={previewing} onClick={() => void runPreview()}>
               {previewing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
-              Preview panel
+              Preview draft
             </button>
             <Link className={buttonClass("secondary")} href={`/studio/${nodeId}/editor/preview`}>
               <Eye className="h-4 w-4" />
@@ -464,10 +485,10 @@ export default function PresenceStudioEditorApp({
             </button>
             <a className={buttonClass("ghost")} href={publicUrl} target="_blank" rel="noopener noreferrer">
               <Globe className="h-4 w-4" />
-              Public Room
+              Live room
             </a>
             <div className="ml-auto flex flex-wrap items-center gap-2">
-              <Pill tone={dirty ? "warn" : "good"}>{dirty ? "Unsaved changes" : "Saved state"}</Pill>
+              <Pill tone={dirty ? "warn" : "good"}>{dirty ? "Saving needed" : "All changes saved"}</Pill>
               <Pill tone={blockingIssues.length ? "danger" : issues.length ? "warn" : "good"}>
                 Readiness {readiness?.percentage ?? 0}%
               </Pill>
@@ -497,16 +518,15 @@ export default function PresenceStudioEditorApp({
             <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200/40 bg-amber-200/10 px-4 py-3 text-sm text-amber-50">
               <Sparkles className="h-4 w-4 shrink-0" />
               <span className="flex-1 min-w-[16rem] leading-6">
-                Your live room is rendering {canonicalBundle.count} canonical
-                {canonicalBundle.source === "ggm-renderer" ? " GGM artworks" : " works"} that aren&apos;t yet in your editable config.
-                Sync them now so the editor reflects what visitors see — then you can edit, reorder, or replace them.
+                Your live room already contains {canonicalBundle.count} {canonicalBundle.count === 1 ? "image" : "images"}.
+                Bring them into this draft room so you can edit, move, or replace them here.
               </span>
               <button
                 type="button"
                 onClick={syncCanonicalAssets}
                 className="rounded-full bg-amber-200 px-3 py-1.5 text-xs font-semibold text-stone-950 hover:bg-amber-100"
               >
-                Sync from live room
+                Bring in live images
               </button>
             </div>
           )}
@@ -515,7 +535,7 @@ export default function PresenceStudioEditorApp({
         <div className="grid lg:grid-cols-[17rem_minmax(0,1fr)]">
           <aside className="border-b border-white/10 bg-black/20 p-3 lg:border-b-0 lg:border-r lg:border-white/10">
             <nav className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
-              {TABS.map((tab) => {
+              {(advancedVisible ? TABS : TABS.filter((tab) => tab.id === "canvas")).map((tab) => {
                 const Icon = tab.icon;
                 const active = activeTab === tab.id;
                 return (
@@ -534,6 +554,29 @@ export default function PresenceStudioEditorApp({
                   </button>
                 );
               })}
+              {!advancedVisible && (
+                <button
+                  type="button"
+                  className="flex min-w-max items-center gap-2 rounded-2xl border border-white/10 px-3 py-2 text-left text-xs font-semibold text-stone-400 transition hover:bg-white/5 hover:text-stone-100 lg:mt-3 lg:min-w-0"
+                  onClick={() => openAdvanced("overview")}
+                >
+                  <SlidersHorizontal className="h-4 w-4 shrink-0" />
+                  Advanced controls
+                </button>
+              )}
+              {advancedVisible && (
+                <button
+                  type="button"
+                  className="mt-2 flex min-w-max items-center gap-2 rounded-2xl border border-amber-200/20 px-3 py-2 text-left text-xs font-semibold text-amber-100 transition hover:bg-amber-200/10 lg:min-w-0"
+                  onClick={() => {
+                    setAdvancedVisible(false);
+                    setActiveTab("canvas");
+                  }}
+                >
+                  <Palette className="h-4 w-4 shrink-0" />
+                  Return to Canvas
+                </button>
+              )}
             </nav>
           </aside>
 
@@ -542,11 +585,14 @@ export default function PresenceStudioEditorApp({
               <PresenceCanvasMode
                 node={node}
                 config={config}
-                mutate={mutate}
                 dirty={dirty}
                 saving={saving}
+                readiness={readiness}
+                assets={overview?.assets ?? []}
                 onSaveDraft={saveDraft}
-                onOpenAdvanced={(target) => setActiveTab(target as TabId)}
+                onCommit={commitCanvasChange}
+                onPreview={runPreview}
+                onOpenAdvanced={openAdvanced}
                 onPublishRequest={() => setPublishConfirmOpen(true)}
                 showCanonicalSync={showCanonicalSync}
                 canonicalBundle={canonicalBundle}

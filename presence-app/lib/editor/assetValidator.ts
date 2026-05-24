@@ -21,11 +21,22 @@ const SCRIPT_PATTERNS = [
   /data:text\/html/i,
 ];
 
-const SECRET_PATTERNS = [
-  /(?:^|[?&#])(access[_-]?token|auth[_-]?token|token|secret|client[_-]?secret|api[_-]?key|signature|x-amz-signature|x-amz-credential)=/i,
+const BLOCKED_SECRET_PATTERNS = [
+  /(?:^|[?&#])(access[_-]?token|auth[_-]?token|secret|client[_-]?secret|api[_-]?key)=/i,
   /(bearer|basic)\s+[a-z0-9._~+/=-]{16,}/i,
   /-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----/i,
 ];
+
+const SIGNED_CDN_HOST_PATTERNS = [
+  /(?:^|\.)amazonaws\.com$/i,
+  /(?:^|\.)cloudfront\.net$/i,
+  /(?:^|\.)supabase\.co$/i,
+  /(?:^|\.)cloudinary\.com$/i,
+  /(?:^|\.)imgix\.net$/i,
+];
+
+const SIGNED_URL_QUERY_PATTERN =
+  /(?:^|[?&#])(token|signature|x-amz-signature|x-amz-credential|x-amz-expires|expires|expiry|signed)=/i;
 
 const INTERNAL_HOST_PATTERNS = [
   /^localhost$/i,
@@ -45,6 +56,7 @@ export function validateAssetUrl(rawUrl: string | null | undefined): AssetValida
   const errors: string[] = [];
   const warnings: string[] = [];
   const url = String(rawUrl ?? "").trim();
+  let parsed: URL | null = null;
 
   if (!url) {
     errors.push("Asset URL is required.");
@@ -65,13 +77,6 @@ export function validateAssetUrl(rawUrl: string | null | undefined): AssetValida
     }
   }
 
-  for (const pattern of SECRET_PATTERNS) {
-    if (pattern.test(url)) {
-      errors.push("Asset URLs must not contain raw secrets, access tokens, or signed credentials.");
-      break;
-    }
-  }
-
   if (/^file:/i.test(url)) errors.push("file: URLs are blocked.");
   if (/^data:/i.test(url)) errors.push("data: URLs are blocked for Presence editor assets.");
 
@@ -80,11 +85,28 @@ export function validateAssetUrl(rawUrl: string | null | undefined): AssetValida
     return { isValid: errors.length === 0, errors: unique(errors), warnings };
   }
 
-  let parsed: URL | null = null;
   try {
     parsed = new URL(url);
   } catch {
     errors.push("Asset URL must be https:// or a root-relative public path.");
+  }
+
+  const signedCdnUrl = Boolean(
+    parsed
+    && SIGNED_CDN_HOST_PATTERNS.some((pattern) => pattern.test(parsed.hostname))
+    && SIGNED_URL_QUERY_PATTERN.test(url),
+  );
+
+  for (const pattern of BLOCKED_SECRET_PATTERNS) {
+    if (pattern.test(url)) {
+      errors.push("Asset URLs must not contain raw secrets or access tokens.");
+      break;
+    }
+  }
+  if (signedCdnUrl) {
+    warnings.push("This signed image link may expire. Prefer a stable room image for long-term publishing.");
+  } else if (SIGNED_URL_QUERY_PATTERN.test(url)) {
+    errors.push("Signed image links must use an approved image host.");
   }
 
   if (parsed) {
@@ -102,7 +124,7 @@ export function validateAssetUrl(rawUrl: string | null | undefined): AssetValida
 
   if (url.length > 2000) warnings.push("Asset URL is unusually long.");
 
-  return { isValid: errors.length === 0, errors: unique(errors), warnings };
+  return { isValid: errors.length === 0, errors: unique(errors), warnings: unique(warnings) };
 }
 
 export function isAssetUrlSafe(url: string | null | undefined): boolean {

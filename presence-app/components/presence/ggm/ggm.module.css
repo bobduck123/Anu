@@ -2758,13 +2758,14 @@
 .fieldContent {
   position: absolute;
   inset: 0;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
   padding: 0 clamp(1rem, 2vw, 2rem) clamp(3rem, 6vw, 4.6rem);
   color: #fff;
-  mix-blend-mode: difference;
+  text-shadow: 0 1px 8px rgba(16, 12, 10, 0.7);
   pointer-events: none;
   text-align: center;
   gap: 0.35rem;
@@ -3010,6 +3011,15 @@
   color: inherit;
   text-align: inherit;
   display: block;
+}
+
+.fieldClickPlate::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: min(40%, 21rem);
+  background: linear-gradient(0deg, rgba(15, 13, 12, 0.62), rgba(15, 13, 12, 0));
+  pointer-events: none;
 }
 
 .fieldClickPlate:focus-visible {

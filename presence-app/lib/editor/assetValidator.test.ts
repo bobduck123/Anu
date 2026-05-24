@@ -21,3 +21,15 @@ test("validateAssetUrl blocks local paths, internal hosts, script payloads, and 
     assert.equal(validateAssetUrl(value).isValid, false, value);
   }
 });
+
+test("validateAssetUrl warns for signed image CDN links without blocking them", () => {
+  const result = validateAssetUrl("https://images.cloudfront.net/room/hero.webp?X-Amz-Signature=abc123&X-Amz-Expires=600");
+  assert.equal(result.isValid, true);
+  assert.equal(result.warnings.some((warning) => warning.includes("may expire")), true);
+});
+
+test("validateAssetUrl still blocks actual secret parameters on signed CDN hosts", () => {
+  const result = validateAssetUrl("https://images.cloudfront.net/room/hero.webp?X-Amz-Signature=abc123&access_token=private");
+  assert.equal(result.isValid, false);
+  assert.equal(result.errors.some((error) => error.includes("raw secrets")), true);
+});

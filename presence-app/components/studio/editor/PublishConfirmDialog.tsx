@@ -28,7 +28,7 @@ export default function PublishConfirmDialog({
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-200/70">Open room to visitors</p>
-            <h2 className="mt-1 text-xl font-semibold">Publish this draft?</h2>
+            <h2 className="mt-1 text-xl font-semibold">Open this draft room?</h2>
           </div>
           <button type="button" disabled={publishing} onClick={onCancel} className="rounded-full p-2 text-stone-400 hover:bg-white/5 hover:text-stone-100 disabled:opacity-50">
             <X className="h-4 w-4" />
@@ -36,17 +36,17 @@ export default function PublishConfirmDialog({
         </div>
         <div className="grid gap-4 px-5 py-5">
           <div className="rounded-2xl border border-amber-200/20 bg-amber-200/10 p-3 text-sm leading-6 text-amber-50">
-            This will archive the current live config and publish the saved draft. Draft preview access stays owner-only.
+            This opens your saved draft to visitors as the live room. Your earlier live room remains available to restore, and draft preview remains private.
           </div>
           <div className="grid gap-2 text-xs text-stone-300 sm:grid-cols-3">
-            <Metric label="Live version" value={publishedVersion ? `v${publishedVersion}` : "None"} />
-            <Metric label="Draft version" value={draftVersion ? `v${draftVersion}` : "Unsaved"} />
+            <Metric label="Live room" value={publishedVersion ? "Open" : "Not opened"} />
+            <Metric label="Draft room" value={draftVersion ? "Saved" : "Unsaved"} />
             <Metric label="Readiness" value={readiness ? `${readiness.percentage}%` : "Unknown"} />
           </div>
           {criticalCount > 0 && (
             <div className="flex gap-2 rounded-2xl border border-red-300/30 bg-red-950/30 p-3 text-sm text-red-100">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-              Resolve {criticalCount} critical readiness {criticalCount === 1 ? "issue" : "issues"} before publishing.
+              Fix {criticalCount} item{criticalCount === 1 ? "" : "s"} that need attention before opening the room.
             </div>
           )}
           <div className="flex flex-wrap justify-end gap-2">

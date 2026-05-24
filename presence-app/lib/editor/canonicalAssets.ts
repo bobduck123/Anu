@@ -110,16 +110,14 @@ function ggmBundle(rendererKey: string): CanonicalAssetBundle {
 }
 
 /**
- * Returns true when the editable config has zero artworks AND zero
- * hero image — the case where the editor sees "missing" but the live
- * room still renders thanks to the renderer's canonical fallbacks.
+ * Returns true when the editable config has no editable work-wall rows.
+ * A separately changed draft cover image must not hide the action that
+ * imports the live wall into the editable draft.
  */
 export function isAssetConfigEmpty(config: PresenceEditableConfig): boolean {
   const asset = asRecord(config.asset_config);
-  const hero = asRecord(asset.hero_image);
-  const heroUrl = textOf(hero.url);
   const artworks = Array.isArray(asset.artworks) ? asset.artworks : [];
-  return !heroUrl && artworks.length === 0;
+  return artworks.length === 0;
 }
 
 /**
@@ -144,7 +142,7 @@ export function applyCanonicalBundle(
     ...config,
     asset_config: {
       ...asset,
-      hero_image: bundle.hero ?? asset.hero_image ?? null,
+      hero_image: textOf(asRecord(asset.hero_image).url) ? asset.hero_image : bundle.hero ?? null,
       artworks: bundle.artworks,
       public_assets_only: true,
     },
