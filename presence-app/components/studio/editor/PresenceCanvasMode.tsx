@@ -22,21 +22,28 @@ import type { PresenceEditableConfig, PresenceEditorAsset, PresenceNode } from "
 import type { ReadinessIssue, ReadinessReport } from "@/lib/editor/readiness";
 import type { CanonicalAssetBundle } from "@/lib/editor/canonicalAssets";
 import { validateAssetUrl } from "@/lib/editor/assetValidator";
+import { resolveRenderModel } from "@/lib/presence/render/resolver";
+import type { PresenceRenderModel } from "@/lib/presence/render/model";
+import { getOptionPack } from "@/lib/presence/option-packs/registry";
+import { fontLoaderHref, getFont, getFontPack } from "@/lib/presence/typography/registry";
+import { applyFontFamily, applyFontPack, applyOptionPack, updatePaletteToken, type PaletteToken } from "@/lib/editor/canvasMutations";
+import { WidgetLibraryDrawer } from "./canvas/WidgetLibraryDrawer";
+import { WidgetInspector } from "./canvas/WidgetInspector";
 import {
   activeMoodId,
   activeMotionId,
   applyCanvasMood,
   applyCanvasMotion,
   buildCanvasImageCandidates,
-  buildCanvasRegistry,
+  buildCanvasRegistryFromRenderModel,
   CANVAS_MOOD_PRESETS,
   CANVAS_MOTION_PRESETS,
   canvasTargetForIssue,
-  canvasTextCss,
-  getCanvasImage,
-  getCanvasText,
+  resolvedCanvasTextCss,
+  getResolvedCanvasText,
   getCanvasTextStyle,
-  getCanvasWorks,
+  getResolvedCanvasImage,
+  getResolvedCanvasWorks,
   reorderCanvasWorks,
   replaceCanvasImage,
   updateCanvasAltText,
@@ -94,10 +101,19 @@ export default function PresenceCanvasMode({
   const [imagePickerTarget, setImagePickerTarget] = useState<string | null>(null);
   const [moveWallOpen, setMoveWallOpen] = useState(false);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
-  const registry = useMemo(() => buildCanvasRegistry(config, node), [config, node]);
+  const renderModel = useMemo(
+    () => resolveRenderModel({ ...node, editable_config: { ...config, status: "draft" } }, "draft"),
+    [config, node],
+  );
+  const registry = useMemo(() => buildCanvasRegistryFromRenderModel(renderModel), [renderModel]);
   const selected = registry.find((element) => element.canvasId === selectedId) ?? null;
-  const ggmVisible = (config.renderer_key ?? node.renderer_key) === "ggm-faithful-room-v1";
-  const palette = canvasPalette(config);
+  const ggmVisible = renderModel.identity.rendererKey === "ggm-faithful-room-v1";
+  const palette = canvasPalette(renderModel);
+  const activeWidgetTypes = useMemo(
+    () => new Set(renderModel.scenes.flatMap((item) => item.widgets.map((widget) => widget.type))),
+    [renderModel],
+  );
+  const fontHref = fontLoaderHref(renderModel.typography.headingFontId.value, renderModel.typography.bodyFontId.value);
   const issuesByTarget = useMemo(() => {
     const mapped = new Map<string, ReadinessIssue[]>();
     for (const issue of readiness?.issues ?? []) {
@@ -168,6 +184,7 @@ export default function PresenceCanvasMode({
   const inspectorProps: InspectorProps = {
     node,
     config,
+    renderModel,
     selected,
     saving,
     ggmVisible,
@@ -187,11 +204,25 @@ export default function PresenceCanvasMode({
       const preset = CANVAS_MOTION_PRESETS.find((option) => option.id === presetId);
       if (preset) void commit((draft) => applyCanvasMotion(draft, preset), "Motion saved to your draft room.");
     },
+    onFontPack: (packId) => {
+      const pack = getFontPack(packId);
+      if (pack) void commit((draft) => applyFontPack(draft, pack), "Font saved to your draft room.");
+    },
+    onFontFamily: (target, fontId) => {
+      const font = getFont(fontId);
+      if (font) void commit((draft) => applyFontFamily(draft, target, font), "Font saved to your draft room.");
+    },
+    onPalette: (token, value) => void commit((draft) => updatePaletteToken(draft, token, value), "Colours saved to your draft room."),
+    onOptionPack: (packId) => {
+      const pack = getOptionPack(packId);
+      if (pack) void commit((draft) => applyOptionPack(draft, pack), "Mood saved to your draft room.");
+    },
     onBringImages: onSyncCanonical,
   };
 
   return (
     <div className="grid gap-4">
+      {fontHref && <link rel="stylesheet" href={fontHref} />}
       <section
         data-testid="pilot-banner"
         className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-amber-200/20 bg-amber-200/10 px-4 py-3"
@@ -212,6 +243,8 @@ export default function PresenceCanvasMode({
           Advanced controls
         </button>
       </section>
+
+      <WidgetLibraryDrawer activeWidgetTypes={activeWidgetTypes} />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_21rem]">
         <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-black/30">
@@ -251,9 +284,10 @@ export default function PresenceCanvasMode({
           )}
 
           <div className="px-4 pb-4 pt-4">
-            <CanvasStage
-              node={node}
-              config={config}
+          <CanvasStage
+            node={node}
+            config={config}
+            model={renderModel}
               palette={palette}
               scene={scene}
               selectedId={selectedId}
@@ -309,6 +343,7 @@ export default function PresenceCanvasMode({
       {imagePickerTarget && (
         <CanvasAssetPicker
           target={registry.find((element) => element.canvasId === imagePickerTarget) ?? null}
+          renderModel={renderModel}
           config={config}
           node={node}
           assets={assets}
@@ -330,6 +365,7 @@ export default function PresenceCanvasMode({
         <WorkWallReorder
           node={node}
           config={config}
+          renderModel={renderModel}
           saving={saving}
           showCanonicalSync={showCanonicalSync}
           onBringImages={onSyncCanonical}
@@ -357,6 +393,7 @@ const SCENES: Array<{ id: CanvasSceneId; label: string }> = [
 function CanvasStage({
   node,
   config,
+  model,
   palette,
   scene,
   selectedId,
@@ -371,6 +408,7 @@ function CanvasStage({
 }: {
   node: PresenceNode;
   config: PresenceEditableConfig;
+  model: PresenceRenderModel;
   palette: CanvasPalette;
   scene: CanvasSceneId;
   selectedId: string | null;
@@ -383,9 +421,9 @@ function CanvasStage({
   onCancelText: () => void;
   onMoveWall: () => void;
 }) {
-  const registry = buildCanvasRegistry(config, node);
+  const registry = buildCanvasRegistryFromRenderModel(model);
   const byId = (id: string) => registry.find((element) => element.canvasId === id)!;
-  const text = (id: string) => getCanvasText(config, node, id);
+  const text = (id: string) => getResolvedCanvasText(model, id);
   const common = (id: string) => ({
     element: byId(id),
     selected: selectedId === id,
@@ -393,7 +431,7 @@ function CanvasStage({
     onSelect,
     onEdit,
   });
-  const visibleWorks = getCanvasWorks(config, node).filter((work) => work.isVisible);
+  const visibleWorks = getResolvedCanvasWorks(model).filter((work) => work.isVisible);
   const stageStyle: CSSProperties = {
     background: palette.bg,
     color: palette.ink,
@@ -410,7 +448,7 @@ function CanvasStage({
       {scene === "artwork" && (
         <div className="grid min-h-[36rem] gap-5 p-5 sm:grid-cols-[minmax(0,1fr)_minmax(15rem,0.72fr)] sm:p-7">
           <SelectionFrame {...common("hero-image")} className="min-h-[21rem] overflow-hidden rounded-[1.5rem]">
-            <CanvasImage image={getCanvasImage(config, node, "hero-image")} label="Cover image" />
+            <CanvasImage image={getResolvedCanvasImage(model, "hero-image")} label="Cover image" />
           </SelectionFrame>
           <div className="flex flex-col justify-center gap-4">
             <EditableCanvasText
@@ -418,7 +456,7 @@ function CanvasStage({
               value={text("hero-title")}
               editing={editingId === "hero-title"}
               multiline={false}
-              style={canvasTextCss(config, "hero-title")}
+              style={resolvedCanvasTextCss(model, "hero-title")}
               className="text-4xl font-semibold leading-tight sm:text-5xl"
               onCommit={onCommitText}
               onCancel={onCancelText}
@@ -428,7 +466,7 @@ function CanvasStage({
               value={text("hero-caption")}
               editing={editingId === "hero-caption"}
               multiline={false}
-              style={{ color: palette.muted, ...canvasTextCss(config, "hero-caption") }}
+              style={{ color: palette.muted, ...resolvedCanvasTextCss(model, "hero-caption") }}
               className="text-base leading-7"
               onCommit={onCommitText}
               onCancel={onCancelText}
@@ -477,7 +515,7 @@ function CanvasStage({
                     value={work.title}
                     editing={editingId === `work-title:${work.slug}`}
                     multiline={false}
-                    style={canvasTextCss(config, `work-title:${work.slug}`)}
+                    style={resolvedCanvasTextCss(model, `work-title:${work.slug}`)}
                     className="mt-3 text-base font-semibold"
                     onCommit={onCommitText}
                     onCancel={onCancelText}
@@ -487,7 +525,7 @@ function CanvasStage({
                     value={work.caption || "Add a caption"}
                     editing={editingId === `work-caption:${work.slug}`}
                     multiline
-                    style={{ color: palette.muted, ...canvasTextCss(config, `work-caption:${work.slug}`) }}
+                    style={{ color: palette.muted, ...resolvedCanvasTextCss(model, `work-caption:${work.slug}`) }}
                     className="mt-2 text-xs leading-5"
                     onCommit={onCommitText}
                     onCancel={onCancelText}
@@ -506,7 +544,7 @@ function CanvasStage({
             value={text("practice-title")}
             editing={editingId === "practice-title"}
             multiline={false}
-            style={canvasTextCss(config, "practice-title")}
+            style={resolvedCanvasTextCss(model, "practice-title")}
             className="max-w-3xl text-4xl font-semibold"
             onCommit={onCommitText}
             onCancel={onCancelText}
@@ -516,7 +554,7 @@ function CanvasStage({
             value={text("biography") || "Add your biography"}
             editing={editingId === "biography"}
             multiline
-            style={canvasTextCss(config, "biography")}
+            style={resolvedCanvasTextCss(model, "biography")}
             className="max-w-3xl text-lg leading-8"
             onCommit={onCommitText}
             onCancel={onCancelText}
@@ -526,7 +564,7 @@ function CanvasStage({
             value={text("main-statement") || "Add your statement"}
             editing={editingId === "main-statement"}
             multiline
-            style={{ color: palette.accent, ...canvasTextCss(config, "main-statement") }}
+            style={{ color: palette.accent, ...resolvedCanvasTextCss(model, "main-statement") }}
             className="max-w-2xl border-l-2 pl-5 text-xl italic leading-8"
             onCommit={onCommitText}
             onCancel={onCancelText}
@@ -536,7 +574,7 @@ function CanvasStage({
             value={text("process-notes") || "Add process notes"}
             editing={editingId === "process-notes"}
             multiline
-            style={{ color: palette.muted, ...canvasTextCss(config, "process-notes") }}
+            style={{ color: palette.muted, ...resolvedCanvasTextCss(model, "process-notes") }}
             className="max-w-2xl text-sm leading-7"
             onCommit={onCommitText}
             onCancel={onCancelText}
@@ -551,7 +589,7 @@ function CanvasStage({
             value={text("calling-title")}
             editing={editingId === "calling-title"}
             multiline={false}
-            style={canvasTextCss(config, "calling-title")}
+            style={resolvedCanvasTextCss(model, "calling-title")}
             className="max-w-2xl text-5xl font-semibold"
             onCommit={onCommitText}
             onCancel={onCancelText}
@@ -561,7 +599,7 @@ function CanvasStage({
             value={text("calling-body") || "Add an invitation note"}
             editing={editingId === "calling-body"}
             multiline
-            style={{ color: palette.muted, ...canvasTextCss(config, "calling-body") }}
+            style={{ color: palette.muted, ...resolvedCanvasTextCss(model, "calling-body") }}
             className="max-w-xl text-base leading-7"
             onCommit={onCommitText}
             onCancel={onCancelText}
@@ -571,7 +609,7 @@ function CanvasStage({
             value={text("invitation-cta")}
             editing={editingId === "invitation-cta"}
             multiline={false}
-            style={{ background: palette.accent, color: palette.paper, ...canvasTextCss(config, "invitation-cta") }}
+            style={{ background: palette.accent, color: palette.paper, ...resolvedCanvasTextCss(model, "invitation-cta") }}
             className="rounded-full px-7 py-4 text-sm font-semibold"
             onCommit={onCommitText}
             onCancel={onCancelText}
@@ -633,6 +671,11 @@ function SelectionFrame({
       {selected && (
         <span className="absolute left-2 top-2 z-10 rounded-full bg-amber-200 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-950">
           {element.label}
+        </span>
+      )}
+      {selected && element.provenance && element.provenance !== "authored" && (
+        <span className="absolute left-2 top-10 z-10 rounded-full bg-stone-900/80 px-2 py-1 text-[10px] font-semibold text-stone-100">
+          Using room default
         </span>
       )}
       {issue && (
@@ -830,6 +873,7 @@ function ToolbarButton({ icon, label, disabled, onClick }: { icon: ReactNode; la
 interface InspectorProps {
   node: PresenceNode;
   config: PresenceEditableConfig;
+  renderModel: PresenceRenderModel;
   selected: CanvasElement | null;
   saving: boolean;
   ggmVisible: boolean;
@@ -844,6 +888,10 @@ interface InspectorProps {
   onOpenMoveWall: () => void;
   onMood: (presetId: string) => void;
   onMotion: (presetId: string) => void;
+  onFontPack: (packId: string) => void;
+  onFontFamily: (target: "heading" | "body", fontId: string) => void;
+  onPalette: (token: PaletteToken, value: string) => void;
+  onOptionPack: (packId: string) => void;
   onBringImages: () => void;
 }
 
@@ -851,6 +899,7 @@ function CanvasInspector(props: InspectorProps) {
   const {
     node,
     config,
+    renderModel,
     selected,
     saving,
     ggmVisible,
@@ -865,6 +914,10 @@ function CanvasInspector(props: InspectorProps) {
     onOpenMoveWall,
     onMood,
     onMotion,
+    onFontPack,
+    onFontFamily,
+    onPalette,
+    onOptionPack,
     onBringImages,
   } = props;
   const blockedWork = Boolean(selected?.workSlug && showCanonicalSync);
@@ -917,7 +970,7 @@ function CanvasInspector(props: InspectorProps) {
               </button>
               <AltTextEditor
                 key={selected.canvasId}
-                initialValue={getCanvasImage(config, node, selected.canvasId).altText}
+                initialValue={getResolvedCanvasImage(renderModel, selected.canvasId).altText}
                 saving={saving}
                 onSave={onAltText}
               />
@@ -939,6 +992,17 @@ function CanvasInspector(props: InspectorProps) {
         </InspectorGroup>
       )}
 
+      <WidgetInspector
+        selected={selected}
+        model={renderModel}
+        saving={saving}
+        optionPackId={typeof config.style_dna?.option_pack_id === "string" ? config.style_dna.option_pack_id : null}
+        onFontPack={onFontPack}
+        onFontFamily={onFontFamily}
+        onPalette={onPalette}
+        onOptionPack={onOptionPack}
+      />
+
       <InspectorGroup title="Mood">
         {ggmVisible ? (
           <MoodControls config={config} saving={saving} onMood={onMood} />
@@ -953,7 +1017,14 @@ function CanvasInspector(props: InspectorProps) {
           </p>
         )}
         {ggmVisible ? (
-          <MotionControls config={config} saving={saving} onMotion={onMotion} />
+          <>
+            {renderModel.motion.safetyCapApplied && (
+              <p className="rounded-xl bg-amber-200/10 p-2 text-xs leading-5 text-amber-100">
+                Heavy motion is off. Your room shows the comfortable motion ceiling.
+              </p>
+            )}
+            <MotionControls config={config} saving={saving} onMotion={onMotion} />
+          </>
         ) : (
           <ComingSoon text="Motion presets are coming next for this room type." />
         )}
@@ -1182,6 +1253,7 @@ function CanvasActions({
 
 function CanvasAssetPicker({
   target,
+  renderModel,
   config,
   node,
   assets,
@@ -1191,6 +1263,7 @@ function CanvasAssetPicker({
   onChoose,
 }: {
   target: CanvasElement | null;
+  renderModel: PresenceRenderModel;
   config: PresenceEditableConfig;
   node: PresenceNode;
   assets: PresenceEditorAsset[];
@@ -1200,7 +1273,7 @@ function CanvasAssetPicker({
   onChoose: (url: string, altText: string) => void;
 }) {
   const candidates = buildCanvasImageCandidates(config, node, assets, canonicalBundle);
-  const current = target ? getCanvasImage(config, node, target.canvasId) : { url: "", altText: "" };
+  const current = target ? getResolvedCanvasImage(renderModel, target.canvasId) : { url: "", altText: "" };
   const [url, setUrl] = useState("");
   const [altText, setAltText] = useState(current.altText);
   const [warning, setWarning] = useState<string | null>(null);
@@ -1290,6 +1363,7 @@ function CanvasAssetPicker({
 function WorkWallReorder({
   node,
   config,
+  renderModel,
   saving,
   showCanonicalSync,
   onBringImages,
@@ -1298,13 +1372,14 @@ function WorkWallReorder({
 }: {
   node: PresenceNode;
   config: PresenceEditableConfig;
+  renderModel: PresenceRenderModel;
   saving: boolean;
   showCanonicalSync: boolean;
   onBringImages: () => void;
   onClose: () => void;
   onSave: (order: string[]) => void;
 }) {
-  const works = getCanvasWorks(config, node).filter((work) => work.isVisible);
+  const works = getResolvedCanvasWorks(renderModel).filter((work) => work.isVisible);
   const [order, setOrder] = useState(() => works.map((work) => work.slug));
   const [dragging, setDragging] = useState<string | null>(null);
   const bySlug = new Map(works.map((work) => [work.slug, work]));
@@ -1443,22 +1518,13 @@ interface CanvasPalette {
   accent: string;
 }
 
-function canvasPalette(config: PresenceEditableConfig): CanvasPalette {
-  const palette = objectValue(objectValue(config.style_dna).palette);
+function canvasPalette(model: PresenceRenderModel): CanvasPalette {
   return {
-    bg: stringValue(palette.bg) || "#f4f4f4",
-    paper: stringValue(palette.paper) || "#eceae7",
-    ink: stringValue(palette.ink) || "#111111",
-    muted: stringValue(palette.muted) || "#6a6a6a",
-    line: stringValue(palette.line) || "#d7d2c8",
-    accent: stringValue(palette.accent) || "#b87938",
+    bg: model.palette.bg.value,
+    paper: model.palette.paper.value,
+    ink: model.palette.ink.value,
+    muted: model.palette.muted.value,
+    line: model.palette.line.value,
+    accent: model.palette.accent.value,
   };
-}
-
-function objectValue(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
-}
-
-function stringValue(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
 }

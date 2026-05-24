@@ -10,6 +10,7 @@ import { PRESENCE_GRAPH_COPY, roomKeyTypeLabel } from "@/lib/presence/graph/copy
 import type { RoomKeyEntryPayload } from "@/lib/api/types";
 import { isGgmFaithfulRoom } from "@/lib/presence/ggm/activate";
 import GgmFaithfulRoom from "@/components/presence/ggm/GgmFaithfulRoom";
+import { resolveRenderModel } from "@/lib/presence/render/resolver";
 import { PresenceGraphActions } from "./PresenceGraphActions";
 
 export function RoomKeyEntry({ token }: { token: string }) {
@@ -90,7 +91,50 @@ export function RoomKeyEntry({ token }: { token: string }) {
   // chip at the top instead of the generic dark stone shell. The visitor
   // should immediately see Christina's work, not a Presence-system page.
   if (isGgmFaithfulRoom(room)) {
-    return <GgmFaithfulRoom node={room} roomKeySourceLabel={sourceLabel} />;
+    const model = resolveRenderModel(room, "published");
+    return (
+      <>
+        <GgmFaithfulRoom node={room} model={model} roomKeySourceLabel={sourceLabel} />
+        <aside
+          className="fixed inset-x-3 bottom-3 z-50 max-h-[58svh] overflow-y-auto rounded-2xl border border-white/15 bg-black/75 p-3 text-stone-50 shadow-2xl backdrop-blur-md sm:left-auto sm:w-[30rem]"
+          aria-label="Room Key actions"
+          style={{
+            "--room-bg": model.palette.bg.value,
+            "--room-surface": model.palette.paper.value,
+            "--room-elevated": model.palette.paper.value,
+            "--room-text": model.palette.ink.value,
+            "--room-muted": model.palette.muted.value,
+            "--room-border": model.palette.line.value,
+            "--room-accent": model.palette.accent.value,
+            "--room-accent-text": model.palette.paper.value,
+            "--room-soft": model.palette.paperWarm.value,
+          } as CSSProperties}
+        >
+          <div className="flex items-center justify-between gap-3 px-4 pt-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-200">
+              {PRESENCE_GRAPH_COPY.roomEntry}
+            </p>
+            <Link
+              href={`/presence/${room.slug}`}
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-stone-950"
+            >
+              Enter Room
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+          </div>
+          <PresenceGraphActions
+            node={room}
+            compact
+            captureOnMount={!payload.encounter}
+            entryContextOverride={{
+              source: payload.room_key?.key_type || "short_link",
+              roomKeyToken: token,
+              contextLabel: payload.room_key?.campaign_label || null,
+            }}
+          />
+        </aside>
+      </>
+    );
   }
 
   return (

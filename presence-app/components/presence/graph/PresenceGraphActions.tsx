@@ -58,10 +58,12 @@ export function PresenceGraphActions({
   node,
   captureOnMount = true,
   entryContextOverride,
+  compact = false,
 }: {
   node: PresenceNode;
   captureOnMount?: boolean;
   entryContextOverride?: Partial<EntryContext>;
+  compact?: boolean;
 }) {
   const [auth, setAuth] = useState<AuthState>({ token: null, observer: null, checked: false });
   const [entryContext, setEntryContext] = useState<EntryContext>({
@@ -316,9 +318,9 @@ export function PresenceGraphActions({
 
         <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <ActionButton label={saved ? "Saved" : "Save Room"} icon={<Bookmark className="h-4 w-4" />} busy={busy === "save"} onClick={saveCurrentRoom} />
-          <ActionButton label={following ? "Following" : "Follow"} icon={<Heart className="h-4 w-4" />} busy={busy === "follow"} onClick={followCurrentRoom} />
+          {!compact && <ActionButton label={following ? "Following" : "Follow"} icon={<Heart className="h-4 w-4" />} busy={busy === "follow"} onClick={followCurrentRoom} />}
           <ActionButton label="Add to Mood Board" icon={<FolderPlus className="h-4 w-4" />} busy={busy === "board"} onClick={openBoardChooser} />
-          <ActionButton label="Field Note" icon={<PenLine className="h-4 w-4" />} busy={busy === "note"} onClick={() => document.getElementById("presence-field-note")?.focus()} />
+          {!compact && <ActionButton label="Field Note" icon={<PenLine className="h-4 w-4" />} busy={busy === "note"} onClick={() => document.getElementById("presence-field-note")?.focus()} />}
         </div>
 
         {actionHint && (
@@ -328,7 +330,7 @@ export function PresenceGraphActions({
         )}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+      {!compact && <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="rounded-2xl border border-[var(--room-border)] bg-[var(--room-surface)] p-4">
           <div className="flex items-center gap-2">
             <PenLine className="h-4 w-4 text-[var(--room-accent)]" />
@@ -387,7 +389,7 @@ export function PresenceGraphActions({
             ))}
           </div>
         </div>
-      </div>
+      </div>}
 
       {boardOpen && (
         <div className="rounded-2xl border border-[var(--room-border)] bg-[var(--room-surface)] p-4">

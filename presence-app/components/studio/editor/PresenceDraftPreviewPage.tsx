@@ -143,7 +143,7 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
       </div>
 
       <div className={mode === "mobile" ? "mx-auto min-h-dvh max-w-[430px] overflow-hidden border-x border-white/15 bg-black shadow-2xl" : "min-h-dvh"}>
-        <PortfolioRenderer node={previewNode} />
+        <PortfolioRenderer node={previewNode} renderMode="draft" />
       </div>
 
       <PublishConfirmDialog
@@ -171,7 +171,7 @@ function PreviewState({ label }: { label: string }) {
 function draftNodeForRenderer(node: PresenceNode, config: PresenceEditableConfig): PresenceNode {
   const rendererConfig: PresenceEditableConfig = {
     ...config,
-    status: "published",
+    status: "draft",
   };
   return {
     ...node,

@@ -1,0 +1,75 @@
+{
+  "artifact": "presence-canvas-builder-v2-wired-proof",
+  "date": "2026-05-24",
+  "scope": "Shared render-model wiring for GGM Canvas, draft preview, public route and RoomKey",
+  "result": "passed_with_documented_limitations",
+  "tests": [
+    {
+      "name": "Frontend typecheck",
+      "command": "npm.cmd run typecheck",
+      "cwd": "presence-app",
+      "status": "passed"
+    },
+    {
+      "name": "Production build",
+      "command": "npm.cmd run build",
+      "cwd": "presence-app",
+      "status": "passed",
+      "notes": "Existing Next multiple-lockfile workspace-root warning emitted."
+    },
+    {
+      "name": "Frontend focused unit and contract tests",
+      "command": "node --test --experimental-strip-types lib/presence/render/resolver.test.ts lib/presence/widgets/registry.test.ts lib/presence/option-packs/registry.test.ts lib/presence/typography/registry.test.ts lib/editor/canvasModel.test.ts lib/editor/canvasMutations.test.ts lib/editor/assetValidator.test.ts lib/editor/diffEngine.test.ts lib/api/editor.test.ts lib/api/presenceGraph.test.ts",
+      "cwd": "presence-app",
+      "status": "passed",
+      "passed": 31,
+      "failed": 0,
+      "notes": "Node reports existing module-type reparsing warnings for TypeScript tests."
+    },
+    {
+      "name": "Backend editor, graph and RoomKey/public boundary tests",
+      "command": "python -m pytest tests/test_presence_studio_editor_foundation.py tests/test_presence_graph_integration_proof.py tests/test_presence_pass_paths.py -q -p no:cacheprovider",
+      "cwd": "flora-fauna/backend",
+      "status": "passed",
+      "passed": 12,
+      "failed": 0,
+      "notes": "Existing SQLAlchemy Query.get legacy warnings emitted."
+    },
+    {
+      "name": "Canvas, Studio, RoomKey and public-route end-to-end flows",
+      "command": "npx.cmd playwright test tests/e2e/canvas-builder-parity.spec.ts tests/e2e/presence-canvas-direct-manipulation.spec.ts tests/e2e/presence-studio-editor.spec.ts tests/e2e/presence-pass-paths.spec.ts --workers=1",
+      "cwd": "presence-app",
+      "status": "passed",
+      "passed": 15,
+      "failed": 0,
+      "browser": "chromium"
+    },
+    {
+      "name": "Diff whitespace check",
+      "command": "git diff --check",
+      "cwd": "presence-app",
+      "status": "passed"
+    }
+  ],
+  "verified": {
+    "canvas_reads_draft_model": true,
+    "full_preview_reads_draft_model": true,
+    "public_reads_published_model": true,
+    "roomkey_reads_published_model": true,
+    "roomkey_guest_actions_and_inactive_state_retained": true,
+    "draft_title_hidden_from_public_before_publish": true,
+    "published_title_visible_after_publish": true,
+    "published_option_pack_palette_visible_after_publish": true,
+    "motion_cap_resolved_before_render": true,
+    "unsafe_asset_validation_retained": true,
+    "font_binary_bundling_introduced": false
+  },
+  "not_verified": {
+    "hosted_environment": true,
+    "paid_pilot_readiness": true,
+    "non_ggm_visual_parity": true,
+    "new_widget_insertion": true,
+    "additional_gallery_layouts": true,
+    "upload_crop_focal_point": true
+  }
+}

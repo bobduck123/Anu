@@ -44,7 +44,7 @@ test("pilot owner edits the draft room directly on Canvas and publishes intentio
   await page.getByRole("button", { name: "Practice" }).click();
   await page.locator('[data-canvas-id="main-statement"]').click();
   await inspector.getByRole("button", { name: "Accent" }).click();
-  await inspector.getByRole("button", { name: "Warm" }).click();
+  await page.getByTestId("canvas-mood-controls").getByRole("button", { name: "Warm", exact: true }).click();
   await expect(page.getByTestId("draft-save-feedback")).toContainText("Mood saved");
   await page.screenshot({ path: path.join(evidenceDir, "mood-and-text-style-on-canvas.png"), fullPage: true });
 

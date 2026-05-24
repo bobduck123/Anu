@@ -17,16 +17,16 @@ import { useMemo } from "react";
 import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import type { PresenceNode, PresenceWork } from "@/lib/api/types";
+import type { PresenceNode } from "@/lib/api/types";
 import { PublicEnquiryDialog } from "@/components/portfolio/PublicEnquiryDialog";
 import {
   GGM_ARTIST,
-  GGM_HERO_SEQUENCE,
   GGM_INSPIRE,
   GGM_LIVE_DEMO_URL,
   GGM_STRANDS,
-  GGM_WORKS,
+  type GgmArtist,
   type GgmWork,
+  type InspireCard,
 } from "@/lib/presence/ggm/source";
 import { GgmStage, type SceneDef } from "./GgmStage";
 import { GgmMotionProvider } from "./GgmMotionContext";
@@ -34,47 +34,172 @@ import { GgmStudioScene } from "./GgmStudioScene";
 import { GgmCallingCard } from "./GgmCallingCard";
 import { GgmReveal } from "./GgmReveal";
 import { GgmWorkDetail } from "./GgmWorkDetail";
-import { buildGgmEditableModel, type GgmEditableModel } from "@/lib/presence/ggm/editable";
+import { resolveRenderModel } from "@/lib/presence/render/resolver";
+import type { PresenceRenderModel, RenderWork, TextStyle } from "@/lib/presence/render/model";
+import { fontLoaderHref } from "@/lib/presence/typography/registry";
+import { textStyleCss } from "@/lib/editor/canvasModel";
 import styles from "./ggm.module.css";
 
 interface GgmFaithfulRoomProps {
   node: PresenceNode;
   roomKeySourceLabel?: string | null;
   focusWorkSlug?: string | null;
+  model?: PresenceRenderModel;
 }
 
-function buildWorks(node: PresenceNode): GgmWork[] {
-  const backendWorks = (node.works ?? []).filter((w) => w.is_visible !== false);
-  if (backendWorks.length === 0) return GGM_WORKS;
-  return backendWorks.map((w, idx) => coerceWork(w, idx));
-}
-
-function coerceWork(w: PresenceWork, idx: number): GgmWork {
-  const matched = GGM_WORKS.find(
-    (c) => c.title.toLowerCase() === (w.title ?? "").toLowerCase(),
+export default function GgmFaithfulRoom(props: GgmFaithfulRoomProps) {
+  const renderModel = useMemo(
+    () => props.model ?? resolveRenderModel(props.node, "published"),
+    [props.model, props.node],
   );
-  if (matched) {
-    return {
-      ...matched,
-      title: w.title ?? matched.title,
-      year: typeof w.year === "number" ? w.year : matched.year,
-      image: w.image_url ?? matched.image,
-      thumb: w.thumbnail_url ?? w.image_url ?? matched.thumb,
-      description: w.description ?? matched.description,
-    };
-  }
-  const slug = String(w.id ?? idx);
+  const model = useMemo(() => ggmViewFromRenderModel(props.node, renderModel), [props.node, renderModel]);
+  const fontHref = fontLoaderHref(
+    renderModel.typography.headingFontId.value,
+    renderModel.typography.bodyFontId.value,
+  );
+  const { model: _suppliedModel, ...roomProps } = props;
+  return (
+    <GgmMotionProvider initialSettings={model.motion} localStorageEnabled={false}>
+      {fontHref && <link rel="stylesheet" href={fontHref} />}
+      <Room {...roomProps} model={model} />
+    </GgmMotionProvider>
+  );
+}
+
+interface GgmResolvedView {
+  artist: GgmArtist;
+  works: GgmWork[];
+  heroSlides: GgmWork[];
+  copy: {
+    brand: string;
+    artworkTitle: string;
+    artworkCaption: string;
+    wallTitle: string;
+    wallLead: string;
+    aboutIntro: string;
+    aboutBody: string;
+    processNotes: string;
+    practiceTitle: string;
+    callingTitle: string;
+    callingCopy: string;
+    enquiryCta: string;
+  };
+  practice: {
+    strands: Array<{ title: string; body: string }>;
+    inspire: InspireCard[];
+  };
+  contact: {
+    externalLink: { label: string; href: string } | null;
+    availability: string | null;
+    showDirectEmail: boolean;
+  };
+  roomKey: {
+    provenanceChipText: string | null;
+  };
+  motion: Partial<import("./GgmMotionContext").GgmMotionSettings>;
+  styleVars: CSSProperties;
+  elementStyles: Record<string, CSSProperties>;
+}
+
+function ggmViewFromRenderModel(node: PresenceNode, model: PresenceRenderModel): GgmResolvedView {
+  const works = model.works.filter((work) => work.visible).map(toGgmWork);
+  const heroSlides = model.hero.slides.filter((work) => work.visible).map(toGgmWork);
+  const biography = widgetText(model, "biography");
+  const statement = widgetText(model, "main-statement");
+  const calling = widgetRecord(model, "calling-body");
+  const palette = {
+    ink: model.palette.ink.value,
+    muted: model.palette.muted.value,
+    paper: model.palette.paper.value,
+    accent: model.palette.accent.value,
+  };
+
   return {
-    id: slug,
-    slug,
-    title: w.title ?? "Untitled",
-    year: typeof w.year === "number" ? w.year : Number(w.year) || 0,
-    medium: w.medium ?? "Watercolour on paper",
-    dimensions: "Unknown",
-    image: w.image_url ?? w.thumbnail_url ?? "/ggm/works/willow-of-port-arthur-2019.webp",
-    thumb: w.thumbnail_url ?? w.image_url ?? "/ggm/thumbs/willow-of-port-arthur-2019.webp",
-    alt: w.title ?? "Watercolour work",
-    description: w.description ?? "",
+    artist: {
+      ...GGM_ARTIST,
+      name: model.identity.displayName.value,
+      subtitle: model.identity.headline.value,
+      location: node.location_label || GGM_ARTIST.location,
+      aboutIntro: biography || GGM_ARTIST.aboutIntro,
+      aboutBody: statement || GGM_ARTIST.aboutBody,
+      statementQuote: statement || GGM_ARTIST.statementQuote,
+    },
+    works,
+    heroSlides: heroSlides.length > 0 ? heroSlides : works,
+    copy: {
+      brand: model.identity.displayName.value,
+      artworkTitle: widgetText(model, "hero-title"),
+      artworkCaption: widgetText(model, "hero-caption"),
+      wallTitle: widgetText(model, "work-wall-title"),
+      wallLead: textValue(widgetRecord(model, "work-wall").lead),
+      aboutIntro: biography,
+      aboutBody: statement,
+      processNotes: widgetText(model, "process-notes"),
+      practiceTitle: widgetText(model, "practice-title"),
+      callingTitle: widgetText(model, "calling-title"),
+      callingCopy: textValue(calling.copy),
+      enquiryCta: textValue(widgetRecord(model, "invitation-cta").label),
+    },
+    practice: {
+      strands: readStrands(widgetRecord(model, "studio-fragments").fragments),
+      inspire: GGM_INSPIRE,
+    },
+    contact: {
+      externalLink: readExternalLink(calling.externalLinks),
+      availability: textValue(calling.availability) || null,
+      showDirectEmail: calling.showDirectEmail === true,
+    },
+    roomKey: {
+      provenanceChipText: model.roomKey.provenanceChipText.value,
+    },
+    motion: {
+      liquidStyle: model.motion.liquidStyle.value,
+      liquidIntensity: model.motion.liquidIntensity.value,
+      liquidDistortion: model.motion.liquidDistortion.value,
+      liquidDurationMs: model.motion.liquidDurationMs.value,
+      ditherStrength: model.motion.ditherStrength.value,
+      filmGrainStrength: model.motion.filmGrainStrength.value,
+      blurAmount: model.motion.blurAmount.value,
+      parallaxDepth: model.motion.parallaxDepth.value,
+      customCursor: model.motion.customCursor.value,
+      heavyMotion: model.motion.heavyMotion.value,
+    },
+    styleVars: {
+      "--ggm-bg": model.palette.bg.value,
+      "--ggm-paper": model.palette.paper.value,
+      "--ggm-paper-soft": model.palette.paper.value,
+      "--ggm-paper-warm": model.palette.paperWarm.value,
+      "--ggm-ink": model.palette.ink.value,
+      "--ggm-muted": model.palette.muted.value,
+      "--ggm-line": model.palette.line.value,
+      "--ggm-stage": model.palette.stage.value,
+      "--ggm-display-family": model.typography.headingFamily.value,
+      "--ggm-body-family": model.typography.bodyFamily.value,
+    } as CSSProperties,
+    elementStyles: Object.fromEntries(
+      Object.entries(model.elementStyles).map(([id, style]) => [
+        id,
+        textStyleCss(
+          id === "hero-title" || id === "hero-caption" ? { ...style, color: undefined } : style as TextStyle,
+          palette,
+        ),
+      ]),
+    ),
+  };
+}
+
+function toGgmWork(work: RenderWork): GgmWork {
+  return {
+    id: work.slug,
+    slug: work.slug,
+    title: work.title,
+    year: Number(work.year) || 0,
+    medium: work.medium,
+    dimensions: work.dimensions,
+    image: work.asset.url,
+    thumb: work.asset.thumbnailUrl,
+    alt: work.asset.altText,
+    description: work.description,
     context: "",
     process: "",
     memory: "",
@@ -82,16 +207,45 @@ function coerceWork(w: PresenceWork, idx: number): GgmWork {
   };
 }
 
-export default function GgmFaithfulRoom(props: GgmFaithfulRoomProps) {
-  const model = useMemo(() => buildGgmEditableModel(props.node), [props.node]);
-  return (
-    <GgmMotionProvider initialSettings={model.motion} localStorageEnabled={!model.config}>
-      <Room {...props} model={model} />
-    </GgmMotionProvider>
-  );
+function widgetRecord(model: PresenceRenderModel, id: string): Record<string, unknown> {
+  const widget = model.scenes.flatMap((scene) => scene.widgets).find((item) => item.id === id);
+  return widget && widget.config && typeof widget.config === "object"
+    ? widget.config as Record<string, unknown>
+    : {};
 }
 
-function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: GgmFaithfulRoomProps & { model: GgmEditableModel }) {
+function widgetText(model: PresenceRenderModel, id: string): string {
+  return textValue(widgetRecord(model, id).text);
+}
+
+function textValue(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function readStrands(value: unknown): Array<{ title: string; body: string }> {
+  return Array.isArray(value)
+    ? value.flatMap((row) => {
+        if (!row || typeof row !== "object") return [];
+        const item = row as Record<string, unknown>;
+        return [{ title: textValue(item.title), body: textValue(item.body) }];
+      })
+    : GGM_STRANDS;
+}
+
+function readExternalLink(value: unknown): { label: string; href: string } | null {
+  if (!Array.isArray(value)) return null;
+  for (const row of value) {
+    if (!row || typeof row !== "object") continue;
+    const item = row as Record<string, unknown>;
+    const href = textValue(item.url);
+    if (/^https?:\/\//i.test(href) && !/localhost|127\.0\.0\.1|\.local|\.internal/i.test(href)) {
+      return { href, label: textValue(item.label) || "External" };
+    }
+  }
+  return null;
+}
+
+function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: Omit<GgmFaithfulRoomProps, "model"> & { model: GgmResolvedView }) {
   const works = model.works;
 
   const hrefForWork = (w: GgmWork) =>
@@ -139,7 +293,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: GgmFaithfulRoo
   const externalPortfolio = model.contact.externalLink ?? pickExternalPortfolio(node);
 
   // Scene 01 cycles through the FULL ordered hero sequence (all 8
-  // works, ordered as in source GGM_HERO_SEQUENCE + the rest).
+  // works, ordered by the shared room model).
   const heroSlides = useMemo<GgmWork[]>(() => {
     return model.heroSlides.length > 0 ? model.heroSlides : works;
   }, [model.heroSlides, works]);
@@ -177,7 +331,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: GgmFaithfulRoo
       number: "02",
       label: "Work Wall",
       sub: "selected watercolours",
-      images: [wallWorks[1]?.image ?? GGM_WORKS[1].image],
+      images: [wallWorks[1]?.image ?? heroSlides[0]?.image ?? ""],
       surface: "wall",
       content: () => (
         <WorkWallSurface
@@ -194,7 +348,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: GgmFaithfulRoo
       number: "03",
       label: "Practice Studio",
       sub: "workbench, notes, references",
-      images: [wallWorks[2]?.image ?? GGM_WORKS[2].image],
+      images: [wallWorks[2]?.image ?? heroSlides[0]?.image ?? ""],
       surface: "studio",
       content: () => (
         <GgmStudioScene
@@ -214,7 +368,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: GgmFaithfulRoo
       number: "04",
       label: "Calling Card",
       sub: "an invitation",
-      images: [wallWorks[3]?.image ?? GGM_WORKS[3].image],
+      images: [wallWorks[3]?.image ?? heroSlides[0]?.image ?? ""],
       surface: "card",
       content: () => (
         <GgmCallingCard
@@ -244,6 +398,7 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: GgmFaithfulRoo
 
   return (
     <div className={styles.ggm} style={model.styleVars}>
+      <h1 className={styles.srOnly}>{brand}</h1>
       <GgmStage
         node={{ ...node, display_name: brand }}
         scenes={scenes}

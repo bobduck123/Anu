@@ -18,6 +18,7 @@ import { fallbackBlueprint } from "@/lib/presence/blueprints/registry";
 import { selectRoomWorld } from "@/lib/presence/world/select";
 import { isImplementedWorld } from "@/lib/presence/world/registry";
 import { GGM_RENDERER_KEY, resolveCustomRendererKey } from "@/lib/presence/ggm/activate";
+import type { PresenceRenderModel } from "@/lib/presence/render/model";
 
 import NocturnalSonicRoom from "./blueprints/NocturnalSonicRoom";
 import EditorialIdentityRoom from "./blueprints/EditorialIdentityRoom";
@@ -42,12 +43,14 @@ interface PresenceDnaRendererProps {
   // When true, skip the Pass 3 room-world dispatch and use the Pass 1/2
   // blueprint chain only. Reserved for fallback / debugging.
   forceLegacyBlueprints?: boolean;
+  renderModel?: PresenceRenderModel;
 }
 
 export default function PresenceDnaRenderer({
   node,
   forceBlueprint,
   forceLegacyBlueprints = false,
+  renderModel,
 }: PresenceDnaRendererProps) {
   const plan = useMemo(() => {
     const dnaResolved = resolvePresenceDna(node);
@@ -65,9 +68,9 @@ export default function PresenceDnaRenderer({
   // `forceBlueprint` escape hatch still bypasses the custom renderer so
   // Studio preview can compare against blueprint variants.
   if (!forceBlueprint) {
-    const customKey = resolveCustomRendererKey(node);
+    const customKey = renderModel?.identity.rendererKey ?? resolveCustomRendererKey(node);
     if (customKey === GGM_RENDERER_KEY) {
-      return <GgmFaithfulRoom node={node} />;
+      return <GgmFaithfulRoom node={node} model={renderModel} />;
     }
   }
 

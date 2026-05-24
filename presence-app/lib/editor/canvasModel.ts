@@ -7,6 +7,7 @@ import type {
 import type { CanonicalAssetBundle } from "./canonicalAssets";
 import type { ReadinessIssue } from "./readiness";
 import { validateAssetUrl } from "./assetValidator.ts";
+import type { PresenceRenderModel, Provenance, WidgetInstance } from "../presence/render/model.ts";
 
 export type CanvasSceneId = "artwork" | "wall" | "practice" | "invitation";
 export type CanvasElementKind = "text" | "image" | "work-wall";
@@ -23,13 +24,14 @@ export interface CanvasElement {
   readinessIds: string[];
   workSlug?: string;
   rendererVisible: boolean;
+  provenance?: Provenance;
 }
 
 export type CanvasTextSize = "small" | "medium" | "large" | "feature";
 export type CanvasTextWeight = "light" | "regular" | "bold";
 export type CanvasTextColor = "ink" | "muted" | "paper" | "accent";
 export type CanvasTextAlign = "left" | "center" | "right";
-export type CanvasFontMood = "editorial" | "display" | "soft" | "mono";
+export type CanvasFontMood = "editorial" | "display" | "soft" | "mono" | "handwritten";
 
 export interface CanvasTextStyle {
   size?: CanvasTextSize;
@@ -289,6 +291,103 @@ export function buildCanvasRegistry(config: PresenceEditableConfig, node: Presen
   return [...FIXED_ELEMENTS, ...dynamic];
 }
 
+export function buildCanvasRegistryFromRenderModel(model: PresenceRenderModel): CanvasElement[] {
+  const widgets = model.scenes.flatMap((scene) => scene.widgets);
+  const fixed = FIXED_ELEMENTS.map((element) => ({
+    ...element,
+    provenance: widgets.find((widget) => widget.id === element.canvasId)?.provenance ?? "canonical",
+  }));
+  const dynamic = model.works.filter((work) => work.visible).flatMap((work) => [
+    {
+      canvasId: `work-image:${work.slug}`,
+      label: `${work.title || "Work"} image`,
+      kind: "image" as const,
+      scene: "wall" as const,
+      controls: ["image", "alt-text", "reorder"] as CanvasControl[],
+      draftPath: `asset_config.artworks[${work.slug}].url`,
+      readinessIds: [`missing-alt-${work.slug}`],
+      workSlug: work.slug,
+      rendererVisible: true,
+    },
+    {
+      canvasId: `work-title:${work.slug}`,
+      label: `${work.title || "Work"} title`,
+      kind: "text" as const,
+      scene: "wall" as const,
+      controls: ["edit", "style", "reorder"] as CanvasControl[],
+      draftPath: `asset_config.artworks[${work.slug}].title`,
+      readinessIds: [],
+      workSlug: work.slug,
+      rendererVisible: true,
+    },
+    {
+      canvasId: `work-caption:${work.slug}`,
+      label: `${work.title || "Work"} caption`,
+      kind: "text" as const,
+      scene: "wall" as const,
+      controls: ["edit", "style"] as CanvasControl[],
+      multiline: true,
+      draftPath: `asset_config.artworks[${work.slug}].caption`,
+      readinessIds: [],
+      workSlug: work.slug,
+      rendererVisible: true,
+    },
+  ]);
+  return [...fixed, ...dynamic];
+}
+
+export function getResolvedCanvasText(model: PresenceRenderModel, canvasId: string): string {
+  const dynamic = splitDynamicId(canvasId);
+  if (dynamic) {
+    const work = model.works.find((item) => item.slug === dynamic.slug);
+    return dynamic.kind === "work-title" ? work?.title ?? "" : dynamic.kind === "work-caption" ? work?.description ?? "" : "";
+  }
+  const widget = widgetById(model, canvasId);
+  const config = record(widget?.config);
+  if (canvasId === "calling-body") return text(config.copy);
+  if (canvasId === "invitation-cta") return text(config.label);
+  return text(config.text);
+}
+
+export function getResolvedCanvasImage(model: PresenceRenderModel, canvasId: string): { url: string; altText: string } {
+  if (canvasId === "hero-image") {
+    const asset = record(record(widgetById(model, canvasId)?.config).asset);
+    return { url: text(asset.url), altText: text(asset.altText) };
+  }
+  const dynamic = splitDynamicId(canvasId);
+  const work = dynamic?.kind === "work-image" ? model.works.find((item) => item.slug === dynamic.slug) : null;
+  return { url: work?.asset.url ?? "", altText: work?.asset.altText ?? "" };
+}
+
+export function getResolvedCanvasWorks(model: PresenceRenderModel): CanvasWork[] {
+  return model.works.map((work) => ({
+    slug: work.slug,
+    title: work.title,
+    caption: work.description,
+    imageUrl: work.asset.url,
+    altText: work.asset.altText,
+    isVisible: work.visible,
+    source: {},
+  }));
+}
+
+export function resolvedCanvasTextCss(model: PresenceRenderModel, canvasId: string): CSSProperties {
+  const palette = Object.fromEntries(
+    Object.entries(model.palette).map(([key, value]) => [key === "stage" ? "hero_stage_bg" : key, value.value]),
+  );
+  const heading = canvasId === "hero-title" || canvasId === "practice-title" || canvasId === "calling-title" ||
+    canvasId === "invitation-cta" || canvasId.startsWith("work-title:");
+  const elementStyle = textStyleCss(model.elementStyles[canvasId] ?? {}, palette);
+  return {
+    ...elementStyle,
+    fontFamily: elementStyle.fontFamily ?? (heading ? model.typography.headingFamily.value : model.typography.bodyFamily.value),
+  };
+}
+
+function widgetById(model: PresenceRenderModel, id: string): WidgetInstance | undefined {
+  return model.scenes.flatMap((scene) => scene.widgets).find((widget) => widget.id === id);
+}
+
 export function getCanvasText(config: PresenceEditableConfig, node: PresenceNode, canvasId: string): string {
   switch (canvasId) {
     case "hero-title":
@@ -515,6 +614,7 @@ export function textStyleCss(style: CanvasTextStyle, palette: Record<string, unk
     display: "'Helvetica Neue', Arial, sans-serif",
     soft: "Georgia, 'Times New Roman', serif",
     mono: "'Cascadia Mono', 'Courier New', monospace",
+    handwritten: "'Segoe Print', 'Bradley Hand', cursive",
   }[style.fontMood] : undefined;
   return {
     fontSize: size,

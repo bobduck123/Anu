@@ -9,6 +9,7 @@ import { Chip } from "@/components/ui";
 import { isGgmFaithfulRoom } from "@/lib/presence/ggm/activate";
 import { ggmWorkBySlug } from "@/lib/presence/ggm/source";
 import GgmFaithfulRoom from "@/components/presence/ggm/GgmFaithfulRoom";
+import { resolveRenderModel } from "@/lib/presence/render/resolver";
 
 interface Props {
   params: Promise<{ slug: string; workId: string }>;
@@ -57,7 +58,7 @@ export default async function WorkDetailPage({ params }: Props) {
     try {
       const node = await fetchDemoOrPublicNode(slug);
       if (isGgmFaithfulRoom(node)) {
-        return <GgmFaithfulRoom node={node} focusWorkSlug={workId} />;
+        return <GgmFaithfulRoom node={node} model={resolveRenderModel(node, "published")} focusWorkSlug={workId} />;
       }
     } catch {
       // ignore — falls through to notFound below.
@@ -70,7 +71,7 @@ export default async function WorkDetailPage({ params }: Props) {
   // If the Room is GGM, prefer the faithful detail surface even when the
   // backend returned data.
   if (isGgmFaithfulRoom(node)) {
-    return <GgmFaithfulRoom node={node} focusWorkSlug={workId} />;
+    return <GgmFaithfulRoom node={node} model={resolveRenderModel(node, "published")} focusWorkSlug={workId} />;
   }
 
   return (

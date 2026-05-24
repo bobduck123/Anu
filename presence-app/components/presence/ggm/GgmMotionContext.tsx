@@ -157,17 +157,6 @@ export function GgmMotionProvider({
         scrollProgress: settings.scrollProgress,
       };
     }
-    if (!settings.heavyMotion) {
-      return {
-        ...settings,
-        liquidIntensity: Math.min(settings.liquidIntensity, 0.58),
-        liquidDistortion: Math.min(settings.liquidDistortion, 0.55),
-        liquidDurationMs: Math.max(settings.liquidDurationMs, 1150),
-        ditherStrength: Math.min(settings.ditherStrength, 0.38),
-        filmGrainStrength: Math.min(settings.filmGrainStrength, 0.32),
-        blurAmount: Math.min(settings.blurAmount, 0.28),
-      };
-    }
     return settings;
   }, [settings, reducedMotion]);
 
