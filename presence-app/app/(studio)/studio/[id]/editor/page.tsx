@@ -12,7 +12,7 @@ export default function StudioPresenceEditorPage({ params }: { params: Promise<{
   const nodeId = Number(id);
   const { node, token, loading, error, authRequired, reload } = useOwnerNode(nodeId);
 
-  if (loading) return <Loading label="Loading Presence editor..." />;
+  if (loading && !node) return <Loading label="Loading Presence editor..." />;
   if (!node || !token) {
     return (
       <StudioNodeGate

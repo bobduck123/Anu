@@ -4,44 +4,78 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Eye, Loader2, Monitor, Send, Smartphone } from "lucide-react";
 import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
-import { useOwnerNode } from "@/components/studio/useOwnerNode";
 import PortfolioRenderer from "@/components/portfolio/PortfolioRenderer";
+import { PresenceApiError } from "@/lib/api/client";
 import { getPresenceEditor, previewPresenceEditorDraft, publishPresenceEditorDraft } from "@/lib/api/editor";
+import { getNode } from "@/lib/api/owner";
 import type { PresenceEditableConfig, PresenceEditorOverview, PresenceEditorPreviewResponse, PresenceNode } from "@/lib/api/types";
+import { createClient } from "@/lib/supabase/client";
 import PublishConfirmDialog from "./PublishConfirmDialog";
 import { buildReadinessReport } from "@/lib/editor/readiness";
 
 export default function PresenceDraftPreviewPage({ roomId }: { roomId: number }) {
-  const { node, token, loading, error, authRequired, reload } = useOwnerNode(roomId);
+  const [node, setNode] = useState<PresenceNode | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [payload, setPayload] = useState<PresenceEditorPreviewResponse | null>(null);
   const [overview, setOverview] = useState<PresenceEditorOverview | null>(null);
-  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [loadingPreview, setLoadingPreview] = useState(true);
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [accessFailure, setAccessFailure] = useState<"sign-in" | "forbidden" | null>(null);
   const [mode, setMode] = useState<"desktop" | "mobile">("desktop");
   const [publishing, setPublishing] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const loadPreview = useCallback(async () => {
-    if (!token) return;
     setLoadingPreview(true);
     setPreviewError(null);
     try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setAccessFailure("sign-in");
+        setToken(null);
+        setNode(null);
+        setPayload(null);
+        setOverview(null);
+        return;
+      }
+      const accessToken = session.access_token;
+      setToken(accessToken);
       const [nextPayload, nextOverview] = await Promise.all([
-        previewPresenceEditorDraft(roomId, token),
-        getPresenceEditor(roomId, token),
+        previewPresenceEditorDraft(roomId, accessToken),
+        getPresenceEditor(roomId, accessToken),
       ]);
+      let nextNode: PresenceNode;
+      try {
+        nextNode = await getNode(roomId, accessToken);
+      } catch {
+        // Preview authorization is defined by the protected editor endpoints.
+        // A missing legacy node-hydration response must not replace a valid owner preview with a gate.
+        nextNode = nodeFromEditorPreview(nextOverview, nextPayload.editable_config ?? nextPayload.draft);
+      }
+      setAccessFailure(null);
+      setNode(nextNode);
       setPayload(nextPayload);
       setOverview(nextOverview);
     } catch (err) {
-      setPreviewError(err instanceof Error ? err.message : "Draft preview failed to load.");
+      if (err instanceof PresenceApiError && (err.status === 401 || err.status === 403)) {
+        setAccessFailure(err.status === 401 ? "sign-in" : "forbidden");
+        setToken(null);
+        setNode(null);
+        setPayload(null);
+        setOverview(null);
+      } else {
+        setAccessFailure(null);
+        setPreviewError(err instanceof Error ? err.message : "Draft preview failed to load.");
+      }
     } finally {
       setLoadingPreview(false);
     }
-  }, [roomId, token]);
+  }, [roomId]);
 
   useEffect(() => {
-    if (token) void loadPreview();
-  }, [loadPreview, token]);
+    void loadPreview();
+  }, [loadPreview]);
 
   const previewConfig = payload?.editable_config ?? payload?.draft ?? null;
   const previewNode = useMemo(() => {
@@ -69,7 +103,6 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
     try {
       await publishPresenceEditorDraft(roomId, token);
       setConfirmOpen(false);
-      await reload();
       await loadPreview();
     } catch (err) {
       setPreviewError(err instanceof Error ? err.message : "Publish failed.");
@@ -78,16 +111,20 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
     }
   }
 
-  if (loading) {
-    return <PreviewState label="Loading owner session..." />;
-  }
-
-  if (!node || !token) {
+  if (accessFailure === "sign-in") {
     return (
       <StudioNodeGate
-        authRequired={authRequired}
+        authRequired
         returnTo={`/studio/${roomId}/editor/preview`}
-        error={error ?? "Draft preview is owner-only."}
+      />
+    );
+  }
+
+  if (accessFailure === "forbidden") {
+    return (
+      <StudioNodeGate
+        returnTo={`/studio/${roomId}/editor/preview`}
+        error="Draft preview is available only to the owner of this Room."
       />
     );
   }
@@ -96,7 +133,7 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
     return <PreviewState label="Loading authenticated draft preview..." />;
   }
 
-  if (previewError || !previewNode) {
+  if (previewError || !previewNode || !token) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-[#101113] px-4 text-stone-100">
         <div className="max-w-md rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 text-center">
@@ -136,11 +173,26 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
             Mobile
           </button>
         </div>
-        <button type="button" onClick={() => setConfirmOpen(true)} disabled={publishing || Boolean(readiness?.hasBlockingIssues)} className="inline-flex items-center gap-2 rounded-full bg-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-950 hover:bg-emerald-200 disabled:pointer-events-none disabled:opacity-50">
+        <button
+          type="button"
+          data-testid="preview-open-to-visitors"
+          aria-describedby={readiness?.hasBlockingIssues ? "preview-publish-blocked-reason" : undefined}
+          onClick={() => setConfirmOpen(true)}
+          disabled={publishing || Boolean(readiness?.hasBlockingIssues)}
+          className="inline-flex items-center gap-2 rounded-full bg-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-950 hover:bg-emerald-200 disabled:pointer-events-none disabled:opacity-50"
+        >
           {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           Open room to visitors
         </button>
       </div>
+      {readiness?.hasBlockingIssues && (
+        <p
+          id="preview-publish-blocked-reason"
+          className="fixed right-4 top-16 z-[1000] max-w-sm rounded-2xl border border-red-300/25 bg-red-950/90 px-4 py-3 text-sm text-red-100 backdrop-blur"
+        >
+          Open to visitors is unavailable until you fix: {readiness.critical.map((issue) => issue.label).join(" ")}
+        </p>
+      )}
 
       <div className={mode === "mobile" ? "mx-auto min-h-dvh max-w-[430px] overflow-hidden border-x border-white/15 bg-black shadow-2xl" : "min-h-dvh"}>
         <PortfolioRenderer node={previewNode} renderMode="draft" />
@@ -177,5 +229,19 @@ function draftNodeForRenderer(node: PresenceNode, config: PresenceEditableConfig
     ...node,
     renderer_key: rendererConfig.renderer_key ?? node.renderer_key,
     editable_config: rendererConfig,
+  };
+}
+
+function nodeFromEditorPreview(overview: PresenceEditorOverview, config: PresenceEditableConfig | null): PresenceNode {
+  return {
+    id: overview.room.id,
+    slug: overview.room.slug,
+    display_name: overview.room.display_name,
+    node_type: "artist",
+    display_mode: "room",
+    status: "draft",
+    visibility: "private",
+    renderer_key: config?.renderer_key ?? null,
+    editable_config: config,
   };
 }

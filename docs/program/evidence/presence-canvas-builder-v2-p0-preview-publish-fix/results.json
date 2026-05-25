@@ -1,0 +1,88 @@
+{
+  "artifact": "presence-canvas-builder-v2-p0-preview-publish-fix",
+  "date": "2026-05-25",
+  "scope": "P0 authenticated draft preview and explicit open-to-visitors lifecycle repair",
+  "result": "passed_local_requires_hosted_resmoke",
+  "hosted_smoke": {
+    "status": "NOT RUN",
+    "reason": "A usable hosted owner login/session was not available from the local verification context."
+  },
+  "preview_owner_access": {
+    "status": "passed_local",
+    "proof": "Owner preview renders the saved draft marker even when the optional owner-node hydration request is forced to fail."
+  },
+  "preview_anonymous_denial": {
+    "status": "passed_local",
+    "proof": "Anonymous and authenticated non-owner preview attempts are denied and do not render the draft marker."
+  },
+  "publish_button_enabled": {
+    "status": "passed_local",
+    "proof": "A valid first saved draft has an enabled primary Open room to visitors action; first publication is not classified as critical."
+  },
+  "publish_confirmation": {
+    "status": "passed_local",
+    "proof": "A visible pointer click opens the labelled confirmation dialog and requires an explicit Open to visitors action."
+  },
+  "publish_request_sent": {
+    "status": "passed_local",
+    "proof": "Playwright observed a successful POST to the owner editor publish route after dialog confirmation."
+  },
+  "public_unchanged_before_publish": {
+    "status": "passed_local",
+    "proof": "The saved draft marker is absent from the anonymous public room before confirmation."
+  },
+  "preview_reflects_draft": {
+    "status": "passed_local",
+    "proof": "Authenticated preview displays the saved draft marker and retains noindex metadata."
+  },
+  "public_updates_after_publish": {
+    "status": "passed_local",
+    "proof": "The public room displays the marker only after the confirmed publish request."
+  },
+  "RoomKey_published_only": {
+    "status": "passed_local",
+    "proof": "RoomKey renders the marker after publish through the published state; existing backend/public boundary tests also passed."
+  },
+  "cleanup_status": {
+    "status": "not_applicable_local",
+    "proof": "Browser proof uses resettable local mock state; hosted smoke was not run and no live room copy was changed."
+  },
+  "tests": [
+    {
+      "name": "Frontend typecheck",
+      "command": "npm.cmd run typecheck",
+      "status": "passed"
+    },
+    {
+      "name": "Focused frontend contract tests",
+      "command": "node --test --experimental-strip-types lib/editor/readiness.test.ts lib/presence/render/resolver.test.ts lib/presence/widgets/registry.test.ts lib/presence/option-packs/registry.test.ts lib/presence/typography/registry.test.ts lib/editor/canvasModel.test.ts lib/editor/canvasMutations.test.ts lib/editor/assetValidator.test.ts lib/editor/diffEngine.test.ts lib/api/editor.test.ts lib/api/presenceGraph.test.ts",
+      "status": "passed",
+      "passed": 33,
+      "failed": 0
+    },
+    {
+      "name": "Production build",
+      "command": "npm.cmd run build",
+      "status": "passed"
+    },
+    {
+      "name": "Backend editor, graph, RoomKey and public boundary tests",
+      "command": "python -m pytest tests/test_presence_studio_editor_foundation.py tests/test_presence_graph_integration_proof.py tests/test_presence_pass_paths.py -q -p no:cacheprovider",
+      "status": "passed",
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "name": "Relevant Playwright Studio and public lifecycle tests",
+      "command": "cmd /c npx playwright test tests/e2e/canvas-builder-preview-publish-p0.spec.ts tests/e2e/canvas-builder-parity.spec.ts tests/e2e/presence-canvas-direct-manipulation.spec.ts tests/e2e/presence-studio-editor.spec.ts tests/e2e/presence-pass-paths.spec.ts --workers=1 --retries=0 --reporter=list",
+      "status": "passed",
+      "passed": 17,
+      "failed": 0
+    },
+    {
+      "name": "Diff whitespace check",
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  ]
+}

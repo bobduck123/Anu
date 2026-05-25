@@ -13,7 +13,6 @@ import {
   Palette,
   Pencil,
   Save,
-  Send,
   SlidersHorizontal,
   Sparkles,
   X,
@@ -67,7 +66,6 @@ interface PresenceCanvasModeProps {
   onCommit: DraftCommit;
   onPreview: () => Promise<unknown>;
   onOpenAdvanced: (tabId: string) => void;
-  onPublishRequest: () => void;
   showCanonicalSync: boolean;
   canonicalBundle: CanonicalAssetBundle | null;
   onSyncCanonical: () => void;
@@ -89,7 +87,6 @@ export default function PresenceCanvasMode({
   onCommit,
   onPreview,
   onOpenAdvanced,
-  onPublishRequest,
   showCanonicalSync,
   canonicalBundle,
   onSyncCanonical,
@@ -322,7 +319,6 @@ export default function PresenceCanvasMode({
             saving={saving}
             onSave={() => void onSaveDraft()}
             onPreview={() => void onPreview()}
-            onPublish={onPublishRequest}
           />
         </aside>
       </div>
@@ -335,7 +331,6 @@ export default function PresenceCanvasMode({
             saving={saving}
             onSave={() => void onSaveDraft()}
             onPreview={() => void onPreview()}
-            onPublish={onPublishRequest}
           />
         </MobileInspectorSheet>
       )}
@@ -1221,13 +1216,11 @@ function CanvasActions({
   saving,
   onSave,
   onPreview,
-  onPublish,
 }: {
   dirty: boolean;
   saving: boolean;
   onSave: () => void;
   onPreview: () => void;
-  onPublish: () => void;
 }) {
   return (
     <section className="mt-3 grid gap-2 rounded-3xl border border-white/10 bg-white/[0.035] p-3">
@@ -1239,14 +1232,9 @@ function CanvasActions({
         <Eye className="h-4 w-4" />
         Preview draft room
       </button>
-      <button
-        type="button"
-        onClick={onPublish}
-        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-300 px-4 py-2 text-xs font-semibold text-emerald-950 hover:bg-emerald-200"
-      >
-        <Send className="h-4 w-4" />
-        Open to visitors
-      </button>
+      <p className="rounded-2xl border border-white/10 bg-black/15 px-3 py-2 text-[11px] leading-5 text-stone-400">
+        When the draft is ready, use <span className="font-semibold text-stone-200">Open room to visitors</span> above.
+      </p>
     </section>
   );
 }

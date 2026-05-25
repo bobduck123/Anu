@@ -290,7 +290,7 @@ export default function PresenceStudioEditorApp({
     setPublishing(true);
     setActionError(null);
     try {
-      if (dirty) {
+      if (dirty || !overview?.draft) {
         const saved = await saveDraft();
         if (!saved) return;
       }
@@ -479,7 +479,14 @@ export default function PresenceStudioEditorApp({
               <Eye className="h-4 w-4" />
               Full preview
             </Link>
-            <button className={buttonClass("publish")} disabled={publishing || blockingIssues.length > 0} onClick={() => setPublishConfirmOpen(true)}>
+            <button
+              type="button"
+              data-testid="open-to-visitors-primary"
+              className={buttonClass("publish")}
+              disabled={publishing || blockingIssues.length > 0}
+              aria-describedby={blockingIssues.length > 0 ? "publish-blocked-reason" : undefined}
+              onClick={() => setPublishConfirmOpen(true)}
+            >
               {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               Open room to visitors
             </button>
@@ -508,6 +515,15 @@ export default function PresenceStudioEditorApp({
               </div>
             </div>
           </div>
+          {blockingIssues.length > 0 && (
+            <p
+              id="publish-blocked-reason"
+              data-testid="publish-blocked-reason"
+              className="mt-3 rounded-2xl border border-red-300/20 bg-red-950/25 px-4 py-3 text-sm text-red-100"
+            >
+              Open to visitors is unavailable until you fix: {blockingIssues.map((issue) => issue.label).join(" ")}
+            </p>
+          )}
 
           {(notice || actionError) && (
             <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${actionError ? "border-red-400/40 bg-red-950/30 text-red-100" : "border-emerald-300/30 bg-emerald-950/20 text-emerald-100"}`}>
@@ -593,7 +609,6 @@ export default function PresenceStudioEditorApp({
                 onCommit={commitCanvasChange}
                 onPreview={runPreview}
                 onOpenAdvanced={openAdvanced}
-                onPublishRequest={() => setPublishConfirmOpen(true)}
                 showCanonicalSync={showCanonicalSync}
                 canonicalBundle={canonicalBundle}
                 onSyncCanonical={syncCanonicalAssets}

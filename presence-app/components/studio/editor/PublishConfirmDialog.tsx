@@ -24,19 +24,24 @@ export default function PublishConfirmDialog({
   const criticalCount = readiness?.critical.length ?? 0;
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg overflow-hidden rounded-[2rem] border border-white/10 bg-[#111214] text-stone-100 shadow-2xl">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="publish-confirm-title"
+        className="w-full max-w-lg overflow-hidden rounded-[2rem] border border-white/10 bg-[#111214] text-stone-100 shadow-2xl"
+      >
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-200/70">Open room to visitors</p>
-            <h2 className="mt-1 text-xl font-semibold">Open this draft room?</h2>
+            <h2 id="publish-confirm-title" className="mt-1 text-xl font-semibold">Open this draft room?</h2>
           </div>
           <button type="button" disabled={publishing} onClick={onCancel} className="rounded-full p-2 text-stone-400 hover:bg-white/5 hover:text-stone-100 disabled:opacity-50">
             <X className="h-4 w-4" />
           </button>
-        </div>
-        <div className="grid gap-4 px-5 py-5">
+          </div>
+          <div className="grid gap-4 px-5 py-5">
           <div className="rounded-2xl border border-amber-200/20 bg-amber-200/10 p-3 text-sm leading-6 text-amber-50">
-            This opens your saved draft to visitors as the live room. Your earlier live room remains available to restore, and draft preview remains private.
+            Your draft will become the live room. Visitors will see these changes after you open the room. Your earlier live room remains available to restore, and draft preview remains private.
           </div>
           <div className="grid gap-2 text-xs text-stone-300 sm:grid-cols-3">
             <Metric label="Live room" value={publishedVersion ? "Open" : "Not opened"} />
@@ -55,7 +60,7 @@ export default function PublishConfirmDialog({
             </button>
             <button type="button" disabled={publishing || criticalCount > 0} onClick={onConfirm} className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-950 hover:bg-emerald-200 disabled:pointer-events-none disabled:opacity-50">
               {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Open room to visitors
+              Open to visitors
             </button>
           </div>
         </div>

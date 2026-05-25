@@ -1,6 +1,6 @@
 import type { PresenceEditableConfig, PresenceEditorOverview, PresenceNode } from "@/lib/api/types";
-import { validateAssetUrl } from "./assetValidator";
-import { diffEditableConfigs } from "./diffEngine";
+import { validateAssetUrl } from "./assetValidator.ts";
+import { diffEditableConfigs } from "./diffEngine.ts";
 
 export type ReadinessSeverity = "critical" | "recommended" | "polish";
 
@@ -80,7 +80,14 @@ export function buildReadinessReport({
     "Keep visitor contact routed through the backend Presence enquiry posture.",
     "calling-card",
   );
-  add(!overview?.published, "no-published-config", "critical", "No published editable config exists.", "Public rooms will fall back to renderer constants until the first publish.", "preview");
+  add(
+    !overview?.published,
+    "first-open-to-visitors",
+    "recommended",
+    "This will be the first Canvas version opened to visitors.",
+    "Opening the room makes this saved draft the live room for visitors.",
+    "preview",
+  );
 
   add(visibleWorks.length === 0, "empty-work-wall", "recommended", "Work Wall is empty.", "Add at least one visible work so the room feels inhabited.", "work-wall");
   add(Boolean(text(hero.url)) && !text(hero.alt_text), "missing-hero-alt", "recommended", "Hero image alt text is missing.", "Alt text keeps the room legible to assistive technology.", "assets");

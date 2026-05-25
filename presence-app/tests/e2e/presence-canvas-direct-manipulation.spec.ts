@@ -97,7 +97,7 @@ test("pilot owner edits the draft room directly on Canvas and publishes intentio
   await page.getByRole("button", { name: "Open room to visitors" }).click();
   await expect(page.getByText("Open this draft room?")).toBeVisible();
   await page.screenshot({ path: path.join(evidenceDir, "publish-open-to-visitors-confirmation.png"), fullPage: true });
-  await page.getByRole("button", { name: "Open room to visitors" }).last().click();
+  await page.getByRole("dialog", { name: "Open this draft room?" }).getByRole("button", { name: "Open to visitors" }).click();
 
   await page.goto("/p/test-presence-room", { waitUntil: "networkidle" });
   await expect(page.getByText("Colour as Memory - Canvas Draft")).toBeVisible();

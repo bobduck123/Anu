@@ -53,6 +53,7 @@ const server = createServer(async (req, res) => {
     if (Array.isArray(body.boards)) state.boards = body.boards;
     if (Array.isArray(body.passes)) state.passes = body.passes;
     if (Array.isArray(body.keys)) state.keys = body.keys;
+    if (body.clearEditorPublished === true) state.editorPublished = null;
     return send(res, 200, { ok: true, state: publicState() });
   }
 
