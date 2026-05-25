@@ -84,6 +84,13 @@ def validate_presence_image(file: FileStorage) -> tuple[str, int]:
         raise PresenceMediaValidationError("Only JPG, PNG, and WEBP images are accepted.")
     if declared and declared not in ALLOWED_IMAGE_MIME_TYPES:
         raise PresenceMediaValidationError("Only JPG, PNG, and WEBP images are accepted.")
+    if declared and declared != sniffed:
+        raise PresenceMediaValidationError("This file type does not match the image contents.")
+    filename = secure_filename(file.filename or "").lower()
+    extension = filename.rsplit(".", 1)[-1] if "." in filename else ""
+    permitted_extensions = {"image/jpeg": {"jpg", "jpeg"}, "image/png": {"png"}, "image/webp": {"webp"}}
+    if extension not in permitted_extensions[sniffed]:
+        raise PresenceMediaValidationError("This file name does not match the image type.")
     return sniffed, size
 
 
@@ -103,6 +110,11 @@ def build_presence_media_path(
     if suffix not in {"jpg", "png", "webp"}:
         suffix = "jpg"
     unique_name = f"{uuid.uuid4().hex}.{suffix}"
+    if target_type == "editor_draft":
+        # These image URLs may become visitor-visible after publish. Keep
+        # owner identity out of the storage path while access stays checked
+        # by the authenticated room upload endpoint.
+        return "/".join(["presence", "rooms", str(node_id), "images", unique_name])
     parts = ["presence", str(owner_user_id), str(node_id)]
     if target_type == "profile_image":
         parts.append("profile")

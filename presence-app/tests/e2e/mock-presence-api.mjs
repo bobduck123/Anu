@@ -391,6 +391,34 @@ const server = createServer(async (req, res) => {
     return sendData(res, { draft: state.editorDraft, assets: state.editorAssets }, 201);
   }
 
+  if (url.pathname === "/api/presence/owner/rooms/101/assets/upload" && req.method === "POST") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
+    if (!state.editorDraft) state.editorDraft = buildEditorConfig("draft", state.nextEditorVersion++);
+    const asset = {
+      media_id: "uploaded-v1b-proof",
+      url: "/ggm/works/bridle-road-2005.webp?uploaded=v1b-proof",
+      alt_text: "Uploaded studio cover image",
+      source: "editable_config:draft",
+      slot: "attached_assets",
+      asset_type: "image",
+      role: "cover",
+      mime_type: "image/png",
+      size_bytes: 68,
+    };
+    state.editorAssets.push(asset);
+    state.editorDraft.asset_config = {
+      ...(state.editorDraft.asset_config || {}),
+      attached_assets: [...(state.editorDraft.asset_config?.attached_assets || []), asset],
+    };
+    return sendData(res, {
+      draft: state.editorDraft,
+      assets: state.editorAssets,
+      uploaded_asset: asset,
+      storage_policy: "public_unlisted_until_used",
+    }, 201);
+  }
+
   if (url.pathname === "/api/presence/owner/nodes/101/analytics" && req.method === "GET") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     return sendData(res, fixtures.analytics.legacy);
@@ -1107,6 +1135,8 @@ function publicRoomFixture() {
 
 function redactEditorConfig(config) {
   if (!config) return null;
+  const publicAssets = { ...(config.asset_config || {}) };
+  delete publicAssets.attached_assets;
   return {
     schema_version: config.schema_version,
     version: config.version,
@@ -1116,7 +1146,7 @@ function redactEditorConfig(config) {
     scene_config: config.scene_config,
     style_dna: config.style_dna,
     motion_config: config.motion_config,
-    asset_config: config.asset_config,
+    asset_config: publicAssets,
     content_config: config.content_config,
     roomkey_config: config.roomkey_config,
     enquiry_config: config.enquiry_config,

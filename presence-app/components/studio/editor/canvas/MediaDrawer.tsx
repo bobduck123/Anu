@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import { Image as ImageIcon, Loader2, Upload, X } from "lucide-react";
 import type { PresenceEditableConfig, PresenceEditorAsset, PresenceNode } from "@/lib/api/types";
 import type { CanonicalAssetBundle } from "@/lib/editor/canonicalAssets";
+import { validateMediaUploadFile } from "@/lib/editor/mediaValidation";
 import {
   buildCanvasImageCandidates,
   buildCanvasRegistryFromRenderModel,
@@ -15,6 +16,7 @@ import { resolveRenderModel } from "@/lib/presence/render/resolver";
 
 type CommitDraft = (next: (draft: PresenceEditableConfig) => PresenceEditableConfig) => Promise<boolean>;
 type SourceTab = "room" | "live" | "upload";
+type UploadState = "choosing" | "validating" | "queued" | "uploading" | "ready" | "failed";
 
 export function MediaDrawer({
   node,
@@ -27,6 +29,7 @@ export function MediaDrawer({
   onClose,
   onCommit,
   onBringImages,
+  onUpload,
 }: {
   node: PresenceNode;
   config: PresenceEditableConfig;
@@ -38,6 +41,7 @@ export function MediaDrawer({
   onClose?: () => void;
   onCommit: CommitDraft;
   onBringImages: () => void;
+  onUpload: (file: File, altText: string, role: string) => Promise<PresenceEditorAsset | null>;
 }) {
   const model = useMemo(
     () => resolveRenderModel({ ...node, editable_config: { ...config, status: "draft" } }, "draft"),
@@ -52,6 +56,11 @@ export function MediaDrawer({
   const [selectedUrl, setSelectedUrl] = useState("");
   const [selectedAlt, setSelectedAlt] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadAlt, setUploadAlt] = useState("");
+  const [uploadState, setUploadState] = useState<UploadState>("choosing");
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
   const current = getResolvedCanvasImage(model, targetId);
   const candidates = buildCanvasImageCandidates(config, node, assets, canonicalBundle);
   const visibleCandidates = candidates.filter((candidate) =>
@@ -86,6 +95,43 @@ export function MediaDrawer({
   async function saveAltText() {
     const saved = await onCommit((draft) => updateCanvasAltText(draft, targetId, selectedAlt));
     setFeedback(saved ? "Alt text saved to draft." : "Couldn't save alt text. Try again.");
+  }
+
+  async function prepareUpload(file: File | undefined) {
+    if (!file) return;
+    setUploadState("validating");
+    setUploadError(null);
+    const error = await validateMediaUploadFile(file);
+    if (error) {
+      setUploadFile(null);
+      setUploadState("failed");
+      setUploadError(error);
+      return;
+    }
+    setUploadFile(file);
+    setUploadState("queued");
+  }
+
+  async function uploadImage() {
+    if (!uploadFile) return;
+    setUploadState("uploading");
+    setUploadError(null);
+    const asset = await onUpload(uploadFile, uploadAlt, targetId === "hero-image" ? "cover" : "work");
+    if (!asset) {
+      setUploadState("failed");
+      setUploadError("We couldn't upload that image. Try again.");
+      return;
+    }
+    setSelectedUrl(asset.url);
+    setSelectedAlt(asset.alt_text ?? uploadAlt);
+    setFeedback("Upload ready in your Draft room. Choose Use this image to place it here.");
+    setUploadState("ready");
+    setTab("room");
+  }
+
+  function dropFile(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    void prepareUpload(event.dataTransfer.files?.[0]);
   }
 
   const contents = (
@@ -144,13 +190,69 @@ export function MediaDrawer({
         </div>
 
         {tab === "upload" ? (
-          <div data-testid="media-upload-deferred" className="rounded-2xl border border-dashed border-[#ceb994] bg-[#f0e6d5] p-6 text-center">
-            <Upload className="mx-auto h-6 w-6 text-[#866845]" />
-            <h3 className="mt-3 text-base font-semibold">Upload coming soon</h3>
-            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#655847]">
-              Ask your Presence operator to add new images for this pilot. You can choose and describe images already in your room now.
+          <div data-testid="media-upload-panel" className="grid gap-4 rounded-2xl border border-[#ceb994] bg-[#f0e6d5] p-5">
+            <div
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={dropFile}
+              className="rounded-2xl border border-dashed border-[#bda278] bg-white/60 p-5 text-center"
+            >
+              <Upload className="mx-auto h-6 w-6 text-[#866845]" />
+              <h3 className="mt-3 text-base font-semibold">Upload image</h3>
+              <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#655847]">
+                Drop in a JPG, PNG, or WEBP image under 8 MB, or choose a file.
+              </p>
+              <input
+                ref={fileInput}
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                className="sr-only"
+                aria-label="Choose image file"
+                onChange={(event) => void prepareUpload(event.target.files?.[0])}
+              />
+              <button
+                type="button"
+                disabled={saving || uploadState === "uploading"}
+                onClick={() => fileInput.current?.click()}
+                className="mt-4 min-h-11 rounded-full border border-[#cabda9] bg-white px-4 text-sm font-semibold text-[#302921] disabled:opacity-45"
+              >
+                Choose image
+              </button>
+            </div>
+            <p className="text-xs leading-5 text-[#655847]">
+              This is saved to your Draft room first. Visitors will not see it in the room until you open the room to visitors.
             </p>
-            <p className="mt-3 text-xs text-[#766a5e]">Crop and focal point controls will arrive with secure draft image uploads.</p>
+            {uploadFile && (
+              <div className="grid gap-3 rounded-xl bg-white/70 p-3">
+                <p className="truncate text-sm font-semibold">{uploadFile.name}</p>
+                <label className="grid gap-2 text-xs font-semibold text-[#655847]">
+                  Add a short description
+                  <textarea
+                    aria-label="Uploaded image alt text"
+                    value={uploadAlt}
+                    onChange={(event) => setUploadAlt(event.target.value)}
+                    rows={2}
+                    className="rounded-xl border border-[#d7cbbb] bg-white px-3 py-2 text-sm font-normal text-[#2d271f]"
+                  />
+                </label>
+                <button
+                  type="button"
+                  disabled={saving || uploadState === "uploading"}
+                  onClick={() => void uploadImage()}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#317650] px-4 text-sm font-semibold text-white disabled:opacity-45"
+                >
+                  {uploadState === "uploading" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {uploadState === "uploading" ? "Uploading image..." : "Upload image"}
+                </button>
+              </div>
+            )}
+            {(uploadState === "validating" || uploadState === "uploading") && (
+              <div aria-label="Upload progress" className="h-2 overflow-hidden rounded-full bg-[#dfd4c5]">
+                <div className="h-full w-2/3 animate-pulse rounded-full bg-[#317650]" />
+              </div>
+            )}
+            {uploadState === "queued" && <p className="text-xs font-semibold text-[#295c43]">Image checked and ready to upload.</p>}
+            {uploadError && <p className="rounded-xl bg-[#f8eadd] p-3 text-sm text-[#704430]">{uploadError}</p>}
+            <p className="text-xs text-[#766a5e]">Crop and focal point controls are not available yet.</p>
           </div>
         ) : visibleCandidates.length > 0 ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">

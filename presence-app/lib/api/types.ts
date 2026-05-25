@@ -130,6 +130,10 @@ export interface PresenceEditorAsset {
   slot?: string | null;
   asset_type?: "image" | "thumbnail" | "texture" | string;
   alt_text?: string | null;
+  media_id?: string | null;
+  role?: "cover" | "work" | "portrait" | "background" | "invitation" | "unused" | string;
+  mime_type?: string | null;
+  size_bytes?: number | null;
 }
 
 export interface PresenceEditorRoomSummary {
@@ -196,6 +200,11 @@ export interface PresenceEditorAttachAssetInput {
 export interface PresenceEditorAttachAssetResponse {
   draft: PresenceEditableConfig;
   assets: PresenceEditorAsset[];
+}
+
+export interface PresenceEditorUploadAssetResponse extends PresenceEditorAttachAssetResponse {
+  uploaded_asset: PresenceEditorAsset;
+  storage_policy: "public_unlisted_until_used" | string;
 }
 
 export interface PresenceAvailabilityChip {

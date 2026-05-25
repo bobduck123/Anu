@@ -45,6 +45,7 @@ ATTACHABLE_ASSET_SLOTS = {
     "attached_assets",
 }
 ATTACHABLE_ASSET_TYPES = {"image", "thumbnail", "texture"}
+UPLOAD_ASSET_ROLES = {"cover", "work", "portrait", "background", "invitation", "unused"}
 
 _RENDERER_KEY_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,119}$")
 _LOCAL_PATH_RE = re.compile(
@@ -580,6 +581,10 @@ def serialize_editor_config(config: PresenceEditableConfig | None) -> dict[str, 
 def serialize_public_editable_config(config: PresenceEditableConfig | None, *, preview: bool = False) -> dict[str, Any] | None:
     if not config:
         return None
+    public_assets = deepcopy(config.asset_config_json or {})
+    # This is draft inventory for the editor picker, not visible room content.
+    # Do not expose unused uploads through public or preview-render payloads.
+    public_assets.pop("attached_assets", None)
     safe = {
         "schema_version": EDITABLE_CONFIG_SCHEMA_VERSION,
         "version": config.version,
@@ -589,7 +594,7 @@ def serialize_public_editable_config(config: PresenceEditableConfig | None, *, p
         "scene_config": config.scene_config_json or {},
         "style_dna": config.style_dna_json or {},
         "motion_config": config.motion_config_json or {},
-        "asset_config": config.asset_config_json or {},
+        "asset_config": public_assets,
         "content_config": config.content_config_json or {},
         "roomkey_config": config.roomkey_config_json or {},
         "enquiry_config": config.enquiry_config_json or {},
@@ -714,3 +719,53 @@ def attach_asset_to_draft(room: PresenceNode, actor, data: dict[str, Any]) -> Pr
     draft.updated_by_user_id = getattr(actor, "id", None)
     draft.updated_at = now_utc()
     return draft
+
+
+def validate_uploaded_asset_fields(*, role: str = "unused", alt_text: str | None = None) -> tuple[str, str | None]:
+    clean_role = str(role or "unused").strip().lower()
+    if clean_role not in UPLOAD_ASSET_ROLES:
+        raise PresenceEditorConfigError("Choose a supported image role.")
+    clean_alt = (
+        _clean_string(str(alt_text or "").strip(), key="alt_text", path="asset.alt_text")
+        if alt_text
+        else None
+    )
+    return clean_role, clean_alt
+
+
+def attach_uploaded_asset_to_draft(
+    room: PresenceNode,
+    actor,
+    *,
+    url: str,
+    alt_text: str | None,
+    media_id: str,
+    role: str = "unused",
+    mime_type: str | None = None,
+    size_bytes: int | None = None,
+) -> tuple[PresenceEditableConfig, dict[str, Any]]:
+    clean_url = _validate_public_or_relative_url(str(url or "").strip(), path="asset.url")
+    clean_role, clean_alt = validate_uploaded_asset_fields(role=role, alt_text=alt_text)
+    clean_media_id = _clean_string(str(media_id or "").strip(), key="media_id", path="asset.media_id")
+    asset: dict[str, Any] = {
+        "media_id": clean_media_id,
+        "url": clean_url,
+        "asset_type": "image",
+        "role": clean_role,
+        "alt_text": clean_alt,
+    }
+    if mime_type in {"image/jpeg", "image/png", "image/webp"}:
+        asset["mime_type"] = mime_type
+    if isinstance(size_bytes, int) and size_bytes > 0:
+        asset["size_bytes"] = size_bytes
+
+    draft, _created = ensure_draft_config(room, actor)
+    asset_config = deepcopy(draft.asset_config_json or {})
+    existing = asset_config.get("attached_assets")
+    items = list(existing) if isinstance(existing, list) else ([existing] if existing else [])
+    items.append(asset)
+    asset_config["attached_assets"] = items
+    draft.asset_config_json = normalise_editor_section(asset_config, section="asset_config")
+    draft.updated_by_user_id = getattr(actor, "id", None)
+    draft.updated_at = now_utc()
+    return draft, asset

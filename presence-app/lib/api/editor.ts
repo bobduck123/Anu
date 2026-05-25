@@ -1,4 +1,4 @@
-import { ownerFetch, ownerReadFetch } from "./client.ts";
+import { ownerFetch, ownerMultipartFetch, ownerReadFetch } from "./client.ts";
 import type {
   PresenceEditableConfig,
   PresenceEditorAssetsResponse,
@@ -9,6 +9,7 @@ import type {
   PresenceEditorOverview,
   PresenceEditorPreviewResponse,
   PresenceEditorPublishResponse,
+  PresenceEditorUploadAssetResponse,
 } from "./types";
 
 const BASE = "/api/presence/owner/rooms";
@@ -113,4 +114,16 @@ export function attachPresenceEditorAsset(
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+export function uploadPresenceEditorAsset(
+  roomId: number,
+  token: string,
+  input: { file: File; altText?: string; role?: string },
+) {
+  const form = new FormData();
+  form.append("file", input.file);
+  form.append("role", input.role ?? "unused");
+  if (input.altText?.trim()) form.append("alt_text", input.altText.trim());
+  return ownerMultipartFetch<PresenceEditorUploadAssetResponse>(`${BASE}/${roomId}/assets/upload`, token, form);
 }

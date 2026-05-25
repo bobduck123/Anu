@@ -12,6 +12,7 @@ import {
   previewPresenceEditorDraft,
   publishPresenceEditorDraft,
   rollbackPresenceEditor,
+  uploadPresenceEditorAsset,
 } from "./editor.ts";
 
 test("presence editor client uses owner-only routes and bearer auth", async () => {
@@ -35,6 +36,11 @@ test("presence editor client uses owner-only routes and bearer auth", async () =
     await getPresenceEditorHistory(7, "tok");
     await listPresenceEditorAssets(7, "tok");
     await attachPresenceEditorAsset(7, "tok", { slot: "hero_image", url: "/ggm/works/willow-of-port-arthur-2019.webp" });
+    await uploadPresenceEditorAsset(7, "tok", {
+      file: new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], "cover.png", { type: "image/png" }),
+      role: "cover",
+      altText: "Uploaded cover",
+    });
 
     assert.equal(calls[0]!.url, "http://localhost:5000/api/presence/owner/rooms/7/editor");
     assert.equal(calls[1]!.url, "http://localhost:5000/api/presence/owner/rooms/7/editor/draft");
@@ -46,6 +52,9 @@ test("presence editor client uses owner-only routes and bearer auth", async () =
     assert.equal(calls[7]!.url, "http://localhost:5000/api/presence/owner/rooms/7/editor/history");
     assert.equal(calls[8]!.url, "http://localhost:5000/api/presence/owner/rooms/7/assets");
     assert.equal(calls[9]!.url, "http://localhost:5000/api/presence/owner/rooms/7/assets/attach");
+    assert.equal(calls[10]!.url, "http://localhost:5000/api/presence/owner/rooms/7/assets/upload");
+    assert.equal(calls[10]!.init.method, "POST");
+    assert.equal(calls[10]!.init.body instanceof FormData, true);
     for (const call of calls) {
       assert.equal((call.init.headers as Record<string, string>).Authorization, "Bearer tok");
     }

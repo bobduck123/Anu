@@ -56,8 +56,9 @@ test("owner uses the simplified Studio and honest Media Flow without breaking dr
   await expect(drawer).toContainText("Your room");
   await page.screenshot({ path: path.join(evidenceDir, "images-media-drawer.png"), fullPage: true });
   await drawer.getByRole("tab", { name: "+ Upload" }).click();
-  await expect(drawer.getByTestId("media-upload-deferred")).toContainText("Upload coming soon");
-  await page.screenshot({ path: path.join(evidenceDir, "upload-honest-deferral.png"), fullPage: true });
+  await expect(drawer.getByTestId("media-upload-panel")).toContainText("Upload image");
+  await expect(drawer.getByTestId("media-upload-panel")).toContainText("Crop and focal point controls are not available yet.");
+  await page.screenshot({ path: path.join(evidenceDir, "upload-enabled-v1b.png"), fullPage: true });
 
   await drawer.getByRole("tab", { name: "Your room" }).click();
   await drawer.getByRole("button", { name: /Bridle Road/ }).first().click();

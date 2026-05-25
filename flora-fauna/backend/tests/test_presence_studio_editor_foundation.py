@@ -1,3 +1,4 @@
+import io
 import os
 from datetime import timedelta
 
@@ -402,3 +403,133 @@ def test_invalid_editor_payloads_and_asset_attach_are_guarded():
     )
     assert attach.status_code == 201, attach.get_json()
     assert any(item["url"] == "/ggm/works/empty-nest-2014.webp" for item in attach.get_json()["data"]["assets"])
+
+
+def test_editor_image_upload_is_owner_scoped_and_only_visible_after_selected_publish():
+    app = _build_app()
+    ids = _seed(app)
+    client = app.test_client()
+    owner_headers = _headers(app, "ggm-owner")
+    other_headers = _headers(app, "other-owner")
+    png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 24
+
+    anonymous = client.post(
+        f"/api/presence/owner/rooms/{ids['room_id']}/assets/upload",
+        data={"file": (io.BytesIO(png), "cover.png", "image/png")},
+        content_type="multipart/form-data",
+        base_url="http://public.test",
+    )
+    assert anonymous.status_code == 401
+    denied = client.post(
+        f"/api/presence/owner/rooms/{ids['room_id']}/assets/upload",
+        data={"file": (io.BytesIO(png), "cover.png", "image/png")},
+        headers=other_headers,
+        content_type="multipart/form-data",
+        base_url="http://public.test",
+    )
+    assert denied.status_code == 403
+
+    upload = client.post(
+        f"/api/presence/owner/rooms/{ids['room_id']}/assets/upload",
+        data={
+            "file": (io.BytesIO(png), "cover.png", "image/png"),
+            "alt_text": "Uploaded cover image",
+            "role": "cover",
+        },
+        headers=owner_headers,
+        content_type="multipart/form-data",
+        base_url="http://public.test",
+    )
+    assert upload.status_code == 201, upload.get_json()
+    uploaded = upload.get_json()["data"]["uploaded_asset"]
+    assert uploaded["role"] == "cover"
+    assert uploaded["mime_type"] == "image/png"
+    assert uploaded["url"].startswith("http://public.test/media/uploads/presence/rooms/")
+    assert "/images/" in uploaded["url"]
+    assert f"/presence/{ids['owner_id']}/{ids['room_id']}/" not in uploaded["url"]
+    assert upload.get_json()["data"]["storage_policy"] == "public_unlisted_until_used"
+
+    before = client.get(f"/api/presence/public/{ids['room_slug']}", base_url="http://public.test")
+    assert uploaded["url"] not in str(before.get_json())
+
+    patch = client.patch(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor/draft",
+        json={"asset_config": {"hero_image": {"url": uploaded["url"], "alt_text": "Uploaded cover image"}}},
+        headers=owner_headers,
+        base_url="http://public.test",
+    )
+    assert patch.status_code == 200, patch.get_json()
+    preview = client.post(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor/preview",
+        headers=owner_headers,
+        base_url="http://public.test",
+    )
+    assert uploaded["url"] in str(preview.get_json()["data"]["editable_config"])
+    assert "attached_assets" not in str(preview.get_json()["data"]["editable_config"])
+
+    still_public = client.get(f"/api/presence/public/{ids['room_slug']}", base_url="http://public.test")
+    assert uploaded["url"] not in str(still_public.get_json())
+    published = client.post(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor/publish",
+        headers=owner_headers,
+        base_url="http://public.test",
+    )
+    assert published.status_code == 200, published.get_json()
+    public_after = client.get(f"/api/presence/public/{ids['room_slug']}", base_url="http://public.test")
+    body = str(public_after.get_json()["data"]["editable_config"])
+    assert uploaded["url"] in body
+    assert "attached_assets" not in body
+    assert f"/presence/{ids['owner_id']}/{ids['room_id']}/" not in body
+
+
+def test_editor_image_upload_policy_blocks_unsafe_types_mismatches_and_oversize_files():
+    app = _build_app()
+    ids = _seed(app)
+    client = app.test_client()
+    owner_headers = _headers(app, "ggm-owner")
+    endpoint = f"/api/presence/owner/rooms/{ids['room_id']}/assets/upload"
+
+    for filename, mime_type, payload in [
+        ("drawing.svg", "image/svg+xml", b"<svg></svg>"),
+        ("page.html", "text/html", b"<html></html>"),
+        ("document.pdf", "application/pdf", b"%PDF-1.7"),
+        ("program.exe", "application/octet-stream", b"MZ"),
+    ]:
+        rejected = client.post(
+            endpoint,
+            data={"file": (io.BytesIO(payload), filename, mime_type)},
+            headers=owner_headers,
+            content_type="multipart/form-data",
+            base_url="http://public.test",
+        )
+        assert rejected.status_code == 422
+
+    bad_role = client.post(
+        endpoint,
+        data={
+            "file": (io.BytesIO(b"\x89PNG\r\n\x1a\n" + b"\x00" * 24), "cover.png", "image/png"),
+            "role": "script",
+        },
+        headers=owner_headers,
+        content_type="multipart/form-data",
+        base_url="http://public.test",
+    )
+    assert bad_role.status_code == 422
+
+    mismatch = client.post(
+        endpoint,
+        data={"file": (io.BytesIO(b"\x89PNG\r\n\x1a\n" + b"\x00" * 24), "photo.jpg", "image/jpeg")},
+        headers=owner_headers,
+        content_type="multipart/form-data",
+        base_url="http://public.test",
+    )
+    assert mismatch.status_code == 422
+
+    oversized = client.post(
+        endpoint,
+        data={"file": (io.BytesIO(b"\xff\xd8\xff" + b"\x00" * (8 * 1024 * 1024 + 1)), "large.jpg", "image/jpeg")},
+        headers=owner_headers,
+        content_type="multipart/form-data",
+        base_url="http://public.test",
+    )
+    assert oversized.status_code in (413, 422)

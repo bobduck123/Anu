@@ -68,6 +68,7 @@ interface PresenceCanvasModeProps {
   showCanonicalSync: boolean;
   canonicalBundle: CanonicalAssetBundle | null;
   onSyncCanonical: () => void;
+  onUploadImage: (file: File, altText: string, role: string) => Promise<PresenceEditorAsset | null>;
 }
 
 interface Feedback {
@@ -89,6 +90,7 @@ export default function PresenceCanvasMode({
   showCanonicalSync,
   canonicalBundle,
   onSyncCanonical,
+  onUploadImage,
 }: PresenceCanvasModeProps) {
   const [scene, setScene] = useState<CanvasSceneId>("artwork");
   const [selectedId, setSelectedId] = useState<string | null>("hero-title");
@@ -346,6 +348,7 @@ export default function PresenceCanvasMode({
           onClose={() => setImagePickerTarget(null)}
           onCommit={(change) => commit(change, "Image updated - saved to draft.")}
           onBringImages={onSyncCanonical}
+          onUpload={onUploadImage}
         />
       )}
 

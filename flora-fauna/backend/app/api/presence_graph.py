@@ -23,6 +23,7 @@ from ..services.presence_owner_identity import resolve_or_provision_presence_own
 from ..services.presence_editor_config import (
     PresenceEditorConfigError,
     attach_asset_to_draft,
+    attach_uploaded_asset_to_draft,
     build_default_editable_config,
     collect_room_assets,
     draft_config_for_room,
@@ -35,6 +36,13 @@ from ..services.presence_editor_config import (
     serialize_editor_config,
     serialize_public_editable_config,
     update_draft_config,
+    validate_uploaded_asset_fields,
+)
+from ..services.presence_media_storage import (
+    PresenceMediaStorageError,
+    PresenceMediaValidationError,
+    build_presence_media_path,
+    store_presence_image,
 )
 from ..services.presence_pass_service import (
     capture_encounter,
@@ -784,6 +792,66 @@ def owner_room_attach_asset(room_id):
     except PresenceEditorConfigError as exc:
         db.session.rollback()
         return _editor_validation_error(exc)
+
+
+@presence_graph_bp.route("/owner/rooms/<int:room_id>/assets/upload", methods=["POST"])
+@alpha_jwt_required()
+def owner_room_upload_asset(room_id):
+    room, err = _load_owned_room(room_id)
+    if err:
+        return err
+    actor = _resolve_owner_user()
+    file = request.files.get("file")
+    if not file or not getattr(file, "filename", ""):
+        return error("validation_error", "Choose a JPG, PNG, or WEBP image to upload.", 422)
+    try:
+        role, alt_text = validate_uploaded_asset_fields(
+            role=request.form.get("role") or "unused",
+            alt_text=request.form.get("alt_text"),
+        )
+        storage_path = build_presence_media_path(
+            owner_user_id=actor.id,
+            node_id=room.id,
+            target_type="editor_draft",
+            filename=getattr(file, "filename", "") or "image",
+        )
+        stored = store_presence_image(file, storage_path=storage_path)
+        media_id = storage_path.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+        draft, uploaded_asset = attach_uploaded_asset_to_draft(
+            room,
+            actor,
+            url=stored.url,
+            alt_text=alt_text,
+            media_id=media_id,
+            role=role,
+            mime_type=stored.content_type,
+            size_bytes=stored.size,
+        )
+        db.session.commit()
+        _audit_platform_admin_editor_access(
+            "presence.editor.assets.upload",
+            actor,
+            room,
+            {"config_id": draft.id, "version": draft.version},
+        )
+        return ok(
+            {
+                "draft": serialize_editor_config(draft),
+                "assets": collect_room_assets(room),
+                "uploaded_asset": uploaded_asset,
+                "storage_policy": "public_unlisted_until_used",
+            },
+            201,
+        )
+    except PresenceMediaValidationError as exc:
+        db.session.rollback()
+        return error("validation_error", str(exc), 422)
+    except PresenceEditorConfigError as exc:
+        db.session.rollback()
+        return _editor_validation_error(exc)
+    except PresenceMediaStorageError as exc:
+        db.session.rollback()
+        return error("storage_unavailable", str(exc), 503)
 
 
 @presence_graph_bp.route("/owner/rooms/<int:room_id>/analytics", methods=["GET"])

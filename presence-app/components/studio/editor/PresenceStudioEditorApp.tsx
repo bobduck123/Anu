@@ -33,6 +33,7 @@ import {
   previewPresenceEditorDraft,
   publishPresenceEditorDraft,
   rollbackPresenceEditor,
+  uploadPresenceEditorAsset,
   type PresenceEditorConfigInput,
 } from "@/lib/api/editor";
 import type {
@@ -350,6 +351,38 @@ export default function PresenceStudioEditorApp({
     }
   }
 
+  async function uploadDraftImage(file: File, altText: string, role: string): Promise<PresenceEditorAsset | null> {
+    if (dirty) {
+      const saved = await saveDraft();
+      if (!saved) return null;
+    }
+    setAssetLoading(true);
+    setActionError(null);
+    try {
+      const response = await uploadPresenceEditorAsset(nodeId, token, { file, altText, role });
+      const draft = normalizeConfig(response.draft, node);
+      setConfig(draft);
+      setBaseSnapshot(snapshot(draft));
+      setOverview((current) =>
+        current
+          ? {
+              ...current,
+              draft,
+              assets: response.assets,
+              history: [draft, ...current.history.filter((item) => item.id !== draft.id)],
+            }
+          : current,
+      );
+      setNotice("Image uploaded to your Draft room. Visitors will not see it until you open the room.");
+      return response.uploaded_asset;
+    } catch (err) {
+      setActionError(errorMessage(err));
+      return null;
+    } finally {
+      setAssetLoading(false);
+    }
+  }
+
   async function attachAsset() {
     if (!attachForm.url.trim()) {
       setActionError("Add a public asset URL or public asset path first.");
@@ -549,6 +582,7 @@ export default function PresenceStudioEditorApp({
                 showCanonicalSync={showCanonicalSync}
                 canonicalBundle={canonicalBundle}
                 onSyncCanonical={syncCanonicalAssets}
+                onUploadImage={uploadDraftImage}
               />
             )}
             {activeTab === "look" && (
@@ -565,9 +599,10 @@ export default function PresenceStudioEditorApp({
                 config={config}
                 assets={overview?.assets ?? []}
                 canonicalBundle={canonicalBundle}
-                saving={saving}
+                saving={saving || assetLoading}
                 onCommit={commitCanvasChange}
                 onBringImages={() => void syncCanonicalAssets()}
+                onUpload={uploadDraftImage}
               />
             )}
             {activeTab === "overview" && (
@@ -1099,9 +1134,9 @@ function AssetsTab({
       <aside className="grid gap-4 content-start">
         <Panel title="Upload image">
           <div className="rounded-2xl border border-dashed border-white/15 bg-black/20 p-4 text-sm text-stone-400">
-            <p className="font-semibold text-stone-200">Disabled for editor beta</p>
+            <p className="font-semibold text-stone-200">Available in Images</p>
             <p className="mt-2 leading-6">
-              The existing media upload endpoint mutates live node/work media. The Presence editor needs a draft-scoped asset upload endpoint before file upload, crop, and focal point editing can be safely enabled here.
+              Open Images to upload a JPG, PNG, or WEBP image into your Draft room. Crop and focal point controls are not available yet.
             </p>
           </div>
         </Panel>
