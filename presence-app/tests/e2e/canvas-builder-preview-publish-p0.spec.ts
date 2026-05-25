@@ -43,7 +43,7 @@ test("owner draft preview survives a legacy node hydration failure while anonymo
   });
   await page.goto("/studio/101/editor/preview", { waitUntil: "networkidle" });
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
-  await expect(page.getByText("Draft preview not public")).toBeVisible();
+  await expect(page.getByText("Draft preview - only you can see this")).toBeVisible();
   await expect(page.getByText(marker)).toBeVisible();
   await expect(page.getByText("Sign in to open this Presence")).toHaveCount(0);
   await page.screenshot({ path: path.join(evidenceDir, "owner-preview-renders-draft.png"), fullPage: true });
@@ -117,15 +117,15 @@ test("the primary visible publish action opens confirmation and publishes only a
   await expect(page.getByTestId("publish-blocked-reason")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Open to visitors", exact: true })).toHaveCount(0);
   await publishButton.click();
-  const dialog = page.getByRole("dialog", { name: "Open this draft room?" });
-  await expect(dialog).toContainText("Your draft will become the live room.");
+  const dialog = page.getByRole("dialog", { name: "Open your room to visitors?" });
+  await expect(dialog).toContainText("Visitors will see your saved draft from this moment on.");
   await page.screenshot({ path: path.join(evidenceDir, "publish-confirmation-dialog.png"), fullPage: true });
 
   const publishRequest = page.waitForResponse((response) =>
     response.url().includes("/api/presence/owner/rooms/101/editor/publish") &&
     response.request().method() === "POST",
   );
-  await dialog.getByRole("button", { name: "Open to visitors" }).click();
+  await dialog.getByRole("button", { name: "Open room to visitors" }).click();
   await expect((await publishRequest).ok()).toBeTruthy();
   await expect(page.getByText("Your live room is open to visitors.")).toBeVisible();
 

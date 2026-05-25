@@ -11,7 +11,7 @@ test("Presence Studio preserves advanced controls and owner-only boundaries", as
   await expect(page.getByRole("button", { name: "Scenes" })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Advanced controls" }).first().click();
-  await expect(page.getByText("Detailed controls for staff and power users")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Return to Canvas" })).toBeVisible();
   await page.getByRole("button", { name: "Assets" }).click();
   await page.getByLabel("Public URL or asset path").fill("file://blocked-private-image.png");
   await expect(page.getByText(/file: URLs are blocked|Local filesystem paths/)).toBeVisible();

@@ -9,7 +9,6 @@ import {
   ArrowUp,
   Clock3,
   Eye,
-  Globe,
   Image as ImageIcon,
   KeyRound,
   Loader2,
@@ -18,7 +17,6 @@ import {
   Radio,
   RefreshCw,
   RotateCcw,
-  Save,
   Send,
   SlidersHorizontal,
   Sparkles,
@@ -41,7 +39,6 @@ import type {
   PresenceEditableConfig,
   PresenceEditorAsset,
   PresenceEditorOverview,
-  PresenceEditorPreviewResponse,
   PresenceNode,
 } from "@/lib/api/types";
 import { canonicalPublicUrl } from "@/lib/presence/url";
@@ -54,13 +51,18 @@ import {
   isAssetConfigEmpty,
   type CanonicalAssetBundle,
 } from "@/lib/editor/canonicalAssets";
-import BeforeAfterComparison from "./BeforeAfterComparison";
 import PublishConfirmDialog from "./PublishConfirmDialog";
 import ReadinessPanel from "./ReadinessPanel";
 import PresenceCanvasMode from "./PresenceCanvasMode";
+import { EditorStatusStrip } from "./EditorStatusStrip";
+import { EditorTopBar } from "./EditorTopBar";
+import { LookPanel } from "./canvas/LookPanel";
+import { MediaDrawer } from "./canvas/MediaDrawer";
 
 type TabId =
   | "canvas"
+  | "look"
+  | "images"
   | "overview"
   | "scenes"
   | "work-wall"
@@ -112,6 +114,13 @@ const TABS: Array<{ id: TabId; label: string; icon: typeof Sparkles }> = [
   { id: "history", label: "History / Rollback", icon: Clock3 },
 ];
 
+const OWNER_MODES: Array<{ id: TabId; label: string; icon: typeof Sparkles }> = [
+  { id: "canvas", label: "Build", icon: Palette },
+  { id: "look", label: "Look", icon: Sparkles },
+  { id: "images", label: "Images", icon: ImageIcon },
+  { id: "preview", label: "Preview", icon: Eye },
+];
+
 const DEFAULT_SCENES = [
   { id: "artwork_field", number: "01", label: "Artwork Field", subtitle: "liquid slideshow" },
   { id: "work_wall", number: "02", label: "Work Wall", subtitle: "selected watercolours" },
@@ -158,9 +167,7 @@ export default function PresenceStudioEditorApp({
   const [assetLoading, setAssetLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [previewPayload, setPreviewPayload] = useState<PresenceEditorPreviewResponse | null>(null);
-  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
-  const [mobilePreviewReviewed, setMobilePreviewReviewed] = useState(false);
+  const [mobilePreviewReviewed] = useState(false);
   const [attachForm, setAttachForm] = useState({ slot: "attached_assets", url: "", alt_text: "" });
   const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
   const [runtimeDebugVisible, setRuntimeDebugVisible] = useState(false);
@@ -195,14 +202,8 @@ export default function PresenceStudioEditorApp({
     () => (config ? buildReadinessReport({ config, overview, node, dirty, mobilePreviewReviewed }) : null),
     [config, dirty, mobilePreviewReviewed, node, overview],
   );
-  const issues = readiness?.issues ?? [];
   const blockingIssues = readiness?.critical ?? [];
   const publicUrl = canonicalPublicUrl(node.slug);
-
-  function setPreviewModeTracked(mode: "desktop" | "mobile") {
-    setPreviewMode(mode);
-    if (mode === "mobile") setMobilePreviewReviewed(true);
-  }
 
   function mutate(next: (draft: PresenceEditableConfig) => PresenceEditableConfig) {
     setConfig((current) => next(cloneConfig(current ?? createFallbackConfig(node))));
@@ -279,7 +280,6 @@ export default function PresenceStudioEditorApp({
         if (!saved) return;
       }
       const payload = await previewPresenceEditorDraft(nodeId, token);
-      setPreviewPayload(payload);
       setOverview((current) => (current && payload.draft ? { ...current, draft: payload.draft } : current));
       setActiveTab("preview");
       setNotice("Draft preview generated. This is owner-authenticated and does not publish changes.");
@@ -440,93 +440,34 @@ export default function PresenceStudioEditorApp({
 
   return (
     <div className="px-3 py-4 sm:px-5 lg:px-7">
-      <div className="mx-auto max-w-[88rem] overflow-hidden rounded-[2rem] border border-white/10 bg-[#0d0e10] text-stone-100 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
-        <header className="border-b border-white/10 bg-[radial-gradient(circle_at_15%_10%,rgba(229,199,132,0.14),transparent_30%),linear-gradient(135deg,#151515,#0b0c0e)] px-5 py-5 sm:px-7">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-amber-200/70">
-                {advancedVisible ? "Presence Studio / Advanced controls" : "Presence Studio / Canvas"}
-              </p>
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight text-stone-50 sm:text-5xl">
-                {node.display_name}
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-stone-300">
-                {advancedVisible
-                  ? "Detailed controls for staff and power users. Return to Canvas for the calm editing path."
-                  : "Pilot mode: shape your room here. Your changes save as a draft until you open the room to visitors."}
-              </p>
-            </div>
-            {advancedVisible ? (
-              <div className="grid gap-2 text-xs sm:grid-cols-2 lg:min-w-[25rem]">
-                <StatusMetric label="Renderer" value={config.renderer_key || node.renderer_key || "renderer fallback"} />
-                <StatusMetric label="Draft" value={overview?.draft ? `v${overview.draft.version ?? "?"}` : "missing"} tone={overview?.draft ? "good" : "warn"} />
-                <StatusMetric label="Published" value={overview?.published ? `v${overview.published.version ?? "?"}` : "missing"} tone={overview?.published ? "good" : "warn"} />
-                <StatusMetric label="Last saved" value={formatDate(config.updated_at) ?? "not saved"} />
-              </div>
-            ) : (
-              <div className="rounded-3xl border border-amber-200/20 bg-amber-200/10 px-4 py-3 text-xs leading-5 text-amber-50 lg:max-w-[22rem]">
-                <p className="font-semibold">Draft room</p>
-                <p className="mt-1 text-amber-50/80">Nothing reaches visitors until you choose <span className="font-semibold">Open room to visitors</span>.</p>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            <button className={buttonClass("primary")} disabled={saving} onClick={() => void saveDraft()}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {overview?.draft ? "Save draft" : "Create draft"}
-            </button>
-            <button className={buttonClass("secondary")} disabled={previewing} onClick={() => void runPreview()}>
-              {previewing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
-              Preview draft
-            </button>
-            <Link className={buttonClass("secondary")} href={`/studio/${nodeId}/editor/preview`}>
-              <Eye className="h-4 w-4" />
-              Full preview
-            </Link>
-            <button
-              type="button"
-              data-testid="open-to-visitors-primary"
-              className={buttonClass("publish")}
-              disabled={publishing || blockingIssues.length > 0}
-              aria-describedby={blockingIssues.length > 0 ? "publish-blocked-reason" : undefined}
-              onClick={() => setPublishConfirmOpen(true)}
-            >
-              {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Open room to visitors
-            </button>
-            <a className={buttonClass("ghost")} href={publicUrl} target="_blank" rel="noopener noreferrer">
-              <Globe className="h-4 w-4" />
-              Live room
-            </a>
-            <div className="ml-auto flex flex-wrap items-center gap-2">
-              <Pill tone={dirty ? "warn" : "good"}>{dirty ? "Saving needed" : "All changes saved"}</Pill>
-              <Pill tone={blockingIssues.length ? "danger" : issues.length ? "warn" : "good"}>
-                Readiness {readiness?.percentage ?? 0}%
-              </Pill>
-              <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1">
-                {(["desktop", "mobile"] as const).map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => setPreviewModeTracked(mode)}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold capitalize transition ${
-                      previewMode === mode ? "bg-amber-200 text-stone-950" : "text-stone-300 hover:text-stone-50"
-                    }`}
-                  >
-                    {mode}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+      <div className="mx-auto max-w-[88rem] overflow-hidden rounded-[2rem] border border-[#dfd4c5] bg-[#171614] text-stone-100 shadow-[0_30px_80px_rgba(0,0,0,0.22)]">
+        <EditorTopBar
+          roomName={node.display_name}
+          roomId={nodeId}
+          publicUrl={publicUrl}
+          hasLiveRoom={Boolean(overview?.published)}
+          dirty={dirty}
+          saving={saving}
+          publishing={publishing}
+          blockedCount={blockingIssues.length}
+          onSave={() => void saveDraft()}
+          onOpenVisitors={() => setPublishConfirmOpen(true)}
+        />
+        <EditorStatusStrip
+          hasLiveRoom={Boolean(overview?.published)}
+          hasSavedDraft={Boolean(overview?.draft)}
+          dirty={dirty}
+          saving={saving}
+          publishing={publishing}
+        />
+        <div className="bg-[#f5f0e8] px-5 pb-4 sm:px-7">
           {blockingIssues.length > 0 && (
             <p
               id="publish-blocked-reason"
               data-testid="publish-blocked-reason"
-              className="mt-3 rounded-2xl border border-red-300/20 bg-red-950/25 px-4 py-3 text-sm text-red-100"
+              className="rounded-2xl border border-[#d9af8d] bg-[#f8eadd] px-4 py-3 text-sm text-[#704430]"
             >
-              Open to visitors is unavailable until you fix: {blockingIssues.map((issue) => issue.label).join(" ")}
+              Open room to visitors after you fix {blockingIssues.length} {blockingIssues.length === 1 ? "thing" : "things"}: {blockingIssues.map((issue) => issue.label).join(" ")}
             </p>
           )}
           {runtimeDebugVisible && (
@@ -538,32 +479,16 @@ export default function PresenceStudioEditorApp({
           )}
 
           {(notice || actionError) && (
-            <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${actionError ? "border-red-400/40 bg-red-950/30 text-red-100" : "border-emerald-300/30 bg-emerald-950/20 text-emerald-100"}`}>
+            <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${actionError ? "border-[#d9af8d] bg-[#f8eadd] text-[#704430]" : "border-[#b7d1bd] bg-[#e7efe7] text-[#295c43]"}`}>
               {actionError ?? notice}
             </div>
           )}
-          {showCanonicalSync && canonicalBundle && (
-            <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200/40 bg-amber-200/10 px-4 py-3 text-sm text-amber-50">
-              <Sparkles className="h-4 w-4 shrink-0" />
-              <span className="flex-1 min-w-[16rem] leading-6">
-                Your live room already contains {canonicalBundle.count} {canonicalBundle.count === 1 ? "image" : "images"}.
-                Bring them into this draft room so you can edit, move, or replace them here.
-              </span>
-              <button
-                type="button"
-                onClick={syncCanonicalAssets}
-                className="rounded-full bg-amber-200 px-3 py-1.5 text-xs font-semibold text-stone-950 hover:bg-amber-100"
-              >
-                Bring in live images
-              </button>
-            </div>
-          )}
-        </header>
+        </div>
 
         <div className="grid lg:grid-cols-[17rem_minmax(0,1fr)]">
-          <aside className="border-b border-white/10 bg-black/20 p-3 lg:border-b-0 lg:border-r lg:border-white/10">
+          <aside className="border-b border-[#dfd4c5] bg-[#f5f0e8] p-3 text-[#302921] lg:border-b-0 lg:border-r">
             <nav className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
-              {(advancedVisible ? TABS : TABS.filter((tab) => tab.id === "canvas")).map((tab) => {
+              {(advancedVisible ? TABS : OWNER_MODES).map((tab) => {
                 const Icon = tab.icon;
                 const active = activeTab === tab.id;
                 return (
@@ -572,8 +497,8 @@ export default function PresenceStudioEditorApp({
                     type="button"
                     className={`flex min-w-max items-center gap-2 rounded-2xl px-3 py-2 text-left text-xs font-semibold transition lg:min-w-0 ${
                       active
-                        ? "bg-amber-200 text-stone-950"
-                        : "border border-white/0 text-stone-300 hover:border-white/10 hover:bg-white/5 hover:text-stone-50"
+                        ? "bg-[#e7d8bd] text-[#302921]"
+                        : "border border-transparent text-[#6e6256] hover:border-[#dfd4c5] hover:bg-[#ede5d7] hover:text-[#302921]"
                     }`}
                     onClick={() => setActiveTab(tab.id)}
                   >
@@ -585,7 +510,7 @@ export default function PresenceStudioEditorApp({
               {!advancedVisible && (
                 <button
                   type="button"
-                  className="flex min-w-max items-center gap-2 rounded-2xl border border-white/10 px-3 py-2 text-left text-xs font-semibold text-stone-400 transition hover:bg-white/5 hover:text-stone-100 lg:mt-3 lg:min-w-0"
+                  className="flex min-w-max items-center gap-2 rounded-2xl border border-[#dfd4c5] px-3 py-2 text-left text-xs font-semibold text-[#6e6256] transition hover:bg-[#ede5d7] hover:text-[#302921] lg:mt-3 lg:min-w-0"
                   onClick={() => openAdvanced("overview")}
                 >
                   <SlidersHorizontal className="h-4 w-4 shrink-0" />
@@ -595,7 +520,7 @@ export default function PresenceStudioEditorApp({
               {advancedVisible && (
                 <button
                   type="button"
-                  className="mt-2 flex min-w-max items-center gap-2 rounded-2xl border border-amber-200/20 px-3 py-2 text-left text-xs font-semibold text-amber-100 transition hover:bg-amber-200/10 lg:min-w-0"
+                  className="mt-2 flex min-w-max items-center gap-2 rounded-2xl border border-[#d5bb91] px-3 py-2 text-left text-xs font-semibold text-[#6e5436] transition hover:bg-[#ede5d7] lg:min-w-0"
                   onClick={() => {
                     setAdvancedVisible(false);
                     setActiveTab("canvas");
@@ -608,7 +533,7 @@ export default function PresenceStudioEditorApp({
             </nav>
           </aside>
 
-          <main className="min-h-[45rem] bg-[radial-gradient(circle_at_90%_0%,rgba(255,255,255,0.06),transparent_28%)] p-4 sm:p-6">
+          <main className={`min-h-[45rem] p-4 sm:p-6 ${activeTab === "look" || activeTab === "images" ? "bg-[#eee7db]" : "bg-[radial-gradient(circle_at_90%_0%,rgba(255,255,255,0.06),transparent_28%)]"}`}>
             {activeTab === "canvas" && config && (
               <PresenceCanvasMode
                 node={node}
@@ -624,6 +549,25 @@ export default function PresenceStudioEditorApp({
                 showCanonicalSync={showCanonicalSync}
                 canonicalBundle={canonicalBundle}
                 onSyncCanonical={syncCanonicalAssets}
+              />
+            )}
+            {activeTab === "look" && (
+              <LookPanel
+                node={node}
+                config={config}
+                saving={saving}
+                onCommit={commitCanvasChange}
+              />
+            )}
+            {activeTab === "images" && (
+              <MediaDrawer
+                node={node}
+                config={config}
+                assets={overview?.assets ?? []}
+                canonicalBundle={canonicalBundle}
+                saving={saving}
+                onCommit={commitCanvasChange}
+                onBringImages={() => void syncCanonicalAssets()}
               />
             )}
             {activeTab === "overview" && (
@@ -665,12 +609,8 @@ export default function PresenceStudioEditorApp({
               <PreviewPublishTab
                 config={config}
                 overview={overview}
-                previewPayload={previewPayload}
-                previewMode={previewMode}
                 readiness={readiness}
-                onPreview={runPreview}
                 onPublish={() => setPublishConfirmOpen(true)}
-                previewing={previewing}
                 publishing={publishing}
               />
             )}
@@ -1211,107 +1151,57 @@ function AssetPreview({ url, alt }: { url: string; alt: string }) {
 function PreviewPublishTab({
   config,
   overview,
-  previewPayload,
-  previewMode,
   readiness,
-  onPreview,
   onPublish,
-  previewing,
   publishing,
 }: {
   config: PresenceEditableConfig;
   overview: PresenceEditorOverview | null;
-  previewPayload: PresenceEditorPreviewResponse | null;
-  previewMode: "desktop" | "mobile";
   readiness: ReadinessReport | null;
-  onPreview: () => Promise<void>;
   onPublish: () => void;
-  previewing: boolean;
   publishing: boolean;
 }) {
   const artwork = sceneById(config, "artwork_field");
-  const contact = asRecord(recordAt(config.content_config, "contact"));
-  const works = arrayOfRecords(recordAt(config.asset_config, "artworks"));
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
-      <section className="grid gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <Pill tone="warn">Draft preview</Pill>
-            <h2 className="mt-3 text-xl font-semibold">Authenticated preview surface</h2>
-            <p className="mt-1 text-sm text-stone-400">Preview uses the owner endpoint and never exposes a public draft route.</p>
-          </div>
-          <div className="flex gap-2">
-            <button className={buttonClass("secondary")} disabled={previewing} onClick={() => void onPreview()}>
-              {previewing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
-              Generate preview
-            </button>
-            <Link className={buttonClass("secondary")} href={`/studio/${config.room_id}/editor/preview`}>
-              <Eye className="h-4 w-4" />
-              Full preview
-            </Link>
-            <button className={buttonClass("publish")} disabled={publishing || Boolean(readiness?.hasBlockingIssues)} onClick={onPublish}>
-              {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Open room to visitors
-            </button>
-          </div>
-        </div>
-        <BeforeAfterComparison publishedConfig={overview?.published_public_config ?? overview?.published} draftConfig={config} />
-        <div className={`mx-auto w-full ${previewMode === "mobile" ? "max-w-sm" : "max-w-5xl"}`}>
-          <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#f4f4f4] text-[#111] shadow-2xl">
-            <div className="border-b border-black/10 bg-[#eceae7] px-5 py-4">
-              <p className="text-[10px] uppercase tracking-[0.28em] text-black/50">Draft preview</p>
-              <h3 className="mt-2 text-3xl font-light leading-none">{textValue(artwork.title) || "Artwork Field"}</h3>
-              <p className="mt-2 text-sm text-black/60">{textValue(artwork.statement) || textValue(artwork.subtitle) || "Scene statement preview"}</p>
-            </div>
-            <div className="grid gap-4 p-5 md:grid-cols-[minmax(0,1fr)_18rem]">
-              <div className="rounded-3xl border border-black/10 bg-white p-4">
-                <p className="text-[10px] uppercase tracking-[0.22em] text-black/45">Work Wall</p>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  {works.slice(0, 4).map((work, idx) => (
-                    <div key={`${textValue(work.slug)}-${idx}`} className="rounded-2xl border border-black/10 bg-[#eceae7] p-2">
-                      <p className="truncate text-sm">{textValue(work.title) || "Untitled"}</p>
-                      <p className="text-xs text-black/50">{textValue(work.year)} {textValue(work.medium)}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-3xl border border-black/10 bg-[#eceae7] p-4">
-                <p className="text-[10px] uppercase tracking-[0.22em] text-black/45">Calling Card</p>
-                <h4 className="mt-3 text-xl">{textValue(contact.contact_title) || "Begin a conversation"}</h4>
-                <p className="mt-2 text-sm text-black/60">{textValue(contact.contact_copy) || "Presence enquiry form posture."}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <aside className="grid gap-4 content-start">
-        <Panel title="Authenticated preview state">
-          {previewPayload ? (
-            <div className="grid gap-2 text-xs text-stone-300">
-              <KeyValue label="Mode" value={previewPayload.editable_config?.status ?? "preview"} />
-              <KeyValue label="Expires" value={formatTimestamp(previewPayload.expires_at)} />
-              <KeyValue label="Access" value="Owner session only" />
-            </div>
-          ) : (
-            <p className="text-sm text-stone-400">Generate preview through the authenticated owner endpoint. Preview access is not shared publicly.</p>
-          )}
-        </Panel>
-        <Panel title="Publish state">
-          <div className="grid gap-2 text-xs text-stone-300">
-            <KeyValue label="Draft" value={overview?.draft ? `v${overview.draft.version ?? "?"}` : "missing"} />
-            <KeyValue label="Published" value={overview?.published ? `v${overview.published.version ?? "?"}` : "missing"} />
-            <KeyValue label="Critical readiness issues" value={String(readiness?.critical.length ?? 0)} />
-            <KeyValue label="Changed fields" value={String(readiness?.changedCount ?? 0)} />
-          </div>
-        </Panel>
-        {readiness && (
-          <Panel title="Readiness before publish">
-            <ReadinessPanel report={readiness} />
-          </Panel>
-        )}
-      </aside>
-    </div>
+    <section data-testid="preview-mode" className="mx-auto grid max-w-3xl gap-6 rounded-[2rem] bg-[#f6f1e8] p-6 text-[#302921] sm:p-8">
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#866845]">Preview</p>
+        <h2 className="mt-2 text-2xl font-semibold">Preview your draft</h2>
+        <p className="mt-2 text-sm leading-6 text-[#655847]">
+          Only you can see a draft preview. Visitors continue to see the Live room until you open your saved changes.
+        </p>
+      </div>
+      <div className="rounded-3xl border border-[#dfd4c5] bg-white p-5">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#866845]">Draft room</p>
+        <h3 className="mt-3 font-serif text-3xl">{textValue(artwork.title) || "Your entrance title"}</h3>
+        <p className="mt-3 text-sm text-[#655847]">{textValue(artwork.statement) || textValue(artwork.subtitle) || "Your room introduction appears here."}</p>
+      </div>
+      {readiness?.critical.length ? (
+        <p className="rounded-2xl bg-[#f8eadd] p-4 text-sm leading-6 text-[#704430]">
+          A few things need attention before you open your room to visitors. Return to Build to find each highlighted item.
+        </p>
+      ) : (
+        <p className="rounded-2xl bg-[#e7efe7] p-4 text-sm text-[#295c43]">Your draft is ready for a private preview.</p>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <Link
+          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#302921] px-4 py-2 text-sm font-semibold text-white"
+          href={`/studio/${config.room_id}/editor/preview`}
+        >
+          <Eye className="h-4 w-4" />
+          Preview your draft
+        </Link>
+        <button
+          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#317650] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          disabled={publishing || Boolean(readiness?.hasBlockingIssues)}
+          onClick={onPublish}
+        >
+          {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          Open room to visitors
+        </button>
+      </div>
+      {!overview?.published && <p className="text-xs text-[#766a5e]">This will be the first time visitors can enter this room.</p>}
+    </section>
   );
 }
 
@@ -1988,11 +1878,6 @@ function formatDate(value: string | null | undefined) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-}
-
-function formatTimestamp(value: number) {
-  if (!value) return "unknown";
-  return formatDate(new Date(value * 1000).toISOString()) ?? "unknown";
 }
 
 function errorMessage(err: unknown) {

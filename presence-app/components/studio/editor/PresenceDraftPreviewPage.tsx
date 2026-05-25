@@ -106,7 +106,7 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
       setConfirmOpen(false);
       await loadPreview();
     } catch (err) {
-      setPreviewError(err instanceof Error ? err.message : "Publish failed.");
+      setPreviewError(err instanceof Error ? err.message : "We couldn't open your room. Try again.");
     } finally {
       setPublishing(false);
     }
@@ -161,7 +161,7 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
   return (
     <div className="min-h-dvh bg-black text-stone-100">
       <div className="fixed left-4 top-4 z-[1000] rounded-full border border-amber-200/40 bg-black/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-100 backdrop-blur">
-        Draft preview not public
+        Draft preview - only you can see this
       </div>
       <div className="fixed right-4 top-4 z-[1000] flex flex-wrap items-center justify-end gap-2">
         <Link href={`/studio/${roomId}/editor`} className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/70 px-4 py-2 text-sm font-semibold text-stone-100 backdrop-blur hover:bg-white/10">
@@ -195,7 +195,7 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
           id="preview-publish-blocked-reason"
           className="fixed right-4 top-16 z-[1000] max-w-sm rounded-2xl border border-red-300/25 bg-red-950/90 px-4 py-3 text-sm text-red-100 backdrop-blur"
         >
-          Open to visitors is unavailable until you fix: {readiness.critical.map((issue) => issue.label).join(" ")}
+          Open your room after you fix: {readiness.critical.map((issue) => issue.label).join(" ")}
         </p>
       )}
 

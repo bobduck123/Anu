@@ -70,14 +70,14 @@ test("Canvas Builder resolves the draft and published room through one visible l
   await page.getByRole("button", { name: /Move Bridle Road up/ }).click();
   await page.getByRole("button", { name: "Save work order" }).click();
 
-  await page.getByRole("link", { name: "Full preview" }).click();
-  await expect(page.getByText("Draft preview not public")).toBeVisible();
+  await page.getByRole("link", { name: "Preview your draft" }).first().click();
+  await expect(page.getByText("Draft preview - only you can see this")).toBeVisible();
   await expect(page.getByText("Parity Room - Visitor Truth")).toBeVisible();
   await page.screenshot({ path: path.join(evidenceDir, "full-preview-matches-draft.png"), fullPage: true });
 
   await page.getByRole("button", { name: "Open room to visitors" }).click();
   await page.screenshot({ path: path.join(evidenceDir, "publish-confirmation.png"), fullPage: true });
-  await page.getByRole("dialog", { name: "Open this draft room?" }).getByRole("button", { name: "Open to visitors" }).click();
+  await page.getByRole("dialog", { name: "Open your room to visitors?" }).getByRole("button", { name: "Open room to visitors" }).click();
 
   await page.goto("/p/test-presence-room", { waitUntil: "networkidle" });
   await expect(page.getByText("Parity Room - Visitor Truth")).toBeVisible();

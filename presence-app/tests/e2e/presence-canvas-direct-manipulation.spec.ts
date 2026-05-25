@@ -57,9 +57,10 @@ test("pilot owner edits the draft room directly on Canvas and publishes intentio
   await page.getByRole("button", { name: "Entrance" }).click();
   await page.locator('[data-canvas-id="hero-image"]').click();
   await page.getByTestId("canvas-mini-toolbar").getByRole("button", { name: "Change image" }).click();
-  await expect(page.getByTestId("canvas-asset-picker")).toBeVisible();
+  await expect(page.getByTestId("media-drawer")).toBeVisible();
   await page.screenshot({ path: path.join(evidenceDir, "selected-image-asset-picker.png"), fullPage: true });
-  await page.getByTestId("canvas-asset-picker").getByRole("button", { name: /Bridle Road/ }).first().click();
+  await page.getByTestId("media-drawer").getByRole("button", { name: /Bridle Road/ }).first().click();
+  await page.getByTestId("media-drawer").getByRole("button", { name: "Use this image" }).click();
   await expect(page.getByTestId("desktop-canvas-inspector").getByLabel("Alt text")).toBeVisible();
   await page.screenshot({ path: path.join(evidenceDir, "alt-text-editor.png"), fullPage: true });
 
@@ -89,15 +90,15 @@ test("pilot owner edits the draft room directly on Canvas and publishes intentio
   await page.screenshot({ path: path.join(evidenceDir, "mobile-bottom-sheet-inspector.png"), fullPage: true });
   await page.setViewportSize({ width: 1280, height: 900 });
 
-  await page.getByRole("link", { name: "Full preview" }).click();
-  await expect(page.getByText("Draft preview not public")).toBeVisible();
+  await page.getByRole("link", { name: "Preview your draft" }).first().click();
+  await expect(page.getByText("Draft preview - only you can see this")).toBeVisible();
   await expect(page.getByText("Colour as Memory - Canvas Draft")).toBeVisible();
   await page.screenshot({ path: path.join(evidenceDir, "full-preview-after-canvas-edits.png"), fullPage: true });
 
   await page.getByRole("button", { name: "Open room to visitors" }).click();
-  await expect(page.getByText("Open this draft room?")).toBeVisible();
+  await expect(page.getByText("Open your room to visitors?")).toBeVisible();
   await page.screenshot({ path: path.join(evidenceDir, "publish-open-to-visitors-confirmation.png"), fullPage: true });
-  await page.getByRole("dialog", { name: "Open this draft room?" }).getByRole("button", { name: "Open to visitors" }).click();
+  await page.getByRole("dialog", { name: "Open your room to visitors?" }).getByRole("button", { name: "Open room to visitors" }).click();
 
   await page.goto("/p/test-presence-room", { waitUntil: "networkidle" });
   await expect(page.getByText("Colour as Memory - Canvas Draft")).toBeVisible();

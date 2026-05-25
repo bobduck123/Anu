@@ -47,7 +47,7 @@ test("editor, refresh, debug and preview never request sign-out or clear the act
   await page.goto("/studio/101/editor?debug=1", { waitUntil: "networkidle" });
   await expect(page.locator('[data-canvas-id="hero-title"]')).toBeVisible();
   await page.goto("/studio/101/editor/preview", { waitUntil: "networkidle" });
-  await expect(page.getByText("Draft preview not public")).toBeVisible();
+  await expect(page.getByText("Draft preview - only you can see this")).toBeVisible();
 
   expect(signOutRequests).toEqual([]);
   await expect.poll(() => sessionCookie(page)).toBeTruthy();

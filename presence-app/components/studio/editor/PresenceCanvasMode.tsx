@@ -28,12 +28,12 @@ import { fontLoaderHref, getFont, getFontPack } from "@/lib/presence/typography/
 import { applyFontFamily, applyFontPack, applyOptionPack, updatePaletteToken, type PaletteToken } from "@/lib/editor/canvasMutations";
 import { WidgetLibraryDrawer } from "./canvas/WidgetLibraryDrawer";
 import { WidgetInspector } from "./canvas/WidgetInspector";
+import { MediaDrawer } from "./canvas/MediaDrawer";
 import {
   activeMoodId,
   activeMotionId,
   applyCanvasMood,
   applyCanvasMotion,
-  buildCanvasImageCandidates,
   buildCanvasRegistryFromRenderModel,
   CANVAS_MOOD_PRESETS,
   CANVAS_MOTION_PRESETS,
@@ -44,7 +44,6 @@ import {
   getResolvedCanvasImage,
   getResolvedCanvasWorks,
   reorderCanvasWorks,
-  replaceCanvasImage,
   updateCanvasAltText,
   updateCanvasText,
   updateCanvasTextStyle,
@@ -336,23 +335,17 @@ export default function PresenceCanvasMode({
       )}
 
       {imagePickerTarget && (
-        <CanvasAssetPicker
-          target={registry.find((element) => element.canvasId === imagePickerTarget) ?? null}
-          renderModel={renderModel}
+        <MediaDrawer
+          mode="drawer"
           config={config}
           node={node}
           assets={assets}
           canonicalBundle={canonicalBundle}
+          targetCanvasId={imagePickerTarget}
           saving={saving}
           onClose={() => setImagePickerTarget(null)}
-          onChoose={(url, altText) => {
-            void commit(
-              (draft) => replaceCanvasImage(draft, imagePickerTarget, url, altText),
-              "Image saved to your draft room.",
-            ).then((saved) => {
-              if (saved) setImagePickerTarget(null);
-            });
-          }}
+          onCommit={(change) => commit(change, "Image updated - saved to draft.")}
+          onBringImages={onSyncCanonical}
         />
       )}
 
@@ -685,7 +678,7 @@ function SelectionFrame({
           className="absolute bottom-2 right-2 z-10 inline-flex min-h-9 items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-950 shadow"
         >
           <AlertTriangle className="h-3 w-3" />
-          Needs attention
+          {readinessChipLabel(issue)}
         </button>
       )}
       {children}
@@ -1132,6 +1125,16 @@ function ToggleToken({ active, disabled, label, onClick }: { active: boolean; di
   );
 }
 
+function readinessChipLabel(issue: ReadinessIssue) {
+  if (issue.id === "missing-primary-image") return "Pick a cover image";
+  if (issue.id === "missing-hero-alt") return "Add alt text";
+  if (issue.id === "empty-work-wall") return "Add at least one work";
+  if (issue.id === "missing-primary-cta") return "Add an invitation";
+  if (issue.id.startsWith("missing-alt-")) return "Add alt text";
+  if (issue.id.startsWith("unsafe-asset-")) return "Replace this image";
+  return "Needs attention";
+}
+
 function AltTextEditor({
   initialValue,
   saving,
@@ -1236,115 +1239,6 @@ function CanvasActions({
         When the draft is ready, use <span className="font-semibold text-stone-200">Open room to visitors</span> above.
       </p>
     </section>
-  );
-}
-
-function CanvasAssetPicker({
-  target,
-  renderModel,
-  config,
-  node,
-  assets,
-  canonicalBundle,
-  saving,
-  onClose,
-  onChoose,
-}: {
-  target: CanvasElement | null;
-  renderModel: PresenceRenderModel;
-  config: PresenceEditableConfig;
-  node: PresenceNode;
-  assets: PresenceEditorAsset[];
-  canonicalBundle: CanonicalAssetBundle | null;
-  saving: boolean;
-  onClose: () => void;
-  onChoose: (url: string, altText: string) => void;
-}) {
-  const candidates = buildCanvasImageCandidates(config, node, assets, canonicalBundle);
-  const current = target ? getResolvedCanvasImage(renderModel, target.canvasId) : { url: "", altText: "" };
-  const [url, setUrl] = useState("");
-  const [altText, setAltText] = useState(current.altText);
-  const [warning, setWarning] = useState<string | null>(null);
-  const [pending, setPending] = useState<{ url: string; altText: string } | null>(null);
-
-  function choose(urlToUse: string, alt: string) {
-    const check = validateAssetUrl(urlToUse);
-    if (!check.isValid) {
-      setWarning(check.errors[0] ?? "That image cannot be used safely.");
-      setPending(null);
-      return;
-    }
-    if (check.warnings.length > 0 && pending?.url !== urlToUse) {
-      setWarning(check.warnings[0]);
-      setPending({ url: urlToUse, altText: alt });
-      return;
-    }
-    setWarning(check.warnings[0] ?? null);
-    setPending(null);
-    onChoose(urlToUse, alt);
-  }
-
-  return (
-    <Modal title={`Change image${target ? ` - ${target.label}` : ""}`} onClose={onClose}>
-      <div data-testid="canvas-asset-picker" className="grid gap-5">
-        <p className="text-sm leading-6 text-stone-300">Choose from images already connected to this room.</p>
-        {candidates.length > 0 ? (
-          <div className="grid max-h-72 grid-cols-2 gap-3 overflow-y-auto pr-1 sm:grid-cols-3">
-            {candidates.map((candidate) => (
-              <button
-                type="button"
-                key={candidate.id}
-                disabled={saving}
-                onClick={() => choose(candidate.url, candidate.altText)}
-                className="min-h-36 overflow-hidden rounded-2xl border border-white/10 bg-black/20 text-left hover:border-amber-200/60 disabled:opacity-40"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={candidate.url} alt="" className="h-24 w-full object-cover" />
-                <span className="block px-2 pt-2 text-[10px] uppercase tracking-[0.14em] text-stone-500">{candidate.sourceLabel}</span>
-                <span className="block truncate px-2 pb-2 text-xs text-stone-100">{candidate.label}</span>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <p className="rounded-2xl bg-white/5 p-3 text-xs text-stone-300">No room images are attached yet.</p>
-        )}
-        <div className="rounded-2xl border border-amber-200/15 bg-amber-200/5 p-3 text-xs leading-5 text-amber-50">
-          Upload from your device is coming next. For this pilot, choose an existing room image or ask the studio to add new images.
-        </div>
-        <details className="rounded-2xl border border-white/10 p-3">
-          <summary className="cursor-pointer text-xs font-semibold text-stone-300">Advanced image link</summary>
-          <div className="mt-3 grid gap-2">
-            <input
-              type="url"
-              value={url}
-              onChange={(event) => setUrl(event.target.value)}
-              placeholder="https://images.example.com/your-image.jpg"
-              className="min-h-11 rounded-xl border border-white/10 bg-black/30 px-3 text-xs text-white outline-none focus:border-amber-200/50"
-            />
-            <input
-              type="text"
-              value={altText}
-              onChange={(event) => setAltText(event.target.value)}
-              placeholder="Alt text for this image"
-              className="min-h-11 rounded-xl border border-white/10 bg-black/30 px-3 text-xs text-white outline-none focus:border-amber-200/50"
-            />
-            <button type="button" disabled={saving || !url.trim()} onClick={() => choose(url, altText)} className={wideButtonClass()}>
-              Use image link
-            </button>
-          </div>
-        </details>
-        {warning && (
-          <div className="grid gap-2 rounded-xl border border-amber-200/20 bg-amber-200/10 p-3 text-xs text-amber-50">
-            <p>{warning}</p>
-            {pending && (
-              <button type="button" disabled={saving} onClick={() => choose(pending.url, pending.altText)} className={wideButtonClass()}>
-                Use this signed image link
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-    </Modal>
   );
 }
 

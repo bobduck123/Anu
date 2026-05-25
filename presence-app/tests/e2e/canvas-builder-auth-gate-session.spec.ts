@@ -60,11 +60,11 @@ test("hydrating session on standard editor and private preview does not become a
 
   await page.evaluate(() => window.localStorage.setItem("presence:e2e:hidden_session_reads", "2"));
   await page.goto("/studio/101/editor/preview", { waitUntil: "networkidle" });
-  await expect(page.getByText("Draft preview not public")).toBeVisible();
+  await expect(page.getByText("Draft preview - only you can see this")).toBeVisible();
   await expect(page.getByText("Sign in to open this Presence")).toHaveCount(0);
 
   await page.goto("/studio/101/editor/preview?debug=1", { waitUntil: "networkidle" });
-  await expect(page.getByText("Draft preview not public")).toBeVisible();
+  await expect(page.getByText("Draft preview - only you can see this")).toBeVisible();
   await expect(page.getByText("Sign in to open this Presence")).toHaveCount(0);
 });
 

@@ -18,17 +18,20 @@ export function PalettePicker({
   model,
   saving,
   onChange,
+  tone = "dark",
 }: {
   model: PresenceRenderModel;
   saving: boolean;
   onChange: (token: PaletteToken, value: string) => void;
+  tone?: "dark" | "paper";
 }) {
+  const paper = tone === "paper";
   return (
-    <section data-testid="palette-picker" className="grid gap-3 rounded-2xl border border-white/10 p-3">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">Room colours</p>
+    <section data-testid="palette-picker" className={`grid gap-3 rounded-2xl border p-3 ${paper ? "border-[#ddd3c4] bg-white/60" : "border-white/10"}`}>
+      <p className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${paper ? "text-[#7f7060]" : "text-stone-500"}`}>Room colours</p>
       <div className="grid grid-cols-2 gap-2">
         {TOKENS.map((token) => (
-          <label key={token.key} className="flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-2 text-[11px] text-stone-300">
+          <label key={token.key} className={`flex min-h-11 items-center gap-2 rounded-xl border px-2 text-[11px] ${paper ? "border-[#ddd3c4] bg-white text-[#655847]" : "border-white/10 text-stone-300"}`}>
             <input
               aria-label={token.label}
               type="color"
