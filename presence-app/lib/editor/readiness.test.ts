@@ -11,6 +11,7 @@ const node = {
   display_mode: "room",
   status: "published",
   visibility: "public",
+  renderer_key: "ggm-faithful-room-v1",
 } as PresenceNode;
 
 const readyDraft: PresenceEditableConfig = {
@@ -68,4 +69,29 @@ test("first publication still blocks unsafe assets", () => {
 
   assert.equal(report.hasBlockingIssues, true);
   assert.equal(report.critical.some((issue) => issue.id.startsWith("unsafe-asset-")), true);
+});
+
+test("the GGM resolved hero shown in Canvas satisfies publish readiness when draft assets are inherited", () => {
+  const report = buildReadinessReport({
+    config: { ...readyDraft, renderer_key: "ggm-faithful-room-v1", asset_config: {} },
+    overview: overview(null),
+    node,
+    dirty: false,
+    mobilePreviewReviewed: true,
+  });
+
+  assert.equal(report.critical.some((issue) => issue.id === "missing-primary-image"), false);
+});
+
+test("a renderer without a resolved or authored image remains blocked", () => {
+  const genericNode = { ...node, renderer_key: "generic-room-v1" };
+  const report = buildReadinessReport({
+    config: { ...readyDraft, renderer_key: "generic-room-v1", asset_config: {} },
+    overview: overview(null),
+    node: genericNode,
+    dirty: false,
+    mobilePreviewReviewed: true,
+  });
+
+  assert.equal(report.critical.some((issue) => issue.id === "missing-primary-image"), true);
 });

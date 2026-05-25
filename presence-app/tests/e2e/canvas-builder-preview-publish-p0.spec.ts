@@ -8,7 +8,7 @@ const evidenceDir = path.join(
   "docs",
   "program",
   "evidence",
-  "presence-canvas-builder-v2-p0-preview-publish-fix",
+  "presence-hosted-auth-readiness-stabilization-proof",
   "screenshots",
 );
 
@@ -38,6 +38,9 @@ test("owner draft preview survives a legacy node hydration failure while anonymo
       body: JSON.stringify({ error: { code: "forbidden", message: "Legacy node hydration denied." } }),
     });
   });
+  await request.post("http://127.0.0.1:5105/__test__/state", {
+    data: { failNextEditorReads: 1, failNextPreviewReads: 1 },
+  });
   await page.goto("/studio/101/editor/preview", { waitUntil: "networkidle" });
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   await expect(page.getByText("Draft preview not public")).toBeVisible();
@@ -61,6 +64,32 @@ test("owner draft preview survives a legacy node hydration failure while anonymo
   await expect(otherOwner.getByText("Draft preview is available only to the owner of this Room.")).toBeVisible();
   await expect(otherOwner.getByText(marker)).toHaveCount(0);
   await otherOwnerContext.close();
+});
+
+test("safe owner reads recover from first hosted warm-up failure and expose owner diagnostics on request", async ({ page, request }) => {
+  mkdirSync(evidenceDir, { recursive: true });
+  await request.post("http://127.0.0.1:5105/__test__/reset");
+  await request.post("http://127.0.0.1:5105/__test__/state", {
+    data: { failNextOwnerNodeReads: 1, failNextEditorReads: 1 },
+  });
+  await signInOwner(page);
+
+  await page.goto("/studio/101/editor?debug=1", { waitUntil: "networkidle" });
+  await expect(page.locator('[data-canvas-id="hero-title"]')).toBeVisible();
+  await expect(page.getByText("Sign in to open this Presence")).toHaveCount(0);
+  await expect(page.getByTestId("hosted-runtime-diagnostics")).toContainText("hosted-auth-readiness-stabilization");
+  await page.screenshot({ path: path.join(evidenceDir, "hosted-runtime-diagnostics-local.png"), fullPage: true });
+});
+
+test("a GGM image visibly inherited through the draft render model satisfies publish readiness", async ({ page, request }) => {
+  await request.post("http://127.0.0.1:5105/__test__/reset");
+  await request.post("http://127.0.0.1:5105/__test__/state", { data: { stripEditorImages: true } });
+  await signInOwner(page);
+
+  await page.goto("/studio/101/editor", { waitUntil: "networkidle" });
+  await expect(page.locator('[data-canvas-id="hero-image"] img')).toBeVisible();
+  await expect(page.getByTestId("open-to-visitors-primary")).toBeEnabled();
+  await expect(page.getByText("Primary artwork or hero image is missing.")).toHaveCount(0);
 });
 
 test("the primary visible publish action opens confirmation and publishes only after confirmation", async ({ page, context, request }) => {

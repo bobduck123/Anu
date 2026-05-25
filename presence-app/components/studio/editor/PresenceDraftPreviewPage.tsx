@@ -4,12 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Eye, Loader2, Monitor, Send, Smartphone } from "lucide-react";
 import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
+import { resolveOwnerSessionToken } from "@/components/studio/ownerSession";
 import PortfolioRenderer from "@/components/portfolio/PortfolioRenderer";
 import { PresenceApiError } from "@/lib/api/client";
 import { getPresenceEditor, previewPresenceEditorDraft, publishPresenceEditorDraft } from "@/lib/api/editor";
 import { getNode } from "@/lib/api/owner";
 import type { PresenceEditableConfig, PresenceEditorOverview, PresenceEditorPreviewResponse, PresenceNode } from "@/lib/api/types";
-import { createClient } from "@/lib/supabase/client";
 import PublishConfirmDialog from "./PublishConfirmDialog";
 import { buildReadinessReport } from "@/lib/editor/readiness";
 
@@ -29,9 +29,8 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
     setLoadingPreview(true);
     setPreviewError(null);
     try {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
+      const accessToken = await resolveOwnerSessionToken();
+      if (!accessToken) {
         setAccessFailure("sign-in");
         setToken(null);
         setNode(null);
@@ -39,7 +38,6 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
         setOverview(null);
         return;
       }
-      const accessToken = session.access_token;
       setToken(accessToken);
       const [nextPayload, nextOverview] = await Promise.all([
         previewPresenceEditorDraft(roomId, accessToken),

@@ -1,105 +1,98 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { ownerReadFetch } from "./client.ts";
 
-import { buildApiUrl, ownerFetch, PresenceApiError } from "./client.ts";
-
-test("buildApiUrl joins configured API base and relative paths", () => {
-  assert.equal(
-    buildApiUrl("/api/presence/owner/beta/start"),
-    "http://localhost:5000/api/presence/owner/beta/start",
-  );
-  assert.equal(
-    buildApiUrl("api/presence/owner/beta/start"),
-    "http://localhost:5000/api/presence/owner/beta/start",
-  );
-});
-
-test("ownerFetch posts to the owner beta start route with supported CORS headers", async () => {
-  const calls: Array<{ url: string; init: RequestInit }> = [];
+test("ownerReadFetch recovers from a transient hosted read failure", async () => {
   const originalFetch = globalThis.fetch;
-
-  globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
-    calls.push({ url: String(url), init: init ?? {} });
-    return new Response(
-      JSON.stringify({
-        data: {
-          id: 42,
-          slug: "test-presence",
-          display_name: "Test Presence",
-          status: "draft",
-          visibility: "private",
-          display_mode: "standard",
-          visual_mood: null,
-        },
-      }),
-      {
-        status: 201,
+  const originalInfo = console.info;
+  let calls = 0;
+  console.info = () => undefined;
+  globalThis.fetch = (async () => {
+    calls += 1;
+    if (calls === 1) {
+      return new Response(JSON.stringify({ error: { code: "cold_start", message: "Warming up." } }), {
+        status: 503,
         headers: { "Content-Type": "application/json" },
-      },
-    );
+      });
+    }
+    return new Response(JSON.stringify({ data: { ok: true } }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   }) as typeof fetch;
-
   try {
-    const result = await ownerFetch<{ slug: string }>(
-      "/api/presence/owner/beta/start",
-      "test-token",
-      {
-        method: "POST",
-        body: JSON.stringify({ display_name: "Test Presence", presence_type: "artist" }),
-      },
-    );
-
-    assert.equal(result.slug, "test-presence");
-    assert.equal(calls.length, 1);
-    assert.equal(
-      calls[0]!.url,
-      "http://localhost:5000/api/presence/owner/beta/start",
-    );
-    assert.equal(calls[0]!.init.method, "POST");
-
-    const headers = calls[0]!.init.headers as Record<string, string>;
-    assert.equal(headers.Authorization, "Bearer test-token");
-    assert.equal(headers["Content-Type"], "application/json");
-    assert.equal(headers.Accept, "application/json");
-    assert.deepEqual(
-      Object.keys(headers).sort(),
-      ["Accept", "Authorization", "Content-Type"].sort(),
-      "beta start should only send headers allowed by backend CORS",
-    );
-    assert.equal(
-      calls[0]!.init.body,
-      JSON.stringify({ display_name: "Test Presence", presence_type: "artist" }),
-    );
+    const data = await ownerReadFetch<{ ok: boolean }>("/api/presence/owner/nodes/11", "tok", {}, {
+      sessionPresent: true,
+      maxAttempts: 2,
+    });
+    assert.equal(data.ok, true);
+    assert.equal(calls, 2);
   } finally {
     globalThis.fetch = originalFetch;
+    console.info = originalInfo;
   }
 });
 
-test("api errors preserve auth response status instead of collapsing to unreachable", async () => {
+test("ownerReadFetch recovers from one network failure but does not retry a confirmed non-owner response", async () => {
   const originalFetch = globalThis.fetch;
-
-  globalThis.fetch = (async () =>
-    new Response(JSON.stringify({ msg: "Missing Authorization Header" }), {
-      status: 401,
+  const originalInfo = console.info;
+  let networkCalls = 0;
+  console.info = () => undefined;
+  globalThis.fetch = (async () => {
+    networkCalls += 1;
+    if (networkCalls === 1) throw new TypeError("cold connection");
+    return new Response(JSON.stringify({ data: { ok: true } }), {
+      status: 200,
       headers: { "Content-Type": "application/json" },
-    })) as typeof fetch;
-
+    });
+  }) as typeof fetch;
   try {
-    await assert.rejects(
-      () =>
-        ownerFetch("/api/presence/owner/beta/start", "", {
-          method: "POST",
-          body: JSON.stringify({ display_name: "Test Presence", presence_type: "artist" }),
-        }),
-      (error) => {
-        assert.ok(error instanceof PresenceApiError);
-        assert.equal(error.status, 401);
-        assert.equal(error.code, "auth_required");
-        assert.equal(error.message, "Missing Authorization Header");
-        return true;
-      },
-    );
+    await ownerReadFetch("/api/presence/owner/nodes/11", "tok", {}, {
+      sessionPresent: true,
+      maxAttempts: 2,
+    });
+    assert.equal(networkCalls, 2);
+
+    let deniedCalls = 0;
+    globalThis.fetch = (async () => {
+      deniedCalls += 1;
+      return new Response(JSON.stringify({ error: { code: "forbidden", message: "Not your Room." } }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
+    }) as typeof fetch;
+    await assert.rejects(() => ownerReadFetch("/api/presence/owner/nodes/11", "tok", {}, {
+      sessionPresent: true,
+      retryAuthOnce: true,
+    }));
+    assert.equal(deniedCalls, 1);
   } finally {
     globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+  }
+});
+
+test("ownerReadFetch never retries an unclassified mutation", async () => {
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  let calls = 0;
+  console.info = () => undefined;
+  globalThis.fetch = (async () => {
+    calls += 1;
+    return new Response(JSON.stringify({ error: { code: "unavailable", message: "Try again." } }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
+  }) as typeof fetch;
+  try {
+    await assert.rejects(() => ownerReadFetch("/api/presence/owner/rooms/11/editor/publish", "tok", {
+      method: "POST",
+    }, {
+      sessionPresent: true,
+    }));
+    assert.equal(calls, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
   }
 });

@@ -1,4 +1,4 @@
-import { ownerFetch } from "./client.ts";
+import { ownerFetch, ownerReadFetch } from "./client.ts";
 import type {
   PresenceEditableConfig,
   PresenceEditorAssetsResponse,
@@ -29,11 +29,17 @@ export type PresenceEditorConfigInput = Partial<
 >;
 
 export function getPresenceEditor(roomId: number, token: string) {
-  return ownerFetch<PresenceEditorOverview>(`${BASE}/${roomId}/editor`, token);
+  return ownerReadFetch<PresenceEditorOverview>(`${BASE}/${roomId}/editor`, token, {}, {
+    sessionPresent: true,
+    retryAuthOnce: true,
+  });
 }
 
 export function getPresenceEditorDraft(roomId: number, token: string) {
-  return ownerFetch<PresenceEditorDraftResponse>(`${BASE}/${roomId}/editor/draft`, token);
+  return ownerReadFetch<PresenceEditorDraftResponse>(`${BASE}/${roomId}/editor/draft`, token, {}, {
+    sessionPresent: true,
+    retryAuthOnce: true,
+  });
 }
 
 export function createPresenceEditorDraft(
@@ -59,9 +65,12 @@ export function patchPresenceEditorDraft(
 }
 
 export function previewPresenceEditorDraft(roomId: number, token: string) {
-  return ownerFetch<PresenceEditorPreviewResponse>(`${BASE}/${roomId}/editor/preview`, token, {
-    method: "POST",
-  });
+  return ownerReadFetch<PresenceEditorPreviewResponse>(
+    `${BASE}/${roomId}/editor/preview`,
+    token,
+    { method: "POST" },
+    { safeEnsurePost: true, sessionPresent: true, retryAuthOnce: true },
+  );
 }
 
 export function publishPresenceEditorDraft(roomId: number, token: string) {
@@ -82,11 +91,17 @@ export function rollbackPresenceEditor(
 }
 
 export function getPresenceEditorHistory(roomId: number, token: string) {
-  return ownerFetch<PresenceEditorHistoryResponse>(`${BASE}/${roomId}/editor/history`, token);
+  return ownerReadFetch<PresenceEditorHistoryResponse>(`${BASE}/${roomId}/editor/history`, token, {}, {
+    sessionPresent: true,
+    retryAuthOnce: true,
+  });
 }
 
 export function listPresenceEditorAssets(roomId: number, token: string) {
-  return ownerFetch<PresenceEditorAssetsResponse>(`${BASE}/${roomId}/assets`, token);
+  return ownerReadFetch<PresenceEditorAssetsResponse>(`${BASE}/${roomId}/assets`, token, {}, {
+    sessionPresent: true,
+    retryAuthOnce: true,
+  });
 }
 
 export function attachPresenceEditorAsset(

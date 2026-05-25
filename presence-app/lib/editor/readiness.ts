@@ -1,4 +1,5 @@
 import type { PresenceEditableConfig, PresenceEditorOverview, PresenceNode } from "@/lib/api/types";
+import { resolveRenderModel } from "../presence/render/resolver.ts";
 import { validateAssetUrl } from "./assetValidator.ts";
 import { diffEditableConfigs } from "./diffEngine.ts";
 
@@ -54,14 +55,28 @@ export function buildReadinessReport({
   const contact = asRecord(recordAt(config.content_config, "contact"));
   const enquiry = asRecord(config.enquiry_config);
   const motion = asRecord(config.motion_config);
+  const draftRenderModel = resolveRenderModel(
+    { ...node, editable_config: { ...config, status: "draft" } },
+    "draft",
+  );
+  const rawHasPrimaryImage =
+    isPublishableImage(text(hero.url))
+    || visibleWorks.some((work) => isPublishableImage(text(work.url) || text(work.image_url)));
+  const resolvedHasPrimaryImage =
+    draftRenderModel.hero.slides.some((work) => work.visible && isPublishableImage(work.asset.url))
+    || draftRenderModel.works.some((work) => work.visible && isPublishableImage(work.asset.url));
+  const hasPrimaryImage =
+    draftRenderModel.identity.rendererKey === "ggm-faithful-room-v1"
+      ? resolvedHasPrimaryImage
+      : rawHasPrimaryImage;
 
   add(!text(artwork.title), "missing-title", "critical", "Scene 01 needs a room title.", "Visitors need a clear entrance title.", "scenes");
   add(
-    !text(hero.url) && !visibleWorks.some((work) => text(work.url) || text(work.image_url)),
+    !hasPrimaryImage,
     "missing-primary-image",
     "critical",
     "Primary artwork or hero image is missing.",
-    "The room needs a visual anchor before it is ready for visitors.",
+    "Add an image that appears in the room before opening it to visitors.",
     "assets",
   );
   add(
@@ -188,6 +203,10 @@ function isSafeExternalUrl(url: string): boolean {
   } catch {
     return false;
   }
+}
+
+function isPublishableImage(url: string): boolean {
+  return Boolean(url) && validateAssetUrl(url).isValid;
 }
 
 function sceneById(config: PresenceEditableConfig, id: string): Record<string, unknown> {

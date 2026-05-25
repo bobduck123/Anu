@@ -1,0 +1,61 @@
+{
+  "evidence": "presence-hosted-auth-readiness-stabilization-proof",
+  "date": "2026-05-25",
+  "scope": "P0 hosted preview authentication, resolved-image readiness, and safe owner-read recovery",
+  "hosted_smoke": {
+    "status": "NOT_RUN",
+    "reason": "Requires deployed change set and an authenticated hosted owner session."
+  },
+  "local_tests": {
+    "typecheck": {
+      "command": "npm.cmd run typecheck",
+      "status": "passed"
+    },
+    "unit_contracts": {
+      "command": "node --test --experimental-strip-types lib\\api\\client.test.ts lib\\editor\\readiness.test.ts lib\\presence\\render\\resolver.test.ts lib\\presence\\widgets\\registry.test.ts lib\\presence\\option-packs\\registry.test.ts lib\\presence\\typography\\registry.test.ts lib\\editor\\canvasModel.test.ts lib\\editor\\canvasMutations.test.ts lib\\editor\\assetValidator.test.ts lib\\editor\\diffEngine.test.ts lib\\api\\editor.test.ts lib\\api\\presenceGraph.test.ts",
+      "status": "passed",
+      "passed": 38,
+      "failed": 0
+    },
+    "build": {
+      "command": "npm.cmd run build",
+      "status": "passed"
+    },
+    "backend_boundaries": {
+      "command": "python -m pytest tests\\test_presence_studio_editor_foundation.py tests\\test_presence_graph_integration_proof.py tests\\test_presence_pass_paths.py tests\\test_presence_cors.py -q -p no:cacheprovider",
+      "status": "passed",
+      "passed": 25,
+      "failed": 0
+    },
+    "browser_lifecycle": {
+      "command": "npx playwright test tests/e2e/canvas-builder-preview-publish-p0.spec.ts tests/e2e/canvas-builder-parity.spec.ts tests/e2e/presence-canvas-direct-manipulation.spec.ts tests/e2e/presence-studio-editor.spec.ts tests/e2e/presence-pass-paths.spec.ts --workers=1 --retries=0 --reporter=list",
+      "status": "passed",
+      "passed": 19,
+      "failed": 0
+    },
+    "diff_check": {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  },
+  "acceptance": {
+    "preview_owner_access": "passed_local",
+    "preview_anonymous_denial": "passed_local",
+    "preview_non_owner_denial": "passed_local",
+    "transient_owner_read_503_recovers": "passed_local",
+    "transient_owner_read_network_error_recovers": "passed_unit",
+    "confirmed_forbidden_not_retried": "passed_unit",
+    "publish_button_enabled_for_resolved_hero": "passed_local",
+    "publish_confirmation": "passed_local",
+    "publish_request_sent": "passed_local",
+    "public_unchanged_before_publish": "passed_local",
+    "preview_reflects_draft": "passed_local",
+    "public_updates_after_publish": "passed_local",
+    "RoomKey_published_only": "passed_local",
+    "cleanup_status": "local_fixture_reset; hosted_cleanup_pending_re_smoke"
+  },
+  "warnings": [
+    "Next.js build/test server reports an existing inferred workspace-root warning due to multiple lockfiles.",
+    "Backend tests report existing SQLAlchemy Query.get legacy warnings."
+  ]
+}

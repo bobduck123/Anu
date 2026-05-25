@@ -24,7 +24,7 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
-import { PresenceApiError } from "@/lib/api/client";
+import { API_BASE, PresenceApiError } from "@/lib/api/client";
 import {
   attachPresenceEditorAsset,
   createPresenceEditorDraft,
@@ -163,6 +163,7 @@ export default function PresenceStudioEditorApp({
   const [mobilePreviewReviewed, setMobilePreviewReviewed] = useState(false);
   const [attachForm, setAttachForm] = useState({ slot: "attached_assets", url: "", alt_text: "" });
   const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
+  const [runtimeDebugVisible, setRuntimeDebugVisible] = useState(false);
 
   const loadEditor = useCallback(async () => {
     setLoading(true);
@@ -184,6 +185,10 @@ export default function PresenceStudioEditorApp({
   useEffect(() => {
     void loadEditor();
   }, [loadEditor]);
+
+  useEffect(() => {
+    setRuntimeDebugVisible(new URLSearchParams(window.location.search).get("debug") === "1");
+  }, []);
 
   const dirty = useMemo(() => Boolean(config && snapshot(config) !== baseSnapshot), [config, baseSnapshot]);
   const readiness = useMemo(
@@ -523,6 +528,12 @@ export default function PresenceStudioEditorApp({
             >
               Open to visitors is unavailable until you fix: {blockingIssues.map((issue) => issue.label).join(" ")}
             </p>
+          )}
+          {runtimeDebugVisible && (
+            <HostedRuntimeDiagnostics
+              editorConnected={Boolean(overview && !loadError)}
+              previewPatchPresent
+            />
           )}
 
           {(notice || actionError) && (
@@ -1602,6 +1613,36 @@ function buttonClass(kind: "primary" | "secondary" | "publish" | "ghost" | "tiny
 
 function inputClass(extra = "") {
   return `w-full rounded-2xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-stone-100 outline-none transition placeholder:text-stone-600 focus:border-amber-200/50 focus:ring-2 focus:ring-amber-200/10 ${extra}`;
+}
+
+function HostedRuntimeDiagnostics({
+  editorConnected,
+  previewPatchPresent,
+}: {
+  editorConnected: boolean;
+  previewPatchPresent: boolean;
+}) {
+  return (
+    <section
+      data-testid="hosted-runtime-diagnostics"
+      className="mt-3 grid gap-2 rounded-2xl border border-sky-300/20 bg-sky-950/20 px-4 py-3 text-xs text-sky-100 sm:grid-cols-2"
+    >
+      <p><span className="font-semibold">Build:</span> Canvas Builder V2 / hosted-auth-readiness-stabilization</p>
+      <p><span className="font-semibold">Service host:</span> {safeServiceHost()}</p>
+      <p><span className="font-semibold">Owner access:</span> {editorConnected ? "connected" : "loading or unavailable"}</p>
+      <p><span className="font-semibold">Session transport:</span> bearer owner session</p>
+      <p><span className="font-semibold">Read recovery:</span> safe owner reads only</p>
+      <p><span className="font-semibold">Preview repair:</span> {previewPatchPresent ? "present" : "unknown"}</p>
+    </section>
+  );
+}
+
+function safeServiceHost() {
+  try {
+    return new URL(API_BASE).host;
+  } catch {
+    return "same hosted service";
+  }
 }
 
 function normalizeConfig(raw: PresenceEditableConfig | Record<string, unknown> | null | undefined, node: PresenceNode): PresenceEditableConfig {

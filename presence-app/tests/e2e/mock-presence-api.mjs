@@ -27,6 +27,9 @@ function resetState() {
     editorPublished: buildEditorConfig("published", 1),
     nextEditorVersion: 2,
     editorAssets: buildEditorAssets(),
+    failNextOwnerNodeReads: 0,
+    failNextEditorReads: 0,
+    failNextPreviewReads: 0,
     // Hall activity event counters used by the analytics endpoint to mirror
     // the real backend's hall_activity_event aggregation.
     hallStallVisits: 0,
@@ -54,6 +57,17 @@ const server = createServer(async (req, res) => {
     if (Array.isArray(body.passes)) state.passes = body.passes;
     if (Array.isArray(body.keys)) state.keys = body.keys;
     if (body.clearEditorPublished === true) state.editorPublished = null;
+    if (Number.isInteger(body.failNextOwnerNodeReads)) state.failNextOwnerNodeReads = body.failNextOwnerNodeReads;
+    if (Number.isInteger(body.failNextEditorReads)) state.failNextEditorReads = body.failNextEditorReads;
+    if (Number.isInteger(body.failNextPreviewReads)) state.failNextPreviewReads = body.failNextPreviewReads;
+    if (body.stripEditorImages === true && state.editorPublished) {
+      state.editorPublished = {
+        ...state.editorPublished,
+        asset_config: {},
+        content_config: { ...state.editorPublished.content_config, works: [] },
+      };
+      state.editorAssets = [];
+    }
     return send(res, 200, { ok: true, state: publicState() });
   }
 
@@ -271,12 +285,20 @@ const server = createServer(async (req, res) => {
   if (url.pathname === "/api/presence/owner/nodes/101" && req.method === "GET") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
+    if (state.failNextOwnerNodeReads > 0) {
+      state.failNextOwnerNodeReads -= 1;
+      return sendError(res, 503, "cold_start", "Room read is warming up.");
+    }
     return sendData(res, publicRoomFixture());
   }
 
   if (url.pathname === "/api/presence/owner/rooms/101/editor" && req.method === "GET") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
+    if (state.failNextEditorReads > 0) {
+      state.failNextEditorReads -= 1;
+      return sendError(res, 503, "cold_start", "Editor read is warming up.");
+    }
     return sendData(res, {
       room: { id: fixtures.room.id, slug: fixtures.room.slug, display_name: fixtures.room.display_name, owner_user_id: fixtures.room.owner_user_id },
       draft: state.editorDraft,
@@ -309,6 +331,10 @@ const server = createServer(async (req, res) => {
   if (url.pathname === "/api/presence/owner/rooms/101/editor/preview" && req.method === "POST") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
+    if (state.failNextPreviewReads > 0) {
+      state.failNextPreviewReads -= 1;
+      return sendError(res, 503, "cold_start", "Preview read is warming up.");
+    }
     if (!state.editorDraft) state.editorDraft = buildEditorConfig("draft", state.nextEditorVersion++);
     return sendData(res, {
       created_draft: false,

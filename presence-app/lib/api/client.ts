@@ -136,6 +136,106 @@ export async function ownerFetch<T>(
   });
 }
 
+export interface OwnerReadRetryPolicy {
+  /**
+   * Preview is a protected ensure-and-render operation: retrying after a
+   * transient failure may repeat its audit event but does not publish or
+   * overwrite owner content.
+   */
+  safeEnsurePost?: boolean;
+  sessionPresent?: boolean;
+  retryAuthOnce?: boolean;
+  maxAttempts?: number;
+}
+
+const OWNER_READ_RETRY_DELAYS_MS = [180, 450];
+const TRANSIENT_READ_STATUSES = new Set([408, 429, 502, 503, 504]);
+
+export async function ownerReadFetch<T>(
+  path: string,
+  token: string,
+  options: RequestInit = {},
+  policy: OwnerReadRetryPolicy = {},
+): Promise<T> {
+  const method = String(options.method ?? "GET").toUpperCase();
+  const retryableMethod = method === "GET" || (method === "POST" && policy.safeEnsurePost === true);
+  if (!retryableMethod) return ownerFetch<T>(path, token, options);
+
+  const attempts = Math.max(1, policy.maxAttempts ?? 3);
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const startedAt = nowMs();
+    try {
+      const result = await ownerFetch<T>(path, token, options);
+      if (attempt > 0) {
+        logOwnerReadTrace({
+          path,
+          method,
+          status: 200,
+          attempt: attempt + 1,
+          recovered: true,
+          durationMs: Math.round(nowMs() - startedAt),
+          sessionPresent: policy.sessionPresent === true,
+        });
+      }
+      return result;
+    } catch (err) {
+      const status = err instanceof PresenceApiError ? err.status : 0;
+      const shouldRetry =
+        attempt + 1 < attempts
+        && (status === 0
+          || TRANSIENT_READ_STATUSES.has(status)
+          || (status === 401 && attempt === 0 && policy.sessionPresent === true && policy.retryAuthOnce === true));
+      logOwnerReadTrace({
+        path,
+        method,
+        status,
+        attempt: attempt + 1,
+        recovered: false,
+        retrying: shouldRetry,
+        durationMs: Math.round(nowMs() - startedAt),
+        sessionPresent: policy.sessionPresent === true,
+      });
+      if (!shouldRetry) throw err;
+      await wait(OWNER_READ_RETRY_DELAYS_MS[Math.min(attempt, OWNER_READ_RETRY_DELAYS_MS.length - 1)] ?? 450);
+    }
+  }
+
+  throw new PresenceApiError(0, "network_error", "The Presence owner read could not be completed.");
+}
+
+interface OwnerReadTrace {
+  path: string;
+  method: string;
+  status: number;
+  attempt: number;
+  recovered: boolean;
+  retrying?: boolean;
+  durationMs: number;
+  sessionPresent: boolean;
+}
+
+function logOwnerReadTrace(trace: OwnerReadTrace) {
+  if (!ownerReadDiagnosticsEnabled()) return;
+  console.info("[Presence owner read]", {
+    ...trace,
+    credentials: "bearer-session",
+  });
+}
+
+function ownerReadDiagnosticsEnabled(): boolean {
+  if (process.env.NODE_ENV !== "production") return true;
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("debug") === "1";
+}
+
+function nowMs(): number {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // Classify an error as a connection problem (not a data/auth problem).
 // Owner / Studio surfaces should surface a clear connection error here
 // instead of pretending nothing exists — those users need to know the
