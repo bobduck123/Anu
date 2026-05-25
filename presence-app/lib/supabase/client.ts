@@ -113,10 +113,12 @@ function createMockBrowserClient() {
       },
       async signOut() {
         window.localStorage.removeItem("presence:e2e:access_token");
+        document.cookie = "presence_e2e_session=; Path=/; Max-Age=0; SameSite=Lax";
         return { error: null };
       },
       async signInWithPassword(_credentials?: unknown) {
         window.localStorage.setItem("presence:e2e:access_token", "owner-test-token");
+        document.cookie = "presence_e2e_session=owner-test-token; Path=/; SameSite=Lax";
         const delayedReads = window.localStorage.getItem("presence:e2e:delay_session_reads_after_sign_in");
         if (delayedReads) {
           window.localStorage.setItem("presence:e2e:hidden_session_reads", delayedReads);

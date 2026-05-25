@@ -34,7 +34,8 @@ test.describe("real Supabase session permanence", () => {
       /Analytics|Studio|Presence/i,
     );
 
-    await page.goto("/auth/sign-out", { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Sign out" }).click();
+    await page.waitForURL("/");
     await page.goto(`/studio/${encodeURIComponent(ggmRoomId)}/analytics`, {
       waitUntil: "networkidle",
     });

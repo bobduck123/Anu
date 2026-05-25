@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Globe, LogOut } from "lucide-react";
+import { ChevronRight, Globe } from "lucide-react";
 import { listNodes } from "@/lib/api/owner";
 import type { PresenceNode } from "@/lib/api/types";
 import { createClient } from "@/lib/supabase/client";
 import { isEmailVerificationRequired } from "@/lib/supabase/config";
 import { Loading, Empty, StatusPill } from "@/components/ui";
 import { StudioAuthGate } from "@/components/auth/StudioAuthGate";
+import SignOutButton from "@/components/auth/SignOutButton";
 
 export default function StudioIndexPage() {
   const emailVerificationRequired = isEmailVerificationRequired();
@@ -98,13 +99,10 @@ export default function StudioIndexPage() {
               preview, publish, and share it.
             </p>
           </div>
-          <Link
-            href="/auth/sign-out"
+          <SignOutButton
+            iconOnly
             className="rounded-xl border border-[var(--p-studio-border)] px-3 py-2 text-xs font-semibold text-[var(--p-studio-muted)] transition hover:border-[var(--p-studio-accent)]/60 hover:text-[var(--p-studio-text)]"
-            title="Sign out"
-          >
-            <LogOut className="h-4 w-4" />
-          </Link>
+          />
         </header>
 
         {loading && <Loading label="Loading your Presences..." />}

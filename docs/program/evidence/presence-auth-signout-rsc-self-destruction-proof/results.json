@@ -1,0 +1,56 @@
+{
+  "evidence": "presence-auth-signout-rsc-self-destruction-proof",
+  "date": "2026-05-25",
+  "scope": "Destructive GET/RSC sign-out route and explicit logout semantics",
+  "hosted_smoke": {
+    "status": "NOT_RUN_AFTER_FIX",
+    "required": true
+  },
+  "acceptance": {
+    "editor_navigation_does_not_request_signout": "passed_local",
+    "session_cookie_persists_after_editor_wait": "passed_local",
+    "hard_refresh_keeps_owner_access": "passed_local",
+    "debug_navigation_does_not_clear_session": "passed_local",
+    "preview_navigation_does_not_clear_session": "passed_local",
+    "get_signout_non_mutating": "passed_local",
+    "rsc_get_signout_non_mutating": "passed_local",
+    "explicit_signout_clears_session": "passed_local",
+    "anonymous_denied": "passed_local_existing_suite",
+    "non_owner_denied": "passed_local_existing_suite"
+  },
+  "tests": {
+    "typecheck": {
+      "command": "npm.cmd run typecheck",
+      "status": "passed"
+    },
+    "build": {
+      "command": "npm.cmd run build",
+      "status": "passed"
+    },
+    "targeted_contracts": {
+      "command": "node --test --experimental-strip-types lib\\api\\client.test.ts lib\\api\\editor.test.ts lib\\editor\\readiness.test.ts lib\\presence\\render\\resolver.test.ts lib\\api\\presenceGraph.test.ts",
+      "status": "passed",
+      "passed": 19,
+      "failed": 0
+    },
+    "focused_browser": {
+      "command": "npx playwright test tests/e2e/auth-signout-rsc-safety.spec.ts tests/e2e/canvas-builder-auth-gate-session.spec.ts tests/e2e/canvas-builder-preview-publish-p0.spec.ts --workers=1 --retries=0 --reporter=list",
+      "status": "passed",
+      "passed": 10,
+      "failed": 0
+    },
+    "full_browser_regression": {
+      "command": "npx playwright test tests/e2e/auth-signout-rsc-safety.spec.ts tests/e2e/canvas-builder-auth-gate-session.spec.ts tests/e2e/canvas-builder-preview-publish-p0.spec.ts tests/e2e/canvas-builder-parity.spec.ts tests/e2e/presence-canvas-direct-manipulation.spec.ts tests/e2e/presence-studio-editor.spec.ts tests/e2e/presence-pass-paths.spec.ts --workers=1 --retries=0 --reporter=list",
+      "status": "passed",
+      "passed": 25,
+      "failed": 0
+    },
+    "diff_check": {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  },
+  "warnings": [
+    "Next.js reports an existing inferred workspace-root warning caused by multiple lockfiles."
+  ]
+}
