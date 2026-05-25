@@ -75,6 +75,11 @@ function createMockBrowserClient() {
   return {
     auth: {
       async getSession() {
+        const hiddenReads = Number(window.localStorage.getItem("presence:e2e:hidden_session_reads") ?? "0");
+        if (hiddenReads > 0) {
+          window.localStorage.setItem("presence:e2e:hidden_session_reads", String(hiddenReads - 1));
+          return { data: { session: null }, error: null };
+        }
         const token = window.localStorage.getItem("presence:e2e:access_token");
         return {
           data: {
@@ -111,7 +116,22 @@ function createMockBrowserClient() {
         return { error: null };
       },
       async signInWithPassword(_credentials?: unknown) {
-        return { data: { user: mockUser, session: null }, error };
+        window.localStorage.setItem("presence:e2e:access_token", "owner-test-token");
+        const delayedReads = window.localStorage.getItem("presence:e2e:delay_session_reads_after_sign_in");
+        if (delayedReads) {
+          window.localStorage.setItem("presence:e2e:hidden_session_reads", delayedReads);
+          window.localStorage.removeItem("presence:e2e:delay_session_reads_after_sign_in");
+        }
+        return {
+          data: {
+            user: mockUser,
+            session: {
+              access_token: "owner-test-token",
+              user: mockUser,
+            },
+          },
+          error: null,
+        };
       },
       async signUp(_credentials?: unknown) {
         return { data: { user: mockUser, session: null }, error };

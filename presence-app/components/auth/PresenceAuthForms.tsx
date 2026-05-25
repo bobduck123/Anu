@@ -22,6 +22,7 @@ import {
   studioContactHref,
   SUPABASE_MISSING_MESSAGE,
 } from "@/lib/supabase/config";
+import { waitForPersistedOwnerSession } from "@/components/studio/ownerSession";
 
 function AuthShell({
   eyebrow,
@@ -128,16 +129,22 @@ export function SignInForm() {
     setError(null);
     savePendingReturnTo(returnTo);
     const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    setBusy(false);
     if (signInError) {
+      setBusy(false);
       setError(signInError.message);
       return;
     }
+    if (!signInData.session?.access_token || !(await waitForPersistedOwnerSession())) {
+      setBusy(false);
+      setError("Your sign-in succeeded, but Studio could not confirm the session yet. Please try again.");
+      return;
+    }
     clearPendingReturnTo();
+    setBusy(false);
     router.replace(resolvePostAuthReturnTo(returnTo, "/studio"));
   }
 

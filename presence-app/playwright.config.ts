@@ -50,6 +50,8 @@ export default defineConfig({
       env: {
         NEXT_PUBLIC_API_BASE: `http://127.0.0.1:${apiPort}`,
         NEXT_PUBLIC_ENABLE_E2E_AUTH_MOCK: "true",
+        NEXT_PUBLIC_SUPABASE_URL: "https://presence-e2e.supabase.test",
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: "presence-e2e-public-key",
       },
     },
   ],

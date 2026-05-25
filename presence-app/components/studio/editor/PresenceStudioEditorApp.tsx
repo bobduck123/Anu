@@ -533,6 +533,7 @@ export default function PresenceStudioEditorApp({
             <HostedRuntimeDiagnostics
               editorConnected={Boolean(overview && !loadError)}
               previewPatchPresent
+              sessionReady={Boolean(token)}
             />
           )}
 
@@ -1618,9 +1619,11 @@ function inputClass(extra = "") {
 function HostedRuntimeDiagnostics({
   editorConnected,
   previewPatchPresent,
+  sessionReady,
 }: {
   editorConnected: boolean;
   previewPatchPresent: boolean;
+  sessionReady: boolean;
 }) {
   return (
     <section
@@ -1628,13 +1631,20 @@ function HostedRuntimeDiagnostics({
       className="mt-3 grid gap-2 rounded-2xl border border-sky-300/20 bg-sky-950/20 px-4 py-3 text-xs text-sky-100 sm:grid-cols-2"
     >
       <p><span className="font-semibold">Build:</span> Canvas Builder V2 / hosted-auth-readiness-stabilization</p>
-      <p><span className="font-semibold">Service host:</span> {safeServiceHost()}</p>
+      <p><span className="font-semibold">Frontend host:</span> {safeFrontendHost()}</p>
+      <p><span className="font-semibold">Backend host:</span> {safeServiceHost()}</p>
       <p><span className="font-semibold">Owner access:</span> {editorConnected ? "connected" : "loading or unavailable"}</p>
       <p><span className="font-semibold">Session transport:</span> bearer owner session</p>
+      <p><span className="font-semibold">Auth provider:</span> {sessionReady ? "session ready" : "checking session"}</p>
       <p><span className="font-semibold">Read recovery:</span> safe owner reads only</p>
       <p><span className="font-semibold">Preview repair:</span> {previewPatchPresent ? "present" : "unknown"}</p>
+      <p><span className="font-semibold">Debug mode:</span> display-only</p>
     </section>
   );
+}
+
+function safeFrontendHost() {
+  return typeof window !== "undefined" ? window.location.host : "hosted frontend";
 }
 
 function safeServiceHost() {

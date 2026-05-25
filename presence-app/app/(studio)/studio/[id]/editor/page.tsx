@@ -10,15 +10,23 @@ import PresenceStudioEditorApp from "@/components/studio/editor/PresenceStudioEd
 export default function StudioPresenceEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const nodeId = Number(id);
-  const { node, token, loading, error, authRequired, reload } = useOwnerNode(nodeId);
+  const { node, token, loading, error, authRequired, accessState, reload } = useOwnerNode(nodeId);
 
-  if (loading && !node) return <Loading label="Loading Presence editor..." />;
+  if (loading && !node) {
+    return (
+      <Loading
+        label={accessState === "confirming-room" ? "Confirming Room access..." : "Checking access..."}
+      />
+    );
+  }
   if (!node || !token) {
     return (
       <StudioNodeGate
         authRequired={authRequired}
         returnTo={`/studio/${nodeId}/editor`}
         error={error ?? "Node not found or you do not have editor access."}
+        retryable={accessState === "unavailable"}
+        onRetry={() => void reload()}
       />
     );
   }

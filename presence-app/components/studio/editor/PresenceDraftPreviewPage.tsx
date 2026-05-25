@@ -21,6 +21,7 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
   const [loadingPreview, setLoadingPreview] = useState(true);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [accessFailure, setAccessFailure] = useState<"sign-in" | "forbidden" | null>(null);
+  const [accessPhase, setAccessPhase] = useState<"checking-session" | "confirming-room">("checking-session");
   const [mode, setMode] = useState<"desktop" | "mobile">("desktop");
   const [publishing, setPublishing] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -28,8 +29,9 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
   const loadPreview = useCallback(async () => {
     setLoadingPreview(true);
     setPreviewError(null);
+    setAccessPhase("checking-session");
     try {
-      const accessToken = await resolveOwnerSessionToken();
+      const accessToken = await resolveOwnerSessionToken({ waitForHydration: true });
       if (!accessToken) {
         setAccessFailure("sign-in");
         setToken(null);
@@ -39,6 +41,7 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
         return;
       }
       setToken(accessToken);
+      setAccessPhase("confirming-room");
       const [nextPayload, nextOverview] = await Promise.all([
         previewPresenceEditorDraft(roomId, accessToken),
         getPresenceEditor(roomId, accessToken),
@@ -128,7 +131,11 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
   }
 
   if (loadingPreview && !previewNode) {
-    return <PreviewState label="Loading authenticated draft preview..." />;
+    return (
+      <PreviewState
+        label={accessPhase === "confirming-room" ? "Warming secure preview..." : "Checking access..."}
+      />
+    );
   }
 
   if (previewError || !previewNode || !token) {

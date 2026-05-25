@@ -19,5 +19,5 @@ test("Presence Studio preserves advanced controls and owner-only boundaries", as
   await page.goto("/");
   await page.evaluate(() => window.localStorage.setItem("presence:e2e:access_token", "non-owner-token"));
   await page.goto("/studio/101/editor", { waitUntil: "networkidle" });
-  await expect(page.getByText(/do not have editor access|You do not own this Presence Room|could not be loaded/i)).toBeVisible();
+  await expect(page.getByText(/do not have access to this Room|do not have editor access|You do not own this Presence Room|could not be loaded/i)).toBeVisible();
 });
