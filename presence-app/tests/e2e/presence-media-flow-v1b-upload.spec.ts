@@ -13,6 +13,21 @@ const evidenceDir = path.join(
 );
 
 const uploadedSrc = "uploaded=v1b-proof";
+const restrictedPublicHtmlTerms = [
+  "editable_config",
+  "asset_config",
+  "content_config",
+  "style_dna",
+  "motion_config",
+  "draft_config",
+  "owner_user_id",
+  "auth_subject",
+  "platform_admin",
+  "internal_lifetime_free",
+  "preview_token",
+  "bearer",
+  "service_role",
+];
 
 test("owner uploads an image into the draft, previews it, and publishes intentionally", async ({ page, context, request }) => {
   mkdirSync(evidenceDir, { recursive: true });
@@ -43,6 +58,7 @@ test("owner uploads an image into the draft, previews it, and publishes intentio
   const publicBefore = await context.newPage();
   await publicBefore.goto("/p/test-presence-room", { waitUntil: "networkidle" });
   await expect(publicBefore.locator(`img[src*="${uploadedSrc}"]`)).toHaveCount(0);
+  await expectPublicHtmlClean(publicBefore);
   await publicBefore.close();
 
   await page.getByRole("link", { name: "Preview your draft" }).first().click();
@@ -57,6 +73,7 @@ test("owner uploads an image into the draft, previews it, and publishes intentio
 
   await page.goto("/p/test-presence-room", { waitUntil: "networkidle" });
   await expect(page.locator(`img[src*="${uploadedSrc}"]`).first()).toBeVisible();
+  await expectPublicHtmlClean(page);
   await page.screenshot({ path: path.join(evidenceDir, "public-after-upload-publish.png"), fullPage: true });
 
   const roomKey = await context.newPage();
@@ -66,3 +83,10 @@ test("owner uploads an image into the draft, previews it, and publishes intentio
   await roomKey.close();
   await request.post("http://127.0.0.1:5105/__test__/reset");
 });
+
+async function expectPublicHtmlClean(page: import("playwright/test").Page) {
+  const html = (await page.content()).toLowerCase();
+  for (const term of restrictedPublicHtmlTerms) {
+    expect(html, `anonymous public HTML exposed ${term}`).not.toContain(term);
+  }
+}

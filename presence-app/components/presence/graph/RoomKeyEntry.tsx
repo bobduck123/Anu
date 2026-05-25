@@ -8,9 +8,9 @@ import { resolveRoomKey } from "@/lib/api/presenceGraph";
 import { PresenceApiError } from "@/lib/api/client";
 import { PRESENCE_GRAPH_COPY, roomKeyTypeLabel } from "@/lib/presence/graph/copy";
 import type { RoomKeyEntryPayload } from "@/lib/api/types";
-import { isGgmFaithfulRoom } from "@/lib/presence/ggm/activate";
+import { GGM_RENDERER_KEY, isGgmFaithfulRoom } from "@/lib/presence/ggm/activate";
 import GgmFaithfulRoom from "@/components/presence/ggm/GgmFaithfulRoom";
-import { resolveRenderModel } from "@/lib/presence/render/resolver";
+import { createPublicRenderPayload } from "@/lib/presence/render/publicPayload";
 import { PresenceGraphActions } from "./PresenceGraphActions";
 
 export function RoomKeyEntry({ token }: { token: string }) {
@@ -80,9 +80,10 @@ export function RoomKeyEntry({ token }: { token: string }) {
     );
   }
 
-  const room = payload.editable_config && !payload.room.editable_config
+  const resolvedRoom = payload.editable_config && !payload.room.editable_config
     ? { ...payload.room, editable_config: payload.editable_config }
     : payload.room;
+  const { node: room, renderModel: publishedModel } = createPublicRenderPayload(resolvedRoom);
   const hero = room.hero_image_url || room.cover_image_url || room.profile_image_url;
   const sourceLabel = roomKeyTypeLabel(payload.room_key?.key_type ?? null);
   const campaign = payload.room_key?.campaign_label ?? null;
@@ -90,8 +91,8 @@ export function RoomKeyEntry({ token }: { token: string }) {
   // GGM RoomKey entry — render the faithful Room with an "Opened via …"
   // chip at the top instead of the generic dark stone shell. The visitor
   // should immediately see Christina's work, not a Presence-system page.
-  if (isGgmFaithfulRoom(room)) {
-    const model = resolveRenderModel(room, "published");
+  if (publishedModel.identity.rendererKey === GGM_RENDERER_KEY || isGgmFaithfulRoom(room)) {
+    const model = publishedModel;
     return (
       <>
         <GgmFaithfulRoom node={room} model={model} roomKeySourceLabel={sourceLabel} />

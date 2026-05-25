@@ -1,0 +1,60 @@
+{
+  "evidence_version": "presence-public-payload-hygiene-proof",
+  "date": "2026-05-26",
+  "scope": "anonymous public Next.js HTML hydration payload mapping",
+  "restricted_terms": [
+    "editable_config",
+    "asset_config",
+    "content_config",
+    "style_dna",
+    "motion_config",
+    "draft_config",
+    "owner_user_id",
+    "auth_subject",
+    "platform_admin",
+    "internal_lifetime_free",
+    "preview_token",
+    "bearer",
+    "service_role"
+  ],
+  "public_safe_mapping_created": true,
+  "published_visual_model_preserved": true,
+  "public_html_clean_local": true,
+  "upload_assign_save_preview_publish_lifecycle_local": true,
+  "public_unchanged_before_publish_local": true,
+  "public_updates_after_publish_local": true,
+  "roomkey_published_only_regression_local": true,
+  "backend_published_json_contract_changed": false,
+  "hosted_post_fix_smoke": "NOT RUN - deployment required",
+  "private_draft_storage_proven": false,
+  "tests": [
+    {
+      "command": "npm.cmd run typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "npm.cmd run build",
+      "result": "passed with existing Next.js multiple-lockfiles workspace-root warning"
+    },
+    {
+      "command": "node --test --experimental-strip-types lib/presence/render/resolver.test.ts lib/presence/render/publicPayload.test.ts lib/editor/readiness.test.ts lib/editor/mediaValidation.test.ts lib/api/editor.test.ts",
+      "result": "passed",
+      "passed": 18
+    },
+    {
+      "command": "python -m pytest tests/test_presence_studio_editor_foundation.py tests/test_presence_graph_integration_proof.py tests/test_presence_pass_paths.py tests/test_presence_cors.py tests/test_presence_nodes.py -q -p no:cacheprovider",
+      "result": "passed with existing SQLAlchemy legacy warnings",
+      "passed": 109
+    },
+    {
+      "command": "npx.cmd playwright test auth-signout, auth-gate, preview-publish, canvas-parity, RoomKey, Media Flow V1B and public-payload hygiene specs --workers=1 --retries=0 --reporter=list",
+      "result": "passed",
+      "passed": 25
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "recommendation": "GO for operator-led pilots with non-sensitive uploads after hosted source re-smoke"
+}
