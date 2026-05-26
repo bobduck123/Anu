@@ -79,6 +79,21 @@ test("image replacement preserves the work record and alt text association", () 
   assert.equal(works[0].alt_text, "New alt");
 });
 
+test("protected uploaded image selection carries its media reference into the draft slot", () => {
+  const replaced = replaceCanvasImage(
+    config,
+    "hero-image",
+    "https://media.test/private-preview?signature=short-lived",
+    "Protected cover",
+    "media-private-1",
+  );
+  assert.deepEqual(replaced.asset_config?.hero_image, {
+    url: "https://media.test/private-preview?signature=short-lived",
+    alt_text: "Protected cover",
+    media_id: "media-private-1",
+  });
+});
+
 test("work reorder ignores duplicate requests and mirrors renderer order", () => {
   const reordered = reorderCanvasWorks(config, node, ["two", "two", "one"]);
   const works = (reordered.asset_config?.artworks ?? []) as Array<Record<string, unknown>>;

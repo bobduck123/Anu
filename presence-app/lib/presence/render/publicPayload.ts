@@ -16,6 +16,10 @@ export const RESTRICTED_PUBLIC_PAYLOAD_KEYS = [
   "preview_token",
   "bearer",
   "service_role",
+  "draft_storage_key",
+  "published_storage_key",
+  "signed_url",
+  "preview_expires_at",
 ] as const;
 
 const restrictedKeys = new Set<string>(RESTRICTED_PUBLIC_PAYLOAD_KEYS);

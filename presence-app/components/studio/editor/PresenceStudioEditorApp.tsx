@@ -373,7 +373,11 @@ export default function PresenceStudioEditorApp({
             }
           : current,
       );
-      setNotice("Image uploaded to your Draft room. Visitors will not see it until you open the room.");
+      setNotice(
+        response.uploaded_asset.visibility === "private_draft"
+          ? "Image uploaded to your Draft room. Only you can see it until you open the room."
+          : "Image uploaded for your Draft room. Use only public-safe images until protected uploads are enabled.",
+      );
       return response.uploaded_asset;
     } catch (err) {
       setActionError(errorMessage(err));

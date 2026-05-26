@@ -55,6 +55,8 @@ export function MediaDrawer({
   const [tab, setTab] = useState<SourceTab>("room");
   const [selectedUrl, setSelectedUrl] = useState("");
   const [selectedAlt, setSelectedAlt] = useState("");
+  const [selectedMediaId, setSelectedMediaId] = useState<string | undefined>();
+  const [selectedVisibility, setSelectedVisibility] = useState<string | undefined>();
   const [feedback, setFeedback] = useState<string | null>(null);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadAlt, setUploadAlt] = useState("");
@@ -78,12 +80,14 @@ export function MediaDrawer({
   useEffect(() => {
     setSelectedUrl("");
     setSelectedAlt(current.altText);
+    setSelectedMediaId(undefined);
+    setSelectedVisibility(undefined);
     setFeedback(null);
   }, [current.altText, current.url, targetId]);
 
   async function useSelectedImage() {
     if (!selectedUrl) return;
-    const saved = await onCommit((draft) => replaceCanvasImage(draft, targetId, selectedUrl, selectedAlt));
+    const saved = await onCommit((draft) => replaceCanvasImage(draft, targetId, selectedUrl, selectedAlt, selectedMediaId));
     if (saved) {
       setFeedback("Image updated - saved to draft.");
       if (mode === "drawer") onClose?.();
@@ -124,7 +128,13 @@ export function MediaDrawer({
     }
     setSelectedUrl(asset.url);
     setSelectedAlt(asset.alt_text ?? uploadAlt);
-    setFeedback("Upload ready in your Draft room. Choose Use this image to place it here.");
+    setSelectedMediaId(asset.media_id ?? undefined);
+    setSelectedVisibility(asset.visibility ?? undefined);
+    setFeedback(
+      asset.visibility === "private_draft"
+        ? "Uploaded to your Draft room. Only you can see this image until you open the room."
+        : "Upload ready in your Draft room. Use only public-safe images until protected uploads are enabled.",
+    );
     setUploadState("ready");
     setTab("room");
   }
@@ -221,6 +231,11 @@ export function MediaDrawer({
             <p className="text-xs leading-5 text-[#655847]">
               This is saved to your Draft room first. Visitors will not see it in the room until you open the room to visitors.
             </p>
+            {selectedVisibility === "private_draft" && (
+              <p className="rounded-xl bg-[#e7efe7] p-3 text-xs font-semibold text-[#295c43]">
+                This image is private until you open the room to visitors.
+              </p>
+            )}
             {uploadFile && (
               <div className="grid gap-3 rounded-xl bg-white/70 p-3">
                 <p className="truncate text-sm font-semibold">{uploadFile.name}</p>
@@ -264,6 +279,8 @@ export function MediaDrawer({
                 onClick={() => {
                   setSelectedUrl(candidate.url);
                   setSelectedAlt(candidate.altText);
+                  setSelectedMediaId(candidate.mediaId);
+                  setSelectedVisibility(candidate.visibility);
                   setFeedback(null);
                 }}
                 className={`overflow-hidden rounded-2xl border bg-white text-left ${
@@ -273,7 +290,7 @@ export function MediaDrawer({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={candidate.url} alt="" className="h-28 w-full object-cover" />
                 <span className="block px-2 pt-2 text-[10px] uppercase tracking-[0.14em] text-[#8a7762]">
-                  {candidate.sourceLabel === "Attached images" ? "Unused image" : candidate.sourceLabel}
+                  {candidate.visibility === "private_draft" ? "Draft image" : candidate.sourceLabel === "Attached images" ? "Unused image" : candidate.sourceLabel}
                 </span>
                 <span className="block truncate px-2 pb-3 pt-1 text-xs font-semibold">{candidate.label}</span>
               </button>

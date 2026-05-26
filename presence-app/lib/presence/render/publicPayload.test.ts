@@ -50,7 +50,9 @@ test("public render payload omits nested editor and control-plane keys while ret
 
 test("public payload key scanner finds nested forbidden architecture terms", () => {
   assert.deepEqual(
-    findRestrictedPublicPayloadKeys({ nested: { content_config: {}, preview_token: "x" } }),
-    ["content_config", "preview_token"],
+    findRestrictedPublicPayloadKeys({
+      nested: { content_config: {}, preview_token: "x", draft_storage_key: "private/path", signed_url: "secret-link" },
+    }),
+    ["content_config", "draft_storage_key", "preview_token", "signed_url"],
   );
 });

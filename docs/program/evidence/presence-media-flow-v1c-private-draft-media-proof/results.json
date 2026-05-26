@@ -1,0 +1,57 @@
+{
+  "evidence_version": "presence-media-flow-v1c-private-draft-media-proof",
+  "date": "2026-05-26",
+  "storage_provider": "Supabase Storage in production with local filesystem test/development fallback",
+  "private_draft_bucket_or_equivalent": "Implemented behind PRESENCE_MEDIA_DRAFT_BUCKET; local protected-store behavior tested; hosted bucket policy not yet smoke-tested",
+  "draft_media_access_controlled": "implemented and locally tested; hosted Supabase private-bucket proof pending",
+  "signed_preview_urls": "implemented and locally tested; hosted Supabase signed-read proof pending",
+  "public_derivative_on_publish": "Public promoted copy of validated original; no resized/compressed derivative yet",
+  "unused_draft_media_publicly_hidden": "passed locally; hosted V1C rerun required",
+  "private_storage_keys_absent_public": "passed locally; hosted V1C rerun required",
+  "upload_validation": "JPG, PNG, WEBP only; MIME/signature/extension and 8 MB maximum enforced; dimensions captured where parsable",
+  "exif_gps_stripping": false,
+  "compression_or_derivatives": false,
+  "focal_point_supported": false,
+  "crop_supported": false,
+  "orphan_cleanup_supported": "Owner-scoped cleanup endpoint implemented; scheduled retention cleanup deferred",
+  "delete_replace_supported": "Safe backend delete for non-live/non-selected protected uploads; existing replacement lifecycle retained",
+  "public_payload_hygiene_clean": "passed locally; existing V1B hosted baseline passed; V1C hosted rerun required",
+  "upload_assign_save_preview_publish_cleanup": "passed locally for protected path; V1C hosted rerun required",
+  "RoomKey_clean": "passed locally and in existing hosted baseline; V1C hosted rerun required",
+  "hosted_v1c_smoke": "NOT RUN - migration, private bucket configuration and deployment required",
+  "tests": [
+    {
+      "command": "npm run typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed with existing Next.js workspace-root lockfile warning"
+    },
+    {
+      "command": "node --test --experimental-strip-types focused editor/media/render/API test files",
+      "result": "passed",
+      "passed": 25
+    },
+    {
+      "command": "python -m pytest selected Presence editor/graph/RoomKey/CORS/nodes suites -q -p no:cacheprovider",
+      "result": "passed with existing SQLAlchemy legacy warnings",
+      "passed": 112
+    },
+    {
+      "command": "python -m pytest tests/test_presence_studio_editor_foundation.py -q -p no:cacheprovider",
+      "result": "passed after Supabase private-policy probe test was added",
+      "passed": 9
+    },
+    {
+      "command": "npx playwright test selected auth/preview/upload/V1C/payload/RoomKey specs --workers=1 --retries=0 --reporter=list",
+      "result": "passed",
+      "passed": 22
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "final_recommendation": "GO for operator-led pilots with private draft media after hosted smoke"
+}

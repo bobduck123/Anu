@@ -15,6 +15,9 @@ const restrictedPublicHtmlTerms = [
   "preview_token",
   "bearer",
   "service_role",
+  "draft_storage_key",
+  "signed_url",
+  "preview_expires_at",
 ];
 
 test.beforeEach(async ({ request }) => {

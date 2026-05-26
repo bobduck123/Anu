@@ -134,6 +134,11 @@ export interface PresenceEditorAsset {
   role?: "cover" | "work" | "portrait" | "background" | "invitation" | "unused" | string;
   mime_type?: string | null;
   size_bytes?: number | null;
+  width?: number | null;
+  height?: number | null;
+  status?: "draft_uploaded" | "draft_attached" | "ready" | "published" | "orphaned" | "deleted" | string;
+  visibility?: "private_draft" | "public_unlisted" | "public_published" | string;
+  preview_expires_at?: number | null;
 }
 
 export interface PresenceEditorRoomSummary {
@@ -204,7 +209,7 @@ export interface PresenceEditorAttachAssetResponse {
 
 export interface PresenceEditorUploadAssetResponse extends PresenceEditorAttachAssetResponse {
   uploaded_asset: PresenceEditorAsset;
-  storage_policy: "public_unlisted_until_used" | string;
+  storage_policy: "private_draft_promoted_on_publish" | "public_unlisted_until_used" | string;
 }
 
 export interface PresenceAvailabilityChip {

@@ -12,7 +12,13 @@ from urllib.parse import urlparse
 from flask import current_app
 
 from ..extensions import db
-from ..models import PresenceCollection, PresenceEditableConfig, PresenceNode, PresenceWork
+from ..models import PresenceCollection, PresenceEditableConfig, PresenceMediaAsset, PresenceNode, PresenceWork
+from .presence_media_storage import (
+    PresenceMediaStorageError,
+    delete_private_media_object,
+    draft_media_read_url,
+    promote_presence_media,
+)
 from ..time_utils import now_utc
 
 
@@ -46,6 +52,7 @@ ATTACHABLE_ASSET_SLOTS = {
 }
 ATTACHABLE_ASSET_TYPES = {"image", "thumbnail", "texture"}
 UPLOAD_ASSET_ROLES = {"cover", "work", "portrait", "background", "invitation", "unused"}
+MEDIA_REFERENCE_SECTION_ATTRS = ("scene_config_json", "asset_config_json", "content_config_json")
 
 _RENDERER_KEY_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,119}$")
 _LOCAL_PATH_RE = re.compile(
@@ -56,7 +63,7 @@ _SCRIPT_RE = re.compile(r"(<\s*script\b)|(\bon[a-z]+\s*=)|(\bjavascript\s*:)|(<\
 _SECRET_KEY_RE = re.compile(r"(password|secret|private_key|access_token|refresh_token|api_key)", re.IGNORECASE)
 _PUBLIC_REDACT_KEY_RE = re.compile(
     r"(created_by|updated_by|published_by|owner|platform_admin|internal_lifetime_free|filesystem_path|"
-    r"private|secret|token|password|email|auth_subject|audit|draft)",
+    r"private|secret|token|password|email|auth_subject|audit|draft|media_id|storage_key|signed_url)",
     re.IGNORECASE,
 )
 _EMAIL_RE = re.compile(r"[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+")
@@ -443,6 +450,12 @@ def update_draft_config(
         existing = getattr(draft, attr) or {}
         setattr(draft, attr, _deep_merge(existing, payload[attr]) if partial else payload[attr])
 
+    for attr in MEDIA_REFERENCE_SECTION_ATTRS:
+        setattr(draft, attr, _secure_private_draft_references(getattr(draft, attr) or {}, room.id))
+    _sync_draft_media_assignment_status(
+        {attr: getattr(draft, attr) or {} for attr in MEDIA_REFERENCE_SECTION_ATTRS},
+        room.id,
+    )
     draft.updated_by_user_id = getattr(actor, "id", None)
     draft.updated_at = now_utc()
     return draft, created
@@ -452,6 +465,11 @@ def publish_draft_config(room: PresenceNode, actor) -> PresenceEditableConfig:
     draft = draft_config_for_room(room)
     if not draft:
         raise PresenceEditorConfigError("No draft config exists for this Room.")
+    try:
+        for attr in MEDIA_REFERENCE_SECTION_ATTRS:
+            setattr(draft, attr, _promote_private_media_references(getattr(draft, attr) or {}, room.id))
+    except PresenceMediaStorageError as exc:
+        raise PresenceEditorConfigError(str(exc)) from exc
     published = published_config_for_room(room)
     now = now_utc()
     if published:
@@ -464,6 +482,7 @@ def publish_draft_config(room: PresenceNode, actor) -> PresenceEditableConfig:
     draft.published_at = now
     draft.updated_by_user_id = getattr(actor, "id", None)
     draft.updated_at = now
+    _mark_unused_private_media_orphaned(room.id)
     return draft
 
 
@@ -560,11 +579,11 @@ def serialize_editor_config(config: PresenceEditableConfig | None) -> dict[str, 
         "version": config.version,
         "status": config.status,
         "renderer_key": config.renderer_key,
-        "scene_config": config.scene_config_json or {},
+        "scene_config": _owner_media_section(config, "scene_config_json"),
         "style_dna": config.style_dna_json or {},
         "motion_config": config.motion_config_json or {},
-        "asset_config": config.asset_config_json or {},
-        "content_config": config.content_config_json or {},
+        "asset_config": _owner_media_section(config, "asset_config_json"),
+        "content_config": _owner_media_section(config, "content_config_json"),
         "roomkey_config": config.roomkey_config_json or {},
         "enquiry_config": config.enquiry_config_json or {},
         "locked_fields": config.locked_fields_json or {},
@@ -581,7 +600,11 @@ def serialize_editor_config(config: PresenceEditableConfig | None) -> dict[str, 
 def serialize_public_editable_config(config: PresenceEditableConfig | None, *, preview: bool = False) -> dict[str, Any] | None:
     if not config:
         return None
-    public_assets = deepcopy(config.asset_config_json or {})
+    public_assets = (
+        _hydrate_private_media_references(config.asset_config_json or {}, config.room_id)
+        if preview
+        else deepcopy(config.asset_config_json or {})
+    )
     # This is draft inventory for the editor picker, not visible room content.
     # Do not expose unused uploads through public or preview-render payloads.
     public_assets.pop("attached_assets", None)
@@ -591,11 +614,19 @@ def serialize_public_editable_config(config: PresenceEditableConfig | None, *, p
         "status": "preview" if preview else "published",
         "renderer_key": config.renderer_key,
         "published_at": config.published_at.isoformat() if config.published_at else None,
-        "scene_config": config.scene_config_json or {},
+        "scene_config": (
+            _hydrate_private_media_references(config.scene_config_json or {}, config.room_id)
+            if preview
+            else config.scene_config_json or {}
+        ),
         "style_dna": config.style_dna_json or {},
         "motion_config": config.motion_config_json or {},
         "asset_config": public_assets,
-        "content_config": config.content_config_json or {},
+        "content_config": (
+            _hydrate_private_media_references(config.content_config_json or {}, config.room_id)
+            if preview
+            else config.content_config_json or {}
+        ),
         "roomkey_config": config.roomkey_config_json or {},
         "enquiry_config": config.enquiry_config_json or {},
         "locked_fields": config.locked_fields_json or {},
@@ -678,6 +709,8 @@ def collect_room_assets(room: PresenceNode) -> list[dict[str, Any]]:
     for config in (draft_config_for_room(room), published_config_for_room(room)):
         if config:
             assets.extend(_asset_from_value(config.asset_config_json or {}, source=f"editable_config:{config.status}", slot="asset_config"))
+    for media_asset in PresenceMediaAsset.query.filter_by(room_id=room.id).filter(PresenceMediaAsset.status != "deleted").all():
+        assets.append(serialize_media_asset_for_owner(media_asset))
 
     seen: set[str] = set()
     unique_assets: list[dict[str, Any]] = []
@@ -743,21 +776,31 @@ def attach_uploaded_asset_to_draft(
     role: str = "unused",
     mime_type: str | None = None,
     size_bytes: int | None = None,
+    visibility: str = "public_unlisted",
+    width: int | None = None,
+    height: int | None = None,
 ) -> tuple[PresenceEditableConfig, dict[str, Any]]:
-    clean_url = _validate_public_or_relative_url(str(url or "").strip(), path="asset.url")
+    clean_url = _validate_public_or_relative_url(str(url or "").strip(), path="asset.url") if url else ""
     clean_role, clean_alt = validate_uploaded_asset_fields(role=role, alt_text=alt_text)
     clean_media_id = _clean_string(str(media_id or "").strip(), key="media_id", path="asset.media_id")
     asset: dict[str, Any] = {
         "media_id": clean_media_id,
-        "url": clean_url,
         "asset_type": "image",
         "role": clean_role,
         "alt_text": clean_alt,
+        "status": "draft_uploaded",
+        "visibility": visibility,
     }
+    if visibility != "private_draft":
+        asset["url"] = clean_url
     if mime_type in {"image/jpeg", "image/png", "image/webp"}:
         asset["mime_type"] = mime_type
     if isinstance(size_bytes, int) and size_bytes > 0:
         asset["size_bytes"] = size_bytes
+    if isinstance(width, int) and width > 0:
+        asset["width"] = width
+    if isinstance(height, int) and height > 0:
+        asset["height"] = height
 
     draft, _created = ensure_draft_config(room, actor)
     asset_config = deepcopy(draft.asset_config_json or {})
@@ -768,4 +811,171 @@ def attach_uploaded_asset_to_draft(
     draft.asset_config_json = normalise_editor_section(asset_config, section="asset_config")
     draft.updated_by_user_id = getattr(actor, "id", None)
     draft.updated_at = now_utc()
-    return draft, asset
+    response_asset = deepcopy(asset)
+    if clean_url:
+        response_asset["url"] = clean_url
+    return draft, response_asset
+
+
+def serialize_media_asset_for_owner(media_asset: PresenceMediaAsset) -> dict[str, Any]:
+    url, expires_at = draft_media_read_url(media_asset)
+    item: dict[str, Any] = {
+        "media_id": media_asset.id,
+        "url": url,
+        "asset_type": "image",
+        "role": media_asset.role,
+        "alt_text": media_asset.alt_text,
+        "mime_type": media_asset.mime_type,
+        "size_bytes": media_asset.size_bytes,
+        "width": media_asset.width,
+        "height": media_asset.height,
+        "status": media_asset.status,
+        "visibility": media_asset.visibility,
+        "source": "uploaded_image",
+        "slot": "attached_assets",
+    }
+    if expires_at:
+        item["preview_expires_at"] = expires_at
+    if media_asset.focal_point_json:
+        item["focal_point"] = deepcopy(media_asset.focal_point_json)
+    return item
+
+
+def _owner_media_section(config: PresenceEditableConfig, attr: str) -> dict[str, Any]:
+    section = getattr(config, attr) or {}
+    if config.status != "draft":
+        return section
+    return _hydrate_private_media_references(section, config.room_id)
+
+
+def delete_unused_media_asset(room: PresenceNode, media_id: str) -> bool:
+    media_asset = PresenceMediaAsset.query.filter_by(id=media_id, room_id=room.id).first()
+    if not media_asset:
+        raise PresenceEditorConfigError("That image was not found.")
+    if media_asset.status == "published" or media_asset.visibility == "public_published":
+        raise PresenceEditorConfigError("This image is live. Replace it in your draft before deleting it.")
+    draft = draft_config_for_room(room)
+    selected = _media_reference_ids((draft.asset_config_json if draft else {}) or {}, include_inventory=False)
+    if media_asset.id in selected:
+        raise PresenceEditorConfigError("Remove this image from your draft before deleting it.")
+    delete_private_media_object(media_asset)
+    media_asset.status = "deleted"
+    media_asset.deleted_at = now_utc()
+    media_asset.updated_at = now_utc()
+    return True
+
+
+def cleanup_orphaned_private_media(room: PresenceNode, *, minimum_age_seconds: int = 86400) -> int:
+    cutoff = now_utc().timestamp() - max(0, int(minimum_age_seconds))
+    deleted = 0
+    rows = PresenceMediaAsset.query.filter_by(room_id=room.id, status="orphaned", visibility="private_draft").all()
+    for media_asset in rows:
+        if media_asset.created_at and media_asset.created_at.timestamp() > cutoff:
+            continue
+        delete_private_media_object(media_asset)
+        media_asset.status = "deleted"
+        media_asset.deleted_at = now_utc()
+        media_asset.updated_at = now_utc()
+        deleted += 1
+    return deleted
+
+
+def _media_by_id(room_id: int) -> dict[str, PresenceMediaAsset]:
+    return {row.id: row for row in PresenceMediaAsset.query.filter_by(room_id=room_id).all()}
+
+
+def _media_reference_ids(value: Any, *, include_inventory: bool = False) -> set[str]:
+    ids: set[str] = set()
+    if isinstance(value, list):
+        for item in value:
+            ids.update(_media_reference_ids(item, include_inventory=include_inventory))
+    elif isinstance(value, dict):
+        media_id = value.get("media_id")
+        if isinstance(media_id, str) and media_id:
+            ids.add(media_id)
+        for key, item in value.items():
+            if not include_inventory and key == "attached_assets":
+                continue
+            ids.update(_media_reference_ids(item, include_inventory=include_inventory))
+    return ids
+
+
+def _walk_media_refs(value: Any, rows: dict[str, PresenceMediaAsset], transform) -> Any:
+    if isinstance(value, list):
+        return [_walk_media_refs(item, rows, transform) for item in value]
+    if not isinstance(value, dict):
+        return deepcopy(value)
+    updated = {key: _walk_media_refs(item, rows, transform) for key, item in value.items()}
+    media_id = updated.get("media_id")
+    media_asset = rows.get(media_id) if isinstance(media_id, str) else None
+    return transform(updated, media_asset) if media_asset else updated
+
+
+def _secure_private_draft_references(asset_config: dict[str, Any], room_id: int) -> dict[str, Any]:
+    rows = _media_by_id(room_id)
+
+    def secure(item: dict[str, Any], media_asset: PresenceMediaAsset) -> dict[str, Any]:
+        if media_asset.visibility != "private_draft":
+            return item
+        item.pop("url", None)
+        item.pop("image_url", None)
+        item.pop("thumbnail_url", None)
+        item.pop("preview_expires_at", None)
+        item["visibility"] = "private_draft"
+        return item
+
+    return _walk_media_refs(asset_config, rows, secure)
+
+
+def _hydrate_private_media_references(asset_config: dict[str, Any], room_id: int) -> dict[str, Any]:
+    rows = _media_by_id(room_id)
+
+    def hydrate(item: dict[str, Any], media_asset: PresenceMediaAsset) -> dict[str, Any]:
+        if media_asset.visibility == "private_draft":
+            url, expires_at = draft_media_read_url(media_asset)
+            item["url"] = url
+            if expires_at:
+                item["preview_expires_at"] = expires_at
+        elif media_asset.public_url:
+            item["url"] = media_asset.public_url
+        return item
+
+    return _walk_media_refs(asset_config, rows, hydrate)
+
+
+def _sync_draft_media_assignment_status(asset_config: dict[str, Any], room_id: int) -> None:
+    selected = _media_reference_ids(asset_config, include_inventory=False)
+    for media_asset in PresenceMediaAsset.query.filter_by(room_id=room_id, visibility="private_draft").all():
+        if media_asset.id in selected and media_asset.status in {"draft_uploaded", "orphaned", "ready"}:
+            media_asset.status = "draft_attached"
+            media_asset.updated_at = now_utc()
+
+
+def _promote_private_media_references(asset_config: dict[str, Any], room_id: int) -> dict[str, Any]:
+    rows = _media_by_id(room_id)
+    selected = _media_reference_ids(asset_config, include_inventory=False)
+
+    def promote(item: dict[str, Any], media_asset: PresenceMediaAsset) -> dict[str, Any]:
+        if media_asset.id not in selected or media_asset.visibility != "private_draft":
+            return item
+        public_media = promote_presence_media(media_asset, room_id=room_id)
+        media_asset.public_url = public_media.url
+        media_asset.published_storage_key = public_media.storage_path
+        media_asset.visibility = "public_published"
+        media_asset.status = "published"
+        media_asset.published_at = now_utc()
+        media_asset.updated_at = now_utc()
+        item.pop("preview_expires_at", None)
+        item["url"] = public_media.url
+        item["status"] = "published"
+        item["visibility"] = "public_published"
+        return item
+
+    return _walk_media_refs(asset_config, rows, promote)
+
+
+def _mark_unused_private_media_orphaned(room_id: int) -> None:
+    for media_asset in PresenceMediaAsset.query.filter_by(room_id=room_id, visibility="private_draft").all():
+        if media_asset.status in {"draft_uploaded", "draft_attached", "ready"}:
+            media_asset.status = "orphaned"
+            media_asset.updated_at = now_utc()

@@ -49,6 +49,8 @@ export interface CanvasImageCandidate {
   url: string;
   altText: string;
   sourceLabel: string;
+  mediaId?: string;
+  visibility?: string;
 }
 
 export interface CanvasWork {
@@ -473,19 +475,31 @@ export function replaceCanvasImage(
   canvasId: string,
   url: string,
   altText: string,
+  mediaId?: string,
 ): PresenceEditableConfig {
   if (canvasId === "hero-image") {
+    const current = record(record(config.asset_config).hero_image);
+    const { media_id: _previousMediaId, visibility: _previousVisibility, status: _previousStatus, ...rest } = current;
     return {
       ...config,
       asset_config: {
         ...record(config.asset_config),
-        hero_image: { ...record(record(config.asset_config).hero_image), url, alt_text: altText.trim() },
+        hero_image: {
+          ...rest,
+          url,
+          alt_text: altText.trim(),
+          ...(mediaId ? { media_id: mediaId } : {}),
+        },
       },
     };
   }
   const target = splitDynamicId(canvasId);
   if (!target || target.kind !== "work-image") return config;
-  return updateWork(config, target.slug, "media", { url, alt_text: altText.trim() });
+  return updateWork(config, target.slug, "media", {
+    url,
+    alt_text: altText.trim(),
+    ...(mediaId ? { media_id: mediaId } : {}),
+  });
 }
 
 export function updateCanvasAltText(
@@ -688,14 +702,16 @@ export function buildCanvasImageCandidates(
   const hero = getCanvasImage(config, node, "hero-image");
   add(hero.url, hero.altText || "Current cover", "This room");
   for (const work of getCanvasWorks(config, node)) add(work.imageUrl, work.altText || work.title, "This room");
-  for (const asset of assets) add(asset.url, asset.alt_text || "Attached image", "Attached images");
+  for (const asset of assets) {
+    add(asset.url, asset.alt_text || "Attached image", "Attached images", asset.media_id ?? undefined, asset.visibility ?? undefined);
+  }
   if (canonical) {
     if (canonical.hero) add(canonical.hero.url, canonical.hero.alt_text, "Live room images");
     for (const work of canonical.artworks) add(work.url, work.alt_text, "Live room images");
   }
   return candidates;
 
-  function add(url: string, label: string, sourceLabel: string) {
+  function add(url: string, label: string, sourceLabel: string, mediaId?: string, visibility?: string) {
     const cleanUrl = text(url);
     if (!cleanUrl || !validateAssetUrl(cleanUrl).isValid || candidates.some((candidate) => candidate.url === cleanUrl)) return;
     candidates.push({
@@ -704,6 +720,8 @@ export function buildCanvasImageCandidates(
       url: cleanUrl,
       altText: label || "",
       sourceLabel,
+      mediaId,
+      visibility,
     });
   }
 }

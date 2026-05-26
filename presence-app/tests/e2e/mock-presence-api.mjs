@@ -30,6 +30,7 @@ function resetState() {
     failNextOwnerNodeReads: 0,
     failNextEditorReads: 0,
     failNextPreviewReads: 0,
+    privateDraftMedia: false,
     // Hall activity event counters used by the analytics endpoint to mirror
     // the real backend's hall_activity_event aggregation.
     hallStallVisits: 0,
@@ -60,6 +61,7 @@ const server = createServer(async (req, res) => {
     if (Number.isInteger(body.failNextOwnerNodeReads)) state.failNextOwnerNodeReads = body.failNextOwnerNodeReads;
     if (Number.isInteger(body.failNextEditorReads)) state.failNextEditorReads = body.failNextEditorReads;
     if (Number.isInteger(body.failNextPreviewReads)) state.failNextPreviewReads = body.failNextPreviewReads;
+    if (typeof body.privateDraftMedia === "boolean") state.privateDraftMedia = body.privateDraftMedia;
     if (body.stripEditorImages === true && state.editorPublished) {
       state.editorPublished = {
         ...state.editorPublished,
@@ -351,7 +353,8 @@ const server = createServer(async (req, res) => {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     if (!state.editorDraft) return sendError(res, 422, "validation_error", "No draft config exists for this Room.");
-    state.editorPublished = { ...state.editorDraft, status: "published", published_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+    const publishedDraft = state.privateDraftMedia ? promotePrivateMedia(state.editorDraft) : state.editorDraft;
+    state.editorPublished = { ...publishedDraft, status: "published", published_at: new Date().toISOString(), updated_at: new Date().toISOString() };
     state.editorDraft = null;
     return sendData(res, { published: state.editorPublished, public_config: redactEditorConfig(state.editorPublished) });
   }
@@ -396,8 +399,10 @@ const server = createServer(async (req, res) => {
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     if (!state.editorDraft) state.editorDraft = buildEditorConfig("draft", state.nextEditorVersion++);
     const asset = {
-      media_id: "uploaded-v1b-proof",
-      url: "/ggm/works/bridle-road-2005.webp?uploaded=v1b-proof",
+      media_id: state.privateDraftMedia ? "uploaded-v1c-proof" : "uploaded-v1b-proof",
+      url: state.privateDraftMedia
+        ? "/ggm/works/bridle-road-2005.webp?draft-preview=v1c-proof"
+        : "/ggm/works/bridle-road-2005.webp?uploaded=v1b-proof",
       alt_text: "Uploaded studio cover image",
       source: "editable_config:draft",
       slot: "attached_assets",
@@ -405,6 +410,7 @@ const server = createServer(async (req, res) => {
       role: "cover",
       mime_type: "image/png",
       size_bytes: 68,
+      visibility: state.privateDraftMedia ? "private_draft" : "public_unlisted",
     };
     state.editorAssets.push(asset);
     state.editorDraft.asset_config = {
@@ -415,7 +421,7 @@ const server = createServer(async (req, res) => {
       draft: state.editorDraft,
       assets: state.editorAssets,
       uploaded_asset: asset,
-      storage_policy: "public_unlisted_until_used",
+      storage_policy: state.privateDraftMedia ? "private_draft_promoted_on_publish" : "public_unlisted_until_used",
     }, 201);
   }
 
@@ -892,6 +898,18 @@ function buildEmptyGarden() {
       { id: "wilting_seeds", title: "Wilting Seeds", blurb: "Fading.", seeds: [] },
     ],
   };
+}
+
+function promotePrivateMedia(value) {
+  if (Array.isArray(value)) return value.map(promotePrivateMedia);
+  if (!value || typeof value !== "object") return value;
+  const mapped = Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, promotePrivateMedia(entry)]));
+  if (mapped.media_id === "uploaded-v1c-proof") {
+    mapped.url = "/ggm/works/bridle-road-2005.webp?published=v1c-proof";
+    mapped.visibility = "public_published";
+    mapped.status = "published";
+  }
+  return mapped;
 }
 
 function buildMaskFixture(alias) {

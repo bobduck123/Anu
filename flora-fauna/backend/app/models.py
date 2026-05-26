@@ -708,6 +708,7 @@ class PresenceNode(db.Model):
     enquiries = db.relationship("PresenceEnquiry", backref="node", lazy=True, cascade="all, delete-orphan")
     analytics_events = db.relationship("PresenceAnalyticsEvent", backref="node", lazy=True, cascade="all, delete-orphan")
     editable_configs = db.relationship("PresenceEditableConfig", backref="room", lazy=True, cascade="all, delete-orphan")
+    media_assets = db.relationship("PresenceMediaAsset", backref="room", lazy=True, cascade="all, delete-orphan")
 
 
 class PresenceEditableConfig(db.Model):
@@ -748,6 +749,42 @@ class PresenceEditableConfig(db.Model):
     created_by = db.relationship("User", foreign_keys=[created_by_user_id])
     updated_by = db.relationship("User", foreign_keys=[updated_by_user_id])
     published_by = db.relationship("User", foreign_keys=[published_by_user_id])
+
+
+class PresenceMediaAsset(db.Model):
+    """Owner-scoped uploaded media lifecycle record for Presence Studio."""
+
+    __tablename__ = "presence_media_asset"
+    __table_args__ = (
+        db.Index("ix_presence_media_asset_room_status", "room_id", "status"),
+        db.Index("ix_presence_media_asset_visibility", "visibility"),
+        db.Index("ix_presence_media_asset_created_at", "created_at"),
+    )
+
+    id = db.Column(db.String(64), primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
+    tenant_id = db.Column(db.Integer, nullable=True)
+    owner_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    status = db.Column(db.String(40), nullable=False, default="draft_uploaded")
+    visibility = db.Column(db.String(40), nullable=False, default="public_unlisted")
+    role = db.Column(db.String(40), nullable=False, default="unused")
+    original_filename = db.Column(db.String(255), nullable=True)
+    mime_type = db.Column(db.String(80), nullable=False)
+    size_bytes = db.Column(db.Integer, nullable=False)
+    width = db.Column(db.Integer, nullable=True)
+    height = db.Column(db.Integer, nullable=True)
+    checksum_sha256 = db.Column(db.String(64), nullable=True)
+    storage_backend = db.Column(db.String(40), nullable=False)
+    draft_storage_key = db.Column(db.String(700), nullable=True)
+    published_storage_key = db.Column(db.String(700), nullable=True)
+    public_url = db.Column(db.String(1000), nullable=True)
+    alt_text = db.Column(db.String(1000), nullable=True)
+    caption = db.Column(db.String(2000), nullable=True)
+    focal_point_json = db.Column("focal_point", db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+    published_at = db.Column(db.DateTime, nullable=True)
+    deleted_at = db.Column(db.DateTime, nullable=True)
 
 
 class PresencePlanEntitlement(db.Model):

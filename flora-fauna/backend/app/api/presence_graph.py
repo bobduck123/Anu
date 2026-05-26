@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request, send_file
 from flask_jwt_extended import verify_jwt_in_request
 
 from ..extensions import db, limiter
@@ -12,6 +12,7 @@ from ..models import (
     Path,
     PathWalk,
     PresenceNode,
+    PresenceMediaAsset,
     PresencePass,
     RoomKey,
     Signal,
@@ -25,7 +26,9 @@ from ..services.presence_editor_config import (
     attach_asset_to_draft,
     attach_uploaded_asset_to_draft,
     build_default_editable_config,
+    cleanup_orphaned_private_media,
     collect_room_assets,
+    delete_unused_media_asset,
     draft_config_for_room,
     ensure_draft_config,
     history_for_room,
@@ -34,6 +37,7 @@ from ..services.presence_editor_config import (
     publish_draft_config,
     rollback_published_config,
     serialize_editor_config,
+    serialize_media_asset_for_owner,
     serialize_public_editable_config,
     update_draft_config,
     validate_uploaded_asset_fields,
@@ -42,7 +46,10 @@ from ..services.presence_media_storage import (
     PresenceMediaStorageError,
     PresenceMediaValidationError,
     build_presence_media_path,
-    store_presence_image,
+    private_draft_storage_enabled,
+    private_local_media_path,
+    store_presence_draft_image,
+    verify_private_media_signature,
 )
 from ..services.presence_pass_service import (
     capture_encounter,
@@ -809,24 +816,51 @@ def owner_room_upload_asset(room_id):
             role=request.form.get("role") or "unused",
             alt_text=request.form.get("alt_text"),
         )
+        is_private = private_draft_storage_enabled()
         storage_path = build_presence_media_path(
             owner_user_id=actor.id,
             node_id=room.id,
-            target_type="editor_draft",
+            target_type="editor_private_draft" if is_private else "editor_draft",
             filename=getattr(file, "filename", "") or "image",
         )
-        stored = store_presence_image(file, storage_path=storage_path)
+        stored = store_presence_draft_image(file, storage_path=storage_path)
         media_id = storage_path.rsplit("/", 1)[-1].rsplit(".", 1)[0]
-        draft, uploaded_asset = attach_uploaded_asset_to_draft(
+        media_asset = PresenceMediaAsset(
+            id=media_id,
+            room_id=room.id,
+            tenant_id=getattr(room, "tenant_id", None),
+            owner_user_id=getattr(actor, "id", None),
+            status="draft_uploaded",
+            visibility=stored.visibility,
+            role=role,
+            original_filename=getattr(file, "filename", None),
+            mime_type=stored.content_type,
+            size_bytes=stored.size,
+            width=stored.width,
+            height=stored.height,
+            checksum_sha256=stored.checksum_sha256,
+            storage_backend=stored.backend,
+            draft_storage_key=stored.storage_path,
+            public_url=stored.url or None,
+            alt_text=alt_text,
+        )
+        db.session.add(media_asset)
+        db.session.flush()
+        uploaded_url = serialize_media_asset_for_owner(media_asset)["url"]
+        draft, _uploaded_asset = attach_uploaded_asset_to_draft(
             room,
             actor,
-            url=stored.url,
+            url=uploaded_url,
             alt_text=alt_text,
             media_id=media_id,
             role=role,
             mime_type=stored.content_type,
             size_bytes=stored.size,
+            visibility=stored.visibility,
+            width=stored.width,
+            height=stored.height,
         )
+        uploaded_asset = serialize_media_asset_for_owner(media_asset)
         db.session.commit()
         _audit_platform_admin_editor_access(
             "presence.editor.assets.upload",
@@ -839,7 +873,11 @@ def owner_room_upload_asset(room_id):
                 "draft": serialize_editor_config(draft),
                 "assets": collect_room_assets(room),
                 "uploaded_asset": uploaded_asset,
-                "storage_policy": "public_unlisted_until_used",
+                "storage_policy": (
+                    "private_draft_promoted_on_publish"
+                    if stored.visibility == "private_draft"
+                    else "public_unlisted_until_used"
+                ),
             },
             201,
         )
@@ -849,6 +887,57 @@ def owner_room_upload_asset(room_id):
     except PresenceEditorConfigError as exc:
         db.session.rollback()
         return _editor_validation_error(exc)
+    except PresenceMediaStorageError as exc:
+        db.session.rollback()
+        return error("storage_unavailable", str(exc), 503)
+
+
+@presence_graph_bp.route("/media/private/<string:media_id>", methods=["GET"])
+def read_signed_private_media(media_id):
+    media_asset = PresenceMediaAsset.query.filter_by(id=media_id, visibility="private_draft").first()
+    if not media_asset:
+        return error("not_found", "Image not found.", 404)
+    if not verify_private_media_signature(media_asset, request.args.get("expires"), request.args.get("signature")):
+        return error("forbidden", "This image link has expired.", 403)
+    path = private_local_media_path(media_asset)
+    if not path or not path.exists():
+        return error("not_found", "Image not found.", 404)
+    response = send_file(path, mimetype=media_asset.mime_type)
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+    return response
+
+
+@presence_graph_bp.route("/owner/rooms/<int:room_id>/assets/<string:media_id>", methods=["DELETE"])
+@alpha_jwt_required()
+def owner_room_delete_asset(room_id, media_id):
+    room, err = _load_owned_room(room_id)
+    if err:
+        return err
+    try:
+        delete_unused_media_asset(room, media_id)
+        db.session.commit()
+        return ok({"deleted": True, "media_id": media_id, "assets": collect_room_assets(room)})
+    except PresenceEditorConfigError as exc:
+        db.session.rollback()
+        return _editor_validation_error(exc)
+    except PresenceMediaStorageError as exc:
+        db.session.rollback()
+        return error("storage_unavailable", str(exc), 503)
+
+
+@presence_graph_bp.route("/owner/rooms/<int:room_id>/assets/cleanup", methods=["POST"])
+@alpha_jwt_required()
+def owner_room_cleanup_orphaned_assets(room_id):
+    room, err = _load_owned_room(room_id)
+    if err:
+        return err
+    configured_minimum_age = current_app.config.get("PRESENCE_MEDIA_ORPHAN_MIN_AGE_SECONDS")
+    minimum_age = int(configured_minimum_age if configured_minimum_age is not None else 86400)
+    try:
+        deleted = cleanup_orphaned_private_media(room, minimum_age_seconds=minimum_age)
+        db.session.commit()
+        return ok({"deleted_count": deleted, "assets": collect_room_assets(room)})
     except PresenceMediaStorageError as exc:
         db.session.rollback()
         return error("storage_unavailable", str(exc), 503)

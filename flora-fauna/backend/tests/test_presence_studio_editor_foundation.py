@@ -1,12 +1,16 @@
 import io
 import os
 from datetime import timedelta
+from urllib.parse import urlsplit
+
+import pytest
 
 os.environ["FLASK_ENV"] = "testing"
 os.environ["SECRET_KEY"] = "test-secret-key-for-presence-editor-1234"
 os.environ["JWT_SECRET_KEY"] = "test-jwt-secret-for-presence-editor-1234"
 
 from flask_jwt_extended import create_access_token  # noqa: E402
+from werkzeug.datastructures import FileStorage  # noqa: E402
 
 from backend_factory import load_create_app  # noqa: E402
 
@@ -533,3 +537,167 @@ def test_editor_image_upload_policy_blocks_unsafe_types_mismatches_and_oversize_
         base_url="http://public.test",
     )
     assert oversized.status_code in (413, 422)
+
+
+def test_private_draft_media_is_signed_for_preview_and_promoted_only_on_publish(tmp_path):
+    app = _build_app()
+    app.config.update(
+        PRESENCE_MEDIA_STORAGE_BACKEND="local",
+        PRESENCE_MEDIA_PRIVATE_DRAFT_ENABLED=True,
+        PRESENCE_MEDIA_PRIVATE_FOLDER=str(tmp_path / "private"),
+        UPLOAD_FOLDER=str(tmp_path / "public"),
+    )
+    ids = _seed(app)
+    client = app.test_client()
+    owner_headers = _headers(app, "ggm-owner")
+    png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 24
+
+    upload = client.post(
+        f"/api/presence/owner/rooms/{ids['room_id']}/assets/upload",
+        data={"file": (io.BytesIO(png), "private-cover.png", "image/png"), "role": "cover", "alt_text": "Private cover"},
+        headers=owner_headers,
+        content_type="multipart/form-data",
+        base_url="http://public.test",
+    )
+    assert upload.status_code == 201, upload.get_json()
+    uploaded = upload.get_json()["data"]["uploaded_asset"]
+    assert upload.get_json()["data"]["storage_policy"] == "private_draft_promoted_on_publish"
+    assert uploaded["visibility"] == "private_draft"
+    assert "/api/presence/media/private/" in uploaded["url"]
+    private_url = urlsplit(uploaded["url"])
+    denied = client.get(private_url.path, base_url="http://public.test")
+    assert denied.status_code == 403
+    readable = client.get(f"{private_url.path}?{private_url.query}", base_url="http://public.test")
+    assert readable.status_code == 200
+    assert "no-store" in readable.headers["Cache-Control"]
+
+    public_before = str(client.get(f"/api/presence/public/{ids['room_slug']}", base_url="http://public.test").get_json())
+    assert "/api/presence/media/private/" not in public_before
+    assert uploaded["media_id"] not in public_before
+
+    patch = client.patch(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor/draft",
+        json={
+            "asset_config": {
+                "hero_image": {
+                    "media_id": uploaded["media_id"],
+                    "url": uploaded["url"],
+                    "alt_text": "Private cover",
+                }
+            }
+        },
+        headers=owner_headers,
+        base_url="http://public.test",
+    )
+    assert patch.status_code == 200, patch.get_json()
+    with app.app_context():
+        from manara_backend_app.models import PresenceEditableConfig
+
+        raw_draft = PresenceEditableConfig.query.filter_by(room_id=ids["room_id"], status="draft").first()
+        raw_hero = raw_draft.asset_config_json["hero_image"]
+        assert "url" not in raw_hero
+        assert "preview_expires_at" not in raw_hero
+    preview = client.post(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor/preview",
+        headers=owner_headers,
+        base_url="http://public.test",
+    )
+    assert "/api/presence/media/private/" in str(preview.get_json()["data"]["editable_config"])
+
+    published = client.post(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor/publish",
+        headers=owner_headers,
+        base_url="http://public.test",
+    )
+    assert published.status_code == 200, published.get_json()
+    public_after = str(client.get(f"/api/presence/public/{ids['room_slug']}", base_url="http://public.test").get_json())
+    assert f"/media/uploads/presence/published/rooms/{ids['room_id']}/{uploaded['media_id']}/display.png" in public_after
+    assert "/api/presence/media/private/" not in public_after
+    assert "media_id" not in public_after
+
+    with app.app_context():
+        from manara_backend_app.models import PresenceMediaAsset
+
+        record = PresenceMediaAsset.query.get(uploaded["media_id"])
+        assert record.status == "published"
+        assert record.visibility == "public_published"
+        assert record.draft_storage_key.startswith("presence/draft/rooms/")
+        assert record.published_storage_key.startswith("presence/published/rooms/")
+
+
+def test_private_unused_media_can_be_cleaned_without_deleting_published_assets(tmp_path):
+    app = _build_app()
+    app.config.update(
+        PRESENCE_MEDIA_STORAGE_BACKEND="local",
+        PRESENCE_MEDIA_PRIVATE_DRAFT_ENABLED=True,
+        PRESENCE_MEDIA_PRIVATE_FOLDER=str(tmp_path / "private"),
+        UPLOAD_FOLDER=str(tmp_path / "public"),
+        PRESENCE_MEDIA_ORPHAN_MIN_AGE_SECONDS=0,
+    )
+    ids = _seed(app)
+    client = app.test_client()
+    owner_headers = _headers(app, "ggm-owner")
+    png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 24
+    upload = client.post(
+        f"/api/presence/owner/rooms/{ids['room_id']}/assets/upload",
+        data={"file": (io.BytesIO(png), "unused.png", "image/png"), "role": "unused"},
+        headers=owner_headers,
+        content_type="multipart/form-data",
+        base_url="http://public.test",
+    )
+    media_id = upload.get_json()["data"]["uploaded_asset"]["media_id"]
+    published = client.post(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor/publish",
+        headers=owner_headers,
+        base_url="http://public.test",
+    )
+    assert published.status_code == 200
+    cleanup = client.post(
+        f"/api/presence/owner/rooms/{ids['room_id']}/assets/cleanup",
+        headers=owner_headers,
+        base_url="http://public.test",
+    )
+    assert cleanup.status_code == 200
+    assert cleanup.get_json()["data"]["deleted_count"] == 1
+    with app.app_context():
+        from manara_backend_app.models import PresenceMediaAsset
+
+        record = PresenceMediaAsset.query.get(media_id)
+        assert record.status == "deleted"
+
+
+def test_private_supabase_upload_rejects_a_bucket_that_is_anonymously_readable(monkeypatch):
+    app = _build_app()
+    app.config.update(
+        PRESENCE_MEDIA_STORAGE_BACKEND="supabase",
+        SUPABASE_URL="https://storage.test",
+        SUPABASE_SERVICE_ROLE_KEY="service-key-for-test-only",
+        PRESENCE_MEDIA_DRAFT_BUCKET="presence-private-drafts",
+    )
+    from manara_backend_app.services import presence_media_storage
+
+    class Response:
+        def __init__(self, status_code):
+            self.status_code = status_code
+
+    deleted = []
+    monkeypatch.setattr(presence_media_storage.requests, "put", lambda *args, **kwargs: Response(201))
+    monkeypatch.setattr(presence_media_storage.requests, "get", lambda *args, **kwargs: Response(200))
+    monkeypatch.setattr(
+        presence_media_storage.requests,
+        "delete",
+        lambda *args, **kwargs: deleted.append(args[0]) or Response(204),
+    )
+    file = FileStorage(
+        stream=io.BytesIO(b"\x89PNG\r\n\x1a\n" + b"\x00" * 24),
+        filename="cover.png",
+        content_type="image/png",
+    )
+
+    with app.test_request_context(base_url="http://public.test"):
+        with pytest.raises(presence_media_storage.PresenceMediaStorageError, match="not private"):
+            presence_media_storage.store_presence_draft_image(
+                file,
+                storage_path="presence/draft/rooms/1/private.png",
+            )
+    assert deleted
