@@ -40,6 +40,7 @@ test("owner uploads an image into the draft, previews it, and publishes intentio
   const drawer = page.getByTestId("media-drawer");
   await drawer.getByRole("tab", { name: "+ Upload" }).click();
   await expect(drawer.getByTestId("media-upload-panel")).toContainText("Visitors will not see it in the room until you open the room");
+  await expect(drawer.getByTestId("media-capability-note")).toContainText("Private draft media is not enabled on this environment. Use only public-safe images.");
   await drawer.getByLabel("Choose image file").setInputFiles({
     name: "v1b-cover.png",
     mimeType: "image/png",

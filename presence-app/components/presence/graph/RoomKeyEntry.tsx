@@ -129,7 +129,7 @@ export function RoomKeyEntry({ token }: { token: string }) {
             captureOnMount={!payload.encounter}
             entryContextOverride={{
               source: payload.room_key?.key_type || "short_link",
-              roomKeyToken: token,
+              roomKeyToken: token ?? null,
               contextLabel: payload.room_key?.campaign_label || null,
             }}
           />
@@ -220,7 +220,7 @@ export function RoomKeyEntry({ token }: { token: string }) {
           captureOnMount={!payload.encounter}
           entryContextOverride={{
             source: payload.room_key?.key_type || "short_link",
-            roomKeyToken: token,
+            roomKeyToken: token ?? null,
             contextLabel: payload.room_key?.campaign_label || null,
           }}
         />

@@ -587,6 +587,7 @@ export default function PresenceStudioEditorApp({
                 canonicalBundle={canonicalBundle}
                 onSyncCanonical={syncCanonicalAssets}
                 onUploadImage={uploadDraftImage}
+                mediaCapability={overview?.media_capability}
               />
             )}
             {activeTab === "look" && (
@@ -607,6 +608,7 @@ export default function PresenceStudioEditorApp({
                 onCommit={commitCanvasChange}
                 onBringImages={() => void syncCanonicalAssets()}
                 onUpload={uploadDraftImage}
+                mediaCapability={overview?.media_capability}
               />
             )}
             {activeTab === "overview" && (

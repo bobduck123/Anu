@@ -35,3 +35,19 @@ test("anonymous public room HTML serialises visible room data without internal e
     }
   }
 });
+
+test("published room-id entry API and redirected room omit internal editor fields", async ({ page, request }) => {
+  const entryResponse = await request.get(`${API_BASE}/api/presence/rooms/101/key-entry`);
+  expect(entryResponse.ok()).toBeTruthy();
+  const entryPayload = JSON.stringify(await entryResponse.json()).toLowerCase();
+  for (const term of restrictedPublicHtmlTerms) {
+    expect(entryPayload, `/api/presence/rooms/101/key-entry exposed ${term}`).not.toContain(term);
+  }
+
+  await page.goto("/room/101/key", { waitUntil: "networkidle" });
+  await expect(page.getByText("Mara Vale Test Room").first()).toBeVisible();
+  const html = (await page.content()).toLowerCase();
+  for (const term of restrictedPublicHtmlTerms) {
+    expect(html, `/room/101/key exposed ${term}`).not.toContain(term);
+  }
+});

@@ -12,6 +12,7 @@ import {
   getPath,
   getPassport,
   listPresencePasses,
+  resolveRoomEntry,
   resolveRoomKey,
   saveRoom,
 } from "./presenceGraph.ts";
@@ -29,6 +30,24 @@ test("presence graph client calls the RoomKey resolve endpoint", async () => {
   try {
     await resolveRoomKey("abc 123");
     assert.equal(calls[0], "http://localhost:5000/api/presence/keys/abc%20123/resolve");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("presence graph client calls the published direct room entry endpoint", async () => {
+  const calls: string[] = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (url: string | URL | Request) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify({ data: { message: "Youve entered this Room.", room: {}, available_actions: [] } }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }) as typeof fetch;
+  try {
+    await resolveRoomEntry(7);
+    assert.equal(calls[0], "http://localhost:5000/api/presence/rooms/7/key-entry");
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -87,4 +106,3 @@ test("presence graph client covers public, path, and owner route construction", 
     globalThis.fetch = originalFetch;
   }
 });
-

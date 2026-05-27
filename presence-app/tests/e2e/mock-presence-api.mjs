@@ -98,6 +98,15 @@ const server = createServer(async (req, res) => {
     });
   }
 
+  if (url.pathname === "/api/presence/rooms/101/key-entry" && req.method === "GET") {
+    const { editable_config: _editableConfig, ...publicCard } = publicRoomFixture();
+    return sendData(res, {
+      room: publicCard,
+      public_url: fixtures.room.public_url,
+      status: "active",
+    });
+  }
+
   if (url.pathname === "/api/presence/keys/revoked-room-key-token/resolve") {
     return sendError(res, 410, "room_key_inactive", "This Room Key is no longer active.");
   }
@@ -306,10 +315,21 @@ const server = createServer(async (req, res) => {
       draft: state.editorDraft,
       published: state.editorPublished,
       published_public_config: redactEditorConfig(state.editorPublished),
-      suggested_config: state.editorDraft || state.editorPublished ? null : buildEditorConfig("draft", 1),
-      history: [state.editorDraft, state.editorPublished].filter(Boolean),
-      assets: state.editorAssets,
-    });
+        suggested_config: state.editorDraft || state.editorPublished ? null : buildEditorConfig("draft", 1),
+        history: [state.editorDraft, state.editorPublished].filter(Boolean),
+        assets: state.editorAssets,
+        media_capability: {
+          private_draft_media_active: state.privateDraftMedia,
+          v1b_fallback_available: true,
+          migration_ready: true,
+          protected_storage_configured: state.privateDraftMedia,
+          protected_storage_verified: state.privateDraftMedia,
+          reason: state.privateDraftMedia ? null : "private_storage_not_configured",
+          owner_message: state.privateDraftMedia
+            ? "Uploaded images stay private in your Draft room until you open the room."
+            : "Private draft media is not enabled on this environment. Use only public-safe images.",
+        },
+      });
   }
 
   if (url.pathname === "/api/presence/owner/rooms/101/editor/draft") {

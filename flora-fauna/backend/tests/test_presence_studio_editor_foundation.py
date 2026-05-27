@@ -4,6 +4,7 @@ from datetime import timedelta
 from urllib.parse import urlsplit
 
 import pytest
+from sqlalchemy import text as sql_text
 
 os.environ["FLASK_ENV"] = "testing"
 os.environ["SECRET_KEY"] = "test-secret-key-for-presence-editor-1234"
@@ -288,6 +289,13 @@ def test_owner_editor_read_create_update_preview_publish_public_redaction_and_ro
     assert resolved.get_json()["data"]["editable_config"]["roomkey_config"]["entry_label"] == "Opened via RoomKey"
     assert "public_token" not in resolved.get_json()["data"]["room_key"]
 
+    direct_entry = client.get(f"/api/presence/rooms/{ids['room_id']}/key-entry", base_url="http://public.test")
+    assert direct_entry.status_code == 200, direct_entry.get_json()
+    assert direct_entry.get_json()["data"]["room"]["slug"] == ids["room_slug"]
+    assert "editable_config" not in direct_entry.get_json()["data"]
+    assert "room_key" not in direct_entry.get_json()["data"]
+    assert "owner-private@example.invalid" not in str(direct_entry.get_json())
+
 
 def test_draft_is_not_public_publish_history_and_rollback():
     app = _build_app()
@@ -486,6 +494,51 @@ def test_editor_image_upload_is_owner_scoped_and_only_visible_after_selected_pub
     assert f"/presence/{ids['owner_id']}/{ids['room_id']}/" not in body
 
 
+def test_editor_and_v1b_upload_survive_missing_optional_v1c_media_migration(tmp_path):
+    app = _build_app()
+    app.config.update(UPLOAD_FOLDER=str(tmp_path / "public"))
+    ids = _seed(app)
+    client = app.test_client()
+    owner_headers = _headers(app, "ggm-owner")
+    png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 24
+
+    with app.app_context():
+        from manara_backend_app.extensions import db
+
+        db.session.execute(sql_text("DROP TABLE presence_media_asset"))
+        db.session.commit()
+
+    editor = client.get(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor",
+        headers=owner_headers,
+        base_url="http://public.test",
+    )
+    assert editor.status_code == 200, editor.get_json()
+    capability = editor.get_json()["data"]["media_capability"]
+    assert capability["migration_ready"] is False
+    assert capability["private_draft_media_active"] is False
+    assert capability["v1b_fallback_available"] is True
+    assert "public-safe images" in capability["owner_message"]
+
+    upload = client.post(
+        f"/api/presence/owner/rooms/{ids['room_id']}/assets/upload",
+        data={"file": (io.BytesIO(png), "cover.png", "image/png"), "role": "cover"},
+        headers=owner_headers,
+        content_type="multipart/form-data",
+        base_url="http://public.test",
+    )
+    assert upload.status_code == 201, upload.get_json()
+    assert upload.get_json()["data"]["storage_policy"] == "public_unlisted_until_used"
+    assert upload.get_json()["data"]["uploaded_asset"]["visibility"] == "public_unlisted"
+
+    reloaded = client.get(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor",
+        headers=owner_headers,
+        base_url="http://public.test",
+    )
+    assert reloaded.status_code == 200, reloaded.get_json()
+
+
 def test_editor_image_upload_policy_blocks_unsafe_types_mismatches_and_oversize_files():
     app = _build_app()
     ids = _seed(app)
@@ -673,6 +726,7 @@ def test_private_supabase_upload_rejects_a_bucket_that_is_anonymously_readable(m
         SUPABASE_URL="https://storage.test",
         SUPABASE_SERVICE_ROLE_KEY="service-key-for-test-only",
         PRESENCE_MEDIA_DRAFT_BUCKET="presence-private-drafts",
+        PRESENCE_MEDIA_PRIVATE_DRAFT_VERIFIED=True,
     )
     from manara_backend_app.services import presence_media_storage
 
@@ -701,3 +755,29 @@ def test_private_supabase_upload_rejects_a_bucket_that_is_anonymously_readable(m
                 storage_path="presence/draft/rooms/1/private.png",
             )
     assert deleted
+
+
+def test_hosted_private_media_capability_requires_verification_flag():
+    app = _build_app()
+    app.config.update(
+        PRESENCE_MEDIA_STORAGE_BACKEND="supabase",
+        SUPABASE_URL="https://storage.test",
+        SUPABASE_SERVICE_ROLE_KEY="service-key-for-test-only",
+        PRESENCE_MEDIA_DRAFT_BUCKET="presence-private-drafts",
+        PRESENCE_MEDIA_PRIVATE_DRAFT_VERIFIED=False,
+    )
+    ids = _seed(app)
+    client = app.test_client()
+
+    editor = client.get(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor",
+        headers=_headers(app, "ggm-owner"),
+        base_url="http://public.test",
+    )
+    assert editor.status_code == 200, editor.get_json()
+    capability = editor.get_json()["data"]["media_capability"]
+    assert capability["migration_ready"] is True
+    assert capability["protected_storage_configured"] is True
+    assert capability["protected_storage_verified"] is False
+    assert capability["private_draft_media_active"] is False
+    assert capability["reason"] == "private_storage_not_verified"

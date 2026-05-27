@@ -32,6 +32,8 @@ from ..services.presence_editor_config import (
     draft_config_for_room,
     ensure_draft_config,
     history_for_room,
+    media_asset_records_available,
+    media_capability_for_owner,
     preview_payload_for_room,
     published_config_for_room,
     publish_draft_config,
@@ -46,9 +48,9 @@ from ..services.presence_media_storage import (
     PresenceMediaStorageError,
     PresenceMediaValidationError,
     build_presence_media_path,
-    private_draft_storage_enabled,
     private_local_media_path,
     store_presence_draft_image,
+    store_presence_image,
     verify_private_media_signature,
 )
 from ..services.presence_pass_service import (
@@ -84,7 +86,9 @@ from ..services.presence_service import (
     PresenceValidationError,
     create_presence_enquiry,
     finalize_presence_enquiry_delivery,
+    public_url_for_node,
     public_presence_node_by_slug,
+    serialize_public_card,
 )
 from ..services.presence_social_service import (
     action_moderation_flag,
@@ -232,6 +236,28 @@ def resolve_public_room_key(public_token):
         derive_shared_space_from_room_entry(encounter)
     db.session.commit()
     return ok(room_key_entry_payload(room, room_key, encounter))
+
+
+@presence_graph_bp.route("/rooms/<int:room_id>/key-entry", methods=["GET"])
+@limiter.limit("120 per minute; 600 per hour")
+def resolve_public_room_entry(room_id):
+    """Resolve a direct room-id link to public display fields only.
+
+    This does not mint or reveal a RoomKey token and therefore does not claim
+    physical-key attribution for a URL that contains only a public room id.
+    The frontend redirects to the canonical public renderer, whose hydration
+    mapping owns all published visual settings.
+    """
+    room, err = _load_public_room(room_id)
+    if err:
+        return err
+    return ok(
+        {
+            "room": serialize_public_card(room),
+            "public_url": public_url_for_node(room),
+            "status": "active",
+        }
+    )
 
 
 @presence_graph_bp.route("/rooms/<int:room_id>/encounters", methods=["POST"])
@@ -641,6 +667,7 @@ def owner_room_editor(room_id):
             "suggested_config": build_default_editable_config(room) if not draft and not published else None,
             "history": [serialize_editor_config(row) for row in history_for_room(room)[:20]],
             "assets": collect_room_assets(room),
+            "media_capability": media_capability_for_owner(),
         }
     )
 
@@ -816,37 +843,44 @@ def owner_room_upload_asset(room_id):
             role=request.form.get("role") or "unused",
             alt_text=request.form.get("alt_text"),
         )
-        is_private = private_draft_storage_enabled()
+        capability = media_capability_for_owner()
+        is_private = bool(capability["private_draft_media_active"])
         storage_path = build_presence_media_path(
             owner_user_id=actor.id,
             node_id=room.id,
             target_type="editor_private_draft" if is_private else "editor_draft",
             filename=getattr(file, "filename", "") or "image",
         )
-        stored = store_presence_draft_image(file, storage_path=storage_path)
-        media_id = storage_path.rsplit("/", 1)[-1].rsplit(".", 1)[0]
-        media_asset = PresenceMediaAsset(
-            id=media_id,
-            room_id=room.id,
-            tenant_id=getattr(room, "tenant_id", None),
-            owner_user_id=getattr(actor, "id", None),
-            status="draft_uploaded",
-            visibility=stored.visibility,
-            role=role,
-            original_filename=getattr(file, "filename", None),
-            mime_type=stored.content_type,
-            size_bytes=stored.size,
-            width=stored.width,
-            height=stored.height,
-            checksum_sha256=stored.checksum_sha256,
-            storage_backend=stored.backend,
-            draft_storage_key=stored.storage_path,
-            public_url=stored.url or None,
-            alt_text=alt_text,
+        stored = (
+            store_presence_draft_image(file, storage_path=storage_path)
+            if is_private
+            else store_presence_image(file, storage_path=storage_path)
         )
-        db.session.add(media_asset)
-        db.session.flush()
-        uploaded_url = serialize_media_asset_for_owner(media_asset)["url"]
+        media_id = storage_path.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+        media_asset = None
+        if capability["migration_ready"]:
+            media_asset = PresenceMediaAsset(
+                id=media_id,
+                room_id=room.id,
+                tenant_id=getattr(room, "tenant_id", None),
+                owner_user_id=getattr(actor, "id", None),
+                status="draft_uploaded",
+                visibility=stored.visibility,
+                role=role,
+                original_filename=getattr(file, "filename", None),
+                mime_type=stored.content_type,
+                size_bytes=stored.size,
+                width=stored.width,
+                height=stored.height,
+                checksum_sha256=stored.checksum_sha256,
+                storage_backend=stored.backend,
+                draft_storage_key=stored.storage_path,
+                public_url=stored.url or None,
+                alt_text=alt_text,
+            )
+            db.session.add(media_asset)
+            db.session.flush()
+        uploaded_url = serialize_media_asset_for_owner(media_asset)["url"] if media_asset else stored.url
         draft, _uploaded_asset = attach_uploaded_asset_to_draft(
             room,
             actor,
@@ -860,7 +894,25 @@ def owner_room_upload_asset(room_id):
             width=stored.width,
             height=stored.height,
         )
-        uploaded_asset = serialize_media_asset_for_owner(media_asset)
+        uploaded_asset = (
+            serialize_media_asset_for_owner(media_asset)
+            if media_asset
+            else {
+                "media_id": media_id,
+                "url": stored.url,
+                "asset_type": "image",
+                "role": role,
+                "alt_text": alt_text,
+                "mime_type": stored.content_type,
+                "size_bytes": stored.size,
+                "width": stored.width,
+                "height": stored.height,
+                "status": "draft_uploaded",
+                "visibility": stored.visibility,
+                "source": "uploaded_image",
+                "slot": "attached_assets",
+            }
+        )
         db.session.commit()
         _audit_platform_admin_editor_access(
             "presence.editor.assets.upload",
@@ -873,6 +925,7 @@ def owner_room_upload_asset(room_id):
                 "draft": serialize_editor_config(draft),
                 "assets": collect_room_assets(room),
                 "uploaded_asset": uploaded_asset,
+                "media_capability": capability,
                 "storage_policy": (
                     "private_draft_promoted_on_publish"
                     if stored.visibility == "private_draft"
@@ -894,6 +947,8 @@ def owner_room_upload_asset(room_id):
 
 @presence_graph_bp.route("/media/private/<string:media_id>", methods=["GET"])
 def read_signed_private_media(media_id):
+    if not media_asset_records_available():
+        return error("not_found", "Image not found.", 404)
     media_asset = PresenceMediaAsset.query.filter_by(id=media_id, visibility="private_draft").first()
     if not media_asset:
         return error("not_found", "Image not found.", 404)

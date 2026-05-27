@@ -17,7 +17,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import type { PresenceEditableConfig, PresenceEditorAsset, PresenceNode } from "@/lib/api/types";
+import type { PresenceEditableConfig, PresenceEditorAsset, PresenceEditorMediaCapability, PresenceNode } from "@/lib/api/types";
 import type { ReadinessIssue, ReadinessReport } from "@/lib/editor/readiness";
 import type { CanonicalAssetBundle } from "@/lib/editor/canonicalAssets";
 import { validateAssetUrl } from "@/lib/editor/assetValidator";
@@ -69,6 +69,7 @@ interface PresenceCanvasModeProps {
   canonicalBundle: CanonicalAssetBundle | null;
   onSyncCanonical: () => void;
   onUploadImage: (file: File, altText: string, role: string) => Promise<PresenceEditorAsset | null>;
+  mediaCapability?: PresenceEditorMediaCapability | null;
 }
 
 interface Feedback {
@@ -91,6 +92,7 @@ export default function PresenceCanvasMode({
   canonicalBundle,
   onSyncCanonical,
   onUploadImage,
+  mediaCapability,
 }: PresenceCanvasModeProps) {
   const [scene, setScene] = useState<CanvasSceneId>("artwork");
   const [selectedId, setSelectedId] = useState<string | null>("hero-title");
@@ -349,6 +351,7 @@ export default function PresenceCanvasMode({
           onCommit={(change) => commit(change, "Image updated - saved to draft.")}
           onBringImages={onSyncCanonical}
           onUpload={onUploadImage}
+          mediaCapability={mediaCapability}
         />
       )}
 

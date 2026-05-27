@@ -10,6 +10,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from flask import current_app
+from sqlalchemy import inspect as sqlalchemy_inspect
 
 from ..extensions import db
 from ..models import PresenceCollection, PresenceEditableConfig, PresenceMediaAsset, PresenceNode, PresenceWork
@@ -17,6 +18,9 @@ from .presence_media_storage import (
     PresenceMediaStorageError,
     delete_private_media_object,
     draft_media_read_url,
+    private_draft_storage_configured,
+    private_draft_storage_enabled,
+    private_draft_storage_verified,
     promote_presence_media,
 )
 from ..time_utils import now_utc
@@ -73,6 +77,53 @@ class PresenceEditorConfigError(ValueError):
     def __init__(self, message: str, details: dict[str, Any] | None = None):
         super().__init__(message)
         self.details = details or {}
+
+
+def media_asset_records_available() -> bool:
+    """Return whether optional V1C lifecycle records can be queried safely."""
+    cache_key = "presence_media_asset_records_available"
+    cached = current_app.extensions.get(cache_key)
+    if isinstance(cached, bool):
+        return cached
+    try:
+        available = bool(sqlalchemy_inspect(db.engine).has_table(PresenceMediaAsset.__tablename__))
+        current_app.extensions[cache_key] = available
+        return available
+    except Exception:
+        current_app.logger.warning(
+            "Presence media capability lookup failed; retaining V1B media mode.",
+            exc_info=True,
+        )
+        current_app.extensions[cache_key] = False
+        return False
+
+
+def media_capability_for_owner() -> dict[str, Any]:
+    migration_ready = media_asset_records_available()
+    storage_configured = private_draft_storage_configured()
+    storage_verified = private_draft_storage_verified()
+    private_active = migration_ready and private_draft_storage_enabled()
+    if not migration_ready:
+        reason = "media_migration_missing"
+    elif not storage_configured:
+        reason = "private_storage_not_configured"
+    elif not storage_verified:
+        reason = "private_storage_not_verified"
+    else:
+        reason = None
+    return {
+        "private_draft_media_active": private_active,
+        "v1b_fallback_available": True,
+        "migration_ready": migration_ready,
+        "protected_storage_configured": storage_configured,
+        "protected_storage_verified": storage_verified,
+        "reason": reason,
+        "owner_message": (
+            "Uploaded images stay private in your Draft room until you open the room."
+            if private_active
+            else "Private draft media is not enabled on this environment. Use only public-safe images."
+        ),
+    }
 
 
 def _json_size(value: Any) -> int:
@@ -398,6 +449,9 @@ def _config_data(config: PresenceEditableConfig | None, room: PresenceNode) -> d
 
 
 def ensure_draft_config(room: PresenceNode, actor=None) -> tuple[PresenceEditableConfig, bool]:
+    # Resolve optional V1C capability before this method starts a mutation.
+    # Inspecting a table mid-transaction can disturb in-memory SQLite tests.
+    media_asset_records_available()
     draft = draft_config_for_room(room)
     if draft:
         return draft, False
@@ -709,8 +763,9 @@ def collect_room_assets(room: PresenceNode) -> list[dict[str, Any]]:
     for config in (draft_config_for_room(room), published_config_for_room(room)):
         if config:
             assets.extend(_asset_from_value(config.asset_config_json or {}, source=f"editable_config:{config.status}", slot="asset_config"))
-    for media_asset in PresenceMediaAsset.query.filter_by(room_id=room.id).filter(PresenceMediaAsset.status != "deleted").all():
-        assets.append(serialize_media_asset_for_owner(media_asset))
+    if media_asset_records_available():
+        for media_asset in PresenceMediaAsset.query.filter_by(room_id=room.id).filter(PresenceMediaAsset.status != "deleted").all():
+            assets.append(serialize_media_asset_for_owner(media_asset))
 
     seen: set[str] = set()
     unique_assets: list[dict[str, Any]] = []
@@ -849,6 +904,8 @@ def _owner_media_section(config: PresenceEditableConfig, attr: str) -> dict[str,
 
 
 def delete_unused_media_asset(room: PresenceNode, media_id: str) -> bool:
+    if not media_asset_records_available():
+        raise PresenceEditorConfigError("Private draft media is not enabled on this environment.")
     media_asset = PresenceMediaAsset.query.filter_by(id=media_id, room_id=room.id).first()
     if not media_asset:
         raise PresenceEditorConfigError("That image was not found.")
@@ -866,6 +923,8 @@ def delete_unused_media_asset(room: PresenceNode, media_id: str) -> bool:
 
 
 def cleanup_orphaned_private_media(room: PresenceNode, *, minimum_age_seconds: int = 86400) -> int:
+    if not media_asset_records_available():
+        return 0
     cutoff = now_utc().timestamp() - max(0, int(minimum_age_seconds))
     deleted = 0
     rows = PresenceMediaAsset.query.filter_by(room_id=room.id, status="orphaned", visibility="private_draft").all()
@@ -881,6 +940,8 @@ def cleanup_orphaned_private_media(room: PresenceNode, *, minimum_age_seconds: i
 
 
 def _media_by_id(room_id: int) -> dict[str, PresenceMediaAsset]:
+    if not media_asset_records_available():
+        return {}
     return {row.id: row for row in PresenceMediaAsset.query.filter_by(room_id=room_id).all()}
 
 
@@ -898,6 +959,16 @@ def _media_reference_ids(value: Any, *, include_inventory: bool = False) -> set[
                 continue
             ids.update(_media_reference_ids(item, include_inventory=include_inventory))
     return ids
+
+
+def _has_private_draft_reference(value: Any) -> bool:
+    if isinstance(value, list):
+        return any(_has_private_draft_reference(item) for item in value)
+    if isinstance(value, dict):
+        if str(value.get("visibility") or "") == "private_draft":
+            return True
+        return any(_has_private_draft_reference(item) for item in value.values())
+    return False
 
 
 def _walk_media_refs(value: Any, rows: dict[str, PresenceMediaAsset], transform) -> Any:
@@ -944,6 +1015,8 @@ def _hydrate_private_media_references(asset_config: dict[str, Any], room_id: int
 
 
 def _sync_draft_media_assignment_status(asset_config: dict[str, Any], room_id: int) -> None:
+    if not media_asset_records_available():
+        return
     selected = _media_reference_ids(asset_config, include_inventory=False)
     for media_asset in PresenceMediaAsset.query.filter_by(room_id=room_id, visibility="private_draft").all():
         if media_asset.id in selected and media_asset.status in {"draft_uploaded", "orphaned", "ready"}:
@@ -952,6 +1025,10 @@ def _sync_draft_media_assignment_status(asset_config: dict[str, Any], room_id: i
 
 
 def _promote_private_media_references(asset_config: dict[str, Any], room_id: int) -> dict[str, Any]:
+    if not media_asset_records_available():
+        if _has_private_draft_reference(asset_config):
+            raise PresenceMediaStorageError("Protected draft images cannot be published until private media setup is restored.")
+        return deepcopy(asset_config)
     rows = _media_by_id(room_id)
     selected = _media_reference_ids(asset_config, include_inventory=False)
 
@@ -975,6 +1052,8 @@ def _promote_private_media_references(asset_config: dict[str, Any], room_id: int
 
 
 def _mark_unused_private_media_orphaned(room_id: int) -> None:
+    if not media_asset_records_available():
+        return
     for media_asset in PresenceMediaAsset.query.filter_by(room_id=room_id, visibility="private_draft").all():
         if media_asset.status in {"draft_uploaded", "draft_attached", "ready"}:
             media_asset.status = "orphaned"

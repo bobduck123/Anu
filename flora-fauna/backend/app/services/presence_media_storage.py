@@ -197,6 +197,14 @@ def _storage_backend_name() -> str:
     ).strip().lower()
 
 
+def _config_truthy(name: str) -> bool:
+    configured = current_app.config.get(name)
+    value = configured if configured is not None else os.environ.get(name)
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _production_storage_required() -> bool:
     if current_app.config.get("TESTING"):
         return False
@@ -210,12 +218,28 @@ def _production_storage_required() -> bool:
     return env == "production" and _storage_backend_name() != "local"
 
 
-def private_draft_storage_enabled() -> bool:
+def private_draft_storage_configured() -> bool:
     backend = _storage_backend_name()
     if backend == "local":
         return bool(current_app.config.get("PRESENCE_MEDIA_PRIVATE_DRAFT_ENABLED"))
     supabase_url, service_key, _bucket = _supabase_settings()
     return bool(_private_draft_bucket() and supabase_url and service_key)
+
+
+def private_draft_storage_verified() -> bool:
+    if _storage_backend_name() == "local":
+        return bool(current_app.config.get("PRESENCE_MEDIA_PRIVATE_DRAFT_ENABLED"))
+    return _config_truthy("PRESENCE_MEDIA_PRIVATE_DRAFT_VERIFIED")
+
+
+def private_draft_storage_enabled() -> bool:
+    """Only activate protected remote uploads after deployment verification.
+
+    The per-upload anonymous read probe still enforces privacy. This flag
+    prevents a partially configured hosted rollout from changing normal
+    uploads before migration and bucket smoke have been completed.
+    """
+    return private_draft_storage_configured() and private_draft_storage_verified()
 
 
 def _store_supabase(

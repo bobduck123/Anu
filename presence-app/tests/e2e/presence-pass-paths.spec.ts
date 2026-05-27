@@ -26,6 +26,14 @@ test("RoomKey entry resolves, renders actions, and captures one encounter", asyn
     .toBe(1);
 });
 
+test("published room-id entry alias renders the room without token attribution", async ({ page }) => {
+  await page.goto(`/room/${fixtures.room.id}/key`);
+
+  await expect(page).toHaveURL(new RegExp(`/presence/${fixtures.room.slug}$`));
+  await expect(page.getByRole("heading", { name: fixtures.room.display_name })).toBeVisible();
+  await expect(page.getByText(/public_token|draft_storage_key|signed_url|owner_user_id/i)).toHaveCount(0);
+});
+
 test("invalid RoomKey shows safe inactive state", async ({ page, request }) => {
   await page.goto("/r/revoked-room-key-token");
 

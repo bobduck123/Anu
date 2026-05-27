@@ -148,6 +148,16 @@ export interface PresenceEditorRoomSummary {
   owner_user_id?: number | null;
 }
 
+export interface PresenceEditorMediaCapability {
+  private_draft_media_active: boolean;
+  v1b_fallback_available: boolean;
+  migration_ready: boolean;
+  protected_storage_configured: boolean;
+  protected_storage_verified: boolean;
+  reason?: string | null;
+  owner_message: string;
+}
+
 export interface PresenceEditorOverview {
   room: PresenceEditorRoomSummary;
   draft: PresenceEditableConfig | null;
@@ -156,6 +166,7 @@ export interface PresenceEditorOverview {
   suggested_config?: Record<string, unknown> | null;
   history: PresenceEditableConfig[];
   assets: PresenceEditorAsset[];
+  media_capability?: PresenceEditorMediaCapability | null;
 }
 
 export interface PresenceEditorDraftResponse {
@@ -476,6 +487,12 @@ export interface RoomKeyEntryPayload {
   encounter?: Encounter | null;
   available_actions: string[];
   observer_upgrade?: string;
+  status?: string;
+}
+
+export interface PublicRoomEntryAliasPayload {
+  room: PresenceNode;
+  public_url: string;
   status?: string;
 }
 

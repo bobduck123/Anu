@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import { Image as ImageIcon, Loader2, Upload, X } from "lucide-react";
-import type { PresenceEditableConfig, PresenceEditorAsset, PresenceNode } from "@/lib/api/types";
+import type { PresenceEditableConfig, PresenceEditorAsset, PresenceEditorMediaCapability, PresenceNode } from "@/lib/api/types";
 import type { CanonicalAssetBundle } from "@/lib/editor/canonicalAssets";
 import { validateMediaUploadFile } from "@/lib/editor/mediaValidation";
 import {
@@ -30,6 +30,7 @@ export function MediaDrawer({
   onCommit,
   onBringImages,
   onUpload,
+  mediaCapability,
 }: {
   node: PresenceNode;
   config: PresenceEditableConfig;
@@ -42,6 +43,7 @@ export function MediaDrawer({
   onCommit: CommitDraft;
   onBringImages: () => void;
   onUpload: (file: File, altText: string, role: string) => Promise<PresenceEditorAsset | null>;
+  mediaCapability?: PresenceEditorMediaCapability | null;
 }) {
   const model = useMemo(
     () => resolveRenderModel({ ...node, editable_config: { ...config, status: "draft" } }, "draft"),
@@ -201,6 +203,11 @@ export function MediaDrawer({
 
         {tab === "upload" ? (
           <div data-testid="media-upload-panel" className="grid gap-4 rounded-2xl border border-[#ceb994] bg-[#f0e6d5] p-5">
+            {mediaCapability && !mediaCapability.private_draft_media_active && (
+              <p data-testid="media-capability-note" className="rounded-xl bg-[#f8eadd] p-3 text-xs font-semibold leading-5 text-[#704430]">
+                {mediaCapability.owner_message}
+              </p>
+            )}
             <div
               onDragOver={(event) => event.preventDefault()}
               onDrop={dropFile}

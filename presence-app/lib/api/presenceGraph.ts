@@ -14,6 +14,7 @@ import type {
   RoomGraphAnalytics,
   RoomKey,
   RoomKeyEntryPayload,
+  PublicRoomEntryAliasPayload,
   Signal,
 } from "./types";
 
@@ -92,6 +93,10 @@ function authHeaders(token: string) {
 
 export function resolveRoomKey(token: string) {
   return apiFetch<RoomKeyEntryPayload>(`${PRESENCE}/keys/${encodeURIComponent(token)}/resolve`);
+}
+
+export function resolveRoomEntry(roomId: number | string) {
+  return apiFetch<PublicRoomEntryAliasPayload>(`${PRESENCE}/rooms/${encodeURIComponent(String(roomId))}/key-entry`);
 }
 
 export function captureRoomEncounter(roomId: number, payload: EncounterInput, token?: string | null) {
