@@ -223,7 +223,7 @@ function inferPersonality(node: PresenceNode, practice: PracticeDna): Personalit
       status_signal = "premium";
       break;
     case "building_trade":
-      // Default to grounded/craft; demo overlays may push specific carpenters
+      // Default to grounded/craft; persisted DNA can push specific carpenters
       // toward either a craft-luxury or a trust-led variation.
       temperament = "grounded";
       energy = "slow";

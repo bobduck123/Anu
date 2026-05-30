@@ -1,4 +1,5 @@
-// Uniqueness assertions for the six Presence DNA demo rooms.
+// Uniqueness assertions for the Presence DNA demo rooms and the GGM
+// cultural-community fixture.
 //
 // HOW TO RUN
 //   This file is type-checked by `npm run typecheck`. To execute the
@@ -12,10 +13,11 @@
 //
 // WHY IT EXISTS
 //   This is the guardrail behind the proof case: the two carpenter
-//   rooms must not collapse into the same template. The script asserts
-//   that no two of the six demo rooms cross the `TOO_SIMILAR_THRESHOLD`
-//   and prints the most-similar pair so we always know where we're
-//   closest to colour-swap territory.
+//   rooms must not collapse into the same template, and GGM must remain
+//   distinct from the gallery-painter profile. The script asserts that
+//   no two rooms cross the `TOO_SIMILAR_THRESHOLD` and prints the
+//   most-similar pair so we always know where we're closest to
+//   colour-swap territory.
 
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

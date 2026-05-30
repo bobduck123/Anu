@@ -23,8 +23,7 @@ interface MaterialsBoardProps {
   // `medium`, `dimensions`, optional thumbnail. This keeps it data-driven
   // and avoids any fabricated content.
   works: PresenceWork[];
-  // Optional explicit material list (provided by demo overlays today,
-  // by the backend later).
+  // Optional explicit material list, provided by backend or fixture metadata.
   materials?: MaterialCard[];
 }
 

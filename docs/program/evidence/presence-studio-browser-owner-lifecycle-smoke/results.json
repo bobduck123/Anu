@@ -1,0 +1,120 @@
+{
+  "date": "2026-05-30",
+  "scope": "Browser-level owner lifecycle smoke for Presence Studio TemplateKit-created Studio Room drafts",
+  "playwright": {
+    "spec": "presence-app/tests/e2e/presence-studio-room-owner-lifecycle.spec.ts",
+    "primaryKitTested": "cultural-community-artist",
+    "authStrategy": "Existing Playwright E2E owner auth mock using localStorage presence:e2e:access_token",
+    "mockApi": "presence-app/tests/e2e/mock-presence-api.mjs",
+    "route": "/studio/template-kits -> /studio/[id]/studio-room"
+  },
+  "mockContract": {
+    "primaryKitsAccepted": [
+      "gallery-artist",
+      "cultural-community-artist",
+      "material-tradie-proof-card",
+      "healing-practitioner",
+      "consultant-contractor"
+    ],
+    "candidateKitsRejected": [
+      "underground-dj-portal"
+    ],
+    "draftStatus": "draft",
+    "visibility": "private",
+    "publicStatus": "draft",
+    "publishedConfigCreated": false,
+    "restrictedKeyRejection": true,
+    "unsafeUrlRejection": "create_and_save_paths"
+  },
+  "lifecycleCovered": {
+    "ownerTemplateKitRouteLoads": true,
+    "fivePrimaryKitsVisible": true,
+    "candidateKitHidden": true,
+    "draftCreateEndpointCalled": true,
+    "editorRedirect": true,
+    "editorShellLoaded": true,
+    "draftWarningVisible": true,
+    "chamberPanelVisible": true,
+    "inspectorVisible": true,
+    "canvasVisible": true,
+    "publishButtonAbsent": true,
+    "safeChamberEditApplied": true,
+    "saveEndpointCalled": true,
+    "previewUpdated": true,
+    "reloadPreservedEdit": true,
+    "publicApiReturned404": true,
+    "publicPageHidden": true,
+    "publishEndpointNotCalled": true
+  },
+  "safety": {
+    "publicStudioRoomRenderingAdded": false,
+    "publicRoutesChanged": false,
+    "publishPathAdded": false,
+    "runtimeAiAdded": false,
+    "broadContactMappingAdded": false,
+    "candidateKitExposureChanged": false
+  },
+  "tests": [
+    {
+      "command": "npx.cmd playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=chromium",
+      "result": "pass",
+      "details": "1 passed"
+    },
+    {
+      "command": "python -m pytest tests\\test_presence_template_kit_draft_persistence.py tests\\test_presence_studio_editor_foundation.py tests\\test_presence_dna_persistence.py",
+      "result": "pass",
+      "details": "29 passed; SQLAlchemy legacy warnings only"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\uniqueness.test.ts",
+      "result": "pass",
+      "details": "all pairs distinct; rooms-gallery-painter and ggm-christina-goddard score 0.045"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\studio-room\\*.test.ts",
+      "result": "pass",
+      "details": "59 passed"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\**\\*.test.ts",
+      "result": "pass",
+      "details": "82 passed"
+    },
+    {
+      "command": "npm.cmd run typecheck",
+      "result": "pass",
+      "details": "tsc --noEmit passed"
+    },
+    {
+      "command": "npm.cmd run build",
+      "result": "pass",
+      "details": "Next.js build passed; pre-existing multiple-lockfile workspace-root warning"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "details": "No whitespace errors; Git emitted LF-to-CRLF working-copy warning for mock-presence-api.mjs"
+    },
+    {
+      "command": "runtime AI/LLM scan over changed areas",
+      "result": "pass",
+      "details": "No OpenAI/Anthropic/langchain/AI SDK/runtime AI matches"
+    },
+    {
+      "command": "public route isolation grep",
+      "result": "pass",
+      "details": "No StudioRoomCanvas/editor/template draft imports found in public app/components surfaces"
+    },
+    {
+      "command": "broad contact/private field changed-hunk grep",
+      "result": "pass",
+      "details": "Only expected mock restricted-key denylist entries for email and phone"
+    }
+  ],
+  "knownLimitations": [
+    "Browser smoke uses the local Playwright mock API and E2E owner auth mock rather than a hosted Supabase session.",
+    "Browser lifecycle covers cultural-community-artist; backend API tests cover all five primary kits.",
+    "Browser edit uses an allowed chamber summary field; broader object edit matrix remains covered by API/unit tests and can expand in an inspector pass.",
+    "Mock validation covers restricted keys and unsafe URLs on create/save, but remains intentionally narrower than backend validation."
+  ]
+}

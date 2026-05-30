@@ -1,0 +1,201 @@
+{
+  "date": "2026-05-29",
+  "scope": "preview-only deterministic Studio Room TemplateKits plus cultural-community GGM extraction",
+  "runtime_ai_added": false,
+  "public_routes_changed": false,
+  "template_routes_production_closed": true,
+  "kits": [
+    {
+      "id": "gallery-artist",
+      "name": "Gallery Artist",
+      "source": "demo:rooms-gallery-painter",
+      "support_state": "primary",
+      "chambers": 8,
+      "objects": 21,
+      "cta": "Commission a work",
+      "cta_present": true,
+      "semantic_coverage": {
+        "contact": 1,
+        "services": 2,
+        "proof": 2,
+        "links": 1,
+        "credentials": 0
+      },
+      "mobile_variant_count": 29,
+      "deferred_fields": []
+    },
+    {
+      "id": "cultural-community-artist",
+      "name": "Cultural-Community Artist / Practice Archive",
+      "source": "demo:ggm-christina-goddard",
+      "support_state": "primary",
+      "source_candidate": "ggm-christina-goddard",
+      "chambers": 8,
+      "objects": 22,
+      "ordered_chambers": [
+        "Archive Threshold",
+        "Practice / Story",
+        "Community Archive / Evidence Wall",
+        "Programs / Services",
+        "Proof / Trust",
+        "Links / Portal",
+        "Contact / Invitation",
+        "Public Contact"
+      ],
+      "cta": "Invite a practice archive conversation",
+      "cta_present": true,
+      "semantic_coverage": {
+        "contact": 1,
+        "services": 2,
+        "proof": 2,
+        "links": 2,
+        "credentials": 0
+      },
+      "mobile_variant_count": 30,
+      "required_fields": 6,
+      "optional_fields": 6,
+      "copy_scaffolds": 8,
+      "deferred_fields": [],
+      "draft_instantiation": {
+        "owner_creatable": true,
+        "persistence": "staged-only",
+        "published": null,
+        "source_candidate_content_scrubbed": true,
+        "restricted_public_payload_keys": []
+      }
+    },
+    {
+      "id": "material-tradie-proof-card",
+      "name": "Material / Tradie Proof Card",
+      "source": "demo:rooms-local-carpenter",
+      "support_state": "primary",
+      "chambers": 9,
+      "objects": 27,
+      "cta": "Get a quote",
+      "cta_present": true,
+      "semantic_coverage": {
+        "contact": 2,
+        "services": 4,
+        "proof": 3,
+        "links": 1,
+        "credentials": 2
+      },
+      "mobile_variant_count": 36,
+      "deferred_fields": []
+    },
+    {
+      "id": "healing-practitioner",
+      "name": "Healing Practitioner",
+      "source": "demo:rooms-community-healer",
+      "support_state": "primary",
+      "chambers": 9,
+      "objects": 24,
+      "cta": "Begin a conversation",
+      "cta_present": true,
+      "semantic_coverage": {
+        "contact": 1,
+        "services": 3,
+        "proof": 2,
+        "links": 1,
+        "credentials": 2
+      },
+      "mobile_variant_count": 33,
+      "deferred_fields": []
+    },
+    {
+      "id": "consultant-contractor",
+      "name": "Consultant / Contractor",
+      "source": "demo:rooms-sharp-consultant",
+      "support_state": "primary",
+      "chambers": 9,
+      "objects": 24,
+      "cta": "Open a project conversation",
+      "cta_present": true,
+      "semantic_coverage": {
+        "contact": 1,
+        "services": 3,
+        "proof": 3,
+        "links": 1,
+        "credentials": 1
+      },
+      "mobile_variant_count": 33,
+      "deferred_fields": []
+    },
+    {
+      "id": "underground-dj-portal",
+      "name": "Underground DJ / Minimal Performer Portal",
+      "source": "demo:rooms-underground-dj",
+      "support_state": "candidate",
+      "owner_creatable": false,
+      "chambers": 6,
+      "objects": 19,
+      "cta": "Book the room",
+      "cta_present": true,
+      "semantic_coverage": {
+        "contact": 1,
+        "services": 0,
+        "proof": 0,
+        "links": 3,
+        "credentials": 0
+      },
+      "mobile_variant_count": 25,
+      "deferred_fields": [
+        "media embeds",
+        "audio player"
+      ]
+    }
+  ],
+  "deferred_candidates": [],
+  "payload_hygiene": "pass",
+  "private_contact_mapping": "explicit public fields only; broad/private fields are diagnostics-only in real-room comparison",
+  "public_route_isolation": "pass",
+  "uniqueness_guard": {
+    "result": "pass",
+    "ggm_gallery_score": 0.045,
+    "closest_ggm_pair": "rooms-community-healer ~ ggm-christina-goddard",
+    "closest_ggm_score": 0.309,
+    "threshold": 0.7
+  },
+  "runtime_ai_scan": "pass",
+  "unsafe_url_scan": "pass",
+  "tests": [
+    {
+      "command": "npx.cmd tsx --test lib/presence/studio-room/studioRoomTemplateKits.test.ts",
+      "result": "pass",
+      "tests": 9
+    },
+    {
+      "command": "npx.cmd tsx --test lib/presence/studio-room/studioRoomTemplateDrafts.test.ts",
+      "result": "pass",
+      "tests": 7
+    },
+    {
+      "command": "npx.cmd tsx --test lib/presence/uniqueness.test.ts",
+      "result": "pass"
+    },
+    {
+      "command": "npx.cmd tsx --test lib/presence/studio-room/*.test.ts",
+      "result": "pass",
+      "tests": 53
+    },
+    {
+      "command": "npx.cmd tsx --test lib/presence/**/*.test.ts",
+      "result": "pass",
+      "tests": 76
+    },
+    {
+      "command": "npm.cmd run typecheck",
+      "result": "pass"
+    },
+    {
+      "command": "npm.cmd run build",
+      "result": "pass",
+      "note": "Next.js emitted existing workspace-root warning about multiple lockfiles."
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    }
+  ],
+  "recommended_next_pass": "renderer/mobile visual polish before Studio Editor backend draft persistence"
+}

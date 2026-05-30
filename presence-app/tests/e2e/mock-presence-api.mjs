@@ -6,6 +6,15 @@ import { dirname, join } from "node:path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixtures = JSON.parse(readFileSync(join(__dirname, "..", "fixtures", "presenceGraph.json"), "utf8"));
 const port = Number(process.env.PORT || 5105);
+const templateKitDraftContractVersion = "presence-editable-config-compat-v1";
+const primaryTemplateKits = {
+  "gallery-artist": "Gallery Artist",
+  "cultural-community-artist": "Cultural-Community Artist / Practice Archive",
+  "material-tradie-proof-card": "Material / Tradie Proof Card",
+  "healing-practitioner": "Healing Practitioner",
+  "consultant-contractor": "Consultant / Contractor",
+};
+const candidateTemplateKits = new Set(["underground-dj-portal"]);
 
 let state;
 
@@ -27,6 +36,9 @@ function resetState() {
     editorPublished: buildEditorConfig("published", 1),
     nextEditorVersion: 2,
     editorAssets: buildEditorAssets(),
+    studioRoomDrafts: {},
+    nextStudioRoomId: 901,
+    nextStudioRoomDraftVersion: 1,
     failNextOwnerNodeReads: 0,
     failNextEditorReads: 0,
     failNextPreviewReads: 0,
@@ -291,6 +303,179 @@ const server = createServer(async (req, res) => {
   if (url.pathname === "/api/observer/paths/1001/choose" && req.method === "POST") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     return sendData(res, { id: 1503, observer_id: fixtures.observer.id, path_id: 1001, trace_type: "fork_chosen", metadata: { choice_id: body.choice_id }, created_at: new Date().toISOString() }, 201);
+  }
+
+  if (url.pathname === "/api/presence/owner/studio-rooms/from-template-kit" && req.method === "POST") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
+    const kitId = String(body.kit_id || body.kitId || body.template_kit_id || body.templateKitId || "").trim();
+    if (candidateTemplateKits.has(kitId)) {
+      return sendError(res, 403, "template_kit_not_owner_creatable", "This TemplateKit is not available for owner draft creation.");
+    }
+    const kitName = primaryTemplateKits[kitId];
+    if (!kitName) return sendError(res, 404, "template_kit_not_found", "TemplateKit was not found.");
+    const draftPayload = body.draft_payload || body.draftPayload || body.saveable_payload || body.saveablePayload;
+    if (!draftPayload || typeof draftPayload !== "object") {
+      return sendError(res, 422, "validation_error", "draft_payload is required.");
+    }
+    if (containsRestrictedKey(draftPayload)) {
+      return sendError(res, 422, "validation_error", "TemplateKit draft payload contains a restricted field.");
+    }
+    if (!validateSafeUrls(draftPayload)) {
+      return sendError(res, 422, "validation_error", "Editable links must be public http(s), public relative paths, or safe chamber fragments.");
+    }
+    const room = draftPayload.room;
+    if (!room || typeof room !== "object" || room.state !== "draft" || room.templateKitId !== kitId) {
+      return sendError(res, 422, "validation_error", "TemplateKit-created Studio Rooms must be draft state.");
+    }
+
+    const roomId = state.nextStudioRoomId++;
+    const slug = `studio-${kitId}-draft-${roomId}`;
+    const storedDraft = toStoredStudioRoomDraft(kitId, kitName, draftPayload);
+    const summary = summarizeStudioRoom(storedDraft.room);
+    const draftConfig = buildStudioRoomDraftEditorConfig(roomId, kitId, kitName, storedDraft, summary);
+    const node = buildStudioRoomDraftNode(roomId, slug, kitId, kitName, storedDraft);
+    state.studioRoomDrafts[String(roomId)] = {
+      node,
+      draft: draftConfig,
+      studioRoomDraft: storedDraft,
+      published: null,
+      summary,
+    };
+
+    return sendData(res, {
+      node_id: roomId,
+      room_id: roomId,
+      slug,
+      template_kit_id: kitId,
+      template_kit_name: kitName,
+      support_state: "primary",
+      status: "draft",
+      visibility: "private",
+      public_status: "draft",
+      published: null,
+      published_at: null,
+      base_published_version: 0,
+      draft: {
+        id: draftConfig.id,
+        version: draftConfig.version,
+        status: draftConfig.status,
+        schema_version: draftConfig.schema_version,
+      },
+      contract: templateKitDraftContractVersion,
+      schema_version: storedDraft.schema_version,
+      chamber_count: summary.chamber_count,
+      object_count: summary.object_count,
+      mobile_variant_count: summary.mobile_variant_count,
+      editor_path: `/studio/${roomId}/studio-room`,
+    }, 201);
+  }
+
+  const studioRoomDraftSaveMatch = url.pathname.match(/^\/api\/presence\/owner\/studio-rooms\/(\d+)\/draft$/);
+  if (studioRoomDraftSaveMatch && req.method === "PATCH") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
+    const roomId = studioRoomDraftSaveMatch[1];
+    const entry = state.studioRoomDrafts[roomId];
+    if (!entry) return sendError(res, 404, "studio_room_draft_not_found", "Studio Room draft config was not found.");
+    const incoming = body.studio_room_draft || body.studioRoomDraft;
+    if (!incoming || typeof incoming !== "object") {
+      return sendError(res, 422, "validation_error", "studio_room_draft is required.");
+    }
+    if (containsRestrictedKey(incoming)) {
+      return sendError(res, 422, "validation_error", "TemplateKit draft payload contains a restricted field.");
+    }
+    if (!validateSafeUrls(incoming)) {
+      return sendError(res, 422, "validation_error", "Editable links must be public http(s), public relative paths, or safe chamber fragments.");
+    }
+    if (
+      incoming.contract !== templateKitDraftContractVersion ||
+      incoming.support_state !== "primary" ||
+      incoming.published_state !== null ||
+      incoming.room?.state !== "draft"
+    ) {
+      return sendError(res, 422, "validation_error", "Studio Room draft updates must remain private draft payloads.");
+    }
+
+    const summary = summarizeStudioRoom(incoming.room);
+    const version = state.nextStudioRoomDraftVersion++;
+    const saved = {
+      ...entry.draft,
+      version,
+      updated_at: new Date().toISOString(),
+      scene_config: {
+        ...(entry.draft.scene_config || {}),
+        summary,
+      },
+      content_config: {
+        ...(entry.draft.content_config || {}),
+        studio_room_draft: incoming,
+      },
+    };
+    entry.draft = saved;
+    entry.studioRoomDraft = incoming;
+    entry.summary = summary;
+
+    return sendData(res, {
+      room_id: Number(roomId),
+      slug: entry.node.slug,
+      template_kit_id: incoming.template_kit_id,
+      status: "draft",
+      visibility: "private",
+      public_status: "draft",
+      published: null,
+      published_config_present: false,
+      published_at: null,
+      base_published_version: incoming.base_published_version || 0,
+      contract: templateKitDraftContractVersion,
+      draft: {
+        id: saved.id,
+        version: saved.version,
+        status: saved.status,
+        updated_at: saved.updated_at,
+      },
+      studio_room_draft: incoming,
+      chamber_count: summary.chamber_count,
+      object_count: summary.object_count,
+      mobile_variant_count: summary.mobile_variant_count,
+    });
+  }
+
+  const studioRoomOwnerNodeMatch = url.pathname.match(/^\/api\/presence\/owner\/nodes\/(\d+)$/);
+  if (studioRoomOwnerNodeMatch && req.method === "GET" && state.studioRoomDrafts[studioRoomOwnerNodeMatch[1]]) {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
+    return sendData(res, state.studioRoomDrafts[studioRoomOwnerNodeMatch[1]].node);
+  }
+
+  const studioRoomEditorMatch = url.pathname.match(/^\/api\/presence\/owner\/rooms\/(\d+)\/editor$/);
+  if (studioRoomEditorMatch && req.method === "GET" && state.studioRoomDrafts[studioRoomEditorMatch[1]]) {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
+    const entry = state.studioRoomDrafts[studioRoomEditorMatch[1]];
+    return sendData(res, {
+      room: {
+        id: entry.node.id,
+        slug: entry.node.slug,
+        display_name: entry.node.display_name,
+        owner_user_id: entry.node.owner_user_id,
+      },
+      draft: entry.draft,
+      published: null,
+      published_public_config: null,
+      suggested_config: null,
+      history: [entry.draft],
+      assets: [],
+      media_capability: {
+        private_draft_media_active: false,
+        v1b_fallback_available: true,
+        migration_ready: true,
+        protected_storage_configured: false,
+        protected_storage_verified: false,
+        reason: "private_storage_not_configured",
+        owner_message: "Private draft media is not enabled on this environment. Use only public-safe images.",
+      },
+    });
   }
 
   if (url.pathname === "/api/presence/owner/nodes/101" && req.method === "GET") {
@@ -1056,6 +1241,196 @@ function buildHallTrailheadPath(hallId) {
   };
 }
 
+function toStoredStudioRoomDraft(kitId, kitName, draftPayload) {
+  return {
+    contract: templateKitDraftContractVersion,
+    schema_version: draftPayload.schemaVersion || draftPayload.schema_version,
+    template_kit_id: kitId,
+    template_kit_name: kitName,
+    support_state: "primary",
+    base_published_version: 0,
+    published_state: null,
+    room: draftPayload.room,
+    required_fields: Array.isArray(draftPayload.requiredFields) ? draftPayload.requiredFields : [],
+    optional_fields: Array.isArray(draftPayload.optionalFields) ? draftPayload.optionalFields : [],
+    copy_scaffolds: Array.isArray(draftPayload.copyScaffolds) ? draftPayload.copyScaffolds : [],
+    cta_strategy: draftPayload.ctaStrategy || {},
+    source_persistence_boundary: draftPayload.persistenceBoundary || null,
+  };
+}
+
+function buildStudioRoomDraftNode(roomId, slug, kitId, kitName, storedDraft) {
+  return {
+    id: roomId,
+    owner_user_id: 1,
+    slug,
+    display_name: `Untitled ${kitName}`,
+    headline: `Draft Studio Room from ${kitName}`,
+    bio: "Replace this scaffold copy before publishing.",
+    node_type: "creative",
+    display_mode: "studio_room_draft",
+    plan_type: "basic",
+    status: "draft",
+    visibility: "private",
+    public_status: "draft",
+    room_type: "studio_room",
+    theme_preset: "studio_room_template",
+    accent_color: storedDraft.room?.theme?.accent || "#d8a44a",
+    primary_cta_label: storedDraft.cta_strategy?.label || null,
+    public_url: `/p/${slug}`,
+    services: [],
+    works: [],
+    links: [],
+    metadata: {
+      studio_room_template: {
+        kit_id: kitId,
+        kit_name: kitName,
+        support_state: "primary",
+        contract: templateKitDraftContractVersion,
+        created_via: "template-kit-start",
+      },
+    },
+  };
+}
+
+function buildStudioRoomDraftEditorConfig(roomId, kitId, kitName, storedDraft, summary) {
+  const now = new Date().toISOString();
+  const version = state.nextStudioRoomDraftVersion++;
+  return {
+    id: 9700 + roomId,
+    room_id: roomId,
+    schema_version: "presence-editable-config-v1",
+    version,
+    status: "draft",
+    renderer_key: "studio-room-template-kit-v1",
+    scene_config: {
+      studio_room_contract: templateKitDraftContractVersion,
+      schema_version: storedDraft.schema_version,
+      template_kit_id: kitId,
+      entry_chamber_id: storedDraft.room?.entryChamberId || null,
+      summary,
+    },
+    style_dna: {},
+    motion_config: {},
+    asset_config: {},
+    content_config: {
+      studio_room_draft: storedDraft,
+      template_kit: {
+        id: kitId,
+        name: kitName,
+        support_state: "primary",
+      },
+    },
+    roomkey_config: {
+      created_via: "template-kit-start",
+      public_route_behavior: "unchanged",
+    },
+    enquiry_config: {
+      cta_label: storedDraft.cta_strategy?.label || null,
+      delivery_posture: "owner_config_required_before_publish",
+    },
+    locked_fields: {
+      studio_room_persistence_contract: {
+        contract: templateKitDraftContractVersion,
+        schema_version: storedDraft.schema_version,
+        base_published_version: 0,
+        candidate_kits_excluded: true,
+      },
+    },
+    created_at: now,
+    updated_at: now,
+    published_at: null,
+    archived_at: null,
+  };
+}
+
+function summarizeStudioRoom(room) {
+  const chambers = Array.isArray(room?.chambers) ? room.chambers : [];
+  let objectCount = 0;
+  let mobileVariantCount = room?.mobile ? 1 : 0;
+  for (const chamber of chambers) {
+    if (!chamber || typeof chamber !== "object") continue;
+    if (chamber.mobile) mobileVariantCount += 1;
+    const objects = Array.isArray(chamber.objects) ? chamber.objects : [];
+    objectCount += objects.length;
+    mobileVariantCount += objects.filter((object) => object && typeof object === "object" && object.mobile).length;
+  }
+  return {
+    chamber_count: chambers.length,
+    object_count: objectCount,
+    mobile_variant_count: mobileVariantCount,
+  };
+}
+
+const restrictedStudioRoomKeys = new Set([
+  "accesstoken",
+  "apikey",
+  "authsubject",
+  "contactemail",
+  "contactphone",
+  "draftconfig",
+  "editableconfig",
+  "editoronly",
+  "email",
+  "internal",
+  "motionconfig",
+  "owneremail",
+  "owneruserid",
+  "password",
+  "phone",
+  "privatekey",
+  "publicemail",
+  "publicphone",
+  "raweditableconfig",
+  "refreshtoken",
+  "secret",
+  "signedurl",
+  "styledna",
+]);
+
+function containsRestrictedKey(value) {
+  if (Array.isArray(value)) return value.some((item) => containsRestrictedKey(item));
+  if (!value || typeof value !== "object") return false;
+  return Object.entries(value).some(([key, child]) => {
+    const compact = String(key).toLowerCase().replace(/[^a-z0-9]/g, "");
+    return restrictedStudioRoomKeys.has(compact) || containsRestrictedKey(child);
+  });
+}
+
+function validateSafeUrls(value) {
+  if (Array.isArray(value)) return value.every((item) => validateSafeUrls(item));
+  if (!value || typeof value !== "object") return true;
+  return Object.entries(value).every(([key, child]) => {
+    const lowered = String(key).toLowerCase();
+    if ((lowered === "url" || lowered === "href") && typeof child === "string") {
+      return isSafeStudioRoomUrl(child);
+    }
+    return validateSafeUrls(child);
+  });
+}
+
+function isSafeStudioRoomUrl(value) {
+  const text = String(value || "").trim();
+  if (!text || text.startsWith("#")) return true;
+  if (text.startsWith("/")) {
+    const lowered = text.toLowerCase();
+    return !text.split("/").includes("..") && !lowered.startsWith("/studio") && !lowered.startsWith("/internal") && !lowered.startsWith("/api") && !lowered.startsWith("/admin");
+  }
+  try {
+    const parsed = new URL(text);
+    const host = parsed.hostname.toLowerCase();
+    return (
+      (parsed.protocol === "http:" || parsed.protocol === "https:") &&
+      host &&
+      !["localhost", "127.0.0.1", "0.0.0.0", "::1"].includes(host) &&
+      !host.endsWith(".local") &&
+      !host.endsWith(".internal")
+    );
+  } catch {
+    return false;
+  }
+}
+
 function buildEditorConfig(status = "published", version = 1) {
   const now = new Date().toISOString();
   return {
@@ -1205,6 +1580,7 @@ function publicState() {
     boards: state.boards.length,
     passes: state.passes.length,
     keys: state.keys.length,
+    studioRoomDrafts: Object.keys(state.studioRoomDrafts || {}).length,
   };
 }
 

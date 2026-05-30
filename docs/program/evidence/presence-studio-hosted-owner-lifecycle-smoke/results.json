@@ -1,0 +1,87 @@
+{
+  "date": "2026-05-31",
+  "scope": "presence-studio-hosted-owner-lifecycle-smoke",
+  "hosted_smoke": {
+    "spec": "presence-app/tests/e2e/presence-studio-room-hosted-lifecycle.spec.ts",
+    "primary_kit": "cultural-community-artist",
+    "env_gates": [
+      "PRESENCE_HOSTED_SMOKE=1",
+      "PRESENCE_E2E_BASE_URL",
+      "PRESENCE_E2E_API_URL",
+      "PRESENCE_E2E_OWNER_EMAIL",
+      "PRESENCE_E2E_OWNER_PASSWORD"
+    ],
+    "optional_cleanup_env": [
+      "PRESENCE_E2E_CLEANUP_STRATEGY=control-delete",
+      "PRESENCE_E2E_CONTROL_TOKEN",
+      "PRESENCE_E2E_CONTROL_SECRET"
+    ],
+    "real_hosted_run": "not_run",
+    "real_hosted_run_reason": "Required hosted URL/API URL/owner credentials were not available in this shell.",
+    "gate_off_skip": {
+      "command": "npx.cmd playwright test tests/e2e/presence-studio-room-hosted-lifecycle.spec.ts --project=chromium",
+      "result": "pass",
+      "tests": 1,
+      "skipped": 1
+    },
+    "gate_on_missing_env_skip": {
+      "command": "PRESENCE_HOSTED_SMOKE=1 npx.cmd playwright test tests/e2e/presence-studio-room-hosted-lifecycle.spec.ts --project=chromium --reporter=json",
+      "result": "pass",
+      "tests": 1,
+      "skipped": 1,
+      "skip_reason": "Missing hosted smoke env vars: PRESENCE_E2E_BASE_URL, PRESENCE_E2E_API_URL, PRESENCE_E2E_OWNER_EMAIL, PRESENCE_E2E_OWNER_PASSWORD"
+    },
+    "cleanup_result": "not_required_no_hosted_record_created"
+  },
+  "local_regressions": [
+    {
+      "command": "npx.cmd playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=chromium",
+      "result": "pass",
+      "tests": 1
+    },
+    {
+      "command": "npx.cmd playwright test tests/e2e/presence-studio-room-multi-kit-lifecycle.spec.ts --project=chromium",
+      "result": "pass",
+      "tests": 5
+    },
+    {
+      "command": "npx.cmd tsx --test \"lib/presence/studio-room/*.test.ts\"",
+      "result": "pass",
+      "tests": 84
+    },
+    {
+      "command": "npx.cmd tsx --test lib/presence/uniqueness.test.ts",
+      "result": "pass",
+      "tests": 1
+    },
+    {
+      "command": "npx.cmd tsx --test \"lib/presence/**/*.test.ts\"",
+      "result": "pass",
+      "tests": 109
+    },
+    {
+      "command": "npm.cmd run typecheck",
+      "result": "pass"
+    },
+    {
+      "command": "npm.cmd run build",
+      "result": "pass",
+      "note": "Existing Next.js multiple-lockfile workspace-root warning emitted."
+    }
+  ],
+  "safety": {
+    "public_route_isolation": "pass",
+    "no_publish_button_or_request_added": "pass",
+    "public_draft_invisibility": "asserted_in_local_and_hosted_specs",
+    "candidate_kit_hidden_or_rejected": "asserted_in_local_and_hosted_specs",
+    "runtime_ai_llm": "pass",
+    "broad_private_contact_media_mapping": "pass",
+    "secret_safety": "pass",
+    "active_demo_overlay_dependency": "pass"
+  },
+  "limitations": [
+    "Real hosted smoke did not run because required hosted env vars and owner credentials were unavailable.",
+    "Hosted smoke currently covers cultural-community-artist only.",
+    "Automatic cleanup requires explicitly supplied control-delete cleanup env vars."
+  ]
+}

@@ -2,6 +2,8 @@ import { defineConfig, devices } from "playwright/test";
 
 const appPort = 3100;
 const apiPort = 5105;
+const hostedSmoke = process.env.PRESENCE_HOSTED_SMOKE === "1";
+const hostedBaseURL = process.env.PRESENCE_E2E_BASE_URL || `http://127.0.0.1:${appPort}`;
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -13,7 +15,7 @@ export default defineConfig({
   fullyParallel: false,
   // Pre-warm Next dev route compilation so a multi-spec sequential run never
   // collides with a 60s cold-compile inside an interactive test step.
-  globalSetup: "./tests/e2e/global-setup.ts",
+  globalSetup: hostedSmoke ? undefined : "./tests/e2e/global-setup.ts",
   // One retry on the existing presence-pass-paths "Observer Mask creation"
   // selector flake when run after the gardens-halls suite. The test passes
   // deterministically on retry; see
@@ -22,17 +24,25 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 1,
   reporter: [["list"]],
   use: {
-    baseURL: `http://127.0.0.1:${appPort}`,
-    trace: "retain-on-failure",
-    screenshot: "only-on-failure",
+    baseURL: hostedSmoke ? hostedBaseURL : `http://127.0.0.1:${appPort}`,
+    trace: hostedSmoke ? "off" : "retain-on-failure",
+    screenshot: hostedSmoke ? "off" : "only-on-failure",
   },
   projects: [
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+    },
   ],
-  webServer: [
+  webServer: hostedSmoke ? [] : [
     {
       command: "node tests/e2e/mock-presence-api.mjs",
       url: `http://127.0.0.1:${apiPort}/healthz`,

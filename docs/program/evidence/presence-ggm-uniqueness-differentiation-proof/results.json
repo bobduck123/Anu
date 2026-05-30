@@ -1,0 +1,45 @@
+{
+  "date": "2026-05-29",
+  "scope": "GGM demo DNA/content differentiation",
+  "runtime_ai_added": false,
+  "public_routes_changed": false,
+  "uniqueness_threshold_changed": false,
+  "rooms_preserved": [
+    "rooms-gallery-painter",
+    "ggm-christina-goddard"
+  ],
+  "before": {
+    "pair": "rooms-gallery-painter ~ ggm-christina-goddard",
+    "score": 1.0,
+    "too_similar": true,
+    "shared_axes": [
+      "blueprint",
+      "entry_type",
+      "palette_mode",
+      "typography_mode",
+      "proof_density",
+      "proof_position",
+      "cta_label",
+      "media_density",
+      "signature_module",
+      "motion_preset",
+      "navigation_mode",
+      "image_treatment",
+      "section_order"
+    ]
+  },
+  "after": {
+    "pair": "rooms-gallery-painter ~ ggm-christina-goddard",
+    "score": 0.045,
+    "too_similar": false,
+    "ggm_blueprint": "program",
+    "ggm_signature": "archive_wall",
+    "ggm_motion": "editorial_snap",
+    "ggm_palette": "cultural",
+    "ggm_image_treatment": "archive",
+    "closest_ggm_pair": "rooms-community-healer ~ ggm-christina-goddard",
+    "closest_ggm_score": 0.309
+  },
+  "conceptual_direction": "Cultural-community artist / practice archive / public story and cultural evidence surface",
+  "final_status": "pass"
+}

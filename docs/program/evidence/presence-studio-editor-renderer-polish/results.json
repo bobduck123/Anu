@@ -1,0 +1,206 @@
+{
+  "date": "2026-05-30",
+  "scope": {
+    "editorShellPath": "/studio/[id]/studio-room",
+    "previewRoute": null,
+    "publishRoute": null,
+    "draftPersistenceBoundary": "presence-editable-config-compat-v1",
+    "ownerCreatableKits": [
+      "gallery-artist",
+      "cultural-community-artist",
+      "material-tradie-proof-card",
+      "healing-practitioner",
+      "consultant-contractor"
+    ],
+    "candidateKitsHiddenFromOwner": ["underground-dj-portal"]
+  },
+  "inspectorControls": {
+    "breadcrumb": true,
+    "objectRoleLabelAndDescription": true,
+    "chamberRoleLabelAndDescription": true,
+    "fieldGroups": [
+      "Identity",
+      "Content",
+      "Offer details",
+      "Trust / proof",
+      "Credential",
+      "Public link",
+      "Primary call to action"
+    ],
+    "inlineValidation": {
+      "urlSafety": true,
+      "lengthLimits": [
+        "title",
+        "summary",
+        "label",
+        "body",
+        "quote",
+        "attribution",
+        "source",
+        "issuer",
+        "detail",
+        "priceLabel",
+        "durationLabel",
+        "linkType",
+        "actionLabel",
+        "url"
+      ]
+    },
+    "objectActions": {
+      "duplicate": {
+        "testId": "studio-room-object-duplicate",
+        "disallowedTypes": ["cta", "metadata"]
+      },
+      "moveUp": {
+        "testId": "studio-room-object-move-up",
+        "disallowedTypes": ["cta"]
+      },
+      "moveDown": {
+        "testId": "studio-room-object-move-down",
+        "disallowedTypes": ["cta"]
+      },
+      "toggleMobileHidden": {
+        "testId": "studio-room-object-toggle-hidden",
+        "disallowedTypes": ["cta", "contact"]
+      },
+      "revertObject": {
+        "testId": "studio-room-object-revert"
+      }
+    },
+    "revertAll": {
+      "testId": "studio-room-revert-all"
+    },
+    "mobileLayout": {
+      "tabsTestId": "studio-room-editor-mobile-tabs",
+      "tabs": ["preview", "inspector"],
+      "desktopLayoutPreserved": true
+    },
+    "publishButtonPresent": false,
+    "publishCopyShown": "No publish action exists in this shell.",
+    "restrictedFieldsStillBlocked": [
+      "schemaVersion",
+      "room.id",
+      "room.slug",
+      "room.state",
+      "room.templateKitId",
+      "supportState",
+      "theme",
+      "rendererConfig",
+      "style_dna",
+      "motion_config",
+      "editable_config",
+      "editorOnly",
+      "internal",
+      "owner_user_id",
+      "auth_subject",
+      "contactEmail",
+      "contactPhone",
+      "media_embeds",
+      "audio_players",
+      "published_state"
+    ]
+  },
+  "rendererImprovements": {
+    "templateKitIdEmitted": true,
+    "stickyMobileCta": {
+      "viewport": "mobile",
+      "testId": "studio-room-mobile-sticky-cta"
+    },
+    "headerMobileCta": {
+      "testId": "studio-room-mobile-primary-cta"
+    },
+    "richObjectSurfaces": {
+      "service": ["priceLabel chip", "durationLabel chip"],
+      "credential": ["issuer line", "detail line"],
+      "proof": ["attribution line", "source line"]
+    },
+    "focusVisibleOutlines": true,
+    "lazyImages": true,
+    "overflowGuard": true,
+    "reducedMotionCascade": true,
+    "unknownRoleFallback": true,
+    "missingImageFallback": true
+  },
+  "kitDifferentiation": {
+    "gallery-artist": "Editorial — larger heading display, generous gallery padding, frameless work cards, outline-style CTA.",
+    "cultural-community-artist": "Archive — left accent rail on every chamber, 'Archive ·' chamber eyebrow, accent-on-surface partnership CTA.",
+    "material-tradie-proof-card": "Practical — tighter card radius, accent-bordered service cards, accent-filled chips, bold accent CTA with 52px tap targets.",
+    "healing-practitioner": "Calm — softer borders, larger card radii, accent-tinted badges, accent-on-surface buttons with subtle shadow.",
+    "consultant-contractor": "Crisp — sharp 4–6px radii, no chamber shadow, monoline buttons, disciplined hero title, ink chips."
+  },
+  "accessibility": {
+    "focusVisible": true,
+    "minTapTarget": "48px (52px for tradie / healing CTAs)",
+    "reducedMotionRespected": true,
+    "ariaPressedOnToggles": true,
+    "ariaExpandedOnChamberRows": true,
+    "ariaLabelledViewportButtons": true,
+    "breadcrumbAriaLabel": "Inspector breadcrumb",
+    "fieldGroupLegends": true,
+    "lazyImageLoading": true
+  },
+  "validation": {
+    "tsTests": {
+      "studioRoomEditingPolish": { "passed": 23, "failed": 0 },
+      "studioRoomDirectory": { "passed": 82, "failed": 0 },
+      "uniqueness": { "passed": 1, "failed": 0 },
+      "adjacentRenderAndDna": { "passed": 13, "failed": 0 }
+    },
+    "typecheck": "exit 0",
+    "build": "Compiled successfully; 29/29 static pages generated",
+    "playwrightLifecycleSmoke": {
+      "chromium": { "passed": 1, "failed": 0, "durationSeconds": 5.1 },
+      "firefox":  { "passed": 1, "failed": 0, "durationSeconds": 6.1 },
+      "webkit":   { "passed": 1, "failed": 0, "durationSeconds": 6.4 }
+    },
+    "publicRouteIsolationGrep": {
+      "scope": "app/(public)/**",
+      "matches": [
+        "StudioRoomOwnerEditorShell",
+        "StudioRoomCanvas",
+        "studioRoomTemplates",
+        "templateDrafts",
+        "from-template-kit"
+      ],
+      "result": "no matches"
+    },
+    "publishGrep": {
+      "scope": "components/presence-studio/StudioRoomOwnerEditorShell.tsx",
+      "matches": [
+        "publishPresenceEditorDraft",
+        "data-testid=\"studio-room-publish",
+        "Publish draft"
+      ],
+      "result": "no matches"
+    },
+    "runtimeAiScanGrep": {
+      "scope": ["lib/presence/studio-room/**", "components/presence-studio/**"],
+      "patterns": "openai|anthropic.com|claude-|llm|chatgpt|gpt-4|gpt-5|cohere|mistral|bedrock|gemini",
+      "result": "matches only inside test assertions of absence"
+    },
+    "privateContactGrep": {
+      "scope": "components/presence-studio/**",
+      "patterns": "contactEmail|contactPhone|public_email|public_phone|ownerEmail|authEmail|owner_user_id|auth_subject",
+      "result": "no matches"
+    }
+  },
+  "draftPublishSafety": {
+    "forcedStatus": "draft",
+    "forcedVisibility": "private",
+    "publishButtonPresent": false,
+    "publishedConfigCreated": false,
+    "publicDraftSlugVisible": false
+  },
+  "limitations": [
+    "Image upload, focal-point control, and media embed editing remain out of scope.",
+    "Inspector cannot yet add wholly new chambers or new object types; duplicate/reorder/hide operate on TemplateKit-seeded objects only.",
+    "Sticky mobile CTA is rendered inside the canvas; there is still no public Studio Room route.",
+    "Cross-browser smoke uses the local mock backend; no hosted testing performed."
+  ],
+  "recommendedNextPasses": {
+    "A": "Claude Design elevation: deterministic, server-only, design-token-driven typography and palette pass.",
+    "B": "Hosted owner lifecycle smoke: replay the cross-browser lifecycle smoke against a hosted preview environment.",
+    "C": "Deterministic Studio Guide: content-only 'next best step' inspector panel for non-technical owners.",
+    "D": "Multi-kit browser lifecycle smoke: replay lifecycle across each of the five primary kits."
+  }
+}

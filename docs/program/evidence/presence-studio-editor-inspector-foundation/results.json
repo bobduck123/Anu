@@ -1,0 +1,131 @@
+{
+  "date": "2026-05-29",
+  "endpoint": {
+    "method": "PATCH",
+    "path": "/api/presence/owner/studio-rooms/{room_id}/draft",
+    "auth": "alpha_jwt_required owner session plus existing owner node access check",
+    "requiresExistingDraftConfig": true,
+    "requiresStudioRoomDraftPayload": true,
+    "createsPublishedConfig": false,
+    "autoPublishes": false
+  },
+  "editorShell": {
+    "path": "/studio/[id]/studio-room",
+    "ownerGate": "useOwnerNode + StudioNodeGate",
+    "hasChamberList": true,
+    "hasObjectInspector": true,
+    "hasDirtyState": true,
+    "hasSaveDraftButton": true,
+    "hasPublishButton": false,
+    "canvasPayload": "toPublicRoomPayload(draft.room)"
+  },
+  "editableFieldContract": {
+    "chamber": ["title", "summary"],
+    "object": ["label"],
+    "textLike": ["title", "body"],
+    "service": ["title", "body", "priceLabel", "durationLabel"],
+    "proof": ["title", "body", "quote", "attribution", "source"],
+    "link": ["title", "body", "action.label", "action.href", "linkType"],
+    "credential": ["title", "body", "issuer", "detail"],
+    "cta": ["title", "body", "action.label", "action.href"],
+    "contact": ["title", "body"]
+  },
+  "restrictedFieldContract": [
+    "schemaVersion",
+    "room.id",
+    "room.slug",
+    "room.state",
+    "room.templateKitId",
+    "supportState",
+    "theme",
+    "rendererConfig",
+    "style_dna",
+    "motion_config",
+    "editorOnly",
+    "internal",
+    "owner/auth/user fields",
+    "email/phone/contactEmail/contactPhone",
+    "media embeds/audio players",
+    "published state"
+  ],
+  "draftPublishSafety": {
+    "forcedStatus": "draft",
+    "forcedVisibility": "private",
+    "forcedPublicStatus": "draft",
+    "publishedAt": null,
+    "publishedConfigCreated": false,
+    "publicDraftSlugVisible": false
+  },
+  "payloadHygiene": {
+    "recursiveRestrictedKeyRejection": true,
+    "unsafeUrlRejection": true,
+    "broadContactFieldRejection": true,
+    "publicPayloadSanitizerUsedForCanvas": true,
+    "publicRouteImports": false
+  },
+  "runtimeAiScan": {
+    "openai": false,
+    "anthropic": false,
+    "langchain": false,
+    "aiSdk": false,
+    "chatbot": false,
+    "runtimeModelInference": false
+  },
+  "tests": [
+    {
+      "command": "python -m pytest tests\\test_presence_template_kit_draft_persistence.py",
+      "cwd": "flora-fauna/backend",
+      "result": "passed",
+      "summary": "6 passed"
+    },
+    {
+      "command": "python -m pytest tests\\test_presence_studio_editor_foundation.py tests\\test_presence_template_kit_draft_persistence.py",
+      "cwd": "flora-fauna/backend",
+      "result": "passed",
+      "summary": "17 passed"
+    },
+    {
+      "command": "npx.cmd tsx --test lib/presence/uniqueness.test.ts",
+      "cwd": "presence-app",
+      "result": "passed",
+      "summary": "uniqueness guard green"
+    },
+    {
+      "command": "npx.cmd tsx --test lib/presence/studio-room/*.test.ts",
+      "cwd": "presence-app",
+      "result": "passed",
+      "summary": "59 passed"
+    },
+    {
+      "command": "npx.cmd tsx --test lib/presence/**/*.test.ts",
+      "cwd": "presence-app",
+      "result": "passed",
+      "summary": "82 passed"
+    },
+    {
+      "command": "npm.cmd run typecheck",
+      "cwd": "presence-app",
+      "result": "passed",
+      "summary": "tsc --noEmit passed"
+    },
+    {
+      "command": "npm.cmd run build",
+      "cwd": "presence-app",
+      "result": "passed",
+      "summary": "Next build passed with existing workspace-root warning"
+    },
+    {
+      "command": "git diff --check",
+      "cwd": "repo root",
+      "result": "passed",
+      "summary": "no whitespace errors"
+    }
+  ],
+  "knownLimitations": [
+    "No drag/drop layout editing.",
+    "No advanced theme/mood inspector.",
+    "No media embed/audio-player support.",
+    "No public Studio Room publishing path.",
+    "Primary TemplateKit id allowlist remains mirrored between frontend and backend."
+  ]
+}

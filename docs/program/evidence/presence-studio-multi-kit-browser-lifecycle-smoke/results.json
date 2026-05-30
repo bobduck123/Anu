@@ -1,0 +1,106 @@
+{
+  "date": "2026-05-31",
+  "scope": "Presence Studio multi-kit browser lifecycle smoke",
+  "product_features_changed": false,
+  "hosted_testing_performed": false,
+  "public_routes_changed": false,
+  "public_studio_room_rendering_added": false,
+  "publish_flow_added": false,
+  "runtime_model_calls_added": false,
+  "unsafe_media_embed_or_audio_added": false,
+  "primary_kits": [
+    "gallery-artist",
+    "cultural-community-artist",
+    "material-tradie-proof-card",
+    "healing-practitioner",
+    "consultant-contractor"
+  ],
+  "candidate_kit": {
+    "id": "underground-dj-portal",
+    "starter_ui_hidden": true,
+    "direct_api_creation_rejected": true,
+    "rejection_status": 403
+  },
+  "browser_coverage": {
+    "single_kit_owner_lifecycle": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "multi_kit_owner_lifecycle": [
+      "chromium"
+    ]
+  },
+  "tests": [
+    {
+      "command": "npx.cmd playwright test tests/e2e/presence-studio-room-multi-kit-lifecycle.spec.ts --project=chromium",
+      "result": "pass",
+      "tests": 5
+    },
+    {
+      "command": "npx.cmd playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=chromium",
+      "result": "pass",
+      "tests": 1
+    },
+    {
+      "command": "npx.cmd playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=firefox",
+      "result": "pass",
+      "tests": 1
+    },
+    {
+      "command": "npx.cmd playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=webkit",
+      "result": "pass",
+      "tests": 1
+    },
+    {
+      "command": "npx.cmd tsx --test \"lib/presence/studio-room/*.test.ts\"",
+      "result": "pass",
+      "tests": 84
+    },
+    {
+      "command": "npx.cmd tsx --test lib/presence/uniqueness.test.ts",
+      "result": "pass",
+      "tests": 1
+    },
+    {
+      "command": "npx.cmd tsx --test \"lib/presence/**/*.test.ts\"",
+      "result": "pass",
+      "tests": 109
+    },
+    {
+      "command": "npm.cmd run typecheck",
+      "result": "pass"
+    },
+    {
+      "command": "npm.cmd run build",
+      "result": "pass",
+      "notes": "Next.js emitted the existing multiple-lockfile workspace-root warning."
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    },
+    {
+      "command": "git diff --cached --check",
+      "result": "pass"
+    }
+  ],
+  "scans": {
+    "runtime_ai_llm": "clean",
+    "public_route_isolation": "clean",
+    "publish_path_button": "clean",
+    "broad_private_contact_fields": "expected sanitizer/diagnostic matches only",
+    "active_demo_overlay_dependency": "clean"
+  },
+  "worktree_notes": [
+    "New multi-kit spec and evidence are staged.",
+    "Large pre-existing staged/dirty Presence Studio worktree remains.",
+    "Pre-existing untracked hosted lifecycle scaffold was inspected and documented, not staged."
+  ],
+  "remaining_limitations": [
+    "No hosted smoke in this pass.",
+    "Multi-kit browser matrix was run on Chromium only.",
+    "No visual snapshot testing was added.",
+    "Existing Next.js multiple-lockfile workspace-root warning remains."
+  ]
+}
