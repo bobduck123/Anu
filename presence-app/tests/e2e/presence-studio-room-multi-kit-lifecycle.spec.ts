@@ -74,6 +74,11 @@ test.describe("multi-kit Studio Room owner lifecycle", () => {
       await expect(page.getByRole("button", { name: /publish/i })).toHaveCount(0);
       await expect(page.locator('a[href^="/p/"], a[href^="/presence/"]')).toHaveCount(0);
 
+      // Studio Guide renders for draft rooms and shows deterministic guidance
+      await expect(page.getByTestId("studio-room-guide-panel")).toBeVisible();
+      const guideIssueCount = await page.locator('[data-testid="studio-room-guide-panel"] .ps-guide-item').count();
+      expect(guideIssueCount).toBeGreaterThanOrEqual(1);
+
       await page.getByLabel("Chamber summary").fill(marker);
       await expect(page.getByTestId("studio-room-save-draft")).toBeEnabled();
       await expect(page.getByTestId("studio-room-canvas-shell")).toContainText(marker);

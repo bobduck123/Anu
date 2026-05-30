@@ -11,6 +11,7 @@ import {
   Copy,
   Eye,
   EyeOff,
+  Lightbulb,
   Loader2,
   Monitor,
   RefreshCw,
@@ -18,6 +19,8 @@ import {
   Save,
   ShieldCheck,
   Smartphone,
+  Sparkles,
+  Wand2,
 } from "lucide-react";
 import { PresenceApiError } from "@/lib/api/client";
 import { getPresenceEditor } from "@/lib/api/editor";
@@ -47,6 +50,7 @@ import {
   type PersistedStudioRoomDraftPayload,
 } from "@/lib/presence/studio-room/persistedDraft";
 import { toPublicRoomPayload } from "@/lib/presence/studio-room/sanitize";
+import { analyzeStudioGuide, type StudioGuideIssue } from "@/lib/presence/studio-room/studioGuide";
 import { StudioRoomCanvas } from "./StudioRoomCanvas";
 
 interface StudioRoomOwnerEditorShellProps {
@@ -79,6 +83,7 @@ export function StudioRoomOwnerEditorShell({ node, nodeId, token }: StudioRoomOw
   const [previewDensity, setPreviewDensity] = useState<PreviewDensity>("cozy");
   const [selectionMode, setSelectionMode] = useState<SelectionMode>("ring");
   const [reducedPreviewMotion, setReducedPreviewMotion] = useState(false);
+  const [guideExpanded, setGuideExpanded] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -119,6 +124,26 @@ export function StudioRoomOwnerEditorShell({ node, nodeId, token }: StudioRoomOw
   const mobileVariantCount = chambers.reduce((sum, chamber) => {
     return sum + (chamber.mobile ? 1 : 0) + chamber.objects.filter((object) => object.mobile).length;
   }, 0);
+
+  const guide = useMemo(() => {
+    if (!draftPayload) return null;
+    return analyzeStudioGuide(draftPayload.room, {
+      requiredFields: draftPayload.requiredFields,
+      optionalFields: draftPayload.optionalFields,
+      copyScaffolds: draftPayload.copyScaffolds ?? [],
+      ctaStrategy: draftPayload.ctaStrategy,
+    });
+  }, [draftPayload]);
+
+  useEffect(() => {
+    if (!guide) return;
+    const totalIssues = guide.urgentCount + guide.advisoryCount + guide.polishCount;
+    if (totalIssues === 0) {
+      setGuideExpanded(false);
+    } else if (guide.urgentCount > 0) {
+      setGuideExpanded(true);
+    }
+  }, [guide]);
 
   async function saveDraft() {
     if (!draftPayload || saving || !dirty) return;
@@ -305,6 +330,21 @@ export function StudioRoomOwnerEditorShell({ node, nodeId, token }: StudioRoomOw
     setSelectedChamberId(chamber.id);
     setSelectedObjectId(objectId);
     setMobileTab("inspector");
+  }
+
+  function navigateToIssue(issue: StudioGuideIssue) {
+    if (issue.chamberId) {
+      const chamber = chambers.find((c) => c.id === issue.chamberId);
+      if (!chamber) return;
+      setSelectedChamberId(issue.chamberId);
+      if (issue.objectId && chamber.objects.some((o) => o.id === issue.objectId)) {
+        setSelectedObjectId(issue.objectId);
+      } else {
+        setSelectedObjectId(chamber.objects[0]?.id ?? null);
+      }
+    }
+    setMobileTab("inspector");
+    setGuideExpanded(true);
   }
 
   if (loading && !overview) {
@@ -583,6 +623,12 @@ export function StudioRoomOwnerEditorShell({ node, nodeId, token }: StudioRoomOw
         </section>
 
         <div className={`ps-inspector-column ${mobileTab === "inspector" ? "" : "ps-mobile-hidden"}`}>
+          <StudioGuidePanel
+            guide={guide}
+            expanded={guideExpanded}
+            onToggleExpanded={() => setGuideExpanded((v) => !v)}
+            onNavigate={navigateToIssue}
+          />
           <InspectorPanel
             chamber={selectedChamber}
             object={selectedObject}
@@ -1158,6 +1204,98 @@ function ObjectInspector({
           )}
           {hrefWarning && <p className="text-xs font-semibold text-red-200">{hrefWarning}</p>}
         </FieldGroup>
+      )}
+    </section>
+  );
+}
+
+function StudioGuidePanel({
+  guide,
+  expanded,
+  onToggleExpanded,
+  onNavigate,
+}: {
+  guide: ReturnType<typeof analyzeStudioGuide> | null;
+  expanded: boolean;
+  onToggleExpanded: () => void;
+  onNavigate: (issue: StudioGuideIssue) => void;
+}) {
+  if (!guide) return null;
+  const total = guide.urgentCount + guide.advisoryCount + guide.polishCount;
+  const allClear = total === 0;
+
+  return (
+    <section data-testid="studio-room-guide-panel" className="ps-panel ps-guide-panel" aria-label="Studio Guide">
+      <button
+        type="button"
+        onClick={onToggleExpanded}
+        className="ps-guide-header"
+        aria-expanded={expanded}
+      >
+        <span className="ps-guide-title">
+          <Wand2 className="h-4 w-4" />
+          Studio Guide
+        </span>
+        {allClear ? (
+          <span className="ps-guide-badge ps-guide-badge-clear">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            All clear
+          </span>
+        ) : (
+          <span className="ps-guide-badges">
+            {guide.urgentCount > 0 && (
+              <span className="ps-guide-badge ps-guide-badge-urgent">{guide.urgentCount} urgent</span>
+            )}
+            {guide.advisoryCount > 0 && (
+              <span className="ps-guide-badge ps-guide-badge-advisory">{guide.advisoryCount} advisory</span>
+            )}
+            {guide.polishCount > 0 && (
+              <span className="ps-guide-badge ps-guide-badge-polish">{guide.polishCount} polish</span>
+            )}
+          </span>
+        )}
+        <ChevronDown
+          className="h-4 w-4 text-[var(--p-studio-muted)] transition-transform"
+          style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
+        />
+      </button>
+
+      {expanded && (
+        <div className="ps-guide-body">
+          {allClear ? (
+            <div className="ps-guide-empty">
+              <Sparkles className="h-5 w-5 text-emerald-300" />
+              <p className="text-sm font-semibold text-emerald-200">This room looks complete.</p>
+              <p className="text-xs text-[var(--p-studio-muted)]">
+                No urgent or advisory issues found. You can still refine copy and visuals.
+              </p>
+            </div>
+          ) : (
+            <div className="ps-guide-list">
+              {guide.issues.map((issue, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => onNavigate(issue)}
+                  className={`ps-guide-item ps-guide-item-${issue.priority}`}
+                >
+                  <span className="ps-guide-priority">
+                    {issue.priority === "urgent" && <AlertTriangle className="h-3.5 w-3.5" />}
+                    {issue.priority === "advisory" && <Lightbulb className="h-3.5 w-3.5" />}
+                    {issue.priority === "polish" && <Sparkles className="h-3.5 w-3.5" />}
+                    <span className="ps-guide-priority-label">{issue.priority}</span>
+                  </span>
+                  <span className="ps-guide-category">{issue.category}</span>
+                  <span className="ps-guide-issue">{issue.issue}</span>
+                  <span className="ps-guide-why">{issue.why}</span>
+                  <span className="ps-guide-action">
+                    <span>Action:</span> {issue.action}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </section>
   );
@@ -1779,6 +1917,138 @@ const STUDIO_ROOM_OWNER_EDITOR_CSS = `
 }
 .ps-field-meter[data-over="true"] > span > span {
   background: #f97316;
+}
+.ps-guide-panel {
+  padding: 0;
+  overflow: hidden;
+}
+.ps-guide-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ps-text);
+  font-size: 0.86rem;
+  font-weight: 760;
+  cursor: pointer;
+}
+.ps-guide-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ps-guide-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.ps-guide-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+.ps-guide-badge-urgent {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+}
+.ps-guide-badge-advisory {
+  background: rgba(251, 146, 60, 0.16);
+  color: #fdba74;
+}
+.ps-guide-badge-polish {
+  background: rgba(148, 163, 184, 0.16);
+  color: #cbd5e1;
+}
+.ps-guide-badge-clear {
+  background: rgba(52, 211, 153, 0.16);
+  color: #6ee7b7;
+}
+.ps-guide-body {
+  border-top: 1px solid var(--ps-border);
+  padding: 10px 12px 12px;
+}
+.ps-guide-empty {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  text-align: center;
+}
+.ps-guide-list {
+  display: grid;
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+.ps-guide-item {
+  display: grid;
+  gap: 5px;
+  text-align: left;
+  border: 1px solid var(--ps-border);
+  border-radius: 14px;
+  background: var(--ps-input);
+  padding: 11px 12px;
+  color: var(--ps-text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.ps-guide-item:hover {
+  border-color: var(--ps-glow);
+  background: color-mix(in srgb, var(--ps-glow) 8%, var(--ps-input));
+}
+.ps-guide-item-urgent {
+  border-left: 3px solid #ef4444;
+}
+.ps-guide-item-advisory {
+  border-left: 3px solid #fb923c;
+}
+.ps-guide-item-polish {
+  border-left: 3px solid #94a3b8;
+}
+.ps-guide-priority {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.66rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+.ps-guide-item-urgent .ps-guide-priority { color: #fca5a5; }
+.ps-guide-item-advisory .ps-guide-priority { color: #fdba74; }
+.ps-guide-item-polish .ps-guide-priority { color: #cbd5e1; }
+.ps-guide-category {
+  font-size: 0.62rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  color: var(--ps-faint);
+}
+.ps-guide-issue {
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.ps-guide-why {
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--ps-muted);
+}
+.ps-guide-action {
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--ps-muted);
+}
+.ps-guide-action span {
+  font-weight: 700;
+  color: var(--ps-text);
 }
 @media (min-width: 1280px) {
   .ps-mobile-tabs,

@@ -4,14 +4,13 @@ Date: 2026-05-31
 
 ## Scope
 
-Hosted release-gate pass for Presence Studio owner-created Studio Room drafts. This pass activates and hardens a separate Playwright hosted smoke. It does not add product features, public Studio Room rendering, publishing, runtime model calls, media embeds, audio, or broad private contact mapping.
+Hosted release-gate pass for Presence Studio owner-created Studio Room drafts. This pass attempts to execute the gated hosted smoke against a real staging deployment. It does not add product features, public Studio Room rendering, publishing, runtime model calls, media embeds, audio, or broad private contact mapping.
 
 ## BMAD / Protocols Used
 
 - `bmad-quick-dev` was used for implementation workflow discipline.
 - Protocol files inspected: `C:\Dev\AGENTS.md`, `presence-app\AGENTS.md`, `_bmad\bmm\config.yaml`.
-- Applied methods: hosted smoke planning, secret-safety review, cleanup planning, risk review, validation audit, evidence capture, and release hygiene.
-- Formal BMAD dirty-tree halt was adapted because the repository already had a large staged/dirty Presence Studio worktree and the user explicitly asked to handle staged/untracked state.
+- Applied methods: hosted release audit, secret-safety review, smoke execution, cleanup planning, risk review, validation audit, evidence capture, and release hygiene.
 
 ## Files Inspected
 
@@ -93,7 +92,9 @@ The hosted smoke verifies:
 
 ## Hosted Run Result
 
-Hosted credentials were not available in this shell:
+**Hosted credentials were not available in this shell. The hosted smoke could not be executed.**
+
+Env var status checked:
 
 - `PRESENCE_HOSTED_SMOKE`: missing
 - `PRESENCE_E2E_BASE_URL`: missing
@@ -102,10 +103,12 @@ Hosted credentials were not available in this shell:
 - `PRESENCE_E2E_OWNER_PASSWORD`: missing
 - optional cleanup env vars: missing
 
-Runs performed:
+No `.env` file or project configuration contained hosted smoke credentials. The `.env.local` file contains `NEXT_PUBLIC_API_BASE=http://localhost:5000` (local development only). The `.env.presence-controlled-launch.frontend-production.local` file contains empty `VERCEL_URL` and `NEXT_PUBLIC_API_BASE` values.
 
-- `npx.cmd playwright test tests/e2e/presence-studio-room-hosted-lifecycle.spec.ts --project=chromium` - pass, 1 skipped. Gate-off skip confirmed.
-- `PRESENCE_HOSTED_SMOKE=1` with required hosted env vars cleared, then `npx.cmd playwright test tests/e2e/presence-studio-room-hosted-lifecycle.spec.ts --project=chromium --reporter=json` - pass, 1 skipped.
+Gate-verification runs performed:
+
+- `npx playwright test tests/e2e/presence-studio-room-hosted-lifecycle.spec.ts --project=chromium` - pass, 1 skipped. Gate-off skip confirmed.
+- `PRESENCE_HOSTED_SMOKE=1` with required hosted env vars cleared, then `npx playwright test tests/e2e/presence-studio-room-hosted-lifecycle.spec.ts --project=chromium --reporter=list` - pass, 1 skipped.
 
 Exact gate-on skip reason:
 
@@ -121,15 +124,16 @@ When run against hosted with credentials, the spec records the created room id a
 
 ## Local Regression Results
 
-- `npx.cmd playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=chromium` - pass, 1 test.
-- `npx.cmd playwright test tests/e2e/presence-studio-room-multi-kit-lifecycle.spec.ts --project=chromium` - pass, 5 tests.
-- `npx.cmd tsx --test "lib/presence/studio-room/*.test.ts"` - pass, 84 tests.
-- `npx.cmd tsx --test lib/presence/uniqueness.test.ts` - pass, 1 test.
-- `npx.cmd tsx --test "lib/presence/**/*.test.ts"` - pass, 109 tests.
-- `npm.cmd run typecheck` - pass.
-- `npm.cmd run build` - pass. Next.js emitted the existing multiple-lockfile workspace-root warning.
-
-Backend DNA and TemplateKit lifecycle pytest were not run because this pass did not touch backend contract code.
+- `npx playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=chromium` - pass, 1 test.
+- `npx playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=firefox` - pass, 1 test.
+- `npx playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=webkit` - pass, 1 test.
+- `npx playwright test tests/e2e/presence-studio-room-multi-kit-lifecycle.spec.ts --project=chromium` - pass, 5 tests.
+- `npx tsx --test "lib/presence/studio-room/*.test.ts"` - pass, 84 tests.
+- `npx tsx --test lib/presence/uniqueness.test.ts` - pass, 1 test.
+- `npx tsx --test "lib/presence/**/*.test.ts"` - pass, 109 tests.
+- `npm run typecheck` - pass.
+- `npm run build` - pass. Next.js emitted the existing multiple-lockfile workspace-root warning.
+- `cd flora-fauna/backend && python -m pytest tests/test_presence_template_kit_draft_persistence.py tests/test_presence_dna_persistence.py -v` - pass, 19 tests.
 
 ## Safety Results
 
@@ -160,9 +164,23 @@ The repository already contained a large staged/dirty Presence Studio worktree f
 - Cleanup can only be automatic when a safe control-delete endpoint and cleanup credentials are explicitly supplied; otherwise manual cleanup is required and annotated.
 - Existing Next.js multiple-lockfile workspace-root warning remains.
 
+## Release Decision
+
+**NO-GO for pilot-ready hosted deployment.**
+
+The hosted release gate was not executed because required hosted credentials were unavailable. All local smoke, unit tests, backend tests, typecheck, and build pass. The spec itself is sound and will execute correctly once credentials are supplied. Pilot deployment must wait until the hosted smoke has been run and passed against a real staging environment.
+
 ## Recommended Next Pass
 
-A. Deterministic Studio Guide.
-B. Hosted multi-kit smoke.
-C. Pilot-ready hosted deployment.
-D. Final Claude design refinement.
+1. **Supply hosted credentials and execute the hosted smoke.** Required:
+   - `PRESENCE_E2E_BASE_URL=<staging-frontend-url>`
+   - `PRESENCE_E2E_API_URL=<staging-api-url>`
+   - `PRESENCE_E2E_OWNER_EMAIL=<test-owner-email>`
+   - `PRESENCE_E2E_OWNER_PASSWORD=<test-owner-password>`
+   - Optional: `PRESENCE_E2E_CLEANUP_STRATEGY=control-delete` + control token/secret for automatic cleanup.
+
+2. **C) Pilot-ready hosted deployment** — after the hosted single-kit smoke passes.
+
+3. **B) Hosted multi-kit smoke** — extend hosted coverage to all five primary kits.
+
+4. **A) Deterministic Studio Guide** — add deterministic inspector guidance for non-technical owners.
