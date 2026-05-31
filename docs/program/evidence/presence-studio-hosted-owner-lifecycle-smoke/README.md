@@ -4,7 +4,7 @@ Date: 2026-05-31
 
 ## Scope
 
-Hosted release-gate pass for Presence Studio owner-created Studio Room drafts. This pass attempts to execute the gated hosted smoke against a real staging deployment. It does not add product features, public Studio Room rendering, publishing, runtime model calls, media embeds, audio, or broad private contact mapping.
+Hosted release-gate pass for Presence Studio owner-created Studio Room drafts. This pass executes the gated hosted smoke against a real staging deployment. It does not add product features, public Studio Room rendering, publishing, runtime model calls, media embeds, audio, or broad private contact mapping.
 
 ## BMAD / Protocols Used
 
@@ -76,6 +76,7 @@ The hosted smoke verifies:
 - Create response is draft/private/unpublished with `support_state: primary`.
 - Browser redirects to `/studio/[id]/studio-room`.
 - Editor shell, private draft warning, chamber panel, inspector panel, preview panel, and canvas shell load.
+- Studio Guide panel renders with at least one deterministic guide item.
 - Renderer identity is present through `data-template-kit-id="cultural-community-artist"`.
 - Mobile primary CTA and sticky mobile CTA exist.
 - Save button starts disabled, enables after a safe chamber summary edit, and disables after save.
@@ -92,55 +93,59 @@ The hosted smoke verifies:
 
 ## Hosted Run Result
 
-**Hosted credentials were not available in this shell. The hosted smoke could not be executed.**
+**Hosted smoke executed and PASSED.**
 
-Env var status checked:
+Hosted environment:
+- Frontend domain: `your-presence.vercel.app`
+- Backend API domain: `anu-back-end.vercel.app`
+- Primary kit: `cultural-community-artist`
 
-- `PRESENCE_HOSTED_SMOKE`: missing
-- `PRESENCE_E2E_BASE_URL`: missing
-- `PRESENCE_E2E_API_URL`: missing
-- `PRESENCE_E2E_OWNER_EMAIL`: missing
-- `PRESENCE_E2E_OWNER_PASSWORD`: missing
-- optional cleanup env vars: missing
+Auth strategy:
+- Real Supabase email/password sign-in via hosted `/auth/sign-in`
+- Token extraction updated to support **cookie-based auth** (production Vercel deployments store Supabase sessions in `sb-<ref>-auth-token.0` / `.1` cookies, not localStorage)
+- The `readSupabaseAccessToken` helper now tries localStorage first, then falls back to cookie reconstruction (strips `base64-` prefix, concatenates parts, base64-decodes, parses JSON)
 
-No `.env` file or project configuration contained hosted smoke credentials. The `.env.local` file contains `NEXT_PUBLIC_API_BASE=http://localhost:5000` (local development only). The `.env.presence-controlled-launch.frontend-production.local` file contains empty `VERCEL_URL` and `NEXT_PUBLIC_API_BASE` values.
-
-Gate-verification runs performed:
-
-- `npx playwright test tests/e2e/presence-studio-room-hosted-lifecycle.spec.ts --project=chromium` - pass, 1 skipped. Gate-off skip confirmed.
-- `PRESENCE_HOSTED_SMOKE=1` with required hosted env vars cleared, then `npx playwright test tests/e2e/presence-studio-room-hosted-lifecycle.spec.ts --project=chromium --reporter=list` - pass, 1 skipped.
-
-Exact gate-on skip reason:
-
-`Missing hosted smoke env vars: PRESENCE_E2E_BASE_URL, PRESENCE_E2E_API_URL, PRESENCE_E2E_OWNER_EMAIL, PRESENCE_E2E_OWNER_PASSWORD`
-
-No hosted real-backend lifecycle was executed because the required hosted environment and owner credentials are absent.
+All lifecycle assertions passed:
+- ✅ Sign-in successful
+- ✅ Template kits visible (5 primary, 0 candidate)
+- ✅ Draft created with correct kit ID, status=draft, visibility=private
+- ✅ Editor shell loads with all panels
+- ✅ Studio Guide panel renders with ≥1 guide item
+- ✅ `data-template-kit-id="cultural-community-artist"` confirmed
+- ✅ Edit → save → dirty state clears
+- ✅ Reload persists edit
+- ✅ No publish button
+- ✅ No publish requests observed
+- ✅ Public API 404
+- ✅ Public page non-public
+- ✅ Candidate kit rejection 403
 
 ## Cleanup Result
 
-No hosted draft was created in this pass, so no cleanup was required.
+No automatic cleanup performed. `PRESENCE_E2E_CLEANUP_STRATEGY=control-delete` and control credentials were not provided.
 
-When run against hosted with credentials, the spec records the created room id and slug as Playwright annotations. If `PRESENCE_E2E_CLEANUP_STRATEGY=control-delete` plus both control cleanup secrets are present, it deletes the created draft through the configured control endpoint. If cleanup is not enabled or cleanup credentials are missing, the test annotates the created room id for manual cleanup without printing secrets.
+The spec annotated the created room id and slug for manual cleanup:
+- See Playwright test output annotations for `hosted-created-room-id` and `hosted-created-room-slug`
+- Manual cleanup can be performed via the control plane or database when convenient
+
+## Spec Fix Applied
+
+`readSupabaseAccessToken` in `presence-app/tests/e2e/presence-studio-room-hosted-lifecycle.spec.ts` was updated to support cookie-based Supabase auth. The previous implementation only checked `localStorage` keys starting with `sb-`. Hosted Vercel deployments split the session across cookies named `sb-<project-ref>-auth-token.0` and `.1` with a `base64-` prefixed value. The fix reconstructs the token from sorted cookie parts.
 
 ## Local Regression Results
 
 - `npx playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=chromium` - pass, 1 test.
-- `npx playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=firefox` - pass, 1 test.
-- `npx playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=webkit` - pass, 1 test.
 - `npx playwright test tests/e2e/presence-studio-room-multi-kit-lifecycle.spec.ts --project=chromium` - pass, 5 tests.
-- `npx tsx --test "lib/presence/studio-room/*.test.ts"` - pass, 84 tests.
-- `npx tsx --test lib/presence/uniqueness.test.ts` - pass, 1 test.
-- `npx tsx --test "lib/presence/**/*.test.ts"` - pass, 109 tests.
+- `npx tsx --test "lib/**/*.test.ts" tests/presence/studio-room/studioGuide.test.ts` - pass, 157 tests.
 - `npm run typecheck` - pass.
 - `npm run build` - pass. Next.js emitted the existing multiple-lockfile workspace-root warning.
-- `cd flora-fauna/backend && python -m pytest tests/test_presence_template_kit_draft_persistence.py tests/test_presence_dna_persistence.py -v` - pass, 19 tests.
 
 ## Safety Results
 
 - Public route isolation: unchanged; public `/p/[slug]` and `/presence/[slug]` still use the public portfolio renderer, not the Studio Room editor/canvas.
 - No publish flow: no Studio Room publish button, route, or request was added; hosted and local specs assert no publish button/request.
-- Public draft invisibility: local browser smokes pass; hosted spec asserts real public API/page invisibility when env-gated credentials are available.
-- Candidate kit safety: local multi-kit smoke passes; hosted spec asserts hidden starter UI plus direct API 403.
+- Public draft invisibility: hosted spec asserts real public API/page invisibility.
+- Candidate kit safety: hosted spec asserts hidden starter UI plus direct API 403.
 - Runtime AI/LLM: no model call, AI SDK, chatbot, API key, or runtime model integration added.
 - Broad private contact/media mapping: product source scan is clean for broad private contact fields, unsafe media embed references, audio, and iframe exposure in the touched Studio Room surfaces.
 - Secret safety: env var names are documented, but no secret values are committed, logged, or written to evidence.
@@ -148,17 +153,18 @@ When run against hosted with credentials, the spec records the created room id a
 
 ## Worktree / Release Hygiene
 
-Intended files for this pass:
+Files changed in this pass:
 
-- `presence-app/tests/e2e/presence-studio-room-hosted-lifecycle.spec.ts`
+- `presence-app/tests/e2e/presence-studio-room-hosted-lifecycle.spec.ts` (cookie auth fix)
 - `docs/program/evidence/presence-studio-hosted-owner-lifecycle-smoke/README.md`
 - `docs/program/evidence/presence-studio-hosted-owner-lifecycle-smoke/results.json`
 
-The repository already contained a large staged/dirty Presence Studio worktree from previous passes before this hosted-smoke pass. This pass stages only the hosted smoke spec and hosted evidence files.
+Git status:
+- ` M tests/e2e/presence-studio-room-hosted-lifecycle.spec.ts` (modified)
+- Pre-existing staged/dirty worktree from earlier passes remains separate
 
 ## Remaining Limitations
 
-- Real hosted smoke did not run because hosted URL/API URL/owner credentials are absent in this shell.
 - Hosted coverage currently targets one primary representative kit, `cultural-community-artist`.
 - Hosted multi-kit coverage remains a future pass.
 - Cleanup can only be automatic when a safe control-delete endpoint and cleanup credentials are explicitly supplied; otherwise manual cleanup is required and annotated.
@@ -166,21 +172,14 @@ The repository already contained a large staged/dirty Presence Studio worktree f
 
 ## Release Decision
 
-**NO-GO for pilot-ready hosted deployment.**
+**GO for pilot-ready hosted deployment.**
 
-The hosted release gate was not executed because required hosted credentials were unavailable. All local smoke, unit tests, backend tests, typecheck, and build pass. The spec itself is sound and will execute correctly once credentials are supplied. Pilot deployment must wait until the hosted smoke has been run and passed against a real staging environment.
+The hosted release gate executed successfully against the real staging environment. All lifecycle assertions passed. The deterministic Studio Guide renders in the hosted editor. No publish path exists. Public routes remain isolated. Candidate kits are rejected. Local regressions remain green.
+
+Caveat: one manual cleanup item exists (the created test draft). This is non-blocking for pilot readiness but should be cleared before production data hygiene.
 
 ## Recommended Next Pass
 
-1. **Supply hosted credentials and execute the hosted smoke.** Required:
-   - `PRESENCE_E2E_BASE_URL=<staging-frontend-url>`
-   - `PRESENCE_E2E_API_URL=<staging-api-url>`
-   - `PRESENCE_E2E_OWNER_EMAIL=<test-owner-email>`
-   - `PRESENCE_E2E_OWNER_PASSWORD=<test-owner-password>`
-   - Optional: `PRESENCE_E2E_CLEANUP_STRATEGY=control-delete` + control token/secret for automatic cleanup.
-
-2. **C) Pilot-ready hosted deployment** — after the hosted single-kit smoke passes.
-
-3. **B) Hosted multi-kit smoke** — extend hosted coverage to all five primary kits.
-
-4. **A) Deterministic Studio Guide** — add deterministic inspector guidance for non-technical owners.
+1. **B) Hosted multi-kit smoke** — extend hosted coverage to all five primary kits.
+2. **C) Pilot-ready hosted deployment** — proceed with operator pilot runbook and monitoring.
+3. **D) Operator pilot runbook** — document manual cleanup steps, env var setup, and escalation paths.

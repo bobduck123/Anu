@@ -167,7 +167,8 @@ async function signInHostedOwner(page: Page) {
 }
 
 async function readSupabaseAccessToken(page: Page): Promise<string | null> {
-  return page.evaluate(() => {
+  // Try localStorage first (dev / some hosted configs)
+  const fromStorage = await page.evaluate(() => {
     for (let index = 0; index < window.localStorage.length; index += 1) {
       const key = window.localStorage.key(index);
       if (!key) continue;
@@ -186,6 +187,35 @@ async function readSupabaseAccessToken(page: Page): Promise<string | null> {
     }
     return null;
   });
+  if (fromStorage) return fromStorage;
+
+  // Fallback: Supabase cookie auth (production Vercel deployments)
+  const cookies = await page.context().cookies();
+  const parts = cookies
+    .filter((c) => /sb-[^-]+-auth-token\.\d+$/.test(c.name))
+    .sort((a, b) => {
+      const aNum = parseInt(a.name.split(".").pop() || "0");
+      const bNum = parseInt(b.name.split(".").pop() || "0");
+      return aNum - bNum;
+    });
+
+  if (parts.length === 0) return null;
+
+  let combined = parts.map((p) => p.value).join("");
+  if (combined.startsWith("base64-")) {
+    combined = combined.slice("base64-".length);
+  }
+
+  try {
+    const decoded = Buffer.from(combined, "base64").toString("utf-8");
+    const parsed = JSON.parse(decoded);
+    const token = parsed?.access_token ?? parsed?.currentSession?.access_token ?? parsed?.session?.access_token;
+    if (typeof token === "string" && token.length > 20) return token;
+  } catch {
+    // Ignore malformed cookie values.
+  }
+
+  return null;
 }
 
 function isPublishLifecycleRequest(value: string): boolean {

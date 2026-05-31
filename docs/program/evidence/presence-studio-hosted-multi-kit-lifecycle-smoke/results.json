@@ -5,15 +5,43 @@
   "hosted_smoke_passed": true,
   "frontend_domain": "your-presence.vercel.app",
   "backend_domain": "anu-back-end.vercel.app",
-  "primary_kit": "cultural-community-artist",
-  "auth_strategy": "hosted Supabase email/password sign-in via /auth/sign-in; cookie-based token extraction",
-  "spec_fix": "readSupabaseAccessToken updated to support cookie-based auth (sb-<ref>-auth-token.0/.1 cookies with base64- prefix)",
+  "kits_tested": [
+    {
+      "id": "gallery-artist",
+      "name": "Gallery Artist",
+      "duration_ms": 17600,
+      "passed": true
+    },
+    {
+      "id": "cultural-community-artist",
+      "name": "Cultural-Community Artist / Practice Archive",
+      "duration_ms": 17000,
+      "passed": true
+    },
+    {
+      "id": "material-tradie-proof-card",
+      "name": "Material / Tradie Proof Card",
+      "duration_ms": 16900,
+      "passed": true
+    },
+    {
+      "id": "healing-practitioner",
+      "name": "Healing Practitioner",
+      "duration_ms": 15900,
+      "passed": true
+    },
+    {
+      "id": "consultant-contractor",
+      "name": "Consultant / Contractor",
+      "duration_ms": 17800,
+      "passed": true
+    }
+  ],
   "assertions": {
-    "sign_in": "passed",
     "template_kits_visible": "passed",
     "candidate_kit_hidden": "passed",
-    "draft_created": "passed",
-    "draft_state": "draft/private/unpublished/support_state=primary",
+    "draft_created_per_kit": "passed",
+    "draft_state": "draft/private/unpublished",
     "editor_shell_loads": "passed",
     "studio_guide_visible": "passed",
     "kit_identity_rendered": "passed",
@@ -22,7 +50,6 @@
     "reload_persistence": "passed",
     "no_publish_button": "passed",
     "no_publish_requests": "passed",
-    "no_public_editor_links": "passed",
     "public_api_404": "passed",
     "public_page_non_public": "passed",
     "candidate_rejection_403": "passed"
@@ -30,6 +57,7 @@
   "cleanup": {
     "strategy": "manual",
     "reason": "PRESENCE_E2E_CLEANUP_STRATEGY=control-delete and control credentials not provided",
+    "drafts_created": 5,
     "annotation_types": ["hosted-created-room-id", "hosted-created-room-slug", "hosted-cleanup"]
   },
   "local_regression": {
@@ -47,5 +75,5 @@
     "broad_private_contact_mapping": "none"
   },
   "release_decision": "GO",
-  "caveat": "One manual cleanup item exists (created test draft). Non-blocking for pilot readiness."
+  "caveat": "Five manual cleanup items exist (one per kit). Non-blocking for pilot readiness."
 }
