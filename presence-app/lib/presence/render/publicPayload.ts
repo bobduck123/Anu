@@ -1,18 +1,32 @@
 import type { PresenceNode } from "../../api/types.ts";
 import type { PresenceRenderModel } from "./model.ts";
 import { resolveRenderModel } from "./resolver.ts";
+import {
+  publicRoomFromStudioV2State,
+  shouldUsePresenceStudioV2,
+  studioV2FromPresenceConfig,
+  type StudioV2PublicRoom,
+} from "../studio-v2/index.ts";
 
 export const RESTRICTED_PUBLIC_PAYLOAD_KEYS = [
   "editable_config",
+  "scene_config",
   "asset_config",
   "content_config",
   "style_dna",
   "motion_config",
+  "roomkey_config",
+  "enquiry_config",
   "draft_config",
   "owner_user_id",
+  "owner",
   "auth_subject",
   "platform_admin",
   "internal_lifetime_free",
+  "locked",
+  "pinned",
+  "hiddenpublic",
+  "hiddenmobile",
   "preview_token",
   "bearer",
   "service_role",
@@ -89,6 +103,7 @@ const PUBLIC_DISPLAY_NODE_KEYS = [
 export interface PublicRenderPayload {
   node: PresenceNode;
   renderModel: PresenceRenderModel;
+  studioV2Room?: StudioV2PublicRoom;
 }
 
 /**
@@ -99,9 +114,20 @@ export interface PublicRenderPayload {
  */
 export function createPublicRenderPayload(node: PresenceNode): PublicRenderPayload {
   const renderModel = resolveRenderModel(node, "published");
+  const studioV2Room = shouldUsePresenceStudioV2({
+    roomId: node.id,
+    slug: node.slug,
+    rendererKey: node.renderer_key,
+    config: node.editable_config,
+    node,
+  })
+    ? publicRoomFromStudioV2State(studioV2FromPresenceConfig(node.editable_config, node))
+    : undefined;
+
   return {
     node: publicDisplayNode(node),
     renderModel: removeRestrictedKeys(renderModel) as PresenceRenderModel,
+    ...(studioV2Room ? { studioV2Room: removeRestrictedKeys(studioV2Room) as StudioV2PublicRoom } : {}),
   };
 }
 

@@ -6,6 +6,8 @@ import StudioShell from "@/components/studio/StudioShell";
 import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
 import { useOwnerNode } from "@/components/studio/useOwnerNode";
 import PresenceStudioEditorApp from "@/components/studio/editor/PresenceStudioEditorApp";
+import PresenceStudioV2Editor from "@/components/presence-studio-v2/PresenceStudioV2Editor";
+import { shouldUsePresenceStudioV2 } from "@/lib/presence/studio-v2/feature";
 
 export default function StudioPresenceEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -31,9 +33,21 @@ export default function StudioPresenceEditorPage({ params }: { params: Promise<{
     );
   }
 
+  const isV2Enabled = shouldUsePresenceStudioV2({
+    roomId: nodeId,
+    slug: node.slug,
+    rendererKey: node.renderer_key,
+    config: node.editable_config,
+    node,
+  });
+
   return (
     <StudioShell node={node}>
-      <PresenceStudioEditorApp node={node} nodeId={nodeId} token={token} onNodeReload={reload} />
+      {isV2Enabled ? (
+        <PresenceStudioV2Editor node={node} nodeId={nodeId} token={token} onNodeReload={reload} />
+      ) : (
+        <PresenceStudioEditorApp node={node} nodeId={nodeId} token={token} onNodeReload={reload} />
+      )}
     </StudioShell>
   );
 }

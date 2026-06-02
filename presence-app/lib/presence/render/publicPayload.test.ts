@@ -2,6 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { PresenceNode } from "../../api/types.ts";
 import { createPublicRenderPayload, findRestrictedPublicPayloadKeys } from "./publicPayload.ts";
+import {
+  DEFAULT_STUDIO_V2_SKIN,
+  DEFAULT_STUDIO_V2_TRANSFORM,
+  PRESENCE_STUDIO_V2_RENDERER_KEY,
+  PRESENCE_STUDIO_V2_SCHEMA_VERSION,
+  presenceConfigFromStudioV2State,
+  type StudioV2State,
+} from "../studio-v2/index.ts";
 
 const node = {
   id: 11,
@@ -51,8 +59,72 @@ test("public render payload omits nested editor and control-plane keys while ret
 test("public payload key scanner finds nested forbidden architecture terms", () => {
   assert.deepEqual(
     findRestrictedPublicPayloadKeys({
-      nested: { content_config: {}, preview_token: "x", draft_storage_key: "private/path", signed_url: "secret-link" },
+      nested: { content_config: {}, scene_config: {}, preview_token: "x", draft_storage_key: "private/path", signed_url: "secret-link" },
     }),
-    ["content_config", "draft_storage_key", "preview_token", "signed_url"],
+    ["content_config", "draft_storage_key", "preview_token", "scene_config", "signed_url"],
   );
+});
+
+test("public payload can include sanitized Studio V2 projection when the pilot flag is enabled", () => {
+  const previousEnabled = process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2;
+  const previousPilotIds = process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS;
+  process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2 = "1";
+  process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS = "11";
+
+  try {
+    const state: StudioV2State = {
+      schemaVersion: PRESENCE_STUDIO_V2_SCHEMA_VERSION,
+      rendererKey: PRESENCE_STUDIO_V2_RENDERER_KEY,
+      roomId: "11",
+      slug: "ggm-christina-goddard",
+      title: "Published Artist",
+      worldId: "gallery",
+      skin: DEFAULT_STUDIO_V2_SKIN,
+      cta: { label: "Visit studio", href: "https://example.com/studio" },
+      chambers: [{
+        id: "wall",
+        label: "Wall",
+        objects: [
+          {
+            id: "public-work",
+            type: "image",
+            title: "Blue Work",
+            visibility: { public: true, mobile: true },
+            transform: { ...DEFAULT_STUDIO_V2_TRANSFORM, x: 20 },
+            locked: true,
+            pinned: true,
+          },
+          {
+            id: "private-note",
+            type: "note",
+            title: "Private note",
+            visibility: { public: false, mobile: false },
+            transform: DEFAULT_STUDIO_V2_TRANSFORM,
+            locked: false,
+            pinned: false,
+          },
+        ],
+      }],
+      moodboardRefs: [],
+      traces: { enabled: false, demo: true, disclosure: "Demo traces" },
+      mobileRecovery: { transformsSuspendedOnMobile: true, strategy: "suspend-mobile-transforms" },
+    };
+    const payload = createPublicRenderPayload({
+      ...node,
+      renderer_key: PRESENCE_STUDIO_V2_RENDERER_KEY,
+      editable_config: {
+        ...presenceConfigFromStudioV2State(state, null),
+        status: "published",
+      },
+    } as PresenceNode);
+
+    assert.ok(payload.studioV2Room);
+    assert.equal(payload.studioV2Room.chambers[0].objects.length, 1);
+    assert.equal(payload.studioV2Room.chambers[0].objects[0].id, "public-work");
+    assert.equal(JSON.stringify(payload).includes("private-note"), false);
+    assert.deepEqual(findRestrictedPublicPayloadKeys(payload), []);
+  } finally {
+    process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2 = previousEnabled;
+    process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS = previousPilotIds;
+  }
 });

@@ -1,0 +1,586 @@
+/* Presence Studio V2 — Scoped styles
+   All selectors live under .presence-studio-v2 to avoid collisions. */
+
+.presence-studio-v2 {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #302921;
+  background: #f5f0e8;
+  --v2-paper: #f0ebe1;
+  --v2-ink: #0d0c0a;
+  --v2-ink-2: #1a1814;
+  --v2-bone: #f8f4ec;
+  --v2-linen: #ddd4c1;
+  --v2-muted: #5a5347;
+  --v2-dim: #8a8270;
+  --v2-copper: #b78c4e;
+  --v2-rule: rgba(13,12,10,0.14);
+  --v2-radius-sm: 6px;
+  --v2-radius-md: 12px;
+  --v2-radius-lg: 18px;
+  --v2-shadow-1: 0 1px 2px rgba(13,12,10,0.06), 0 8px 24px -16px rgba(13,12,10,0.25);
+  --v2-shadow-2: 0 18px 60px -28px rgba(13,12,10,0.45);
+}
+
+/* ── Cockpit shell ── */
+.presence-studio-v2 .v2-cockpit {
+  display: flex;
+  flex-direction: column;
+  min-height: 60vh;
+}
+.presence-studio-v2 .v2-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--v2-rule);
+  background: var(--v2-bone);
+}
+.presence-studio-v2 .v2-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.presence-studio-v2 .v2-toolbar-spacer {
+  flex: 1;
+}
+.presence-studio-v2 .v2-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--v2-radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--v2-ink-2);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.presence-studio-v2 .v2-btn:hover { background: rgba(13,12,10,0.06); }
+.presence-studio-v2 .v2-btn.active { background: var(--v2-ink); color: var(--v2-bone); }
+.presence-studio-v2 .v2-btn.primary { background: var(--v2-ink); color: var(--v2-bone); }
+.presence-studio-v2 .v2-btn.primary:hover { opacity: 0.9; }
+.presence-studio-v2 .v2-btn.danger { color: #b91c1c; }
+.presence-studio-v2 .v2-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.presence-studio-v2 .v2-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+}
+.presence-studio-v2 .v2-badge.saved { background: #dcfce7; color: #166534; }
+.presence-studio-v2 .v2-badge.error { background: #fee2e2; color: #991b1b; }
+
+/* ── Stage / room viewport ── */
+.presence-studio-v2 .v2-stage {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  background: #e8e1d2;
+}
+.presence-studio-v2 .v2-room {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px;
+  border-radius: var(--v2-radius-lg);
+  box-shadow: var(--v2-shadow-1);
+  min-height: 400px;
+  position: relative;
+}
+
+/* World backgrounds */
+.presence-studio-v2 .v2-room.world-gallery { background: #f7f3ea; }
+.presence-studio-v2 .v2-room.world-zine { background: #0a0a0a; color: #f0e8d0; }
+.presence-studio-v2 .v2-room.world-dj { background: #08070a; color: #e8e0f0; }
+.presence-studio-v2 .v2-room.world-healing { background: #e8efe2; color: #1e2a1f; }
+.presence-studio-v2 .v2-room.world-market { background: #f2e6d4; color: #3d2b1a; }
+.presence-studio-v2 .v2-room.world-archive { background: #efe8dc; color: #17130f; }
+.presence-studio-v2 .v2-room.world-carpenter { background: #f2eadf; color: #24170f; }
+.presence-studio-v2 .v2-room.world-consultant { background: #ffffff; color: #111111; }
+
+/* Room header */
+.presence-studio-v2 .v2-room-header {
+  margin-bottom: 28px;
+}
+.presence-studio-v2 .v2-room-eyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.6;
+  margin-bottom: 6px;
+}
+.presence-studio-v2 .v2-room-name {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.15;
+  margin-bottom: 8px;
+}
+.presence-studio-v2 .v2-room-tagline {
+  font-size: 14px;
+  opacity: 0.72;
+  line-height: 1.45;
+  max-width: 520px;
+}
+
+/* Chambers */
+.presence-studio-v2 .v2-chamber {
+  margin-bottom: 28px;
+}
+.presence-studio-v2 .v2-chamber-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  opacity: 0.5;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--v2-rule);
+}
+
+/* Objects */
+.presence-studio-v2 .v2-objects {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+.presence-studio-v2 .v2-obj {
+  position: relative;
+  padding: 16px;
+  border-radius: var(--v2-radius-md);
+  border: 1px solid rgba(13,12,10,0.08);
+  background: rgba(255,255,255,0.65);
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+}
+.presence-studio-v2 .v2-room.world-zine .v2-obj,
+.presence-studio-v2 .v2-room.world-dj .v2-obj {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.1);
+  color: inherit;
+}
+.presence-studio-v2 .v2-obj:hover {
+  box-shadow: var(--v2-shadow-1);
+  border-color: rgba(13,12,10,0.18);
+}
+.presence-studio-v2 .v2-obj.selected {
+  box-shadow: 0 0 0 2px var(--v2-copper), var(--v2-shadow-1);
+  border-color: var(--v2-copper);
+}
+.presence-studio-v2 .v2-obj.is-locked { opacity: 0.75; }
+.presence-studio-v2 .v2-obj.is-hidden-state { opacity: 0.55; }
+
+/* Object content */
+.presence-studio-v2 .v2-obj-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--v2-radius-sm);
+  margin-bottom: 10px;
+}
+.presence-studio-v2 .v2-obj-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+  margin-bottom: 4px;
+}
+.presence-studio-v2 .v2-obj-meta {
+  font-size: 12px;
+  opacity: 0.65;
+  margin-bottom: 6px;
+}
+.presence-studio-v2 .v2-obj-detail {
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+.presence-studio-v2 .v2-obj-link {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Editor badges */
+.presence-studio-v2 .v2-obj-badges {
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+}
+.presence-studio-v2 .v2-obj-badge {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--v2-ink);
+  color: var(--v2-bone);
+  white-space: nowrap;
+}
+.presence-studio-v2 .v2-obj-corner {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  gap: 4px;
+  opacity: 0.5;
+}
+
+/* Moodboard layer */
+.presence-studio-v2 .v2-influence-layer {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--v2-rule);
+}
+.presence-studio-v2 .v2-influence-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.5;
+  margin-bottom: 10px;
+}
+.presence-studio-v2 .v2-influence-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.presence-studio-v2 .v2-influence-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--v2-rule);
+  font-size: 12px;
+}
+.presence-studio-v2 .v2-influence-chip span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Traces */
+.presence-studio-v2 .v2-traces {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--v2-rule);
+}
+.presence-studio-v2 .v2-trace-strip {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  opacity: 0.65;
+}
+.presence-studio-v2 .v2-trace-disclosure {
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.5;
+}
+
+/* ── Floating toolbar ── */
+.presence-studio-v2 .v2-float {
+  position: fixed;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  background: var(--v2-ink);
+  border-radius: var(--v2-radius-md);
+  box-shadow: var(--v2-shadow-2);
+  z-index: 50;
+}
+.presence-studio-v2 .v2-float-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--v2-radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--v2-bone);
+  cursor: pointer;
+}
+.presence-studio-v2 .v2-float-btn:hover { background: rgba(255,255,255,0.1); }
+.presence-studio-v2 .v2-float-btn.active { background: var(--v2-copper); color: var(--v2-ink); }
+.presence-studio-v2 .v2-float-btn.danger { color: #fca5a5; }
+.presence-studio-v2 .v2-float-sep {
+  width: 1px;
+  background: rgba(255,255,255,0.15);
+  margin: 4px 2px;
+}
+
+/* ── Side panels ── */
+.presence-studio-v2 .v2-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+  z-index: 40;
+}
+.presence-studio-v2 .v2-side-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 380px;
+  max-width: 90vw;
+  height: 100vh;
+  background: var(--v2-bone);
+  border-left: 1px solid var(--v2-rule);
+  box-shadow: var(--v2-shadow-2);
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.presence-studio-v2 .v2-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--v2-rule);
+}
+.presence-studio-v2 .v2-panel-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+.presence-studio-v2 .v2-panel-body {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+}
+
+/* Form fields in panels */
+.presence-studio-v2 .v2-field {
+  margin-bottom: 14px;
+}
+.presence-studio-v2 .v2-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  opacity: 0.75;
+}
+.presence-studio-v2 .v2-field input,
+.presence-studio-v2 .v2-field textarea,
+.presence-studio-v2 .v2-field select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--v2-radius-sm);
+  border: 1px solid var(--v2-rule);
+  background: #fff;
+  font-size: 13px;
+  color: inherit;
+}
+.presence-studio-v2 .v2-field input:focus,
+.presence-studio-v2 .v2-field textarea:focus,
+.presence-studio-v2 .v2-field select:focus {
+  outline: none;
+  border-color: var(--v2-copper);
+}
+.presence-studio-v2 .v2-field textarea { min-height: 80px; resize: vertical; }
+.presence-studio-v2 .v2-check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+/* Skin Lab */
+.presence-studio-v2 .v2-skin-section {
+  margin-bottom: 18px;
+}
+.presence-studio-v2 .v2-skin-section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+  margin-bottom: 10px;
+}
+.presence-studio-v2 .v2-skin-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.presence-studio-v2 .v2-skin-label {
+  font-size: 12px;
+  width: 100px;
+  flex-shrink: 0;
+}
+.presence-studio-v2 .v2-skin-slider {
+  flex: 1;
+}
+.presence-studio-v2 .v2-skin-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.presence-studio-v2 .v2-skin-choice {
+  padding: 5px 10px;
+  border-radius: var(--v2-radius-sm);
+  border: 1px solid var(--v2-rule);
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+}
+.presence-studio-v2 .v2-skin-choice.active {
+  background: var(--v2-ink);
+  color: var(--v2-bone);
+  border-color: var(--v2-ink);
+}
+.presence-studio-v2 .v2-skin-swatches {
+  display: flex;
+  gap: 6px;
+}
+.presence-studio-v2 .v2-skin-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+.presence-studio-v2 .v2-skin-swatch.active {
+  border-color: var(--v2-ink);
+}
+
+/* Moodboard */
+.presence-studio-v2 .v2-mood-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.presence-studio-v2 .v2-mood-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: var(--v2-radius-sm);
+  border: 1px solid var(--v2-rule);
+  background: transparent;
+  font-size: 11px;
+  cursor: pointer;
+}
+.presence-studio-v2 .v2-mood-item.active {
+  background: var(--v2-ink);
+  color: var(--v2-bone);
+  border-color: var(--v2-ink);
+}
+.presence-studio-v2 .v2-mood-ref {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: var(--v2-radius-sm);
+  border: 1px solid var(--v2-rule);
+  margin-bottom: 6px;
+}
+.presence-studio-v2 .v2-mood-ref-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.presence-studio-v2 .v2-mood-ref-text {
+  font-size: 13px;
+  font-weight: 500;
+}
+.presence-studio-v2 .v2-mood-ref-type {
+  font-size: 11px;
+  opacity: 0.55;
+}
+
+/* Add object type grid */
+.presence-studio-v2 .v2-add-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.presence-studio-v2 .v2-add-type-grid button {
+  padding: 8px;
+  border-radius: var(--v2-radius-sm);
+  border: 1px solid var(--v2-rule);
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+.presence-studio-v2 .v2-add-type-grid button.active {
+  background: var(--v2-ink);
+  color: var(--v2-bone);
+  border-color: var(--v2-ink);
+}
+
+/* World switcher overlay */
+.presence-studio-v2 .v2-worlds-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.presence-studio-v2 .v2-worlds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  max-width: 720px;
+  width: 100%;
+}
+.presence-studio-v2 .v2-world-card {
+  padding: 16px;
+  border-radius: var(--v2-radius-md);
+  background: rgba(14,13,11,0.92);
+  color: var(--v2-bone);
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.presence-studio-v2 .v2-world-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--v2-shadow-2);
+}
+.presence-studio-v2 .v2-world-card.active {
+  box-shadow: 0 0 0 2px var(--v2-copper);
+}
+.presence-studio-v2 .v2-world-card .wc-name {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.presence-studio-v2 .v2-world-card .wc-surface {
+  font-size: 12px;
+  opacity: 0.6;
+}
+.presence-studio-v2 .v2-world-card .wc-feel {
+  font-size: 11px;
+  opacity: 0.45;
+  margin-top: 6px;
+}
+
+/* Transforms in wild mode */
+.presence-studio-v2 .v2-transform-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.presence-studio-v2 .v2-transform-controls button {
+  padding: 4px 8px;
+  border-radius: var(--v2-radius-sm);
+  border: 1px solid var(--v2-rule);
+  background: transparent;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* Mobile viewport simulation */
+.presence-studio-v2 .v2-room.mobile-viewport {
+  max-width: 375px;
+}
