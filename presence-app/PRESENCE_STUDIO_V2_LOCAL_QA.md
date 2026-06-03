@@ -373,3 +373,27 @@ No hosted content was changed:
 Current hosted blocker:
 
 - A real hosted Studio V2 pilot room is not available for this owner account, or hosted feature flags/pilot IDs are not configured to expose one.
+
+---
+
+## 2026-05-31 — Hosted Smoke Link
+
+Local QA continues to pass (47/47 tests). However, the **hosted smoke is blocked** because the deployed production build does not contain `NEXT_PUBLIC_PRESENCE_STUDIO_V2`.
+
+Local tests are green. Deployment is the blocker.
+
+See: `docs/program/evidence/PRESENCE_STUDIO_V2_PHASE_E_HOSTED_SMOKE_AUDIT.md`
+
+
+---
+
+## 2026-05-31 — Hosted Smoke Update
+
+Local tests: 47/47 continue to pass.
+
+Deployed status after second redeploy:
+- Public render: ✅ V2 working for Room 11
+- Editor: ❌ Blocked (needs NEXT_PUBLIC_* env vars)
+
+See: `docs/program/evidence/PRESENCE_STUDIO_V2_PHASE_E_HOSTED_SMOKE_AUDIT.md`
+

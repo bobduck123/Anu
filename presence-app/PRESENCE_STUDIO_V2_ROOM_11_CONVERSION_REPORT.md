@@ -254,3 +254,34 @@ ROOM11_OWNER_TOKEN=<token> npx tsx scripts/restore-room-11-from-backup.mts
    ```
 5. **If smoke fails:** run rollback script and investigate
 6. **If smoke passes:** room 11 is the first hosted Studio V2 pilot
+
+---
+
+## 2026-05-31 — Hosted Smoke Attempt Note
+
+Room 11 server-side conversion remains intact:
+- Published config: `renderer_key: presence-studio-v2-room`
+- Metadata: `custom_renderer_key: presence-studio-v2-room`
+- Backend data: correct
+
+However, the **frontend deployment does not recognise Room 11 as V2** because `NEXT_PUBLIC_PRESENCE_STUDIO_V2` is missing from the deployed build. The legacy editor and legacy public renderer are used instead.
+
+No rollback required (no content modified during failed smoke).
+Rollback script remains available if needed.
+
+See: `docs/program/evidence/PRESENCE_STUDIO_V2_PHASE_E_HOSTED_SMOKE_AUDIT.md`
+
+
+---
+
+## 2026-05-31 — Second Smoke Attempt Note
+
+Room 11 server-side conversion remains intact.
+
+After second redeploy (with `PRESENCE_STUDIO_V2_ENABLED` server env vars):
+- ✅ Public page `/p/ggm-christina-goddard` now renders V2 (confirmed via SSR HTML)
+- ❌ Editor `/studio/11/editor` still renders legacy (needs `NEXT_PUBLIC_*` client env vars)
+
+No hosted content modified during testing.
+Rollback script remains available.
+

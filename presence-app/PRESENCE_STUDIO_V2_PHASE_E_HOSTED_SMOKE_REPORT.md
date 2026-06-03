@@ -238,3 +238,87 @@ ROOM11_OWNER_TOKEN=<token> npx tsx scripts/restore-room-11-from-backup.mts
 - Hosted public render readiness: blocked; depends on env vars + deployment.
 - Controlled operator-led pilot readiness: not ready until hosted lifecycle smoke passes.
 - Public self-serve onboarding readiness: not ready.
+
+---
+
+## 2026-05-31 Hosted Smoke Attempt — BLOCKED
+
+### Attempted by
+Kimi (hosted QA engineer)
+
+### Blocker
+**`NEXT_PUBLIC_PRESENCE_STUDIO_V2` is NOT present in the deployed production build.**
+
+### Evidence
+- Grep for `NEXT_PUBLIC_PRESENCE_STUDIO_V2` in deployed JS/HTML: **0 occurrences**
+- Grep for `PRESENCE_STUDIO_V2` in deployed JS/HTML: **0 occurrences**
+- `/studio/11/editor` renders **legacy editor** (Canvas, Inspector, font pickers, "Pilot mode" copy)
+- `data-testid="presence-studio-v2-root"`: **not found**
+- Playwright hosted smoke fails at first step with:
+  ```
+  Error: expect(locator).toBeVisible() failed
+  Locator: getByTestId('presence-studio-v2-root')
+  Timeout: 30000ms
+  ```
+
+### Root Cause
+`app/(studio)/studio/[id]/editor/page.tsx` is a `"use client"` component that calls `shouldUsePresenceStudioV2()`, which checks `process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2` at **build time**. The deployed build was produced without this env var, so V2 eligibility always evaluates to `false`.
+
+### Impact
+- V2 editor: blocked
+- V2 public render: blocked (server-side `publicProjection.ts` also checks env)
+- All rooms render legacy paths
+- No hosted content was modified
+
+### Next Fix
+1. Verify env vars are set in **production** environment (not preview/development)
+2. Trigger fresh production build: `vercel --prod`
+3. Verify env vars appear in new build output
+4. Re-run hosted smoke
+
+### Verdict
+**NOT READY for pilot.** Deployment configuration issue.
+
+
+---
+
+## 2026-05-31 — Second Hosted Smoke Attempt (Post-Redeploy)
+
+### Attempted by
+Kimi (hosted QA engineer)
+
+### Redeploy context
+User rebuilt with `PRESENCE_STUDIO_V2_ENABLED=1` and `PRESENCE_STUDIO_V2_PILOT_IDS=11`.
+
+### Result: PARTIAL PROGRESS
+
+**Public render: ✅ WORKING**
+- `/p/ggm-christina-goddard` SSR HTML now contains:
+  - `presence-studio-v2-public`
+  - `v2-public-threshold`
+  - `world-gallery`
+  - `texture-paper`
+- Server-side env vars are correctly enabling V2 public render
+
+**Editor: ❌ STILL BLOCKED**
+- `/studio/11/editor` after real sign-in still renders **legacy editor**
+- `data-testid="presence-studio-v2-root"`: **not found**
+- Legacy Canvas/Inspector/Font pickers still present
+
+### Root Cause
+The editor page (`app/(studio)/studio/[id]/editor/page.tsx`) is a `"use client"` component. It evaluates `process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2` at **build time**. The deployed build has **server-side** env vars but **no `NEXT_PUBLIC_*` client env vars**.
+
+Server components (public render) see `PRESENCE_STUDIO_V2_ENABLED` → work.
+Client components (editor) need `NEXT_PUBLIC_PRESENCE_STUDIO_V2` → blocked.
+
+### Next Fix
+Add to Vercel production environment:
+```
+NEXT_PUBLIC_PRESENCE_STUDIO_V2=1
+NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS=11
+```
+Then `vercel --prod` and re-run Stage 1.
+
+### Verdict
+**NOT READY for full pilot.** Public render is live. Editor is one env var away.
+

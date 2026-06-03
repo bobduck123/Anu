@@ -137,3 +137,42 @@ npx.cmd playwright test presence-studio-v2-hosted-lifecycle.spec.ts --project=ch
 - Hosted public render: blocked.
 - Controlled operator-led pilot: not ready until hosted lifecycle passes.
 - Public self-serve onboarding: not ready.
+
+---
+
+## 2026-05-31 — Hosted Smoke Attempt Result
+
+**Status:** BLOCKED at Step 1 (open V2 owner editor)
+
+**Finding:** `NEXT_PUBLIC_PRESENCE_STUDIO_V2` is absent from the deployed production build.
+
+**Consequence:**
+- `/studio/11/editor` renders legacy editor, not V2
+- `presence-studio-v2-root` testid not found
+- Playwright fails with timeout on V2 root visibility
+- No edits, saves, or publishes attempted
+- No hosted content modified
+
+**Fix required:**
+- Confirm env vars in Vercel **production** environment
+- Run `vercel --prod` to force fresh build
+- Verify env strings exist in deployed chunks
+- Re-run smoke
+
+**Report:** `docs/program/evidence/PRESENCE_STUDIO_V2_PHASE_E_HOSTED_SMOKE_AUDIT.md`
+
+
+---
+
+## 2026-05-31 — Second Hosted Smoke Attempt Result
+
+**Status:** Stage 1 partially passes. Full smoke blocked.
+
+**Public render:** ✅ Room 11 now renders V2 publicly (`presence-studio-v2-public` class confirmed in SSR HTML).
+
+**Editor:** ❌ Still renders legacy editor. Missing `NEXT_PUBLIC_PRESENCE_STUDIO_V2` from client bundle.
+
+**Fix required:** Add `NEXT_PUBLIC_*` variants to Vercel production env, rebuild, re-run Stage 1.
+
+**No hosted content modified.**
+
