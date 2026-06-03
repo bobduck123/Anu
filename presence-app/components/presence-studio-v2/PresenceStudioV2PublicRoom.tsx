@@ -22,6 +22,8 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
   const ctaObject = visibleObjects.find((object) => object.type === "cta" || object.role === "cta");
   const ctaLabel = ctaObject?.title || room.cta.label;
   const ctaHref = ctaObject?.link || room.cta.href;
+  const thresholdObject = visibleObjects.find((object) => object.image?.src) ?? visibleObjects[0];
+  const thresholdIndex = visibleObjects.slice(0, 4);
 
   return (
     <main
@@ -29,6 +31,7 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
       style={style}
     >
       <section className="v2-public-threshold">
+        <div className="v2-public-threshold-atmosphere" aria-hidden="true" />
         <div className="v2-public-world-mark">
           <span>{world?.name ?? room.worldId}</span>
           {world?.surface && <small>{world.surface}</small>}
@@ -42,11 +45,43 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
             {ctaLabel}
           </PublicLink>
         )}
+        {thresholdObject && (
+          <aside className="v2-public-threshold-artifact" aria-label="Room entry object">
+            {thresholdObject.image?.src ? (
+              <img
+                src={thresholdObject.image.src}
+                alt={thresholdObject.image.alt || thresholdObject.title}
+                loading="eager"
+              />
+            ) : (
+              <div className="v2-public-threshold-artifact-blank" aria-hidden="true" />
+            )}
+            <div>
+              <span>{thresholdObject.role || thresholdObject.type}</span>
+              <strong>{thresholdObject.title}</strong>
+            </div>
+          </aside>
+        )}
+        {thresholdIndex.length > 0 && (
+          <nav className="v2-public-threshold-index" aria-label="Room objects">
+            {thresholdIndex.map((object, index) => (
+              <a key={object.id} href={`#v2-public-object-${object.id}`}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <strong>{object.title}</strong>
+              </a>
+            ))}
+          </nav>
+        )}
       </section>
 
       <section className="v2-public-room-space" aria-label={`${room.title} public room`}>
         {room.chambers.map((chamber) => (
-          <section className="v2-public-chamber" key={chamber.id} aria-labelledby={`v2-public-chamber-${chamber.id}`}>
+          <section
+            className="v2-public-chamber"
+            key={chamber.id}
+            aria-labelledby={`v2-public-chamber-${chamber.id}`}
+            data-object-count={chamber.objects.length}
+          >
             <div className="v2-public-chamber-head">
               <span>{world?.verb ?? "The room opens"}</span>
               <h2 id={`v2-public-chamber-${chamber.id}`}>{chamber.label}</h2>
@@ -115,7 +150,7 @@ function PublicObjectCard({ object, radius }: { object: StudioV2PublicObject; ra
     <>
       {object.image?.src && (
         <img
-          className="v2-public-object-image"
+          className="v2-public-object-media-img"
           src={object.image.src}
           alt={object.image.alt || object.title}
           loading="lazy"
@@ -141,6 +176,7 @@ function PublicObjectCard({ object, radius }: { object: StudioV2PublicObject; ra
     return (
       <PublicLink
         href={object.link}
+        id={`v2-public-object-${object.id}`}
         className={`v2-public-object v2-public-object-${object.type}${object.mobileVisible ? "" : " is-mobile-muted"}`}
         style={style}
       >
@@ -151,6 +187,7 @@ function PublicObjectCard({ object, radius }: { object: StudioV2PublicObject; ra
 
   return (
     <article
+      id={`v2-public-object-${object.id}`}
       className={`v2-public-object v2-public-object-${object.type}${object.mobileVisible ? "" : " is-mobile-muted"}`}
       style={style}
     >
@@ -161,18 +198,20 @@ function PublicObjectCard({ object, radius }: { object: StudioV2PublicObject; ra
 
 function PublicLink({
   href,
+  id,
   className,
   style,
   children,
 }: {
   href?: string;
+  id?: string;
   className: string;
   style?: CSSProperties;
   children: ReactNode;
 }) {
   if (!href) {
     return (
-      <span className={`${className} is-disabled`} style={style}>
+      <span id={id} className={`${className} is-disabled`} style={style}>
         {children}
       </span>
     );
@@ -180,6 +219,7 @@ function PublicLink({
   const external = href.startsWith("http://") || href.startsWith("https://");
   return (
     <a
+      id={id}
       href={href}
       className={className}
       style={style}

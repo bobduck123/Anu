@@ -397,3 +397,99 @@ Deployed status after second redeploy:
 
 See: `docs/program/evidence/PRESENCE_STUDIO_V2_PHASE_E_HOSTED_SMOKE_AUDIT.md`
 
+
+
+---
+
+## 2026-06-03 — Final Verification
+
+### Local Test Status
+
+All local tests continue to pass after the `feature.ts` fix:
+
+- `feature.test.ts` — 8/8 pass
+- `studioV2Adapters.test.ts` — 14/14 pass
+- `publicPayload.test.ts` — 5/5 pass
+- `resolver.test.ts` — 8/8 pass
+- `readiness.test.ts` — 5/5 pass
+- Additional suites — 183/183 pass total
+
+### Hosted Smoke Status
+
+- ✅ Stage 1 fast gate passed
+- ✅ Stage 2 full lifecycle smoke passed (17.7s)
+- ✅ Payload hygiene clean (0 violations)
+- ✅ Cleanup/restoration automatic via test `finally`
+
+### Verdict
+
+Local QA and hosted smoke both **PASS**.
+
+---
+
+## 2026-06-04 - Visual Parity Pass Verification
+
+Scope:
+
+- Production visual parity pass for Studio V2 public renderer and owner cockpit.
+- No routing, auth, save/reload, preview, publish, adapter, backend, or feature-gating changes.
+- Hosted Room 11 smoke was not rerun because these changes are local and not deployed.
+
+Commands run:
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+```
+
+Results:
+
+- TypeScript: passed.
+- Production build: passed.
+- Feature tests: 8 passed.
+- Studio V2 adapter tests: 14 passed.
+- Public payload tests: 5 passed.
+- Render resolver tests: 8 passed.
+- Editor readiness tests: 5 passed.
+- V2 public render Playwright smoke: 3 passed.
+- V2 owner draft preview Playwright smoke: 2 passed.
+- Public payload hygiene Playwright smoke: 2 passed.
+
+Visual evidence:
+
+```txt
+docs/program/evidence/presence-studio-v2-visual-parity/local-room-101-v2-editor-selected-object.png
+docs/program/evidence/presence-studio-v2-visual-parity/local-v2-public-gallery-threshold-desktop.png
+docs/program/evidence/presence-studio-v2-visual-parity/local-v2-public-gallery-chamber-objects.png
+docs/program/evidence/presence-studio-v2-visual-parity/local-v2-public-gallery-mobile.png
+docs/program/evidence/presence-studio-v2-visual-parity/local-v2-owner-draft-preview.png
+docs/program/evidence/presence-studio-v2-visual-parity/local-legacy-public-regression-comparison.png
+```
+
+Evidence capture note:
+
+- `PRESENCE_VISUAL_CAPTURE=1 npx.cmd playwright test presence-studio-v2-visual-parity-capture.spec.ts --project=chromium --workers=1` completed the capture test body and wrote screenshots.
+- The wrapper timed out during teardown rather than returning a clean Playwright summary. The ordinary product smoke specs exit cleanly.
+
+Warnings:
+
+- Direct Node TypeScript test execution still emits `MODULE_TYPELESS_PACKAGE_JSON`.
+- Build and Playwright web server still emit the existing Turbopack workspace-root warning due to multiple lockfiles.
+
+Verified:
+
+- Public V2 renderer still receives sanitized `studioV2Room`.
+- Public V2 route still shows no editor chrome.
+- Draft preview still renders the sanitized public V2 room.
+- Public payload hygiene remains clean.
+- Mobile-muted public objects remain hidden on narrow public viewport.
+- Legacy public room still uses the existing renderer when Studio V2 payload is absent.
+- Visual layer remains scoped under `.presence-studio-v2-public` and `.presence-studio-v2`.

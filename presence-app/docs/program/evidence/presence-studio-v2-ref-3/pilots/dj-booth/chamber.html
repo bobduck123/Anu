@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>T.AMP — The Booth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;700;800;900&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="chamber.css">
+</head>
+<body>
+
+<canvas class="dj-noise" id="djNoise" aria-hidden="true"></canvas>
+<div class="dj-scan" aria-hidden="true"></div>
+
+<!-- TOP RAIL -->
+<header class="dj-rail">
+  <a class="dj-rail-back" href="threshold.html">
+    <span>←</span> threshold
+  </a>
+  <div class="dj-rail-center">
+    <span class="dj-rail-title">T.AMP</span>
+    <span class="dj-rail-slash">/</span>
+    <span class="dj-rail-room">the booth — mixes &amp; ephemera</span>
+  </div>
+  <div class="dj-rail-right">
+    <span class="dj-rail-now" id="dRailNow">●  now: mix 014</span>
+    <span class="dj-rail-key">esc to stop</span>
+  </div>
+</header>
+
+<!-- MAIN GRID -->
+<main class="dj-room">
+
+  <!-- LEFT: CRATE -->
+  <aside class="dj-crate">
+    <div class="dj-crate-head">
+      <span class="dj-crate-label">the crate</span>
+      <span class="dj-crate-count">15 mixes</span>
+    </div>
+    <div class="dj-crate-list" id="dCrate">
+      <!-- injected -->
+    </div>
+    <div class="dj-crate-foot">
+      <span>sort:</span>
+      <button class="dj-crate-sort is-on">recent</button>
+      <button class="dj-crate-sort">venue</button>
+      <button class="dj-crate-sort">bpm</button>
+    </div>
+  </aside>
+
+  <!-- CENTER: DECK -->
+  <section class="dj-deck">
+    <div class="dj-deck-head">
+      <span class="dj-deck-num" id="dNum">014</span>
+      <div class="dj-deck-title-wrap">
+        <h2 class="dj-deck-title" id="dTitle">OFFLINE BPM</h2>
+        <div class="dj-deck-sub" id="dSub">live · HOR Berlin · 03.26 · 78 min</div>
+      </div>
+      <div class="dj-deck-bpm">
+        <span class="dj-bpm-num" id="dBpm">132</span>
+        <span class="dj-bpm-lab">BPM</span>
+      </div>
+    </div>
+
+    <!-- Vinyl + Waveform -->
+    <div class="dj-deck-body">
+      <div class="dj-vinyl" id="dVinyl">
+        <div class="dj-vinyl-disc">
+          <div class="dj-vinyl-label">
+            <span class="dj-vinyl-stamp">T.AMP</span>
+            <span class="dj-vinyl-spec" id="dDiscSpec">014 / OFFLINE BPM</span>
+            <span class="dj-vinyl-rpm">33 ⅓ RPM</span>
+          </div>
+        </div>
+        <div class="dj-vinyl-needle"></div>
+      </div>
+      <div class="dj-wavewrap">
+        <canvas class="dj-wave-full" id="dWave"></canvas>
+        <div class="dj-wave-progress" id="dProg"></div>
+        <div class="dj-wave-time">
+          <span id="dElapsed">00:00</span>
+          <span id="dRemain">−78:00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tracklist -->
+    <div class="dj-tracklist">
+      <div class="dj-tracklist-head">
+        <span>tracklist</span>
+        <span class="dj-tracklist-meta" id="dTrkCount">21 tracks · cued from end</span>
+      </div>
+      <ol class="dj-tracks" id="dTracks">
+        <!-- injected -->
+      </ol>
+    </div>
+
+    <!-- Transport -->
+    <div class="dj-transport">
+      <button class="dj-tport dj-tport--play" id="dPlay">
+        <svg viewBox="0 0 24 24" width="18" height="18"><polygon points="6 4 20 12 6 20" fill="currentColor"/></svg>
+        play
+      </button>
+      <button class="dj-tport">
+        <svg viewBox="0 0 24 24" width="14" height="14"><path d="M5 4l9 8-9 8V4zM16 4h3v16h-3z" fill="currentColor"/></svg>
+        next
+      </button>
+      <div class="dj-tport-spacer"></div>
+      <button class="dj-tport">+ load to deck B</button>
+      <button class="dj-tport dj-tport--ghost">download · €0</button>
+      <button class="dj-tport dj-tport--ghost">share</button>
+    </div>
+
+  </section>
+
+  <!-- RIGHT: ZINE BOARD -->
+  <aside class="dj-zine">
+    <div class="dj-zine-head">
+      <span>zine board</span>
+      <span class="dj-zine-meta">pinned · 06.06</span>
+    </div>
+
+    <div class="dj-zine-pile">
+
+      <!-- A scanned flyer -->
+      <div class="dj-card dj-card--flyer" style="--rot:-3deg">
+        <div class="dj-flyer-tag">flyer</div>
+        <div class="dj-flyer-stack">
+          <div class="dj-flyer-supra">fri 06.06 · berghain panorama bar</div>
+          <div class="dj-flyer-title">T.AMP<br>&nbsp;&nbsp;&nbsp;ASAKE<br>↳ b2b</div>
+          <div class="dj-flyer-bar"></div>
+          <div class="dj-flyer-meta">23:00 → 04:00 · €18 / door · 18+</div>
+        </div>
+      </div>
+
+      <!-- A polaroid scrap -->
+      <div class="dj-card dj-card--polaroid" style="--rot:5deg">
+        <div class="dj-pola-img" style="background:linear-gradient(135deg,#1f1a14,#3a2b1a 50%,#000)"></div>
+        <div class="dj-pola-cap">crowd at 02:14 · HOR · march</div>
+      </div>
+
+      <!-- A zine page -->
+      <div class="dj-card dj-card--zine" style="--rot:-2deg">
+        <div class="dj-zine-num">N°03</div>
+        <div class="dj-zine-title">ZINE · OFFLINE</div>
+        <div class="dj-zine-body">
+          essays on quiet rave, lagos polyrhythm,<br>
+          the loop that learned to think.<br>
+          <strong>32pp, photocopied,</strong> stapled.
+        </div>
+        <div class="dj-zine-cta">read &nbsp;→</div>
+      </div>
+
+      <!-- Calendar -->
+      <div class="dj-card dj-card--cal" style="--rot:3deg">
+        <div class="dj-cal-head">summer tour</div>
+        <ul class="dj-cal-list">
+          <li><b>14.06</b><span>NTS Radio · LDN</span></li>
+          <li><b>22.06</b><span>Boiler Room · Paris</span></li>
+          <li><b>31.07</b><span>Dekmantel · A'dam</span></li>
+          <li class="is-soldout"><b>09.09</b><span>Nyege Nyege · Jinja</span><em>sold out</em></li>
+        </ul>
+      </div>
+
+      <!-- Ticket stub -->
+      <div class="dj-card dj-card--ticket" style="--rot:1.5deg">
+        <div class="dj-tick-left">
+          <div class="dj-tick-no">№ 1042</div>
+          <div class="dj-tick-event">T.AMP RESIDENCY</div>
+          <div class="dj-tick-meta">PANORAMA BAR · 06.06.26 · 23:00</div>
+        </div>
+        <div class="dj-tick-perf"></div>
+        <div class="dj-tick-right">
+          <div class="dj-tick-price">€18</div>
+          <div class="dj-tick-row">ROW —</div>
+          <div class="dj-tick-row">SEAT —</div>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+</main>
+
+<script src="chamber.js"></script>
+</body>
+</html>

@@ -48,8 +48,8 @@ test("published flagged Studio V2 room renders through public V2 renderer withou
   await expect(page.locator(".presence-studio-v2-public")).toBeVisible();
   await expect(page.getByText("Mara Vale Studio V2").first()).toBeVisible();
   await expect(page.getByText("Current Works").first()).toBeVisible();
-  await expect(page.getByText("Bridle Road, after rain")).toBeVisible();
-  await expect(page.getByText("Desktop-only proof")).toBeVisible();
+  await expect(page.locator(".v2-public-object").getByRole("heading", { name: "Bridle Road, after rain" })).toBeVisible();
+  await expect(page.locator(".v2-public-object").getByRole("heading", { name: "Desktop-only proof" })).toBeVisible();
   await expect(page.getByText("Creek road after 4pm")).toBeVisible();
   await expect(page.getByText("Demo traces")).toBeVisible();
   await expect(page.getByText("Request availability").first()).toBeVisible();
@@ -82,8 +82,8 @@ test("public V2 renderer hides mobile-muted objects on narrow public viewports",
   await page.goto("/p/v2-public-room", { waitUntil: "networkidle" });
 
   await expect(page.locator(".presence-studio-v2-public")).toBeVisible();
-  await expect(page.getByText("Bridle Road, after rain")).toBeVisible();
-  await expect(page.getByText("Desktop-only proof")).toBeHidden();
+  await expect(page.locator(".v2-public-object").getByRole("heading", { name: "Bridle Road, after rain" })).toBeVisible();
+  await expect(page.locator(".v2-public-object").getByRole("heading", { name: "Desktop-only proof" })).toBeHidden();
   expect(runtimeErrors).toEqual([]);
 });
 

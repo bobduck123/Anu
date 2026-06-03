@@ -50,8 +50,8 @@ test("owner draft preview renders V2 drafts through the sanitized public V2 rend
   await expect(page.locator(".presence-studio-v2-public")).toBeVisible({ timeout: 15000 });
   await expect(page.getByText("Mara Vale Studio V2 Draft").first()).toBeVisible();
   await expect(page.getByText("Current Works").first()).toBeVisible();
-  await expect(page.getByText("Bridle Road, after rain")).toBeVisible();
-  await expect(page.getByText("Desktop-only proof")).toBeVisible();
+  await expect(page.locator(".v2-public-object").getByRole("heading", { name: "Bridle Road, after rain" })).toBeVisible();
+  await expect(page.locator(".v2-public-object").getByRole("heading", { name: "Desktop-only proof" })).toBeVisible();
   await expect(page.getByText("Creek road after 4pm")).toBeVisible();
   await expect(page.getByText("Demo traces")).toBeVisible();
 

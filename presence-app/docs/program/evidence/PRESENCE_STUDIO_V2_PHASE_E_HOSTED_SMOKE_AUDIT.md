@@ -246,3 +246,89 @@ Then re-run Stage 1 fast gate (sign in, check `/studio/11/editor` for V2 root).
 ---
 
 *Audit complete. Stage 1 partially passes (public render yes, editor no). Full smoke blocked. No hosted content modified. Next action: add `NEXT_PUBLIC_*` env vars to Vercel and rebuild.*
+
+
+---
+
+## 2026-06-03 — Final Audit (POST-ENV-FIX)
+
+**Status:** ✅ **COMPLETED**
+
+### What Changed
+
+`lib/presence/studio-v2/feature.ts` was corrected to directly access `process.env.NEXT_PUBLIC_*` variables. Next.js inlines these at build time **only** when accessed directly as `process.env.VAR_NAME`, not through parameter aliases.
+
+The corrected build was redeployed to `https://your-presence.vercel.app`.
+
+### Stage 1 Fast Gate Result
+
+| Check | Result |
+|-------|--------|
+| V2 root appears for Room 11 | ✅ Yes (`data-testid="presence-studio-v2-root"` count = 1) |
+| Legacy editor absent for Room 11 | ✅ Yes (CANVAS/INSPECTOR count = 0) |
+| No page/console errors | ✅ Yes |
+| Anonymous blocked from editor | ✅ Yes (sign-in gate shown) |
+| Legacy room still legacy | ✅ Yes (Room 1 shows CANVAS/INSPECTOR) |
+
+### Stage 2 Full Lifecycle Smoke Result
+
+Playwright test `presence-studio-v2-hosted-lifecycle.spec.ts`:
+- **Result:** 1 passed
+- **Duration:** 17.7s
+- **Retries:** 0 (first pass after minor test locator fix)
+
+Steps verified:
+1. ✅ Anonymous visitor cannot open owner editor
+2. ✅ Real owner sign-in
+3. ✅ V2 owner editor mounts
+4. ✅ Edit V2 room and save through owner draft API
+5. ✅ Reload editor and verify backend draft persistence
+6. ✅ Owner draft preview renders sanitized V2 room
+7. ✅ Publish through real owner endpoint
+8. ✅ Anonymous public V2 render clean on `/p/` and `/presence/`
+9. ✅ Legacy and room-key negative checks remain safe
+10. ✅ No restricted config/editor terms leaked
+11. ✅ Cleanup restores original published config
+
+### Payload Hygiene Result
+
+| Surface | Violations |
+|---------|------------|
+| `/p/ggm-christina-goddard` (desktop) | 0 |
+| `/presence/ggm-christina-goddard` (desktop) | 0 |
+| `/p/ggm-christina-goddard` (mobile) | 0 |
+| `/room/11/key` | 0 |
+| **Total** | **0** |
+
+### Cleanup / Rollback
+
+- Smoke test added timestamped draft objects (`Phase E V2 hosted smoke <timestamp> ...`).
+- Test `finally` block restored original published config via owner API.
+- Public page verified free of smoke markers.
+- **No manual rollback required.**
+
+### Verdicts
+
+| Gate | Verdict |
+|------|---------|
+| Room 11 V2 conversion readiness | ✅ READY |
+| Hosted V2 editor readiness | ✅ READY for flagged Room 11 |
+| Hosted owner preview readiness | ✅ READY for flagged Room 11 |
+| Hosted public render readiness | ✅ READY for flagged Room 11 |
+| Controlled operator-led pilot | ✅ READY with curated/public-safe content |
+| Public self-serve onboarding | ❌ NOT READY (intentionally out of scope) |
+
+### Evidence Files
+
+| File | Location |
+|------|----------|
+| This audit report | `docs/program/evidence/PRESENCE_STUDIO_V2_PHASE_E_HOSTED_SMOKE_AUDIT.md` |
+| Phase E smoke report | `PRESENCE_STUDIO_V2_PHASE_E_HOSTED_SMOKE_REPORT.md` |
+| Hosted smoke summary | `PRESENCE_STUDIO_V2_HOSTED_SMOKE.md` |
+| Room 11 conversion report | `PRESENCE_STUDIO_V2_ROOM_11_CONVERSION_REPORT.md` |
+| Local QA report | `PRESENCE_STUDIO_V2_LOCAL_QA.md` |
+| Room 11 backup | `docs/program/evidence/studio-v2-hosted-room-11-backup/` |
+
+---
+
+*Audit complete. Phase E hosted lifecycle smoke PASSED. Room 11 cleared for controlled pilot.*

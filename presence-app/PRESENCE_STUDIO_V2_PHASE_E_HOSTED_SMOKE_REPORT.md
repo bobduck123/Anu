@@ -322,3 +322,84 @@ Then `vercel --prod` and re-run Stage 1.
 ### Verdict
 **NOT READY for full pilot.** Public render is live. Editor is one env var away.
 
+
+
+---
+
+## 2026-06-03 — Final Hosted Smoke Result (POST-ENV-FIX)
+
+**Status:** ✅ **PASSED**
+
+### Root Cause Fix Applied
+
+`lib/presence/studio-v2/feature.ts` was corrected to directly access `process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2` instead of using an `env` parameter alias. Next.js only inlines `NEXT_PUBLIC_*` vars when accessed directly as `process.env.VAR_NAME`, not through aliases.
+
+The corrected build was redeployed to production.
+
+### Stage 1 Fast Gate — PASSED
+
+```
+V2_ROOT:          1
+V2_SAVE:          1
+LEGACY_CANVAS:    0
+LEGACY_INSPECTOR: 0
+HAS_GUIDED_WILD:  true
+HAS_MOOD:         true
+ERRORS:           none
+```
+
+- ✅ `[data-testid="presence-studio-v2-root"]` appears for Room 11 editor
+- ✅ Legacy Canvas/Inspector/GGM editor does NOT appear for Room 11
+- ✅ Anonymous users blocked from editor (sign-in gate shown)
+- ✅ Room 1 still renders legacy editor (CANVAS/INSPECTOR present)
+- ✅ No page errors
+- ✅ No console errors
+
+### Stage 2 Full Hosted Lifecycle Smoke — PASSED
+
+Playwright test `presence-studio-v2-hosted-lifecycle.spec.ts` passed in **17.7s**.
+
+Steps verified:
+- ✅ Real owner sign-in
+- ✅ V2 editor root appears (`presence-studio-v2-root`)
+- ✅ Edit/save works (draft PATCH succeeds)
+- ✅ Reload persistence works from backend
+- ✅ Owner preview renders V2, not DNA/legacy
+- ✅ Real publish succeeds (POST to publish endpoint)
+- ✅ Anonymous `/p/ggm-christina-goddard` renders V2
+- ✅ Anonymous `/presence/ggm-christina-goddard` renders V2
+- ✅ Payload hygiene is clean
+- ✅ Mobile viewport public render clean
+- ✅ `/room/11/key` remains hygienic/safe
+- ✅ Cleanup/restoration completed in `finally` block
+
+### Payload Hygiene Scan — PASSED
+
+Zero violations found across:
+- `/p/ggm-christina-goddard` (desktop)
+- `/presence/ggm-christina-goddard` (desktop)
+- `/p/ggm-christina-goddard` (mobile viewport)
+- `/room/11/key`
+
+No restricted terms leaked:
+`style_dna`, `scene_config`, `motion_config`, `asset_config`, `content_config`, `roomkey_config`, `enquiry_config`, `editable_config`, `hiddenPublic`, `hiddenMobile`, `WILD TRANSFORM SUSPENDED`, `localStorage`, `TemplateKit`, `presence-studio-v2-toolbar`, `presence-studio-v2-panel`, `/api/presence/owner`, `auth-token`, `service_role`, `bearer `, `locked`, `pinned`, `/studio/`
+
+### Cleanup / Rollback Status
+
+- Smoke test created temporary draft objects with unique timestamped titles.
+- Test `finally` block restored original published config and draft state via owner API.
+- Public page verified clean of all smoke markers.
+- **No manual rollback required.**
+
+### Verdicts
+
+| Gate | Verdict |
+|------|---------|
+| Room 11 V2 conversion readiness | ✅ **READY** |
+| Hosted V2 editor readiness | ✅ **READY for flagged Room 11** |
+| Hosted owner preview readiness | ✅ **READY for flagged Room 11** |
+| Hosted public render readiness | ✅ **READY for flagged Room 11** |
+| Controlled operator-led pilot | ✅ **READY with curated/public-safe content** |
+| Public self-serve onboarding | ❌ **NOT READY** (intentionally scoped out) |
+
+**Overall: Phase E hosted lifecycle smoke PASSED. Room 11 is cleared for controlled pilot use.**

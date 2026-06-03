@@ -1,0 +1,179 @@
+/* =============================================================================
+   PRESENCE — colors_and_type.css
+   The single token source for the Presence design system.
+
+   Three coexisting surfaces share these tokens:
+     1. WORLD   — the public Presence network (Rooms · Gardens · Halls · Paths)
+                  Paper + grain, Instrument Serif, sharp radii. Prefix: --p-*
+     2. STUDIO  — the Cockpit editor (room owner's creative cockpit)
+                  Dark "studio" / light "daylight" chrome. Prefix: --ck-*  (see ui_kits)
+     3. ROOM    — the rendered spatial room, themed per kit. Prefix: --r* + .kit-*
+
+   Fonts load from Google Fonts (no local files needed) — see @import below.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@500;600;700;800&display=swap');
+
+:root {
+  /* ---------------------------------------------------------------------------
+     1 · WORLD PALETTE  — the public Presence network
+     "Premium = sharp + quiet." A paper ground, ink type, a dark stage, and a
+     family of oklch accents that share chroma/lightness and only vary in hue.
+     --------------------------------------------------------------------------- */
+
+  /* paper surfaces (light shells — marketing, Gardens, Masks, Halls foyers) */
+  --p-paper:        #f0ebe1;   /* page ground */
+  --p-paper-2:      #e8e1d2;   /* recessed panel */
+  --p-linen:        #ddd4c1;   /* deeper panel / rule fill */
+  --p-bone:         #f8f4ec;   /* card surface, inverted text on ink */
+
+  /* ink */
+  --p-ink:          #0d0c0a;   /* primary text + primary button */
+  --p-ink-2:        #1a1814;
+
+  /* stage surfaces (Hall lobbies, hero apertures, splash, nocturnal rooms) */
+  --p-stage:        #0e0d0b;
+  --p-stage-2:      #16140f;
+  --p-stage-3:      #221e16;
+
+  /* on-surface text */
+  --p-on-paper:       #161410;
+  --p-on-paper-mute:  #5a5347;
+  --p-on-paper-dim:   #8a8270;
+  --p-on-stage:       #efe9da;
+  --p-on-stage-mute:  #a59c87;
+  --p-on-stage-dim:   #6c6452;
+
+  /* accents — one chroma/lightness, hue tells the layer apart */
+  --p-vermilion:    oklch(0.58 0.16 32);    /* Halls — gathering / heat */
+  --p-brass:        oklch(0.74 0.13 82);    /* Paths — movement */
+  --p-moss:         oklch(0.52 0.08 138);   /* Gardens — living / taste */
+  --p-cobalt:       oklch(0.55 0.13 250);   /* World — the map, opening later */
+  --p-copper:       oklch(0.62 0.13 38);    /* Rooms — commerce / craft */
+  --p-copper-soft:  oklch(0.86 0.06 60);
+  --p-moss-soft:    oklch(0.68 0.06 138);
+
+  /* semantic layer accents */
+  --rooms-accent:   var(--p-copper);
+  --gardens-accent: var(--p-moss);
+  --halls-accent:   var(--p-vermilion);
+  --paths-accent:   var(--p-brass);
+  --world-accent:   var(--p-cobalt);
+
+  /* Seed lifecycle (Garden objects: a taste-trace's state of care) */
+  --seed-active:    var(--p-moss);
+  --seed-watered:   var(--p-brass);
+  --seed-wilting:   oklch(0.68 0.09 60);
+  --seed-composted: var(--p-on-paper-dim);
+  --seed-pruned:    var(--p-on-paper-mute);
+
+  /* hairlines */
+  --p-rule:         color-mix(in oklab, var(--p-ink) 14%, transparent);
+  --p-rule-strong:  color-mix(in oklab, var(--p-ink) 28%, transparent);
+  --p-rule-dark:    color-mix(in oklab, var(--p-on-stage) 14%, transparent);
+
+  /* ---------------------------------------------------------------------------
+     2 · RADII  — premium reads sharp. Pills are reserved for STATUS only.
+     --------------------------------------------------------------------------- */
+  --p-r-0:    0px;
+  --p-r-1:    2px;     /* cards, buttons — paper-thin, editorial */
+  --p-r-2:    4px;
+  --p-r-3:    8px;
+  --p-r-pill: 999px;   /* status chips ONLY (● live · ● draft) — never actions */
+
+  /* ---------------------------------------------------------------------------
+     3 · DEPTH  — barely-there lift on paper; cinema shadow on stage.
+     --------------------------------------------------------------------------- */
+  --p-sh-1: 0 1px 0 color-mix(in oklab, var(--p-ink) 6%, transparent);
+  --p-sh-2: 0 1px 2px rgba(13,12,10,0.06), 0 8px 24px -16px rgba(13,12,10,0.25);
+  --p-sh-3: 0 18px 60px -28px rgba(13,12,10,0.45), 0 2px 0 rgba(13,12,10,0.04);
+  --p-sh-cinema: 0 30px 90px -32px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04) inset;
+
+  /* ---------------------------------------------------------------------------
+     4 · MOTION  — slow, decelerating, cinematic. Never utility-app snap.
+     --------------------------------------------------------------------------- */
+  --p-ease-cinema:  cubic-bezier(0.2, 0.7, 0.1, 1);    /* camera moves, reveals */
+  --p-ease-camera:  cubic-bezier(0.45, 0, 0.15, 1);    /* chamber-to-chamber */
+  --p-ease-tactile: cubic-bezier(0.32, 0.72, 0, 1);    /* taps, presses */
+  --p-ease-studio:  cubic-bezier(0.22, 0.88, 0.24, 1); /* studio editorial pacing */
+  --p-dur-tap:    180ms;
+  --p-dur-glide:  360ms;
+  --p-dur-cine:   720ms;
+  --p-dur-air:    1400ms;
+
+  /* ---------------------------------------------------------------------------
+     5 · TYPE STACKS
+     WORLD  → Instrument Serif (display) · Geist (ui) · JetBrains Mono (meta)
+     STUDIO → Cormorant Garamond / Inter Tight (display) · Inter (ui)
+     --------------------------------------------------------------------------- */
+  --p-f-display: "Instrument Serif", "Cormorant Garamond", "Times New Roman", serif;
+  --p-f-ui:      "Geist", "Helvetica Neue", Helvetica, ui-sans-serif, sans-serif;
+  --p-f-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --studio-f-display: "Cormorant Garamond", Georgia, serif;
+  --studio-f-sans:    "Inter", system-ui, sans-serif;
+  --studio-f-tight:   "Inter Tight", "Inter", system-ui, sans-serif;
+
+  /* ---------------------------------------------------------------------------
+     6 · STUDIO ONBOARDING (the "chooser" — cream editorial commission flow)
+     --------------------------------------------------------------------------- */
+  --studio-cream:       #f5efe2;
+  --studio-cream-2:     #ede4d1;
+  --studio-card:        #fdfaf2;
+  --studio-bone:        #fbf6ea;
+  --studio-ink:         #1b1714;
+  --studio-mute:        #6a5f4d;
+  --studio-rule:        #d8cdb6;
+  --studio-rule-strong: #b1a585;
+  --studio-copper:      oklch(0.62 0.13 38);
+  --studio-copper-soft: oklch(0.86 0.06 60);
+  --studio-mono:        var(--p-f-mono);
+}
+
+/* =============================================================================
+   SEMANTIC TYPE PRIMITIVES — WORLD surface
+   Use these classes (or the vars inside) directly in public Presence designs.
+   ========================================================================== */
+.p-display {                /* hero / threshold display */
+  font-family: var(--p-f-display);
+  font-weight: 400;
+  font-size: clamp(40px, 5.4vw, 78px);
+  line-height: 0.96;
+  letter-spacing: -0.02em;
+  color: var(--p-on-paper);
+}
+.p-display em { font-style: italic; color: var(--gardens-accent); }  /* one emphasis word, in accent */
+
+.p-h1 { font-family: var(--p-f-display); font-weight: 400; font-size: clamp(30px, 3.6vw, 52px); line-height: 1.02; letter-spacing: -0.015em; color: var(--p-on-paper); }
+.p-h2 { font-family: var(--p-f-display); font-weight: 400; font-size: clamp(24px, 2.6vw, 36px); line-height: 1.06; letter-spacing: -0.01em; color: var(--p-on-paper); }
+.p-h3 { font-family: var(--p-f-ui); font-weight: 600; font-size: 19px; line-height: 1.2; letter-spacing: -0.01em; color: var(--p-on-paper); }
+
+.p-lede { font-family: var(--p-f-ui); font-weight: 400; font-size: clamp(16px, 1.4vw, 19px); line-height: 1.6; color: var(--p-on-paper-mute); max-width: 40ch; }
+.p-body { font-family: var(--p-f-ui); font-weight: 400; font-size: 15px; line-height: 1.65; color: var(--p-on-paper-mute); }
+.p-small { font-family: var(--p-f-ui); font-weight: 400; font-size: 13px; line-height: 1.55; color: var(--p-on-paper-dim); }
+
+.p-eyebrow {                /* uppercase mono label — the system's signature meta voice */
+  font-family: var(--p-f-mono);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  font-weight: 500;
+  color: var(--p-on-paper-mute);
+}
+.p-mono { font-family: var(--p-f-mono); font-size: 12px; letter-spacing: 0.02em; color: var(--p-on-paper-mute); }
+
+/* on dark stage, flip text defaults */
+.on-stage .p-display, .on-stage .p-h1, .on-stage .p-h2, .on-stage .p-h3 { color: var(--p-on-stage); }
+.on-stage .p-lede, .on-stage .p-body { color: var(--p-on-stage-mute); }
+.on-stage .p-eyebrow { color: var(--p-on-stage-mute); }
+
+/* =============================================================================
+   ROOM THEME TOKENS  — each kit is its own spatial world.
+   Apply a .kit-* class to a .pr-room; the renderer reads these vars:
+     --rb bg · --rs surface · --rt text · --rm muted · --ra accent ·
+     --rg glow (selection) · --rr radius · --rhw heading-weight
+   ========================================================================== */
+.kit-gallery-artist            { --rb:#f7f3ea; --rs:#fffdf7; --rt:#191815; --rm:#746f63; --ra:#8f6f3f; --rg:#b78c4e; --rr:16px; --rhw:500; }
+.kit-cultural-community-artist { --rb:#efe8dc; --rs:#fffaf2; --rt:#17130f; --rm:#62635c; --ra:#8f3a2f; --rg:#b9542f; --rr:12px; --rhw:600; }
+.kit-material-tradie-proof-card{ --rb:#f2eadf; --rs:#fff8ec; --rt:#24170f; --rm:#735f4a; --ra:#a85221; --rg:#c4622a; --rr:10px; --rhw:800; }
+.kit-healing-practitioner      { --rb:#eef3e8; --rs:#fbf7ef; --rt:#1e2a1f; --rm:#61715d; --ra:#567d55; --rg:#6f9a6c; --rr:22px; --rhw:500; }
+.kit-consultant-contractor     { --rb:#f3f1ed; --rs:#ffffff; --rt:#111111; --rm:#5f5f5b; --ra:#111111; --rg:#2f6df0; --rr:5px;  --rhw:700; }

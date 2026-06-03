@@ -285,3 +285,29 @@ After second redeploy (with `PRESENCE_STUDIO_V2_ENABLED` server env vars):
 No hosted content modified during testing.
 Rollback script remains available.
 
+
+
+---
+
+## 2026-06-03 — Final Verification (POST-ENV-FIX)
+
+### Conversion Status
+
+Room 11 backend conversion remains intact. After the `feature.ts` env-inline fix and production redeploy:
+
+- ✅ Editor `/studio/11/editor` mounts `PresenceStudioV2Editor`
+- ✅ Public `/p/ggm-christina-goddard` renders `PresenceStudioV2PublicRoom`
+- ✅ Public `/presence/ggm-christina-goddard` renders V2
+- ✅ Full lifecycle smoke passed (edit, save, preview, publish, public render)
+- ✅ Payload hygiene clean
+- ✅ Legacy Room 1 preserved
+
+### Root Cause of Earlier Blocker
+
+The initial blocker was **not** a backend conversion issue. It was a Next.js build-time env var inlining limitation in `feature.ts`. The code used `env.NEXT_PUBLIC_PRESENCE_STUDIO_V2` via a default parameter alias, which Next.js does not inline. Client-side `process.env.NEXT_PUBLIC_*` was `undefined` at runtime, so `shouldUsePresenceStudioV2()` always returned `false` in the browser.
+
+Fix: direct `process.env.NEXT_PUBLIC_*` access in function bodies.
+
+### Verdict
+
+Room 11 V2 conversion is **complete and verified end-to-end**.

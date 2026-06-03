@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Halberg Woodworks — Open Today</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="threshold.css">
+</head>
+<body>
+
+<!-- Paper texture under everything -->
+<canvas class="ms-paper" id="msPaper" aria-hidden="true"></canvas>
+
+<!-- The page is a folded shop card -->
+<main class="ms-card">
+
+  <!-- Header strip -->
+  <header class="ms-head">
+    <div class="ms-head-left">
+      <div class="ms-mark">HALBERG</div>
+      <div class="ms-mark-sub">WOOD<span>WORKS</span></div>
+    </div>
+    <div class="ms-head-right">
+      <div class="ms-stamp">
+        <div class="ms-stamp-no">№ 0421</div>
+        <div class="ms-stamp-lab">Catalogue</div>
+        <div class="ms-stamp-yr">06 · 06 · 26</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="ms-rule"><span></span><span></span><span></span></div>
+
+  <!-- Body, 2 columns -->
+  <section class="ms-body">
+
+    <!-- LEFT: Status / hero / address -->
+    <div class="ms-left">
+
+      <div class="ms-status">
+        <div class="ms-status-tag">
+          <span class="ms-status-dot"></span>
+          OPEN TODAY · 8AM → 4PM
+        </div>
+        <div class="ms-status-note">Walk-ins welcome. Doors closed during cuts &mdash; please knock.</div>
+      </div>
+
+      <h1 class="ms-headline">
+        Furniture &amp; small things,<br>
+        made of <em>oak, ash, cherry,</em><br>
+        kiln-dried &amp; signed.
+      </h1>
+
+      <div class="ms-bio">
+        Otto Halberg has been turning Vermont hardwood into stools, tables, spoons and shelves out of a converted dairy barn just north of Tyrone since 1989. Everything you see was made by one pair of hands, on commission or for the bench.
+      </div>
+
+      <div class="ms-address">
+        <div class="ms-address-line">
+          <span class="ms-address-key">SHOP</span>
+          <span class="ms-address-val">142 Quarry Road · Tyrone · Vermont 05478</span>
+        </div>
+        <div class="ms-address-line">
+          <span class="ms-address-key">TEL</span>
+          <span class="ms-address-val">+1 (802) 555 0118 · text first</span>
+        </div>
+        <div class="ms-address-line">
+          <span class="ms-address-key">EML</span>
+          <span class="ms-address-val">otto@halbergwoodworks.com</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: today's bench + inventory teaser -->
+    <div class="ms-right">
+
+      <!-- "On the bench" card -->
+      <article class="ms-bench">
+        <header class="ms-bench-head">
+          <span class="ms-bench-cap">on the bench, today</span>
+          <span class="ms-bench-rule"></span>
+          <span class="ms-bench-day">day 11 of 18</span>
+        </header>
+        <div class="ms-bench-body">
+          <svg class="ms-bench-sketch" viewBox="0 0 240 130" aria-hidden="true">
+            <g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+              <!-- a simple sketched stool/bench top -->
+              <rect x="20" y="20" width="200" height="20" rx="3"/>
+              <line x1="34"  y1="40"  x2="30"  y2="116"/>
+              <line x1="46"  y1="40"  x2="50"  y2="116"/>
+              <line x1="194" y1="40"  x2="190" y2="116"/>
+              <line x1="206" y1="40"  x2="210" y2="116"/>
+              <line x1="50"  y1="78"  x2="190" y2="78"/>
+              <line x1="20"  y1="116" x2="220" y2="116"/>
+              <!-- dimension tick marks -->
+              <line x1="20" y1="10" x2="220" y2="10" stroke-dasharray="2 3"/>
+              <text x="120" y="8" text-anchor="middle" font-family="Space Mono" font-size="8" fill="currentColor">120 cm</text>
+            </g>
+          </svg>
+          <div class="ms-bench-meta">
+            <div class="ms-bench-title">Quartersawn White Oak Bench</div>
+            <div class="ms-bench-spec">
+              <span>White oak · waxed</span><span>·</span>
+              <span>120 × 38 × 44 cm</span><span>·</span>
+              <span>commission</span>
+            </div>
+            <div class="ms-bench-note">"Mortise &amp; tenon, no fasteners. The grain on this slab is the reason I picked it three winters ago."</div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Inventory teaser -->
+      <div class="ms-tease">
+        <div class="ms-tease-item">
+          <div class="ms-tease-num">12</div>
+          <div class="ms-tease-lab">pieces<br>ready</div>
+        </div>
+        <div class="ms-tease-item">
+          <div class="ms-tease-num">04</div>
+          <div class="ms-tease-lab">on<br>commission</div>
+        </div>
+        <div class="ms-tease-item">
+          <div class="ms-tease-num">01</div>
+          <div class="ms-tease-lab">just<br>delivered</div>
+        </div>
+        <div class="ms-tease-item ms-tease-item--cta">
+          <a href="chamber.html" class="ms-tease-link">
+            Step inside the workshop
+            <span class="ms-tease-arrow">⟶</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+  <div class="ms-rule"><span></span><span></span><span></span></div>
+
+  <!-- Foot -->
+  <footer class="ms-foot">
+    <div class="ms-foot-left">
+      <div class="ms-newsletter">
+        <span class="ms-news-lab">Letter from the barn &mdash; once a season</span>
+        <form class="ms-news-form" onsubmit="event.preventDefault();">
+          <input type="email" placeholder="you@somewhere.farm" required>
+          <button type="submit">subscribe</button>
+        </form>
+      </div>
+    </div>
+    <div class="ms-foot-right">
+      <span class="ms-cred">Member, Vermont Furnituremakers’ Guild · est. 1989</span>
+      <span class="ms-cred">Photos &amp; films of the work: <em>journal</em> →</span>
+    </div>
+  </footer>
+
+</main>
+
+<div class="ms-veil"></div>
+<script src="threshold.js"></script>
+</body>
+</html>

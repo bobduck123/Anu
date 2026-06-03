@@ -210,7 +210,7 @@
   backdrop-filter: blur(12px);
 }
 
-.presence-studio-v2-public .v2-public-object-image {
+.presence-studio-v2-public .v2-public-object-media-img {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -356,5 +356,623 @@
 
   .presence-studio-v2-public .v2-public-object.is-mobile-muted {
     display: none;
+  }
+}
+
+/* Production visual parity layer: scoped room-world cinema. */
+.presence-studio-v2-public {
+  --p-paper: #f0ebe1;
+  --p-bone: #f8f4ec;
+  --p-linen: #ddd4c1;
+  --p-stage: #0e0d0b;
+  --p-ink: #0d0c0a;
+  --p-copper: #b78c4e;
+  --p-brass: #d7b15f;
+  --p-moss: #567d55;
+  --p-vermilion: #c4622a;
+  --p-cobalt: #2f5fb3;
+  --p-aura: color-mix(in srgb, var(--v2-public-accent) 22%, transparent);
+  --p-glow: 0 0 42px color-mix(in srgb, var(--v2-public-accent) 24%, transparent);
+  --p-cinema-shadow: 0 38px 120px -56px rgba(10, 8, 5, 0.72);
+  --p-card-shadow: 0 calc(12px + (24px * var(--v2-public-shadow))) calc(30px + (44px * var(--v2-public-shadow))) rgba(14, 11, 7, 0.18);
+  --p-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --p-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  background:
+    radial-gradient(circle at 16% 8%, var(--p-aura), transparent 30rem),
+    radial-gradient(circle at 82% 0%, rgba(255, 255, 255, 0.34), transparent 24rem),
+    linear-gradient(180deg, color-mix(in srgb, var(--v2-public-bg) 94%, #fff) 0%, var(--v2-public-bg) 48%, color-mix(in srgb, var(--v2-public-bg) 82%, #0e0d0b) 100%);
+  font-family: "Geist", "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.presence-studio-v2-public::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 50% -8%, rgba(255, 255, 255, 0.18), transparent 34rem),
+    repeating-linear-gradient(90deg, rgba(14, 13, 11, 0.025) 0 1px, transparent 1px 7px);
+  opacity: 0.38;
+  mix-blend-mode: soft-light;
+}
+
+.presence-studio-v2-public .v2-public-threshold,
+.presence-studio-v2-public .v2-public-room-space {
+  width: min(1240px, calc(100% - 32px));
+}
+
+.presence-studio-v2-public .v2-public-threshold {
+  min-height: min(820px, calc(100svh - 28px));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 380px);
+  grid-template-areas:
+    "mark artifact"
+    "title artifact"
+    "cta index";
+  align-content: stretch;
+  align-items: center;
+  column-gap: clamp(28px, 7vw, 92px);
+  row-gap: 22px;
+  margin-top: 14px;
+  margin-bottom: clamp(34px, 7vw, 86px);
+  padding: clamp(28px, 5.4vw, 72px);
+  overflow: hidden;
+  border: 1px solid rgba(248, 244, 236, 0.1);
+  border-radius: clamp(22px, 4vw, 42px);
+  background:
+    radial-gradient(circle at 72% 28%, color-mix(in srgb, var(--v2-public-accent) 22%, transparent), transparent 24rem),
+    radial-gradient(circle at 28% 18%, rgba(248, 244, 236, 0.13), transparent 26rem),
+    linear-gradient(135deg, #17130f 0%, #0f0e0c 46%, #070706 100%);
+  box-shadow: var(--p-cinema-shadow);
+  isolation: isolate;
+}
+
+.presence-studio-v2-public .v2-public-threshold-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 8%),
+    radial-gradient(ellipse at 62% 20%, rgba(255, 255, 255, 0.16), transparent 22rem),
+    linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+  opacity: 0.8;
+}
+
+.presence-studio-v2-public .v2-public-world-mark {
+  grid-area: mark;
+  color: rgba(248, 244, 236, 0.7);
+  border-color: rgba(248, 244, 236, 0.18);
+  padding-bottom: 12px;
+}
+
+.presence-studio-v2-public .v2-public-world-mark span {
+  color: color-mix(in srgb, var(--v2-public-accent) 66%, #f8f4ec);
+}
+
+.presence-studio-v2-public .v2-public-title-group {
+  grid-area: title;
+  max-width: 780px;
+  transform: translateY(0);
+  animation: v2PublicThresholdIn 720ms var(--p-ease-out) both;
+}
+
+.presence-studio-v2-public h1 {
+  max-width: 10ch;
+  color: var(--p-bone);
+  font-family: "Instrument Serif", "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  font-size: clamp(3.7rem, 11vw, 10.6rem);
+  font-weight: var(--v2-public-heading-weight);
+  letter-spacing: 0;
+  line-height: 0.82;
+  text-wrap: balance;
+  text-shadow: 0 22px 70px rgba(0, 0, 0, 0.42);
+}
+
+.presence-studio-v2-public .v2-public-title-group p {
+  max-width: 56ch;
+  color: rgba(248, 244, 236, 0.78);
+  font-size: clamp(1rem, 1.55vw, 1.28rem);
+}
+
+.presence-studio-v2-public .v2-public-primary-cta {
+  grid-area: cta;
+  min-height: 54px;
+  padding: 14px 22px;
+  border-color: color-mix(in srgb, var(--v2-public-accent) 54%, rgba(248, 244, 236, 0.38));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--v2-public-accent) 34%, rgba(248, 244, 236, 0.16)), color-mix(in srgb, var(--v2-public-accent) 18%, rgba(248, 244, 236, 0.08)));
+  color: #fff9ee;
+  box-shadow: 0 18px 46px color-mix(in srgb, var(--v2-public-accent) 22%, transparent);
+  transition: transform 180ms var(--p-ease), box-shadow 180ms var(--p-ease), border-color 180ms var(--p-ease);
+}
+
+.presence-studio-v2-public .v2-public-primary-cta:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--v2-public-accent) 80%, #fff);
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--v2-public-accent) 30%, transparent);
+}
+
+.presence-studio-v2-public .v2-public-threshold-artifact {
+  grid-area: artifact;
+  align-self: center;
+  justify-self: end;
+  width: min(100%, 360px);
+  transform: rotate(1.4deg);
+  border: 1px solid rgba(248, 244, 236, 0.2);
+  border-radius: clamp(16px, 2vw, 24px);
+  background:
+    linear-gradient(180deg, rgba(248, 244, 236, 0.15), rgba(248, 244, 236, 0.06)),
+    rgba(14, 13, 11, 0.74);
+  box-shadow:
+    0 26px 80px rgba(0, 0, 0, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+  animation: v2PublicArtifactIn 860ms var(--p-ease-out) both;
+}
+
+.presence-studio-v2-public .v2-public-threshold-artifact img,
+.presence-studio-v2-public .v2-public-threshold-artifact-blank {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  background:
+    radial-gradient(circle at 48% 30%, color-mix(in srgb, var(--v2-public-accent) 26%, #f8f4ec), transparent 11rem),
+    linear-gradient(135deg, rgba(248, 244, 236, 0.28), rgba(0, 0, 0, 0.18));
+}
+
+.presence-studio-v2-public .v2-public-threshold-artifact > div:last-child {
+  padding: 14px 16px 16px;
+  color: #f8f4ec;
+}
+
+.presence-studio-v2-public .v2-public-threshold-artifact span,
+.presence-studio-v2-public .v2-public-threshold-index span {
+  display: block;
+  margin-bottom: 5px;
+  color: rgba(248, 244, 236, 0.56);
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2-public .v2-public-threshold-artifact strong {
+  display: block;
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  line-height: 1.05;
+}
+
+.presence-studio-v2-public .v2-public-threshold-index {
+  grid-area: index;
+  align-self: end;
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.presence-studio-v2-public .v2-public-threshold-index a {
+  display: grid;
+  grid-template-columns: 3ch minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+  border-top: 1px solid rgba(248, 244, 236, 0.13);
+  padding-top: 8px;
+  color: rgba(248, 244, 236, 0.78);
+  text-decoration: none;
+}
+
+.presence-studio-v2-public .v2-public-threshold-index strong {
+  overflow: hidden;
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.presence-studio-v2-public .v2-public-room-space {
+  padding-bottom: clamp(72px, 10vw, 132px);
+}
+
+.presence-studio-v2-public .v2-public-chamber {
+  position: relative;
+  margin-bottom: clamp(50px, 8vw, 96px);
+  padding: clamp(20px, 4vw, 42px);
+  border: 1px solid color-mix(in srgb, var(--v2-public-rule) 72%, transparent);
+  border-radius: clamp(18px, 3vw, 34px);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--v2-public-panel-strong) 78%, transparent), color-mix(in srgb, var(--v2-public-panel) 66%, transparent)),
+    radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--v2-public-accent) 9%, transparent), transparent 24rem);
+  box-shadow: 0 24px 72px -54px rgba(11, 8, 3, 0.7);
+  backdrop-filter: blur(10px);
+}
+
+.presence-studio-v2-public .v2-public-chamber::before {
+  content: attr(data-object-count) " objects held here";
+  position: absolute;
+  top: 18px;
+  right: clamp(18px, 3vw, 34px);
+  color: var(--v2-public-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2-public .v2-public-chamber-head {
+  align-items: start;
+  margin-bottom: clamp(16px, 3vw, 28px);
+  border-top: 0;
+  border-bottom: 1px solid var(--v2-public-rule);
+  padding: 0 0 18px;
+}
+
+.presence-studio-v2-public .v2-public-chamber h2,
+.presence-studio-v2-public .v2-public-influence h2 {
+  font-family: "Instrument Serif", "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 4.4vw, 4.2rem);
+  font-weight: var(--v2-public-heading-weight);
+}
+
+.presence-studio-v2-public .v2-public-object-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: clamp(16px, 2.8vw, 32px);
+}
+
+.presence-studio-v2-public .v2-public-object {
+  overflow: clip;
+  border-color: color-mix(in srgb, var(--v2-public-rule) 84%, transparent);
+  background:
+    linear-gradient(180deg, var(--v2-public-panel-strong), var(--v2-public-panel)),
+    color-mix(in srgb, var(--v2-public-bg) 84%, #fff);
+  box-shadow: var(--p-card-shadow);
+  transition: transform 220ms var(--p-ease), box-shadow 220ms var(--p-ease), border-color 220ms var(--p-ease);
+}
+
+.presence-studio-v2-public .v2-public-object:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--v2-public-accent) 44%, var(--v2-public-rule));
+  box-shadow:
+    0 30px 80px -44px rgba(8, 5, 2, 0.72),
+    0 0 0 1px color-mix(in srgb, var(--v2-public-accent) 18%, transparent),
+    var(--p-glow);
+}
+
+.presence-studio-v2-public .v2-public-object-media-img {
+  border-bottom: 1px solid color-mix(in srgb, var(--v2-public-rule) 80%, transparent);
+}
+
+.presence-studio-v2-public .v2-public-object h3,
+.presence-studio-v2-public .v2-public-influence-card h3 {
+  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+  font-size: clamp(1.16rem, 1.8vw, 1.62rem);
+  font-weight: 560;
+  letter-spacing: 0;
+}
+
+.presence-studio-v2-public .v2-public-object-role::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
+  border-radius: 999px;
+  background: var(--v2-public-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--v2-public-accent) 13%, transparent);
+  vertical-align: 1px;
+}
+
+.presence-studio-v2-public .v2-public-object-cta,
+.presence-studio-v2-public .v2-public-object-portal {
+  border-color: color-mix(in srgb, var(--v2-public-accent) 56%, var(--v2-public-rule));
+  background:
+    linear-gradient(140deg, color-mix(in srgb, var(--v2-public-accent) 28%, rgba(255, 255, 255, 0.84)), var(--v2-public-panel-strong));
+}
+
+.presence-studio-v2-public .v2-public-object-cta .v2-public-object-action,
+.presence-studio-v2-public .v2-public-object-portal .v2-public-object-action {
+  align-items: center;
+  min-height: 36px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--v2-public-accent) 84%, #0d0c0a);
+  color: #fff;
+  padding: 8px 12px;
+}
+
+.presence-studio-v2-public .v2-public-object-proof,
+.presence-studio-v2-public .v2-public-object-testimonial,
+.presence-studio-v2-public .v2-public-object-credential {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--v2-public-accent) 20%, transparent) 0 4px, transparent 4px),
+    repeating-linear-gradient(0deg, rgba(13, 12, 10, 0.035) 0 1px, transparent 1px 28px),
+    color-mix(in srgb, var(--p-bone) 88%, var(--v2-public-bg));
+}
+
+.presence-studio-v2-public .v2-public-object-proof::after,
+.presence-studio-v2-public .v2-public-object-testimonial::after,
+.presence-studio-v2-public .v2-public-object-credential::after {
+  content: "Proof";
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  color: color-mix(in srgb, var(--v2-public-accent) 64%, var(--v2-public-ink));
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.58;
+  transform: rotate(-5deg);
+}
+
+.presence-studio-v2-public .v2-public-object-event,
+.presence-studio-v2-public .v2-public-object-media {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--v2-public-accent) 22%, transparent) 0 1px, transparent 1px 16px),
+    radial-gradient(circle at 82% 20%, color-mix(in srgb, var(--v2-public-accent) 28%, transparent), transparent 9rem),
+    var(--v2-public-panel-strong);
+}
+
+.presence-studio-v2-public .v2-public-object-shop,
+.presence-studio-v2-public .v2-public-object-service {
+  border-style: solid;
+  background:
+    radial-gradient(circle at 15% 12%, rgba(255, 255, 255, 0.36), transparent 11rem),
+    linear-gradient(180deg, color-mix(in srgb, var(--p-brass) 16%, var(--v2-public-panel-strong)), var(--v2-public-panel));
+}
+
+.presence-studio-v2-public .v2-public-object.v2-public-object-image {
+  --v2-public-ink: #f8f4ec;
+  --v2-public-muted: rgba(248, 244, 236, 0.64);
+  background: #111;
+  border-color: rgba(248, 244, 236, 0.14);
+}
+
+.presence-studio-v2-public .v2-public-influence {
+  position: relative;
+  border-radius: 26px;
+  border: 1px solid var(--v2-public-rule);
+  background:
+    radial-gradient(circle at 12% 12%, color-mix(in srgb, var(--v2-public-accent) 10%, transparent), transparent 18rem),
+    color-mix(in srgb, var(--v2-public-panel) 78%, transparent);
+  padding: clamp(22px, 4vw, 36px);
+}
+
+.presence-studio-v2-public .v2-public-influence-card {
+  transform: rotate(var(--v2-frag-rotate, -0.8deg));
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.36)),
+    var(--v2-public-panel-strong);
+  box-shadow: 0 18px 48px -34px rgba(0, 0, 0, 0.54);
+}
+
+.presence-studio-v2-public .v2-public-influence-card:nth-child(even) {
+  --v2-frag-rotate: 0.9deg;
+}
+
+.presence-studio-v2-public .v2-public-traces {
+  border-radius: 24px;
+  border: 1px solid var(--v2-public-rule);
+  background: color-mix(in srgb, var(--v2-public-panel) 74%, transparent);
+  padding: 22px;
+}
+
+.presence-studio-v2-public .v2-public-trace-strip span,
+.presence-studio-v2-public .v2-public-guestbook blockquote {
+  background: color-mix(in srgb, var(--v2-public-panel-strong) 86%, transparent);
+  box-shadow: 0 10px 30px -24px rgba(0, 0, 0, 0.5);
+}
+
+.presence-studio-v2-public.world-gallery {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.72), transparent 28rem),
+    linear-gradient(90deg, rgba(13, 12, 10, 0.035) 0 1px, transparent 1px 12%),
+    #ece4d7;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-chamber {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.78), transparent 30rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.64), rgba(240, 235, 225, 0.8));
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object-media-img {
+  aspect-ratio: 1 / 1.08;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object-media-img {
+  width: calc(100% - 24px);
+  margin: 12px;
+  background: #f8f4ec;
+  box-shadow: inset 0 0 0 10px #f8f4ec, 0 14px 34px rgba(13, 12, 10, 0.12);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object-media-img + .v2-public-object-copy {
+  border-top: 1px solid rgba(13, 12, 10, 0.08);
+}
+
+.presence-studio-v2-public.world-dj {
+  background:
+    radial-gradient(circle at 18% 5%, color-mix(in srgb, var(--v2-public-accent) 34%, transparent), transparent 24rem),
+    radial-gradient(circle at 82% 12%, rgba(47, 95, 179, 0.24), transparent 26rem),
+    linear-gradient(180deg, #08070a 0%, #0f0c16 56%, #060506 100%);
+}
+
+.presence-studio-v2-public.world-dj .v2-public-threshold,
+.presence-studio-v2-public.world-zine .v2-public-threshold {
+  border-color: rgba(255, 255, 255, 0.15);
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 20px),
+    radial-gradient(circle at 72% 22%, color-mix(in srgb, var(--v2-public-accent) 34%, transparent), transparent 24rem),
+    linear-gradient(135deg, #050506 0%, #120d1e 52%, #050506 100%);
+}
+
+.presence-studio-v2-public.world-dj .v2-public-threshold-atmosphere {
+  animation: v2PublicSignalDrift 5400ms linear infinite;
+}
+
+.presence-studio-v2-public.world-archive {
+  background:
+    linear-gradient(90deg, rgba(139, 41, 35, 0.16) 0 2px, transparent 2px 76px),
+    repeating-linear-gradient(0deg, rgba(13, 12, 10, 0.035) 0 1px, transparent 1px 32px),
+    #eee5d8;
+}
+
+.presence-studio-v2-public.world-archive .v2-public-threshold {
+  color: var(--p-ink);
+  border-color: rgba(13, 12, 10, 0.16);
+  background:
+    linear-gradient(90deg, rgba(139, 41, 35, 0.22) 0 6px, transparent 6px),
+    repeating-linear-gradient(0deg, rgba(13, 12, 10, 0.05) 0 1px, transparent 1px 34px),
+    #f4ead9;
+}
+
+.presence-studio-v2-public.world-archive .v2-public-threshold h1,
+.presence-studio-v2-public.world-archive .v2-public-title-group p,
+.presence-studio-v2-public.world-archive .v2-public-world-mark {
+  color: var(--p-ink);
+  text-shadow: none;
+}
+
+.presence-studio-v2-public.world-market {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(215, 177, 95, 0.28), transparent 24rem),
+    linear-gradient(180deg, #f3e1c9 0%, #d7a960 100%);
+}
+
+.presence-studio-v2-public.world-market .v2-public-threshold {
+  border-color: rgba(68, 38, 14, 0.16);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 38%),
+    radial-gradient(circle at 72% 18%, rgba(255, 255, 255, 0.24), transparent 20rem),
+    linear-gradient(135deg, #8b4f26 0%, #d39a48 54%, #4a2816 100%);
+}
+
+.presence-studio-v2-public.world-healing .v2-public-threshold {
+  background:
+    radial-gradient(circle at 72% 24%, rgba(255, 255, 255, 0.32), transparent 22rem),
+    radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--v2-public-accent) 25%, transparent), transparent 22rem),
+    linear-gradient(135deg, #233626 0%, #526f4c 52%, #162118 100%);
+}
+
+.presence-studio-v2-public.world-carpenter .v2-public-threshold {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 48px),
+    linear-gradient(135deg, #2f1e12 0%, #7a4a27 54%, #1c120c 100%);
+}
+
+.presence-studio-v2-public.world-consultant .v2-public-threshold {
+  color: var(--p-ink);
+  border-color: rgba(13, 12, 10, 0.13);
+  background:
+    linear-gradient(90deg, rgba(47, 95, 179, 0.18) 0 5px, transparent 5px),
+    radial-gradient(circle at 70% 18%, rgba(47, 95, 179, 0.13), transparent 18rem),
+    linear-gradient(135deg, #f8f4ec 0%, #eee8dc 58%, #d9cfbf 100%);
+}
+
+.presence-studio-v2-public.world-consultant .v2-public-threshold h1,
+.presence-studio-v2-public.world-consultant .v2-public-title-group p,
+.presence-studio-v2-public.world-consultant .v2-public-world-mark {
+  color: var(--p-ink);
+  text-shadow: none;
+}
+
+.presence-studio-v2-public.world-archive .v2-public-threshold-artifact,
+.presence-studio-v2-public.world-consultant .v2-public-threshold-artifact {
+  background: rgba(248, 244, 236, 0.86);
+  color: var(--p-ink);
+  border-color: rgba(13, 12, 10, 0.14);
+}
+
+.presence-studio-v2-public.world-archive .v2-public-threshold-artifact > div:last-child,
+.presence-studio-v2-public.world-consultant .v2-public-threshold-artifact > div:last-child {
+  color: var(--p-ink);
+}
+
+@keyframes v2PublicThresholdIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes v2PublicArtifactIn {
+  from {
+    opacity: 0;
+    transform: translateY(28px) rotate(0deg) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(1.4deg) scale(1);
+  }
+}
+
+@keyframes v2PublicSignalDrift {
+  from {
+    background-position: 0 0, 0 0, 0 0;
+  }
+  to {
+    background-position: 80px 0, 0 0, 0 0;
+  }
+}
+
+@media (max-width: 860px) {
+  .presence-studio-v2-public .v2-public-threshold {
+    min-height: auto;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "mark"
+      "title"
+      "artifact"
+      "cta"
+      "index";
+    padding: clamp(22px, 7vw, 36px);
+  }
+
+  .presence-studio-v2-public h1 {
+    max-width: 9ch;
+    font-size: clamp(3.35rem, 17vw, 6.2rem);
+  }
+
+  .presence-studio-v2-public .v2-public-threshold-artifact {
+    justify-self: stretch;
+    width: min(100%, 360px);
+    transform: rotate(0.8deg);
+  }
+
+  .presence-studio-v2-public .v2-public-threshold-index {
+    display: none;
+  }
+
+  .presence-studio-v2-public .v2-public-chamber {
+    padding: 18px;
+  }
+
+  .presence-studio-v2-public .v2-public-chamber::before {
+    position: static;
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .presence-studio-v2-public .v2-public-object-grid,
+  .presence-studio-v2-public .v2-public-influence-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .presence-studio-v2-public *,
+  .presence-studio-v2-public *::before,
+  .presence-studio-v2-public *::after {
+    animation: none !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

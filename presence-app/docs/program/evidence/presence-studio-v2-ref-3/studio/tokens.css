@@ -1,0 +1,29 @@
+/* Presence Studio — Token Source + Font Imports */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@500;600;700;800&display=swap');
+
+:root {
+  --p-paper: #f0ebe1; --p-ink: #0d0c0a; --p-ink-2: #1a1814;
+  --p-stage: #0e0d0b; --p-stage-2: #16140f; --p-stage-3: #221e16;
+  --p-bone: #f8f4ec; --p-linen: #ddd4c1; --p-paper-2: #e8e1d2;
+  --p-on-paper: #161410; --p-on-paper-mute: #5a5347; --p-on-paper-dim: #8a8270;
+  --p-on-stage: #efe9da; --p-on-stage-mute: #a59c87; --p-on-stage-dim: #6c6452;
+  --p-copper: oklch(0.62 0.13 38); --p-copper-soft: oklch(0.86 0.06 60);
+  --p-moss: oklch(0.52 0.08 138); --p-moss-soft: oklch(0.68 0.06 138);
+  --p-vermilion: oklch(0.58 0.16 32); --p-brass: oklch(0.74 0.13 82);
+  --p-cobalt: oklch(0.55 0.13 250);
+  --p-rule: color-mix(in oklab, var(--p-ink) 14%, transparent);
+  --p-rule-dark: color-mix(in oklab, var(--p-on-stage) 14%, transparent);
+  --p-f-display: "Instrument Serif", "Cormorant Garamond", serif;
+  --p-f-ui: "Geist", "Inter", system-ui, sans-serif;
+  --p-f-mono: "JetBrains Mono", ui-monospace, monospace;
+  --p-r-0: 0px; --p-r-1: 2px; --p-r-2: 4px; --p-r-3: 8px; --p-r-pill: 999px;
+  --p-sh-1: 0 1px 0 rgba(13,12,10,0.06);
+  --p-sh-2: 0 1px 2px rgba(13,12,10,0.06), 0 8px 24px -16px rgba(13,12,10,0.25);
+  --p-sh-3: 0 18px 60px -28px rgba(13,12,10,0.45);
+  --p-sh-cinema: 0 30px 90px -32px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  --p-ease-cinema: cubic-bezier(0.2, 0.7, 0.1, 1);
+  --p-ease-camera: cubic-bezier(0.45, 0, 0.15, 1);
+  --p-ease-tactile: cubic-bezier(0.32, 0.72, 0, 1);
+  --p-ease-studio: cubic-bezier(0.22, 0.88, 0.24, 1);
+  --p-dur-tap: 180ms; --p-dur-glide: 360ms; --p-dur-cine: 720ms; --p-dur-air: 1400ms;
+}

@@ -1,0 +1,126 @@
+﻿@import url("https://fonts.googleapis.com/css2?family=Oxanium:wght@300;500;700&family=UnifrakturCook:wght@700&display=swap");
+
+:root {
+  --gold: #ffd84d;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  color: var(--gold);
+  font-family: "Oxanium", "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.landing-shell {
+  position: fixed;
+  inset: 0;
+  background: #000;
+}
+
+.fade-show,
+.fs-slides {
+  position: absolute;
+  inset: 0;
+}
+
+.fs-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.15s ease;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.fs-slide.active {
+  opacity: 1;
+}
+
+.fade-show::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.28) 100%);
+  pointer-events: none;
+}
+
+.fs-quick-nav {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  z-index: 7;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 7px;
+}
+
+.fs-quick-btn {
+  width: 10px;
+  height: 10px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 216, 77, 0.72);
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.fs-quick-btn.active {
+  background: var(--gold);
+  transform: scale(1.16);
+}
+
+.fs-quick-btn:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.brand-mark {
+  position: fixed;
+  top: 16%;
+  left: 10%;
+  z-index: 18;
+  pointer-events: none;
+  color: var(--gold);
+  font-family: "UnifrakturCook", "Times New Roman", serif;
+  font-size: clamp(38px, 8vw, 128px);
+  line-height: 0.84;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 10px rgba(255, 216, 77, 0.7), 0 0 30px rgba(255, 216, 77, 0.45);
+  transition: top 0.95s ease, left 0.95s ease, transform 0.95s ease, opacity 0.95s ease;
+  opacity: 0.96;
+}
+
+.enter-btn {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 20;
+  display: inline-block;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 216, 77, 0.88);
+  border-radius: 999px;
+  color: var(--gold);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 10px;
+  line-height: 1;
+  transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+.enter-btn:hover,
+.enter-btn:focus-visible {
+  background: var(--gold);
+  color: #111;
+  outline: none;
+}
+
+body.is-transitioning {
+  opacity: 0;
+  transition: opacity 0.55s ease;
+}

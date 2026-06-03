@@ -1,0 +1,436 @@
+/* Presence Studio — 8 Radically Different Room World Styles
+   VISUAL ART DIRECTION PASS: Each world is a place, not a palette.
+   "I have entered someone's world." */
+
+/* ═══ SHARED ROOM PRIMITIVES ═══ */
+.room-inner { min-height: 100%; position: relative;
+  transition: background 0.6s var(--p-ease-cinema), color 0.6s var(--p-ease-cinema); }
+.room-header { padding: 32px 24px 20px; }
+.room-header .rh-eyebrow { font-family: var(--p-f-mono); font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; opacity: 0.3; margin-bottom: 8px; }
+.room-header .rh-name { font-size: 26px; line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 6px; }
+.room-header .rh-tagline { font-size: 13px; opacity: 0.45; line-height: 1.45; }
+.room-chamber { padding: 0 24px 24px; }
+.room-chamber-label { font-family: var(--p-f-mono); font-size: 9px; letter-spacing: 0.16em;
+  text-transform: uppercase; opacity: 0.25; margin-bottom: 14px;
+  padding-bottom: 8px; border-bottom: 1px solid currentColor; border-bottom-color: inherit;
+  border-bottom-style: solid; border-bottom-width: 1px; }
+.room-objects { display: flex; flex-direction: column; gap: 12px; }
+.obj-title { font-size: 15px; line-height: 1.3; }
+.obj-meta { font-size: 12px; opacity: 0.5; margin-top: 3px; line-height: 1.4; }
+.obj-detail { font-size: 11px; opacity: 0.35; margin-top: 3px; }
+
+/* ══════════════════════════════════════════════════════════════════
+   1. GALLERY WALL — expensive contemporary gallery
+   Soft directional lighting, museum labels, quiet luxury
+   ══════════════════════════════════════════════════════════════════ */
+.room-world-gallery { background: #f7f3ea; color: #191815; font-family: "Cormorant Garamond", serif;
+  /* directional spotlight from above-left */ }
+/* warm spotlight gradient */
+.room-world-gallery::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 80% 60% at 30% 10%, rgba(255,248,230,0.5), transparent 70%),
+              radial-gradient(ellipse 60% 80% at 80% 90%, rgba(200,185,160,0.12), transparent 60%);
+  z-index: 0; }
+.room-world-gallery > * { position: relative; z-index: 1; }
+.room-world-gallery .room-header { padding: 48px 28px 24px; }
+.room-world-gallery .room-header .rh-eyebrow { color: #8f6f3f; opacity: 0.5; letter-spacing: 0.24em; }
+.room-world-gallery .room-header .rh-name { font-family: "Cormorant Garamond", serif; font-weight: 400;
+  font-size: 32px; letter-spacing: -0.015em; line-height: 1.0; }
+.room-world-gallery .room-header .rh-tagline { font-family: "Inter", sans-serif; font-size: 12px;
+  color: #746f63; font-weight: 400; }
+.room-world-gallery .room-chamber { padding: 0 28px 32px; }
+.room-world-gallery .room-chamber-label { color: #8f6f3f; border-bottom-color: rgba(143,111,63,0.15);
+  letter-spacing: 0.2em; }
+.room-world-gallery .room-objects { gap: 0; }
+.room-world-gallery .room-obj { background: transparent; border: none; padding: 24px 0 20px;
+  border-bottom: 1px solid rgba(25,24,21,0.05); }
+.room-world-gallery .room-obj:last-child { border-bottom: none; }
+/* artwork with frame shadow and spotlight */
+.room-world-gallery .obj-image { width: 100%; aspect-ratio: 4/3; border-radius: 0; object-fit: cover;
+  margin-bottom: 14px; display: block;
+  box-shadow: 0 8px 40px -12px rgba(25,24,21,0.2), 0 2px 6px rgba(25,24,21,0.08);
+  /* subtle warm vignette via outline */ }
+.room-world-gallery .obj-title { font-family: "Cormorant Garamond", serif; font-size: 18px;
+  font-weight: 400; font-style: italic; letter-spacing: -0.005em; }
+.room-world-gallery .obj-meta { font-family: var(--p-f-mono); font-size: 9px; color: #8f6f3f;
+  letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.6; }
+.room-world-gallery .room-obj[data-role="text"] { max-width: 320px; }
+.room-world-gallery .room-obj[data-role="text"] .obj-title { font-style: normal; font-size: 16px; }
+.room-world-gallery .room-obj[data-role="text"] .obj-meta { font-family: "Cormorant Garamond", serif;
+  font-size: 15px; font-style: italic; color: #5a5347; letter-spacing: 0; text-transform: none;
+  line-height: 1.5; margin-top: 6px; }
+.room-world-gallery .room-obj[data-role="credential"] .obj-meta { font-family: "Inter", sans-serif;
+  font-size: 11px; color: #746f63; letter-spacing: 0; text-transform: none; }
+.room-world-gallery .room-obj[data-role="cta"] { border: none; margin-top: 20px;
+  padding: 16px 24px; text-align: center;
+  border-top: 1px solid rgba(143,111,63,0.15); border-bottom: 1px solid rgba(143,111,63,0.15); }
+.room-world-gallery .room-obj[data-role="cta"] .obj-title { font-style: italic; font-size: 16px;
+  color: #8f6f3f; font-weight: 400; }
+/* paper grain */
+.room-world-gallery::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.25;
+  mix-blend-mode: multiply; z-index: 2;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px; }
+
+/* ══════════════════════════════════════════════════════════════════
+   2. ZINE BOARD — living bedroom wall / punk board
+   Tape, torn paper, stickers, photocopy texture, controlled chaos
+   ══════════════════════════════════════════════════════════════════ */
+.room-world-zine { background: #0a0a0a; color: #f0e8d0; font-family: "Inter Tight", sans-serif; }
+/* photocopy grain + scan lines */
+.room-world-zine::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(240,232,208,0.008) 3px, rgba(240,232,208,0.008) 4px),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 100% 100%, 200px;
+  opacity: 0.4; mix-blend-mode: overlay; }
+.room-world-zine > * { position: relative; z-index: 1; }
+.room-world-zine .room-header { padding: 28px 22px 16px; }
+.room-world-zine .room-header .rh-name { font-family: "Inter Tight", sans-serif; font-weight: 800;
+  text-transform: uppercase; letter-spacing: -0.04em; font-size: 36px; line-height: 0.92;
+  /* punk scrawl */ text-shadow: 2px 2px 0 rgba(255,107,157,0.15); }
+.room-world-zine .room-header .rh-tagline { font-family: var(--p-f-mono); font-size: 10px;
+  color: rgba(240,232,208,0.3); letter-spacing: 0.06em; text-transform: uppercase; }
+.room-world-zine .room-chamber-label { color: #ff6b9d; border-bottom-color: rgba(255,107,157,0.15);
+  font-size: 10px; letter-spacing: 0.12em; }
+.room-world-zine .room-objects { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.room-world-zine .room-obj { background: rgba(255,255,255,0.025); padding: 18px 14px; position: relative;
+  border: none; }
+/* tape strips — different colors per object */
+.room-world-zine .room-obj::before { content: ""; position: absolute; top: -5px; left: 12%; right: 12%;
+  height: 10px; pointer-events: none; transform: rotate(-0.8deg);
+  background: rgba(201,168,76,0.45); }
+.room-world-zine .room-obj:nth-child(2)::before { background: rgba(255,107,157,0.3);
+  transform: rotate(0.6deg); left: 20%; right: 8%; }
+.room-world-zine .room-obj:nth-child(4)::before { background: rgba(140,180,200,0.35);
+  transform: rotate(-0.3deg); left: 5%; right: 18%; }
+/* rotations for chaos */
+.room-world-zine .room-obj:nth-child(1) { transform: rotate(-1.8deg); }
+.room-world-zine .room-obj:nth-child(2) { transform: rotate(1.2deg); }
+.room-world-zine .room-obj:nth-child(3) { grid-column: span 2; transform: rotate(-0.5deg); }
+.room-world-zine .room-obj:nth-child(4) { transform: rotate(0.9deg); }
+.room-world-zine .room-obj:nth-child(5) { transform: rotate(-0.3deg); }
+/* torn paper edge on some objects */
+.room-world-zine .room-obj:nth-child(1)::after,
+.room-world-zine .room-obj:nth-child(3)::after { content: ""; position: absolute; bottom: -2px;
+  left: 0; right: 0; height: 4px; pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(240,232,208,0.03) 6px, rgba(240,232,208,0.03) 8px);
+  clip-path: polygon(0% 0%, 4% 80%, 8% 20%, 12% 70%, 16% 30%, 20% 90%, 24% 10%, 28% 60%, 32% 40%, 36% 85%, 40% 15%, 44% 75%, 48% 25%, 52% 80%, 56% 35%, 60% 90%, 64% 20%, 68% 65%, 72% 30%, 76% 80%, 80% 10%, 84% 70%, 88% 40%, 92% 85%, 96% 20%, 100% 60%); }
+
+.room-world-zine .obj-title { font-family: "Inter Tight", sans-serif; font-weight: 800; font-size: 14px;
+  text-transform: uppercase; letter-spacing: -0.02em; line-height: 1.15; }
+.room-world-zine .obj-meta { font-size: 11px; color: #ff6b9d; font-weight: 600; }
+.room-world-zine .obj-detail { color: rgba(240,232,208,0.3); font-family: var(--p-f-mono); font-size: 9px;
+  letter-spacing: 0.04em; text-transform: uppercase; }
+/* CTA — bright hot pink slab */
+.room-world-zine .room-obj[data-role="cta"] { background: #ff6b9d; transform: rotate(-0.3deg) !important;
+  box-shadow: 4px 4px 0 #0a0a0a; }
+.room-world-zine .room-obj[data-role="cta"] .obj-title { color: #0a0a0a; font-size: 16px; }
+.room-world-zine .room-obj[data-role="cta"] .obj-meta { color: rgba(10,10,10,0.45); }
+.room-world-zine .room-obj[data-role="cta"]::before { display: none; }
+.room-world-zine .room-obj[data-role="cta"]::after { display: none; }
+/* sticker marks — decorative pseudo dots */
+.room-world-zine .room-chamber::after { content: "✦ ✧ ★"; position: absolute; bottom: -8px; right: 16px;
+  font-size: 10px; color: rgba(255,107,157,0.2); letter-spacing: 4px; pointer-events: none; }
+
+/* ══════════════════════════════════════════════════════════════════
+   3. DJ BOOTH — underground signal room
+   Dark stage, pulsing glow, signal lines, club light
+   ══════════════════════════════════════════════════════════════════ */
+.room-world-dj { background: #06050a; color: #e8e0f0; font-family: "Inter Tight", sans-serif;
+  /* ambient club light */ }
+/* signal mesh + ambient glow */
+.room-world-dj::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 100% 40% at 50% 0%, rgba(168,85,247,0.08), transparent 60%),
+    radial-gradient(ellipse 80% 50% at 20% 80%, rgba(168,85,247,0.04), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 90% 60%, rgba(99,102,241,0.04), transparent 50%),
+    repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(168,85,247,0.03) 59px, rgba(168,85,247,0.03) 60px); }
+.room-world-dj > * { position: relative; z-index: 1; }
+.room-world-dj .room-header { padding: 28px 22px 18px;
+  border-bottom: 1px solid rgba(168,85,247,0.08); }
+.room-world-dj .room-header .rh-name { font-family: "Inter Tight", sans-serif; font-weight: 800;
+  letter-spacing: -0.05em; font-size: 28px; line-height: 1.0;
+  text-shadow: 0 0 30px rgba(168,85,247,0.2); }
+.room-world-dj .room-header .rh-eyebrow { color: #a855f7; opacity: 0.6; }
+.room-world-dj .room-header .rh-tagline { color: rgba(232,224,240,0.25); font-family: var(--p-f-mono);
+  font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+.room-world-dj .room-chamber-label { color: #a855f7; border-bottom-color: rgba(168,85,247,0.1);
+  font-size: 10px; }
+.room-world-dj .room-objects { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+.room-world-dj .room-obj { background: rgba(168,85,247,0.04);
+  border: 1px solid rgba(168,85,247,0.12);
+  padding: 18px 12px; border-radius: 3px; text-align: center;
+  transition: all 0.3s var(--p-ease-cinema); position: relative; overflow: hidden; }
+/* signal line on left edge */
+.room-world-dj .room-obj::before { content: ""; position: absolute; left: 0; top: 20%; bottom: 20%;
+  width: 2px; background: linear-gradient(180deg, transparent, #a855f7, transparent);
+  opacity: 0.3; pointer-events: none; }
+.room-world-dj .room-obj:hover { background: rgba(168,85,247,0.08);
+  border-color: rgba(168,85,247,0.25);
+  box-shadow: 0 0 20px -6px rgba(168,85,247,0.15); }
+.room-world-dj .obj-title { font-family: "Inter Tight", sans-serif; font-weight: 700; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.06em; }
+.room-world-dj .obj-meta { font-size: 10px; color: #a855f7; }
+/* CTA — glowing beacon */
+.room-world-dj .room-obj[data-role="cta"] { background: #a855f7; border-color: #a855f7;
+  grid-column: span 3; }
+.room-world-dj .room-obj[data-role="cta"]::before { display: none; }
+.room-world-dj .room-obj[data-role="cta"] .obj-title { color: #fff; font-size: 14px;
+  letter-spacing: 0.1em; }
+.room-world-dj .room-obj[data-role="cta"] .obj-meta { color: rgba(255,255,255,0.4); }
+@keyframes dj-pulse { 0%,100% { box-shadow: 0 0 30px -4px rgba(168,85,247,0.3),
+    0 0 60px -8px rgba(168,85,247,0.1); }
+  50% { box-shadow: 0 0 44px -2px rgba(168,85,247,0.5),
+    0 0 80px -8px rgba(168,85,247,0.2); } }
+.room-world-dj .room-obj[data-role="cta"] { animation: dj-pulse 3s ease-in-out infinite; }
+/* ambient scan lines */
+.room-world-dj::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 3px);
+  opacity: 0.5; }
+
+/* ══════════════════════════════════════════════════════════════════
+   4. HEALING ALTAR — soft ritual sanctuary
+   Breathing gradients, light pools, organic shapes, altar feel
+   ══════════════════════════════════════════════════════════════════ */
+.room-world-healing { background: #e8efe2; color: #1e2a1f;
+  font-family: "Cormorant Garamond", serif; }
+/* soft light pools */
+.room-world-healing::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 20%, rgba(255,253,245,0.6), transparent 60%),
+    radial-gradient(ellipse 50% 60% at 30% 70%, rgba(111,154,108,0.06), transparent 50%),
+    radial-gradient(ellipse 40% 40% at 80% 50%, rgba(111,154,108,0.04), transparent 50%),
+    linear-gradient(180deg, #e8efe2 0%, #f0ede6 50%, #e5e8df 100%); }
+.room-world-healing > * { position: relative; z-index: 1; }
+.room-world-healing .room-header { padding: 44px 28px 24px; text-align: center; }
+.room-world-healing .room-header .rh-eyebrow { color: #567d55; opacity: 0.5; letter-spacing: 0.24em; }
+.room-world-healing .room-header .rh-name { font-family: "Cormorant Garamond", serif; font-weight: 400;
+  font-style: italic; font-size: 34px; letter-spacing: -0.015em; line-height: 1.05; }
+.room-world-healing .room-header .rh-tagline { font-family: "Inter", sans-serif; color: #61715d;
+  font-size: 12px; }
+.room-world-healing .room-chamber { max-width: 360px; margin: 0 auto; padding: 0 24px 32px; }
+.room-world-healing .room-chamber-label { color: #567d55; border-bottom-color: rgba(86,125,85,0.1);
+  text-align: center; }
+.room-world-healing .room-objects { gap: 18px; align-items: center; }
+.room-world-healing .room-obj { background: rgba(255,253,245,0.75); border-radius: 24px;
+  padding: 24px 26px; text-align: center;
+  box-shadow: 0 8px 32px -12px rgba(30,42,31,0.08), 0 1px 2px rgba(30,42,31,0.04);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,253,245,0.6); }
+.room-world-healing .obj-title { font-family: "Cormorant Garamond", serif; font-size: 18px;
+  font-weight: 400; line-height: 1.4; }
+.room-world-healing .obj-meta { font-family: "Inter", sans-serif; font-size: 11px; color: #567d55; }
+/* CTA — organic pill */
+.room-world-healing .room-obj[data-role="cta"] { background: #567d55; border-radius: 999px;
+  padding: 16px 32px; border: none;
+  box-shadow: 0 6px 24px -8px rgba(86,125,85,0.3), 0 0 40px -12px rgba(86,125,85,0.1); }
+.room-world-healing .room-obj[data-role="cta"] .obj-title { color: #fff; font-family: "Inter", sans-serif;
+  font-size: 14px; font-weight: 500; letter-spacing: 0; font-style: normal; }
+.room-world-healing .room-obj[data-role="cta"] .obj-meta { color: rgba(255,255,255,0.45); }
+/* breath animation on all objects */
+@keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.006); } }
+.room-world-healing .room-obj { animation: breathe 7s ease-in-out infinite; }
+.room-world-healing .room-obj:nth-child(2) { animation-delay: -2s; }
+.room-world-healing .room-obj:nth-child(3) { animation-delay: -4s; }
+/* soft grain */
+.room-world-healing::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.12;
+  mix-blend-mode: multiply; z-index: 2;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px; }
+
+/* ══════════════════════════════════════════════════════════════════
+   5. MARKET STALL — abundant tactile table
+   Table surface, price tags, warm colour, paper labels
+   ══════════════════════════════════════════════════════════════════ */
+.room-world-market { background: #f2e6d4; color: #3d2b1a; font-family: "Inter", sans-serif; }
+/* warm table surface with cloth texture hint */
+.room-world-market::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 100% 40% at 50% 0%, rgba(196,98,42,0.06), transparent 50%),
+    repeating-linear-gradient(90deg, transparent, transparent 11px, rgba(61,43,26,0.01) 11px, rgba(61,43,26,0.01) 12px);
+  opacity: 0.8; }
+.room-world-market > * { position: relative; z-index: 1; }
+/* bold header banner */
+.room-world-market .room-header { background: #c4622a; color: #fff8ec; margin: 0; padding: 22px 24px;
+  position: relative; overflow: hidden; }
+.room-world-market .room-header::after { content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
+  background: repeating-linear-gradient(90deg, #3d2b1a, #3d2b1a 6px, transparent 6px, transparent 12px);
+  opacity: 0.15; }
+.room-world-market .room-header .rh-eyebrow { color: rgba(255,248,236,0.5); }
+.room-world-market .room-header .rh-name { font-family: "Inter Tight", sans-serif; font-weight: 800;
+  color: #fff8ec; font-size: 28px; letter-spacing: -0.02em; }
+.room-world-market .room-header .rh-tagline { color: rgba(255,248,236,0.6); }
+.room-world-market .room-chamber-label { color: #c4622a; border-bottom-color: rgba(196,98,42,0.15); }
+.room-world-market .room-objects { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.room-world-market .room-obj { background: #fff8ec; border: 1.5px solid rgba(61,43,26,0.08);
+  border-radius: 10px; padding: 16px; position: relative;
+  box-shadow: 0 2px 8px -4px rgba(61,43,26,0.1); }
+/* price tag chip */
+.room-world-market .obj-title { font-family: "Inter", sans-serif; font-weight: 700; font-size: 14px;
+  line-height: 1.25; }
+.room-world-market .obj-meta { font-size: 16px; color: #c4622a; font-weight: 800;
+  font-family: "Inter Tight", sans-serif; }
+.room-world-market .obj-detail { font-size: 11px; color: #735f4a; font-weight: 400; }
+.room-world-market .room-obj[data-role="cta"],
+.room-world-market .room-obj[data-role="event"] { grid-column: span 2; }
+.room-world-market .room-obj[data-role="event"] { background: rgba(196,98,42,0.06);
+  border-color: rgba(196,98,42,0.12); }
+.room-world-market .room-obj[data-role="cta"] { background: #3d2b1a; border-color: #3d2b1a;
+  text-align: center; border-radius: 10px;
+  box-shadow: 0 4px 16px -6px rgba(61,43,26,0.25); }
+.room-world-market .room-obj[data-role="cta"] .obj-title { color: #fff8ec; font-size: 15px; }
+.room-world-market .room-obj[data-role="cta"] .obj-meta { color: rgba(255,248,236,0.4); font-size: 12px; font-weight: 500; }
+/* cloth grain */
+.room-world-market::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.06; z-index: 2;
+  background: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(61,43,26,0.04) 2px, rgba(61,43,26,0.04) 3px),
+              repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(61,43,26,0.04) 2px, rgba(61,43,26,0.04) 3px); }
+
+/* ══════════════════════════════════════════════════════════════════
+   6. EVIDENCE ARCHIVE — serious archive of proof
+   Ledger lines, folder tabs, stamps, timeline marks
+   ══════════════════════════════════════════════════════════════════ */
+.room-world-archive { background: #efe8dc; color: #17130f; font-family: "Inter", sans-serif; }
+/* ruled paper lines */
+.room-world-archive::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(143,58,47,0.04) 27px, rgba(143,58,47,0.04) 28px),
+    linear-gradient(90deg, transparent 59px, rgba(143,58,47,0.06) 59px, rgba(143,58,47,0.06) 60px, transparent 60px); }
+.room-world-archive > * { position: relative; z-index: 1; }
+.room-world-archive .room-header { padding: 28px 24px 20px; border-bottom: 2px solid #8f3a2f;
+  margin-bottom: 4px; }
+.room-world-archive .room-header .rh-eyebrow { color: #8f3a2f; opacity: 0.6; }
+.room-world-archive .room-header .rh-name { font-family: "Inter Tight", sans-serif; font-weight: 700;
+  letter-spacing: -0.01em; }
+.room-world-archive .room-header .rh-tagline { color: #62635c; }
+.room-world-archive .room-chamber-label { color: #8f3a2f; border-bottom-color: rgba(143,58,47,0.2);
+  border-bottom-style: dashed; }
+.room-world-archive .room-objects { gap: 0; }
+.room-world-archive .room-obj { padding: 14px 16px 14px 20px; border-left: 4px solid #8f3a2f;
+  border-bottom: 1px dashed rgba(23,19,15,0.08); background: rgba(255,250,242,0.45);
+  position: relative; }
+/* archive prefix label */
+.room-world-archive .obj-title { font-weight: 600; font-size: 14px; padding-left: 0; }
+.room-world-archive .obj-title::before { content: "ARCHIVE"; font-weight: 500; color: #8f3a2f;
+  font-family: var(--p-f-mono); font-size: 8px; letter-spacing: 0.12em;
+  display: block; margin-bottom: 3px; opacity: 0.5; }
+.room-world-archive .obj-meta { font-family: var(--p-f-mono); font-size: 10px; color: #62635c;
+  letter-spacing: 0.03em; }
+.room-world-archive .obj-detail { font-family: var(--p-f-mono); font-size: 9px; color: #8f3a2f;
+  letter-spacing: 0.04em; }
+/* stamp mark on some objects */
+.room-world-archive .room-obj:nth-child(1)::after { content: "FILED"; position: absolute;
+  right: 12px; top: 12px; font-family: var(--p-f-mono); font-size: 8px; letter-spacing: 0.1em;
+  color: rgba(143,58,47,0.2); border: 1px solid rgba(143,58,47,0.12); padding: 2px 6px;
+  border-radius: 2px; transform: rotate(-4deg); pointer-events: none; }
+.room-world-archive .room-obj:nth-child(3)::after { content: "TRANSCRIPT"; position: absolute;
+  right: 12px; top: 12px; font-family: var(--p-f-mono); font-size: 8px; letter-spacing: 0.1em;
+  color: rgba(143,58,47,0.2); border: 1px solid rgba(143,58,47,0.12); padding: 2px 6px;
+  border-radius: 2px; transform: rotate(2deg); pointer-events: none; }
+/* CTA */
+.room-world-archive .room-obj[data-role="cta"] { border-left-color: transparent; background: transparent;
+  border-bottom: none; }
+.room-world-archive .room-obj[data-role="cta"] .obj-title { color: #8f3a2f; font-weight: 500;
+  text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.room-world-archive .room-obj[data-role="cta"] .obj-title::before { display: none; }
+.room-world-archive .room-obj[data-role="cta"]::after { display: none; }
+
+/* ══════════════════════════════════════════════════════════════════
+   7. CARPENTER WORKBENCH — tactile proof bench
+   Timber surface, heavy labels, spec chips, workmanship
+   ══════════════════════════════════════════════════════════════════ */
+.room-world-carpenter { background: #f2eadf; color: #24170f; font-family: "Inter Tight", sans-serif; }
+/* wood grain texture */
+.room-world-carpenter::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    repeating-linear-gradient(3deg, transparent, transparent 20px, rgba(36,23,15,0.01) 20px, rgba(36,23,15,0.01) 21px),
+    repeating-linear-gradient(3deg, transparent, transparent 60px, rgba(36,23,15,0.008) 60px, rgba(36,23,15,0.008) 62px);
+  opacity: 0.8; }
+.room-world-carpenter > * { position: relative; z-index: 1; }
+.room-world-carpenter .room-header { padding: 28px 24px 20px;
+  border-bottom: 3px solid #24170f; margin-bottom: 4px; }
+.room-world-carpenter .room-header .rh-name { font-family: "Inter Tight", sans-serif; font-weight: 800;
+  font-size: 26px; letter-spacing: -0.02em; }
+.room-world-carpenter .room-header .rh-tagline { font-family: "Inter", sans-serif; color: #735f4a; }
+.room-world-carpenter .room-chamber-label { color: #a85221; border-bottom-color: rgba(168,82,33,0.2);
+  border-bottom-width: 2px; }
+.room-world-carpenter .room-objects { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.room-world-carpenter .room-obj { background: #fff8ec; border: 2px solid rgba(36,23,15,0.12);
+  border-radius: 4px; padding: 18px; position: relative;
+  box-shadow: 0 2px 6px -3px rgba(36,23,15,0.12); }
+.room-world-carpenter .obj-title { font-weight: 800; font-size: 14px; letter-spacing: -0.01em; }
+.room-world-carpenter .obj-meta { font-size: 12px; color: #735f4a; font-weight: 500;
+  font-family: "Inter", sans-serif; }
+.room-world-carpenter .obj-detail { font-size: 10px; color: #a85221; font-weight: 700;
+  font-family: var(--p-f-mono); letter-spacing: 0.04em; text-transform: uppercase;
+  background: rgba(168,82,33,0.06); display: inline-block; padding: 2px 8px; border-radius: 2px;
+  margin-top: 6px; }
+/* testimonial — dark inverted slab */
+.room-world-carpenter .room-obj[data-role="testimonial"] { grid-column: span 2; border: none;
+  background: #24170f; color: #f2eadf; border-radius: 4px;
+  box-shadow: 0 4px 16px -6px rgba(36,23,15,0.3); }
+.room-world-carpenter .room-obj[data-role="testimonial"] .obj-title { color: #f2eadf; font-weight: 400;
+  font-family: "Cormorant Garamond", serif; font-size: 20px; font-style: italic;
+  line-height: 1.35; letter-spacing: -0.01em; }
+.room-world-carpenter .room-obj[data-role="testimonial"] .obj-meta { color: rgba(242,234,223,0.4);
+  font-family: "Inter", sans-serif; }
+/* CTA — bold action slab */
+.room-world-carpenter .room-obj[data-role="cta"] { grid-column: span 2; background: #a85221;
+  border-color: #a85221; text-align: center; border-radius: 4px;
+  box-shadow: 0 4px 16px -6px rgba(168,82,33,0.3); }
+.room-world-carpenter .room-obj[data-role="cta"] .obj-title { color: #fff; font-size: 17px;
+  letter-spacing: -0.01em; }
+.room-world-carpenter .room-obj[data-role="cta"] .obj-meta { color: rgba(255,255,255,0.45); }
+
+/* ══════════════════════════════════════════════════════════════════
+   8. CONSULTANT DESK — calm authority
+   Desk surface, sharp grid, cobalt accent, premium restraint
+   ══════════════════════════════════════════════════════════════════ */
+.room-world-consultant { background: #fafafa; color: #111111; font-family: "Inter", sans-serif; }
+/* subtle desk surface grain */
+.room-world-consultant::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8f8f6 40%, #f4f3f0 100%),
+    repeating-linear-gradient(90deg, transparent, transparent 119px, rgba(0,0,0,0.015) 119px, rgba(0,0,0,0.015) 120px); }
+.room-world-consultant > * { position: relative; z-index: 1; }
+.room-world-consultant .room-header { border-bottom: 1px solid #e4e4e4; padding: 32px 28px 20px; }
+.room-world-consultant .room-header .rh-name { font-weight: 700; letter-spacing: -0.03em;
+  font-size: 28px; }
+.room-world-consultant .room-header .rh-tagline { color: #777; font-size: 12px; }
+.room-world-consultant .room-chamber { padding: 0 28px 28px; }
+.room-world-consultant .room-chamber-label { color: #999; border-bottom-color: #e8e8e8;
+  letter-spacing: 0.18em; }
+.room-world-consultant .room-objects { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.room-world-consultant .room-obj { background: #fff; border: 1px solid #e8e8e8;
+  border-radius: 6px; padding: 18px; transition: all 0.25s var(--p-ease-cinema);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+.room-world-consultant .room-obj:hover { border-color: #d0d0d0;
+  box-shadow: 0 4px 12px -4px rgba(0,0,0,0.06); transform: translateY(-1px); }
+/* cobalt accent line on left */
+.room-world-consultant .room-obj::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px;
+  width: 2px; background: #2f6df0; opacity: 0; transition: opacity 0.25s; border-radius: 1px; }
+.room-world-consultant .room-obj:hover::before { opacity: 0.3; }
+.room-world-consultant .obj-title { font-weight: 600; font-size: 14px; letter-spacing: -0.01em; }
+.room-world-consultant .obj-meta { font-size: 12px; color: #888; }
+/* CTA — sharp ink button */
+.room-world-consultant .room-obj[data-role="cta"] { grid-column: span 2; background: #111; border-color: #111;
+  text-align: center; box-shadow: 0 4px 16px -6px rgba(0,0,0,0.2); }
+.room-world-consultant .room-obj[data-role="cta"]::before { display: none; }
+.room-world-consultant .room-obj[data-role="cta"] .obj-title { color: #fff; font-size: 14px; }
+.room-world-consultant .room-obj[data-role="cta"] .obj-meta { color: rgba(255,255,255,0.4); }
+.room-world-consultant .room-obj.selected::after { border-color: #2f6df0 !important; }
+
+/* ═══ TEXTURE OVERLAYS (toggled via skin lab) ═══ */
+.room-texture-grain::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.22;
+  mix-blend-mode: multiply; z-index: 2;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px; }
+.room-texture-paper::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.12; z-index: 2;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.015) 3px, rgba(0,0,0,0.015) 4px); }
+.room-texture-concrete::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.18; z-index: 2;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.45' numOctaves='6' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 300px; }
+.room-texture-cloth::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.06; z-index: 2;
+  background: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 3px),
+              repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 3px); }

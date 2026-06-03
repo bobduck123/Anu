@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>T.AMP — Tonight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;700;800;900&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="threshold.css">
+</head>
+<body>
+
+<!-- Vertical scan-line texture + CRT noise -->
+<canvas class="dj-noise" id="djNoise" aria-hidden="true"></canvas>
+<div class="dj-scan" aria-hidden="true"></div>
+
+<!-- Stage: full-bleed marquee + waveform -->
+<main class="dj-stage">
+
+  <!-- Header status bar -->
+  <header class="dj-status">
+    <div class="dj-status-left">
+      <span class="dj-live-dot"></span>
+      <span class="dj-live-text">LIVE TONIGHT</span>
+      <span class="dj-status-sep">//</span>
+      <span class="dj-status-meta">FRI 06.06.26 · 23:00 → 04:00</span>
+    </div>
+    <div class="dj-status-right">
+      <span>T.AMP</span>
+      <span class="dj-status-sep">//</span>
+      <span>BERLIN ↔ LAGOS</span>
+    </div>
+  </header>
+
+  <!-- Marquee row (top) — venue / show -->
+  <div class="dj-marquee dj-marquee--top">
+    <div class="dj-marquee-track">
+      <span>BERGHAIN PANORAMA BAR</span><span class="dj-marquee-dot">●</span>
+      <span>TONIGHT · DOORS 23:00</span><span class="dj-marquee-dot">●</span>
+      <span>T.AMP &amp; ASAKE B2B</span><span class="dj-marquee-dot">●</span>
+      <span>SUPPORT: KIKELOMO · NIKKI NAIR</span><span class="dj-marquee-dot">●</span>
+      <span>BERGHAIN PANORAMA BAR</span><span class="dj-marquee-dot">●</span>
+      <span>TONIGHT · DOORS 23:00</span><span class="dj-marquee-dot">●</span>
+      <span>T.AMP &amp; ASAKE B2B</span><span class="dj-marquee-dot">●</span>
+      <span>SUPPORT: KIKELOMO · NIKKI NAIR</span><span class="dj-marquee-dot">●</span>
+    </div>
+  </div>
+
+  <!-- Main type stack -->
+  <section class="dj-headline">
+    <div class="dj-headline-supra">
+      <span>act 04</span>
+      <span class="dj-headline-rule"></span>
+      <span>summer residency</span>
+    </div>
+    <h1 class="dj-headline-title">
+      <span class="dj-tamp">T.AMP</span>
+      <span class="dj-headline-sub">(tobi amp; / lagos &times; berlin)</span>
+    </h1>
+
+    <!-- Waveform / equalizer -->
+    <div class="dj-wave" id="djWave" aria-hidden="true">
+      <!-- bars injected by JS -->
+    </div>
+
+    <div class="dj-headline-lower">
+      <div class="dj-now">
+        <span class="dj-now-label">currently spinning</span>
+        <div class="dj-now-title">"OFFLINE BPM" — mix 014</div>
+        <div class="dj-now-meta">
+          <span>78 min</span>
+          <span class="dj-dot">·</span>
+          <span>recorded at HOR Berlin · 03.26</span>
+          <span class="dj-dot">·</span>
+          <span>21 tracks</span>
+        </div>
+      </div>
+      <div class="dj-counter">
+        <div class="dj-counter-num" id="djCount">04:32</div>
+        <div class="dj-counter-cap">until set time</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Marquee row (bottom) — supporters / partners -->
+  <div class="dj-marquee dj-marquee--bot">
+    <div class="dj-marquee-track">
+      <span>UPCOMING · NTS RADIO · 14.06</span><span class="dj-marquee-dot">×</span>
+      <span>BOILER ROOM PARIS · 22.06</span><span class="dj-marquee-dot">×</span>
+      <span>DEKMANTEL · 31.07</span><span class="dj-marquee-dot">×</span>
+      <span>NYEGE NYEGE · 09.09</span><span class="dj-marquee-dot">×</span>
+      <span>NEW MIX 015 · DROPS 11.06</span><span class="dj-marquee-dot">×</span>
+      <span>UPCOMING · NTS RADIO · 14.06</span><span class="dj-marquee-dot">×</span>
+      <span>BOILER ROOM PARIS · 22.06</span><span class="dj-marquee-dot">×</span>
+      <span>DEKMANTEL · 31.07</span><span class="dj-marquee-dot">×</span>
+      <span>NYEGE NYEGE · 09.09</span><span class="dj-marquee-dot">×</span>
+      <span>NEW MIX 015 · DROPS 11.06</span><span class="dj-marquee-dot">×</span>
+    </div>
+  </div>
+
+</main>
+
+<!-- Footer rail: contact + enter -->
+<footer class="dj-foot">
+  <div class="dj-foot-meta">
+    <span class="dj-foot-block">
+      <span class="dj-foot-label">bookings</span>
+      <span class="dj-foot-value">helena@deepskinagency.de</span>
+    </span>
+    <span class="dj-foot-block">
+      <span class="dj-foot-label">tape collection</span>
+      <span class="dj-foot-value">14 mixes · 3 zines · live cuts</span>
+    </span>
+  </div>
+  <a class="dj-enter" href="chamber.html">
+    <span class="dj-enter-bg" aria-hidden="true"></span>
+    <span class="dj-enter-text">ENTER THE BOOTH</span>
+    <span class="dj-enter-arrow">→</span>
+  </a>
+</footer>
+
+<div class="dj-veil"></div>
+<script src="threshold.js"></script>
+</body>
+</html>

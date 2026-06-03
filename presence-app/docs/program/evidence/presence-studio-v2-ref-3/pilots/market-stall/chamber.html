@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Halberg Woodworks — Workshop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="chamber.css">
+</head>
+<body>
+
+<canvas class="ms-paper" id="msPaper" aria-hidden="true"></canvas>
+
+<!-- TOP RAIL -->
+<header class="ms-rail">
+  <a class="ms-rail-back" href="threshold.html">
+    <span>←</span> shop card
+  </a>
+  <div class="ms-rail-mark">
+    <span>HALBERG</span>
+    <em>Woodworks</em>
+    <span class="ms-rail-room">— catalogue · the workshop</span>
+  </div>
+  <div class="ms-rail-right">
+    <span class="ms-rail-status">● open · 8a → 4p</span>
+    <span class="ms-rail-stamp">№ 0421</span>
+  </div>
+</header>
+
+<main class="ms-shop">
+
+  <!-- LEFT: filters / wood -->
+  <aside class="ms-side">
+
+    <section class="ms-side-block">
+      <h3 class="ms-side-h">Catalogue</h3>
+      <ul class="ms-side-list">
+        <li class="is-on" data-filter="all">Everything <span>17</span></li>
+        <li data-filter="furniture">Furniture <span>9</span></li>
+        <li data-filter="vessels">Bowls &amp; vessels <span>4</span></li>
+        <li data-filter="small">Spoons &amp; small things <span>4</span></li>
+      </ul>
+    </section>
+
+    <section class="ms-side-block">
+      <h3 class="ms-side-h">Wood</h3>
+      <ul class="ms-side-list ms-side-list--wood">
+        <li><span class="ms-swatch" style="background:#caa170"></span>White oak</li>
+        <li><span class="ms-swatch" style="background:#a8794a"></span>Cherry</li>
+        <li><span class="ms-swatch" style="background:#d6c69a"></span>Ash</li>
+        <li><span class="ms-swatch" style="background:#5d3d24"></span>Black walnut</li>
+        <li><span class="ms-swatch" style="background:#e8d8b3"></span>Maple, hard</li>
+      </ul>
+    </section>
+
+    <section class="ms-side-block">
+      <h3 class="ms-side-h">Status</h3>
+      <ul class="ms-side-list ms-side-list--status">
+        <li><span class="ms-pip ms-pip--avail"></span>Available <span>9</span></li>
+        <li><span class="ms-pip ms-pip--comm"></span>Commission <span>4</span></li>
+        <li><span class="ms-pip ms-pip--sold"></span>Sold this season <span>3</span></li>
+        <li><span class="ms-pip ms-pip--bench"></span>On the bench <span>1</span></li>
+      </ul>
+    </section>
+
+    <section class="ms-side-block ms-side-block--legend">
+      <h3 class="ms-side-h">Legend</h3>
+      <p class="ms-side-legend">
+        Every piece in this catalogue was made in the dairy-barn workshop in Tyrone, Vermont, between October 2024 and June 2026. Prices include hand delivery in New England; shipping outside is at cost. All wood was sourced within 120 miles.
+      </p>
+    </section>
+
+  </aside>
+
+  <!-- CENTER: inventory -->
+  <section class="ms-grid">
+
+    <header class="ms-grid-head">
+      <div class="ms-grid-title">
+        <span class="ms-grid-h">Pieces on offer</span>
+        <span class="ms-grid-count" id="msCount">17 pieces · sorted by recency</span>
+      </div>
+      <div class="ms-grid-sort">
+        <button class="is-on" data-sort="recent">recent</button>
+        <button data-sort="price">price ↑</button>
+        <button data-sort="wood">wood</button>
+        <button data-sort="status">status</button>
+      </div>
+    </header>
+
+    <div class="ms-pieces" id="msPieces">
+      <!-- injected -->
+    </div>
+
+  </section>
+
+  <!-- RIGHT: bench + journal -->
+  <aside class="ms-journal">
+
+    <section class="ms-bench">
+      <header class="ms-bench-head">
+        <span class="ms-bench-cap">on the bench</span>
+        <span class="ms-bench-day">day 11 / 18</span>
+      </header>
+      <svg class="ms-bench-sketch" viewBox="0 0 240 120" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="20" y="20" width="200" height="18" rx="3"/>
+          <line x1="34" y1="38" x2="30" y2="108"/>
+          <line x1="46" y1="38" x2="50" y2="108"/>
+          <line x1="194" y1="38" x2="190" y2="108"/>
+          <line x1="206" y1="38" x2="210" y2="108"/>
+          <line x1="50" y1="72" x2="190" y2="72"/>
+          <line x1="20" y1="108" x2="220" y2="108"/>
+          <line x1="20" y1="10" x2="220" y2="10" stroke-dasharray="2 3"/>
+          <text x="120" y="8" text-anchor="middle" font-family="Space Mono" font-size="8" fill="currentColor">120 cm</text>
+        </g>
+      </svg>
+      <div class="ms-bench-title">Quartersawn Oak Bench</div>
+      <div class="ms-bench-meta">commission · finishing wax · 7 days to delivery</div>
+      <div class="ms-bench-bar">
+        <span style="width:61%"></span>
+      </div>
+    </section>
+
+    <section class="ms-letters">
+      <h3 class="ms-letters-h">Field journal</h3>
+      <article class="ms-letter">
+        <header><span class="ms-letter-date">may 28</span><span class="ms-letter-tag">on wood</span></header>
+        <p>"Cut down a leaning ash at the edge of the pasture. It was already half-gone but the heartwood is clean and tight. Two stools' worth, maybe three."</p>
+      </article>
+      <article class="ms-letter">
+        <header><span class="ms-letter-date">may 14</span><span class="ms-letter-tag">on commissions</span></header>
+        <p>"The Boston library finally signed off on the reading table. Eight feet of black walnut, mortise and tenon, no fasteners. I'll deliver it in October."</p>
+      </article>
+      <article class="ms-letter">
+        <header><span class="ms-letter-date">april 30</span><span class="ms-letter-tag">on practice</span></header>
+        <p>"Thirty-five years in, I still measure twice and cut once. The mistake costs the same; only the embarrassment changes."</p>
+      </article>
+      <a class="ms-letters-more" href="#archive">read the archive →</a>
+    </section>
+
+  </aside>
+
+</main>
+
+<script src="chamber.js"></script>
+</body>
+</html>

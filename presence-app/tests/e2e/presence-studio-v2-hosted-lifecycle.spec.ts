@@ -137,7 +137,7 @@ test.describe("hosted Studio V2 owner lifecycle", () => {
         await expect(page.getByText(visibleTitle)).toBeVisible();
         await expect(page.getByText(hiddenTitle)).toBeVisible();
         await page.getByRole("button", { name: "Mood" }).click();
-        await expect(page.getByText(moodTitle)).toBeVisible();
+        await expect(page.getByText(moodTitle).first()).toBeVisible();
       });
 
       await test.step("owner draft preview renders sanitized V2 room", async () => {

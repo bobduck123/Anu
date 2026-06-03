@@ -1,0 +1,48 @@
+/* Presence — brand marks, as reusable CSS (no raster logo exists in source).
+   Load colors_and_type.css first for tokens. */
+
+/* ---------------------------------------------------------------------------
+   1 · The Presence glyph — a concentric APERTURE: outer ink ring + filled
+   accent dot. "A doorway / threshold you can enter." Pairs with the wordmark
+   set in Instrument Serif. The inner dot defaults to moss (Gardens); recolour
+   per surface (copper for Rooms, vermilion for Halls).
+   --------------------------------------------------------------------------- */
+.presence-brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--p-f-display);
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  color: var(--p-ink);
+  text-decoration: none;
+}
+.presence-brand .glyph { position: relative; width: 22px; height: 22px; flex: none; }
+.presence-brand .glyph::before,
+.presence-brand .glyph::after { content: ""; position: absolute; inset: 0; border: 1.5px solid var(--p-ink); border-radius: 50%; }
+.presence-brand .glyph::after { inset: 4px; border-color: var(--gardens-accent); background: var(--gardens-accent); }
+
+.presence-brand.is-rooms  .glyph::after { border-color: var(--rooms-accent);  background: var(--rooms-accent); }
+.presence-brand.is-halls  .glyph::after { border-color: var(--halls-accent);  background: var(--halls-accent); }
+.presence-brand.is-world  .glyph::after { border-color: var(--world-accent);  background: var(--world-accent); }
+.presence-brand.on-stage  { color: var(--p-on-stage); }
+.presence-brand.on-stage .glyph::before { border-color: var(--p-on-stage); }
+
+/* size variants */
+.presence-brand.lg { font-size: 30px; gap: 14px; }
+.presence-brand.lg .glyph { width: 32px; height: 32px; }
+.presence-brand.sm { font-size: 15px; gap: 7px; }
+.presence-brand.sm .glyph { width: 16px; height: 16px; }
+.presence-brand.sm .glyph::after { inset: 3px; }
+
+/* ---------------------------------------------------------------------------
+   2 · The Studio app mark — a copper-gradient rounded-square "P" tile.
+   Used as the Cockpit / app icon (favicon, top bar, loading).
+   --------------------------------------------------------------------------- */
+.studio-mark {
+  width: 34px; height: 34px; border-radius: 11px; flex: none;
+  display: grid; place-items: center; color: #fff; font-weight: 800;
+  font-family: var(--studio-f-sans); font-size: 16px;
+  background: linear-gradient(135deg, var(--studio-copper), color-mix(in srgb, var(--studio-copper) 60%, #000));
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--studio-copper) 70%, transparent), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+.studio-mark.lg { width: 56px; height: 56px; border-radius: 18px; font-size: 26px; }
+.studio-mark.sm { width: 22px; height: 22px; border-radius: 7px; font-size: 11px; }

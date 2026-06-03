@@ -1,0 +1,128 @@
+@import url("https://fonts.googleapis.com/css2?family=Oxanium:wght@300;500;700&display=swap");
+*,
+::before,
+::after {
+  box-sizing: border-box;
+  border-style: solid;
+  border-width: 0;
+}
+:root {
+  --gallery-black: #000000;
+  --gold-neon: #ffd84d;
+}
+html {
+  background: var(--gallery-black);
+  color: var(--gold-neon);
+}
+html,
+body {
+  -ms-scroll-chaining: none;
+      overscroll-behavior: none;
+  font-family: "Oxanium", sans-serif;
+  overflow: hidden;
+  background: var(--gallery-black);
+  color: var(--gold-neon);
+}
+.box {
+  padding: 32px;
+}
+h1 {
+  font-size: 2.4rem;
+  padding-bottom: 0;
+  color: var(--gold-neon);
+  letter-spacing: 0.18em;
+  text-transform: lowercase;
+  text-shadow: 0 0 8px rgba(255, 216, 77, 0.65), 0 0 22px rgba(255, 216, 77, 0.35);
+}
+
+.brand-link {
+  color: var(--gold-neon);
+  text-decoration: none;
+  transition: opacity 0.2s ease, text-shadow 0.2s ease;
+}
+
+.brand-link:hover,
+.brand-link:focus-visible {
+  opacity: 0.86;
+  text-shadow: 0 0 10px rgba(255, 216, 77, 0.95), 0 0 26px rgba(255, 216, 77, 0.55);
+  outline: none;
+}
+.loading {
+  z-index: 9999;
+  background: var(--gallery-black);
+  color: var(--gold-neon);
+  text-align: center;
+  position: fixed;
+  width: 100%;
+  min-height: 100vh;
+  min-height: calc(var(--vh, 1vh) * 100);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.8s 0.8s cubic-bezier(0.755, 0.05, 0.855, 0.06), visibility 0.8s 0.8s cubic-bezier(0.755, 0.05, 0.855, 0.06);
+}
+.loading.loaded {
+  opacity: 0;
+  visibility: hidden;
+}
+.loading .loading-container {
+  position: relative;
+  width: 40%;
+  overflow: hidden;
+}
+.loading .loading-container .counter {
+  padding: 0.8rem;
+  transform: traslate(0, 0);
+}
+.loading .loading-container .counter.loaded {
+  -webkit-animation: counter-animation 0.8s cubic-bezier(0.755, 0.05, 0.855, 0.06) 0.8s 1 normal forwards running;
+          animation: counter-animation 0.8s cubic-bezier(0.755, 0.05, 0.855, 0.06) 0.8s 1 normal forwards running;
+}
+.loading .loading-container .line {
+  position: absolute;
+  background: linear-gradient(90deg, #a26f00 0%, #ffd84d 45%, #fff2a6 52%, #ffd84d 58%, #a26f00 100%);
+  box-shadow: 0 0 10px rgba(255, 216, 77, 0.85), 0 0 20px rgba(255, 216, 77, 0.45);
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+}
+.loading .loading-container .line.loaded {
+  -webkit-animation: line-animation 0.8s cubic-bezier(0.755, 0.05, 0.855, 0.06) 0s 1 normal forwards running;
+          animation: line-animation 0.8s cubic-bezier(0.755, 0.05, 0.855, 0.06) 0s 1 normal forwards running;
+}
+@-webkit-keyframes counter-animation {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(0, 10%);
+  }
+}
+@keyframes counter-animation {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(0, 10%);
+  }
+}
+@-webkit-keyframes line-animation {
+  0% {
+    left: 0;
+  }
+  100% {
+    left: 100%;
+  }
+}
+@keyframes line-animation {
+  0% {
+    left: 0;
+  }
+  100% {
+    left: 100%;
+  }
+}

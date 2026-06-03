@@ -176,3 +176,52 @@ npx.cmd playwright test presence-studio-v2-hosted-lifecycle.spec.ts --project=ch
 
 **No hosted content modified.**
 
+
+
+---
+
+## 2026-06-03 — Final Hosted Smoke (POST-ENV-FIX)
+
+**Status:** ✅ **PASSED**
+
+### What Changed
+
+`lib/presence/studio-v2/feature.ts` client env alias bug fixed. `NEXT_PUBLIC_PRESENCE_STUDIO_V2` and `NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS` are now correctly inlined by Next.js at build time because the code accesses them directly as `process.env.VAR_NAME` instead of through an alias parameter.
+
+### Stage 1 Fast Gate
+
+```
+V2_ROOT:          1
+V2_SAVE:          1
+LEGACY_CANVAS:    0
+LEGACY_INSPECTOR: 0
+ERRORS:           none
+```
+
+- Room 11 editor renders V2
+- Room 1 editor still renders legacy (negative check passed)
+- Anonymous users blocked
+
+### Stage 2 Full Lifecycle Smoke
+
+Playwright `presence-studio-v2-hosted-lifecycle.spec.ts` — **1 passed** (17.7s).
+
+- Owner sign-in ✅
+- V2 editor mount ✅
+- Edit/save/persist ✅
+- Draft preview ✅
+- Publish ✅
+- Public render `/p/` ✅
+- Public render `/presence/` ✅
+- Mobile viewport ✅
+- Payload hygiene ✅
+- Room key safety ✅
+- Cleanup/restoration ✅
+
+### Payload Hygiene
+
+Zero violations across all scanned surfaces.
+
+### Verdict
+
+**Room 11 is ready for controlled operator-led pilot.**
