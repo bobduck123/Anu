@@ -70,6 +70,9 @@ const server = createServer(async (req, res) => {
     if (Array.isArray(body.passes)) state.passes = body.passes;
     if (Array.isArray(body.keys)) state.keys = body.keys;
     if (body.clearEditorPublished === true) state.editorPublished = null;
+    if (body.useStudioV2DraftPreview === true) {
+      state.editorDraft = buildStudioV2EditorConfig("draft", state.nextEditorVersion++);
+    }
     if (Number.isInteger(body.failNextOwnerNodeReads)) state.failNextOwnerNodeReads = body.failNextOwnerNodeReads;
     if (Number.isInteger(body.failNextEditorReads)) state.failNextEditorReads = body.failNextEditorReads;
     if (Number.isInteger(body.failNextPreviewReads)) state.failNextPreviewReads = body.failNextPreviewReads;
@@ -141,6 +144,10 @@ const server = createServer(async (req, res) => {
 
   if (url.pathname === "/api/presence/public/rooms-gallery-painter" && req.method === "GET") {
     return sendData(res, { ...fixtures.room, slug: "rooms-gallery-painter", display_name: "Gallery Painter Fixture" });
+  }
+
+  if (url.pathname === "/api/presence/public/v2-public-room" && req.method === "GET") {
+    return sendData(res, studioV2PublicRoomFixture());
   }
 
   if (url.pathname === "/api/presence/public/nodes" && req.method === "GET") {
@@ -1546,6 +1553,195 @@ function publicRoomFixture() {
   };
 }
 
+function studioV2PublicRoomFixture() {
+  const now = "2026-06-03T00:00:00.000Z";
+  return {
+    ...fixtures.room,
+    id: 202,
+    slug: "v2-public-room",
+    display_name: "Mara Vale Studio V2",
+    headline: "Painter and image-maker in a public digital room",
+    renderer_key: "presence-studio-v2-room",
+    public_url: "/p/v2-public-room",
+    editable_config: {
+      schema_version: "presence-editable-v1",
+      version: 1,
+      status: "published",
+      renderer_key: "presence-studio-v2-room",
+      published_at: now,
+      scene_config: {
+        studio_v2: {
+          schemaVersion: "presence-studio-v2-v1",
+          worldId: "gallery",
+          chambers: [
+            { id: "works", label: "Current Works", objectIds: ["public-work", "hidden-note", "mobile-hidden-proof", "public-cta"] },
+          ],
+          objectState: {
+            "public-work": {
+              chamberId: "works",
+              visibility: { public: true, mobile: true },
+              transform: { x: 0, y: 0, scale: 1, rotation: 0, zIndex: 2 },
+              locked: true,
+              pinned: true,
+            },
+            "hidden-note": {
+              chamberId: "works",
+              visibility: { public: false, mobile: false },
+              transform: { x: 0, y: 0, scale: 1, rotation: 0, zIndex: 1 },
+              locked: false,
+              pinned: false,
+            },
+            "mobile-hidden-proof": {
+              chamberId: "works",
+              visibility: { public: true, mobile: false },
+              transform: { x: 0, y: 0, scale: 1, rotation: 0, zIndex: 4 },
+              locked: false,
+              pinned: false,
+            },
+            "public-cta": {
+              chamberId: "works",
+              visibility: { public: true, mobile: true },
+              transform: { x: 0, y: 0, scale: 1, rotation: 0, zIndex: 3 },
+              locked: false,
+              pinned: false,
+            },
+          },
+          mobileRecovery: {
+            transformsSuspendedOnMobile: true,
+            strategy: "suspend-mobile-transforms",
+          },
+        },
+      },
+      style_dna: {
+        studio_v2: {
+          schemaVersion: "presence-studio-v2-v1",
+          skin: {
+            background: "#f7f3ea",
+            texture: "paper",
+            auraIntensity: 0.42,
+            motionIntensity: "gentle",
+            displayFont: "serif",
+            headingWeight: 600,
+            objectRadius: 12,
+            borderStyle: "hairline",
+            shadowDepth: 0.35,
+            accentColor: "#8f6f3f",
+          },
+        },
+      },
+      motion_config: {
+        studio_v2: {
+          motionIntensity: "gentle",
+          auraIntensity: 0.42,
+        },
+      },
+      asset_config: {
+        studio_v2: {
+          assets: [
+            { objectId: "public-work", src: "/ggm/works/willow-of-port-arthur-2019.webp", alt: "Willow of Port Arthur" },
+          ],
+        },
+      },
+      content_config: {
+        studio_v2: {
+          schemaVersion: "presence-studio-v2-v1",
+          roomId: "202",
+          slug: "v2-public-room",
+          title: "Mara Vale Studio V2",
+          tagline: "A gallery wall stress test rendered from sanitized V2 payload.",
+          objects: [
+            {
+              id: "public-work",
+              type: "image",
+              role: "work",
+              title: "Bridle Road, after rain",
+              meta: "Oil, ground pigment, linen",
+              detail: "A public work object visible to anonymous visitors.",
+              image: { src: "/ggm/works/willow-of-port-arthur-2019.webp", alt: "Willow of Port Arthur" },
+            },
+            {
+              id: "hidden-note",
+              type: "note",
+              title: "Private install note",
+              detail: "This should never render publicly.",
+            },
+            {
+              id: "mobile-hidden-proof",
+              type: "proof",
+              role: "proof",
+              title: "Desktop-only proof",
+              detail: "Visible on desktop but hidden from narrow public rooms.",
+            },
+            {
+              id: "public-cta",
+              type: "cta",
+              role: "cta",
+              title: "Request availability",
+              meta: "For acquisitions and studio visits",
+              link: "https://example.com/studio",
+            },
+          ],
+          moodboardRefs: [
+            { id: "mood-1", type: "place", label: "Creek road after 4pm", detail: "warm shadow, eucalyptus dust", dot: "#8f6f3f" },
+          ],
+          traces: {
+            enabled: true,
+            demo: true,
+            disclosure: "Demo traces",
+            entries: 12,
+            seeds: 3,
+            guestbook: 1,
+            guestbookEntries: ["Illustrative public room note."],
+          },
+          cta: {
+            label: "Request availability",
+            href: "https://example.com/studio",
+          },
+        },
+      },
+      roomkey_config: {
+        studio_v2: {
+          portals: [{ objectId: "public-cta", label: "Request availability", url: "https://example.com/studio" }],
+        },
+      },
+      enquiry_config: {
+        studio_v2: {
+          primaryCta: { label: "Request availability", href: "https://example.com/studio" },
+        },
+      },
+      locked_fields: {},
+      created_at: now,
+      updated_at: now,
+      published_at: now,
+    },
+  };
+}
+
+function buildStudioV2EditorConfig(status = "draft", version = 1) {
+  const now = new Date().toISOString();
+  const fixture = studioV2PublicRoomFixture();
+  return {
+    ...fixture.editable_config,
+    id: 9800 + version,
+    room_id: fixtures.room.id,
+    version,
+    status,
+    published_at: status === "published" ? now : null,
+    created_at: now,
+    updated_at: now,
+    content_config: {
+      ...fixture.editable_config.content_config,
+      studio_v2: {
+        ...fixture.editable_config.content_config.studio_v2,
+        roomId: String(fixtures.room.id),
+        slug: fixtures.room.slug,
+        title: "Mara Vale Studio V2 Draft",
+        tagline: "Owner-only draft preview rendered through the sanitized V2 bridge.",
+      },
+    },
+  };
+}
+
 function redactEditorConfig(config) {
   if (!config) return null;
   const publicAssets = { ...(config.asset_config || {}) };
@@ -1581,6 +1777,8 @@ function publicState() {
     passes: state.passes.length,
     keys: state.keys.length,
     studioRoomDrafts: Object.keys(state.studioRoomDrafts || {}).length,
+    editorDraftRenderer: state.editorDraft?.renderer_key ?? null,
+    editorDraftTitle: state.editorDraft?.content_config?.studio_v2?.title ?? null,
   };
 }
 

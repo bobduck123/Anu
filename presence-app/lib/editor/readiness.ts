@@ -1,5 +1,6 @@
 import type { PresenceEditableConfig, PresenceEditorOverview, PresenceNode } from "@/lib/api/types";
 import { resolveRenderModel } from "../presence/render/resolver.ts";
+import { isStudioV2PresenceConfig, studioV2FromPresenceConfig } from "../presence/studio-v2/index.ts";
 import { validateAssetUrl } from "./assetValidator.ts";
 import { diffEditableConfigs } from "./diffEngine.ts";
 
@@ -46,6 +47,10 @@ export function buildReadinessReport({
   dirty,
   mobilePreviewReviewed = false,
 }: ReadinessInput): ReadinessReport {
+  if (isStudioV2PresenceConfig(config)) {
+    return buildStudioV2ReadinessReport({ config, overview, node, dirty, mobilePreviewReviewed });
+  }
+
   const issues: ReadinessIssue[] = [];
   const artwork = sceneById(config, "artwork_field");
   const calling = sceneById(config, "calling_card");
@@ -128,6 +133,69 @@ export function buildReadinessReport({
   }
 
   add(boolean(motion.heavy_motion_enabled, false), "heavy-motion-enabled", "polish", "Heavy motion is enabled.", "Keep this opt-in and verify reduced-motion behavior before opening the room.", "motion");
+  add(dirty, "unsaved-local-changes", "recommended", "There are unsaved draft changes.", "Save the draft before previewing or opening the room to visitors.", "overview");
+
+  const changedCount = diffEditableConfigs(overview?.published_public_config ?? overview?.published, config).length;
+  add(changedCount > 0, "unpublished-changes", "recommended", "Draft differs from the live room.", "Review the draft-vs-published comparison before opening the room to visitors.", "preview");
+  add(!mobilePreviewReviewed, "mobile-preview-not-reviewed", "polish", "Mobile preview has not been reviewed in this session.", "Check the small viewport before publishing visual changes.", "preview");
+
+  const critical = issues.filter((issue) => issue.severity === "critical");
+  const recommended = issues.filter((issue) => issue.severity === "recommended");
+  const polish = issues.filter((issue) => issue.severity === "polish");
+  const percentage = Math.max(0, Math.min(100, 100 - critical.length * 18 - recommended.length * 7 - polish.length * 3));
+
+  return {
+    percentage,
+    issues,
+    critical,
+    recommended,
+    polish,
+    tips: buildTips(issues),
+    changedCount,
+    hasBlockingIssues: critical.length > 0,
+  };
+
+  function add(condition: boolean, id: string, severity: ReadinessSeverity, label: string, detail: string, tabId: string) {
+    if (condition && !issues.some((issue) => issue.id === id)) {
+      issues.push({ id, severity, label, detail, tabId });
+    }
+  }
+}
+
+function buildStudioV2ReadinessReport({
+  config,
+  overview,
+  node,
+  dirty,
+  mobilePreviewReviewed = false,
+}: ReadinessInput): ReadinessReport {
+  const issues: ReadinessIssue[] = [];
+  const state = studioV2FromPresenceConfig(config, node);
+  const publicObjects = state.chambers.flatMap((chamber) =>
+    chamber.objects.filter((object) => object.visibility.public),
+  );
+  const ctaLabel = text(state.cta.label);
+
+  add(!text(state.title), "missing-v2-title", "critical", "Room title is missing.", "Visitors need a clear room threshold title.", "overview");
+  add(publicObjects.length === 0, "missing-v2-public-objects", "critical", "No public room objects are visible.", "Keep at least one public object in the room before opening it to visitors.", "objects");
+  add(!ctaLabel, "missing-v2-primary-cta", "critical", "Primary invitation is missing.", "Add the action language visitors use to begin a conversation.", "objects");
+
+  for (const url of collectAssetUrls(config)) {
+    const result = validateAssetUrl(url);
+    if (!result.isValid) {
+      add(true, `unsafe-asset-${hash(url)}`, "critical", result.errors[0] ?? "Unsafe asset URL.", url, "assets");
+    }
+  }
+
+  add(
+    !overview?.published,
+    "first-open-to-visitors",
+    "recommended",
+    "This will be the first Studio V2 room opened to visitors.",
+    "Opening the room makes this saved draft the live room for visitors.",
+    "preview",
+  );
+  add(publicObjects.length < 2, "sparse-v2-room", "recommended", "Room has very few public objects.", "Add enough public objects for the room to feel inhabited.", "objects");
   add(dirty, "unsaved-local-changes", "recommended", "There are unsaved draft changes.", "Save the draft before previewing or opening the room to visitors.", "overview");
 
   const changedCount = diffEditableConfigs(overview?.published_public_config ?? overview?.published, config).length;

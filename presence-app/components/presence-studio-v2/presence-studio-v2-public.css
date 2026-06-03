@@ -1,0 +1,360 @@
+.presence-studio-v2-public {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 15% 12%, color-mix(in srgb, var(--v2-public-accent) 18%, transparent), transparent 32rem),
+    radial-gradient(circle at 86% 8%, rgba(255,255,255,0.35), transparent 28rem),
+    var(--v2-public-bg);
+  color: #161410;
+  --v2-public-ink: #161410;
+  --v2-public-muted: rgba(22,20,16,0.62);
+  --v2-public-rule: rgba(22,20,16,0.14);
+  --v2-public-panel: rgba(255,255,255,0.62);
+  --v2-public-panel-strong: rgba(255,255,255,0.82);
+  --v2-public-soft-shadow: 0 calc(14px + (24px * var(--v2-public-shadow))) calc(36px + (40px * var(--v2-public-shadow))) rgba(18,14,10,0.12);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow-x: hidden;
+}
+
+.presence-studio-v2-public::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+  background-size: 36px 36px;
+  opacity: 0.14;
+  mix-blend-mode: soft-light;
+}
+
+.presence-studio-v2-public.texture-paper,
+.presence-studio-v2-public.texture-ledger,
+.presence-studio-v2-public.texture-linen {
+  background-image:
+    radial-gradient(circle at 12% 15%, color-mix(in srgb, var(--v2-public-accent) 16%, transparent), transparent 28rem),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.018) 0 1px, transparent 1px 6px),
+    var(--v2-public-bg);
+}
+
+.presence-studio-v2-public.world-zine,
+.presence-studio-v2-public.world-dj {
+  color: #f3eadc;
+  --v2-public-ink: #f3eadc;
+  --v2-public-muted: rgba(243,234,220,0.68);
+  --v2-public-rule: rgba(243,234,220,0.18);
+  --v2-public-panel: rgba(255,255,255,0.075);
+  --v2-public-panel-strong: rgba(255,255,255,0.12);
+  background:
+    radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--v2-public-accent) 30%, transparent), transparent 30rem),
+    radial-gradient(circle at 76% 18%, rgba(255,255,255,0.08), transparent 22rem),
+    var(--v2-public-bg);
+}
+
+.presence-studio-v2-public.world-consultant {
+  --v2-public-panel: rgba(255,255,255,0.78);
+  --v2-public-panel-strong: rgba(255,255,255,0.92);
+  background:
+    linear-gradient(90deg, rgba(58,43,30,0.055) 0 1px, transparent 1px 72px),
+    linear-gradient(180deg, rgba(58,43,30,0.04) 0 1px, transparent 1px 32px),
+    var(--v2-public-bg);
+}
+
+.presence-studio-v2-public.world-carpenter {
+  background:
+    linear-gradient(90deg, rgba(85,50,24,0.075) 0 1px, transparent 1px 52px),
+    radial-gradient(circle at 16% 18%, rgba(133,86,42,0.18), transparent 25rem),
+    var(--v2-public-bg);
+}
+
+.presence-studio-v2-public .v2-public-threshold,
+.presence-studio-v2-public .v2-public-room-space {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.presence-studio-v2-public .v2-public-threshold {
+  min-height: clamp(360px, 54vh, 560px);
+  display: grid;
+  align-content: center;
+  gap: 28px;
+  padding: 72px 0 44px;
+}
+
+.presence-studio-v2-public .v2-public-world-mark {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: baseline;
+  border-bottom: 1px solid var(--v2-public-rule);
+  padding-bottom: 10px;
+  color: var(--v2-public-muted);
+}
+
+.presence-studio-v2-public .v2-public-world-mark span,
+.presence-studio-v2-public .v2-public-section-kicker,
+.presence-studio-v2-public .v2-public-chamber-head span,
+.presence-studio-v2-public .v2-public-object-role,
+.presence-studio-v2-public .v2-public-influence-type,
+.presence-studio-v2-public .v2-public-trace-disclosure {
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2-public .v2-public-world-mark small {
+  font-size: 0.82rem;
+}
+
+.presence-studio-v2-public .v2-public-title-group {
+  max-width: 840px;
+}
+
+.presence-studio-v2-public h1 {
+  margin: 0;
+  color: var(--v2-public-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(3rem, 9vw, 7.6rem);
+  font-weight: var(--v2-public-heading-weight);
+  letter-spacing: 0;
+  line-height: 0.88;
+}
+
+.presence-studio-v2-public .v2-public-title-group p {
+  max-width: 680px;
+  margin: 22px 0 0;
+  color: var(--v2-public-muted);
+  font-size: clamp(1.05rem, 2vw, 1.4rem);
+  line-height: 1.55;
+}
+
+.presence-studio-v2-public .v2-public-primary-cta {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--v2-public-accent) 48%, transparent);
+  background: color-mix(in srgb, var(--v2-public-accent) 16%, transparent);
+  color: var(--v2-public-ink);
+  padding: 12px 18px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+}
+
+.presence-studio-v2-public.world-zine .v2-public-primary-cta,
+.presence-studio-v2-public.world-dj .v2-public-primary-cta {
+  color: #fff;
+  background: color-mix(in srgb, var(--v2-public-accent) 28%, transparent);
+}
+
+.presence-studio-v2-public .v2-public-primary-cta.is-disabled {
+  opacity: 0.62;
+}
+
+.presence-studio-v2-public .v2-public-room-space {
+  padding: 0 0 76px;
+}
+
+.presence-studio-v2-public .v2-public-chamber {
+  margin: 0 0 52px;
+}
+
+.presence-studio-v2-public .v2-public-chamber-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid var(--v2-public-rule);
+  padding: 18px 0 20px;
+}
+
+.presence-studio-v2-public .v2-public-chamber-head span {
+  color: var(--v2-public-muted);
+}
+
+.presence-studio-v2-public .v2-public-chamber h2,
+.presence-studio-v2-public .v2-public-influence h2 {
+  margin: 0;
+  color: var(--v2-public-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.6rem, 3vw, 2.8rem);
+  font-weight: var(--v2-public-heading-weight);
+  line-height: 1;
+}
+
+.presence-studio-v2-public .v2-public-object-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: clamp(14px, 2vw, 22px);
+  align-items: start;
+}
+
+.presence-studio-v2-public .v2-public-object {
+  position: relative;
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--v2-public-rule);
+  background: var(--v2-public-panel);
+  color: var(--v2-public-ink);
+  text-decoration: none;
+  box-shadow: var(--v2-public-soft-shadow);
+  backdrop-filter: blur(12px);
+}
+
+.presence-studio-v2-public .v2-public-object-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: rgba(0,0,0,0.08);
+}
+
+.presence-studio-v2-public .v2-public-object-copy {
+  padding: 18px;
+}
+
+.presence-studio-v2-public .v2-public-object-role,
+.presence-studio-v2-public .v2-public-influence-type {
+  color: var(--v2-public-muted);
+  margin-bottom: 8px;
+}
+
+.presence-studio-v2-public .v2-public-object h3,
+.presence-studio-v2-public .v2-public-influence-card h3 {
+  margin: 0;
+  color: var(--v2-public-ink);
+  font-size: clamp(1rem, 1.6vw, 1.28rem);
+  line-height: 1.18;
+}
+
+.presence-studio-v2-public .v2-public-object-meta,
+.presence-studio-v2-public .v2-public-object-detail,
+.presence-studio-v2-public .v2-public-influence-card p {
+  margin: 9px 0 0;
+  color: var(--v2-public-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.presence-studio-v2-public .v2-public-object-action,
+.presence-studio-v2-public .v2-public-subtle-link {
+  display: inline-flex;
+  margin-top: 14px;
+  color: color-mix(in srgb, var(--v2-public-accent) 82%, var(--v2-public-ink));
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.presence-studio-v2-public .v2-public-object.is-mobile-muted {
+  border-style: dashed;
+}
+
+.presence-studio-v2-public .v2-public-influence,
+.presence-studio-v2-public .v2-public-traces {
+  border-top: 1px solid var(--v2-public-rule);
+  padding-top: 28px;
+  margin-top: 52px;
+}
+
+.presence-studio-v2-public .v2-public-section-kicker {
+  color: var(--v2-public-muted);
+  margin-bottom: 10px;
+}
+
+.presence-studio-v2-public .v2-public-influence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.presence-studio-v2-public .v2-public-influence-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  border: 1px solid var(--v2-public-rule);
+  border-radius: 18px;
+  background: var(--v2-public-panel-strong);
+  padding: 16px;
+}
+
+.presence-studio-v2-public .v2-public-influence-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  margin-top: 4px;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--v2-public-accent) 11%, transparent);
+}
+
+.presence-studio-v2-public .v2-public-traces {
+  color: var(--v2-public-muted);
+}
+
+.presence-studio-v2-public .v2-public-trace-disclosure {
+  margin-bottom: 12px;
+}
+
+.presence-studio-v2-public .v2-public-trace-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.presence-studio-v2-public .v2-public-trace-strip span,
+.presence-studio-v2-public .v2-public-guestbook blockquote {
+  border: 1px solid var(--v2-public-rule);
+  border-radius: 999px;
+  background: var(--v2-public-panel);
+  padding: 8px 12px;
+  margin: 0;
+  font-size: 0.84rem;
+}
+
+.presence-studio-v2-public .v2-public-guestbook {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.presence-studio-v2-public .v2-public-guestbook blockquote {
+  border-radius: 16px;
+  line-height: 1.45;
+}
+
+@media (max-width: 720px) {
+  .presence-studio-v2-public .v2-public-threshold,
+  .presence-studio-v2-public .v2-public-room-space {
+    width: min(100% - 24px, 1120px);
+  }
+
+  .presence-studio-v2-public .v2-public-threshold {
+    min-height: auto;
+    padding-top: 48px;
+  }
+
+  .presence-studio-v2-public .v2-public-chamber-head {
+    display: block;
+  }
+
+  .presence-studio-v2-public .v2-public-chamber-head h2 {
+    margin-top: 8px;
+  }
+
+  .presence-studio-v2-public .v2-public-object {
+    transform: none !important;
+  }
+
+  .presence-studio-v2-public .v2-public-object.is-mobile-muted {
+    display: none;
+  }
+}

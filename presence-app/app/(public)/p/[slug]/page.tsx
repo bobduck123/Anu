@@ -49,7 +49,11 @@ export default async function PortfolioPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLd(presenceStructuredData(publicPayload.node)) }}
       />
-      <PortfolioRenderer node={publicPayload.node} renderModel={publicPayload.renderModel} />
+      <PortfolioRenderer
+        node={publicPayload.node}
+        renderModel={publicPayload.renderModel}
+        studioV2Room={publicPayload.studioV2Room}
+      />
     </>
   );
 }

@@ -1,12 +1,7 @@
 import type { PresenceNode } from "../../api/types.ts";
 import type { PresenceRenderModel } from "./model.ts";
 import { resolveRenderModel } from "./resolver.ts";
-import {
-  publicRoomFromStudioV2State,
-  shouldUsePresenceStudioV2,
-  studioV2FromPresenceConfig,
-  type StudioV2PublicRoom,
-} from "../studio-v2/index.ts";
+import { studioV2PublicRoomFromPresenceNode, type StudioV2PublicRoom } from "../studio-v2/index.ts";
 
 export const RESTRICTED_PUBLIC_PAYLOAD_KEYS = [
   "editable_config",
@@ -17,10 +12,14 @@ export const RESTRICTED_PUBLIC_PAYLOAD_KEYS = [
   "motion_config",
   "roomkey_config",
   "enquiry_config",
+  "draft",
   "draft_config",
   "owner_user_id",
   "owner",
   "auth_subject",
+  "auth",
+  "session",
+  "token",
   "platform_admin",
   "internal_lifetime_free",
   "locked",
@@ -34,9 +33,25 @@ export const RESTRICTED_PUBLIC_PAYLOAD_KEYS = [
   "published_storage_key",
   "signed_url",
   "preview_expires_at",
+  "localstorage",
 ] as const;
 
 const restrictedKeys = new Set<string>(RESTRICTED_PUBLIC_PAYLOAD_KEYS);
+
+export const RESTRICTED_PUBLIC_PAYLOAD_VALUE_FRAGMENTS = [
+  "WILD TRANSFORM SUSPENDED",
+  "v2-toolbar",
+  "v2-side-panel",
+  "v2-float",
+  "localStorage",
+  "/api/presence/owner",
+  "/api/presence/owner/studio-rooms",
+  "private_draft",
+  "draft_uploaded",
+  "signed_url",
+  "storage_key",
+  "TemplateKit",
+] as const;
 
 const PUBLIC_DISPLAY_NODE_KEYS = [
   "id",
@@ -114,15 +129,7 @@ export interface PublicRenderPayload {
  */
 export function createPublicRenderPayload(node: PresenceNode): PublicRenderPayload {
   const renderModel = resolveRenderModel(node, "published");
-  const studioV2Room = shouldUsePresenceStudioV2({
-    roomId: node.id,
-    slug: node.slug,
-    rendererKey: node.renderer_key,
-    config: node.editable_config,
-    node,
-  })
-    ? publicRoomFromStudioV2State(studioV2FromPresenceConfig(node.editable_config, node))
-    : undefined;
+  const studioV2Room = studioV2PublicRoomFromPresenceNode(node);
 
   return {
     node: publicDisplayNode(node),
@@ -135,6 +142,17 @@ export function findRestrictedPublicPayloadKeys(value: unknown): string[] {
   const found = new Set<string>();
   visitKeys(value, (key) => {
     if (restrictedKeys.has(key.toLowerCase())) found.add(key.toLowerCase());
+  });
+  return [...found].sort();
+}
+
+export function findRestrictedPublicPayloadFragments(value: unknown): string[] {
+  const found = new Set<string>();
+  visitValues(value, (entry) => {
+    if (typeof entry !== "string") return;
+    for (const fragment of RESTRICTED_PUBLIC_PAYLOAD_VALUE_FRAGMENTS) {
+      if (entry.includes(fragment)) found.add(fragment);
+    }
   });
   return [...found].sort();
 }
@@ -168,5 +186,17 @@ function visitKeys(value: unknown, visitor: (key: string) => void) {
   for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
     visitor(key);
     visitKeys(entry, visitor);
+  }
+}
+
+function visitValues(value: unknown, visitor: (value: unknown) => void) {
+  visitor(value);
+  if (Array.isArray(value)) {
+    value.forEach((entry) => visitValues(entry, visitor));
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+  for (const entry of Object.values(value as Record<string, unknown>)) {
+    visitValues(entry, visitor);
   }
 }

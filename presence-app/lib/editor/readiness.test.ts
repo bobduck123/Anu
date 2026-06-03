@@ -1,6 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import type { PresenceEditableConfig, PresenceEditorOverview, PresenceNode } from "@/lib/api/types";
+import {
+  DEFAULT_STUDIO_V2_SKIN,
+  DEFAULT_STUDIO_V2_TRANSFORM,
+  PRESENCE_STUDIO_V2_RENDERER_KEY,
+  PRESENCE_STUDIO_V2_SCHEMA_VERSION,
+  presenceConfigFromStudioV2State,
+  type StudioV2State,
+} from "../presence/studio-v2/index.ts";
 import { buildReadinessReport } from "./readiness.ts";
 
 const node = {
@@ -94,4 +102,68 @@ test("a renderer without a resolved or authored image remains blocked", () => {
   });
 
   assert.equal(report.critical.some((issue) => issue.id === "missing-primary-image"), true);
+});
+
+test("a valid Studio V2 draft is not blocked by legacy GGM scene readiness", () => {
+  const state: StudioV2State = {
+    schemaVersion: PRESENCE_STUDIO_V2_SCHEMA_VERSION,
+    rendererKey: PRESENCE_STUDIO_V2_RENDERER_KEY,
+    roomId: "11",
+    slug: "ggm-christina-goddard",
+    title: "Studio V2 room ready to open",
+    tagline: "A V2 public room",
+    worldId: "gallery",
+    skin: DEFAULT_STUDIO_V2_SKIN,
+    cta: { label: "Begin a conversation", href: "https://example.com/contact" },
+    chambers: [
+      {
+        id: "room",
+        label: "Room",
+        objects: [
+          {
+            id: "proof-1",
+            type: "proof",
+            title: "Public proof object",
+            detail: "Visible public proof.",
+            visibility: { public: true, mobile: true },
+            transform: DEFAULT_STUDIO_V2_TRANSFORM,
+            locked: true,
+            pinned: true,
+          },
+          {
+            id: "cta-1",
+            type: "cta",
+            role: "cta",
+            title: "Begin a conversation",
+            link: "https://example.com/contact",
+            visibility: { public: true, mobile: true },
+            transform: DEFAULT_STUDIO_V2_TRANSFORM,
+            locked: false,
+            pinned: false,
+          },
+        ],
+      },
+    ],
+    moodboardRefs: [],
+    traces: { enabled: false, demo: true, disclosure: "Demo traces" },
+    mobileRecovery: { transformsSuspendedOnMobile: true, strategy: "suspend-mobile-transforms" },
+  };
+  const config = {
+    ...presenceConfigFromStudioV2State(state, null),
+    status: "draft",
+  } as PresenceEditableConfig;
+
+  const report = buildReadinessReport({
+    config,
+    overview: overview({ ...config, status: "published" }),
+    node: { ...node, renderer_key: PRESENCE_STUDIO_V2_RENDERER_KEY },
+    dirty: false,
+    mobilePreviewReviewed: true,
+  });
+
+  assert.equal(report.hasBlockingIssues, false);
+  assert.equal(report.critical.some((issue) => issue.id === "missing-title"), false);
+  assert.equal(report.critical.some((issue) => issue.id === "missing-primary-image"), false);
+  assert.equal(report.critical.some((issue) => issue.id === "missing-primary-cta"), false);
+  assert.equal(report.critical.some((issue) => issue.id === "missing-enquiry-routing"), false);
 });

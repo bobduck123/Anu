@@ -12,6 +12,12 @@ import { getNode } from "@/lib/api/owner";
 import type { PresenceEditableConfig, PresenceEditorOverview, PresenceEditorPreviewResponse, PresenceNode } from "@/lib/api/types";
 import PublishConfirmDialog from "./PublishConfirmDialog";
 import { buildReadinessReport } from "@/lib/editor/readiness";
+import { studioV2PublicRoomFromPresenceNode, type PresenceStudioV2FeatureEnv } from "@/lib/presence/studio-v2";
+
+const STUDIO_V2_CLIENT_FEATURE_ENV: PresenceStudioV2FeatureEnv = {
+  NEXT_PUBLIC_PRESENCE_STUDIO_V2: process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2,
+  NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS: process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS,
+};
 
 export default function PresenceDraftPreviewPage({ roomId }: { roomId: number }) {
   const [node, setNode] = useState<PresenceNode | null>(null);
@@ -83,6 +89,14 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
     if (!node || !previewConfig) return null;
     return draftNodeForRenderer(node, previewConfig);
   }, [node, previewConfig]);
+  const studioV2Room = useMemo(
+    () => (previewNode ? studioV2PublicRoomFromPresenceNode(previewNode, previewNode.editable_config, STUDIO_V2_CLIENT_FEATURE_ENV) : undefined),
+    [previewNode],
+  );
+  const rendererNode = useMemo(
+    () => (previewNode && studioV2Room ? nodeWithoutEditableConfig(previewNode) : previewNode),
+    [previewNode, studioV2Room],
+  );
 
   const readiness = useMemo(
     () =>
@@ -200,7 +214,7 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
       )}
 
       <div className={mode === "mobile" ? "mx-auto min-h-dvh max-w-[430px] overflow-hidden border-x border-white/15 bg-black shadow-2xl" : "min-h-dvh"}>
-        <PortfolioRenderer node={previewNode} renderMode="draft" />
+        <PortfolioRenderer node={rendererNode ?? previewNode} renderMode="draft" studioV2Room={studioV2Room} />
       </div>
 
       <PublishConfirmDialog
@@ -234,6 +248,14 @@ function draftNodeForRenderer(node: PresenceNode, config: PresenceEditableConfig
     ...node,
     renderer_key: rendererConfig.renderer_key ?? node.renderer_key,
     editable_config: rendererConfig,
+  };
+}
+
+function nodeWithoutEditableConfig(node: PresenceNode): PresenceNode {
+  const { editable_config: _editableConfig, ...safeNode } = node;
+  return {
+    ...safeNode,
+    editable_config: null,
   };
 }
 

@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import type { StudioV2State, StudioV2Skin, StudioV2MoodboardReference, StudioV2Object, StudioV2WorldId } from "@/lib/presence/studio-v2";
 import { WORLD_KITS, SKIN_CONTROLS, MOODBOARD_TYPES, ADD_OBJECT_TYPES } from "./worlds";
 
+function makePanelId(prefix: string): string {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
 /* ─── Skin Lab ─── */
 
 interface SkinLabSheetProps {
@@ -334,7 +338,7 @@ export function MoodboardSheet({ open, onClose, refs, accent, onAdd, onRemove }:
           disabled={!canAdd}
           onClick={() => {
             if (!canAdd) return;
-            onAdd({ id: `mood-${Date.now()}`, type: draft.type, label: draft.label.trim(), url: draft.url, detail: draft.detail, dot: accent });
+            onAdd({ id: makePanelId("mood"), type: draft.type, label: draft.label.trim(), url: draft.url, detail: draft.detail, dot: accent });
             setDraft({ type: draft.type, label: "", url: "", detail: "" });
           }}
         >
