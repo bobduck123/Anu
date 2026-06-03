@@ -304,3 +304,72 @@ Still not verified:
 - Hosted cleanup/restoration.
 
 Phase E hosted smoke remains blocked until the required hosted env variables and pilot room ID are supplied.
+
+## Phase E Hosted Attempt (2026-06-03)
+
+Hosted env supplied and used:
+
+```txt
+PRESENCE_HOSTED_SMOKE=1
+PRESENCE_E2E_BASE_URL=https://your-presence.vercel.app
+PRESENCE_E2E_API_URL=https://anu-back-end.vercel.app
+PRESENCE_STUDIO_V2_HOSTED_PILOT_ROOM_ID=11
+```
+
+Local preflight rerun before hosted attempt:
+
+- `npm.cmd run typecheck`: passed.
+- `npm.cmd run build`: passed.
+- `node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts`: 14 passed.
+- `node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts`: 5 passed.
+- `node --experimental-strip-types --test lib\presence\render\resolver.test.ts`: 8 passed.
+- `node --experimental-strip-types --test lib\editor\readiness.test.ts`: 5 passed.
+- `npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium`: 3 passed.
+- `npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1`: 2 passed.
+- `npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium`: 2 passed.
+
+Hosted room verification:
+
+- Room `11` is `ggm-christina-goddard`.
+- Display name is `Christina Kerkvliet Goddard`.
+- Published renderer is `ggm-faithful-room-v1`.
+- No draft config exists.
+- `presence-studio-v2-root` did not render.
+- Safe verification had no page errors and no console errors.
+
+Read-only owner room scan:
+
+- 28 owner rooms inspected.
+- No room had `presence-studio-v2-room` as node, draft, or published renderer.
+- Hosted TemplateKit drafts use `studio-room-template-kit-v1`, not Studio V2.
+
+Hosted lifecycle command:
+
+```powershell
+npx.cmd playwright test presence-studio-v2-hosted-lifecycle.spec.ts --project=chromium --workers=1
+```
+
+Result:
+
+- 1 failed.
+- Failure step: `open V2 owner editor`.
+- Failure reason: `getByTestId('presence-studio-v2-root')` was not found.
+
+Evidence:
+
+```txt
+test-results/presence-studio-v2-hosted--16269--a-flagged-V2-room-publicly-chromium/error-context.md
+test-results/presence-studio-v2-hosted--16269--a-flagged-V2-room-publicly-chromium-retry1/error-context.md
+```
+
+No hosted content was changed:
+
+- no object added
+- no draft saved
+- no publish attempted
+- no public content changed
+- no cleanup required
+
+Current hosted blocker:
+
+- A real hosted Studio V2 pilot room is not available for this owner account, or hosted feature flags/pilot IDs are not configured to expose one.

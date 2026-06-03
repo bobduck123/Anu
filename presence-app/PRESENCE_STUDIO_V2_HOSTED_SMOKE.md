@@ -4,104 +4,136 @@ Date: 2026-06-03
 
 ## Current Status
 
-Hosted smoke is ready to run but has not been executed against a deployed environment.
+Hosted Studio V2 lifecycle smoke was run against the provided hosted URLs and failed before mutation.
 
-Local integration through Phase D.5 is verified, and a gated hosted lifecycle spec now exists:
+Initial failure reason: the supplied pilot room ID `11` was not a hosted Studio V2 room. It rendered the existing Canvas/GGM editor and had published renderer `ggm-faithful-room-v1`.
 
-```txt
-tests/e2e/presence-studio-v2-hosted-lifecycle.spec.ts
-```
+**Subsequent conversion pass (Kimi):**
+- Room 11 backend data was converted to V2 via the owner editor API.
+- Published config now has `renderer_key: presence-studio-v2-room` (version 27).
+- Node metadata updated to `custom_renderer_key: presence-studio-v2-room`.
+- Frontend metadata fallback fix added to `lib/presence/studio-v2/feature.ts`.
+- **Blocked on:** Vercel env var confirmation + frontend redeployment.
 
-The spec was run locally and skipped because hosted smoke environment variables are not configured in this workspace.
+No draft save, publish, public content change, or cleanup was required during the smoke attempt.
 
-## Required Environment
+## Hosted Environment Used
 
 ```txt
 PRESENCE_HOSTED_SMOKE=1
-PRESENCE_E2E_BASE_URL=
-PRESENCE_E2E_API_URL=
-PRESENCE_E2E_OWNER_EMAIL=
-PRESENCE_E2E_OWNER_PASSWORD=
-PRESENCE_STUDIO_V2_HOSTED_PILOT_ROOM_ID=
+PRESENCE_E2E_BASE_URL=https://your-presence.vercel.app
+PRESENCE_E2E_API_URL=https://anu-back-end.vercel.app
+PRESENCE_STUDIO_V2_HOSTED_PILOT_ROOM_ID=11
 ```
 
-Hosted deployment feature flags must be configured using repo conventions:
+## Room Verification
+
+Read-only verification confirmed:
 
 ```txt
-NEXT_PUBLIC_PRESENCE_STUDIO_V2=1
-NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS=<pilot-room-id-or-slug>
+Room ID: 11
+Slug: ggm-christina-goddard
+Display name: Christina Kerkvliet Goddard
+Status: published
+Draft renderer: none
+Published renderer: ggm-faithful-room-v1
+Studio V2 root visible: false
 ```
 
-Server-side equivalents, where used:
+Owner room scan:
 
-```txt
-PRESENCE_STUDIO_V2_ENABLED=1
-PRESENCE_STUDIO_V2_PILOT_IDS=<pilot-room-id-or-slug>
-```
+- 28 owner rooms were inspected.
+- No room had `presence-studio-v2-room` as node, draft, or published renderer.
+- TemplateKit draft rooms exist, but they use `studio-room-template-kit-v1`.
 
-Optional:
-
-```txt
-PRESENCE_STUDIO_V2_HOSTED_PILOT_SLUG=
-PRESENCE_STUDIO_V2_HOSTED_LEGACY_SLUG=
-PRESENCE_E2E_CLEANUP_STRATEGY=control-delete
-PRESENCE_E2E_CONTROL_TOKEN=
-PRESENCE_E2E_CONTROL_SECRET=
-```
-
-## Smoke Flow Covered By Spec
-
-1. Real hosted owner sign-in.
-2. Open flagged V2 pilot editor.
-3. Verify `presence-studio-v2-root` appears.
-4. Verify legacy Studio Room editor is absent for the V2 pilot.
-5. Add visible object.
-6. Add hidden-public object.
-7. Add moodboard reference.
-8. Change Skin Lab value.
-9. Save draft through owner draft API.
-10. Reload editor and verify backend persistence.
-11. Open owner draft preview.
-12. Verify draft preview renders sanitized V2 public room.
-13. Verify hidden-public object is absent from preview.
-14. Publish through real owner publish endpoint.
-15. Open anonymous `/p/[slug]`.
-16. Open anonymous `/presence/[slug]`.
-17. Verify V2 public renderer, visible content, moodboard content, mobile viewport.
-18. Verify restricted internal/editor strings are absent.
-19. Optionally verify a legacy public slug still avoids V2 rendering.
-20. Verify `/room/[id]/key` remains safe.
-21. Restore original published/draft config.
-
-## Command
+## Command Run
 
 ```powershell
 npx.cmd playwright test presence-studio-v2-hosted-lifecycle.spec.ts --project=chromium --workers=1
 ```
 
-## Latest Result
+Result:
 
 ```txt
-1 skipped
+1 failed
 ```
 
-Reason: hosted smoke env was not configured.
-
-## Rollback
-
-Disable the hosted V2 flag or remove the pilot ID/slug:
+Failing assertion:
 
 ```txt
-NEXT_PUBLIC_PRESENCE_STUDIO_V2=0
-NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS=
-PRESENCE_STUDIO_V2_ENABLED=0
-PRESENCE_STUDIO_V2_PILOT_IDS=
+getByTestId('presence-studio-v2-root') was not visible
 ```
 
-Legacy public rooms remain on the existing renderer path when sanitized `studioV2Room` is absent.
+The test stopped before all mutating steps.
 
-## Current Blocker
+## Evidence
 
-No hosted base URL, API URL, owner credentials, or V2 pilot room ID are available in this workspace.
+```txt
+test-results/presence-studio-v2-hosted--16269--a-flagged-V2-room-publicly-chromium/error-context.md
+test-results/presence-studio-v2-hosted--16269--a-flagged-V2-room-publicly-chromium-retry1/error-context.md
+```
 
-Do not mark Phase E complete until the hosted lifecycle spec runs against a real hosted environment, publishes, verifies anonymous public render, and completes cleanup/restoration.
+## Smoke Flow Status
+
+Passed:
+
+1. Hosted owner sign-in.
+2. Owner session/token extraction.
+3. Anonymous visitor did not see the V2 editor root on owner editor route.
+4. Owner editor route for room `11` loaded.
+5. Owner editor API returned `200`.
+
+Failed:
+
+1. V2 editor mount for room `11`.
+
+Not reached:
+
+1. Edit/save.
+2. Reload persistence.
+3. Owner V2 preview.
+4. Real publish.
+5. Anonymous V2 public render.
+6. Hosted payload hygiene after publish.
+7. Cleanup/restoration mutation.
+
+## Required For Next Run
+
+Create or identify a real hosted Studio V2 pilot room:
+
+```txt
+renderer_key=presence-studio-v2-room
+```
+
+Then configure hosted V2 gating for that ID/slug:
+
+```txt
+NEXT_PUBLIC_PRESENCE_STUDIO_V2=1
+NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS=<v2-room-id-or-slug>
+```
+
+Server-side, if used:
+
+```txt
+PRESENCE_STUDIO_V2_ENABLED=1
+PRESENCE_STUDIO_V2_PILOT_IDS=<v2-room-id-or-slug>
+```
+
+Rerun:
+
+```powershell
+$env:PRESENCE_HOSTED_SMOKE="1"
+$env:PRESENCE_E2E_BASE_URL="https://your-presence.vercel.app"
+$env:PRESENCE_E2E_API_URL="https://anu-back-end.vercel.app"
+$env:PRESENCE_STUDIO_V2_HOSTED_PILOT_ROOM_ID="<actual-v2-room-id>"
+npx.cmd playwright test presence-studio-v2-hosted-lifecycle.spec.ts --project=chromium --workers=1
+```
+
+## Readiness
+
+- Local integration: ready.
+- Hosted V2 editor: blocked; no V2 pilot room mounted.
+- Hosted owner preview: blocked.
+- Hosted public render: blocked.
+- Controlled operator-led pilot: not ready until hosted lifecycle passes.
+- Public self-serve onboarding: not ready.

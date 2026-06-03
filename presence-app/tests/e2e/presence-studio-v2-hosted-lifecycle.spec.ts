@@ -49,6 +49,7 @@ test.describe("hosted Studio V2 owner lifecycle", () => {
   }) => {
     test.setTimeout(180_000);
 
+    const baseURL = required("PRESENCE_E2E_BASE_URL");
     const apiBase = trimTrailingSlash(required("PRESENCE_E2E_API_URL"));
     const roomId = Number(required("PRESENCE_STUDIO_V2_HOSTED_PILOT_ROOM_ID"));
     const marker = `Phase E V2 hosted smoke ${Date.now()}`;
@@ -63,6 +64,16 @@ test.describe("hosted Studio V2 owner lifecycle", () => {
     page.on("pageerror", (err) => pageErrors.push(err.message));
     page.on("console", (message) => {
       if (message.type() === "error") consoleErrors.push(message.text());
+    });
+
+    await test.step("anonymous visitor cannot open owner editor", async () => {
+      const anonymous = await context.browser()?.newContext({ baseURL });
+      expect(anonymous, "A fresh anonymous browser context should be available.").toBeTruthy();
+      const anonymousEditor = await anonymous!.newPage();
+      await anonymousEditor.goto(`/studio/${roomId}/editor`, { waitUntil: "domcontentloaded" });
+      await expect(anonymousEditor.getByTestId("presence-studio-v2-root")).toHaveCount(0);
+      await expect(anonymousEditor.getByText(/sign in|checking access|editor access|node not found/i)).toBeVisible({ timeout: 30_000 });
+      await anonymous!.close();
     });
 
     await signInHostedOwner(page, roomId);
@@ -158,7 +169,7 @@ test.describe("hosted Studio V2 owner lifecycle", () => {
       });
 
       await test.step("anonymous public V2 render is clean on canonical and alias routes", async () => {
-        const anonymous = await context.browser()?.newContext();
+        const anonymous = await context.browser()?.newContext({ baseURL });
         expect(anonymous, "A fresh anonymous browser context should be available.").toBeTruthy();
         const publicPage = await anonymous!.newPage();
         await publicPage.goto(`/p/${originalSlug}`, { waitUntil: "domcontentloaded" });

@@ -54,7 +54,19 @@ export function shouldUsePresenceStudioV2(
   input: PresenceStudioV2EligibilityInput,
   env: PresenceStudioV2FeatureEnv = process.env as PresenceStudioV2FeatureEnv,
 ): boolean {
-  const rendererKey = input.rendererKey ?? input.config?.renderer_key ?? input.node?.renderer_key;
+  const metadata = input.node?.metadata as Record<string, unknown> | undefined;
+  let metadataRendererKey: string | undefined;
+  if (metadata) {
+    if (typeof metadata.custom_renderer_key === "string" && metadata.custom_renderer_key) {
+      metadataRendererKey = metadata.custom_renderer_key;
+    } else {
+      const customPresence = metadata.custom_presence as Record<string, unknown> | undefined;
+      if (typeof customPresence?.renderer_key === "string") {
+        metadataRendererKey = customPresence.renderer_key;
+      }
+    }
+  }
+  const rendererKey = input.rendererKey ?? input.config?.renderer_key ?? input.node?.renderer_key ?? metadataRendererKey;
   const isV2Room = rendererKey === PRESENCE_STUDIO_V2_RENDERER_KEY || isStudioV2PresenceConfig(input.config);
   return isPresenceStudioV2GloballyEnabled(env) && isV2Room && isPresenceStudioV2PilotEligible(input, env);
 }

@@ -1,0 +1,4227 @@
+{
+  "data": {
+    "assets": [
+      {
+        "alt_text": "Willow of Port Arthur, 2019. Watercolour on paper.",
+        "asset_type": "image",
+        "slot": "hero_image",
+        "source": "editable_config:published",
+        "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+      },
+      {
+        "alt_text": null,
+        "asset_type": "image",
+        "slot": "attached_assets[1]",
+        "source": "editable_config:published",
+        "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+      },
+      {
+        "alt_text": null,
+        "asset_type": "image",
+        "slot": "attached_assets[2]",
+        "source": "editable_config:published",
+        "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/79f0d922f0f44e14a3bace72d27d5853.png"
+      },
+      {
+        "alt_text": null,
+        "asset_type": "image",
+        "slot": "attached_assets[3]",
+        "source": "editable_config:published",
+        "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/a69a95c5ecc74429aee725bd0c35f225.png"
+      },
+      {
+        "alt_text": null,
+        "asset_type": "image",
+        "slot": "attached_assets[4]",
+        "source": "editable_config:published",
+        "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/0b5d4bed25954464981787ef41bd6fa8.png"
+      },
+      {
+        "alt_text": null,
+        "asset_type": "image",
+        "slot": "attached_assets[5]",
+        "source": "editable_config:published",
+        "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/64b5211d63fa44cdbf7d93028d179b28.png"
+      },
+      {
+        "alt_text": null,
+        "asset_type": "image",
+        "slot": "attached_assets[6]",
+        "source": "editable_config:published",
+        "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/86984b0458914346bfaca08ea3123996.png"
+      }
+    ],
+    "draft": null,
+    "history": [
+      {
+        "archived_at": null,
+        "asset_config": {
+          "artworks": [],
+          "attached_assets": [
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "783471c01a894f9ebddd039f83d4ac68",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "5b3475d7679d4c668cc6900af1ef9524",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "79f0d922f0f44e14a3bace72d27d5853",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/79f0d922f0f44e14a3bace72d27d5853.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "a69a95c5ecc74429aee725bd0c35f225",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/a69a95c5ecc74429aee725bd0c35f225.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "0b5d4bed25954464981787ef41bd6fa8",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/0b5d4bed25954464981787ef41bd6fa8.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "64b5211d63fa44cdbf7d93028d179b28",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/64b5211d63fa44cdbf7d93028d179b28.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "height": 300,
+              "media_id": "86984b0458914346bfaca08ea3123996",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "status": "draft_uploaded",
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/86984b0458914346bfaca08ea3123996.png",
+              "visibility": "public_unlisted",
+              "width": 400
+            }
+          ],
+          "hero_image": {
+            "alt_text": "Willow of Port Arthur, 2019. Watercolour on paper.",
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-06-03T03:05:27.859625",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 42,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-06-03T03:05:28.231889",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "Christina Kerkvliet Goddard"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "published",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#987f61",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-06-03T03:05:28.231889",
+        "updated_by_user_id": 1,
+        "version": 26
+      },
+      {
+        "archived_at": "2026-06-03T03:05:28.231889",
+        "asset_config": {
+          "artworks": [],
+          "attached_assets": [
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "783471c01a894f9ebddd039f83d4ac68",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "5b3475d7679d4c668cc6900af1ef9524",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "79f0d922f0f44e14a3bace72d27d5853",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/79f0d922f0f44e14a3bace72d27d5853.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "a69a95c5ecc74429aee725bd0c35f225",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/a69a95c5ecc74429aee725bd0c35f225.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "0b5d4bed25954464981787ef41bd6fa8",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/0b5d4bed25954464981787ef41bd6fa8.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "64b5211d63fa44cdbf7d93028d179b28",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/64b5211d63fa44cdbf7d93028d179b28.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "height": 300,
+              "media_id": "86984b0458914346bfaca08ea3123996",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "status": "draft_uploaded",
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/86984b0458914346bfaca08ea3123996.png",
+              "visibility": "public_unlisted",
+              "width": 400
+            }
+          ],
+          "hero_image": {
+            "alt_text": "Willow of Port Arthur, 2019. Watercolour on paper.",
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-06-03T03:04:51.249230",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 41,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-06-03T03:04:51.664933",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "Christina Kerkvliet Goddard"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#987f61",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-06-03T03:05:28.231889",
+        "updated_by_user_id": 1,
+        "version": 25
+      },
+      {
+        "archived_at": "2026-06-03T03:04:51.664933",
+        "asset_config": {
+          "artworks": [],
+          "attached_assets": [
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "783471c01a894f9ebddd039f83d4ac68",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "5b3475d7679d4c668cc6900af1ef9524",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "79f0d922f0f44e14a3bace72d27d5853",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/79f0d922f0f44e14a3bace72d27d5853.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "a69a95c5ecc74429aee725bd0c35f225",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/a69a95c5ecc74429aee725bd0c35f225.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "0b5d4bed25954464981787ef41bd6fa8",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/0b5d4bed25954464981787ef41bd6fa8.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "64b5211d63fa44cdbf7d93028d179b28",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/64b5211d63fa44cdbf7d93028d179b28.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "height": 300,
+              "media_id": "86984b0458914346bfaca08ea3123996",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "status": "draft_uploaded",
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/86984b0458914346bfaca08ea3123996.png",
+              "visibility": "public_unlisted",
+              "width": 400
+            }
+          ],
+          "hero_image": {
+            "alt_text": "Willow of Port Arthur, 2019. Watercolour on paper.",
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-27T23:44:06.588054",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 24,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-27T23:44:17.094626",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "Christina Kerkvliet Goddard"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#987f61",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-06-03T03:04:51.664933",
+        "updated_by_user_id": 1,
+        "version": 24
+      },
+      {
+        "archived_at": "2026-05-27T23:44:17.094626",
+        "asset_config": {
+          "artworks": [],
+          "attached_assets": [
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "783471c01a894f9ebddd039f83d4ac68",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "5b3475d7679d4c668cc6900af1ef9524",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "79f0d922f0f44e14a3bace72d27d5853",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/79f0d922f0f44e14a3bace72d27d5853.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "a69a95c5ecc74429aee725bd0c35f225",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/a69a95c5ecc74429aee725bd0c35f225.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "0b5d4bed25954464981787ef41bd6fa8",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/0b5d4bed25954464981787ef41bd6fa8.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "64b5211d63fa44cdbf7d93028d179b28",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/64b5211d63fa44cdbf7d93028d179b28.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "height": 300,
+              "media_id": "86984b0458914346bfaca08ea3123996",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "status": "draft_uploaded",
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/86984b0458914346bfaca08ea3123996.png",
+              "visibility": "public_unlisted",
+              "width": 400
+            }
+          ],
+          "hero_image": {
+            "alt_text": "Harmless hosted recovery smoke image.",
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-27T03:27:29.238277",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 23,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-27T23:43:29.792999",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "HOSTED RECOVERY SMOKE TEST 1779925331566"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#987f61",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-27T23:44:17.094626",
+        "updated_by_user_id": 1,
+        "version": 23
+      },
+      {
+        "archived_at": "2026-05-27T23:43:29.792999",
+        "asset_config": {
+          "artworks": [],
+          "attached_assets": [
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "783471c01a894f9ebddd039f83d4ac68",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "5b3475d7679d4c668cc6900af1ef9524",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "79f0d922f0f44e14a3bace72d27d5853",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/79f0d922f0f44e14a3bace72d27d5853.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "a69a95c5ecc74429aee725bd0c35f225",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/a69a95c5ecc74429aee725bd0c35f225.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "0b5d4bed25954464981787ef41bd6fa8",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/0b5d4bed25954464981787ef41bd6fa8.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "64b5211d63fa44cdbf7d93028d179b28",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/64b5211d63fa44cdbf7d93028d179b28.png"
+            }
+          ],
+          "hero_image": {
+            "alt_text": "Willow of Port Arthur, 2019. Watercolour on paper.",
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T23:10:27.681517",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 22,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T23:10:40.146165",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "Christina Kerkvliet Goddard"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-27T23:43:29.792999",
+        "updated_by_user_id": 1,
+        "version": 22
+      },
+      {
+        "archived_at": "2026-05-25T23:10:40.146165",
+        "asset_config": {
+          "artworks": [],
+          "attached_assets": [
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "783471c01a894f9ebddd039f83d4ac68",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "5b3475d7679d4c668cc6900af1ef9524",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "79f0d922f0f44e14a3bace72d27d5853",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/79f0d922f0f44e14a3bace72d27d5853.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "a69a95c5ecc74429aee725bd0c35f225",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/a69a95c5ecc74429aee725bd0c35f225.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "0b5d4bed25954464981787ef41bd6fa8",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/0b5d4bed25954464981787ef41bd6fa8.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "64b5211d63fa44cdbf7d93028d179b28",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/64b5211d63fa44cdbf7d93028d179b28.png"
+            }
+          ],
+          "hero_image": {
+            "alt_text": "Attached image",
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T23:09:35.665585",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 21,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T23:10:07.244488",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "HOSTED PAYLOAD HYGIENE RERUN 1779750524785"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-25T23:10:40.146165",
+        "updated_by_user_id": 1,
+        "version": 21
+      },
+      {
+        "archived_at": "2026-05-25T23:10:07.244488",
+        "asset_config": {
+          "artworks": [],
+          "attached_assets": [
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "783471c01a894f9ebddd039f83d4ac68",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "5b3475d7679d4c668cc6900af1ef9524",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "79f0d922f0f44e14a3bace72d27d5853",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/79f0d922f0f44e14a3bace72d27d5853.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "a69a95c5ecc74429aee725bd0c35f225",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/a69a95c5ecc74429aee725bd0c35f225.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "0b5d4bed25954464981787ef41bd6fa8",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/0b5d4bed25954464981787ef41bd6fa8.png"
+            }
+          ],
+          "hero_image": {
+            "alt_text": "Willow of Port Arthur, 2019. Watercolour on paper.",
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T16:53:36.797265",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 20,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T16:53:49.288851",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "Christina Kerkvliet Goddard"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-25T23:10:07.244488",
+        "updated_by_user_id": 1,
+        "version": 20
+      },
+      {
+        "archived_at": "2026-05-25T16:53:49.288851",
+        "asset_config": {
+          "artworks": [],
+          "attached_assets": [
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "783471c01a894f9ebddd039f83d4ac68",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "5b3475d7679d4c668cc6900af1ef9524",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "79f0d922f0f44e14a3bace72d27d5853",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/79f0d922f0f44e14a3bace72d27d5853.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "a69a95c5ecc74429aee725bd0c35f225",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/a69a95c5ecc74429aee725bd0c35f225.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "0b5d4bed25954464981787ef41bd6fa8",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/0b5d4bed25954464981787ef41bd6fa8.png"
+            }
+          ],
+          "hero_image": {
+            "alt_text": "Attached image",
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T16:52:36.651231",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 19,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T16:53:16.592362",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "HOSTED PAYLOAD HYGIENE TEST 1779727903327"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-25T16:53:49.288851",
+        "updated_by_user_id": 1,
+        "version": 19
+      },
+      {
+        "archived_at": "2026-05-25T16:53:16.592362",
+        "asset_config": {
+          "artworks": [],
+          "attached_assets": [
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "783471c01a894f9ebddd039f83d4ac68",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "5b3475d7679d4c668cc6900af1ef9524",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "79f0d922f0f44e14a3bace72d27d5853",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/79f0d922f0f44e14a3bace72d27d5853.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "a69a95c5ecc74429aee725bd0c35f225",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/a69a95c5ecc74429aee725bd0c35f225.png"
+            }
+          ],
+          "hero_image": {
+            "alt_text": "Willow of Port Arthur, 2019. Watercolour on paper.",
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T10:47:55.598228",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 18,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T10:48:36.047134",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "Christina Kerkvliet Goddard"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-25T16:53:16.592362",
+        "updated_by_user_id": 1,
+        "version": 18
+      },
+      {
+        "archived_at": "2026-05-25T10:48:36.047134",
+        "asset_config": {
+          "artworks": [],
+          "attached_assets": [
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "783471c01a894f9ebddd039f83d4ac68",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "5b3475d7679d4c668cc6900af1ef9524",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "79f0d922f0f44e14a3bace72d27d5853",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/79f0d922f0f44e14a3bace72d27d5853.png"
+            }
+          ],
+          "hero_image": {
+            "alt_text": "Willow of Port Arthur, 2019. Watercolour on paper.",
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T10:45:20.339558",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 17,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T10:45:32.797239",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "Christina Kerkvliet Goddard"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-25T10:48:36.047134",
+        "updated_by_user_id": 1,
+        "version": 17
+      },
+      {
+        "archived_at": "2026-05-25T10:45:32.797239",
+        "asset_config": {
+          "artworks": [],
+          "attached_assets": [
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "783471c01a894f9ebddd039f83d4ac68",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "5b3475d7679d4c668cc6900af1ef9524",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "79f0d922f0f44e14a3bace72d27d5853",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/79f0d922f0f44e14a3bace72d27d5853.png"
+            }
+          ],
+          "hero_image": {
+            "alt_text": "Attached image",
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T10:44:11.445379",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 16,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T10:44:53.186626",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "HOSTED V1B RESMOKE TEST 1779705837503"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-25T10:45:32.797239",
+        "updated_by_user_id": 1,
+        "version": 16
+      },
+      {
+        "archived_at": "2026-05-25T10:44:53.186626",
+        "asset_config": {
+          "artworks": [],
+          "attached_assets": [
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "783471c01a894f9ebddd039f83d4ac68",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+            },
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "5b3475d7679d4c668cc6900af1ef9524",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+            }
+          ],
+          "hero_image": {
+            "alt_text": "Willow of Port Arthur, 2019. Watercolour on paper.",
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T10:38:33.414313",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 15,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T10:40:09.937921",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "Christina Kerkvliet Goddard"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-25T10:44:53.186626",
+        "updated_by_user_id": 1,
+        "version": 15
+      },
+      {
+        "archived_at": "2026-05-25T10:40:09.937921",
+        "asset_config": {
+          "artworks": [],
+          "attached_assets": [
+            {
+              "alt_text": null,
+              "asset_type": "image",
+              "media_id": "783471c01a894f9ebddd039f83d4ac68",
+              "mime_type": "image/png",
+              "role": "cover",
+              "size_bytes": 3324,
+              "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+            }
+          ],
+          "hero_image": {
+            "alt_text": "Willow of Port Arthur, 2019. Watercolour on paper.",
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T10:27:22.497339",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 14,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T10:30:52.445813",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "Christina Kerkvliet Goddard"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-25T10:40:09.937921",
+        "updated_by_user_id": 1,
+        "version": 14
+      },
+      {
+        "archived_at": "2026-05-25T10:30:52.445813",
+        "asset_config": {
+          "artworks": [],
+          "hero_image": {
+            "alt_text": "Harmless hosted V1B smoke test alt text",
+            "url": null
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T10:23:09.193498",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 13,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T10:23:13.441782",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "Christina Kerkvliet Goddard"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-25T10:30:52.445813",
+        "updated_by_user_id": 1,
+        "version": 13
+      },
+      {
+        "archived_at": "2026-05-25T10:23:13.441782",
+        "asset_config": {
+          "artworks": [],
+          "hero_image": {
+            "alt_text": "Harmless hosted V1B smoke test alt text",
+            "url": null
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T07:02:02.969885",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 12,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T10:22:45.664037",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "HOSTED V1B RESMOKE TEST 1779704498921"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-25T10:23:13.441782",
+        "updated_by_user_id": 1,
+        "version": 12
+      },
+      {
+        "archived_at": "2026-05-25T10:22:45.664037",
+        "asset_config": {
+          "artworks": [],
+          "hero_image": {
+            "alt_text": "Harmless hosted V1B smoke test alt text",
+            "url": null
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T07:00:57.805319",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 11,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T07:01:04.360580",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "Christina Kerkvliet Goddard"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-25T10:22:45.664037",
+        "updated_by_user_id": 1,
+        "version": 11
+      },
+      {
+        "archived_at": "2026-05-25T07:01:04.360580",
+        "asset_config": {
+          "artworks": [],
+          "hero_image": {
+            "alt_text": "Harmless hosted V1B smoke test alt text",
+            "url": null
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T07:00:09.024715",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 10,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T07:00:39.130217",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "HOSTED V1B UPLOAD TEST 1779692396437"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-25T07:01:04.360580",
+        "updated_by_user_id": 1,
+        "version": 10
+      },
+      {
+        "archived_at": "2026-05-25T07:00:39.130217",
+        "asset_config": {
+          "artworks": [],
+          "hero_image": {
+            "alt_text": "Harmless hosted V1B smoke test alt text",
+            "url": null
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T06:59:29.612004",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 9,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T06:59:36.235778",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "Christina Kerkvliet Goddard"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-25T07:00:39.130217",
+        "updated_by_user_id": 1,
+        "version": 9
+      },
+      {
+        "archived_at": "2026-05-25T06:59:36.235778",
+        "asset_config": {
+          "artworks": [],
+          "hero_image": {
+            "alt_text": "Harmless hosted V1B smoke test alt text",
+            "url": null
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T06:56:29.869840",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 8,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T06:56:36.304524",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "HOSTED V1B UPLOAD TEST 1779691969957"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-25T06:59:36.235778",
+        "updated_by_user_id": 1,
+        "version": 8
+      },
+      {
+        "archived_at": "2026-05-25T06:56:36.304524",
+        "asset_config": {
+          "artworks": [],
+          "hero_image": {
+            "alt_text": "Harmless hosted V1B smoke test alt text",
+            "url": null
+          },
+          "public_assets_only": true,
+          "thumbnails": []
+        },
+        "content_config": {
+          "about": {
+            "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+            "curatorial_statement": null,
+            "long_story": null,
+            "practice_statement": null,
+            "short_bio": "Selected watercolour works."
+          },
+          "contact": {
+            "availability_status": null,
+            "contact_posture": "enquiry_form",
+            "location_label": "Moana, South Australia",
+            "primary_cta_label": null,
+            "primary_cta_url": null
+          },
+          "display_name": "Christina Kerkvliet Goddard",
+          "headline": "Watercolour works across memory, colour, and lived landscape.",
+          "hero_subtitle": null,
+          "hero_title": null,
+          "works": []
+        },
+        "created_at": "2026-05-25T06:25:33.694847",
+        "created_by_user_id": 1,
+        "enquiry_config": {
+          "availability_status": null,
+          "copy": "Use the Presence enquiry form to contact the owner.",
+          "cta_label": "Begin a conversation",
+          "delivery_posture": "backend_enquiry_capture"
+        },
+        "id": 7,
+        "locked_fields": {
+          "reduced_motion_fallback": {
+            "reason": "Accessibility fallback must remain available.",
+            "system_controlled": true
+          },
+          "renderer_shell": {
+            "locked": true,
+            "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+          }
+        },
+        "motion_config": {
+          "blur_amount": 0.16,
+          "distortion_scale": 0.22,
+          "dither_strength": 0.28,
+          "film_grain_strength": 0.32,
+          "heavy_motion_enabled": false,
+          "intensity": "gentle",
+          "liquid_intensity": 0.2,
+          "liquid_style": "ripple",
+          "morph_speed_ms": 1350,
+          "reduced_motion_fallback": true,
+          "scene_transition_duration_ms": 1250,
+          "transition_style": "liquid_crossfade"
+        },
+        "published_at": "2026-05-25T06:56:11.248863",
+        "published_by_user_id": 1,
+        "renderer_key": "ggm-faithful-room-v1",
+        "room_id": 11,
+        "roomkey_config": {
+          "entry_label": "Opened via RoomKey",
+          "guest_entry_copy": "You have entered this Presence Room.",
+          "invalid_copy": "This Room Key is not available.",
+          "provenance_chip_text": "Opened via NFC/QR",
+          "revoked_copy": "This Room Key has been revoked.",
+          "show_save_to_garden": true
+        },
+        "scene_config": {
+          "scenes": [
+            {
+              "action_labels": {
+                "primary": "Begin a conversation",
+                "work_advance": "Show next artwork"
+              },
+              "id": "artwork_field",
+              "intro_copy": "Selected watercolour works.",
+              "label": "Artwork Field",
+              "layout": "hero-liquid-slideshow",
+              "primary_artwork_slug": null,
+              "roomkey_provenance_text": "Opened via RoomKey",
+              "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+              "title": "HOSTED V1B UPLOAD TEST 1779692128281"
+            },
+            {
+              "artwork_order": [],
+              "id": "work_wall",
+              "label": "Work Wall",
+              "layout": "gallery-wall",
+              "selected_work_slug": null,
+              "work_detail_behaviour": "inline_detail_or_route"
+            },
+            {
+              "about_title": "Practice Studio",
+              "id": "practice_studio",
+              "label": "Practice Studio",
+              "layout": "studio-workbench",
+              "note_cards_enabled": true
+            },
+            {
+              "contact_title": "Calling Card",
+              "enquiry_cta": "Begin a conversation",
+              "id": "calling_card",
+              "label": "Calling Card",
+              "layout": "calling-paper"
+            }
+          ]
+        },
+        "schema_version": "presence-editable-config-v1",
+        "status": "archived",
+        "style_dna": {
+          "artwork_treatment": "renderer_default",
+          "background_treatment": "renderer_default",
+          "canvas_mood": "warm",
+          "element_styles": {
+            "hero-title": {
+              "align": "right",
+              "font_mood": "editorial",
+              "italic": true,
+              "size": "large",
+              "weight": "bold"
+            }
+          },
+          "invitation_style": "framed-card",
+          "option_pack_id": "ink-room",
+          "palette": {
+            "accent": "#b56b38",
+            "bg": "#efe4d4",
+            "hero_stage_bg": "#eadbc7",
+            "ink": "#2c2119",
+            "line": "#d4b898",
+            "muted": "#806754",
+            "paper": "#f4eadc",
+            "paper_warm": "#e6d2b9",
+            "theme_preset": "gallery_white",
+            "visual_mood": null
+          },
+          "spacing": {},
+          "typography": {
+            "body_font_id": "inter",
+            "body_stack": "Inter, system-ui, sans-serif",
+            "font_pack_id": "soft-studio",
+            "heading_font_id": "instrument-serif",
+            "heading_stack": "Instrument Serif, Georgia, serif"
+          }
+        },
+        "updated_at": "2026-05-25T06:56:36.304524",
+        "updated_by_user_id": 1,
+        "version": 7
+      }
+    ],
+    "media_capability": {
+      "migration_ready": false,
+      "owner_message": "Private draft media is not enabled on this environment. Use only public-safe images.",
+      "private_draft_media_active": false,
+      "protected_storage_configured": false,
+      "protected_storage_verified": false,
+      "reason": "media_migration_missing",
+      "v1b_fallback_available": true
+    },
+    "published": {
+      "archived_at": null,
+      "asset_config": {
+        "artworks": [],
+        "attached_assets": [
+          {
+            "alt_text": null,
+            "asset_type": "image",
+            "media_id": "783471c01a894f9ebddd039f83d4ac68",
+            "mime_type": "image/png",
+            "role": "cover",
+            "size_bytes": 3324,
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+          },
+          {
+            "alt_text": null,
+            "asset_type": "image",
+            "media_id": "5b3475d7679d4c668cc6900af1ef9524",
+            "mime_type": "image/png",
+            "role": "cover",
+            "size_bytes": 3324,
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+          },
+          {
+            "alt_text": null,
+            "asset_type": "image",
+            "media_id": "79f0d922f0f44e14a3bace72d27d5853",
+            "mime_type": "image/png",
+            "role": "cover",
+            "size_bytes": 3324,
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/79f0d922f0f44e14a3bace72d27d5853.png"
+          },
+          {
+            "alt_text": null,
+            "asset_type": "image",
+            "media_id": "a69a95c5ecc74429aee725bd0c35f225",
+            "mime_type": "image/png",
+            "role": "cover",
+            "size_bytes": 3324,
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/a69a95c5ecc74429aee725bd0c35f225.png"
+          },
+          {
+            "alt_text": null,
+            "asset_type": "image",
+            "media_id": "0b5d4bed25954464981787ef41bd6fa8",
+            "mime_type": "image/png",
+            "role": "cover",
+            "size_bytes": 3324,
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/0b5d4bed25954464981787ef41bd6fa8.png"
+          },
+          {
+            "alt_text": null,
+            "asset_type": "image",
+            "media_id": "64b5211d63fa44cdbf7d93028d179b28",
+            "mime_type": "image/png",
+            "role": "cover",
+            "size_bytes": 3324,
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/64b5211d63fa44cdbf7d93028d179b28.png"
+          },
+          {
+            "alt_text": null,
+            "asset_type": "image",
+            "height": 300,
+            "media_id": "86984b0458914346bfaca08ea3123996",
+            "mime_type": "image/png",
+            "role": "cover",
+            "size_bytes": 3324,
+            "status": "draft_uploaded",
+            "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/86984b0458914346bfaca08ea3123996.png",
+            "visibility": "public_unlisted",
+            "width": 400
+          }
+        ],
+        "hero_image": {
+          "alt_text": "Willow of Port Arthur, 2019. Watercolour on paper.",
+          "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+        },
+        "public_assets_only": true,
+        "thumbnails": []
+      },
+      "content_config": {
+        "about": {
+          "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+          "curatorial_statement": null,
+          "long_story": null,
+          "practice_statement": null,
+          "short_bio": "Selected watercolour works."
+        },
+        "contact": {
+          "availability_status": null,
+          "contact_posture": "enquiry_form",
+          "location_label": "Moana, South Australia",
+          "primary_cta_label": null,
+          "primary_cta_url": null
+        },
+        "display_name": "Christina Kerkvliet Goddard",
+        "headline": "Watercolour works across memory, colour, and lived landscape.",
+        "hero_subtitle": null,
+        "hero_title": null,
+        "works": []
+      },
+      "created_at": "2026-06-03T03:05:27.859625",
+      "created_by_user_id": 1,
+      "enquiry_config": {
+        "availability_status": null,
+        "copy": "Use the Presence enquiry form to contact the owner.",
+        "cta_label": "Begin a conversation",
+        "delivery_posture": "backend_enquiry_capture"
+      },
+      "id": 42,
+      "locked_fields": {
+        "reduced_motion_fallback": {
+          "reason": "Accessibility fallback must remain available.",
+          "system_controlled": true
+        },
+        "renderer_shell": {
+          "locked": true,
+          "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+        }
+      },
+      "motion_config": {
+        "blur_amount": 0.16,
+        "distortion_scale": 0.22,
+        "dither_strength": 0.28,
+        "film_grain_strength": 0.32,
+        "heavy_motion_enabled": false,
+        "intensity": "gentle",
+        "liquid_intensity": 0.2,
+        "liquid_style": "ripple",
+        "morph_speed_ms": 1350,
+        "reduced_motion_fallback": true,
+        "scene_transition_duration_ms": 1250,
+        "transition_style": "liquid_crossfade"
+      },
+      "published_at": "2026-06-03T03:05:28.231889",
+      "published_by_user_id": 1,
+      "renderer_key": "ggm-faithful-room-v1",
+      "room_id": 11,
+      "roomkey_config": {
+        "entry_label": "Opened via RoomKey",
+        "guest_entry_copy": "You have entered this Presence Room.",
+        "invalid_copy": "This Room Key is not available.",
+        "provenance_chip_text": "Opened via NFC/QR",
+        "revoked_copy": "This Room Key has been revoked.",
+        "show_save_to_garden": true
+      },
+      "scene_config": {
+        "scenes": [
+          {
+            "action_labels": {
+              "primary": "Begin a conversation",
+              "work_advance": "Show next artwork"
+            },
+            "id": "artwork_field",
+            "intro_copy": "Selected watercolour works.",
+            "label": "Artwork Field",
+            "layout": "hero-liquid-slideshow",
+            "primary_artwork_slug": null,
+            "roomkey_provenance_text": "Opened via RoomKey",
+            "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+            "title": "Christina Kerkvliet Goddard"
+          },
+          {
+            "artwork_order": [],
+            "id": "work_wall",
+            "label": "Work Wall",
+            "layout": "gallery-wall",
+            "selected_work_slug": null,
+            "work_detail_behaviour": "inline_detail_or_route"
+          },
+          {
+            "about_title": "Practice Studio",
+            "id": "practice_studio",
+            "label": "Practice Studio",
+            "layout": "studio-workbench",
+            "note_cards_enabled": true
+          },
+          {
+            "contact_title": "Calling Card",
+            "enquiry_cta": "Begin a conversation",
+            "id": "calling_card",
+            "label": "Calling Card",
+            "layout": "calling-paper"
+          }
+        ]
+      },
+      "schema_version": "presence-editable-config-v1",
+      "status": "published",
+      "style_dna": {
+        "artwork_treatment": "renderer_default",
+        "background_treatment": "renderer_default",
+        "canvas_mood": "warm",
+        "element_styles": {
+          "hero-title": {
+            "align": "right",
+            "font_mood": "editorial",
+            "italic": true,
+            "size": "large",
+            "weight": "bold"
+          }
+        },
+        "invitation_style": "framed-card",
+        "option_pack_id": "ink-room",
+        "palette": {
+          "accent": "#b56b38",
+          "bg": "#efe4d4",
+          "hero_stage_bg": "#eadbc7",
+          "ink": "#2c2119",
+          "line": "#987f61",
+          "muted": "#806754",
+          "paper": "#f4eadc",
+          "paper_warm": "#e6d2b9",
+          "theme_preset": "gallery_white",
+          "visual_mood": null
+        },
+        "spacing": {},
+        "typography": {
+          "body_font_id": "inter",
+          "body_stack": "Inter, system-ui, sans-serif",
+          "font_pack_id": "soft-studio",
+          "heading_font_id": "instrument-serif",
+          "heading_stack": "Instrument Serif, Georgia, serif"
+        }
+      },
+      "updated_at": "2026-06-03T03:05:28.231889",
+      "updated_by_user_id": 1,
+      "version": 26
+    },
+    "published_public_config": {
+      "asset_config": {
+        "hero_image": {
+          "alt_text": "Willow of Port Arthur, 2019. Watercolour on paper.",
+          "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+        },
+        "public_assets_only": true
+      },
+      "content_config": {
+        "about": {
+          "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+          "short_bio": "Selected watercolour works."
+        },
+        "contact": {
+          "contact_posture": "enquiry_form",
+          "location_label": "Moana, South Australia"
+        },
+        "display_name": "Christina Kerkvliet Goddard",
+        "headline": "Watercolour works across memory, colour, and lived landscape."
+      },
+      "enquiry_config": {
+        "copy": "Use the Presence enquiry form to contact the owner.",
+        "cta_label": "Begin a conversation",
+        "delivery_posture": "backend_enquiry_capture"
+      },
+      "locked_fields": {
+        "reduced_motion_fallback": {
+          "reason": "Accessibility fallback must remain available.",
+          "system_controlled": true
+        },
+        "renderer_shell": {
+          "locked": true,
+          "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+        }
+      },
+      "motion_config": {
+        "blur_amount": 0.16,
+        "distortion_scale": 0.22,
+        "dither_strength": 0.28,
+        "film_grain_strength": 0.32,
+        "heavy_motion_enabled": false,
+        "intensity": "gentle",
+        "liquid_intensity": 0.2,
+        "liquid_style": "ripple",
+        "morph_speed_ms": 1350,
+        "reduced_motion_fallback": true,
+        "scene_transition_duration_ms": 1250,
+        "transition_style": "liquid_crossfade"
+      },
+      "published_at": "2026-06-03T03:05:28.231889",
+      "renderer_key": "ggm-faithful-room-v1",
+      "roomkey_config": {
+        "entry_label": "Opened via RoomKey",
+        "guest_entry_copy": "You have entered this Presence Room.",
+        "invalid_copy": "This Room Key is not available.",
+        "provenance_chip_text": "Opened via NFC/QR",
+        "revoked_copy": "This Room Key has been revoked.",
+        "show_save_to_garden": true
+      },
+      "scene_config": {
+        "scenes": [
+          {
+            "action_labels": {
+              "primary": "Begin a conversation",
+              "work_advance": "Show next artwork"
+            },
+            "id": "artwork_field",
+            "intro_copy": "Selected watercolour works.",
+            "label": "Artwork Field",
+            "layout": "hero-liquid-slideshow",
+            "roomkey_provenance_text": "Opened via RoomKey",
+            "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+            "title": "Christina Kerkvliet Goddard"
+          },
+          {
+            "id": "work_wall",
+            "label": "Work Wall",
+            "layout": "gallery-wall",
+            "work_detail_behaviour": "inline_detail_or_route"
+          },
+          {
+            "about_title": "Practice Studio",
+            "id": "practice_studio",
+            "label": "Practice Studio",
+            "layout": "studio-workbench",
+            "note_cards_enabled": true
+          },
+          {
+            "contact_title": "Calling Card",
+            "enquiry_cta": "Begin a conversation",
+            "id": "calling_card",
+            "label": "Calling Card",
+            "layout": "calling-paper"
+          }
+        ]
+      },
+      "schema_version": "presence-editable-config-v1",
+      "status": "published",
+      "style_dna": {
+        "artwork_treatment": "renderer_default",
+        "background_treatment": "renderer_default",
+        "canvas_mood": "warm",
+        "element_styles": {
+          "hero-title": {
+            "align": "right",
+            "font_mood": "editorial",
+            "italic": true,
+            "size": "large",
+            "weight": "bold"
+          }
+        },
+        "invitation_style": "framed-card",
+        "option_pack_id": "ink-room",
+        "palette": {
+          "accent": "#b56b38",
+          "bg": "#efe4d4",
+          "hero_stage_bg": "#eadbc7",
+          "ink": "#2c2119",
+          "line": "#987f61",
+          "muted": "#806754",
+          "paper": "#f4eadc",
+          "paper_warm": "#e6d2b9",
+          "theme_preset": "gallery_white"
+        },
+        "typography": {
+          "body_font_id": "inter",
+          "body_stack": "Inter, system-ui, sans-serif",
+          "font_pack_id": "soft-studio",
+          "heading_font_id": "instrument-serif",
+          "heading_stack": "Instrument Serif, Georgia, serif"
+        }
+      },
+      "version": 26
+    },
+    "room": {
+      "display_name": "Christina Kerkvliet Goddard",
+      "id": 11,
+      "owner_user_id": 1,
+      "slug": "ggm-christina-goddard"
+    },
+    "suggested_config": null
+  },
+  "ok": true,
+  "request_id": "3b56f324-869a-492a-854f-41d08b0361cb"
+}

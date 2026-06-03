@@ -1,0 +1,757 @@
+{
+  "renderer_key": "presence-studio-v2-room",
+  "scene_config": {
+    "scenes": [
+      {
+        "action_labels": {
+          "primary": "Begin a conversation",
+          "work_advance": "Show next artwork"
+        },
+        "id": "artwork_field",
+        "intro_copy": "Selected watercolour works.",
+        "label": "Artwork Field",
+        "layout": "hero-liquid-slideshow",
+        "primary_artwork_slug": null,
+        "roomkey_provenance_text": "Opened via RoomKey",
+        "subtitle": "Watercolour works across memory, colour, and lived landscape.",
+        "title": "Christina Kerkvliet Goddard"
+      },
+      {
+        "artwork_order": [],
+        "id": "work_wall",
+        "label": "Work Wall",
+        "layout": "gallery-wall",
+        "selected_work_slug": null,
+        "work_detail_behaviour": "inline_detail_or_route"
+      },
+      {
+        "about_title": "Practice Studio",
+        "id": "practice_studio",
+        "label": "Practice Studio",
+        "layout": "studio-workbench",
+        "note_cards_enabled": true
+      },
+      {
+        "contact_title": "Calling Card",
+        "enquiry_cta": "Begin a conversation",
+        "id": "calling_card",
+        "label": "Calling Card",
+        "layout": "calling-paper"
+      }
+    ],
+    "studio_v2": {
+      "schemaVersion": "presence-studio-v2-v1",
+      "worldId": "gallery",
+      "chambers": [
+        {
+          "id": "field",
+          "label": "Artwork Field",
+          "objectIds": [
+            "hero-image",
+            "hero-title",
+            "hero-caption"
+          ]
+        },
+        {
+          "id": "wall",
+          "label": "Work Wall",
+          "objectIds": [
+            "work-wall-title",
+            "work-feature",
+            "work-wall"
+          ]
+        },
+        {
+          "id": "studio",
+          "label": "Practice Studio",
+          "objectIds": [
+            "practice-title",
+            "biography",
+            "main-statement",
+            "process-notes",
+            "studio-fragments"
+          ]
+        },
+        {
+          "id": "card",
+          "label": "Calling Card",
+          "objectIds": [
+            "calling-title",
+            "calling-body",
+            "invitation-cta"
+          ]
+        },
+        {
+          "id": "contact",
+          "label": "Contact",
+          "objectIds": [
+            "contact-website"
+          ]
+        },
+        {
+          "id": "portal",
+          "label": "Links",
+          "objectIds": [
+            "link-1"
+          ]
+        }
+      ],
+      "objectState": {
+        "hero-image": {
+          "chamberId": "field",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 1
+          },
+          "locked": false,
+          "pinned": false
+        },
+        "hero-title": {
+          "chamberId": "field",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 2
+          },
+          "locked": false,
+          "pinned": false
+        },
+        "hero-caption": {
+          "chamberId": "field",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 3
+          },
+          "locked": false,
+          "pinned": false
+        },
+        "work-wall-title": {
+          "chamberId": "wall",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 1
+          },
+          "locked": false,
+          "pinned": false
+        },
+        "work-feature": {
+          "chamberId": "wall",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 2
+          },
+          "locked": false,
+          "pinned": false
+        },
+        "work-wall": {
+          "chamberId": "wall",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 3
+          },
+          "locked": false,
+          "pinned": false
+        },
+        "practice-title": {
+          "chamberId": "studio",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 1
+          },
+          "locked": false,
+          "pinned": false
+        },
+        "biography": {
+          "chamberId": "studio",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 2
+          },
+          "locked": false,
+          "pinned": false
+        },
+        "main-statement": {
+          "chamberId": "studio",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 3
+          },
+          "locked": false,
+          "pinned": false
+        },
+        "process-notes": {
+          "chamberId": "studio",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 4
+          },
+          "locked": false,
+          "pinned": false
+        },
+        "studio-fragments": {
+          "chamberId": "studio",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 5
+          },
+          "locked": false,
+          "pinned": false
+        },
+        "calling-title": {
+          "chamberId": "card",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 1
+          },
+          "locked": false,
+          "pinned": false
+        },
+        "calling-body": {
+          "chamberId": "card",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 2
+          },
+          "locked": false,
+          "pinned": false
+        },
+        "invitation-cta": {
+          "chamberId": "card",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 3
+          },
+          "locked": false,
+          "pinned": false
+        },
+        "contact-website": {
+          "chamberId": "contact",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 1
+          },
+          "locked": false,
+          "pinned": false
+        },
+        "link-1": {
+          "chamberId": "portal",
+          "visibility": {
+            "public": true,
+            "mobile": true
+          },
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "rotation": 0,
+            "zIndex": 1
+          },
+          "locked": false,
+          "pinned": false
+        }
+      },
+      "mobileRecovery": {
+        "transformsSuspendedOnMobile": false,
+        "safeRecoveryAppliedAt": "",
+        "strategy": "preserve"
+      }
+    }
+  },
+  "style_dna": {
+    "artwork_treatment": "renderer_default",
+    "background_treatment": "renderer_default",
+    "canvas_mood": "warm",
+    "element_styles": {
+      "hero-title": {
+        "align": "right",
+        "font_mood": "editorial",
+        "italic": true,
+        "size": "large",
+        "weight": "bold"
+      }
+    },
+    "invitation_style": "framed-card",
+    "option_pack_id": "ink-room",
+    "palette": {
+      "accent": "#b56b38",
+      "bg": "#efe4d4",
+      "hero_stage_bg": "#eadbc7",
+      "ink": "#2c2119",
+      "line": "#987f61",
+      "muted": "#806754",
+      "paper": "#f4eadc",
+      "paper_warm": "#e6d2b9",
+      "theme_preset": "gallery_white",
+      "visual_mood": null
+    },
+    "spacing": {},
+    "typography": {
+      "body_font_id": "inter",
+      "body_stack": "Inter, system-ui, sans-serif",
+      "font_pack_id": "soft-studio",
+      "heading_font_id": "instrument-serif",
+      "heading_stack": "Instrument Serif, Georgia, serif"
+    },
+    "studio_v2": {
+      "schemaVersion": "presence-studio-v2-v1",
+      "skin": {
+        "background": "#efe4d4",
+        "texture": "paper",
+        "auraIntensity": 0.45,
+        "motionIntensity": "gentle",
+        "displayFont": "Instrument Serif, Georgia, serif",
+        "headingWeight": 600,
+        "objectRadius": 18,
+        "borderStyle": "hairline",
+        "shadowDepth": 0.35,
+        "accentColor": "#b56b38"
+      }
+    }
+  },
+  "motion_config": {
+    "blur_amount": 0.16,
+    "distortion_scale": 0.22,
+    "dither_strength": 0.28,
+    "film_grain_strength": 0.32,
+    "heavy_motion_enabled": false,
+    "intensity": "gentle",
+    "liquid_intensity": 0.2,
+    "liquid_style": "ripple",
+    "morph_speed_ms": 1350,
+    "reduced_motion_fallback": true,
+    "scene_transition_duration_ms": 1250,
+    "transition_style": "liquid_crossfade",
+    "studio_v2": {
+      "motionIntensity": "gentle",
+      "auraIntensity": 0.45
+    }
+  },
+  "asset_config": {
+    "artworks": [],
+    "attached_assets": [
+      {
+        "alt_text": null,
+        "asset_type": "image",
+        "media_id": "783471c01a894f9ebddd039f83d4ac68",
+        "mime_type": "image/png",
+        "role": "cover",
+        "size_bytes": 3324,
+        "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+      },
+      {
+        "alt_text": null,
+        "asset_type": "image",
+        "media_id": "5b3475d7679d4c668cc6900af1ef9524",
+        "mime_type": "image/png",
+        "role": "cover",
+        "size_bytes": 3324,
+        "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/5b3475d7679d4c668cc6900af1ef9524.png"
+      },
+      {
+        "alt_text": null,
+        "asset_type": "image",
+        "media_id": "79f0d922f0f44e14a3bace72d27d5853",
+        "mime_type": "image/png",
+        "role": "cover",
+        "size_bytes": 3324,
+        "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/79f0d922f0f44e14a3bace72d27d5853.png"
+      },
+      {
+        "alt_text": null,
+        "asset_type": "image",
+        "media_id": "a69a95c5ecc74429aee725bd0c35f225",
+        "mime_type": "image/png",
+        "role": "cover",
+        "size_bytes": 3324,
+        "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/a69a95c5ecc74429aee725bd0c35f225.png"
+      },
+      {
+        "alt_text": null,
+        "asset_type": "image",
+        "media_id": "0b5d4bed25954464981787ef41bd6fa8",
+        "mime_type": "image/png",
+        "role": "cover",
+        "size_bytes": 3324,
+        "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/0b5d4bed25954464981787ef41bd6fa8.png"
+      },
+      {
+        "alt_text": null,
+        "asset_type": "image",
+        "media_id": "64b5211d63fa44cdbf7d93028d179b28",
+        "mime_type": "image/png",
+        "role": "cover",
+        "size_bytes": 3324,
+        "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/64b5211d63fa44cdbf7d93028d179b28.png"
+      },
+      {
+        "alt_text": null,
+        "asset_type": "image",
+        "height": 300,
+        "media_id": "86984b0458914346bfaca08ea3123996",
+        "mime_type": "image/png",
+        "role": "cover",
+        "size_bytes": 3324,
+        "status": "draft_uploaded",
+        "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/86984b0458914346bfaca08ea3123996.png",
+        "visibility": "public_unlisted",
+        "width": 400
+      }
+    ],
+    "hero_image": {
+      "alt_text": "Willow of Port Arthur, 2019. Watercolour on paper.",
+      "url": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png"
+    },
+    "public_assets_only": true,
+    "thumbnails": [],
+    "studio_v2": {
+      "assets": [
+        {
+          "objectId": "hero-image",
+          "src": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png",
+          "alt": "Willow of Port Arthur, 2019. Watercolour on paper."
+        },
+        {
+          "objectId": "work-feature",
+          "src": "/ggm/works/willow-of-port-arthur-2019.webp",
+          "alt": "Willow of Port Arthur, 2019. Watercolour on paper."
+        }
+      ]
+    }
+  },
+  "content_config": {
+    "about": {
+      "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+      "curatorial_statement": null,
+      "long_story": null,
+      "practice_statement": null,
+      "short_bio": "Selected watercolour works."
+    },
+    "contact": {
+      "availability_status": null,
+      "contact_posture": "enquiry_form",
+      "location_label": "Moana, South Australia",
+      "primary_cta_label": null,
+      "primary_cta_url": null
+    },
+    "display_name": "Christina Kerkvliet Goddard",
+    "headline": "Watercolour works across memory, colour, and lived landscape.",
+    "hero_subtitle": null,
+    "hero_title": null,
+    "works": [],
+    "studio_v2": {
+      "schemaVersion": "presence-studio-v2-v1",
+      "roomId": "11",
+      "slug": "ggm-christina-goddard",
+      "title": "Christina Kerkvliet Goddard",
+      "tagline": "Watercolour works across memory, colour, and lived landscape.",
+      "objects": [
+        {
+          "id": "hero-image",
+          "type": "image",
+          "role": "image",
+          "title": "Cover image",
+          "meta": "",
+          "detail": "",
+          "link": "",
+          "image": {
+            "src": "https://rsskwpfuxoowuubvegbr.supabase.co/storage/v1/object/public/presence-media/presence/rooms/11/images/783471c01a894f9ebddd039f83d4ac68.png",
+            "alt": "Willow of Port Arthur, 2019. Watercolour on paper."
+          }
+        },
+        {
+          "id": "hero-title",
+          "type": "text",
+          "role": "text",
+          "title": "Christina Kerkvliet Goddard",
+          "meta": "",
+          "detail": "",
+          "link": ""
+        },
+        {
+          "id": "hero-caption",
+          "type": "text",
+          "role": "text",
+          "title": "Watercolour works across memory, colour, and lived landscape.",
+          "meta": "",
+          "detail": "",
+          "link": ""
+        },
+        {
+          "id": "work-wall-title",
+          "type": "text",
+          "role": "text",
+          "title": "A viewing tray of selected watercolour works.",
+          "meta": "",
+          "detail": "",
+          "link": ""
+        },
+        {
+          "id": "work-feature",
+          "type": "image",
+          "role": "image",
+          "title": "Willow of Port Arthur",
+          "meta": "",
+          "detail": "A luminous green canopy where atmosphere and recollection merge into a soft, suspended scene.",
+          "link": "",
+          "image": {
+            "src": "/ggm/works/willow-of-port-arthur-2019.webp",
+            "alt": "Willow of Port Arthur, 2019. Watercolour on paper."
+          }
+        },
+        {
+          "id": "work-wall",
+          "type": "image",
+          "role": "work",
+          "title": "Work wall",
+          "meta": "",
+          "detail": "Hung in chronological pockets. Scroll the tray to walk the wall. Tap any plate for the work's room.",
+          "link": ""
+        },
+        {
+          "id": "practice-title",
+          "type": "text",
+          "role": "text",
+          "title": "Practice Studio",
+          "meta": "",
+          "detail": "",
+          "link": ""
+        },
+        {
+          "id": "biography",
+          "type": "text",
+          "role": "text",
+          "title": "Christina Kerkvliet Goddard's external artist portfolio.",
+          "meta": "",
+          "detail": "",
+          "link": ""
+        },
+        {
+          "id": "main-statement",
+          "type": "text",
+          "role": "text",
+          "title": "Memory Colours revisits and haunts its sites of episode as a way to present how colour can generate memory.",
+          "meta": "",
+          "detail": "",
+          "link": ""
+        },
+        {
+          "id": "process-notes",
+          "type": "text",
+          "role": "text",
+          "title": "Process notes",
+          "meta": "",
+          "detail": "",
+          "link": ""
+        },
+        {
+          "id": "studio-fragments",
+          "type": "text",
+          "role": "text",
+          "title": "Studio fragments",
+          "meta": "",
+          "detail": "",
+          "link": ""
+        },
+        {
+          "id": "calling-title",
+          "type": "text",
+          "role": "text",
+          "title": "Calling Card",
+          "meta": "",
+          "detail": "",
+          "link": ""
+        },
+        {
+          "id": "calling-body",
+          "type": "text",
+          "role": "text",
+          "title": "Use the Presence enquiry form to begin a conversation.",
+          "meta": "",
+          "detail": "Use the Presence enquiry form to begin a conversation.",
+          "link": ""
+        },
+        {
+          "id": "invitation-cta",
+          "type": "cta",
+          "role": "cta",
+          "title": "Begin a conversation",
+          "meta": "",
+          "detail": "",
+          "link": ""
+        },
+        {
+          "id": "contact-website",
+          "type": "text",
+          "role": "contact",
+          "title": "Website",
+          "meta": "",
+          "detail": "https://your-presence.vercel.app/presence/ggm-christina-goddard",
+          "link": "https://your-presence.vercel.app/presence/ggm-christina-goddard"
+        },
+        {
+          "id": "link-1",
+          "type": "link",
+          "role": "link-card",
+          "title": "Website",
+          "meta": "",
+          "detail": "website",
+          "link": "https://your-presence.vercel.app/presence/ggm-christina-goddard"
+        }
+      ],
+      "moodboardRefs": [],
+      "traces": {
+        "enabled": false,
+        "demo": true,
+        "disclosure": "Demo traces",
+        "guestbookEntries": []
+      },
+      "cta": {
+        "label": "Begin a conversation",
+        "href": ""
+      }
+    }
+  },
+  "roomkey_config": {
+    "entry_label": "Opened via RoomKey",
+    "guest_entry_copy": "You have entered this Presence Room.",
+    "invalid_copy": "This Room Key is not available.",
+    "provenance_chip_text": "Opened via NFC/QR",
+    "revoked_copy": "This Room Key has been revoked.",
+    "show_save_to_garden": true,
+    "studio_v2": {
+      "portals": [
+        {
+          "objectId": "link-1",
+          "label": "Website",
+          "url": "https://your-presence.vercel.app/presence/ggm-christina-goddard"
+        }
+      ]
+    }
+  },
+  "enquiry_config": {
+    "availability_status": null,
+    "copy": "Use the Presence enquiry form to contact the owner.",
+    "cta_label": "Begin a conversation",
+    "delivery_posture": "backend_enquiry_capture",
+    "studio_v2": {
+      "primaryCta": {
+        "label": "Begin a conversation",
+        "href": ""
+      }
+    }
+  },
+  "locked_fields": {
+    "reduced_motion_fallback": {
+      "reason": "Accessibility fallback must remain available.",
+      "system_controlled": true
+    },
+    "renderer_shell": {
+      "locked": true,
+      "reason": "Commissioned renderer chrome and shader contract. Owners control scenes, content, assets, style tokens, motion tokens, RoomKey, and enquiry posture through this editor."
+    }
+  }
+}

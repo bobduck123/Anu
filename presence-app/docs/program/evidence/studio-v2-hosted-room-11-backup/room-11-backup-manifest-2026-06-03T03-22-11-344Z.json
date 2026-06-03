@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-06-03T03-22-11-344Z",
+  "roomId": 11,
+  "slug": "ggm-christina-goddard",
+  "baseUrl": "https://your-presence.vercel.app",
+  "apiBase": "https://anu-back-end.vercel.app",
+  "backupFiles": [
+    "room-11-collections-2026-06-03T03-22-11-344Z.json",
+    "room-11-editor-draft-2026-06-03T03-22-11-344Z.json",
+    "room-11-editor-history-2026-06-03T03-22-11-344Z.json",
+    "room-11-editor-overview-2026-06-03T03-22-11-344Z.json",
+    "room-11-owner-node-2026-06-03T03-22-11-344Z.json",
+    "room-11-public-html-2026-06-03T03-22-11-344Z.html",
+    "room-11-services-2026-06-03T03-22-11-344Z.json",
+    "room-11-works-2026-06-03T03-22-11-344Z.json"
+  ],
+  "nodeDisplayName": "Christina Kerkvliet Goddard",
+  "hasDraft": false,
+  "hasPublished": true
+}
