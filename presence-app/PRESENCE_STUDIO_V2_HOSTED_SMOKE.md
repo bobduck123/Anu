@@ -327,3 +327,9 @@ docs/program/evidence/presence-studio-v2-studio-recovery-s1-hosted/
 ```
 
 Verdict: Room 11 remains ready for controlled operator-led pilot use. Public self-serve onboarding is still not ready.
+
+Release baseline:
+
+- Baseline product commit: `7a27ec30abebf871f13ccda3830378542f16115d`.
+- Deployment `dpl_EEh5vdTqXMis3nTy8wmP6LYdwNqC` was originally created from dirty local state based on `f81fca829742939ad24865521d5c2d52f3a4bdfb`.
+- The baseline commit records the deployed S1 product code, tests, reports, smoke scripts, and safe evidence in Git.

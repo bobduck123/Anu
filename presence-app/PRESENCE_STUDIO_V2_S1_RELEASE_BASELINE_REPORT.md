@@ -207,7 +207,7 @@ Warnings:
 Baseline product commit:
 
 ```txt
-Pending at report creation. See final handoff / follow-up report update after commit.
+7a27ec30abebf871f13ccda3830378542f16115d
 ```
 
 Branch:
@@ -219,7 +219,7 @@ feature/presence-ecosystem-alpha
 Relationship to deployment:
 
 - The deployed production build was created from dirty local state based on `f81fca829742939ad24865521d5c2d52f3a4bdfb`.
-- The baseline commit will supersede that dirty deployment state in Git by committing the S1 product code, tests, reports, smoke scripts, and safe evidence.
+- Baseline commit `7a27ec30abebf871f13ccda3830378542f16115d` supersedes that dirty deployment state in Git by committing the S1 product code, tests, reports, smoke scripts, and safe evidence.
 - Any later report-only commit may supersede the baseline commit without changing product behavior.
 
 ## S2 Readiness

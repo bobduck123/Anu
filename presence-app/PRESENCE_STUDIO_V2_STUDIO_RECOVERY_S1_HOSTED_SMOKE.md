@@ -185,7 +185,7 @@ P2:
 
 - Hosted lifecycle mutation was narrowed after one timeout; add a separate non-destructive hosted UI smoke for Skin Lab and Moodboard if desired.
 - Current S1 still lacks S2 direct manipulation.
-- Deployment was made from a dirty local working tree; commit/push should follow before treating this as a durable release baseline.
+- Deployment was made from a dirty local working tree. Baseline commit `7a27ec30abebf871f13ccda3830378542f16115d` now records the S1 product code, tests, reports, smoke scripts, and safe evidence in Git.
 
 ## Verdicts
 

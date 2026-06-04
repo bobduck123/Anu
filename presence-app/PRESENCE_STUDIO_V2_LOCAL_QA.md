@@ -695,4 +695,4 @@ docs/program/evidence/presence-studio-v2-studio-recovery-s1-hosted/
 Known notes:
 
 - Vercel deploy reported existing `npm audit` findings: 2 moderate and 1 high vulnerability. They were not addressed in this S1 smoke pass.
-- Deployment was made from a dirty local working tree, so commit/push should follow before treating this as the durable release baseline.
+- Deployment was made from a dirty local working tree. Baseline commit `7a27ec30abebf871f13ccda3830378542f16115d` now records the S1 product code, tests, reports, smoke scripts, and safe evidence in Git.
