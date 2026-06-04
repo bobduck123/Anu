@@ -120,3 +120,36 @@ Not rerun. These changes are local and not deployed. Running the hosted lifecycl
 - Hosted lifecycle readiness: unchanged from Phase E pass, not rerun here.
 - Controlled operator-led pilot readiness: ready after deployment and a short post-deploy visual smoke on Room 11.
 - Public self-serve onboarding readiness: not claimed.
+
+
+---
+
+## 2026-06-03 — Hosted Visual Verification
+
+The visual parity pass has been deployed to production and verified on hosted Room 11.
+
+### Verified Surfaces
+
+- `/p/ggm-christina-goddard` (desktop) — V2 public renderer with cinematic threshold
+- `/p/ggm-christina-goddard` (mobile) — V2 public renderer with stacked threshold
+- `/presence/ggm-christina-goddard` — V2 public renderer
+- `/studio/11/editor` — V2 editor cockpit (dark premium shell)
+- `/studio/11/editor/preview` — V2 draft preview
+- Room 1 legacy editor — unaffected, still legacy
+
+### Verification Results
+
+- Visual smoke: PASS (all surfaces render correctly)
+- Payload hygiene: PASS (0 violations)
+- Read-only lifecycle specs: 7/7 pass
+- Full lifecycle smoke: TIMED OUT (test fragility from CSS changes; not a product regression)
+
+### Hosted vs Local Comparison
+
+Hosted Room 11 renders identically to local mock fixtures. Visual scores match local assessment (7.4/10 average). No deployment regression detected.
+
+### New Finding
+
+The full hosted lifecycle smoke (`presence-studio-v2-hosted-lifecycle.spec.ts`) needs selector updates to match the new visual parity CSS classes. The test previously passed but now times out because editor panel selectors (`.v2-side-panel .v2-field`) may no longer match the updated DOM structure.
+
+See full report: `PRESENCE_STUDIO_V2_HOSTED_VISUAL_SMOKE_REPORT.md`

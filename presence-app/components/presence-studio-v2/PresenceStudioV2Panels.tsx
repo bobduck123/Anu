@@ -39,10 +39,10 @@ export function SkinLabSheet({ skin, open, onClose, onChange }: SkinLabSheetProp
   };
 
   return (
-    <div className="v2-side-panel">
+    <div className="v2-side-panel" data-testid="studio-v2-skin-sheet">
       <div className="v2-panel-head">
         <span className="v2-panel-title">Room Skin Lab</span>
-        <button className="v2-btn" onClick={onClose}>✕</button>
+        <button className="v2-btn" data-testid="studio-v2-sheet-close" onClick={onClose}>✕</button>
       </div>
       <div className="v2-panel-body">
         {Object.entries(grouped).map(([cat, ctrls]) => (
@@ -56,6 +56,7 @@ export function SkinLabSheet({ skin, open, onClose, onChange }: SkinLabSheetProp
                     <span className="v2-skin-label">{ctrl.label}</span>
                     <input
                       className="v2-skin-slider"
+                      data-testid={`studio-v2-skin-${ctrl.id}`}
                       type="range"
                       min={ctrl.min}
                       max={ctrl.max}
@@ -132,10 +133,10 @@ export function ObjectEditorSheet({ object, open, onClose, onChange }: ObjectEdi
   };
 
   return (
-    <div className="v2-side-panel">
+    <div className="v2-side-panel" data-testid="studio-v2-object-sheet">
       <div className="v2-panel-head">
         <span className="v2-panel-title">Object Tuning</span>
-        <button className="v2-btn" onClick={onClose}>✕</button>
+        <button className="v2-btn" data-testid="studio-v2-sheet-close" onClick={onClose}>✕</button>
       </div>
       <div className="v2-panel-body">
         {object.locked && (
@@ -146,11 +147,11 @@ export function ObjectEditorSheet({ object, open, onClose, onChange }: ObjectEdi
         )}
         <div className="v2-field">
           <label>Title</label>
-          <input value={object.title} onChange={(e) => update({ title: e.target.value })} />
+          <input data-testid="studio-v2-object-title" value={object.title} onChange={(e) => update({ title: e.target.value })} />
         </div>
         <div className="v2-field">
           <label>Type</label>
-          <select value={object.type} onChange={(e) => update({ type: e.target.value as StudioV2Object["type"] })}>
+          <select data-testid="studio-v2-object-type" value={object.type} onChange={(e) => update({ type: e.target.value as StudioV2Object["type"] })}>
             {["text","note","image","link","portal","cta","testimonial","proof","event","service","shop","media","credential","moodboard"].map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
@@ -158,19 +159,20 @@ export function ObjectEditorSheet({ object, open, onClose, onChange }: ObjectEdi
         </div>
         <div className="v2-field">
           <label>Meta / subtitle</label>
-          <input value={object.meta || ""} onChange={(e) => update({ meta: e.target.value })} />
+          <input data-testid="studio-v2-object-meta" value={object.meta || ""} onChange={(e) => update({ meta: e.target.value })} />
         </div>
         <div className="v2-field">
           <label>Detail</label>
-          <textarea value={object.detail || ""} onChange={(e) => update({ detail: e.target.value })} />
+          <textarea data-testid="studio-v2-object-detail" value={object.detail || ""} onChange={(e) => update({ detail: e.target.value })} />
         </div>
         <div className="v2-field">
           <label>Link / portal target</label>
-          <input value={object.link || ""} onChange={(e) => update({ link: e.target.value })} />
+          <input data-testid="studio-v2-object-link" value={object.link || ""} onChange={(e) => update({ link: e.target.value })} />
         </div>
         <div className="v2-field">
           <label>Image URL</label>
           <input
+            data-testid="studio-v2-object-image"
             value={object.image?.src || ""}
             onChange={(e) => update({ image: e.target.value ? { src: e.target.value, alt: object.title } : undefined })}
           />
@@ -232,10 +234,10 @@ export function AddObjectSheet({ open, onClose, onAdd }: AddObjectSheetProps) {
   const selectedType = ADD_OBJECT_TYPES.find((t) => t.type === draft.type) || ADD_OBJECT_TYPES[0];
 
   return (
-    <div className="v2-side-panel">
+    <div className="v2-side-panel" data-testid="studio-v2-add-sheet">
       <div className="v2-panel-head">
         <span className="v2-panel-title">Add Object</span>
-        <button className="v2-btn" onClick={onClose}>✕</button>
+        <button className="v2-btn" data-testid="studio-v2-sheet-close" onClick={onClose}>✕</button>
       </div>
       <div className="v2-panel-body">
         <div className="v2-add-type-grid">
@@ -251,19 +253,19 @@ export function AddObjectSheet({ open, onClose, onAdd }: AddObjectSheetProps) {
         </div>
         <div className="v2-field">
           <label>Title</label>
-          <input value={draft.title} placeholder={selectedType.title} onChange={(e) => setDraft((p) => ({ ...p, title: e.target.value }))} />
+          <input data-testid="studio-v2-add-title" value={draft.title} placeholder={selectedType.title} onChange={(e) => setDraft((p) => ({ ...p, title: e.target.value }))} />
         </div>
         <div className="v2-field">
           <label>Meta</label>
-          <input value={draft.meta} placeholder={selectedType.meta} onChange={(e) => setDraft((p) => ({ ...p, meta: e.target.value }))} />
+          <input data-testid="studio-v2-add-meta" value={draft.meta} placeholder={selectedType.meta} onChange={(e) => setDraft((p) => ({ ...p, meta: e.target.value }))} />
         </div>
         <div className="v2-field">
           <label>Detail</label>
-          <textarea value={draft.detail} onChange={(e) => setDraft((p) => ({ ...p, detail: e.target.value }))} />
+          <textarea data-testid="studio-v2-add-detail" value={draft.detail} onChange={(e) => setDraft((p) => ({ ...p, detail: e.target.value }))} />
         </div>
         <div className="v2-field">
           <label>Link</label>
-          <input value={draft.link} placeholder="Optional URL" onChange={(e) => setDraft((p) => ({ ...p, link: e.target.value }))} />
+          <input data-testid="studio-v2-add-link" value={draft.link} placeholder="Optional URL" onChange={(e) => setDraft((p) => ({ ...p, link: e.target.value }))} />
         </div>
         <button
           className="v2-btn primary"
@@ -303,10 +305,10 @@ export function MoodboardSheet({ open, onClose, refs, accent, onAdd, onRemove }:
   const canAdd = draft.label.trim().length > 0;
 
   return (
-    <div className="v2-side-panel">
+    <div className="v2-side-panel" data-testid="studio-v2-moodboard-sheet">
       <div className="v2-panel-head">
         <span className="v2-panel-title">Moodboard / Influences</span>
-        <button className="v2-btn" onClick={onClose}>✕</button>
+        <button className="v2-btn" data-testid="studio-v2-sheet-close" onClick={onClose}>✕</button>
       </div>
       <div className="v2-panel-body">
         <div className="v2-mood-grid">
@@ -322,15 +324,15 @@ export function MoodboardSheet({ open, onClose, refs, accent, onAdd, onRemove }:
         </div>
         <div className="v2-field">
           <label>Title</label>
-          <input value={draft.label} placeholder="Reference title" onChange={(e) => setDraft((p) => ({ ...p, label: e.target.value }))} />
+          <input data-testid="studio-v2-mood-title" value={draft.label} placeholder="Reference title" onChange={(e) => setDraft((p) => ({ ...p, label: e.target.value }))} />
         </div>
         <div className="v2-field">
           <label>URL</label>
-          <input value={draft.url} placeholder="Optional link" onChange={(e) => setDraft((p) => ({ ...p, url: e.target.value }))} />
+          <input data-testid="studio-v2-mood-url" value={draft.url} placeholder="Optional link" onChange={(e) => setDraft((p) => ({ ...p, url: e.target.value }))} />
         </div>
         <div className="v2-field">
           <label>Detail</label>
-          <input value={draft.detail} placeholder="Optional detail" onChange={(e) => setDraft((p) => ({ ...p, detail: e.target.value }))} />
+          <input data-testid="studio-v2-mood-detail" value={draft.detail} placeholder="Optional detail" onChange={(e) => setDraft((p) => ({ ...p, detail: e.target.value }))} />
         </div>
         <button
           className="v2-btn primary"

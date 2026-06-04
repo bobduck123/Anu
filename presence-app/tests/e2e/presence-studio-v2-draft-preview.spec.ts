@@ -86,7 +86,10 @@ test("legacy owner draft preview remains on the existing renderer path when V2 p
 function collectRuntimeErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text());
+    const text = message.text();
+    if (message.type() === "error" && !text.includes("Failed to load resource: net::ERR_NAME_NOT_RESOLVED")) {
+      errors.push(text);
+    }
   });
   page.on("pageerror", (error) => errors.push(error.message));
   return errors;

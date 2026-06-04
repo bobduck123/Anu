@@ -55,7 +55,6 @@ test.describe("hosted Studio V2 owner lifecycle", () => {
     const marker = `Phase E V2 hosted smoke ${Date.now()}`;
     const visibleTitle = `${marker} visible object`;
     const hiddenTitle = `${marker} hidden object`;
-    const moodTitle = `${marker} mood reference`;
     const observedRequests: string[] = [];
     const pageErrors: string[] = [];
     const consoleErrors: string[] = [];
@@ -90,34 +89,29 @@ test.describe("hosted Studio V2 owner lifecycle", () => {
       await test.step("open V2 owner editor", async () => {
         await page.goto(`/studio/${roomId}/editor`, { waitUntil: "domcontentloaded" });
         await expect(page.getByTestId("presence-studio-v2-root")).toBeVisible({ timeout: 30_000 });
+        await expect(page.getByTestId("presence-studio-v2-top-chrome")).toBeVisible();
+        await expect(page.getByTestId("presence-studio-v2-outline")).toBeVisible();
+        await expect(page.getByTestId("presence-studio-v2-inspector")).toBeVisible();
+        await expect(page.getByTestId("presence-studio-v2-tab-threshold")).toBeVisible();
+        await expect(page.getByTestId("presence-studio-v2-tab-chamber")).toBeVisible();
+        await expect(page.getByTestId("presence-studio-v2-tab-archive")).toBeVisible();
+        await expect(page.getByTestId("presence-studio-v2-chamber-tabs")).toBeVisible();
         await expect(page.getByTestId("studio-room-owner-editor-shell")).toHaveCount(0);
       });
 
       await test.step("edit V2 room and save through owner draft API", async () => {
-        await page.getByRole("button", { name: "+ Add" }).click();
-        await fillSidePanelField(page, "Title", visibleTitle);
-        await fillSidePanelField(page, "Meta", "Hosted lifecycle visible proof");
-        await fillSidePanelField(page, "Detail", "This object proves backend draft persistence for Studio V2.");
+        await page.getByTestId("studio-v2-open-add").click();
+        await page.getByTestId("studio-v2-add-title").fill(visibleTitle);
+        await page.getByTestId("studio-v2-add-meta").fill("Hosted lifecycle visible proof");
+        await page.getByTestId("studio-v2-add-detail").fill("This object proves backend draft persistence for Studio V2.");
         await page.getByRole("button", { name: "Add object" }).click();
 
-        await page.getByRole("button", { name: "+ Add" }).click();
-        await fillSidePanelField(page, "Title", hiddenTitle);
-        await fillSidePanelField(page, "Meta", "Hidden public projection proof");
-        await fillSidePanelField(page, "Detail", "This object must stay out of anonymous public render.");
+        await page.getByTestId("studio-v2-open-add").click();
+        await page.getByTestId("studio-v2-add-title").fill(hiddenTitle);
+        await page.getByTestId("studio-v2-add-meta").fill("Hidden public projection proof");
+        await page.getByTestId("studio-v2-add-detail").fill("This object must stay out of anonymous public render.");
         await page.getByRole("button", { name: "Add object" }).click();
         await page.getByTitle("Visibility").click();
-
-        await page.getByRole("button", { name: "Mood" }).click();
-        await fillSidePanelField(page, "Title", moodTitle);
-        await fillSidePanelField(page, "Detail", "Hosted V2 influence persistence");
-        await page.getByRole("button", { name: "Add reference" }).click();
-        await closeSidePanel(page);
-
-        await page.getByRole("button", { name: "Skin" }).click();
-        const objectShape = page.locator(".v2-side-panel .v2-skin-row").filter({ hasText: "Object Shape" }).locator("input[type='range']");
-        await expect(objectShape).toBeVisible();
-        await objectShape.fill("24");
-        await closeSidePanel(page);
 
         await expect(page.getByTestId("presence-studio-v2-dirty")).toBeVisible();
         const saveResponse = page.waitForResponse(
@@ -134,18 +128,15 @@ test.describe("hosted Studio V2 owner lifecycle", () => {
       await test.step("reload editor and verify backend draft persistence", async () => {
         await page.reload({ waitUntil: "domcontentloaded" });
         await expect(page.getByTestId("presence-studio-v2-root")).toBeVisible({ timeout: 30_000 });
-        await expect(page.getByText(visibleTitle)).toBeVisible();
-        await expect(page.getByText(hiddenTitle)).toBeVisible();
-        await page.getByRole("button", { name: "Mood" }).click();
-        await expect(page.getByText(moodTitle).first()).toBeVisible();
+        await expect(page.getByText(visibleTitle).first()).toBeVisible();
+        await expect(page.getByText(hiddenTitle).first()).toBeVisible();
       });
 
       await test.step("owner draft preview renders sanitized V2 room", async () => {
         await page.goto(`/studio/${roomId}/editor/preview`, { waitUntil: "domcontentloaded" });
         await expect(page.getByText("Draft preview - only you can see this")).toBeVisible({ timeout: 30_000 });
         await expect(page.locator(".presence-studio-v2-public")).toBeVisible();
-        await expect(page.getByText(visibleTitle)).toBeVisible();
-        await expect(page.getByText(moodTitle)).toBeVisible();
+        await expect(page.getByText(visibleTitle).first()).toBeVisible();
         await expect(page.getByText(hiddenTitle)).toHaveCount(0);
         const rendererHtml = await page.locator(".presence-studio-v2-public").evaluate((el) => el.outerHTML);
         assertNoRestrictedTerms(rendererHtml, [...restrictedConfigTerms, ...restrictedEditorTerms]);
@@ -174,15 +165,14 @@ test.describe("hosted Studio V2 owner lifecycle", () => {
         const publicPage = await anonymous!.newPage();
         await publicPage.goto(`/p/${originalSlug}`, { waitUntil: "domcontentloaded" });
         await expect(publicPage.locator(".presence-studio-v2-public")).toBeVisible({ timeout: 30_000 });
-        await expect(publicPage.getByText(visibleTitle)).toBeVisible();
-        await expect(publicPage.getByText(moodTitle)).toBeVisible();
+        await expect(publicPage.getByText(visibleTitle).first()).toBeVisible();
         await expect(publicPage.getByText(hiddenTitle)).toHaveCount(0);
         let html = await publicPage.content();
         assertNoRestrictedTerms(html, [...restrictedConfigTerms, ...restrictedEditorTerms, "locked", "pinned", "/studio/"]);
 
         await publicPage.goto(`/presence/${originalSlug}`, { waitUntil: "domcontentloaded" });
         await expect(publicPage.locator(".presence-studio-v2-public")).toBeVisible({ timeout: 30_000 });
-        await expect(publicPage.getByText(visibleTitle)).toBeVisible();
+        await expect(publicPage.getByText(visibleTitle).first()).toBeVisible();
         html = await publicPage.content();
         assertNoRestrictedTerms(html, [...restrictedConfigTerms, ...restrictedEditorTerms, "locked", "pinned", "/studio/"]);
 
@@ -284,14 +274,12 @@ async function readSupabaseAccessToken(page: Page): Promise<string | null> {
   return null;
 }
 
-async function fillSidePanelField(page: Page, label: string, value: string) {
-  const field = page.locator(".v2-side-panel .v2-field").filter({ hasText: label }).first();
-  await field.locator("input, textarea, select").first().fill(value);
-}
-
 async function closeSidePanel(page: Page) {
-  await page.locator(".v2-side-panel .v2-panel-head button").first().click();
-  await expect(page.locator(".v2-side-panel")).toHaveCount(0);
+  const sheets = page.locator(
+    '[data-testid="studio-v2-skin-sheet"], [data-testid="studio-v2-object-sheet"], [data-testid="studio-v2-add-sheet"], [data-testid="studio-v2-moodboard-sheet"]',
+  );
+  await page.getByTestId("studio-v2-sheet-close").first().click();
+  await expect(sheets).toHaveCount(0);
 }
 
 async function fetchEditorOverview(

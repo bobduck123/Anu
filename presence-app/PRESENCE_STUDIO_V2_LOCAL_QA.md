@@ -493,3 +493,206 @@ Verified:
 - Mobile-muted public objects remain hidden on narrow public viewport.
 - Legacy public room still uses the existing renderer when Studio V2 payload is absent.
 - Visual layer remains scoped under `.presence-studio-v2-public` and `.presence-studio-v2`.
+
+---
+
+## 2026-06-04 - P1 Visual Polish and Test Maintenance Verification
+
+Scope:
+
+- Hosted lifecycle selector maintenance after visual parity CSS changed the editor surface.
+- Public V2 CSS consolidation.
+- Gallery museum-frame treatment.
+- World-specific public object grids for gallery, zine, and DJ.
+- No routing, auth, save/reload, preview, publish, adapter, backend, or feature-gating changes.
+
+Commands run:
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+```
+
+Results:
+
+- TypeScript: passed.
+- Production build: passed.
+- Feature tests: 8 passed.
+- Studio V2 adapter tests: 14 passed.
+- Public payload tests: 5 passed.
+- Render resolver tests: 8 passed.
+- Editor readiness tests: 5 passed.
+- V2 public render Playwright smoke: 3 passed.
+- V2 owner draft preview Playwright smoke: 2 passed.
+- Public payload hygiene Playwright smoke: 2 passed.
+
+Notes:
+
+- The first local parallel Playwright attempt hit `EADDRINUSE` because multiple specs tried to start the same mock API server. The affected specs passed when rerun sequentially.
+- The local visual capture spec wrote screenshots but the wrapper command timed out during teardown after the passing test body.
+- Direct Node TypeScript tests still emit `MODULE_TYPELESS_PACKAGE_JSON`.
+- Next build/Playwright still emit the existing Turbopack workspace-root warning due to multiple lockfiles.
+
+Hosted lifecycle:
+
+- Attempted after selector maintenance.
+- Timed out before edit/save/publish because the currently deployed hosted build does not yet contain the new test IDs.
+- No smoke marker appeared in the post-timeout public HTML check.
+- A fresh full hosted lifecycle pass requires deployment of this P1 patch.
+
+Evidence:
+
+```txt
+docs/program/evidence/presence-studio-v2-p1-visual-polish/
+PRESENCE_STUDIO_V2_P1_VISUAL_POLISH_AND_TEST_REPORT.md
+```
+
+---
+
+## 2026-06-04 - Studio Recovery S1 Verification
+
+Scope:
+
+- Recovered prototype-grade Studio V2 editor information architecture.
+- Added top chrome, left outline/assets rail, center stage shell, persistent right inspector, surface tabs, and chamber navigation tabs.
+- No routing, auth, save/reload, preview, publish, adapter, backend, payload, or feature-gating changes.
+- S2 direct manipulation was intentionally not implemented.
+
+Commands run:
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+npx.cmd playwright test tests/e2e/presence-studio-v2-hosted-lifecycle.spec.ts --project=chromium --workers=1
+```
+
+Results:
+
+- TypeScript: passed.
+- Production build: passed.
+- Feature tests: 8 passed.
+- Studio V2 adapter tests: 14 passed.
+- Public payload tests: 5 passed.
+- Render resolver tests: 8 passed.
+- Editor readiness tests: 5 passed.
+- V2 public render Playwright smoke: 3 passed.
+- V2 owner draft preview Playwright smoke: 2 passed.
+- Public payload hygiene Playwright smoke: 2 passed.
+- Hosted lifecycle spec: 1 skipped because `PRESENCE_HOSTED_SMOKE` was not set.
+
+Evidence capture:
+
+```powershell
+$env:PRESENCE_STUDIO_RECOVERY_S1_CAPTURE="1"
+npx.cmd playwright test tests/e2e/presence-studio-v2-studio-recovery-s1-capture.spec.ts --project=chromium --workers=1
+```
+
+The S1 capture test body passed and wrote screenshots, but the wrapper command timed out during Playwright web-server teardown after the passing test body.
+
+Evidence path:
+
+```txt
+docs/program/evidence/presence-studio-v2-studio-recovery-s1/
+```
+
+Warnings:
+
+- A first parallel Playwright attempt hit `EADDRINUSE` on the shared mock API port. The affected specs passed when rerun sequentially.
+- Direct Node TypeScript tests still emit `MODULE_TYPELESS_PACKAGE_JSON`.
+- Build and Playwright web server still emit the existing Turbopack workspace-root warning due to multiple lockfiles.
+
+Verified:
+
+- Studio V2 editor root still mounts locally when V2 feature gating applies.
+- Left outline selects objects and chamber tabs scroll the stage.
+- Persistent right inspector edits existing state fields.
+- Existing object title/meta/detail/link/image test IDs remain present in the inspector.
+- Skin Lab, Add, Moodboard, World switcher entry points remain reachable.
+- Public V2 rendering remains sanitized.
+- Draft preview remains sanitized.
+- Payload hygiene remains clean.
+- Legacy public room still uses the existing renderer when Studio V2 payload is absent.
+
+Hosted note:
+
+- Real hosted smoke was not rerun because the S1 patch is local and not deployed. Running the hosted lifecycle against the current hosted deployment would not validate this editor recovery pass.
+
+---
+
+## 2026-06-05 - S1 Hosted Deployment Gate
+
+Pre-deploy local gate rerun:
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+```
+
+Results:
+
+- Typecheck: passed.
+- Build: passed.
+- Feature tests: 8 passed.
+- Studio V2 adapter tests: 14 passed.
+- Public payload tests: 5 passed.
+- Render resolver tests: 8 passed.
+- Editor readiness tests: 5 passed.
+- V2 public render Playwright: 3 passed.
+- V2 draft preview Playwright: 2 passed.
+- Public payload hygiene Playwright: 2 passed.
+
+Adjustment:
+
+- `presence-studio-v2-draft-preview.spec.ts` now filters local sandbox external-resource DNS noise in the legacy fallback test. This avoids failing a passing local legacy render because external non-app resources cannot resolve in the sandbox.
+
+Hosted deployment:
+
+```txt
+Production URL: https://your-presence.vercel.app
+Deployment URL: https://presence-8ynedjq8j-emadhatu-2110s-projects.vercel.app
+Deployment ID: dpl_EEh5vdTqXMis3nTy8wmP6LYdwNqC
+```
+
+Hosted verification:
+
+- Read-only S1 hosted smoke passed.
+- Full hosted lifecycle smoke passed: `1 passed (19.7s)`.
+- Hosted payload hygiene scan passed with `0` violations.
+- Room 1 legacy negative remained legacy.
+- Smoke cleanup/restoration completed; no public smoke marker remained.
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_STUDIO_RECOVERY_S1_HOSTED_SMOKE.md
+docs/program/evidence/presence-studio-v2-studio-recovery-s1-hosted/
+```
+
+Known notes:
+
+- Vercel deploy reported existing `npm audit` findings: 2 moderate and 1 high vulnerability. They were not addressed in this S1 smoke pass.
+- Deployment was made from a dirty local working tree, so commit/push should follow before treating this as the durable release baseline.

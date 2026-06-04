@@ -35,7 +35,12 @@ export default function PresenceStudioV2Room({
         </div>
 
         {state.chambers.map((chamber) => (
-          <div className="v2-chamber" key={chamber.id}>
+          <div
+            className="v2-chamber"
+            key={chamber.id}
+            id={`presence-v2-chamber-${chamber.id}`}
+            data-v2-chamber-id={chamber.id}
+          >
             <div className="v2-chamber-label">{chamber.label}</div>
             <div className="v2-objects">
               {chamber.objects.map((obj) => (
@@ -128,8 +133,10 @@ function ObjectCard({
 
   return (
     <div
+      id={`presence-v2-object-${obj.id}`}
       className={`v2-obj${isSelected ? " selected" : ""}${editorClass}`}
       data-role={obj.type}
+      data-v2-object-id={obj.id}
       style={style}
       onClick={onSelect}
     >

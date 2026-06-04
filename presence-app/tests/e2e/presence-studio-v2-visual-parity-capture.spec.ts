@@ -3,13 +3,15 @@ import path from "node:path";
 import { expect, test, type Page } from "playwright/test";
 
 const API_BASE = "http://127.0.0.1:5105";
-const evidenceDir = path.join(
-  process.cwd(),
-  "docs",
-  "program",
-  "evidence",
-  "presence-studio-v2-visual-parity",
-);
+const evidenceDir = process.env.PRESENCE_VISUAL_CAPTURE_OUT
+  ? path.resolve(process.cwd(), process.env.PRESENCE_VISUAL_CAPTURE_OUT)
+  : path.join(
+      process.cwd(),
+      "docs",
+      "program",
+      "evidence",
+      "presence-studio-v2-visual-parity",
+    );
 
 test.skip(process.env.PRESENCE_VISUAL_CAPTURE !== "1", "Set PRESENCE_VISUAL_CAPTURE=1 to capture visual evidence.");
 
