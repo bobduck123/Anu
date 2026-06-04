@@ -216,11 +216,17 @@ Branch:
 feature/presence-ecosystem-alpha
 ```
 
+Push status:
+
+```txt
+Pushed to origin/feature/presence-ecosystem-alpha
+```
+
 Relationship to deployment:
 
 - The deployed production build was created from dirty local state based on `f81fca829742939ad24865521d5c2d52f3a4bdfb`.
 - Baseline commit `7a27ec30abebf871f13ccda3830378542f16115d` supersedes that dirty deployment state in Git by committing the S1 product code, tests, reports, smoke scripts, and safe evidence.
-- Any later report-only commit may supersede the baseline commit without changing product behavior.
+- Report/status commits after the baseline may supersede the product commit with documentation-only changes and do not alter product behavior.
 
 ## S2 Readiness
 
