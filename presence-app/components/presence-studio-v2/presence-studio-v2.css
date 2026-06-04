@@ -816,6 +816,199 @@
   z-index: -1;
 }
 
+.presence-studio-v2 .v2-obj:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--p-copper) 74%, #fff);
+  outline-offset: 4px;
+}
+
+.presence-studio-v2 .v2-obj.can-manipulate {
+  cursor: grab;
+  touch-action: none;
+}
+
+.presence-studio-v2 .v2-obj.can-manipulate:active {
+  cursor: grabbing;
+}
+
+.presence-studio-v2 .v2-selection-frame {
+  position: absolute;
+  inset: -10px;
+  z-index: 12;
+  border: 1.5px solid color-mix(in srgb, var(--p-copper) 78%, #fff);
+  border-radius: calc(var(--v2-radius-md) + 8px);
+  pointer-events: none;
+  box-shadow:
+    0 0 0 1px rgba(13, 12, 10, 0.18),
+    0 0 28px -12px rgba(215, 177, 95, 0.95),
+    inset 0 0 18px -12px rgba(215, 177, 95, 0.9);
+}
+
+.presence-studio-v2 .v2-selection-frame.active {
+  border-style: solid;
+  animation: v2-selection-aura 2.8s ease-in-out infinite;
+}
+
+.presence-studio-v2 .v2-selection-frame.disabled {
+  border-style: dashed;
+  opacity: 0.66;
+  box-shadow:
+    0 0 0 1px rgba(13, 12, 10, 0.12),
+    0 0 18px -14px rgba(215, 177, 95, 0.7);
+}
+
+.presence-studio-v2 .v2-selection-label {
+  position: absolute;
+  left: 10px;
+  top: -30px;
+  display: inline-flex;
+  align-items: center;
+  max-width: min(260px, calc(100% - 20px));
+  gap: 7px;
+  border: 1px solid rgba(248, 244, 236, 0.16);
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: rgba(13, 12, 10, 0.88);
+  color: #f8f4ec;
+  box-shadow: 0 16px 38px -24px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+
+.presence-studio-v2 .v2-selection-label span,
+.presence-studio-v2 .v2-selection-label em {
+  color: #d7b15f;
+  font-size: 9px;
+  font-style: normal;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2 .v2-selection-label strong {
+  overflow: hidden;
+  color: #fff8e8;
+  font-size: 11px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.presence-studio-v2 .v2-selection-label em {
+  border-left: 1px solid rgba(248, 244, 236, 0.16);
+  padding-left: 7px;
+  color: rgba(248, 244, 236, 0.64);
+}
+
+.presence-studio-v2 .v2-resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.78);
+  border-radius: 4px;
+  background: var(--p-copper);
+  box-shadow:
+    0 0 12px -2px rgba(215, 177, 95, 0.95),
+    0 3px 8px rgba(0, 0, 0, 0.32);
+  pointer-events: auto;
+  transition: transform 160ms var(--p-ease), box-shadow 160ms var(--p-ease), opacity 160ms var(--p-ease);
+}
+
+.presence-studio-v2 .v2-resize-handle:hover {
+  transform: scale(1.18);
+  box-shadow:
+    0 0 18px -2px rgba(215, 177, 95, 1),
+    0 5px 12px rgba(0, 0, 0, 0.36);
+}
+
+.presence-studio-v2 .v2-resize-handle.tl { top: -7px; left: -7px; cursor: nwse-resize; }
+.presence-studio-v2 .v2-resize-handle.tr { top: -7px; right: -7px; cursor: nesw-resize; }
+.presence-studio-v2 .v2-resize-handle.bl { bottom: -7px; left: -7px; cursor: nesw-resize; }
+.presence-studio-v2 .v2-resize-handle.br { right: -7px; bottom: -7px; cursor: nwse-resize; }
+
+.presence-studio-v2 .v2-rotate-handle {
+  position: absolute;
+  top: -42px;
+  left: 50%;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1.5px solid color-mix(in srgb, var(--p-copper) 78%, #fff);
+  border-radius: 999px;
+  background: rgba(13, 12, 10, 0.9);
+  color: #d7b15f;
+  box-shadow:
+    0 0 18px -4px rgba(215, 177, 95, 0.88),
+    0 7px 16px rgba(0, 0, 0, 0.34);
+  cursor: grab;
+  pointer-events: auto;
+  transform: translateX(-50%);
+  transition: transform 160ms var(--p-ease), box-shadow 160ms var(--p-ease), opacity 160ms var(--p-ease);
+}
+
+.presence-studio-v2 .v2-rotate-handle:hover {
+  transform: translateX(-50%) scale(1.12);
+  box-shadow:
+    0 0 24px -3px rgba(215, 177, 95, 0.95),
+    0 9px 18px rgba(0, 0, 0, 0.4);
+}
+
+.presence-studio-v2 .v2-selection-frame.disabled .v2-resize-handle,
+.presence-studio-v2 .v2-selection-frame.disabled .v2-rotate-handle {
+  cursor: not-allowed;
+  opacity: 0.38;
+  filter: grayscale(0.3);
+}
+
+.presence-studio-v2 .v2-drag-readout {
+  position: sticky;
+  top: 58px;
+  z-index: 12;
+  display: flex;
+  width: fit-content;
+  max-width: calc(100% - 44px);
+  align-items: center;
+  gap: 8px;
+  margin: 0 22px 12px;
+  border: 1px solid rgba(248, 244, 236, 0.13);
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: rgba(13, 12, 10, 0.86);
+  color: #f8f4ec;
+  box-shadow: 0 20px 48px -32px rgba(0, 0, 0, 0.92);
+}
+
+.presence-studio-v2 .v2-drag-readout span {
+  color: #d7b15f;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2 .v2-drag-readout strong {
+  font-size: 12px;
+  font-weight: 620;
+  white-space: nowrap;
+}
+
+body.v2-is-manipulating {
+  cursor: grabbing;
+  user-select: none;
+}
+
+@keyframes v2-selection-aura {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(13, 12, 10, 0.18),
+      0 0 24px -14px rgba(215, 177, 95, 0.86),
+      inset 0 0 18px -13px rgba(215, 177, 95, 0.86);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(13, 12, 10, 0.18),
+      0 0 34px -10px rgba(215, 177, 95, 1),
+      inset 0 0 22px -10px rgba(215, 177, 95, 0.94);
+  }
+}
+
 .presence-studio-v2 .v2-obj.is-locked {
   border-style: double;
   opacity: 0.86;

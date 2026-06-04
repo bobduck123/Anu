@@ -241,3 +241,40 @@ S2 still includes:
 - possible undo/redo and grouping design
 
 Public self-serve onboarding remains out of scope.
+
+
+---
+
+## Dependency Patch Applied (Post-Baseline)
+
+**Date:** 2026-06-04
+**Commit:** `b0b5bf1`
+
+The dependency audit triage from the baseline report was executed as a separate targeted patch.
+
+### Changes
+
+| Package | Before | After |
+|---------|--------|-------|
+| `next` | `16.2.4` | `16.2.7` |
+| `@supabase/supabase-js` | `2.105.3` | `2.107.0` |
+
+### Results
+
+- **High severity Next issues:** Resolved (DoS, middleware bypass, XSS, cache poisoning, SSRF)
+- **ws moderate issue:** Resolved (realtime-js@2.107.0 no longer depends on ws)
+- **postcss moderate issue:** Deferred — Next 16.2.7 still bundles postcss@8.4.31; Tailwind already provides postcss@8.5.14 at top level
+
+### QA
+
+Full local QA rerun after patch:
+- TypeScript: pass
+- Build: pass
+- Node tests: 40/40 pass
+- Playwright smoke: 7/7 pass
+
+No product behavior changes. No secrets committed.
+
+### S2 Status
+
+**Cleared to begin.** Dependency runway is clean.

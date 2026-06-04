@@ -30,6 +30,60 @@ function makeId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
+const EDITOR_MIN_SCALE = 0.45;
+const EDITOR_MAX_SCALE = 2.5;
+const EDITOR_MIN_POSITION = -1200;
+const EDITOR_MAX_POSITION = 1200;
+
+type CanvasInteractionKind = "drag" | "resize" | "rotate";
+type ResizeCorner = "tl" | "tr" | "bl" | "br";
+
+interface CanvasInteraction {
+  kind: CanvasInteractionKind;
+  objectId: string;
+  startX: number;
+  startY: number;
+  startTransform: StudioV2Object["transform"];
+  maxX: number;
+  maxY: number;
+  centerX?: number;
+  centerY?: number;
+  startDistance?: number;
+  startAngle?: number;
+}
+
+interface TransformReadout {
+  kind: CanvasInteractionKind | "nudge";
+  objectId: string;
+  x: number;
+  y: number;
+  scale: number;
+  rotation: number;
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+  if (Number.isNaN(value)) return min;
+  return Math.min(max, Math.max(min, value));
+}
+
+function roundTo(value: number, decimals = 2): number {
+  const factor = 10 ** decimals;
+  return Math.round(value * factor) / factor;
+}
+
+function angleFromCenter(clientX: number, clientY: number, centerX: number, centerY: number): number {
+  return Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
+}
+
+function distanceFromCenter(clientX: number, clientY: number, centerX: number, centerY: number): number {
+  return Math.hypot(clientX - centerX, clientY - centerY);
+}
+
+function isFormTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return Boolean(target.closest("input, textarea, select, button, a, [contenteditable='true']"));
+}
+
 export default function PresenceStudioV2Editor({
   node,
   nodeId,
@@ -55,8 +109,10 @@ export default function PresenceStudioV2Editor({
   const [activeChamberId, setActiveChamberId] = useState<string | null>(null);
   const [expandedChambers, setExpandedChambers] = useState<Set<string>>(() => new Set());
   const [shareNotice, setShareNotice] = useState<string | null>(null);
+  const [interactionReadout, setInteractionReadout] = useState<TransformReadout | null>(null);
 
   const roomRef = useRef<HTMLDivElement | null>(null);
+  const interactionRef = useRef<CanvasInteraction | null>(null);
 
   const dirty = useMemo(
     () => Boolean(v2State && snapshot(v2State) !== baseSnapshot),
@@ -151,6 +207,191 @@ export default function PresenceStudioV2Editor({
     }));
   }
 
+  function findObject(id: string | null): StudioV2Object | null {
+    if (!v2State || !id) return null;
+    for (const chamber of v2State.chambers) {
+      const object = chamber.objects.find((candidate) => candidate.id === id);
+      if (object) return object;
+    }
+    return null;
+  }
+
+  function setObjectTransform(id: string, transform: StudioV2Object["transform"]) {
+    setV2State((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        chambers: prev.chambers.map((chamber) => ({
+          ...chamber,
+          objects: chamber.objects.map((object) =>
+            object.id === id ? { ...object, transform: { ...object.transform, ...transform } } : object,
+          ),
+        })),
+      };
+    });
+    setNotice(null);
+    setActionError(null);
+  }
+
+  function stageBounds() {
+    const rect = roomRef.current?.getBoundingClientRect();
+    return {
+      maxX: clampNumber(Math.round((rect?.width ?? 900) * 0.62), 180, EDITOR_MAX_POSITION),
+      maxY: clampNumber(Math.round((rect?.height ?? 700) * 0.62), 180, EDITOR_MAX_POSITION),
+    };
+  }
+
+  function transformReadout(kind: TransformReadout["kind"], objectId: string, transform: StudioV2Object["transform"]) {
+    setInteractionReadout({
+      kind,
+      objectId,
+      x: Math.round(transform.x),
+      y: Math.round(transform.y),
+      scale: roundTo(transform.scale, 2),
+      rotation: Math.round(transform.rotation),
+    });
+  }
+
+  function endCanvasInteraction(onMove: (event: PointerEvent) => void, onUp: (event: PointerEvent) => void) {
+    interactionRef.current = null;
+    document.body.classList.remove("v2-is-manipulating");
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+    window.removeEventListener("pointercancel", onUp);
+    window.setTimeout(() => setInteractionReadout(null), 1800);
+  }
+
+  function beginCanvasInteraction(
+    kind: CanvasInteractionKind,
+    objectId: string,
+    event: React.PointerEvent<HTMLElement>,
+  ) {
+    const object = findObject(objectId);
+    if (!object || mode !== "wild" || object.locked) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (kind === "drag" && isFormTarget(event.target)) return;
+
+    const objectEl = (event.currentTarget as HTMLElement).closest("[data-v2-object-id]") as HTMLElement | null;
+    const objectRect = objectEl?.getBoundingClientRect();
+    if (!objectRect) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+
+    const { maxX, maxY } = stageBounds();
+    const centerX = objectRect.left + objectRect.width / 2;
+    const centerY = objectRect.top + objectRect.height / 2;
+    interactionRef.current = {
+      kind,
+      objectId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startTransform: { ...object.transform },
+      maxX,
+      maxY,
+      centerX,
+      centerY,
+      startDistance: distanceFromCenter(event.clientX, event.clientY, centerX, centerY),
+      startAngle: angleFromCenter(event.clientX, event.clientY, centerX, centerY),
+    };
+    document.body.classList.add("v2-is-manipulating");
+    transformReadout(kind, objectId, object.transform);
+
+    const onMove = (moveEvent: PointerEvent) => {
+      const interaction = interactionRef.current;
+      if (!interaction || interaction.objectId !== objectId) return;
+      moveEvent.preventDefault();
+
+      const next = { ...interaction.startTransform };
+      if (interaction.kind === "drag") {
+        const dx = moveEvent.clientX - interaction.startX;
+        const dy = moveEvent.clientY - interaction.startY;
+        next.x = clampNumber(Math.round(interaction.startTransform.x + dx), -interaction.maxX, interaction.maxX);
+        next.y = clampNumber(Math.round(interaction.startTransform.y + dy), -interaction.maxY, interaction.maxY);
+      }
+
+      if (interaction.kind === "resize") {
+        const centerXValue = interaction.centerX ?? moveEvent.clientX;
+        const centerYValue = interaction.centerY ?? moveEvent.clientY;
+        const startDistance = Math.max(1, interaction.startDistance ?? 1);
+        const distance = distanceFromCenter(moveEvent.clientX, moveEvent.clientY, centerXValue, centerYValue);
+        next.scale = clampNumber(
+          roundTo(interaction.startTransform.scale * (distance / startDistance), 2),
+          EDITOR_MIN_SCALE,
+          EDITOR_MAX_SCALE,
+        );
+      }
+
+      if (interaction.kind === "rotate") {
+        const centerXValue = interaction.centerX ?? moveEvent.clientX;
+        const centerYValue = interaction.centerY ?? moveEvent.clientY;
+        const startAngle = interaction.startAngle ?? 0;
+        const currentAngle = angleFromCenter(moveEvent.clientX, moveEvent.clientY, centerXValue, centerYValue);
+        const angleDelta = currentAngle - startAngle;
+        const pointerDelta = (moveEvent.clientX - interaction.startX) * 0.65 + (moveEvent.clientY - interaction.startY) * 0.35;
+        const rotationDelta = Math.abs(angleDelta) >= 1 ? angleDelta : pointerDelta;
+        next.rotation = clampNumber(Math.round(interaction.startTransform.rotation + rotationDelta), -360, 360);
+      }
+
+      setObjectTransform(objectId, next);
+      transformReadout(interaction.kind, objectId, next);
+    };
+
+    const onUp = (upEvent: PointerEvent) => {
+      upEvent.preventDefault();
+      endCanvasInteraction(onMove, onUp);
+    };
+
+    window.addEventListener("pointermove", onMove, { passive: false });
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+  }
+
+  function beginObjectDrag(objectId: string, event: React.PointerEvent<HTMLElement>) {
+    beginCanvasInteraction("drag", objectId, event);
+  }
+
+  function beginObjectResize(objectId: string, _corner: ResizeCorner, event: React.PointerEvent<HTMLElement>) {
+    beginCanvasInteraction("resize", objectId, event);
+  }
+
+  function beginObjectRotate(objectId: string, event: React.PointerEvent<HTMLElement>) {
+    beginCanvasInteraction("rotate", objectId, event);
+  }
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && selectedId) {
+        setSelectedId(null);
+        setInteractionReadout(null);
+        return;
+      }
+
+      if (!selectedId || !selectedObject || mode !== "wild" || selectedObject.locked || isFormTarget(event.target)) return;
+      const step = event.shiftKey ? 10 : 1;
+      const patch: Partial<StudioV2Object["transform"]> = {};
+      if (event.key === "ArrowLeft") patch.x = selectedObject.transform.x - step;
+      if (event.key === "ArrowRight") patch.x = selectedObject.transform.x + step;
+      if (event.key === "ArrowUp") patch.y = selectedObject.transform.y - step;
+      if (event.key === "ArrowDown") patch.y = selectedObject.transform.y + step;
+      if (patch.x === undefined && patch.y === undefined) return;
+
+      event.preventDefault();
+      const { maxX, maxY } = stageBounds();
+      const next = {
+        ...selectedObject.transform,
+        x: clampNumber(patch.x ?? selectedObject.transform.x, -maxX, maxX),
+        y: clampNumber(patch.y ?? selectedObject.transform.y, -maxY, maxY),
+      };
+      setObjectTransform(selectedId, next);
+      transformReadout("nudge", selectedId, next);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
+
   function updateRoom(patch: Partial<StudioV2State>) {
     updateState((prev) => ({ ...prev, ...patch }));
   }
@@ -174,9 +415,10 @@ export default function PresenceStudioV2Editor({
   }
 
   function selectObject(id: string) {
+    const isAlreadySelected = selectedId === id;
     setSelectedId(id);
     setSurfaceTab("chamber");
-    setInspectorTab("content");
+    if (!isAlreadySelected) setInspectorTab("content");
     setActivePanel("none");
     const chamber = v2State?.chambers.find((ch) => ch.objects.some((obj) => obj.id === id));
     if (chamber) setActiveChamberId(chamber.id);
@@ -481,6 +723,14 @@ export default function PresenceStudioV2Editor({
                 <span>{world?.name ?? v2State.worldId}</span>
                 <strong>{activeChamber?.label ?? "Room"}</strong>
               </div>
+              {interactionReadout && (
+                <div data-testid="presence-studio-v2-drag-readout" className="v2-drag-readout">
+                  <span>{interactionReadout.kind}</span>
+                  <strong>
+                    X {interactionReadout.x} / Y {interactionReadout.y} / {Math.round(interactionReadout.scale * 100)}% / {interactionReadout.rotation} deg
+                  </strong>
+                </div>
+              )}
               <PresenceStudioV2Room
                 state={v2State}
                 selectedId={selectedId}
@@ -490,6 +740,9 @@ export default function PresenceStudioV2Editor({
                   if (id) selectObject(id);
                   else setSelectedId(null);
                 }}
+                onBeginDrag={beginObjectDrag}
+                onBeginResize={beginObjectResize}
+                onBeginRotate={beginObjectRotate}
               />
 
               {/* Floating toolbar */}
@@ -938,7 +1191,11 @@ function StudioInspectorPanel({
               <div className="v2-inspector-section">
                 <div className="v2-inspector-section-title">Transform</div>
                 <div className="v2-honest-note">
-                  Direct drag and handles arrive in S2. These transform values persist now and activate visually in Wild Mode.
+                  {locked
+                    ? "This object is locked. Unlock it in Style before moving, resizing, or rotating."
+                    : mode === "wild"
+                      ? "Drag the selected object on the canvas. Use corner handles to scale and the top handle to rotate."
+                      : "Guided Mode protects the layout. Switch to Wild Mode to move, scale, or rotate on the canvas."}
                 </div>
                 <div className="v2-motion-grid">
                   <label className="v2-field">
@@ -948,7 +1205,7 @@ function StudioInspectorPanel({
                       type="number"
                       value={object.transform.x}
                       disabled={locked}
-                      onChange={(event) => updateTransform({ x: Number(event.target.value) })}
+                      onChange={(event) => updateTransform({ x: clampNumber(Number(event.target.value), EDITOR_MIN_POSITION, EDITOR_MAX_POSITION) })}
                     />
                   </label>
                   <label className="v2-field">
@@ -958,7 +1215,7 @@ function StudioInspectorPanel({
                       type="number"
                       value={object.transform.y}
                       disabled={locked}
-                      onChange={(event) => updateTransform({ y: Number(event.target.value) })}
+                      onChange={(event) => updateTransform({ y: clampNumber(Number(event.target.value), EDITOR_MIN_POSITION, EDITOR_MAX_POSITION) })}
                     />
                   </label>
                   <label className="v2-field">
@@ -966,12 +1223,12 @@ function StudioInspectorPanel({
                     <input
                       data-testid="presence-studio-v2-transform-scale"
                       type="number"
-                      min="0.2"
-                      max="4"
+                      min={EDITOR_MIN_SCALE}
+                      max={EDITOR_MAX_SCALE}
                       step="0.05"
                       value={object.transform.scale}
                       disabled={locked}
-                      onChange={(event) => updateTransform({ scale: Number(event.target.value) })}
+                      onChange={(event) => updateTransform({ scale: clampNumber(Number(event.target.value), EDITOR_MIN_SCALE, EDITOR_MAX_SCALE) })}
                     />
                   </label>
                   <label className="v2-field">
@@ -982,21 +1239,22 @@ function StudioInspectorPanel({
                       step="1"
                       value={object.transform.rotation}
                       disabled={locked}
-                      onChange={(event) => updateTransform({ rotation: Number(event.target.value) })}
+                      onChange={(event) => updateTransform({ rotation: clampNumber(Number(event.target.value), -360, 360) })}
                     />
                   </label>
                   <label className="v2-field">
                     <span>Z index</span>
                     <input
+                      data-testid="presence-studio-v2-transform-z"
                       type="number"
                       value={object.transform.zIndex}
                       disabled={locked}
-                      onChange={(event) => updateTransform({ zIndex: Number(event.target.value) })}
+                      onChange={(event) => updateTransform({ zIndex: clampNumber(Number(event.target.value), 0, 999) })}
                     />
                   </label>
                   <div className="v2-motion-mode">
                     <span>Current mode</span>
-                    <strong>{mode === "wild" ? "Wild transform preview" : "Guided layout protection"}</strong>
+                    <strong>{locked ? "Locked - handles disabled" : mode === "wild" ? "Wild direct manipulation" : "Guided layout protection"}</strong>
                   </div>
                 </div>
                 <button

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import type { StudioV2State, StudioV2Object } from "@/lib/presence/studio-v2";
 
 interface PresenceStudioV2RoomProps {
@@ -8,6 +9,9 @@ interface PresenceStudioV2RoomProps {
   mode: "guided" | "wild";
   viewport: "desktop" | "mobile";
   onSelectObject: (id: string | null) => void;
+  onBeginDrag?: (id: string, event: React.PointerEvent<HTMLElement>) => void;
+  onBeginResize?: (id: string, corner: "tl" | "tr" | "bl" | "br", event: React.PointerEvent<HTMLElement>) => void;
+  onBeginRotate?: (id: string, event: React.PointerEvent<HTMLElement>) => void;
 }
 
 export default function PresenceStudioV2Room({
@@ -16,15 +20,25 @@ export default function PresenceStudioV2Room({
   mode,
   viewport,
   onSelectObject,
+  onBeginDrag,
+  onBeginResize,
+  onBeginRotate,
 }: PresenceStudioV2RoomProps) {
   const isWild = mode === "wild";
   const suspendTransforms = !isWild;
+  const suppressRoomDeselectRef = useRef(false);
 
   return (
     <div className="v2-stage">
       <div
         className={`v2-room world-${state.worldId} ${viewport === "mobile" ? "mobile-viewport" : ""}`}
-        onClick={() => onSelectObject(null)}
+        onClick={() => {
+          if (suppressRoomDeselectRef.current) {
+            suppressRoomDeselectRef.current = false;
+            return;
+          }
+          onSelectObject(null);
+        }}
       >
         <div className="v2-room-header">
           <div className="v2-room-eyebrow">{state.worldId}</div>
@@ -49,11 +63,19 @@ export default function PresenceStudioV2Room({
                   obj={obj}
                   skin={state.skin}
                   isSelected={selectedId === obj.id}
+                  canManipulate={isWild && selectedId === obj.id && !obj.locked}
+                  mode={mode}
                   suspendTransforms={suspendTransforms}
+                  onSuppressRoomDeselect={() => {
+                    suppressRoomDeselectRef.current = true;
+                  }}
                   onSelect={(e) => {
                     e.stopPropagation();
                     onSelectObject(obj.id);
                   }}
+                  onBeginDrag={onBeginDrag}
+                  onBeginResize={onBeginResize}
+                  onBeginRotate={onBeginRotate}
                 />
               ))}
             </div>
@@ -97,14 +119,26 @@ function ObjectCard({
   obj,
   skin,
   isSelected,
+  canManipulate,
+  mode,
   suspendTransforms,
+  onSuppressRoomDeselect,
   onSelect,
+  onBeginDrag,
+  onBeginResize,
+  onBeginRotate,
 }: {
   obj: StudioV2Object;
   skin: StudioV2State["skin"];
   isSelected: boolean;
+  canManipulate: boolean;
+  mode: "guided" | "wild";
   suspendTransforms: boolean;
+  onSuppressRoomDeselect: () => void;
   onSelect: (e: React.MouseEvent) => void;
+  onBeginDrag?: (id: string, event: React.PointerEvent<HTMLElement>) => void;
+  onBeginResize?: (id: string, corner: "tl" | "tr" | "bl" | "br", event: React.PointerEvent<HTMLElement>) => void;
+  onBeginRotate?: (id: string, event: React.PointerEvent<HTMLElement>) => void;
 }) {
   const tf = obj.transform;
   const hasTransform = tf.x !== 0 || tf.y !== 0 || tf.rotation !== 0 || tf.scale !== 1;
@@ -129,6 +163,7 @@ function ObjectCard({
     obj.locked ? " is-locked" : "",
     obj.pinned ? " is-pinned" : "",
     !obj.visibility.public || !obj.visibility.mobile ? " is-hidden-state" : "",
+    canManipulate ? " can-manipulate" : " cannot-manipulate",
   ].join("");
 
   return (
@@ -137,9 +172,68 @@ function ObjectCard({
       className={`v2-obj${isSelected ? " selected" : ""}${editorClass}`}
       data-role={obj.type}
       data-v2-object-id={obj.id}
+      data-testid="presence-studio-v2-draggable-object"
       style={style}
+      tabIndex={0}
       onClick={onSelect}
+      onPointerDown={(event) => {
+        if (!isSelected) return;
+        event.stopPropagation();
+        onSuppressRoomDeselect();
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        if (!canManipulate) {
+          event.preventDefault();
+          return;
+        }
+        onBeginDrag?.(obj.id, event);
+      }}
+      onPointerUp={(event) => {
+        if (isSelected) event.stopPropagation();
+      }}
     >
+      {isSelected && (
+        <div
+          data-testid="presence-studio-v2-selection-frame"
+          className={`v2-selection-frame${canManipulate ? " active" : " disabled"}`}
+          aria-label={`Selected ${obj.type}: ${obj.title}`}
+        >
+          <div data-testid="presence-studio-v2-selection-label" className="v2-selection-label">
+            <span>{obj.type}</span>
+            <strong>{obj.title || "Untitled"}</strong>
+            {obj.locked && <em>Locked</em>}
+            {obj.pinned && <em>Pinned</em>}
+            {mode === "guided" && !obj.locked && <em>Guided</em>}
+          </div>
+          {(["tl", "tr", "bl", "br"] as const).map((corner) => (
+            <span
+              key={corner}
+              data-testid="presence-studio-v2-resize-handle"
+              className={`v2-resize-handle ${corner}`}
+              aria-disabled={!canManipulate}
+              onPointerDown={(event) => {
+                event.stopPropagation();
+                if (canManipulate) onBeginResize?.(obj.id, corner, event);
+              }}
+            />
+          ))}
+          <button
+            type="button"
+            data-testid="presence-studio-v2-rotate-handle"
+            className="v2-rotate-handle"
+            aria-label="Rotate selected object"
+            aria-disabled={!canManipulate}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+              if (canManipulate) onBeginRotate?.(obj.id, event);
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 2v6h-6" />
+              <path d="M21 13a9 9 0 1 1-3-6.7L21 8" />
+            </svg>
+          </button>
+        </div>
+      )}
       {/* Editor badges */}
       {badges.length > 0 && (
         <div className="v2-obj-badges">

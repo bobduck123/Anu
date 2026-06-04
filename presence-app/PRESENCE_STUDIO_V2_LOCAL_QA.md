@@ -696,3 +696,122 @@ Known notes:
 
 - Vercel deploy reported existing `npm audit` findings: 2 moderate and 1 high vulnerability. They were not addressed in this S1 smoke pass.
 - Deployment was made from a dirty local working tree. Baseline commit `7a27ec30abebf871f13ccda3830378542f16115d` now records the S1 product code, tests, reports, smoke scripts, and safe evidence in Git.
+
+
+---
+
+## 2026-06-04 - Dependency Patch Verification
+
+Scope: Targeted dependency patch after S1 baseline. No product code changes.
+
+Commands run:
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+```
+
+Results:
+
+- TypeScript: passed.
+- Build: passed.
+- Feature tests: 8 passed.
+- Studio V2 adapter tests: 14 passed.
+- Public payload tests: 5 passed.
+- Render resolver tests: 8 passed.
+- Editor readiness tests: 5 passed.
+- V2 public render Playwright smoke: 3 passed.
+- V2 draft preview Playwright smoke: 2 passed.
+- Public payload hygiene Playwright smoke: 2 passed.
+
+Packages changed:
+
+- `next`: 16.2.4 -> 16.2.7 (high severity patch)
+- `@supabase/supabase-js`: 2.105.3 -> 2.107.0 (removes vulnerable ws transitive dep)
+
+Audit after patch:
+
+- High severity: 0 (was 1)
+- Moderate severity: 2 (postcss via Next internal bundle; deferred until Next release)
+- ws vulnerability: resolved
+
+Warnings:
+
+- Direct Node TypeScript tests still emit `MODULE_TYPELESS_PACKAGE_JSON`.
+- Build and Playwright web server still emit Turbopack workspace-root warning.
+- Hosted smoke not run — env vars not available in execution context. Recommended before S2 begins.
+
+See full report: `PRESENCE_STUDIO_V2_DEPENDENCY_PATCH_REPORT.md`
+
+---
+
+## 2026-06-05 - Studio Recovery S2 Local QA
+
+Scope: Direct manipulation and object handles for Studio V2. No backend contracts, auth, save/reload, preview, publish, public payload, or feature-gating logic changed.
+
+Commands run:
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-direct-manipulation.spec.ts --project=chromium --workers=1
+```
+
+Results:
+
+- TypeScript: passed.
+- Build: passed.
+- Feature tests: 8 passed.
+- Studio V2 adapter tests: 14 passed.
+- Public payload tests: 5 passed.
+- Render resolver tests: 8 passed.
+- Editor readiness tests: 5 passed.
+- V2 public render Playwright smoke: 3 passed.
+- V2 draft preview Playwright smoke: 2 passed.
+- Public payload hygiene Playwright smoke: 2 passed.
+- S2 direct manipulation Playwright smoke: 2 passed.
+
+S2 interaction coverage:
+
+- selected-object frame renders
+- Guided Mode disables handles/drag
+- Wild Mode drag updates x/y
+- resize handle updates scale
+- rotate handle updates rotation
+- Motion tab stays synced
+- Save Draft persists transforms through the owner draft API mock path
+- reload restores saved transform values
+- locked objects remain fixed and visibly disabled
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_STUDIO_RECOVERY_S2_REPORT.md
+docs/program/evidence/presence-studio-v2-studio-recovery-s2/
+```
+
+Capture note:
+
+- `PRESENCE_STUDIO_RECOVERY_S2_CAPTURE=1 npx.cmd playwright test tests/e2e/presence-studio-v2-studio-recovery-s2-capture.spec.ts --project=chromium --workers=1` wrote the S2 screenshots and the test body passed, but the shell command hit the local timeout during Playwright teardown. The screenshots are present and usable.
+
+Warnings:
+
+- Direct Node TypeScript tests still emit `MODULE_TYPELESS_PACKAGE_JSON`.
+- Build and Playwright web server still emit the existing Turbopack workspace-root warning.
+- Hosted S2 smoke was not run because S2 has not been deployed in this pass.

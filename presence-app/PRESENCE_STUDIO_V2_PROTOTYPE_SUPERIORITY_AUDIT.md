@@ -531,3 +531,44 @@ Remaining prototype superiority gap:
 - True archive/version history.
 
 Public self-serve onboarding remains out of scope until S2 and further usability hardening are complete.
+
+---
+
+## S2 Status - 2026-06-05
+
+Studio Recovery S2 has been implemented locally.
+
+Recovered:
+
+- editor-only selected-object frame
+- selected object type/title label
+- corner resize handles
+- rotate handle
+- Wild Mode drag-to-move
+- Wild Mode scale via corner handles
+- Wild Mode rotation via rotate handle
+- Motion inspector sync for x, y, scale, rotation, and z-index
+- explicit disabled handle states in Guided Mode
+- explicit disabled handle/input states for locked objects
+- Escape deselect
+- Arrow-key nudging in Wild Mode for selected, unlocked objects
+- local save/reload persistence through the existing owner draft API mock path
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_STUDIO_RECOVERY_S2_REPORT.md
+docs/program/evidence/presence-studio-v2-studio-recovery-s2/
+```
+
+Still deferred beyond S2:
+
+- real asset upload and assignment
+- undo/redo
+- grouping
+- chamber CRUD
+- collaboration cursors
+- true archive/version history
+- public self-serve onboarding readiness
+
+S2 does not change backend contracts, public payload shape, feature gating, auth, save/reload, owner preview, or publish. Hosted S2 verification remains pending deployment.
