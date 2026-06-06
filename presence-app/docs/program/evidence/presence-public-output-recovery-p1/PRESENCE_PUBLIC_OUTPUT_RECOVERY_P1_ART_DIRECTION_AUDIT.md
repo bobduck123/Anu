@@ -1,10 +1,12 @@
 # Presence Public Output Recovery — P1 Art-Direction Audit
 
-**Date:** 2025-06-07
+**Date:** 2026-06-07
 **Auditor:** Kimi Code CLI (agent-led evidence review)
+**Deploy Date:** 2026-06-07
+**Deployment:** `https://your-presence.vercel.app` (ID: `2a88iBaAgYm1v1QUPqeiLZjCUdfJ`)
 **Scope:** V2 public room renderer — gallery worlds only (S4A stashed, legacy rooms excluded)
 **Benchmark:** `bbbvision.vercel.app` (local reference at `/Dev/bbb-vision-site/`)
-**Evidence:** 10 screenshots in this directory (01–10)
+**Evidence:** 10 local screenshots (01–10) + 8 hosted screenshots in `docs/program/evidence/presence-public-output-recovery-p1-hosted/`
 **Deploy Floor:** Overall ≥ 7.5/10, all individual thresholds ≥ 7.0/10
 
 ---
@@ -193,11 +195,17 @@ In priority order for the next art-direction pass:
 
 ---
 
-## 7. Deploy Recommendation
+## 7. Deploy Status
 
-**DEPLOY P1.**
+**DEPLOYED 2026-06-07.**
 
-The public output has crossed the threshold from "embarrassing to share" to "credible gallery experience." The atmospheric entry, museum-frame treatment, and editorial grid establish a genuine aesthetic identity. The residual issues (numbered index, pill CTA, abrupt transitions) are real but do not prevent public sharing. They are P2 polish items.
+Production URL: `https://your-presence.vercel.app`
+Deployment ID: `2a88iBaAgYm1v1QUPqeiLZjCUdfJ`
+
+Hosted smoke verification completed. All public-output checks passed (threshold height, grid columns, museum-frame treatment, role labels hidden, mobile flow, payload hygiene).
+
+Full hosted smoke report:
+`docs/program/evidence/presence-public-output-recovery-p1-hosted/PRESENCE_PUBLIC_OUTPUT_RECOVERY_P1_HOSTED_SMOKE.md`
 
 Post-deploy monitoring:
 - Track bounce rate on threshold vs. scroll depth into chambers.

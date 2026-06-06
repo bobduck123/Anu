@@ -6,7 +6,7 @@ Scope: Gallery / GGM public room output recovery, based on the hosted-verified S
 
 ## Executive Verdict
 
-Public Output Recovery P1 is locally complete and ready for Kimi art-direction audit.
+Public Output Recovery P1 is **deployed to production** and has passed hosted smoke verification.
 
 The Gallery/GGM public renderer is materially closer to a threshold experience: the room now opens with a full-viewport image-led entry, reduced chrome, spatial title composition, and an exhibition-path chamber rhythm. The pass did not touch editor behavior, backend contracts, feature gating, or public payload shape.
 
@@ -16,7 +16,12 @@ S4A chamber-management work was found in the working tree at preflight and parke
 stash: park S4A chamber management safety-audited local work
 ```
 
-No deploy was run. No hosted data was mutated.
+S4A was **not deployed**. Working tree was clean at deploy time.
+
+**Deployment:**
+- URL: `https://your-presence.vercel.app`
+- Deployment ID: `2a88iBaAgYm1v1QUPqeiLZjCUdfJ`
+- Build: 29 static pages, 0 errors
 
 ## Public Output Weaknesses Addressed
 
@@ -145,8 +150,44 @@ No restricted editor/control-plane terms were exposed in public output.
 - Local evidence screenshots include the normal Next dev indicator because screenshots were captured through Playwright dev server, not hosted production.
 - The original Kimi audit document path was absent on the clean S3 baseline, so this pass creates the expected audit path with the known audit findings and P1 status.
 
+## Hosted Smoke Results
+
+Hosted smoke completed 2026-06-07. Full report:
+`docs/program/evidence/presence-public-output-recovery-p1-hosted/PRESENCE_PUBLIC_OUTPUT_RECOVERY_P1_HOSTED_SMOKE.md`
+
+Key findings:
+- Threshold renders at 950px height with full-bleed atmospheric image ✅
+- 12-column editorial grid confirmed on hosted Room 11 ✅
+- Museum-frame treatment (`contain`, `border-radius: 0`) verified ✅
+- Role labels hidden via `display: none` in gallery context ✅
+- Mobile threshold and chamber flow functional ✅
+- Payload hygiene: 0 violations ✅
+- Owner preview: draft banner renders, threshold visible, no chrome leaks ✅
+- Studio regression: editor mounts, S1/S2/S3 features present ✅
+- Legacy negative: room `hesmaddw` confirmed legacy, no V2 leakage ✅
+- Full hosted lifecycle: 18.5s pass, edit/save/preview/publish/public/hygiene/cleanup ✅
+- Payload hygiene post-lifecycle: 0 violations ✅
+
+## Art-Direction Audit
+
+Kimi art-direction audit score: **7.6/10** (meets 7.5 deploy floor).
+
+Full audit:
+`docs/program/evidence/presence-public-output-recovery-p1/PRESENCE_PUBLIC_OUTPUT_RECOVERY_P1_ART_DIRECTION_AUDIT.md`
+
 ## Recommendation
 
-Safe for Kimi art-direction audit.
+**DEPLOYED AND HOSTED-VERIFIED.** P1 baseline is locked.
 
-Safe to deploy after audit if the reviewer agrees the Gallery/GGM public output now meets the minimum threshold-room standard. Hosted lifecycle should be rerun after deployment because this changes the public renderer CSS/markup, even though local public/preview/payload gates passed.
+All hosted verification gaps are closed:
+- ✅ Public output smoke
+- ✅ Owner preview
+- ✅ Studio regression
+- ✅ Legacy negative (`hesmaddw`)
+- ✅ Full hosted lifecycle (18.5s)
+- ✅ Payload hygiene (pre + post lifecycle)
+- ✅ Evidence captured (14 screenshots)
+
+Safe for controlled operator-led pilot. Public self-serve onboarding should wait for P2 polish (transition continuity, CTA refinement, wall labels, zoom/lightbox).
+
+S4A remains parked in `stash@{0}`. No P2 work started.

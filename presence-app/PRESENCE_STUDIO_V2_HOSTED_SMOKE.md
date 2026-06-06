@@ -430,3 +430,41 @@ Verdict:
 - Hosted public render: ready.
 - Controlled operator-led pilot: ready with operator support.
 - Public self-serve onboarding: not ready until later S4/S5/S6/S7 work.
+
+
+---
+
+## P1 Public Output Recovery Deployment — 2026-06-07
+
+**Deployment URL:** `https://your-presence.vercel.app`
+**Deployment ID:** `2a88iBaAgYm1v1QUPqeiLZjCUdfJ`
+**Branch:** `feature/presence-ecosystem-alpha`
+**S4A Status:** Parked in `stash@{0}` — NOT deployed
+
+### Deployed Changes
+
+Public Output Recovery P1 deployed to production. Changes limited to:
+- `components/presence-studio-v2/PresenceStudioV2PublicRoom.tsx`
+- `components/presence-studio-v2/presence-studio-v2-public.css`
+
+### Hosted Smoke Results (Completed 2026-06-07)
+
+- **Public Room 11 (`/p/ggm-christina-goddard`):** Threshold, gallery grid, museum-frame images, mobile flow all verified.
+- **Payload Hygiene:** 0 violations (pre + post lifecycle).
+- **Owner Preview:** ✅ Tested — draft banner renders, threshold visible, no chrome leaks.
+- **Legacy Negative:** ✅ Tested — room `hesmaddw` confirmed legacy, no V2 leakage.
+- **Full Lifecycle:** ✅ Tested — 18.5s pass; edit/save/preview/publish/public/hygiene/cleanup.
+- **Studio Regression:** ✅ Tested — editor mounts, S1/S2/S3 features present.
+
+Full hosted smoke report:
+`docs/program/evidence/presence-public-output-recovery-p1-hosted/PRESENCE_PUBLIC_OUTPUT_RECOVERY_P1_HOSTED_SMOKE.md`
+
+### Verdict
+
+- Hosted Gallery/GGM public output: **ready with P2 polish**
+- Hosted owner preview: **ready**
+- Hosted Studio regression: **ready**
+- Live legacy isolation: **ready**
+- Hosted lifecycle: **ready**
+- Controlled operator-led pilot: **ready with operator support**
+- Public self-serve onboarding: **not ready** (wait for P2)

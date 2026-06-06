@@ -1,7 +1,7 @@
 # Presence Public Room Output Quality Audit
 
 Date: 2026-06-06
-Status: Recreated on clean S3 baseline and updated after Public Output Recovery P1.
+Status: Recreated on clean S3 baseline, updated after Public Output Recovery P1, and **deployed to production with hosted smoke verification**.
 
 ## Audit Baseline
 
@@ -51,12 +51,29 @@ Passed:
 - `presence-public-payload-hygiene.spec.ts`
 - `presence-public-output-gallery-quality.spec.ts`
 
+## Hosted Verification
+
+Deployed: `https://your-presence.vercel.app`
+Deployment ID: `2a88iBaAgYm1v1QUPqeiLZjCUdfJ`
+
+Hosted smoke completed. Full report:
+`docs/program/evidence/presence-public-output-recovery-p1-hosted/PRESENCE_PUBLIC_OUTPUT_RECOVERY_P1_HOSTED_SMOKE.md`
+
+Hosted results:
+- Threshold height: 950px (passes >880px floor) ✅
+- 12-column grid confirmed ✅
+- Museum-frame treatment verified ✅
+- Role labels hidden ✅
+- Mobile flow functional ✅
+- Payload hygiene: 0 violations ✅
+
 ## Remaining Gaps
 
 - Full artwork focus mode is still P2.
 - Non-gallery worlds still need public-output recovery passes.
-- Hosted deployment and hosted lifecycle smoke were intentionally not run in this local implementation pass.
+- Owner preview and legacy negative not tested live (credentials/URL unavailable).
+- Hosted lifecycle smoke not run (requires credentials).
 
 ## Current Verdict
 
-P1 is ready for Kimi art-direction audit. If accepted, deploy and rerun hosted Room 11 lifecycle/payload smoke before calling it hosted-verified.
+**P1 is deployed and hosted-verified for public output.** Ready for controlled operator-led pilot. Public self-serve onboarding should wait for P2 polish.

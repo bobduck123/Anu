@@ -1089,3 +1089,41 @@ Notes:
 - The P1 capture spec reported `ok` and wrote screenshots, but the shell wrapper timed out during Playwright web-server teardown. This matches prior capture-spec teardown behavior; evidence files are present.
 - Direct Node TypeScript tests still emit `MODULE_TYPELESS_PACKAGE_JSON`.
 - Build and Playwright web server still emit the existing Turbopack workspace-root warning.
+
+
+---
+
+## P1 Deployment — 2026-06-07
+
+**Deployed to production via `npx vercel --prod`.**
+
+- Production URL: `https://your-presence.vercel.app`
+- Deployment ID: `2a88iBaAgYm1v1QUPqeiLZjCUdfJ`
+- Build: 29 static pages, 0 errors
+- S4A: Parked in `stash@{0}` — not deployed
+
+Hosted smoke completed. All public-output checks passed:
+- Threshold height: 950px ✅
+- 12-column grid: confirmed ✅
+- Museum-frame images: `contain`, `border-radius: 0` ✅
+- Role labels: `display: none` ✅
+- Mobile: functional ✅
+- Payload hygiene: 0 violations ✅
+
+Full hosted smoke report:
+`docs/program/evidence/presence-public-output-recovery-p1-hosted/PRESENCE_PUBLIC_OUTPUT_RECOVERY_P1_HOSTED_SMOKE.md`
+
+
+## P1 Hosted Verification Completed — 2026-06-07
+
+All skipped checks from initial deployment now closed:
+
+- **Owner preview:** ✅ Tested with live credentials. Draft preview banner renders. Threshold visible. No editor chrome leaks.
+- **Studio regression:** ✅ Tested with live credentials. V2 editor mounts. S1/S2/S3 features present. One non-blocking 404 from auxiliary resource.
+- **Legacy negative:** ✅ Tested room `hesmaddw`. Confirmed legacy renderer. No V2 public renderer, no Gallery CSS, no threshold leakage.
+- **Full hosted lifecycle:** ✅ `presence-studio-v2-hosted-lifecycle.spec.ts` passed in 18.5s. Edit/save/reload/preview/publish/public/hygiene/cleanup all verified.
+- **Payload hygiene post-lifecycle:** ✅ 0 violations.
+
+**Evidence:** 14 screenshots in `docs/program/evidence/presence-public-output-recovery-p1-hosted/`
+
+**Baseline status:** LOCKED. P1 is deployed, hosted-verified, and ready for controlled operator-led pilot.
