@@ -333,3 +333,44 @@ Release baseline:
 - Baseline product commit: `7a27ec30abebf871f13ccda3830378542f16115d`.
 - Deployment `dpl_EEh5vdTqXMis3nTy8wmP6LYdwNqC` was originally created from dirty local state based on `f81fca829742939ad24865521d5c2d52f3a4bdfb`.
 - The baseline commit records the deployed S1 product code, tests, reports, smoke scripts, and safe evidence in Git.
+
+---
+
+## 2026-06-06 - Studio Recovery S2 Hosted Smoke
+
+Studio Recovery S2 was verified on hosted Room 11 / `ggm-christina-goddard`.
+
+S2 hosted verification:
+
+- V2 editor root mounts.
+- Selected-object frame and handles render in the editor only.
+- Guided Mode disables direct manipulation.
+- Wild Mode drag-to-move works.
+- Wild Mode resize works.
+- Wild Mode rotate works.
+- Locked objects disable manipulation.
+- Motion inspector values sync with canvas manipulation.
+- Save/reload persisted transform values exactly.
+- Owner preview has no editor chrome leakage.
+- Public desktop/mobile render cleanly.
+- Legacy rooms remain unaffected.
+- Full hosted lifecycle smoke passed in 36.7s.
+- Cleanup restored transform values to the original state.
+
+Payload hygiene:
+
+- Preview/public HTML scan found `0` restricted editor/config leaks.
+- Public routes did not expose S2 editor selectors or manipulation handles.
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_S2_HOSTED_REPORT.md
+docs/program/evidence/presence-studio-v2-studio-recovery-s2-hosted/
+```
+
+Verdict:
+
+- Room 11 remains ready for controlled operator-led pilot use with S2 direct manipulation.
+- S3 can begin after release-baseline commit/push.
+- Public self-serve onboarding remains out of scope.

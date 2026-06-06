@@ -572,3 +572,43 @@ Still deferred beyond S2:
 - public self-serve onboarding readiness
 
 S2 does not change backend contracts, public payload shape, feature gating, auth, save/reload, owner preview, or publish. Hosted S2 verification remains pending deployment.
+
+---
+
+## S2 Hosted Status - 2026-06-06
+
+Studio Recovery S2 has been deployed and verified on hosted Room 11 / `ggm-christina-goddard`.
+
+Hosted confirmation:
+
+- Wild Mode drag-to-move works.
+- Wild Mode resize works.
+- Wild Mode rotate works.
+- Guided Mode disables manipulation.
+- Locked objects disable manipulation.
+- Motion inspector syncs with canvas manipulation.
+- Save/reload persisted transform values exactly.
+- Owner preview has no editor chrome leakage.
+- Public desktop/mobile render cleanly.
+- Legacy rooms remain unaffected.
+- Full hosted lifecycle smoke passed in 36.7s.
+- Cleanup restored transform values to the original state.
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_S2_HOSTED_REPORT.md
+docs/program/evidence/presence-studio-v2-studio-recovery-s2-hosted/
+```
+
+Remaining prototype superiority gaps after S2:
+
+- real asset upload and assignment
+- undo/redo
+- grouping
+- chamber CRUD
+- collaboration cursors
+- true archive/version history
+- broader self-serve usability hardening
+
+S3 can begin after the S2 release baseline commit is pushed. Public self-serve onboarding remains out of scope.

@@ -815,3 +815,53 @@ Warnings:
 - Direct Node TypeScript tests still emit `MODULE_TYPELESS_PACKAGE_JSON`.
 - Build and Playwright web server still emit the existing Turbopack workspace-root warning.
 - Hosted S2 smoke was not run because S2 has not been deployed in this pass.
+
+---
+
+## 2026-06-06 - S2 Release Baseline Local QA
+
+Scope: Release-baseline verification after hosted S2 passed on Room 11. No product behavior changed in this pass.
+
+Commands run:
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-direct-manipulation.spec.ts --project=chromium
+npx.cmd playwright test tests\e2e\presence-studio-v2-hosted-manipulation.spec.ts --project=chromium
+```
+
+Results:
+
+- TypeScript: passed.
+- Build: passed.
+- Feature tests: 8 passed.
+- Studio V2 adapter tests: 14 passed.
+- Public payload tests: 5 passed.
+- Render resolver tests: 8 passed.
+- Editor readiness tests: 5 passed.
+- V2 public render Playwright smoke: 3 passed.
+- V2 draft preview Playwright smoke: 2 passed.
+- Public payload hygiene Playwright smoke: 2 passed.
+- S2 direct manipulation Playwright smoke: 2 passed.
+- Hosted S2 manipulation audit spec: 1 skipped without `PRESENCE_HOSTED_SMOKE=1`.
+
+Warnings:
+
+- Direct Node TypeScript tests still emit `MODULE_TYPELESS_PACKAGE_JSON`.
+- Build and Playwright web server still emit the existing Turbopack workspace-root warning.
+
+Hosted S2 verification:
+
+```txt
+PRESENCE_STUDIO_V2_S2_HOSTED_REPORT.md
+docs/program/evidence/presence-studio-v2-studio-recovery-s2-hosted/
+```
