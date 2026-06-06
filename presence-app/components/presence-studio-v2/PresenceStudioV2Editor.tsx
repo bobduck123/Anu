@@ -84,6 +84,38 @@ function isFormTarget(target: EventTarget | null): boolean {
   return Boolean(target.closest("input, textarea, select, button, a, [contenteditable='true']"));
 }
 
+function hasMeaningfulTransform(transform: StudioV2Object["transform"]): boolean {
+  return transform.x !== 0 || transform.y !== 0 || transform.scale !== 1 || transform.rotation !== 0;
+}
+
+function countPublicObjects(state: StudioV2State): number {
+  return state.chambers.reduce(
+    (total, chamber) => total + chamber.objects.filter((object) => object.visibility.public).length,
+    0,
+  );
+}
+
+function safeHost(value?: string): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.host;
+  } catch {
+    return value.startsWith("/") ? "Internal Presence path" : "Link format needs review";
+  }
+}
+
+function objectStateBadges(object: StudioV2Object, dirty: boolean): string[] {
+  const badges: string[] = [];
+  if (object.locked) badges.push("Locked");
+  if (object.pinned) badges.push("Pinned");
+  if (!object.visibility.public) badges.push("Hidden from public");
+  if (!object.visibility.mobile) badges.push("Hidden on mobile");
+  if (hasMeaningfulTransform(object.transform)) badges.push("Transformed");
+  if (dirty) badges.push("Unsaved draft");
+  return badges.length > 0 ? badges : ["Public-ready"];
+}
+
 export default function PresenceStudioV2Editor({
   node,
   nodeId,
@@ -110,6 +142,9 @@ export default function PresenceStudioV2Editor({
   const [expandedChambers, setExpandedChambers] = useState<Set<string>>(() => new Set());
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [interactionReadout, setInteractionReadout] = useState<TransformReadout | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [railOpen, setRailOpen] = useState(true);
+  const [inspectorOpen, setInspectorOpen] = useState(true);
 
   const roomRef = useRef<HTMLDivElement | null>(null);
   const interactionRef = useRef<CanvasInteraction | null>(null);
@@ -151,6 +186,10 @@ export default function PresenceStudioV2Editor({
       return next;
     });
   }, [v2State]);
+
+  useEffect(() => {
+    setDeleteConfirmId(null);
+  }, [selectedId]);
 
   async function saveDraft(nextState: StudioV2State | null = v2State): Promise<boolean> {
     if (!nextState) return false;
@@ -440,14 +479,18 @@ export default function PresenceStudioV2Editor({
     const url = typeof window !== "undefined" ? `${window.location.origin}${path}` : path;
     try {
       await navigator.clipboard.writeText(url);
-      setShareNotice("Copied public URL");
+      setShareNotice(dirty ? "Copied public URL. Save draft before sharing new edits." : "Copied public URL");
     } catch {
       setShareNotice(url);
     }
-    window.setTimeout(() => setShareNotice(null), 2600);
+    window.setTimeout(() => setShareNotice(null), 3400);
   }
 
   function goToPreview() {
+    if (dirty) {
+      setShareNotice("Unsaved changes are local until Save draft. Preview opens the last saved draft.");
+      window.setTimeout(() => setShareNotice(null), 3400);
+    }
     window.location.href = `/studio/${nodeId}/editor/preview`;
   }
 
@@ -512,6 +555,7 @@ export default function PresenceStudioV2Editor({
       })),
     }));
     if (selectedId === id) setSelectedId(null);
+    setDeleteConfirmId(null);
   }
 
   function handleFloatingAction(action: string) {
@@ -541,7 +585,8 @@ export default function PresenceStudioV2Editor({
         break;
       }
       case "delete":
-        handleDeleteObject(selectedId);
+        setDeleteConfirmId(selectedId);
+        setInspectorTab("style");
         break;
       case "lock": {
         const obj = selectedObject;
@@ -593,9 +638,14 @@ export default function PresenceStudioV2Editor({
   const world = WORLD_KITS.find((kit) => kit.id === v2State.worldId);
   const activeChamber = v2State.chambers.find((chamber) => chamber.id === activeChamberId) ?? v2State.chambers[0] ?? null;
   const saveStatus = saving ? "Saving" : dirty ? "Unsaved changes" : notice ?? "Saved";
+  const publicUrlPath = `/presence/${v2State.slug || node.slug || String(nodeId)}`;
+  const publicObjects = countPublicObjects(v2State);
 
   return (
-    <div data-testid="presence-studio-v2-root" className="presence-studio-v2 v2-cockpit">
+    <div
+      data-testid="presence-studio-v2-root"
+      className={`presence-studio-v2 v2-cockpit${railOpen ? " rail-open" : " rail-closed"}${inspectorOpen ? " inspector-open" : " inspector-closed"}`}
+    >
       {/* Top chrome */}
       <header data-testid="presence-studio-v2-top-chrome" className="v2-toolbar v2-top-chrome">
         <div className="v2-toolbar-group">
@@ -615,6 +665,29 @@ export default function PresenceStudioV2Editor({
         </div>
 
         <div className="v2-toolbar-spacer" />
+
+        <div className="v2-toolbar-group v2-drawer-actions">
+          <button
+            type="button"
+            data-testid="presence-studio-v2-outline-toggle"
+            className={`v2-btn${railOpen ? " active" : ""}`}
+            aria-expanded={railOpen}
+            aria-controls="presence-studio-v2-outline-panel"
+            onClick={() => setRailOpen((current) => !current)}
+          >
+            Outline
+          </button>
+          <button
+            type="button"
+            data-testid="presence-studio-v2-inspector-toggle"
+            className={`v2-btn${inspectorOpen ? " active" : ""}`}
+            aria-expanded={inspectorOpen}
+            aria-controls="presence-studio-v2-inspector-panel"
+            onClick={() => setInspectorOpen((current) => !current)}
+          >
+            Inspector
+          </button>
+        </div>
 
         <nav className="v2-surface-tabs" aria-label="Studio surface">
           <button
@@ -658,8 +731,24 @@ export default function PresenceStudioV2Editor({
         </div>
 
         <div className="v2-toolbar-group">
-          <button className={`v2-btn${viewport === "desktop" ? " active" : ""}`} onClick={() => setViewport("desktop")}>Desktop</button>
-          <button className={`v2-btn${viewport === "mobile" ? " active" : ""}`} onClick={() => setViewport("mobile")}>Mobile</button>
+          <button
+            type="button"
+            data-testid="presence-studio-v2-viewport-desktop"
+            className={`v2-btn${viewport === "desktop" ? " active" : ""}`}
+            aria-pressed={viewport === "desktop"}
+            onClick={() => setViewport("desktop")}
+          >
+            Desktop
+          </button>
+          <button
+            type="button"
+            data-testid="presence-studio-v2-viewport-mobile"
+            className={`v2-btn${viewport === "mobile" ? " active" : ""}`}
+            aria-pressed={viewport === "mobile"}
+            onClick={() => setViewport("mobile")}
+          >
+            Mobile
+          </button>
         </div>
 
         <div className="v2-toolbar-group">
@@ -670,9 +759,9 @@ export default function PresenceStudioV2Editor({
         </div>
 
         <div className="v2-toolbar-group">
-          <button data-testid="presence-studio-v2-share-action" className="v2-btn" onClick={() => void handleShare()}>Share</button>
-          <button data-testid="presence-studio-v2-preview-action" className="v2-btn" onClick={goToPreview}>Preview</button>
-          <button data-testid="presence-studio-v2-publish-action" className="v2-btn" onClick={goToPreview}>Publish</button>
+          <button data-testid="presence-studio-v2-share-action" className="v2-btn" onClick={() => void handleShare()} title={publicUrlPath}>Share</button>
+          <button data-testid="presence-studio-v2-preview-action" className="v2-btn" onClick={goToPreview}>Preview visitor view</button>
+          <button data-testid="presence-studio-v2-publish-action" className="v2-btn" onClick={goToPreview}>Publish from preview</button>
         </div>
 
         <div className="v2-toolbar-group">
@@ -693,6 +782,7 @@ export default function PresenceStudioV2Editor({
           selectedId={selectedId}
           activeChamberId={activeChamber?.id ?? null}
           expandedChambers={expandedChambers}
+          open={railOpen}
           onToggleChamber={toggleChamberExpanded}
           onSelectObject={selectObject}
           onSelectChamber={scrollToChamber}
@@ -718,7 +808,7 @@ export default function PresenceStudioV2Editor({
           ) : surfaceTab === "archive" ? (
             <ArchiveWorkbench state={v2State} hasDraft={hasDraft} dirty={dirty} />
           ) : (
-            <div className="v2-stage-frame">
+            <div className={`v2-stage-frame v2-device-${viewport}`}>
               <div className="v2-stage-frame-head">
                 <span>{world?.name ?? v2State.worldId}</span>
                 <strong>{activeChamber?.label ?? "Room"}</strong>
@@ -731,19 +821,31 @@ export default function PresenceStudioV2Editor({
                   </strong>
                 </div>
               )}
-              <PresenceStudioV2Room
-                state={v2State}
-                selectedId={selectedId}
-                mode={mode}
-                viewport={viewport}
-                onSelectObject={(id) => {
-                  if (id) selectObject(id);
-                  else setSelectedId(null);
-                }}
-                onBeginDrag={beginObjectDrag}
-                onBeginResize={beginObjectResize}
-                onBeginRotate={beginObjectRotate}
-              />
+              <div
+                data-testid="presence-studio-v2-device-frame"
+                className={`v2-device-frame v2-device-frame-${viewport}`}
+              >
+                <div className="v2-device-chrome" aria-hidden="true">
+                  <span className="v2-device-dots"><i /><i /><i /></span>
+                  <span data-testid="presence-studio-v2-device-label" className="v2-device-label">
+                    {viewport === "mobile" ? "Mobile public room preview" : "Desktop public room preview"}
+                  </span>
+                  <span className="v2-device-path">{publicUrlPath}</span>
+                </div>
+                <PresenceStudioV2Room
+                  state={v2State}
+                  selectedId={selectedId}
+                  mode={mode}
+                  viewport={viewport}
+                  onSelectObject={(id) => {
+                    if (id) selectObject(id);
+                    else setSelectedId(null);
+                  }}
+                  onBeginDrag={beginObjectDrag}
+                  onBeginResize={beginObjectResize}
+                  onBeginRotate={beginObjectRotate}
+                />
+              </div>
 
               {/* Floating toolbar */}
               {selectedId && (
@@ -764,6 +866,12 @@ export default function PresenceStudioV2Editor({
           mode={mode}
           dirty={dirty}
           saving={saving}
+          open={inspectorOpen}
+          publicUrlPath={publicUrlPath}
+          publicObjects={publicObjects}
+          deleteConfirmId={deleteConfirmId}
+          onRequestDelete={(id) => setDeleteConfirmId(id)}
+          onCancelDelete={() => setDeleteConfirmId(null)}
           onSetInspectorTab={setInspectorTab}
           onUpdateRoom={updateRoom}
           onUpdateCta={updateCta}
@@ -852,6 +960,7 @@ function StudioOutlinePanel({
   selectedId,
   activeChamberId,
   expandedChambers,
+  open,
   onToggleChamber,
   onSelectObject,
   onSelectChamber,
@@ -860,6 +969,7 @@ function StudioOutlinePanel({
   selectedId: string | null;
   activeChamberId: string | null;
   expandedChambers: Set<string>;
+  open: boolean;
   onToggleChamber: (id: string) => void;
   onSelectObject: (id: string) => void;
   onSelectChamber: (id: string) => void;
@@ -871,7 +981,11 @@ function StudioOutlinePanel({
   );
 
   return (
-    <aside data-testid="presence-studio-v2-outline" className="v2-left-rail">
+    <aside
+      id="presence-studio-v2-outline-panel"
+      data-testid="presence-studio-v2-outline"
+      className={`v2-left-rail${open ? " is-open" : " is-collapsed"}`}
+    >
       <section className="v2-rail-section">
         <div className="v2-rail-title">
           <span>Room outline</span>
@@ -961,6 +1075,12 @@ function StudioInspectorPanel({
   mode,
   dirty,
   saving,
+  open,
+  publicUrlPath,
+  publicObjects,
+  deleteConfirmId,
+  onRequestDelete,
+  onCancelDelete,
   onSetInspectorTab,
   onUpdateRoom,
   onUpdateCta,
@@ -976,6 +1096,12 @@ function StudioInspectorPanel({
   mode: "guided" | "wild";
   dirty: boolean;
   saving: boolean;
+  open: boolean;
+  publicUrlPath: string;
+  publicObjects: number;
+  deleteConfirmId: string | null;
+  onRequestDelete: (id: string) => void;
+  onCancelDelete: () => void;
   onSetInspectorTab: (tab: "content" | "style" | "motion") => void;
   onUpdateRoom: (patch: Partial<StudioV2State>) => void;
   onUpdateCta: (patch: Partial<StudioV2State["cta"]>) => void;
@@ -988,6 +1114,15 @@ function StudioInspectorPanel({
   const object = selectedObject;
   const world = WORLD_KITS.find((kit) => kit.id === state.worldId);
   const locked = Boolean(object?.locked);
+  const linkHost = safeHost(object?.link);
+  const deletePending = Boolean(object && deleteConfirmId === object.id);
+  const objectBadges = object ? objectStateBadges(object, dirty) : [];
+  const checklist = [
+    { label: "Room title", ok: Boolean(state.title.trim()) },
+    { label: "Public objects", ok: publicObjects > 0 },
+    { label: "CTA path", ok: Boolean(state.cta.label || state.cta.href) },
+    { label: "Mobile preview", ok: true },
+  ];
 
   const updateObject = (patch: Partial<StudioV2Object>) => {
     if (!object) return;
@@ -1000,7 +1135,11 @@ function StudioInspectorPanel({
   };
 
   return (
-    <aside data-testid="presence-studio-v2-inspector" className="v2-inspector">
+    <aside
+      id="presence-studio-v2-inspector-panel"
+      data-testid="presence-studio-v2-inspector"
+      className={`v2-inspector${open ? " is-open" : " is-collapsed"}`}
+    >
       <div className="v2-inspector-head">
         <span>{object ? "Object inspector" : "Room inspector"}</span>
         <strong>{object?.title || state.title}</strong>
@@ -1008,6 +1147,24 @@ function StudioInspectorPanel({
 
       {!object ? (
         <div className="v2-inspector-body">
+          <div data-testid="presence-studio-v2-preview-confidence" className="v2-preview-confidence">
+            <div>
+              <span>Visitor confidence</span>
+              <strong>{dirty ? "Save before sharing" : "Ready to preview"}</strong>
+            </div>
+            <p>
+              Preview opens the owner-only visitor view. Publishing still happens through the real preview and publish flow.
+            </p>
+            <div className="v2-confidence-list">
+              {checklist.map((item) => (
+                <span key={item.label} className={item.ok ? "ok" : "warn"}>
+                  {item.ok ? "Ready" : "Needs"}: {item.label}
+                </span>
+              ))}
+            </div>
+            <code>{publicUrlPath}</code>
+          </div>
+
           <div className="v2-inspector-section">
             <div className="v2-inspector-section-title">Room identity</div>
             <label data-testid="presence-studio-v2-field-title" className="v2-field">
@@ -1043,6 +1200,11 @@ function StudioInspectorPanel({
               <span>Status</span>
               <strong>{saving ? "Saving" : dirty ? "Unsaved changes" : "Saved"}</strong>
             </div>
+            {dirty && (
+              <div className="v2-honest-note">
+                Unsaved Studio changes are not in the backend draft until Save draft completes.
+              </div>
+            )}
             <button type="button" className="v2-btn" onClick={onOpenSkin}>Open Skin Lab</button>
           </div>
         </div>
@@ -1078,8 +1240,40 @@ function StudioInspectorPanel({
             )}
 
             {inspectorTab === "content" && (
-              <div className="v2-inspector-section">
-                <div className="v2-inspector-section-title">Object content</div>
+              <div className="v2-inspector-section v2-object-content-panel">
+                <div className="v2-inspector-section-title">
+                  <span>Object content</span>
+                  <strong className="v2-type-badge">{object.type}</strong>
+                </div>
+                <div data-testid="presence-studio-v2-object-state-summary" className="v2-object-state-summary">
+                  {objectBadges.map((badge) => (
+                    <span key={badge}>{badge}</span>
+                  ))}
+                </div>
+                <div className="v2-object-preview-card">
+                  {object.image?.src ? (
+                    <img
+                      data-testid="presence-studio-v2-inspector-image-preview"
+                      src={object.image.src}
+                      alt={object.image.alt || object.title}
+                    />
+                  ) : (
+                    <div data-testid="presence-studio-v2-inspector-image-empty" className="v2-object-preview-empty">
+                      No image URL assigned. This object will render as text/proof/CTA content.
+                    </div>
+                  )}
+                  <div className="v2-object-preview-copy">
+                    <span>{object.type}</span>
+                    <strong>{object.title || "Untitled object"}</strong>
+                    <p>
+                      {object.visibility.public
+                        ? "Visible in the public room."
+                        : "Hidden from public visitors until visibility is enabled."}
+                      {" "}
+                      {object.visibility.mobile ? "Included on mobile." : "Hidden on mobile public view."}
+                    </p>
+                  </div>
+                </div>
                 <label data-testid="presence-studio-v2-field-title" className="v2-field">
                   <span>Title</span>
                   <input
@@ -1141,6 +1335,10 @@ function StudioInspectorPanel({
                     }}
                   />
                 </label>
+                <div data-testid="presence-studio-v2-inspector-link-status" className="v2-link-status">
+                  <span>Link status</span>
+                  <strong>{linkHost ? linkHost : "No link target set"}</strong>
+                </div>
                 <label className="v2-check-row">
                   <input
                     type="checkbox"
@@ -1148,7 +1346,7 @@ function StudioInspectorPanel({
                     disabled={locked}
                     onChange={(event) => updateObject({ visibility: { ...object.visibility, public: event.target.checked } })}
                   />
-                  <span>Visible publicly</span>
+                  <span>Shown in public room</span>
                 </label>
                 <label className="v2-check-row">
                   <input
@@ -1157,22 +1355,34 @@ function StudioInspectorPanel({
                     disabled={locked}
                     onChange={(event) => updateObject({ visibility: { ...object.visibility, mobile: event.target.checked } })}
                   />
-                  <span>Visible on mobile</span>
+                  <span>Shown on mobile public view</span>
                 </label>
+                <div className="v2-honest-note">
+                  These fields are visitor-facing when public visibility is enabled. Upload and crop tools are not part of this build.
+                </div>
               </div>
             )}
 
             {inspectorTab === "style" && (
-              <div className="v2-inspector-section">
+              <div className="v2-inspector-section v2-object-style-panel">
                 <div className="v2-inspector-section-title">Object state</div>
-                <label className="v2-check-row">
+                <div data-testid="presence-studio-v2-object-state-summary" className="v2-object-state-summary strong">
+                  {objectBadges.map((badge) => (
+                    <span key={badge}>{badge}</span>
+                  ))}
+                </div>
+                <label className="v2-check-row v2-state-toggle">
                   <input type="checkbox" checked={object.locked} onChange={(event) => updateObject({ locked: event.target.checked })} />
-                  <span>Locked</span>
+                  <span><strong>Lock movement</strong><em>Prevents canvas drag, resize, rotation, and content edits.</em></span>
                 </label>
-                <label className="v2-check-row">
+                <label className="v2-check-row v2-state-toggle">
                   <input type="checkbox" checked={object.pinned} onChange={(event) => updateObject({ pinned: event.target.checked })} />
-                  <span>Pinned / fixed in room</span>
+                  <span><strong>Pin in room</strong><em>Marks this object as intentionally fixed in the composition.</em></span>
                 </label>
+                <div className="v2-layer-summary">
+                  <span>Layer position</span>
+                  <strong>Z {object.transform.zIndex}</strong>
+                </div>
                 <div className="v2-inspector-grid">
                   <button type="button" className="v2-btn" onClick={() => updateTransform({ zIndex: Math.max(0, object.transform.zIndex - 1) })}>
                     Layer down
@@ -1181,16 +1391,33 @@ function StudioInspectorPanel({
                     Layer up
                   </button>
                   <button type="button" className="v2-btn" onClick={() => onDuplicate(object.id)}>Duplicate</button>
-                  <button type="button" className="v2-btn danger" onClick={() => onDelete(object.id)}>Delete</button>
+                  <button
+                    type="button"
+                    className="v2-btn danger"
+                    onClick={() => (deletePending ? onDelete(object.id) : onRequestDelete(object.id))}
+                  >
+                    {deletePending ? "Confirm delete object" : "Delete object"}
+                  </button>
                 </div>
+                {deletePending && (
+                  <div className="v2-delete-confirm">
+                    <span>This removes the object from the draft after Save draft.</span>
+                    <button type="button" className="v2-btn" onClick={onCancelDelete}>Cancel</button>
+                  </div>
+                )}
                 <button type="button" className="v2-btn" onClick={onOpenSkin}>Room Skin Lab controls object material</button>
               </div>
             )}
 
             {inspectorTab === "motion" && (
-              <div className="v2-inspector-section">
+              <div className="v2-inspector-section v2-object-motion-panel">
                 <div className="v2-inspector-section-title">Transform</div>
-                <div className="v2-honest-note">
+                <div data-testid="presence-studio-v2-object-state-summary" className="v2-object-state-summary">
+                  {objectBadges.map((badge) => (
+                    <span key={badge}>{badge}</span>
+                  ))}
+                </div>
+                <div data-testid="presence-studio-v2-motion-mode-note" className="v2-honest-note">
                   {locked
                     ? "This object is locked. Unlock it in Style before moving, resizing, or rotating."
                     : mode === "wild"
@@ -1198,50 +1425,90 @@ function StudioInspectorPanel({
                       : "Guided Mode protects the layout. Switch to Wild Mode to move, scale, or rotate on the canvas."}
                 </div>
                 <div className="v2-motion-grid">
-                  <label className="v2-field">
-                    <span>X</span>
+                  <div className="v2-axis-cluster">
+                    <label className="v2-field">
+                      <span>X</span>
+                      <input
+                        data-testid="presence-studio-v2-transform-x"
+                        type="number"
+                        value={object.transform.x}
+                        disabled={locked}
+                        onChange={(event) => updateTransform({ x: clampNumber(Number(event.target.value), EDITOR_MIN_POSITION, EDITOR_MAX_POSITION) })}
+                      />
+                    </label>
+                    <div className="v2-stepper-row">
+                      <button type="button" className="v2-stepper" disabled={locked} onClick={() => updateTransform({ x: clampNumber(object.transform.x - 10, EDITOR_MIN_POSITION, EDITOR_MAX_POSITION) })} aria-label="Move object left 10 pixels">-10</button>
+                      <button type="button" data-testid="presence-studio-v2-transform-x-plus" className="v2-stepper" disabled={locked} onClick={() => updateTransform({ x: clampNumber(object.transform.x + 10, EDITOR_MIN_POSITION, EDITOR_MAX_POSITION) })} aria-label="Move object right 10 pixels">+10</button>
+                    </div>
+                  </div>
+                  <div className="v2-axis-cluster">
+                    <label className="v2-field">
+                      <span>Y</span>
+                      <input
+                        data-testid="presence-studio-v2-transform-y"
+                        type="number"
+                        value={object.transform.y}
+                        disabled={locked}
+                        onChange={(event) => updateTransform({ y: clampNumber(Number(event.target.value), EDITOR_MIN_POSITION, EDITOR_MAX_POSITION) })}
+                      />
+                    </label>
+                    <div className="v2-stepper-row">
+                      <button type="button" className="v2-stepper" disabled={locked} onClick={() => updateTransform({ y: clampNumber(object.transform.y - 10, EDITOR_MIN_POSITION, EDITOR_MAX_POSITION) })} aria-label="Move object up 10 pixels">-10</button>
+                      <button type="button" data-testid="presence-studio-v2-transform-y-plus" className="v2-stepper" disabled={locked} onClick={() => updateTransform({ y: clampNumber(object.transform.y + 10, EDITOR_MIN_POSITION, EDITOR_MAX_POSITION) })} aria-label="Move object down 10 pixels">+10</button>
+                    </div>
+                  </div>
+                  <div className="v2-range-field">
+                    <label className="v2-field">
+                      <span>Scale</span>
+                      <input
+                        data-testid="presence-studio-v2-transform-scale"
+                        type="number"
+                        min={EDITOR_MIN_SCALE}
+                        max={EDITOR_MAX_SCALE}
+                        step="0.05"
+                        value={object.transform.scale}
+                        disabled={locked}
+                        onChange={(event) => updateTransform({ scale: clampNumber(Number(event.target.value), EDITOR_MIN_SCALE, EDITOR_MAX_SCALE) })}
+                      />
+                    </label>
                     <input
-                      data-testid="presence-studio-v2-transform-x"
-                      type="number"
-                      value={object.transform.x}
-                      disabled={locked}
-                      onChange={(event) => updateTransform({ x: clampNumber(Number(event.target.value), EDITOR_MIN_POSITION, EDITOR_MAX_POSITION) })}
-                    />
-                  </label>
-                  <label className="v2-field">
-                    <span>Y</span>
-                    <input
-                      data-testid="presence-studio-v2-transform-y"
-                      type="number"
-                      value={object.transform.y}
-                      disabled={locked}
-                      onChange={(event) => updateTransform({ y: clampNumber(Number(event.target.value), EDITOR_MIN_POSITION, EDITOR_MAX_POSITION) })}
-                    />
-                  </label>
-                  <label className="v2-field">
-                    <span>Scale</span>
-                    <input
-                      data-testid="presence-studio-v2-transform-scale"
-                      type="number"
+                      data-testid="presence-studio-v2-transform-scale-slider"
+                      className="v2-motion-slider"
+                      type="range"
                       min={EDITOR_MIN_SCALE}
                       max={EDITOR_MAX_SCALE}
                       step="0.05"
                       value={object.transform.scale}
                       disabled={locked}
                       onChange={(event) => updateTransform({ scale: clampNumber(Number(event.target.value), EDITOR_MIN_SCALE, EDITOR_MAX_SCALE) })}
+                      aria-label="Scale selected object"
                     />
-                  </label>
-                  <label className="v2-field">
-                    <span>Rotation</span>
+                  </div>
+                  <div className="v2-range-field">
+                    <label className="v2-field">
+                      <span>Rotation</span>
+                      <input
+                        data-testid="presence-studio-v2-transform-rotation"
+                        type="number"
+                        step="1"
+                        value={object.transform.rotation}
+                        disabled={locked}
+                        onChange={(event) => updateTransform({ rotation: clampNumber(Number(event.target.value), -360, 360) })}
+                      />
+                    </label>
                     <input
-                      data-testid="presence-studio-v2-transform-rotation"
-                      type="number"
+                      data-testid="presence-studio-v2-transform-rotation-slider"
+                      className="v2-motion-slider rotation"
+                      type="range"
+                      min="-180"
+                      max="180"
                       step="1"
-                      value={object.transform.rotation}
+                      value={clampNumber(object.transform.rotation, -180, 180)}
                       disabled={locked}
                       onChange={(event) => updateTransform({ rotation: clampNumber(Number(event.target.value), -360, 360) })}
+                      aria-label="Rotate selected object"
                     />
-                  </label>
+                  </div>
                   <label className="v2-field">
                     <span>Z index</span>
                     <input
@@ -1255,6 +1522,7 @@ function StudioInspectorPanel({
                   <div className="v2-motion-mode">
                     <span>Current mode</span>
                     <strong>{locked ? "Locked - handles disabled" : mode === "wild" ? "Wild direct manipulation" : "Guided layout protection"}</strong>
+                    <em>{mode === "wild" && !locked ? "Canvas handles and numeric controls are live." : "Canvas handles are read-only in this state."}</em>
                   </div>
                 </div>
                 <button

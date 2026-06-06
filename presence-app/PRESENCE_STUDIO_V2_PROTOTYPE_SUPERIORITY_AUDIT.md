@@ -612,3 +612,57 @@ Remaining prototype superiority gaps after S2:
 - broader self-serve usability hardening
 
 S3 can begin after the S2 release baseline commit is pushed. Public self-serve onboarding remains out of scope.
+
+---
+
+## S3 Status - 2026-06-06
+
+Studio Recovery S3 has been implemented locally.
+
+Recovered:
+
+- clearer professional persistent inspector
+- Content tab image preview and image empty state
+- object link status
+- clearer public/mobile visibility language
+- Style tab state badges, lock/pin clarity, layer summary, duplicate, and delete confirmation
+- Motion tab x/y steppers, scale slider, rotation slider, z-index clarity, and mode guidance
+- editor-only desktop/mobile device frame chrome
+- mid-width/narrow Outline and Inspector toggles
+- room-level preview/publish confidence checklist
+- clearer dirty-state warning for preview/share confidence
+- editor-only object state clarity for hidden/locked/pinned/transformed/unsaved states
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_STUDIO_RECOVERY_S3_REPORT.md
+docs/program/evidence/presence-studio-v2-studio-recovery-s3/
+```
+
+S3 local QA passed:
+
+- typecheck
+- build
+- feature tests
+- adapter tests
+- public payload tests
+- resolver tests
+- readiness tests
+- V2 public render Playwright
+- V2 draft preview Playwright
+- public payload hygiene Playwright
+- S2 direct manipulation Playwright
+- S3 inspector usability Playwright
+
+Remaining prototype superiority gaps after S3:
+
+- chamber CRUD
+- real asset upload and assignment
+- undo/redo
+- grouping
+- collaboration cursors
+- true archive/version history
+- broader self-serve onboarding readiness
+
+S3 does not change backend contracts, public payload shape, feature gating, auth, save/reload, owner preview, or publish. Hosted S3 verification remains pending deployment.

@@ -865,3 +865,69 @@ Hosted S2 verification:
 PRESENCE_STUDIO_V2_S2_HOSTED_REPORT.md
 docs/program/evidence/presence-studio-v2-studio-recovery-s2-hosted/
 ```
+
+---
+
+## 2026-06-06 - Studio Recovery S3 Local QA
+
+Scope: Inspector depth, device frame chrome, mid-width/narrow editor usability, and client confidence language. No backend contracts, public payload shape, feature gating, auth, save/reload, preview, or publish flow changed.
+
+Commands run:
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-direct-manipulation.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-inspector-usability.spec.ts --project=chromium
+```
+
+Results:
+
+- TypeScript: passed.
+- Build: passed.
+- Feature tests: 8 passed.
+- Studio V2 adapter tests: 14 passed.
+- Public payload tests: 5 passed.
+- Render resolver tests: 8 passed.
+- Editor readiness tests: 5 passed.
+- V2 public render Playwright smoke: 3 passed.
+- V2 draft preview Playwright smoke: 2 passed.
+- Public payload hygiene Playwright smoke: 2 passed.
+- S2 direct manipulation Playwright smoke: 2 passed.
+- S3 inspector usability Playwright smoke: 4 passed.
+
+S3 coverage:
+
+- inspector image preview and empty state
+- object link status
+- public/mobile visibility language
+- Style state badges, lock/pin controls, layer clarity, delete confirmation
+- Motion x/y steppers, scale slider, rotation slider
+- desktop/mobile device frame labels
+- mid-width and narrow Outline/Inspector controls
+- preview/publish confidence copy
+- public render remains free of editor state
+- S2 direct manipulation still passes
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_STUDIO_RECOVERY_S3_REPORT.md
+docs/program/evidence/presence-studio-v2-studio-recovery-s3/
+```
+
+Notes:
+
+- An initial parallel Playwright invocation produced `EADDRINUSE` on mock API port `5105`; rerunning the browser specs sequentially passed.
+- `PRESENCE_STUDIO_RECOVERY_S3_CAPTURE=1 npx.cmd playwright test presence-studio-v2-studio-recovery-s3-capture.spec.ts --project=chromium` wrote the S3 screenshots and the test body passed, but the shell command timed out during Playwright teardown. The screenshots are present.
+- Direct Node TypeScript tests still emit `MODULE_TYPELESS_PACKAGE_JSON`.
+- Build and Playwright web server still emit the existing Turbopack workspace-root warning.
+- Hosted S3 smoke was not run because S3 has not been deployed in this pass.

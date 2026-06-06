@@ -209,6 +209,8 @@ function ObjectCard({
               key={corner}
               data-testid="presence-studio-v2-resize-handle"
               className={`v2-resize-handle ${corner}`}
+              role="button"
+              aria-label={`Resize selected object from ${corner} corner`}
               aria-disabled={!canManipulate}
               onPointerDown={(event) => {
                 event.stopPropagation();
