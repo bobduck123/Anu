@@ -666,3 +666,54 @@ Remaining prototype superiority gaps after S3:
 - broader self-serve onboarding readiness
 
 S3 does not change backend contracts, public payload shape, feature gating, auth, save/reload, owner preview, or publish. Hosted S3 verification remains pending deployment.
+
+---
+
+## S3 Hosted Status - 2026-06-06
+
+Studio Recovery S3 has been deployed and verified on hosted Room 11 / `ggm-christina-goddard`.
+
+Hosted confirmation:
+
+- S3 editor cockpit mounts on `/studio/11/editor`.
+- Content tab image preview/empty state path works.
+- Link status and visibility guidance render in the inspector.
+- Style tab state badges, lock/pin clarity, layer summary, and delete confirmation work.
+- Motion tab X/Y steppers and scale/rotation sliders sync with transform inputs.
+- S2 selection frame and Wild Mode manipulation remain functional.
+- Guided Mode disables manipulation.
+- Desktop/mobile device frames render in the editor only.
+- Narrow Outline/Inspector toggles work.
+- Preview/publish confidence checklist and dirty-state warning render honestly.
+- Owner preview remains sanitized.
+- Public desktop/mobile routes remain clean.
+- Room 1 remains legacy.
+- Full hosted lifecycle smoke passed after S3 deploy.
+- Hosted payload hygiene passed with `0` violations.
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_STUDIO_RECOVERY_S3_HOSTED_SMOKE.md
+docs/program/evidence/presence-studio-v2-studio-recovery-s3-hosted/
+```
+
+Remaining prototype superiority gaps after hosted S3:
+
+- chamber CRUD
+- real asset upload and assignment
+- undo/redo
+- grouping
+- collaboration cursors
+- true archive/version history
+- broader self-serve onboarding readiness
+
+S4 can be scoped next, but was not started in the S3 deploy/smoke pass. Public self-serve onboarding remains out of scope.
+
+Release baseline:
+
+```txt
+PRESENCE_STUDIO_V2_S3_RELEASE_BASELINE_REPORT.md
+```
+
+S4 is cleared to begin after the S3 baseline commit is pushed and the working tree is clean.

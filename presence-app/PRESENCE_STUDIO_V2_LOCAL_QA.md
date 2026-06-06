@@ -931,3 +931,89 @@ Notes:
 - Direct Node TypeScript tests still emit `MODULE_TYPELESS_PACKAGE_JSON`.
 - Build and Playwright web server still emit the existing Turbopack workspace-root warning.
 - Hosted S3 smoke was not run because S3 has not been deployed in this pass.
+
+---
+
+## 2026-06-06 - Studio Recovery S3 Pre-Deploy and Hosted QA
+
+Scope: Final pre-deploy local gates, production deployment, hosted S3 smoke, full hosted lifecycle smoke, and payload hygiene.
+
+Pre-deploy commands passed:
+
+```powershell
+git status
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-direct-manipulation.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-inspector-usability.spec.ts --project=chromium
+```
+
+Results:
+
+- TypeScript: passed.
+- Build: passed.
+- Feature tests: 8 passed.
+- Studio V2 adapter tests: 14 passed.
+- Public payload tests: 5 passed.
+- Render resolver tests: 8 passed.
+- Editor readiness tests: 5 passed.
+- V2 public render Playwright: 3 passed.
+- V2 draft preview Playwright: 2 passed.
+- Public payload hygiene Playwright: 2 passed.
+- S2 direct manipulation Playwright: 2 passed.
+- S3 inspector usability Playwright: 4 passed.
+
+Deployment:
+
+```txt
+Production alias: https://your-presence.vercel.app
+Deployment URL: https://presence-c9s85tb7s-emadhatu-2110s-projects.vercel.app
+Deployment ID: dpl_5R4QQYfDBvBUnLcQf9MxSTegd1Df
+Deploy commit: 0ab808ab15f63dc78b53486b73fb8039522f1341
+```
+
+Hosted commands passed:
+
+```powershell
+npx.cmd playwright test tests\e2e\presence-studio-v2-hosted-s3-smoke.spec.ts --project=chromium --workers=1
+npx.cmd playwright test tests\e2e\presence-studio-v2-hosted-lifecycle.spec.ts --project=chromium --workers=1
+node scripts\hosted-payload-hygiene.mjs
+```
+
+Hosted results:
+
+- S3 hosted smoke: 1 passed in 18.8s.
+- Full hosted lifecycle smoke: 1 passed in 22.6s.
+- Standalone hosted payload hygiene: `TOTAL_VIOLATIONS: 0`.
+- Room 1 legacy negative remained legacy.
+- Cleanup/restoration completed.
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_STUDIO_RECOVERY_S3_HOSTED_SMOKE.md
+docs/program/evidence/presence-studio-v2-studio-recovery-s3-hosted/
+```
+
+Warnings:
+
+- Initial `vercel --prod` failed because `vercel` was not on PATH; deployment succeeded through `npx vercel@latest --prod`.
+- The first hosted S3 smoke run was blocked by sandbox network access before sign-in; no hosted data was touched.
+- A subsequent hosted S3 smoke attempt failed before save due a test-only range step mismatch; no draft save occurred.
+- A later hosted S3 smoke attempt failed during cleanup-selection before save; no draft save occurred.
+- Final hosted S3 smoke passed with restoration complete.
+- Existing Node/Next warnings remain unchanged.
+
+Baseline note:
+
+- S3 release-baseline QA was rerun after hosted verification with the same local command set.
+- All required local gates passed before commit.
+- See `PRESENCE_STUDIO_V2_S3_RELEASE_BASELINE_REPORT.md`.

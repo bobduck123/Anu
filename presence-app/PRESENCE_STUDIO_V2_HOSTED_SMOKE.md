@@ -374,3 +374,59 @@ Verdict:
 - Room 11 remains ready for controlled operator-led pilot use with S2 direct manipulation.
 - S3 can begin after release-baseline commit/push.
 - Public self-serve onboarding remains out of scope.
+
+---
+
+## 2026-06-06 - Studio Recovery S3 Hosted Smoke
+
+Studio Recovery S3 was deployed and verified on hosted Room 11 / `ggm-christina-goddard`.
+
+Deployment:
+
+```txt
+Production alias: https://your-presence.vercel.app
+Deployment URL: https://presence-c9s85tb7s-emadhatu-2110s-projects.vercel.app
+Deployment ID: dpl_5R4QQYfDBvBUnLcQf9MxSTegd1Df
+Deploy commit: 0ab808ab15f63dc78b53486b73fb8039522f1341
+```
+
+S3 hosted verification:
+
+- V2 editor root mounts.
+- S1 three-pane cockpit remains present.
+- S2 selected-object frame and manipulation controls remain present.
+- Content tab image preview/empty state path verified.
+- Style tab state badges, lock/pin clarity, layer summary, and two-click delete confirmation verified.
+- Motion tab X/Y steppers and scale/rotation sliders verified.
+- Desktop/mobile device frame chrome verified.
+- Narrow Outline/Inspector toggles verified.
+- Preview/publish confidence checklist verified.
+- Dirty-state warning verified.
+- Guided Mode disables manipulation.
+- Wild Mode drag/scale/rotation sanity passed.
+- Owner preview remains clean.
+- Public desktop/mobile render cleanly.
+- Room 1 legacy negative remains legacy.
+- Full hosted lifecycle smoke passed in 22.6s.
+- Cleanup/restoration completed.
+
+Payload hygiene:
+
+- Hosted S3 smoke found `0` editor/config leaks in preview/public HTML.
+- Standalone hosted payload hygiene script passed with `TOTAL_VIOLATIONS: 0`.
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_STUDIO_RECOVERY_S3_HOSTED_SMOKE.md
+docs/program/evidence/presence-studio-v2-studio-recovery-s3-hosted/
+```
+
+Verdict:
+
+- Hosted S3 editor: ready for Room 11.
+- Hosted direct manipulation: ready.
+- Hosted owner preview: ready.
+- Hosted public render: ready.
+- Controlled operator-led pilot: ready with operator support.
+- Public self-serve onboarding: not ready until later S4/S5/S6/S7 work.

@@ -187,6 +187,38 @@ Still deferred:
 ## Readiness
 
 - Safe for Kimi audit: yes.
-- Safe to deploy after audit: yes, pending reviewer sign-off.
+- Kimi audit: PASS.
+- Hosted S3 smoke: PASS.
+- Safe to deploy after audit: deployed and verified.
 - Controlled operator-led pilot readiness: maintained.
 - Public self-serve onboarding readiness: not ready.
+
+---
+
+## Hosted Deployment Status - 2026-06-06
+
+S3 was deployed to production and verified on Room 11.
+
+Deployment:
+
+```txt
+Production alias: https://your-presence.vercel.app
+Deployment URL: https://presence-c9s85tb7s-emadhatu-2110s-projects.vercel.app
+Deployment ID: dpl_5R4QQYfDBvBUnLcQf9MxSTegd1Df
+Deploy commit: 0ab808ab15f63dc78b53486b73fb8039522f1341
+```
+
+Hosted verification:
+
+- S3 hosted smoke passed.
+- Full hosted lifecycle smoke passed: `1 passed (22.6s)`.
+- Standalone hosted payload hygiene passed with `0` violations.
+- Room 1 legacy negative remained legacy.
+- Cleanup/restoration completed.
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_STUDIO_RECOVERY_S3_HOSTED_SMOKE.md
+docs/program/evidence/presence-studio-v2-studio-recovery-s3-hosted/
+```
