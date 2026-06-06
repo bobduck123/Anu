@@ -159,13 +159,19 @@ a7cb6d6
 Release-baseline commit:
 
 ```txt
-Created by this pass; exact hash is recorded in the final handoff after commit creation.
+98e161f9ffbc10e70e7d3a5f96693f24a17c107e
 ```
 
 Remote branch:
 
 ```txt
 origin/feature/presence-ecosystem-alpha
+```
+
+Push status:
+
+```txt
+Baseline commit pushed to origin/feature/presence-ecosystem-alpha.
 ```
 
 ## Remaining Risks
