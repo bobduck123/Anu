@@ -1017,3 +1017,75 @@ Baseline note:
 - S3 release-baseline QA was rerun after hosted verification with the same local command set.
 - All required local gates passed before commit.
 - See `PRESENCE_STUDIO_V2_S3_RELEASE_BASELINE_REPORT.md`.
+
+---
+
+## 2026-06-06 - Public Output Recovery P1 Gallery/GGM
+
+Scope: Local public-renderer quality recovery for Gallery/GGM output only. No deploy. No hosted data mutation. No editor/backend/feature-gate changes.
+
+Preflight:
+
+- `git status` showed uncommitted S4A chamber-management work.
+- S4A was parked before editing with:
+
+```powershell
+git stash push -u -m "park S4A chamber management safety-audited local work"
+```
+
+Commands passed:
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+npx.cmd playwright test presence-public-output-gallery-quality.spec.ts --project=chromium
+```
+
+Results:
+
+- TypeScript: passed.
+- Build: passed.
+- Feature tests: 8 passed.
+- Studio V2 adapter tests: 14 passed.
+- Public payload tests: 5 passed.
+- Render resolver tests: 8 passed.
+- Editor readiness tests: 5 passed.
+- V2 public render Playwright: 3 passed.
+- V2 draft preview Playwright: 2 passed.
+- Public payload hygiene Playwright: 2 passed.
+- New Gallery public-output quality Playwright: 3 passed.
+
+Verified:
+
+- Gallery public output uses a full-viewport image-led threshold.
+- Gallery chamber output no longer uses object-count pseudo text.
+- Gallery desktop object layout uses an exhibition-path grid rather than a two-column card wall.
+- Gallery object type/system labels are not visibly announced.
+- Gallery image treatment uses sharp museum framing and `object-fit: contain`.
+- Gallery mobile threshold remains a designed entry state.
+- Mobile-muted public objects remain hidden on narrow public viewports.
+- Owner draft preview remains V2-backed and clean.
+- Public payload hygiene remains clean.
+- Legacy public room remains outside the V2 public renderer.
+
+Evidence:
+
+```txt
+PRESENCE_PUBLIC_OUTPUT_RECOVERY_P1_REPORT.md
+docs/program/evidence/presence-public-output-recovery-p1/
+```
+
+Notes:
+
+- The expected Kimi audit path was not present on the clean S3 baseline, so `docs/program/presence-studio-v2-public-output-quality/PRESENCE_PUBLIC_ROOM_OUTPUT_QUALITY_AUDIT.md` was recreated with the supplied audit finding and P1 status.
+- The P1 capture spec reported `ok` and wrote screenshots, but the shell wrapper timed out during Playwright web-server teardown. This matches prior capture-spec teardown behavior; evidence files are present.
+- Direct Node TypeScript tests still emit `MODULE_TYPELESS_PACKAGE_JSON`.
+- Build and Playwright web server still emit the existing Turbopack workspace-root warning.

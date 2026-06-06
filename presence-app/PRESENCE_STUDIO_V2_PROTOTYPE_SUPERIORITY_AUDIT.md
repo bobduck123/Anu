@@ -717,3 +717,38 @@ PRESENCE_STUDIO_V2_S3_RELEASE_BASELINE_REPORT.md
 ```
 
 S4 is cleared to begin after the S3 baseline commit is pushed and the working tree is clean.
+
+---
+
+## Public Output Recovery P1 Status - 2026-06-06
+
+After S3, Kimi's public-room output review identified a separate product gap: the public Room 11/Gallery output was functionally clean but still read as a structured content page instead of a threshold into a world.
+
+Public Output Recovery P1 addresses the Gallery/GGM minimum standard without changing Studio editor behavior or backend contracts.
+
+Recovered public-room qualities:
+
+- Full-viewport Gallery threshold using the first safe public image.
+- Lower-chrome entry with spatial title and portal-style CTA.
+- Gallery chambers changed from framed card panels to exhibition-path room bands.
+- Gallery object layout changed from generic auto-fit cards to an editorial 12-column rhythm.
+- Gallery images now use sharper museum-frame treatment and `object-fit: contain`.
+- Visible system labels and object-count pseudo text are removed or heavily reduced.
+- Moodboard references read as influence fragments.
+- Demo traces read as marginal residue rather than metric chips.
+- Mobile Gallery threshold and chamber rhythm are improved.
+
+Evidence:
+
+```txt
+PRESENCE_PUBLIC_OUTPUT_RECOVERY_P1_REPORT.md
+docs/program/evidence/presence-public-output-recovery-p1/
+```
+
+New local regression gate:
+
+```txt
+tests/e2e/presence-public-output-gallery-quality.spec.ts
+```
+
+P1 is ready for Kimi art-direction audit. It has not been deployed. S4A chamber-management work remains parked and is not included in this public-output pass.

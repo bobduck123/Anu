@@ -24,14 +24,22 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
   const ctaHref = ctaObject?.link || room.cta.href;
   const thresholdObject = visibleObjects.find((object) => object.image?.src) ?? visibleObjects[0];
   const thresholdIndex = visibleObjects.slice(0, 4);
+  const thresholdImage = thresholdObject?.image;
+  const entryHref = ctaHref || "#v2-public-room-space";
+  const entryLabel = ctaLabel || "Enter room";
 
   return (
     <main
-      className={`presence-studio-v2-public world-${room.worldId} texture-${room.skin.texture} motion-${room.skin.motionIntensity}`}
+      className={`presence-studio-v2-public world-${room.worldId} texture-${room.skin.texture} motion-${room.skin.motionIntensity}${thresholdImage?.src ? " has-threshold-image" : ""}`}
       style={style}
     >
       <section className="v2-public-threshold">
         <div className="v2-public-threshold-atmosphere" aria-hidden="true" />
+        {thresholdImage?.src && (
+          <div className="v2-public-threshold-image-field" aria-hidden="true">
+            <img src={thresholdImage.src} alt="" loading="eager" />
+          </div>
+        )}
         <div className="v2-public-world-mark">
           <span>{world?.name ?? room.worldId}</span>
           {world?.surface && <small>{world.surface}</small>}
@@ -40,11 +48,9 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
           <h1>{room.title}</h1>
           {room.tagline && <p>{room.tagline}</p>}
         </div>
-        {ctaLabel && (
-          <PublicLink href={ctaHref} className="v2-public-primary-cta">
-            {ctaLabel}
-          </PublicLink>
-        )}
+        <PublicLink href={entryHref} className="v2-public-primary-cta">
+          {entryLabel}
+        </PublicLink>
         {thresholdObject && (
           <aside className="v2-public-threshold-artifact" aria-label="Room entry object">
             {thresholdObject.image?.src ? (
@@ -57,10 +63,16 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
               <div className="v2-public-threshold-artifact-blank" aria-hidden="true" />
             )}
             <div>
-              <span>{thresholdObject.role || thresholdObject.type}</span>
               <strong>{thresholdObject.title}</strong>
+              {thresholdObject.meta && <span>{thresholdObject.meta}</span>}
             </div>
           </aside>
+        )}
+        {thresholdObject && (
+          <div className="v2-public-threshold-caption">
+            <span>Entry work</span>
+            <strong>{thresholdObject.title}</strong>
+          </div>
         )}
         {thresholdIndex.length > 0 && (
           <nav className="v2-public-threshold-index" aria-label="Room objects">
@@ -74,13 +86,12 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
         )}
       </section>
 
-      <section className="v2-public-room-space" aria-label={`${room.title} public room`}>
+      <section className="v2-public-room-space" id="v2-public-room-space" aria-label={`${room.title} public room`}>
         {room.chambers.map((chamber) => (
           <section
             className="v2-public-chamber"
             key={chamber.id}
             aria-labelledby={`v2-public-chamber-${chamber.id}`}
-            data-object-count={chamber.objects.length}
           >
             <div className="v2-public-chamber-head">
               <span>{world?.verb ?? "The room opens"}</span>
@@ -146,6 +157,7 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
 
 function PublicObjectCard({ object, radius }: { object: StudioV2PublicObject; radius: number }) {
   const hasLink = Boolean(object.link);
+  const roleLabel = publicObjectRoleLabel(object);
   const content = (
     <>
       {object.image?.src && (
@@ -157,7 +169,7 @@ function PublicObjectCard({ object, radius }: { object: StudioV2PublicObject; ra
         />
       )}
       <div className="v2-public-object-copy">
-        <div className="v2-public-object-role">{object.role || object.type}</div>
+        {roleLabel && <div className="v2-public-object-role">{roleLabel}</div>}
         <h3>{object.title}</h3>
         {object.meta && <p className="v2-public-object-meta">{object.meta}</p>}
         {object.detail && <p className="v2-public-object-detail">{object.detail}</p>}
@@ -190,6 +202,7 @@ function PublicObjectCard({ object, radius }: { object: StudioV2PublicObject; ra
       id={`v2-public-object-${object.id}`}
       className={`v2-public-object v2-public-object-${object.type}${object.mobileVisible ? "" : " is-mobile-muted"}`}
       style={style}
+      tabIndex={object.detail ? 0 : undefined}
     >
       {content}
     </article>
@@ -234,4 +247,13 @@ function objectTransform(object: StudioV2PublicObject): string | undefined {
   const { x, y, rotation, scale } = object.transform;
   if (x === 0 && y === 0 && rotation === 0 && scale === 1) return undefined;
   return `translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`;
+}
+
+function publicObjectRoleLabel(object: StudioV2PublicObject): string | undefined {
+  const label = object.role || object.type;
+  if (!label) return undefined;
+  const normalized = label.toLowerCase();
+  if (["image", "text", "note", "link", "moodboard"].includes(normalized)) return undefined;
+  if (normalized === object.type.toLowerCase()) return undefined;
+  return label;
 }
