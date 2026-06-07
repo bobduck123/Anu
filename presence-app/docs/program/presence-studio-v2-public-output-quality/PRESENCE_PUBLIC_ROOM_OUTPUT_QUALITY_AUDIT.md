@@ -77,3 +77,71 @@ Hosted results:
 ## Current Verdict
 
 **P1 is deployed and hosted-verified for public output.** Ready for controlled operator-led pilot. Public self-serve onboarding should wait for P2 polish.
+
+## P2 Local Status
+
+Date: 2026-06-07
+
+Public Output Recovery P2 has been implemented locally and is awaiting Kimi art-direction audit before deployment.
+
+Implemented:
+
+- Threshold-to-chamber transition band for smoother entry into the Gallery wall.
+- Text-first CTA portal mark replacing the remaining pill-like threshold CTA.
+- Visible numeric chamber index removed from Gallery wayfinding.
+- Chamber headings reduced into gallery wall-placard labels.
+- Artwork copy restyled as wall labels with restrained title/meta/detail hierarchy.
+- First image-led Gallery object promoted as lead artwork through existing public data only.
+- Artwork hover/focus frame motion and portal hover interactions.
+- Lightweight public-safe artwork focus/lightbox using sanitized image/title/meta/detail only.
+- Mobile Gallery continuity and focus behavior retained.
+
+Local QA passed:
+
+- Typecheck
+- Build
+- Studio V2 feature, adapter, public payload, resolver, and readiness tests
+- V2 public render Playwright
+- V2 draft preview Playwright
+- Public payload hygiene Playwright
+- Gallery quality Playwright
+- New Gallery polish Playwright
+
+Evidence:
+
+```txt
+docs/program/evidence/presence-public-output-recovery-p2/
+PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_REPORT.md
+```
+
+## P2 Art-Direction Audit — 2026-06-08
+
+**Auditor:** Kimi Code CLI
+**Score:** **8.3/10** (up from P1 baseline 7.6/10)
+**Verdict:** **PASS — deploy to hosted smoke**
+
+Full audit:
+`PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_ART_DIRECTION_AUDIT.md`
+
+P2 addressed every remaining P1 art-direction gap:
+- Threshold-to-chamber gradient bridge band
+- Text-first CTA portal mark with circular glyph
+- Numbered chamber index removed from Gallery wayfinding
+- Chamber headings reduced to wall-placard labels
+- Artwork captions restyled as curatorial wall labels
+- Lead artwork hierarchy via featured grid span
+- Restrained hover/focus micro-interactions
+- Lightweight public-safe artwork focus/lightbox
+- Mobile continuity and focus behaviour retained
+
+Deploy thresholds met:
+- Overall ≥ 8.3/10 ✅
+- Threshold ≥ 8.0/10 ✅
+- Gallery/chamber ≥ 8.0/10 ✅
+- Mobile ≥ 7.5/10 ✅
+- Payload hygiene passes ✅
+- No editor/system leakage ✅
+- No S4A leakage ✅
+- Legacy rooms unaffected ✅
+
+P2 is ready for hosted smoke verification after deployment.

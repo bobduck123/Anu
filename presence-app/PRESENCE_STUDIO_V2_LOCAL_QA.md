@@ -1090,6 +1090,76 @@ Notes:
 - Direct Node TypeScript tests still emit `MODULE_TYPELESS_PACKAGE_JSON`.
 - Build and Playwright web server still emit the existing Turbopack workspace-root warning.
 
+---
+
+## Public Output Recovery P2 Local QA - 2026-06-07
+
+Scope: Gallery/GGM public-output art-direction polish.
+
+Results:
+
+- TypeScript: passed.
+- Build: passed.
+- Feature tests: 8 passed.
+- Studio V2 adapter tests: 14 passed.
+- Public payload tests: 5 passed.
+- Render resolver tests: 8 passed.
+- Editor readiness tests: 5 passed.
+- V2 public render Playwright: 3 passed.
+- V2 draft preview Playwright: 2 passed.
+- Public payload hygiene Playwright: 2 passed.
+- Gallery public-output quality Playwright: 3 passed.
+- New Gallery public-output polish Playwright: 3 passed.
+
+Verified:
+
+- Gallery threshold-to-chamber transition band exists.
+- Threshold CTA remains accessible but no longer reads as a filled pill.
+- Gallery wayfinding no longer exposes visible numeric index labels.
+- Chamber labels are placard-sized, not page-heading scale.
+- Artwork copy reads as a wall label.
+- Lightweight artwork focus/lightbox opens and closes on desktop and mobile.
+- Mobile Gallery output remains usable.
+- Owner draft preview remains V2-backed and clean.
+- Public payload hygiene remains clean.
+- Legacy public room remains outside the V2 public renderer.
+- S4A Chamber Management remains parked in `stash@{0}` and absent from the working tree.
+
+Evidence:
+
+```txt
+PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_REPORT.md
+docs/program/evidence/presence-public-output-recovery-p2/
+```
+
+Notes:
+
+- The P2 capture spec reported `ok` and wrote screenshots, but the shell wrapper timed out during Playwright web-server teardown. Evidence files are present.
+- P2 has not been deployed or hosted-smoked.
+
+## P2 Art-Direction Audit — 2026-06-08
+
+**Auditor:** Kimi Code CLI
+**Score:** **8.3/10** (up from P1: 7.6/10)
+**Verdict:** **PASS — deploy to hosted smoke**
+
+Full audit:
+`PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_ART_DIRECTION_AUDIT.md`
+
+Deploy thresholds met:
+- Overall ≥ 8.3/10 ✅
+- Threshold ≥ 8.0/10 ✅
+- Gallery/chamber ≥ 8.0/10 ✅
+- Mobile ≥ 7.5/10 ✅
+- Payload hygiene passes ✅
+- No editor/system leakage ✅
+- No S4A leakage ✅
+- Legacy rooms unaffected ✅
+
+Post-deploy actions:
+1. Run hosted smoke for public render, owner preview, legacy negative, payload hygiene.
+2. Fix lightbox backdrop opacity (minor visual bleed-through defect).
+3. Consider prev/next lightbox navigation for P3.
 
 ---
 

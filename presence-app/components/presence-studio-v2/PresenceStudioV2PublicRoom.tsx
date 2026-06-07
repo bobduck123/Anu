@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import type { StudioV2PublicObject, StudioV2PublicRoom } from "@/lib/presence/studio-v2";
 import { WORLD_KITS } from "./worlds";
@@ -10,6 +11,7 @@ interface PresenceStudioV2PublicRoomProps {
 }
 
 export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2PublicRoomProps) {
+  const [focusedArtwork, setFocusedArtwork] = useState<StudioV2PublicObject | null>(null);
   const world = WORLD_KITS.find((kit) => kit.id === room.worldId);
   const style = {
     "--v2-public-bg": room.skin.background,
@@ -23,10 +25,36 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
   const ctaLabel = ctaObject?.title || room.cta.label;
   const ctaHref = ctaObject?.link || room.cta.href;
   const thresholdObject = visibleObjects.find((object) => object.image?.src) ?? visibleObjects[0];
-  const thresholdIndex = visibleObjects.slice(0, 4);
   const thresholdImage = thresholdObject?.image;
   const entryHref = ctaHref || "#v2-public-room-space";
   const entryLabel = ctaLabel || "Enter room";
+  const isGallery = room.worldId === "gallery";
+  const thresholdIndex = isGallery
+    ? room.chambers
+        .filter((chamber) => chamber.objects.length > 0)
+        .slice(0, 4)
+        .map((chamber) => ({ href: `#v2-public-room-${chamber.id}`, label: chamber.label, marker: "" }))
+    : visibleObjects
+        .slice(0, 4)
+        .map((object, index) => ({
+          href: `#v2-public-object-${object.id}`,
+          label: object.title,
+          marker: String(index + 1).padStart(2, "0"),
+        }));
+
+  useEffect(() => {
+    if (!focusedArtwork) return;
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFocusedArtwork(null);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [focusedArtwork]);
 
   return (
     <main
@@ -70,36 +98,47 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
         )}
         {thresholdObject && (
           <div className="v2-public-threshold-caption">
-            <span>Entry work</span>
+            <span>Opening work</span>
             <strong>{thresholdObject.title}</strong>
           </div>
         )}
         {thresholdIndex.length > 0 && (
-          <nav className="v2-public-threshold-index" aria-label="Room objects">
-            {thresholdIndex.map((object, index) => (
-              <a key={object.id} href={`#v2-public-object-${object.id}`}>
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <strong>{object.title}</strong>
+          <nav className="v2-public-threshold-index" aria-label={isGallery ? "Threshold room wayfinding" : "Room objects"}>
+            {thresholdIndex.map((item) => (
+              <a key={item.href} href={item.href}>
+                <span aria-hidden={isGallery ? "true" : undefined}>{item.marker}</span>
+                <strong>{item.label}</strong>
               </a>
             ))}
           </nav>
         )}
       </section>
+      <div className="v2-public-threshold-transition" aria-hidden="true" />
 
       <section className="v2-public-room-space" id="v2-public-room-space" aria-label={`${room.title} public room`}>
-        {room.chambers.map((chamber) => (
+        {room.chambers.map((chamber, chamberIndex) => (
           <section
-            className="v2-public-chamber"
+            id={`v2-public-room-${chamber.id}`}
+            className={`v2-public-chamber room-tone-${chamberIndex % 3}${chamberIndex === 0 ? " is-first-room" : ""}`}
             key={chamber.id}
+            data-testid="presence-public-chamber-room"
+            data-v2-public-chamber-id={chamber.id}
             aria-labelledby={`v2-public-chamber-${chamber.id}`}
           >
             <div className="v2-public-chamber-head">
-              <span>{world?.verb ?? "The room opens"}</span>
+              <span>{isGallery ? "Gallery room" : world?.verb ?? "The room opens"}</span>
               <h2 id={`v2-public-chamber-${chamber.id}`}>{chamber.label}</h2>
             </div>
             <div className="v2-public-object-grid">
-              {chamber.objects.map((object) => (
-                <PublicObjectCard key={object.id} object={object} radius={room.skin.objectRadius} />
+              {chamber.objects.map((object, objectIndex) => (
+                <PublicObjectCard
+                  key={object.id}
+                  object={object}
+                  radius={room.skin.objectRadius}
+                  isGallery={isGallery}
+                  isFeatured={isGallery && chamberIndex === 0 && objectIndex === 0 && Boolean(object.image?.src)}
+                  onFocusArtwork={isGallery ? setFocusedArtwork : undefined}
+                />
               ))}
             </div>
           </section>
@@ -151,22 +190,86 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
           </section>
         )}
       </section>
+
+      {focusedArtwork?.image?.src && (
+        <div
+          className="v2-public-artwork-focus"
+          data-testid="presence-public-artwork-focus"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Artwork focus: ${focusedArtwork.title}`}
+        >
+          <button
+            className="v2-public-artwork-focus-backdrop"
+            type="button"
+            aria-label="Close artwork focus"
+            onClick={() => setFocusedArtwork(null)}
+          />
+          <figure className="v2-public-artwork-focus-stage">
+            <button
+              className="v2-public-artwork-focus-close"
+              data-testid="presence-public-artwork-focus-close"
+              type="button"
+              onClick={() => setFocusedArtwork(null)}
+            >
+              Close
+            </button>
+            <img
+              data-testid="presence-public-artwork-focus-image"
+              src={focusedArtwork.image.src}
+              alt={focusedArtwork.image.alt || focusedArtwork.title}
+            />
+            <figcaption>
+              <strong>{focusedArtwork.title}</strong>
+              {focusedArtwork.meta && <span>{focusedArtwork.meta}</span>}
+              {focusedArtwork.detail && <p>{focusedArtwork.detail}</p>}
+            </figcaption>
+          </figure>
+        </div>
+      )}
     </main>
   );
 }
 
-function PublicObjectCard({ object, radius }: { object: StudioV2PublicObject; radius: number }) {
+function PublicObjectCard({
+  object,
+  radius,
+  isGallery = false,
+  isFeatured = false,
+  onFocusArtwork,
+}: {
+  object: StudioV2PublicObject;
+  radius: number;
+  isGallery?: boolean;
+  isFeatured?: boolean;
+  onFocusArtwork?: (object: StudioV2PublicObject) => void;
+}) {
   const hasLink = Boolean(object.link);
   const roleLabel = publicObjectRoleLabel(object);
+  const canFocusArtwork = isGallery && Boolean(object.image?.src) && !hasLink && Boolean(onFocusArtwork);
   const content = (
     <>
       {object.image?.src && (
-        <img
-          className="v2-public-object-media-img"
-          src={object.image.src}
-          alt={object.image.alt || object.title}
-          loading="lazy"
-        />
+        <div className="v2-public-object-media">
+          <img
+            className="v2-public-object-media-img"
+            src={object.image.src}
+            alt={object.image.alt || object.title}
+            loading="lazy"
+          />
+          {canFocusArtwork && (
+            <button
+              className="v2-public-artwork-focus-trigger"
+              data-testid="presence-public-artwork-focus-trigger"
+              type="button"
+              aria-haspopup="dialog"
+              aria-label={`View ${object.title}`}
+              onClick={() => onFocusArtwork?.(object)}
+            >
+              View work
+            </button>
+          )}
+        </div>
       )}
       <div className="v2-public-object-copy">
         {roleLabel && <div className="v2-public-object-role">{roleLabel}</div>}
@@ -189,7 +292,7 @@ function PublicObjectCard({ object, radius }: { object: StudioV2PublicObject; ra
       <PublicLink
         href={object.link}
         id={`v2-public-object-${object.id}`}
-        className={`v2-public-object v2-public-object-${object.type}${object.mobileVisible ? "" : " is-mobile-muted"}`}
+        className={`v2-public-object v2-public-object-${object.type}${object.mobileVisible ? "" : " is-mobile-muted"}${isGallery && object.image?.src ? " is-artwork" : ""}${isFeatured ? " is-featured" : ""}`}
         style={style}
       >
         {content}
@@ -200,7 +303,7 @@ function PublicObjectCard({ object, radius }: { object: StudioV2PublicObject; ra
   return (
     <article
       id={`v2-public-object-${object.id}`}
-      className={`v2-public-object v2-public-object-${object.type}${object.mobileVisible ? "" : " is-mobile-muted"}`}
+      className={`v2-public-object v2-public-object-${object.type}${object.mobileVisible ? "" : " is-mobile-muted"}${isGallery && object.image?.src ? " is-artwork" : ""}${isFeatured ? " is-featured" : ""}`}
       style={style}
       tabIndex={object.detail ? 0 : undefined}
     >

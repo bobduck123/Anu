@@ -190,4 +190,47 @@ All hosted verification gaps are closed:
 
 Safe for controlled operator-led pilot. Public self-serve onboarding should wait for P2 polish (transition continuity, CTA refinement, wall labels, zoom/lightbox).
 
-S4A remains parked in `stash@{0}`. No P2 work started.
+S4A remains parked in `stash@{0}`.
+
+## P2 Follow-On Status - 2026-06-07
+
+Public Output Recovery P2 has now been implemented locally, but not deployed.
+
+P2 addressed the remaining P1 visual gaps:
+
+- threshold-to-chamber transition continuity
+- CTA portal refinement
+- softened chamber wayfinding
+- chamber labels as wall placards
+- artwork wall-label treatment
+- hover/focus micro-interactions
+- lightweight artwork focus/lightbox
+- stronger curatorial hierarchy
+
+Full local report:
+
+```txt
+PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_REPORT.md
+```
+
+## P2 Art-Direction Audit Result — 2026-06-08
+
+**Auditor:** Kimi Code CLI
+**Score:** **8.3/10** (up from P1: 7.6/10)
+**Verdict:** **PASS — deploy to hosted smoke**
+
+Full audit:
+`PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_ART_DIRECTION_AUDIT.md`
+
+P2 successfully addressed all remaining P1 visual gaps:
+- Threshold-to-chamber transition continuity (gradient bridge band)
+- CTA portal refinement (text-first with circular glyph and animated rule)
+- Softened chamber wayfinding (numbers removed for gallery)
+- Chamber labels as wall placards (small uppercase with border rules)
+- Artwork wall-label treatment (top rule, uppercase meta, restrained title)
+- Hover/focus micro-interactions (frame offset, image lift, shadow deepen)
+- Lightweight artwork focus/lightbox (fixed overlay, museum matting, curatorial caption)
+- Lead artwork curatorial hierarchy (featured span on desktop)
+- Mobile continuity preserved
+
+P2 meets all deploy thresholds. Hosted smoke should be run after deployment.

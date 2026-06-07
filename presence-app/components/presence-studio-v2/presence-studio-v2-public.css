@@ -1354,6 +1354,466 @@
   }
 }
 
+/* Public Output Recovery P2: Gallery threshold continuity and artwork focus. */
+.presence-studio-v2-public .v2-public-object-media {
+  position: relative;
+  display: block;
+}
+
+.presence-studio-v2-public .v2-public-threshold-transition {
+  display: none;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-threshold {
+  margin-bottom: 0;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-threshold::after {
+  inset: auto 0 -1px;
+  height: clamp(128px, 20vw, 270px);
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(238, 232, 220, 0.12) 34%, rgba(238, 232, 220, 0.72) 72%, var(--v2-gallery-wall) 100%),
+    linear-gradient(90deg, transparent, rgba(248, 244, 236, 0.28), transparent);
+  opacity: 1;
+  pointer-events: none;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-threshold-transition {
+  position: relative;
+  display: block;
+  height: clamp(78px, 12vw, 170px);
+  margin-top: -1px;
+  background:
+    radial-gradient(ellipse at 52% 0%, rgba(255, 248, 231, 0.55), transparent 34rem),
+    linear-gradient(180deg, var(--v2-gallery-wall) 0%, #ece4d6 68%, transparent 100%);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-threshold-transition::before {
+  content: "";
+  position: absolute;
+  inset: clamp(18px, 3vw, 42px) clamp(20px, 6vw, 96px) auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(13, 12, 10, 0.2), transparent);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-primary-cta {
+  min-height: 48px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #ffe5a4;
+  padding: 10px 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-primary-cta::before {
+  content: "";
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 229, 164, 0.74);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 8px rgba(255, 229, 164, 0.08);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-primary-cta::after {
+  width: clamp(44px, 8vw, 96px);
+  margin-left: 16px;
+  transform-origin: left center;
+  transition: transform 220ms var(--p-ease), opacity 220ms var(--p-ease);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-primary-cta:hover,
+.presence-studio-v2-public.world-gallery .v2-public-primary-cta:focus-visible {
+  transform: translateY(-1px);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-primary-cta:hover::after,
+.presence-studio-v2-public.world-gallery .v2-public-primary-cta:focus-visible::after {
+  transform: scaleX(1.16);
+  opacity: 1;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-primary-cta:focus-visible {
+  outline: 2px solid rgba(255, 229, 164, 0.92);
+  outline-offset: 8px;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-threshold-index {
+  width: min(100%, 360px);
+  opacity: 0.68;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-threshold-index a {
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 14px;
+  padding: 9px 0;
+  color: rgba(255, 248, 231, 0.68);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-threshold-index a:hover,
+.presence-studio-v2-public.world-gallery .v2-public-threshold-index a:focus-visible {
+  color: #fff8e7;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-threshold-index span {
+  align-self: center;
+  width: 32px;
+  height: 1px;
+  margin: 0;
+  background: rgba(245, 215, 131, 0.56);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-threshold-index strong {
+  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+  font-size: clamp(0.98rem, 1.5vw, 1.24rem);
+  font-weight: 500;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-threshold-caption span {
+  letter-spacing: 0.18em;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-room-space {
+  padding-top: clamp(12px, 2.5vw, 42px);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-chamber {
+  margin-bottom: clamp(82px, 13vw, 176px);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-chamber-head {
+  display: block;
+  margin-bottom: clamp(30px, 5.6vw, 78px);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-chamber h2 {
+  display: inline-block;
+  max-width: min(100%, 42ch);
+  border-top: 1px solid rgba(13, 12, 10, 0.24);
+  border-bottom: 1px solid rgba(13, 12, 10, 0.12);
+  color: rgba(21, 18, 14, 0.76);
+  padding: 10px 0 8px;
+  font-family: var(--p-font-ui);
+  font-size: clamp(0.78rem, 1.1vw, 1rem);
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object {
+  transition: transform 280ms var(--p-ease), filter 280ms var(--p-ease);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object.is-artwork:hover,
+.presence-studio-v2-public.world-gallery .v2-public-object.is-artwork:focus-within {
+  filter: saturate(1.02);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object.is-featured {
+  margin-bottom: clamp(10px, 3vw, 42px);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object.is-featured .v2-public-object-media-img {
+  max-height: min(82svh, 960px);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object-media {
+  position: relative;
+  isolation: isolate;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object-media::after {
+  content: "";
+  position: absolute;
+  inset: -13px;
+  z-index: -1;
+  border: 1px solid rgba(13, 12, 10, 0.12);
+  opacity: 0;
+  transition: opacity 240ms var(--p-ease), transform 240ms var(--p-ease);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object.is-artwork:hover .v2-public-object-media::after,
+.presence-studio-v2-public.world-gallery .v2-public-object.is-artwork:focus-within .v2-public-object-media::after {
+  opacity: 1;
+  transform: translate(6px, 6px);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object-media-img {
+  transition: transform 360ms var(--p-ease), box-shadow 360ms var(--p-ease), filter 360ms var(--p-ease);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object.is-artwork:hover .v2-public-object-media-img,
+.presence-studio-v2-public.world-gallery .v2-public-object.is-artwork:focus-within .v2-public-object-media-img {
+  transform: translateY(-4px) scale(1.008);
+  box-shadow:
+    0 0 0 10px #f8f4ec,
+    0 0 0 11px rgba(13, 12, 10, 0.38),
+    0 42px 96px -44px rgba(28, 22, 15, 0.34);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object-copy {
+  position: relative;
+  width: min(100%, 440px);
+  margin-top: 22px;
+  border-top: 1px solid rgba(13, 12, 10, 0.18);
+  padding: 11px 0 0 0;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object-copy::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 42px;
+  height: 1px;
+  background: #8c642e;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object h3 {
+  font-family: var(--p-font-ui);
+  font-size: clamp(0.96rem, 1.2vw, 1.14rem);
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.28;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object-meta {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object-detail {
+  max-width: 48ch;
+  font-size: 0.9rem;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-artwork-focus-trigger {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  min-height: 38px;
+  border: 1px solid rgba(248, 244, 236, 0.74);
+  border-radius: 999px;
+  background: rgba(9, 8, 6, 0.58);
+  color: #fff8e7;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  opacity: 0;
+  padding: 9px 12px;
+  text-transform: uppercase;
+  transform: translateY(6px);
+  transition: opacity 220ms var(--p-ease), transform 220ms var(--p-ease), background 220ms var(--p-ease);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object:hover .v2-public-artwork-focus-trigger,
+.presence-studio-v2-public.world-gallery .v2-public-object:focus-within .v2-public-artwork-focus-trigger {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-artwork-focus-trigger:hover,
+.presence-studio-v2-public.world-gallery .v2-public-artwork-focus-trigger:focus-visible {
+  background: rgba(9, 8, 6, 0.76);
+  outline: 2px solid rgba(255, 229, 164, 0.9);
+  outline-offset: 3px;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object-cta,
+.presence-studio-v2-public.world-gallery .v2-public-object-portal,
+.presence-studio-v2-public.world-gallery .v2-public-object-link {
+  border: 0;
+  border-top: 1px solid rgba(13, 12, 10, 0.22);
+  border-bottom: 1px solid rgba(13, 12, 10, 0.12);
+  background: transparent;
+  padding: clamp(16px, 3vw, 26px) 0;
+  box-shadow: none;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-object-cta:hover,
+.presence-studio-v2-public.world-gallery .v2-public-object-portal:hover,
+.presence-studio-v2-public.world-gallery .v2-public-object-link:hover {
+  transform: translateX(5px);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-influence-card {
+  background: rgba(248, 244, 236, 0.44);
+  box-shadow: 0 20px 50px -44px rgba(13, 12, 10, 0.28);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-artwork-focus {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: clamp(18px, 4vw, 56px);
+  color: #fff8e7;
+  animation: v2PublicObjectFocusIn 180ms var(--p-ease) both;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-artwork-focus-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background:
+    radial-gradient(ellipse at 50% 22%, rgba(245, 215, 131, 0.16), transparent 28rem),
+    rgba(6, 5, 4, 0.88);
+  cursor: zoom-out;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-artwork-focus-stage {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(1120px, 100%);
+  max-height: min(88svh, 900px);
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.28fr);
+  gap: clamp(18px, 4vw, 48px);
+  align-items: end;
+  margin: 0;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-artwork-focus-stage img {
+  display: block;
+  width: 100%;
+  max-height: min(84svh, 860px);
+  object-fit: contain;
+  background: #f8f4ec;
+  box-shadow:
+    0 0 0 10px #f8f4ec,
+    0 0 0 11px rgba(245, 215, 131, 0.36),
+    0 34px 120px -44px rgba(0, 0, 0, 0.92);
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-artwork-focus-stage figcaption {
+  border-left: 1px solid rgba(245, 215, 131, 0.42);
+  padding-left: 18px;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-artwork-focus-stage strong {
+  display: block;
+  color: #fff8e7;
+  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+  font-size: clamp(1.5rem, 3vw, 2.6rem);
+  font-weight: 560;
+  line-height: 1.04;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-artwork-focus-stage span,
+.presence-studio-v2-public.world-gallery .v2-public-artwork-focus-stage p {
+  display: block;
+  margin-top: 10px;
+  color: rgba(255, 248, 231, 0.74);
+  line-height: 1.55;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-artwork-focus-close {
+  position: absolute;
+  top: -52px;
+  right: 0;
+  min-height: 40px;
+  border: 1px solid rgba(255, 248, 231, 0.38);
+  border-radius: 999px;
+  background: rgba(255, 248, 231, 0.08);
+  color: #fff8e7;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  padding: 9px 13px;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2-public.world-gallery .v2-public-artwork-focus-close:focus-visible {
+  outline: 2px solid rgba(255, 229, 164, 0.9);
+  outline-offset: 3px;
+}
+
+@media (min-width: 861px) {
+  .presence-studio-v2-public.world-gallery .v2-public-object.is-featured {
+    grid-column: 1 / span 8;
+  }
+
+  .presence-studio-v2-public.world-gallery .v2-public-object.is-featured + .v2-public-object {
+    grid-column: 10 / span 3;
+    margin-top: clamp(96px, 14vw, 210px);
+  }
+}
+
+@media (max-width: 860px) {
+  .presence-studio-v2-public.world-gallery .v2-public-threshold-transition {
+    height: clamp(58px, 18vw, 112px);
+  }
+
+  .presence-studio-v2-public.world-gallery .v2-public-primary-cta {
+    width: min(100%, 330px);
+    justify-content: space-between;
+  }
+
+  .presence-studio-v2-public.world-gallery .v2-public-chamber h2 {
+    font-size: clamp(0.78rem, 3.5vw, 0.96rem);
+    letter-spacing: 0.14em;
+  }
+
+  .presence-studio-v2-public.world-gallery .v2-public-object-copy {
+    width: min(100%, 360px);
+  }
+
+  .presence-studio-v2-public.world-gallery .v2-public-artwork-focus-trigger {
+    opacity: 1;
+    transform: none;
+  }
+
+  .presence-studio-v2-public.world-gallery .v2-public-artwork-focus {
+    padding: 18px;
+  }
+
+  .presence-studio-v2-public.world-gallery .v2-public-artwork-focus-stage {
+    max-height: none;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .presence-studio-v2-public.world-gallery .v2-public-artwork-focus-stage img {
+    max-height: 66svh;
+  }
+
+  .presence-studio-v2-public.world-gallery .v2-public-artwork-focus-stage figcaption {
+    border-top: 1px solid rgba(245, 215, 131, 0.36);
+    border-left: 0;
+    padding-top: 14px;
+    padding-left: 0;
+  }
+
+  .presence-studio-v2-public.world-gallery .v2-public-artwork-focus-close {
+    top: 0;
+    right: 0;
+    transform: translateY(-52px);
+  }
+}
+
+@keyframes v2PublicObjectFocusIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .presence-studio-v2-public *,
   .presence-studio-v2-public *::before,
