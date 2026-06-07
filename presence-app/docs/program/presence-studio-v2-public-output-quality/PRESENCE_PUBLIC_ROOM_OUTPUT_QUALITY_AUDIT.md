@@ -82,7 +82,7 @@ Hosted results:
 
 Date: 2026-06-07
 
-Public Output Recovery P2 has been implemented locally and is awaiting Kimi art-direction audit before deployment.
+Historical pre-deploy status: Public Output Recovery P2 was implemented locally and then advanced through Kimi art-direction audit, production deployment, and hosted smoke verification on 2026-06-08.
 
 Implemented:
 
@@ -144,4 +144,39 @@ Deploy thresholds met:
 - No S4A leakage ✅
 - Legacy rooms unaffected ✅
 
-P2 is ready for hosted smoke verification after deployment.
+This pre-deploy recommendation was completed on 2026-06-08; hosted verification results are recorded below.
+
+## P2 Hosted Verification - 2026-06-08
+
+Public Output Recovery P2 was deployed to production and verified on hosted Room 11.
+
+Deployment:
+
+- Production alias: `https://your-presence.vercel.app`
+- Deployment URL: `https://presence-ca262tvaz-emadhatu-2110s-projects.vercel.app`
+- Deployment ID: `dpl_FjWacd3Tjxka9PpnmHgifq6dFV2J`
+- Commit: `f9673c80cb163c3007b8deedeedcc29d2848e9ee`
+- S4A: parked in `stash@{0}` and not deployed.
+
+Hosted results:
+
+- Gallery/GGM P2 hosted public smoke: PASS, warmed rerun `1 passed (40.6s)`.
+- Owner preview: PASS.
+- Studio regression: PASS.
+- Legacy negative: PASS using `https://your-presence.vercel.app/p/hesmaddw`.
+- Hosted payload hygiene: PASS, `TOTAL_VIOLATIONS: 0` before and after lifecycle.
+- Full hosted lifecycle: PASS, `1 passed (48.7s)` with cleanup/restoration complete.
+
+Evidence:
+
+```txt
+PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_HOSTED_SMOKE.md
+docs/program/evidence/presence-public-output-recovery-p2-hosted/
+```
+
+Current verdict:
+
+- P2 renderer/deployment baseline can be locked.
+- Controlled operator-led pilot is ready with operator support.
+- Public self-serve onboarding remains not ready.
+- Hosted Room 11 media/content currently includes a prior blue `Harmless V1B Test / Hosted Smoke Image` asset, so final client-facing screenshot evidence should wait for a separate controlled content/media correction pass.

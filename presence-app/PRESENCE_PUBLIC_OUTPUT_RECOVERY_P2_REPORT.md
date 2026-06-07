@@ -2,7 +2,7 @@
 
 Date: 2026-06-07
 Scope: Gallery/GGM public renderer art-direction polish
-Status: Local implementation complete, safe for Kimi art-direction audit before deploy
+Status: Deployed and hosted-smoked; renderer baseline ready with hosted media-content caveat
 
 ## Objective
 
@@ -98,7 +98,7 @@ The new artwork focus view uses only sanitized public image/title/meta/detail an
 - Non-gallery worlds still need their own public-output recovery passes.
 - Full image curation still depends on pilot content quality and public-safe media selection.
 - Lightbox focus is intentionally minimal: no carousel, no deep artwork archive, no upload/crop, no analytics.
-- Hosted verification has not been run for P2; deploy should wait for Kimi art-direction audit.
+- Hosted verification has now passed; remaining hosted work is content/media correction for final client-facing Gallery/GGM screenshots.
 
 ## Art-Direction Audit
 
@@ -119,9 +119,9 @@ Key findings:
 - All P1 art-direction gaps closed.
 - Remaining P2/P3 polish: lightbox backdrop opacity, close button shape, prev/next navigation, CTA label copy.
 
-## Recommendation
+## Art-Direction Audit Recommendation
 
-**Deploy to hosted smoke.** P2 meets all deploy thresholds:
+Pre-deploy audit recommendation: **deploy to hosted smoke.** P2 met all deploy thresholds:
 - Overall ≥ 8.3/10 ✅
 - Threshold ≥ 8.0/10 ✅
 - Gallery/chamber ≥ 8.0/10 ✅
@@ -131,4 +131,46 @@ Key findings:
 - No S4A leakage ✅
 - Legacy rooms unaffected ✅
 
-After deploy, run hosted preview/public/legacy/payload hygiene checks before claiming hosted readiness. Address lightbox backdrop opacity as the first post-deploy polish item.
+Hosted preview/public/legacy/payload hygiene checks have now passed. Address lightbox backdrop opacity as the first P3 polish item.
+
+## Hosted Deployment And Smoke - 2026-06-08
+
+P2 was deployed to production and hosted-smoked after the Kimi art-direction audit passed.
+
+Deployment:
+
+- Production alias: `https://your-presence.vercel.app`
+- Deployment URL: `https://presence-ca262tvaz-emadhatu-2110s-projects.vercel.app`
+- Deployment ID: `dpl_FjWacd3Tjxka9PpnmHgifq6dFV2J`
+- Commit: `f9673c80cb163c3007b8deedeedcc29d2848e9ee`
+- S4A: still parked in `stash@{0}` and not deployed.
+
+Hosted verification:
+
+- Gallery/GGM P2 hosted public smoke: `1 passed (40.6s)` on warmed rerun.
+- Owner preview: ready; P2 renderer appears with no editor chrome leakage.
+- Studio regression: ready; Studio V2 editor mounts with S1/S2/S3 surfaces intact.
+- Legacy negative: ready; `https://your-presence.vercel.app/p/hesmaddw` remains legacy with no V2/P2 leakage.
+- Hosted payload hygiene: `TOTAL_VIOLATIONS: 0` before and after lifecycle.
+- Full hosted lifecycle: `1 passed (48.7s)` with cleanup/restoration complete.
+
+Hosted evidence:
+
+```txt
+docs/program/evidence/presence-public-output-recovery-p2-hosted/
+PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_HOSTED_SMOKE.md
+```
+
+Hosted content caveat:
+
+- The live Room 11 media state includes a prior blue `Harmless V1B Test / Hosted Smoke Image` asset. This pass preserved hosted data and verified the renderer/deployment baseline. A separate controlled content/media correction pass is recommended before final client-facing Gallery/GGM screenshots are used.
+
+Updated verdicts:
+
+- Gallery/GGM P2 public output: ready at renderer/deployment level, with hosted media-content caveat.
+- Owner preview: ready.
+- Studio regression: ready.
+- Legacy isolation: ready.
+- Hosted lifecycle: ready.
+- Controlled operator-led pilot: ready with operator support.
+- Public self-serve onboarding: not ready.

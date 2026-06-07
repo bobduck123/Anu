@@ -1135,7 +1135,7 @@ docs/program/evidence/presence-public-output-recovery-p2/
 Notes:
 
 - The P2 capture spec reported `ok` and wrote screenshots, but the shell wrapper timed out during Playwright web-server teardown. Evidence files are present.
-- P2 has not been deployed or hosted-smoked.
+- Superseded on 2026-06-08 by deployed/hosted-smoked P2 verification below.
 
 ## P2 Art-Direction Audit — 2026-06-08
 
@@ -1197,3 +1197,79 @@ All skipped checks from initial deployment now closed:
 **Evidence:** 14 screenshots in `docs/program/evidence/presence-public-output-recovery-p1-hosted/`
 
 **Baseline status:** LOCKED. P1 is deployed, hosted-verified, and ready for controlled operator-led pilot.
+
+## Public Output Recovery P2 Pre-Deploy And Hosted QA - 2026-06-08
+
+Scope: Deploy Public Output Recovery P2, verify hosted Gallery/GGM public output, owner preview, Studio regression, payload hygiene, legacy isolation, and full hosted lifecycle. S4A remained parked in `stash@{0}`.
+
+Preflight:
+
+- `git status`: clean before hosted smoke artifacts were added.
+- `git stash list`: `stash@{0}` remained `park S4A chamber management safety-audited local work`.
+- `git diff --stat`: empty at preflight.
+- No env files, credentials, auth state, or local credential artifacts were staged.
+
+Local pre-deploy commands passed:
+
+```txt
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+npx.cmd playwright test presence-public-output-gallery-quality.spec.ts --project=chromium
+npx.cmd playwright test presence-public-output-gallery-polish.spec.ts --project=chromium
+```
+
+Deployment:
+
+- Production alias: `https://your-presence.vercel.app`
+- Deployment URL: `https://presence-ca262tvaz-emadhatu-2110s-projects.vercel.app`
+- Deployment ID: `dpl_FjWacd3Tjxka9PpnmHgifq6dFV2J`
+- Commit: `f9673c80cb163c3007b8deedeedcc29d2848e9ee`
+- `vercel --prod` was unavailable on PATH; deployment completed with `npx vercel@latest --prod`.
+
+Hosted commands passed:
+
+```txt
+npx.cmd playwright test presence-public-output-recovery-p2-hosted.spec.ts --project=chromium --workers=1
+node scripts\hosted-payload-hygiene.mjs
+npx.cmd playwright test tests/e2e/presence-studio-v2-hosted-lifecycle.spec.ts --project=chromium --workers=1
+node scripts\hosted-payload-hygiene.mjs
+```
+
+Hosted results:
+
+- P2 hosted smoke: warmed rerun `1 passed (40.6s)`.
+- Owner preview: ready.
+- Studio regression: ready.
+- Legacy negative: ready at `https://your-presence.vercel.app/p/hesmaddw`.
+- Hosted payload hygiene: `TOTAL_VIOLATIONS: 0` pre-lifecycle and post-lifecycle.
+- Full hosted lifecycle: `1 passed (48.7s)`.
+- Cleanup/restoration completed; public marker scan found no lifecycle smoke residue.
+
+Evidence:
+
+```txt
+PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_HOSTED_SMOKE.md
+docs/program/evidence/presence-public-output-recovery-p2-hosted/
+```
+
+Hosted caveat:
+
+- Hosted Room 11 currently includes a prior blue `Harmless V1B Test / Hosted Smoke Image` asset. Renderer/deployment QA is clean, but final client-facing Gallery/GGM evidence should follow a separate controlled content/media correction pass.
+
+Verdict:
+
+- Gallery/GGM P2 public output: ready at renderer/deployment level, with hosted media-content caveat.
+- Owner preview: ready.
+- Studio regression: ready.
+- Legacy isolation: ready.
+- Hosted lifecycle: ready.
+- Controlled operator-led pilot: ready with operator support.
+- Public self-serve onboarding: not ready.

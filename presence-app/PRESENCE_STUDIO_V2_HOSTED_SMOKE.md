@@ -468,3 +468,44 @@ Full hosted smoke report:
 - Hosted lifecycle: **ready**
 - Controlled operator-led pilot: **ready with operator support**
 - Public self-serve onboarding: **not ready** (wait for P2)
+
+
+---
+
+## P2 Public Output Recovery Deployment - 2026-06-08
+
+**Production alias:** `https://your-presence.vercel.app`
+**Deployment URL:** `https://presence-ca262tvaz-emadhatu-2110s-projects.vercel.app`
+**Deployment ID:** `dpl_FjWacd3Tjxka9PpnmHgifq6dFV2J`
+**Commit:** `f9673c80cb163c3007b8deedeedcc29d2848e9ee`
+**S4A Status:** Parked in `stash@{0}` - NOT deployed
+
+### Hosted Smoke Results
+
+- Hosted Gallery/GGM P2 public output smoke: PASS, warmed rerun `1 passed (40.6s)`.
+- Owner preview: PASS, upgraded P2 renderer visible and no editor chrome leakage.
+- Studio regression: PASS, V2 editor mounts with S1/S2/S3 surfaces present.
+- Legacy negative: PASS, `https://your-presence.vercel.app/p/hesmaddw` remains legacy with no V2/P2 leakage.
+- Hosted payload hygiene: PASS, `TOTAL_VIOLATIONS: 0` before and after lifecycle.
+- Full hosted lifecycle: PASS, `1 passed (48.7s)`, cleanup/restoration complete.
+
+Evidence:
+
+```txt
+PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_HOSTED_SMOKE.md
+docs/program/evidence/presence-public-output-recovery-p2-hosted/
+```
+
+### Hosted Caveat
+
+The live Room 11 media/content currently includes a prior blue `Harmless V1B Test / Hosted Smoke Image` asset. The P2 renderer/deployment is clean, but final client-facing Gallery/GGM screenshots should wait for a separate controlled content/media correction pass.
+
+### Verdict
+
+- Hosted Gallery/GGM P2 public output: **ready at renderer/deployment level, with hosted media-content caveat**
+- Hosted owner preview: **ready**
+- Hosted Studio regression: **ready**
+- Live legacy isolation: **ready**
+- Hosted lifecycle: **ready**
+- Controlled operator-led pilot: **ready with operator support**
+- Public self-serve onboarding: **not ready**

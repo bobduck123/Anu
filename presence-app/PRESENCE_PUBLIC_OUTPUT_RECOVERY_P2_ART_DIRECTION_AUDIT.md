@@ -407,3 +407,38 @@ Post-deploy:
 1. Run hosted smoke for public render, owner preview, legacy negative, and payload hygiene.
 2. Fix lightbox backdrop opacity (P2 polish #1).
 3. Consider prev/next lightbox navigation (P3 polish).
+
+---
+
+## 12. Hosted Smoke Addendum - 2026-06-08
+
+P2 was deployed to production and verified on hosted Room 11 after this audit.
+
+Deployment:
+
+- Production alias: `https://your-presence.vercel.app`
+- Deployment URL: `https://presence-ca262tvaz-emadhatu-2110s-projects.vercel.app`
+- Deployment ID: `dpl_FjWacd3Tjxka9PpnmHgifq6dFV2J`
+- Commit: `f9673c80cb163c3007b8deedeedcc29d2848e9ee`
+
+Hosted verification:
+
+- Gallery/GGM P2 public smoke: PASS, warmed rerun `1 passed (40.6s)`.
+- Owner preview: PASS.
+- Studio regression: PASS.
+- Legacy negative using `https://your-presence.vercel.app/p/hesmaddw`: PASS.
+- Payload hygiene: PASS, `TOTAL_VIOLATIONS: 0` before and after lifecycle.
+- Full hosted lifecycle: PASS, `1 passed (48.7s)`, cleanup/restoration completed.
+
+Evidence:
+
+```txt
+docs/program/evidence/presence-public-output-recovery-p2-hosted/
+PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_HOSTED_SMOKE.md
+```
+
+Hosted caveat:
+
+- The deployed renderer is clean and matches the P2 audit direction. Hosted Room 11 currently contains a prior blue `Harmless V1B Test / Hosted Smoke Image` asset, so final public-facing Gallery/GGM screenshot evidence should follow a separate controlled content/media correction pass.
+
+Final hosted verdict: deploy smoke passed. P2 renderer/deployment baseline is ready to lock with the hosted media-content caveat noted above.
