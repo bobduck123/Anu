@@ -243,3 +243,17 @@ Screenshots captured:
 ## 13. Baseline Lock
 
 The P2 renderer/deployment baseline can be locked after review of this evidence bundle. S4A remains parked in `stash@{0}` and absent from deployed product code. Hosted Room 11 media/content should be corrected in a separate controlled data pass before final public storytelling screenshots are treated as client-facing.
+
+## 14. Release Baseline Lock - 2026-06-08
+
+P2 renderer baseline was locked in Git without hosted content mutation.
+
+- Baseline commit: `4bbfce9dcbbd884dc9780391fcec353186dd7b24`
+- Commit message: `feat(public-output): deploy hosted-verified gallery polish`
+- Push target: `origin/feature/presence-ecosystem-alpha`
+- Release report: `PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_RELEASE_BASELINE_REPORT.md`
+- Secret hygiene: passed; no credentials or auth artifacts committed.
+- Local QA: passed after hosted smoke.
+- S4A: still parked in `stash@{0}`.
+
+Controlled content/media correction may begin after this baseline is pushed and reviewed.

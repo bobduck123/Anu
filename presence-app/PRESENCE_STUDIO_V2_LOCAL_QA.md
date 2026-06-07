@@ -1273,3 +1273,29 @@ Verdict:
 - Hosted lifecycle: ready.
 - Controlled operator-led pilot: ready with operator support.
 - Public self-serve onboarding: not ready.
+
+## Public Output Recovery P2 Release Baseline Lock - 2026-06-08
+
+Purpose: represent the hosted-verified P2 renderer baseline in Git without changing hosted content.
+
+Baseline commit:
+
+```txt
+4bbfce9dcbbd884dc9780391fcec353186dd7b24
+```
+
+Release report:
+
+```txt
+PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_RELEASE_BASELINE_REPORT.md
+```
+
+QA status:
+
+- Local QA rerun passed.
+- Secret hygiene passed.
+- No credentials, env files, auth state, storage state, traces, or local logs were committed.
+- S4A remains parked in `stash@{0}`.
+- Hosted Room 11 content/media was not mutated.
+
+Controlled content/media correction can begin after this baseline is pushed and reviewed.

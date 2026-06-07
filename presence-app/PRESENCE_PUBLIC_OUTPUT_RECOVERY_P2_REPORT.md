@@ -174,3 +174,16 @@ Updated verdicts:
 - Hosted lifecycle: ready.
 - Controlled operator-led pilot: ready with operator support.
 - Public self-serve onboarding: not ready.
+
+## Release Baseline Lock - 2026-06-08
+
+The hosted-verified P2 renderer baseline was committed without touching hosted Room 11 content.
+
+- Baseline commit: `4bbfce9dcbbd884dc9780391fcec353186dd7b24`
+- Commit message: `feat(public-output): deploy hosted-verified gallery polish`
+- Release report: `PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_RELEASE_BASELINE_REPORT.md`
+- Local QA rerun: passed.
+- Secret hygiene: passed.
+- S4A: still parked in `stash@{0}`.
+
+Next allowed pass: controlled content/media correction only, with no renderer changes and no S4A un-stash.

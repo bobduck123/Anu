@@ -509,3 +509,14 @@ The live Room 11 media/content currently includes a prior blue `Harmless V1B Tes
 - Hosted lifecycle: **ready**
 - Controlled operator-led pilot: **ready with operator support**
 - Public self-serve onboarding: **not ready**
+
+### Release Baseline Lock
+
+P2 hosted baseline was locked in Git on 2026-06-08:
+
+- Baseline commit: `4bbfce9dcbbd884dc9780391fcec353186dd7b24`
+- Release report: `PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_RELEASE_BASELINE_REPORT.md`
+- Secret hygiene: passed.
+- Local QA rerun: passed.
+- Hosted data: not mutated during lock pass.
+- S4A: still parked in `stash@{0}`.
