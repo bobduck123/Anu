@@ -1605,3 +1605,58 @@ Verdict:
 - S6A is safe for Kimi design/QA audit.
 - S6A is safe to deploy after audit if the audit passes.
 - Public self-serve onboarding remains out of scope.
+
+## Studio Recovery S6A Hosted Smoke - 2026-06-09
+
+Scope: Deploy and hosted-smoke S6A Public Style Presets + Christina Liquid Gallery before starting bbbvision pilot work.
+
+Deployment:
+
+- Production alias: `https://your-presence.vercel.app`
+- Deployment URL: `https://presence-ektpmsott-emadhatu-2110s-projects.vercel.app`
+- Deployment ID: `dpl_8Cuyuyq1sgYSpznp6jwTVNbge8Bz`
+- Deployed commit: `1e4a570ae95cf154870980cdb43f1c49a91d3796`
+
+Hosted gate finding:
+
+- Room 11 editor and owner preview were V2.
+- Backend public endpoint initially returned `404 not_found`.
+- Owner node was `status: unpublished`, `public_status: draft`, while draft and published configs were both `presence-studio-v2-room`.
+- Existing owner node publish endpoint restored `status: published` and `public_status: public`.
+- No content edits, media replacements, draft writes, S4A changes, or bbbvision work were performed.
+
+Hosted smoke passed:
+
+```txt
+npx.cmd playwright test presence-studio-v2-public-style-presets-hosted-smoke.spec.ts --project=chromium --workers=1
+1 passed (18.7s)
+```
+
+Verified:
+
+- Hosted Studio V2 style selector appears.
+- Gallery P2 and Christina / Liquid Gallery options are visible.
+- Owner preview is clean.
+- Public `/p/ggm-christina-goddard` and `/presence/ggm-christina-goddard` render clean V2 Gallery P2 output.
+- Lightbox/focus works and closes with Escape.
+- Mobile public render is clean.
+- Legacy `/p/hesmaddw` remains legacy.
+- Public leak scan is clean for S6A/S5/editor/private terms.
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6A_HOSTED_SMOKE.md
+docs/program/evidence/presence-studio-v2-public-style-presets-s6a-hosted/
+```
+
+Verdict:
+
+- Hosted S6A editor readiness: ready.
+- Hosted owner preview readiness: ready.
+- Hosted public output readiness: ready.
+- Hosted payload hygiene readiness: ready for smoke scope.
+- Live legacy isolation readiness: ready.
+- Controlled operator-led pilot readiness: ready with operator support.
+- Public self-serve onboarding readiness: not ready.
+- S6A can be release-baselined before bbbvision work starts.

@@ -16,9 +16,9 @@ Hardcoded owner credentials were found in **3 untracked working files**:
 
 | File | Finding | Action Taken |
 |------|---------|--------------|
-| `scripts/backup-room-11.mjs` | `const EMAIL = "e4hatu@gmail.com"; const PASSWORD = "testtesttest123";` | **Redacted** — changed to read from `PRESENCE_E2E_OWNER_EMAIL` / `PRESENCE_E2E_OWNER_PASSWORD` env vars |
-| `scripts/get-hosted-token.mjs` | `const EMAIL = "e4hatu@gmail.com"; const PASSWORD = "testtesttest123";` | **Redacted** — changed to read from env vars |
-| `PRESENCE_STUDIO_V2_ROOM_11_CONVERSION_REPORT.md` | `$env:PRESENCE_E2E_OWNER_EMAIL="e4hatu@gmail.com"` / `$env:PRESENCE_E2E_OWNER_PASSWORD="testtesttest123"` | **Redacted** — replaced with `<OWNER_EMAIL>` / `<OWNER_PASSWORD>` placeholders |
+| `scripts/backup-room-11.mjs` | `const EMAIL = "<OWNER_EMAIL>"; const PASSWORD = "<OWNER_PASSWORD>";` | **Redacted** — changed to read from `PRESENCE_E2E_OWNER_EMAIL` / `PRESENCE_E2E_OWNER_PASSWORD` env vars |
+| `scripts/get-hosted-token.mjs` | `const EMAIL = "<OWNER_EMAIL>"; const PASSWORD = "<OWNER_PASSWORD>";` | **Redacted** — changed to read from env vars |
+| `PRESENCE_STUDIO_V2_ROOM_11_CONVERSION_REPORT.md` | `$env:PRESENCE_E2E_OWNER_EMAIL="<OWNER_EMAIL>"` / `$env:PRESENCE_E2E_OWNER_PASSWORD="<OWNER_PASSWORD>"` | **Redacted** — replaced with `<OWNER_EMAIL>` / `<OWNER_PASSWORD>` placeholders |
 
 ### ✅ Safe Items
 
@@ -39,7 +39,7 @@ Hardcoded owner credentials were found in **3 untracked working files**:
 
 ### 🟡 Password Rotation Recommendation
 
-**RECOMMENDED:** Rotate the owner account password (`testtesttest123`).
+**RECOMMENDED:** Rotate the owner account password used during this audit.
 
 Rationale: Although the password was only in untracked working files (not committed), it may have been exposed through:
 - Shell command history on the local machine

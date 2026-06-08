@@ -510,6 +510,65 @@ The live Room 11 media/content currently includes a prior blue `Harmless V1B Tes
 - Controlled operator-led pilot: **ready with operator support**
 - Public self-serve onboarding: **not ready**
 
+
+---
+
+## S6A Public Style Presets Deployment - 2026-06-09
+
+**Production alias:** `https://your-presence.vercel.app`
+**Deployment URL:** `https://presence-ektpmsott-emadhatu-2110s-projects.vercel.app`
+**Deployment ID:** `dpl_8Cuyuyq1sgYSpznp6jwTVNbge8Bz`
+**Deployed commit:** `1e4a570ae95cf154870980cdb43f1c49a91d3796`
+**S4A Status:** Parked in `stash@{0}` - NOT deployed
+
+### Hosted Gate
+
+Initial hosted smoke showed Room 11 editor and owner preview on V2, but anonymous public output had fallen back to the stale GGM demo fixture because the backend public endpoint returned `404 not_found`.
+
+Read-only owner checks showed:
+
+- Draft config renderer: `presence-studio-v2-room`
+- Published config renderer: `presence-studio-v2-room`
+- Node status: `unpublished`
+- Node public status: `draft`
+
+The existing owner node publish endpoint restored the intended public pilot state:
+
+```txt
+POST /api/presence/owner/nodes/11/publish
+```
+
+After that, the public endpoint returned Room 11 with `renderer_key: presence-studio-v2-room`, `status: published`, and `public_status: public`.
+
+### Hosted Smoke Results
+
+- Hosted S6A smoke: PASS, `1 passed (18.7s)`.
+- Studio style selector: PASS, Gallery P2 and Christina / Liquid Gallery options visible.
+- Owner preview: PASS, V2 Gallery P2 output clean.
+- Public `/p/ggm-christina-goddard`: PASS, V2 Gallery P2 output clean.
+- Public `/presence/ggm-christina-goddard`: PASS.
+- Public lightbox/focus: PASS.
+- Mobile public output: PASS.
+- Legacy negative `/p/hesmaddw`: PASS, remains outside V2.
+- Public leakage scan in smoke: PASS, no style selector, S5 asset panel, editor, config, auth, or owner API terms exposed.
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6A_HOSTED_SMOKE.md
+docs/program/evidence/presence-studio-v2-public-style-presets-s6a-hosted/
+```
+
+### Verdict
+
+- Hosted S6A editor readiness: **ready**
+- Hosted owner preview readiness: **ready**
+- Hosted public output readiness: **ready**
+- Hosted payload hygiene readiness: **ready for smoke scope**
+- Live legacy isolation readiness: **ready**
+- Controlled operator-led pilot readiness: **ready with operator support**
+- Public self-serve onboarding readiness: **not ready**
+
 ### Release Baseline Lock
 
 P2 hosted baseline was locked in Git on 2026-06-08:

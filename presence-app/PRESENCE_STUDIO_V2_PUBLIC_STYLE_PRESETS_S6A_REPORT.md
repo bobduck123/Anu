@@ -1,7 +1,7 @@
 # Presence Studio V2 Public Style Presets S6A Report
 
 Date: 2026-06-09
-Scope: Selectable public-output style presets and Christina Liquid Gallery archetype. Local only. No deploy.
+Scope: Selectable public-output style presets and Christina Liquid Gallery archetype. Deployed and hosted-smoked after Kimi PASS.
 
 ## 1. Reference Site Analysis
 
@@ -221,11 +221,49 @@ Captured:
 **Leakage:** No editor-only state leaks to public/preview. 20-term hygiene scan clean.
 **One-off risk:** The Christina renderer is data-driven and reusable; no hardcoded content or Room 11 IDs.
 
-## 10. Readiness
+## 10. Hosted Deployment
+
+Hosted report:
+
+```txt
+PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6A_HOSTED_SMOKE.md
+```
+
+Deployment:
+
+- Production alias: `https://your-presence.vercel.app`
+- Deployment URL: `https://presence-ektpmsott-emadhatu-2110s-projects.vercel.app`
+- Deployment ID: `dpl_8Cuyuyq1sgYSpznp6jwTVNbge8Bz`
+- Deployed commit: `1e4a570ae95cf154870980cdb43f1c49a91d3796`
+
+Hosted smoke result:
+
+```txt
+npx.cmd playwright test presence-studio-v2-public-style-presets-hosted-smoke.spec.ts --project=chromium --workers=1
+1 passed (18.7s)
+```
+
+Hosted smoke verified the Room 11 Studio style selector, owner preview, public `/p` route, public `/presence` alias, artwork lightbox, mobile output, and legacy `/p/hesmaddw` isolation.
+
+Hosted gate note:
+
+- Initial public route check failed because Room 11 node status was `unpublished` / `draft`, while editor draft and published configs were both V2.
+- Existing owner node publish endpoint restored `status: published` and `public_status: public`.
+- No content edits, media replacements, draft writes, S4A changes, or bbbvision changes were made.
+
+Hosted evidence:
+
+```txt
+docs/program/evidence/presence-studio-v2-public-style-presets-s6a-hosted/
+```
+
+## 11. Readiness
 
 Safe for Kimi design/QA audit: yes.
 
-Safe to deploy after audit: yes, if audit passes and S4A remains parked.
+Safe to deploy after audit: completed.
+
+Safe to baseline before bbbvision: yes.
 
 S4A status during this pass:
 
@@ -233,4 +271,4 @@ S4A status during this pass:
 stash@{0}: On feature/presence-ecosystem-alpha: park S4A chamber management safety-audited local work
 ```
 
-No hosted data was mutated. No deploy was run.
+Hosted data action: Room 11 node was republished through the existing owner node publish endpoint after read-only checks showed it was unintentionally unpublished while its V2 configs remained present.
