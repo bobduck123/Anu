@@ -27,7 +27,7 @@ Production implemented a **minimal subset** of the immersive cockpit concept. It
 1. **No information architecture** — No outline tree, no chamber tabs, no room structure navigation. Objects are dumped into scrollable chambers with no structural visibility.
 2. **No direct manipulation** — Objects cannot be dragged, resized, or rotated on canvas. Transforms are nudged via 11 discrete buttons in a side panel.
 3. **No persistent inspector** — The right panel is a conditional sheet that opens only on selection. There is no always-visible properties surface.
-4. **No asset browser** — Images are pasted as URLs. There is no visual grid of room assets.
+4. **~~No asset browser~~** — Recovered in S5. Derived Room Assets panel with thumbnails, status badges, and usage mapping.
 5. **Weak top chrome** — No breadcrumbs, no undo indicator, no in-chrome preview/share/publish. Just "Studio V2", mode toggles, and "Save draft".
 6. **No object frame/handles** — Selected objects get a CSS shadow ring but no bounding box, no resize handles, no rotation handle.
 7. **No Content/Style/Motion tabs** — Object editing is a flat field list. The prototype inspector groups controls into semantic tabs.
@@ -52,7 +52,7 @@ These two phases alone would close 60% of the perceived quality gap.
 | **3-pane IDE layout** (outline / canvas / inspector) | `pilots/editor.html`: `grid-template-columns: 280px 1fr 320px` | **Absent** — single scrollable stage with floating sheets | P1 | Low — pure UI layout |
 | **Left outline tree** | `pilots/editor.html`: `.ed-tree` with folders, leaf nodes, gold active border, metadata | **Absent** — no structural navigation | P1 | Low — render from existing `chambers[]` |
 | **Threshold/Chamber/Archive tabs** | `pilots/editor.html`: `.ed-top-mid` tab bar, 4 tabs in bordered pill | **Absent** — all chambers inline | P1 | Low — UI chrome only |
-| **Asset/archive browser grid** | `pilots/editor.html`: `.ed-assets` 3-col grid with thumbnails, labels, "+11" overflow | **Absent** — URL text field only | P2 | Low — can derive from object images |
+| **Asset/archive browser grid** | `pilots/editor.html`: `.ed-assets` 3-col grid with thumbnails, labels, "+11" overflow | **Recovered in S5** — left-rail Room Assets panel with thumbnails, status badges, usage mapping, and replace-URL flow | P2 | Low — derived from object images |
 | **Persistent right inspector** | `pilots/editor.html`: `.ed-right` always visible, 320px | **Absent** — conditional `.v2-side-panel` sheet | P1 | Low — repurpose existing sheets |
 | **Content/Style/Motion tabs** | `pilots/editor.html`: `.ed-prop-tab` with 3 tabs inside inspector | **Absent** — flat field list | P2 | Low — reorganize existing fields |
 | **Object frame + handles** | `pilots/editor.html`: `.ed-frame-handle` dashed gold border + 4 corner squares + label tag | **Absent** — only CSS `box-shadow` ring | P2 | Medium — need overlay positioning logic |
@@ -717,6 +717,40 @@ PRESENCE_STUDIO_V2_S3_RELEASE_BASELINE_REPORT.md
 ```
 
 S4 is cleared to begin after the S3 baseline commit is pushed and the working tree is clean.
+
+---
+
+## S5 Status - 2026-06-08
+
+Studio Recovery S5 Asset / Media Library Foundations has been implemented locally.
+
+Recovered honestly:
+
+- Derived Room Assets registry from current Studio V2 objects.
+- Left-rail Room Assets panel with thumbnails, status badges, and usage mapping.
+- Inspector asset detail view with full URL, replacement field, object/chamber usage, public/mobile status, threshold/hero context, duplicate warning, and test/smoke warning.
+- Replace image URL flow through existing object `image.src`.
+- Media health checklist for missing URLs, broken/unloaded thumbnails, suspected test assets, duplicate URLs, external URLs, public-visible media, and mobile-visible media.
+- Owner preview/public renderer remain clean because S5 warnings are editor-only.
+
+Still deferred beyond S5:
+
+- Real upload.
+- Crop/storage/CDN library.
+- Multi-replace for duplicate URLs.
+- Asset approval workflow.
+- Version history and archive restore.
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_ASSET_LIBRARY_S5_REPORT.md
+docs/program/evidence/presence-studio-v2-asset-library-s5/
+```
+
+S5 local QA passed. No backend contracts, model fields, adapter behavior, public projection, public payload shape, hosted data, or S4A stash contents were changed.
+
+S5 audit: `PRESENCE_STUDIO_V2_ASSET_LIBRARY_S5_AUDIT.md` — **CONDITIONAL PASS**. Deploy allowed; P1 unit-test gap to close before next refactor.
 
 ---
 

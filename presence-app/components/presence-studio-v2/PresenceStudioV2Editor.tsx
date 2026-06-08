@@ -8,8 +8,21 @@ import {
   createPresenceEditorDraft,
   type PresenceEditorConfigInput,
 } from "@/lib/api/editor";
-import { studioV2FromPresenceConfig, presenceConfigFromStudioV2State } from "@/lib/presence/studio-v2";
-import type { StudioV2State, StudioV2Object, StudioV2MoodboardReference } from "@/lib/presence/studio-v2";
+import {
+  deriveStudioV2AssetRegistry,
+  presenceConfigFromStudioV2State,
+  studioV2AssetStatusLabel,
+  studioV2FromPresenceConfig,
+  validateStudioV2AssetUrl,
+} from "@/lib/presence/studio-v2";
+import type {
+  StudioV2AssetRegistry,
+  StudioV2DerivedAsset,
+  StudioV2MediaHealth,
+  StudioV2MoodboardReference,
+  StudioV2Object,
+  StudioV2State,
+} from "@/lib/presence/studio-v2";
 import PresenceStudioV2Room from "./PresenceStudioV2Room";
 import { SkinLabSheet, AddObjectSheet, MoodboardSheet, WorldSwitcher } from "./PresenceStudioV2Panels";
 import { WORLD_KITS } from "./worlds";
@@ -145,6 +158,8 @@ export default function PresenceStudioV2Editor({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [railOpen, setRailOpen] = useState(true);
   const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+  const [brokenAssetObjectIds, setBrokenAssetObjectIds] = useState<Set<string>>(() => new Set());
 
   const roomRef = useRef<HTMLDivElement | null>(null);
   const interactionRef = useRef<CanvasInteraction | null>(null);
@@ -152,6 +167,11 @@ export default function PresenceStudioV2Editor({
   const dirty = useMemo(
     () => Boolean(v2State && snapshot(v2State) !== baseSnapshot),
     [v2State, baseSnapshot],
+  );
+
+  const assetRegistry = useMemo(
+    () => (v2State ? deriveStudioV2AssetRegistry(v2State, { brokenObjectIds: brokenAssetObjectIds }) : null),
+    [v2State, brokenAssetObjectIds],
   );
 
   const loadEditor = useCallback(async () => {
@@ -453,15 +473,46 @@ export default function PresenceStudioV2Editor({
     });
   }
 
-  function selectObject(id: string) {
+  function selectObject(id: string, options: { assetId?: string } = {}) {
     const isAlreadySelected = selectedId === id;
     setSelectedId(id);
+    setSelectedAssetId(options.assetId ?? null);
     setSurfaceTab("chamber");
     if (!isAlreadySelected) setInspectorTab("content");
     setActivePanel("none");
     const chamber = v2State?.chambers.find((ch) => ch.objects.some((obj) => obj.id === id));
     if (chamber) setActiveChamberId(chamber.id);
     scrollToObject(id);
+  }
+
+  function selectAsset(assetId: string) {
+    const asset = assetRegistry?.assets.find((candidate) => candidate.id === assetId);
+    if (!asset) return;
+    selectObject(asset.objectId, { assetId: asset.id });
+    setInspectorOpen(true);
+  }
+
+  function replaceAssetUrl(objectId: string, value: string) {
+    const object = findObject(objectId);
+    if (!object) return;
+    const src = value.trim();
+    updateObject(objectId, {
+      image: src ? { src, alt: object.image?.alt || object.title || "Room image" } : undefined,
+    });
+    setBrokenAssetObjectIds((current) => {
+      const next = new Set(current);
+      next.delete(objectId);
+      return next;
+    });
+  }
+
+  function markAssetBroken(objectId: string) {
+    setBrokenAssetObjectIds((current) => {
+      if (current.has(objectId)) return current;
+      const next = new Set(current);
+      next.add(objectId);
+      return next;
+    });
   }
 
   function toggleChamberExpanded(id: string) {
@@ -640,6 +691,8 @@ export default function PresenceStudioV2Editor({
   const saveStatus = saving ? "Saving" : dirty ? "Unsaved changes" : notice ?? "Saved";
   const publicUrlPath = `/presence/${v2State.slug || node.slug || String(nodeId)}`;
   const publicObjects = countPublicObjects(v2State);
+  const assetRegistryForRender = assetRegistry ?? deriveStudioV2AssetRegistry(v2State, { brokenObjectIds: brokenAssetObjectIds });
+  const selectedAssetForRender = assetRegistryForRender.assets.find((asset) => asset.id === selectedAssetId) ?? null;
 
   return (
     <div
@@ -779,13 +832,17 @@ export default function PresenceStudioV2Editor({
       <div className="v2-studio-layout">
         <StudioOutlinePanel
           state={v2State}
+          assetRegistry={assetRegistryForRender}
           selectedId={selectedId}
+          selectedAssetId={selectedAssetId}
           activeChamberId={activeChamber?.id ?? null}
           expandedChambers={expandedChambers}
           open={railOpen}
           onToggleChamber={toggleChamberExpanded}
           onSelectObject={selectObject}
+          onSelectAsset={selectAsset}
           onSelectChamber={scrollToChamber}
+          onAssetError={markAssetBroken}
         />
 
         {/* Room stage */}
@@ -862,6 +919,8 @@ export default function PresenceStudioV2Editor({
         <StudioInspectorPanel
           state={v2State}
           selectedObject={selectedObject}
+          selectedAsset={selectedAssetForRender}
+          assetRegistry={assetRegistryForRender}
           inspectorTab={inspectorTab}
           mode={mode}
           dirty={dirty}
@@ -876,6 +935,9 @@ export default function PresenceStudioV2Editor({
           onUpdateRoom={updateRoom}
           onUpdateCta={updateCta}
           onUpdateObject={(obj) => updateObject(obj.id, obj)}
+          onReplaceAssetUrl={replaceAssetUrl}
+          onSelectObject={(id) => selectObject(id)}
+          onAssetError={markAssetBroken}
           onOpenWorlds={() => setActivePanel("worlds")}
           onOpenSkin={() => setActivePanel("skin")}
           onDuplicate={handleDuplicateObject}
@@ -957,28 +1019,32 @@ function objectGlyph(type: StudioV2Object["type"]): string {
 
 function StudioOutlinePanel({
   state,
+  assetRegistry,
   selectedId,
+  selectedAssetId,
   activeChamberId,
   expandedChambers,
   open,
   onToggleChamber,
   onSelectObject,
+  onSelectAsset,
   onSelectChamber,
+  onAssetError,
 }: {
   state: StudioV2State;
+  assetRegistry: StudioV2AssetRegistry;
   selectedId: string | null;
+  selectedAssetId: string | null;
   activeChamberId: string | null;
   expandedChambers: Set<string>;
   open: boolean;
   onToggleChamber: (id: string) => void;
   onSelectObject: (id: string) => void;
+  onSelectAsset: (id: string) => void;
   onSelectChamber: (id: string) => void;
+  onAssetError: (objectId: string) => void;
 }) {
-  const assets = state.chambers.flatMap((chamber) =>
-    chamber.objects
-      .filter((object) => object.image?.src)
-      .map((object) => ({ chamberId: chamber.id, object })),
-  );
+  const assets = assetRegistry.assets;
 
   return (
     <aside
@@ -1040,26 +1106,69 @@ function StudioOutlinePanel({
         </div>
       </section>
 
-      <section data-testid="presence-studio-v2-assets" className="v2-rail-section v2-assets">
+      <section data-testid="presence-studio-v2-assets-panel" className="v2-rail-section v2-assets-panel">
         <div className="v2-rail-title">
-          <span>Existing room images</span>
+          <span>Room Assets</span>
           <strong>{assets.length}</strong>
         </div>
+        <p className="v2-quiet-copy">Derived from objects in this room. Upload library later.</p>
+        <MediaHealthChecklist health={assetRegistry.health} />
         {assets.length === 0 ? (
-          <p className="v2-quiet-copy">No image objects in this draft yet. Add image URLs through object content fields.</p>
+          <p className="v2-quiet-copy">No image or media objects in this draft yet. Add image URLs through object content fields.</p>
         ) : (
           <div className="v2-assets-grid">
-            {assets.map(({ object }) => (
-              <button
-                key={object.id}
-                type="button"
-                data-testid="presence-studio-v2-asset"
-                className={`v2-asset${selectedId === object.id ? " active" : ""}`}
-                onClick={() => onSelectObject(object.id)}
+            {assets.map((asset) => (
+              <article
+                key={asset.id}
+                data-testid="presence-studio-v2-asset-card"
+                className={`v2-asset-card${selectedAssetId === asset.id || selectedId === asset.objectId ? " active" : ""}`}
               >
-                <img src={object.image?.src} alt={object.image?.alt || object.title} />
-                <span>{object.title}</span>
-              </button>
+                <button
+                  type="button"
+                  data-testid="presence-studio-v2-asset-thumbnail"
+                  className="v2-asset-thumb"
+                  onClick={() => onSelectAsset(asset.id)}
+                  aria-label={`Inspect asset used in ${asset.objectTitle}`}
+                >
+                  {asset.src ? (
+                    <img src={asset.src} alt={asset.alt} onError={() => onAssetError(asset.objectId)} />
+                  ) : (
+                    <span>Missing URL</span>
+                  )}
+                </button>
+                <div className="v2-asset-card-copy">
+                  <strong>{asset.objectTitle}</strong>
+                  <span>{asset.chamberLabel} / {asset.objectType}</span>
+                  <div className="v2-asset-status-row">
+                    {asset.statuses.map((status) => (
+                      <span
+                        key={status}
+                        data-testid="presence-studio-v2-asset-status"
+                        className={`v2-asset-status status-${status}`}
+                      >
+                        {studioV2AssetStatusLabel(status)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="v2-asset-card-actions">
+                  <button
+                    type="button"
+                    data-testid="presence-studio-v2-asset-used-in"
+                    className="v2-link-button"
+                    onClick={() => onSelectObject(asset.objectId)}
+                  >
+                    Used in {asset.chamberLabel}
+                  </button>
+                  <button
+                    type="button"
+                    className="v2-link-button"
+                    onClick={() => onSelectAsset(asset.id)}
+                  >
+                    Replace URL
+                  </button>
+                </div>
+              </article>
             ))}
           </div>
         )}
@@ -1068,9 +1177,138 @@ function StudioOutlinePanel({
   );
 }
 
+function MediaHealthChecklist({ health }: { health: StudioV2MediaHealth }) {
+  const items = [
+    { label: "Total media assets", value: health.total, state: "neutral" },
+    { label: "Missing URLs", value: health.missingUrls, state: health.missingUrls > 0 ? "warn" : "ok" },
+    { label: "Broken/unloaded thumbnails", value: health.brokenOrUnloaded, state: health.brokenOrUnloaded > 0 ? "warn" : "ok" },
+    { label: "Suspected test assets", value: health.suspectedTestAssets, state: health.suspectedTestAssets > 0 ? "warn" : "ok" },
+    { label: "Duplicate URLs", value: health.duplicateUrls, state: health.duplicateUrls > 0 ? "notice" : "ok" },
+    { label: "External URLs", value: health.externalUrls, state: health.externalUrls > 0 ? "notice" : "ok" },
+    { label: "Public-visible media", value: health.publicVisible, state: "neutral" },
+    { label: "Mobile-visible media", value: health.mobileVisible, state: "neutral" },
+  ] as const;
+
+  return (
+    <div data-testid="presence-studio-v2-media-health" className="v2-media-health" aria-label="Room media health checklist">
+      {items.map((item) => (
+        <div
+          key={item.label}
+          data-testid="presence-studio-v2-media-health-item"
+          className={`v2-media-health-item ${item.state}`}
+        >
+          <span>{item.label}</span>
+          <strong>{item.value}</strong>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AssetDetailPanel({
+  asset,
+  registryTotal,
+  locked,
+  onReplaceUrl,
+  onSelectObject,
+  onOpenObjectInspector,
+  onAssetError,
+}: {
+  asset: StudioV2DerivedAsset;
+  registryTotal: number;
+  locked: boolean;
+  onReplaceUrl: (value: string) => void;
+  onSelectObject: () => void;
+  onOpenObjectInspector: () => void;
+  onAssetError: () => void;
+}) {
+  const validation = validateStudioV2AssetUrl(asset.src);
+  const validationMessages = [
+    validation.empty ? "Empty URL: this object has no image source." : "",
+    validation.unsupportedProtocol ? "Unsupported protocol. Use a public /path, http, or https URL." : "",
+    validation.possibleTestAsset ? "Possible test asset: URL includes smoke/test terms." : "",
+    validation.externalUrl ? "External URL: confirm the file is public, stable, and approved." : "",
+    validation.localPublicAsset ? "Local/public asset path." : "",
+    asset.statuses.includes("broken-unloaded") ? "Preview failed to load in this editor session." : "",
+    asset.usageCount > 1
+      ? `Duplicate URL appears in ${asset.usageCount} objects. This S5 flow replaces the selected object only; multi-replace arrives later.`
+      : "",
+    locked ? "This object is locked. Unlock it in Style before replacing its image URL." : "",
+  ].filter(Boolean);
+
+  return (
+    <section className="v2-asset-detail" aria-label="Selected asset detail">
+      <div className="v2-inspector-section-title">
+        <span>Asset detail</span>
+        <strong>{registryTotal} in room</strong>
+      </div>
+      <div className="v2-asset-detail-preview">
+        {asset.src ? (
+          <img src={asset.src} alt={asset.alt} onError={onAssetError} />
+        ) : (
+          <div className="v2-asset-detail-empty">Missing image URL</div>
+        )}
+      </div>
+      <div className="v2-asset-status-row detail">
+        {asset.statuses.map((status) => (
+          <span
+            key={status}
+            data-testid="presence-studio-v2-asset-status"
+            className={`v2-asset-status status-${status}`}
+          >
+            {studioV2AssetStatusLabel(status)}
+          </span>
+        ))}
+      </div>
+      <label className="v2-field">
+        <span>Full URL</span>
+        <input readOnly value={asset.src || "No URL"} title={asset.src || "No URL"} onFocus={(event) => event.currentTarget.select()} />
+      </label>
+      <label className="v2-field">
+        <span>Replace image URL</span>
+        <input
+          data-testid="presence-studio-v2-asset-replace-url"
+          value={asset.src}
+          disabled={locked}
+          placeholder="/public/path/or/https-url.webp"
+          onChange={(event) => onReplaceUrl(event.target.value)}
+        />
+      </label>
+      <dl className="v2-asset-detail-facts">
+        <div><dt>Object</dt><dd>{asset.objectTitle}</dd></div>
+        <div><dt>Type</dt><dd>{asset.objectType}</dd></div>
+        <div><dt>Used in</dt><dd>{asset.chamberLabel}</dd></div>
+        <div><dt>Public</dt><dd>{asset.publicVisible ? "Public" : "Hidden from public"}</dd></div>
+        <div><dt>Mobile</dt><dd>{asset.mobileVisible ? "Mobile-visible" : "Hidden on mobile"}</dd></div>
+        <div><dt>Threshold</dt><dd>{asset.thresholdContext ? "Threshold/hero context" : "Chamber object"}</dd></div>
+      </dl>
+      {validationMessages.length > 0 && (
+        <div className="v2-asset-warnings">
+          {validationMessages.map((message) => (
+            <p key={message}>{message}</p>
+          ))}
+        </div>
+      )}
+      <div className="v2-asset-detail-actions">
+        <button type="button" data-testid="presence-studio-v2-asset-used-in" className="v2-btn" onClick={onSelectObject}>
+          Select object
+        </button>
+        <button type="button" className="v2-btn" onClick={onOpenObjectInspector}>
+          Open object inspector
+        </button>
+      </div>
+      <div className="v2-honest-note">
+        Derived from current room objects. Upload library arrives later.
+      </div>
+    </section>
+  );
+}
+
 function StudioInspectorPanel({
   state,
   selectedObject,
+  selectedAsset,
+  assetRegistry,
   inspectorTab,
   mode,
   dirty,
@@ -1085,6 +1323,9 @@ function StudioInspectorPanel({
   onUpdateRoom,
   onUpdateCta,
   onUpdateObject,
+  onReplaceAssetUrl,
+  onSelectObject,
+  onAssetError,
   onOpenWorlds,
   onOpenSkin,
   onDuplicate,
@@ -1092,6 +1333,8 @@ function StudioInspectorPanel({
 }: {
   state: StudioV2State;
   selectedObject: StudioV2Object | null;
+  selectedAsset: StudioV2DerivedAsset | null;
+  assetRegistry: StudioV2AssetRegistry;
   inspectorTab: "content" | "style" | "motion";
   mode: "guided" | "wild";
   dirty: boolean;
@@ -1106,6 +1349,9 @@ function StudioInspectorPanel({
   onUpdateRoom: (patch: Partial<StudioV2State>) => void;
   onUpdateCta: (patch: Partial<StudioV2State["cta"]>) => void;
   onUpdateObject: (object: StudioV2Object) => void;
+  onReplaceAssetUrl: (objectId: string, value: string) => void;
+  onSelectObject: (id: string) => void;
+  onAssetError: (objectId: string) => void;
   onOpenWorlds: () => void;
   onOpenSkin: () => void;
   onDuplicate: (id: string) => void;
@@ -1117,6 +1363,7 @@ function StudioInspectorPanel({
   const linkHost = safeHost(object?.link);
   const deletePending = Boolean(object && deleteConfirmId === object.id);
   const objectBadges = object ? objectStateBadges(object, dirty) : [];
+  const registryTotal = assetRegistry.health.total;
   const checklist = [
     { label: "Room title", ok: Boolean(state.title.trim()) },
     { label: "Public objects", ok: publicObjects > 0 },
@@ -1235,6 +1482,18 @@ function StudioInspectorPanel({
           </div>
 
           <div className="v2-inspector-body">
+            {selectedAsset && (
+              <AssetDetailPanel
+                asset={selectedAsset}
+                registryTotal={registryTotal}
+                locked={locked}
+                onReplaceUrl={(value) => onReplaceAssetUrl(selectedAsset.objectId, value)}
+                onSelectObject={() => onSelectObject(selectedAsset.objectId)}
+                onOpenObjectInspector={() => onSetInspectorTab("content")}
+                onAssetError={() => onAssetError(selectedAsset.objectId)}
+              />
+            )}
+
             {locked && inspectorTab !== "style" && (
               <div className="v2-honest-note">This object is locked. Unlock it in Style before editing content or transforms.</div>
             )}

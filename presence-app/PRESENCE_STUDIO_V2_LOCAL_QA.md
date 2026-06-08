@@ -1335,3 +1335,191 @@ Constraints respected:
 - Credentials supplied via env vars only; not written to files.
 
 The P2 Gallery/GGM public output is now client-facing clean.
+
+## Studio Recovery S5 Asset / Media Library Foundations - 2026-06-08
+
+Scope: Editor-only derived asset/media foundations for Studio V2. No upload/crop/storage, no backend contract changes, no public payload shape changes, no hosted data mutation, no deploy.
+
+Implemented:
+
+- Derived asset registry from current Studio V2 room objects.
+- Room Assets panel in the left rail.
+- Asset card thumbnails, status badges, usage mapping, and used-in navigation.
+- Asset detail state in the persistent inspector.
+- Replace image URL flow through existing `object.image.src`.
+- Advisory validation for missing URLs, broken/unloaded thumbnails, duplicate URLs, possible smoke/test assets, external URLs, and local/public asset paths.
+- Room-level media health checklist.
+- Editor-only warnings; owner preview/public render remain clean.
+
+Files changed:
+
+- `components/presence-studio-v2/PresenceStudioV2Editor.tsx`
+- `components/presence-studio-v2/presence-studio-v2.css`
+- `lib/presence/studio-v2/assets.ts`
+- `lib/presence/studio-v2/index.ts`
+- `tests/e2e/presence-studio-v2-asset-library.spec.ts`
+- `docs/program/evidence/presence-studio-v2-asset-library-s5/`
+- `PRESENCE_STUDIO_V2_ASSET_LIBRARY_S5_REPORT.md`
+
+Model/adapter status:
+
+- No model fields changed.
+- No adapter behavior changed.
+- Public projection unchanged.
+
+Required QA passed:
+
+```txt
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-direct-manipulation.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-inspector-usability.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-asset-library.spec.ts --project=chromium
+```
+
+Evidence:
+
+```txt
+docs/program/evidence/presence-studio-v2-asset-library-s5/
+PRESENCE_STUDIO_V2_ASSET_LIBRARY_S5_REPORT.md
+```
+
+Audit:
+
+`PRESENCE_STUDIO_V2_ASSET_LIBRARY_S5_AUDIT.md` — CONDITIONAL PASS
+
+- 14 Playwright regression tests passed (50.6s).
+- 40 Node unit tests passed.
+- TypeScript + build passed.
+- Payload hygiene passes. No leakage to public/preview.
+- P1 fix before next refactor: add `lib/presence/studio-v2/assets.test.ts`.
+
+Verdict:
+
+- Safe for Kimi audit.
+- Safe to deploy after audit if no hosted data mutation is bundled.
+- S4A remains parked in `stash@{0}`.
+- Public self-serve onboarding remains out of scope.
+
+## Studio Recovery S5 Asset / Media Library P1 Unit-Test Closure - 2026-06-08
+
+Scope: Close the Kimi P1 gap before hosted deployment by adding deterministic unit coverage for S5 asset/media safety logic. No deploy. No hosted data mutation.
+
+Tests added:
+
+- `lib/presence/studio-v2/assets.test.ts`
+
+Edge cases covered:
+
+- Registry derivation from Studio V2 object media only.
+- Object ID, title, type, chamber ID, and chamber label mapping.
+- Duplicate URL detection and repeated usage counts.
+- Public/mobile visibility counts.
+- Empty room and no-media safe registry output.
+- URL validation for empty, local/public, external, unsupported protocol, protocol-relative, trimmed, and relative paths.
+- Status derivation for missing, broken/unloaded, duplicate, possible smoke/test asset, external URL, local/public asset, and clean valid artwork.
+- Smoke/test terms in URL, title, and alt text: `smoke`, `test`, `harmless`, `hosted-smoke`, `v1b`.
+- Safety invariants: no input mutation, no raw editor/private config fields in registry output, malformed image-field tolerance.
+- Threshold/hero heuristic: auto-detected from the first public-visible object with a normalized image URL.
+
+Bugs found/fixed:
+
+- Protocol-relative URLs such as `//cdn.example.com/image.webp` were too loosely treated as local/public assets. They are now marked unsupported/broken-unloaded.
+- Threshold/hero auto-detection previously used a truthy raw `image.src`; it now uses the normalized URL path so malformed non-string values cannot become threshold media.
+
+Required QA passed:
+
+```txt
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\assets.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-direct-manipulation.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-inspector-usability.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-asset-library.spec.ts --project=chromium
+```
+
+Known warnings:
+
+- Node direct TypeScript tests still emit the existing `MODULE_TYPELESS_PACKAGE_JSON` warning.
+- Next/Turbopack still warns about multiple lockfiles and inferred workspace root.
+
+Verdict:
+
+- S5 P1 unit-test gap is closed.
+- S5 is clean for hosted deployment, pending normal hosted smoke.
+- S4A remains parked in `stash@{0}`.
+- No credentials, env files, auth state, or hosted data mutation were introduced in this pass.
+
+## Studio Recovery S5 Hosted Smoke - 2026-06-09
+
+Scope: Deploy and hosted-smoke S5 Asset / Media Library Foundations on production. Verify hosted Studio editor, owner preview, public output, payload hygiene, legacy isolation, and lifecycle cleanup.
+
+Deployment:
+
+```txt
+Production alias: https://your-presence.vercel.app
+Deployment URL: https://presence-c9nmbuzw5-emadhatu-2110s-projects.vercel.app
+Deployment ID: dpl_2w6Lyj9UfKiyj6PFUdokG12t3Mni
+Base local commit: 04886d37c0e4d05fcf81a673ef8d6f38b680a8f5
+```
+
+Note: Vercel inspect did not report a Git source commit. Deployment was run from the local S5 working tree on top of the base commit above.
+
+Hosted smoke:
+
+- Hosted S5 editor smoke: PASS, `1 passed (17.1s)` with retries disabled.
+- Room Assets panel: PASS.
+- Asset cards/detail/used-in mapping: PASS.
+- Media health checklist: PASS.
+- Replace URL flow visible and honest; no upload/crop/storage capability implied.
+- Corrected Room 11 content: no possible smoke/test asset warning observed.
+- Owner preview: PASS, no S5/editor leakage.
+- Public `/p/ggm-christina-goddard`: PASS, P2 output clean and lightbox/focus works.
+- Public `/presence/ggm-christina-goddard`: PASS.
+- Mobile public output: PASS.
+- Legacy negative `/p/hesmaddw`: PASS.
+- Hosted payload hygiene: PASS, `TOTAL_VIOLATIONS: 0` pre-lifecycle and post-lifecycle.
+- Full hosted lifecycle: PASS, `1 passed (20.8s)`, cleanup/restoration complete.
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_ASSET_LIBRARY_S5_HOSTED_SMOKE.md
+docs/program/evidence/presence-studio-v2-asset-library-s5-hosted/
+```
+
+Guardrails:
+
+- S4A remains parked in `stash@{0}`.
+- No S4A chamber-management code found in app/components/lib/tests.
+- No hosted content replacement was performed during the S5 asset panel smoke.
+- Lifecycle mutation was controlled and restored.
+- Exact credential scan returned no hits.
+- No env files, credentials, auth state, traces, HARs, or logs are staged.
+
+Verdict:
+
+- Hosted S5 editor readiness: ready for operator-led pilots.
+- Hosted owner preview readiness: ready.
+- Hosted public output readiness: ready.
+- Hosted payload hygiene readiness: ready.
+- Hosted lifecycle readiness: ready.
+- Controlled operator-led pilot readiness: ready with operator support.
+- Public self-serve onboarding readiness: not ready.
+- S5 baseline can be locked after review.

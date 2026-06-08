@@ -539,3 +539,49 @@ Full report:
 
 Updated verdict:
 - Hosted Gallery/GGM P2 public output: **ready for client-facing screenshots and pilot demos**.
+
+
+---
+
+## S5 Asset / Media Library Deployment - 2026-06-09
+
+**Production alias:** `https://your-presence.vercel.app`
+**Deployment URL:** `https://presence-c9nmbuzw5-emadhatu-2110s-projects.vercel.app`
+**Deployment ID:** `dpl_2w6Lyj9UfKiyj6PFUdokG12t3Mni`
+**Base local commit:** `04886d37c0e4d05fcf81a673ef8d6f38b680a8f5`
+**S4A Status:** Parked in `stash@{0}` - NOT deployed
+
+Note: Vercel inspect did not report a Git source commit. The deployment was created from the local S5 working tree on top of the base commit above.
+
+### Hosted Smoke Results
+
+- Hosted S5 editor smoke: PASS, `1 passed (17.1s)` with retries disabled.
+- Studio regression: PASS, editor mounts with S1/S2/S3 surfaces present.
+- Room Assets panel: PASS, derived hosted Room 11 assets appear.
+- Asset detail/used-in mapping: PASS.
+- Media health checklist: PASS.
+- Replace URL flow: visible and honest; no upload/crop/storage capability implied.
+- Owner preview: PASS, no S5 asset UI leakage.
+- Public `/p/ggm-christina-goddard`: PASS, public P2 output clean and lightbox/focus works.
+- Public `/presence/ggm-christina-goddard`: PASS.
+- Mobile public output: PASS.
+- Legacy negative `/p/hesmaddw`: PASS, remains legacy with no V2/S5 leakage.
+- Hosted payload hygiene: PASS, `TOTAL_VIOLATIONS: 0` before and after lifecycle.
+- Full hosted lifecycle: PASS, `1 passed (20.8s)`, cleanup/restoration complete.
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_ASSET_LIBRARY_S5_HOSTED_SMOKE.md
+docs/program/evidence/presence-studio-v2-asset-library-s5-hosted/
+```
+
+### Verdict
+
+- Hosted S5 editor: **ready for operator-led pilots**
+- Hosted owner preview: **ready**
+- Hosted public output: **ready**
+- Hosted payload hygiene: **ready**
+- Hosted lifecycle: **ready**
+- Controlled operator-led pilot: **ready with operator support**
+- Public self-serve onboarding: **not ready**

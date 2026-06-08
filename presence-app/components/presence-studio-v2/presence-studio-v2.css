@@ -1490,23 +1490,171 @@ body.v2-is-manipulating {
 
 .presence-studio-v2 .v2-assets-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
 
-.presence-studio-v2 .v2-asset {
+.presence-studio-v2 .v2-assets-panel .v2-quiet-copy {
+  margin: -4px 0 12px;
+}
+
+.presence-studio-v2 .v2-media-health {
   display: grid;
   gap: 6px;
-  padding: 7px;
-  border-radius: 12px;
+  margin: 0 0 12px;
 }
 
-.presence-studio-v2 .v2-asset img {
+.presence-studio-v2 .v2-media-health-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 8px;
+  border: 1px solid rgba(248, 244, 236, 0.08);
+  border-radius: 10px;
+  background: rgba(248, 244, 236, 0.035);
+  color: rgba(248, 244, 236, 0.64);
+  font-size: 11px;
+}
+
+.presence-studio-v2 .v2-media-health-item strong {
+  color: rgba(255, 228, 163, 0.9);
+  font-variant-numeric: tabular-nums;
+}
+
+.presence-studio-v2 .v2-media-health-item.ok strong {
+  color: #b8f4c0;
+}
+
+.presence-studio-v2 .v2-media-health-item.warn {
+  border-color: rgba(255, 178, 94, 0.34);
+  background: rgba(255, 178, 94, 0.08);
+}
+
+.presence-studio-v2 .v2-media-health-item.warn strong {
+  color: #ffc46d;
+}
+
+.presence-studio-v2 .v2-media-health-item.notice strong {
+  color: #f0d694;
+}
+
+.presence-studio-v2 .v2-asset-card {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(248, 244, 236, 0.08);
+  border-radius: 14px;
+  background: rgba(248, 244, 236, 0.038);
+}
+
+.presence-studio-v2 .v2-asset-card.active {
+  border-color: rgba(183, 140, 78, 0.48);
+  background: rgba(183, 140, 78, 0.12);
+}
+
+.presence-studio-v2 .v2-asset-thumb {
+  display: grid;
+  width: 100%;
+  min-height: 92px;
+  place-items: center;
+  overflow: hidden;
+  border: 0;
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(248, 244, 236, 0.08), rgba(248, 244, 236, 0.025));
+  color: rgba(248, 244, 236, 0.5);
+  cursor: pointer;
+  font-size: 11px;
+  text-align: center;
+}
+
+.presence-studio-v2 .v2-asset-thumb img {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 10px;
   box-shadow: 0 12px 28px -20px rgba(0, 0, 0, 0.9);
+}
+
+.presence-studio-v2 .v2-asset-card-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.presence-studio-v2 .v2-asset-card-copy strong {
+  overflow: hidden;
+  color: rgba(248, 244, 236, 0.88);
+  font-size: 12px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.presence-studio-v2 .v2-asset-card-copy > span {
+  overflow: hidden;
+  color: rgba(248, 244, 236, 0.5);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.presence-studio-v2 .v2-asset-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.presence-studio-v2 .v2-asset-status {
+  border: 1px solid rgba(248, 244, 236, 0.12);
+  border-radius: 999px;
+  padding: 3px 6px;
+  background: rgba(248, 244, 236, 0.055);
+  color: rgba(248, 244, 236, 0.68);
+  font-size: 9px;
+  line-height: 1.15;
+}
+
+.presence-studio-v2 .v2-asset-status.status-valid {
+  border-color: rgba(132, 228, 150, 0.22);
+  color: #c7f7ce;
+}
+
+.presence-studio-v2 .v2-asset-status.status-missing-url,
+.presence-studio-v2 .v2-asset-status.status-broken-unloaded,
+.presence-studio-v2 .v2-asset-status.status-possible-test-asset {
+  border-color: rgba(255, 178, 94, 0.36);
+  background: rgba(255, 178, 94, 0.08);
+  color: #ffc46d;
+}
+
+.presence-studio-v2 .v2-asset-status.status-duplicate,
+.presence-studio-v2 .v2-asset-status.status-external-url {
+  border-color: rgba(240, 214, 148, 0.26);
+  color: #f0d694;
+}
+
+.presence-studio-v2 .v2-asset-card-actions,
+.presence-studio-v2 .v2-asset-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.presence-studio-v2 .v2-link-button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #ffe4a3;
+  cursor: pointer;
+  font-size: 11px;
+  text-align: left;
+}
+
+.presence-studio-v2 .v2-link-button:hover {
+  color: #fff7e8;
+  text-decoration: underline;
 }
 
 .presence-studio-v2 .v2-quiet-copy,
@@ -1664,6 +1812,99 @@ body.v2-is-manipulating {
 .presence-studio-v2 .v2-inspector-row span {
   color: rgba(248, 244, 236, 0.58);
   font-size: 12px;
+}
+
+.presence-studio-v2 .v2-asset-detail {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-bottom: 1px solid rgba(248, 244, 236, 0.08);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(183, 140, 78, 0.14), transparent 14rem),
+    rgba(248, 244, 236, 0.025);
+}
+
+.presence-studio-v2 .v2-asset-detail-preview,
+.presence-studio-v2 .v2-asset-detail-empty {
+  display: grid;
+  min-height: 170px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(248, 244, 236, 0.1);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(248, 244, 236, 0.08), rgba(248, 244, 236, 0.02));
+}
+
+.presence-studio-v2 .v2-asset-detail-preview img {
+  width: 100%;
+  max-height: 260px;
+  object-fit: contain;
+}
+
+.presence-studio-v2 .v2-asset-detail-empty {
+  color: rgba(248, 244, 236, 0.54);
+  font-size: 12px;
+}
+
+.presence-studio-v2 .v2-asset-status-row.detail {
+  margin-top: -4px;
+}
+
+.presence-studio-v2 .v2-asset-detail .v2-field {
+  margin-bottom: 0;
+}
+
+.presence-studio-v2 .v2-asset-detail .v2-field input[readonly] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+}
+
+.presence-studio-v2 .v2-asset-detail-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.presence-studio-v2 .v2-asset-detail-facts div {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid rgba(248, 244, 236, 0.08);
+  border-radius: 11px;
+  background: rgba(248, 244, 236, 0.035);
+}
+
+.presence-studio-v2 .v2-asset-detail-facts dt {
+  color: rgba(248, 244, 236, 0.48);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2 .v2-asset-detail-facts dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  color: rgba(248, 244, 236, 0.8);
+  font-size: 12px;
+}
+
+.presence-studio-v2 .v2-asset-warnings {
+  display: grid;
+  gap: 6px;
+}
+
+.presence-studio-v2 .v2-asset-warnings p {
+  margin: 0;
+  padding: 8px 9px;
+  border: 1px solid rgba(255, 178, 94, 0.24);
+  border-radius: 10px;
+  background: rgba(255, 178, 94, 0.07);
+  color: rgba(255, 218, 164, 0.9);
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .presence-studio-v2 .v2-inspector-grid,

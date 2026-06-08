@@ -15,6 +15,17 @@ const restrictedEditorTerms = [
   "/api/presence/owner", "auth-token", "service_role", "bearer ",
 ];
 const restrictedPublicTerms = ["locked", "pinned", "/studio/", "owner_user_id", "draft_config"];
+const restrictedS5AssetTerms = [
+  "Room Assets",
+  "Derived from current room objects",
+  "Upload library later",
+  "Media health",
+  "Possible test asset",
+  "Replace image URL",
+  "presence-studio-v2-assets-panel",
+  "presence-studio-v2-asset-card",
+  "presence-studio-v2-media-health",
+];
 
 function scan(text, terms, label) {
   const lowered = text.toLowerCase();
@@ -36,8 +47,8 @@ await p1.waitForTimeout(3000);
 const publicHtml = await p1.content();
 const publicText = await p1.locator("body").innerText();
 console.log("\n=== PUBLIC /p/ SCAN ===");
-const pub1 = scan(publicHtml, [...restrictedConfigTerms, ...restrictedEditorTerms, ...restrictedPublicTerms], "HTML");
-const pubText1 = scan(publicText, restrictedConfigTerms, "TEXT");
+const pub1 = scan(publicHtml, [...restrictedConfigTerms, ...restrictedEditorTerms, ...restrictedPublicTerms, ...restrictedS5AssetTerms], "HTML");
+const pubText1 = scan(publicText, [...restrictedConfigTerms, ...restrictedS5AssetTerms], "TEXT");
 await ctx1.close();
 
 // 2. Public /presence/ route
@@ -47,7 +58,7 @@ await p2.goto(`/presence/${SLUG}`, { waitUntil: "networkidle" });
 await p2.waitForTimeout(3000);
 const presenceHtml = await p2.content();
 console.log("\n=== PUBLIC /presence/ SCAN ===");
-const pub2 = scan(presenceHtml, [...restrictedConfigTerms, ...restrictedEditorTerms, ...restrictedPublicTerms], "HTML");
+const pub2 = scan(presenceHtml, [...restrictedConfigTerms, ...restrictedEditorTerms, ...restrictedPublicTerms, ...restrictedS5AssetTerms], "HTML");
 await ctx2.close();
 
 // 3. Room key route
@@ -67,7 +78,7 @@ await p4.goto(`/p/${SLUG}`, { waitUntil: "networkidle" });
 await p4.waitForTimeout(3000);
 const mobileHtml = await p4.content();
 console.log("\n=== MOBILE PUBLIC SCAN ===");
-const mobileScan = scan(mobileHtml, [...restrictedConfigTerms, ...restrictedPublicTerms], "HTML");
+const mobileScan = scan(mobileHtml, [...restrictedConfigTerms, ...restrictedPublicTerms, ...restrictedS5AssetTerms], "HTML");
 await ctx4.close();
 
 const allViolations = [...pub1, ...pubText1, ...pub2, ...keyScan, ...mobileScan];
