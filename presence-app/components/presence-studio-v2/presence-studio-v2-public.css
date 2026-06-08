@@ -2397,6 +2397,602 @@
   }
 }
 
+.presence-studio-v2-public.style-bbbvision-threshold-gallery {
+  --v2-bbb-black: #000000;
+  --v2-bbb-gold: #ffd84d;
+  --v2-bbb-soft-gold: #fff2a6;
+  --v2-bbb-dim-gold: rgba(255, 216, 77, 0.68);
+  --v2-bbb-ink: rgba(255, 248, 206, 0.9);
+  min-height: 100svh;
+  background: var(--v2-bbb-black);
+  color: var(--v2-bbb-gold);
+  font-family: "Oxanium", "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  scroll-behavior: smooth;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-threshold {
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  background: #000;
+  isolation: isolate;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-slide-stack,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-slide-stack img,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-threshold-empty,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-threshold-wash {
+  position: absolute;
+  inset: 0;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-slide-stack img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  filter: saturate(1.08) contrast(1.04);
+  transform: scale(1.02);
+  transition: opacity 900ms ease, transform 1200ms ease;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-slide-stack img.is-active {
+  opacity: 1;
+  transform: scale(1.055);
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-threshold-empty {
+  background:
+    radial-gradient(circle at 30% 32%, rgba(255, 216, 77, 0.12), transparent 28%),
+    radial-gradient(circle at 68% 70%, rgba(255, 216, 77, 0.08), transparent 30%),
+    #000;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-threshold-wash {
+  z-index: 2;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0.32) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.18), transparent 42%, rgba(0, 0, 0, 0.42));
+  pointer-events: none;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-brand-mark {
+  position: absolute;
+  z-index: 4;
+  top: 15%;
+  left: 9%;
+  max-width: min(760px, calc(100% - 48px));
+  color: var(--v2-bbb-gold);
+  font-family: "UnifrakturCook", Georgia, "Times New Roman", serif;
+  font-size: 5.5rem;
+  line-height: 0.86;
+  letter-spacing: 0;
+  text-shadow:
+    0 0 10px rgba(255, 216, 77, 0.75),
+    0 0 32px rgba(255, 216, 77, 0.44);
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-threshold-line {
+  position: absolute;
+  z-index: 4;
+  left: 10%;
+  bottom: 104px;
+  max-width: 520px;
+  margin: 0;
+  color: rgba(255, 248, 206, 0.82);
+  font-size: 0.92rem;
+  line-height: 1.7;
+  text-shadow: 0 0 18px rgba(0, 0, 0, 0.72);
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-dot-nav {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: 20px;
+  display: flex;
+  gap: 8px;
+  transform: translateX(-50%);
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-dot-nav button {
+  width: 11px;
+  height: 11px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 216, 77, 0.58);
+  cursor: pointer;
+  transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-dot-nav button:hover,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-dot-nav button:focus-visible,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-dot-nav button.is-active {
+  background: var(--v2-bbb-gold);
+  box-shadow: 0 0 12px rgba(255, 216, 77, 0.68);
+  transform: scale(1.18);
+  outline: 0;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-dot-nav button:focus-visible {
+  outline: 1px solid var(--v2-bbb-soft-gold);
+  outline-offset: 3px;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-enter {
+  position: absolute;
+  z-index: 5;
+  right: 20px;
+  bottom: 20px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 216, 77, 0.86);
+  border-radius: 999px;
+  color: var(--v2-bbb-gold);
+  text-decoration: none;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0;
+  line-height: 1;
+  background: rgba(0, 0, 0, 0.28);
+  transition: background-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-enter:hover,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-enter:focus-visible {
+  background: var(--v2-bbb-gold);
+  color: #111;
+  box-shadow: 0 0 18px rgba(255, 216, 77, 0.62);
+  transform: translateY(-1px);
+  outline: 0;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery {
+  position: relative;
+  min-height: 100svh;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 216, 77, 0.08), transparent 34rem),
+    linear-gradient(180deg, #000 0%, #050402 100%);
+  overflow: clip;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-head {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px 32px 18px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0));
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-brand {
+  color: var(--v2-bbb-gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2rem;
+  line-height: 1;
+  text-decoration: none;
+  text-shadow: 0 0 16px rgba(255, 216, 77, 0.48);
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-head nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-head nav a,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-cta,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-story-link {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 216, 77, 0.42);
+  border-radius: 999px;
+  color: var(--v2-bbb-gold);
+  text-decoration: none;
+  font-size: 0.72rem;
+  line-height: 1;
+  background: rgba(255, 216, 77, 0.04);
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-head nav a:hover,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-head nav a:focus-visible,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-cta:hover,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-cta:focus-visible,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-story-link:hover,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-story-link:focus-visible {
+  border-color: rgba(255, 216, 77, 0.88);
+  background: var(--v2-bbb-gold);
+  color: #111;
+  box-shadow: 0 0 18px rgba(255, 216, 77, 0.38);
+  outline: 0;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-image-field {
+  position: relative;
+  min-height: calc(100svh - 82px);
+  padding: 42px 32px 86px;
+  display: grid;
+  place-items: center;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-orbit {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-orbit::after {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border: 1px solid rgba(255, 216, 77, 0.08);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-orbit button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 126px;
+  height: 126px;
+  padding: 0;
+  border: 1px solid rgba(255, 216, 77, 0.26);
+  border-radius: 2px;
+  background: #080704;
+  box-shadow: 0 0 0 rgba(255, 216, 77, 0);
+  cursor: pointer;
+  pointer-events: auto;
+  overflow: hidden;
+  transform:
+    translate(-50%, -50%)
+    rotate(calc(var(--v2-bbb-orbit-index) * 23deg))
+    translateY(-min(34svh, 19rem))
+    rotate(calc(var(--v2-bbb-orbit-index) * -23deg));
+  transition: border-color 180ms ease, box-shadow 180ms ease, filter 180ms ease, opacity 180ms ease;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-orbit button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.92) contrast(1.06);
+  transition: transform 320ms ease, filter 320ms ease;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-orbit button:hover,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-orbit button:focus-visible,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-orbit button.is-active {
+  border-color: rgba(255, 216, 77, 0.92);
+  box-shadow: 0 0 18px rgba(255, 216, 77, 0.42);
+  outline: 0;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-orbit button:hover img,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-orbit button:focus-visible img,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-orbit button.is-active img {
+  filter: saturate(1.06) contrast(1.08);
+  transform: scale(1.06);
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-stage {
+  position: relative;
+  z-index: 2;
+  width: min(58rem, 72vw);
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 24px;
+  align-items: end;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-stage-button,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-stage-empty {
+  width: 100%;
+  min-height: 56svh;
+  padding: 0;
+  border: 1px solid rgba(255, 216, 77, 0.22);
+  border-radius: 2px;
+  background: rgba(8, 7, 4, 0.84);
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.72), 0 0 36px rgba(255, 216, 77, 0.12);
+  overflow: hidden;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-stage-button {
+  cursor: zoom-in;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-stage-button img {
+  width: 100%;
+  height: 100%;
+  max-height: 68svh;
+  object-fit: contain;
+  display: block;
+  transition: transform 420ms ease, filter 420ms ease;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-stage-button:hover img,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-stage-button:focus-visible img {
+  transform: scale(1.018);
+  filter: saturate(1.08);
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-stage-button:focus-visible {
+  outline: 1px solid var(--v2-bbb-soft-gold);
+  outline-offset: 4px;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-stage-empty,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-empty-note {
+  display: grid;
+  place-items: center;
+  color: rgba(255, 248, 206, 0.7);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-caption {
+  color: var(--v2-bbb-ink);
+  border-left: 1px solid rgba(255, 216, 77, 0.28);
+  padding-left: 18px;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-caption span,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-about-copy span,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-story-list article span {
+  display: block;
+  color: var(--v2-bbb-dim-gold);
+  font-size: 0.68rem;
+  line-height: 1.35;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-caption strong,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-story-list article strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--v2-bbb-soft-gold);
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-caption p,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-about-copy p,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-story-list article p {
+  margin: 10px 0 0;
+  color: rgba(255, 248, 206, 0.72);
+  font-size: 0.84rem;
+  line-height: 1.65;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-controls {
+  position: absolute;
+  z-index: 4;
+  left: 32px;
+  bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-controls button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 216, 77, 0.38);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.42);
+  color: var(--v2-bbb-gold);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-controls button:hover,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-controls button:focus-visible {
+  border-color: rgba(255, 216, 77, 0.9);
+  background: var(--v2-bbb-gold);
+  color: #111;
+  outline: 0;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-controls button:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-control-line {
+  width: 48px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 216, 77, 0.7), transparent);
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-about {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 42px;
+  padding: 96px 32px 118px;
+  border-top: 1px solid rgba(255, 216, 77, 0.18);
+  background:
+    radial-gradient(circle at 14% 20%, rgba(255, 216, 77, 0.08), transparent 18rem),
+    #020201;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-about-copy h2 {
+  margin: 10px 0 0;
+  color: var(--v2-bbb-soft-gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.25rem;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-story-list {
+  display: grid;
+  gap: 14px;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-story-list article {
+  border-top: 1px solid rgba(255, 216, 77, 0.2);
+  padding-top: 14px;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-artwork-focus .v2-public-artwork-focus-stage {
+  background: rgba(2, 2, 1, 0.96);
+  border-color: rgba(255, 216, 77, 0.34);
+  color: var(--v2-bbb-ink);
+}
+
+@media (max-width: 900px) {
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-brand-mark {
+    top: 13%;
+    left: 22px;
+    max-width: calc(100% - 44px);
+    font-size: 3.8rem;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-threshold-line {
+    left: 22px;
+    right: 22px;
+    bottom: 74px;
+    max-width: none;
+    font-size: 0.84rem;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-enter {
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-dot-nav {
+    left: 18px;
+    bottom: 22px;
+    max-width: calc(100% - 128px);
+    transform: none;
+    overflow: hidden;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-head {
+    position: relative;
+    align-items: flex-start;
+    padding: 22px 18px 0;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-brand {
+    font-size: 1.45rem;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-head nav {
+    gap: 8px;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-head nav a,
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-cta {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 0.68rem;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-image-field {
+    min-height: auto;
+    padding: 34px 18px 82px;
+    display: block;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-orbit {
+    position: relative;
+    inset: auto;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 92px;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 4px 2px 16px;
+    margin-bottom: 18px;
+    pointer-events: auto;
+    scroll-snap-type: x mandatory;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-orbit::after {
+    display: none;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-orbit button {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 92px;
+    height: 92px;
+    transform: none;
+    scroll-snap-align: center;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-stage {
+    width: 100%;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-stage-button,
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-stage-empty {
+    min-height: 48svh;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-stage-button img {
+    max-height: 58svh;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-caption {
+    border-top: 1px solid rgba(255, 216, 77, 0.24);
+    border-left: 0;
+    padding-top: 14px;
+    padding-left: 0;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-controls {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    margin-top: 18px;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-about {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 72px 18px 90px;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-about-copy h2 {
+    font-size: 1.85rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .presence-studio-v2-public *,
   .presence-studio-v2-public *::before,

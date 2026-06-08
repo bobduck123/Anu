@@ -36,6 +36,11 @@ export const PUBLIC_STYLE_PRESET_OPTIONS: PublicStylePresetOption[] = [
     label: "Christina / Liquid Gallery",
     description: "Selected-works sequence, minimal art-site chrome, liquid atmosphere, and practice pathway.",
   },
+  {
+    id: "bbbvision-threshold-gallery",
+    label: "bbb.vision / Threshold Gallery",
+    description: "Image ritual threshold, enter transition, black-and-gold gallery field, and restrained image focus.",
+  },
 ];
 
 export const SKIN_CONTROLS = [

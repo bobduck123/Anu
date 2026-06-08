@@ -134,7 +134,7 @@ test("public payload can include sanitized Studio V2 projection when the pilot f
       slug: "ggm-christina-goddard",
       title: "Published Artist",
       worldId: "gallery",
-      publicStylePreset: "gallery-p2",
+      publicStylePreset: "bbbvision-threshold-gallery",
       skin: DEFAULT_STUDIO_V2_SKIN,
       cta: { label: "Visit studio", href: "https://example.com/studio" },
       chambers: [{
@@ -175,6 +175,7 @@ test("public payload can include sanitized Studio V2 projection when the pilot f
     } as PresenceNode);
 
     assert.ok(payload.studioV2Room);
+    assert.equal(payload.studioV2Room.publicStylePreset, "bbbvision-threshold-gallery");
     assert.equal(payload.studioV2Room.chambers[0].objects.length, 1);
     assert.equal(payload.studioV2Room.chambers[0].objects[0].id, "public-work");
     assert.equal(JSON.stringify(payload).includes("private-note"), false);

@@ -191,6 +191,24 @@ test("Studio V2 public style preset round-trips through style DNA safely", () =>
   assert.deepEqual(findRestrictedPublicPayloadKeys(publicRoom), []);
 });
 
+test("bbbvision public style preset round-trips through style DNA safely", () => {
+  const state: StudioV2State = {
+    ...studioState(),
+    publicStylePreset: "bbbvision-threshold-gallery",
+  };
+  const editable = presenceConfigFromStudioV2State(state, null) as PresenceEditableConfig;
+
+  assert.equal(record(record(editable.style_dna).studio_v2).publicStylePreset, "bbbvision-threshold-gallery");
+
+  const restored = studioV2FromPresenceConfig(editable, node());
+  const publicRoom = publicRoomFromStudioV2State(restored);
+
+  assert.equal(restored.publicStylePreset, "bbbvision-threshold-gallery");
+  assert.equal(publicRoom.publicStylePreset, "bbbvision-threshold-gallery");
+  assert.deepEqual(findStudioV2PublicPayloadLeaks(publicRoom, { allowDemoTraces: true }), []);
+  assert.deepEqual(findRestrictedPublicPayloadKeys(publicRoom), []);
+});
+
 test("invalid Studio V2 public style preset falls back to Gallery P2", () => {
   const editable = presenceConfigFromStudioV2State(studioState(), null) as PresenceEditableConfig;
   editable.style_dna = {

@@ -33,7 +33,10 @@ export type StudioV2ObjectType =
 export type StudioV2Texture = "none" | "paper" | "grain" | "scan" | "linen" | "timber" | "ledger";
 export type StudioV2BorderStyle = "none" | "hairline" | "framed" | "taped" | "ledger";
 export type StudioV2MotionIntensity = "still" | "gentle" | "living";
-export type StudioV2PublicStylePreset = "gallery-p2" | "christina-liquid-gallery";
+export type StudioV2PublicStylePreset =
+  | "gallery-p2"
+  | "christina-liquid-gallery"
+  | "bbbvision-threshold-gallery";
 
 export interface StudioV2Skin {
   background: string;
@@ -187,6 +190,7 @@ export const STUDIO_V2_WORLD_IDS: readonly StudioV2WorldId[] = [
 export const STUDIO_V2_PUBLIC_STYLE_PRESETS: readonly StudioV2PublicStylePreset[] = [
   "gallery-p2",
   "christina-liquid-gallery",
+  "bbbvision-threshold-gallery",
 ];
 
 export const DEFAULT_STUDIO_V2_PUBLIC_STYLE_PRESET: StudioV2PublicStylePreset = "gallery-p2";

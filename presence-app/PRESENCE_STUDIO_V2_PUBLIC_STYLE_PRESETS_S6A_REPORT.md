@@ -195,7 +195,7 @@ Captured:
 - No real upload/crop/storage/library changes.
 - No hardcoded Christina content or Room 11-specific behavior.
 - Christina Liquid Gallery currently derives sequence order from public object/chamber order.
-- Only two style presets exist.
+- Three style presets now exist after the bbbvision follow-up: `gallery-p2`, `christina-liquid-gallery`, and `bbbvision-threshold-gallery`.
 - Non-gallery worlds fall back to existing rendering.
 - Public style selection changes public presentation after save/publish; it does not create a broader theme engine.
 - More exact liquid morphology, shader work, and rich transition logic are deferred.
@@ -272,3 +272,30 @@ stash@{0}: On feature/presence-ecosystem-alpha: park S4A chamber management safe
 ```
 
 Hosted data action: Room 11 node was republished through the existing owner node publish endpoint after read-only checks showed it was unintentionally unpublished while its V2 configs remained present.
+
+## 12. bbbvision Follow-Up
+
+Report:
+
+```txt
+PRESENCE_STUDIO_V2_BBBVISION_PILOT_REPORT.md
+```
+
+The first post-S6A style preset extension has been implemented locally:
+
+- `bbbvision-threshold-gallery` added to the typed preset model.
+- Studio selector now shows `bbb.vision / Threshold Gallery`.
+- Public renderer has a reusable bbbvision threshold/gallery branch for gallery-world V2 rooms.
+- Renderer is data-driven from sanitized Studio V2 room data and does not hardcode bbbvision content.
+- Gallery P2 and Christina Liquid Gallery remain available and tested.
+- Hosted owner Studio index check found no existing bbbvision/BBB room for the requested target owner account.
+- Hosted bbbvision room creation/migration is deferred to a controlled create/seed/assign pass.
+- No deploy and no hosted data mutation were performed.
+
+Evidence:
+
+```txt
+docs/program/evidence/presence-studio-v2-bbbvision-pilot/
+```
+
+Local QA for the bbbvision follow-up passed, including typecheck, build, all requested Node tests, and all requested Playwright specs including `presence-studio-v2-bbbvision-pilot.spec.ts`.

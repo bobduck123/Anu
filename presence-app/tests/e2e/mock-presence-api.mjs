@@ -34,6 +34,7 @@ function resetState() {
     nextKeyId: 202,
     editorDraft: null,
     editorPublished: buildEditorConfig("published", 1),
+    bbbVisionPilot: false,
     nextEditorVersion: 2,
     editorAssets: buildEditorAssets(),
     studioRoomDrafts: {},
@@ -72,6 +73,12 @@ const server = createServer(async (req, res) => {
     if (body.clearEditorPublished === true) state.editorPublished = null;
     if (body.useStudioV2DraftPreview === true) {
       state.editorDraft = buildStudioV2EditorConfig("draft", state.nextEditorVersion++);
+    }
+    if (body.useBbbVisionPilot === true) {
+      state.bbbVisionPilot = true;
+      state.editorDraft = buildBbbVisionEditorConfig("draft", state.nextEditorVersion++);
+      state.editorPublished = buildBbbVisionEditorConfig("published", state.nextEditorVersion++);
+      state.editorAssets = buildBbbVisionEditorAssets();
     }
     if (Number.isInteger(body.failNextOwnerNodeReads)) state.failNextOwnerNodeReads = body.failNextOwnerNodeReads;
     if (Number.isInteger(body.failNextEditorReads)) state.failNextEditorReads = body.failNextEditorReads;
@@ -1546,8 +1553,16 @@ function buildEditorAssets() {
 }
 
 function publicRoomFixture() {
+  const displayOverrides = state.bbbVisionPilot ? {
+    slug: "bbbvision-pilot",
+    display_name: "bbb.vision",
+    headline: "Image-first threshold gallery converted into an editable Presence room.",
+    public_url: "/p/test-presence-room",
+    renderer_key: "presence-studio-v2-room",
+  } : {};
   return {
     ...fixtures.room,
+    ...displayOverrides,
     renderer_key: state.editorPublished?.renderer_key || fixtures.room.renderer_key || "ggm-faithful-room-v1",
     editable_config: redactEditorConfig(state.editorPublished),
   };
@@ -1740,6 +1755,202 @@ function buildStudioV2EditorConfig(status = "draft", version = 1) {
       },
     },
   };
+}
+
+function buildBbbVisionEditorConfig(status = "draft", version = 1) {
+  const now = new Date().toISOString();
+  return {
+    id: 9900 + version,
+    room_id: fixtures.room.id,
+    schema_version: "presence-editable-config-v1",
+    version,
+    status,
+    renderer_key: "presence-studio-v2-room",
+    scene_config: {
+      studio_v2: {
+        schemaVersion: "presence-studio-v2-v1",
+        worldId: "gallery",
+        chambers: [
+          { id: "threshold", label: "Threshold", objectIds: ["bbb-sparkle", "bbb-portrait", "bbb-portal"] },
+          { id: "gallery", label: "Gallery Field", objectIds: ["bbb-stage", "bbb-shadow", "bbb-note"] },
+        ],
+        objectState: {
+          "bbb-sparkle": {
+            chamberId: "threshold",
+            visibility: { public: true, mobile: true },
+            transform: { x: 0, y: 0, scale: 1, rotation: 0, zIndex: 1 },
+            locked: false,
+            pinned: false,
+          },
+          "bbb-portrait": {
+            chamberId: "threshold",
+            visibility: { public: true, mobile: true },
+            transform: { x: 0, y: 0, scale: 1, rotation: 0, zIndex: 2 },
+            locked: false,
+            pinned: false,
+          },
+          "bbb-portal": {
+            chamberId: "threshold",
+            visibility: { public: true, mobile: true },
+            transform: { x: 0, y: 0, scale: 1, rotation: 0, zIndex: 3 },
+            locked: false,
+            pinned: false,
+          },
+          "bbb-stage": {
+            chamberId: "gallery",
+            visibility: { public: true, mobile: true },
+            transform: { x: 0, y: 0, scale: 1, rotation: 0, zIndex: 4 },
+            locked: false,
+            pinned: false,
+          },
+          "bbb-shadow": {
+            chamberId: "gallery",
+            visibility: { public: true, mobile: true },
+            transform: { x: 0, y: 0, scale: 1, rotation: 0, zIndex: 5 },
+            locked: false,
+            pinned: false,
+          },
+          "bbb-note": {
+            chamberId: "gallery",
+            visibility: { public: true, mobile: true },
+            transform: { x: 0, y: 0, scale: 1, rotation: 0, zIndex: 6 },
+            locked: false,
+            pinned: false,
+          },
+        },
+        mobileRecovery: {
+          transformsSuspendedOnMobile: true,
+          strategy: "suspend-mobile-transforms",
+        },
+      },
+    },
+    style_dna: {
+      studio_v2: {
+        schemaVersion: "presence-studio-v2-v1",
+        publicStylePreset: "gallery-p2",
+        skin: {
+          background: "#000000",
+          texture: "none",
+          auraIntensity: 0.32,
+          motionIntensity: "gentle",
+          displayFont: "serif",
+          headingWeight: 500,
+          objectRadius: 2,
+          borderStyle: "hairline",
+          shadowDepth: 0.42,
+          accentColor: "#ffd84d",
+        },
+      },
+    },
+    motion_config: {
+      studio_v2: {
+        motionIntensity: "gentle",
+        auraIntensity: 0.32,
+      },
+    },
+    asset_config: {
+      studio_v2: {
+        assets: buildBbbVisionEditorAssets().map((asset) => ({
+          objectId: asset.object_id,
+          src: asset.url,
+          alt: asset.alt_text,
+        })),
+      },
+    },
+    content_config: {
+      studio_v2: {
+        schemaVersion: "presence-studio-v2-v1",
+        roomId: String(fixtures.room.id),
+        slug: "bbbvision-pilot",
+        title: "bbb.vision",
+        tagline: "Image-first threshold gallery, brought into Presence as an editable pilot room.",
+        objects: [
+          {
+            id: "bbb-sparkle",
+            type: "image",
+            role: "work",
+            title: "Opening image",
+            meta: "Threshold sequence",
+            detail: "A public image object used by the threshold ritual.",
+            image: { src: "/ggm/works/willow-of-port-arthur-2019.webp", alt: "Opening image" },
+          },
+          {
+            id: "bbb-portrait",
+            type: "image",
+            role: "work",
+            title: "Portrait field",
+            meta: "Gallery image",
+            detail: "A second public image for the black-and-gold gallery field.",
+            image: { src: "/ggm/works/bridle-road-2005.webp", alt: "Portrait field" },
+          },
+          {
+            id: "bbb-portal",
+            type: "cta",
+            role: "cta",
+            title: "Enter",
+            meta: "Public route action",
+          },
+          {
+            id: "bbb-stage",
+            type: "image",
+            role: "work",
+            title: "Stage image",
+            meta: "Gallery image",
+            detail: "Another image object available for the gallery field.",
+            image: { src: "/ggm/works/willow-of-port-arthur-2019.webp", alt: "Stage image" },
+          },
+          {
+            id: "bbb-shadow",
+            type: "image",
+            role: "work",
+            title: "Shadow image",
+            meta: "Gallery image",
+            image: { src: "/ggm/works/bridle-road-2005.webp", alt: "Shadow image" },
+          },
+          {
+            id: "bbb-note",
+            type: "text",
+            role: "statement",
+            title: "Editable practice note",
+            detail: "This statement is editable through Studio and appears only as public-safe room copy.",
+          },
+        ],
+        moodboardRefs: [],
+        traces: {
+          enabled: false,
+          demo: true,
+          disclosure: "Demo traces",
+          guestbookEntries: [],
+        },
+        cta: {
+          label: "Enter",
+        },
+      },
+    },
+    roomkey_config: {
+      studio_v2: {
+        portals: [{ objectId: "bbb-portal", label: "Enter" }],
+      },
+    },
+    enquiry_config: {
+      studio_v2: {
+        primaryCta: { label: "Enter" },
+      },
+    },
+    locked_fields: {},
+    created_at: now,
+    updated_at: now,
+    published_at: status === "published" ? now : null,
+  };
+}
+
+function buildBbbVisionEditorAssets() {
+  return [
+    { object_id: "bbb-sparkle", url: "/ggm/works/willow-of-port-arthur-2019.webp", alt_text: "Opening image", source: "studio_v2_object", slot: "threshold", asset_type: "image" },
+    { object_id: "bbb-portrait", url: "/ggm/works/bridle-road-2005.webp", alt_text: "Portrait field", source: "studio_v2_object", slot: "gallery", asset_type: "image" },
+    { object_id: "bbb-stage", url: "/ggm/works/willow-of-port-arthur-2019.webp", alt_text: "Stage image", source: "studio_v2_object", slot: "gallery", asset_type: "image" },
+    { object_id: "bbb-shadow", url: "/ggm/works/bridle-road-2005.webp", alt_text: "Shadow image", source: "studio_v2_object", slot: "gallery", asset_type: "image" },
+  ];
 }
 
 function redactEditorConfig(config) {

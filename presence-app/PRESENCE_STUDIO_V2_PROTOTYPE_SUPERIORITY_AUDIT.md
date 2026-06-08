@@ -824,3 +824,57 @@ S6A audit: `PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6A_AUDIT.md` — **PASS** (
 Scores: model/adapter 9/10, Studio selector 9/10, Christina renderer 8/10, Gallery P2 preserved, style switching verified, payload hygiene clean, S5 regression absent, legacy isolation confirmed.
 
 S6A local QA passed. Gallery P2 remains available and unchanged as the default style. No hosted data was mutated. No deploy was run. S4A chamber-management work remains parked and is not included.
+
+---
+
+## bbbvision Pilot Style Preset Status - 2026-06-09
+
+Studio V2 now has a third selectable public style preset:
+
+```txt
+bbbvision-threshold-gallery
+```
+
+Recovered honestly:
+
+- `bbb.vision / Threshold Gallery` appears in the Studio V2 Public Output Style selector.
+- The preset persists through `style_dna.studio_v2.publicStylePreset`.
+- Public renderer branch is reusable and data-driven from sanitized Studio V2 public room data.
+- Threshold landing, Enter ritual, black/gold gallery field, image selection, large focused stage, restrained controls, and practice/about copy are implemented without iframing or static page cloning.
+- Gallery P2 and Christina Liquid Gallery remain intact.
+- S5 Asset Library, S2 direct manipulation, S3 inspector, public payload hygiene, and legacy isolation remain passing.
+- Local/mock editable pilot proof covers save/reload, owner preview, mock public publish, style switching, mobile, public hygiene, and owner negative.
+
+Still deferred beyond this pass:
+
+- Hosted bbbvision room creation or reassignment.
+- Real bbbvision asset/media migration into public-safe Presence media.
+- Explicit threshold image ordering model.
+- Route-level landing/gallery split.
+- Canvas/glitch engine parity.
+- Hosted RBAC proof for the bbbvision room.
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_BBBVISION_PILOT_REPORT.md
+docs/program/evidence/presence-studio-v2-bbbvision-pilot/
+```
+
+Current verdict: safe for Kimi audit. No deploy was run. No hosted data was mutated. S4A remains parked.
+
+---
+
+## bbbvision Pilot S6B Audit Result - 2026-06-08
+
+Auditor: Kimi Code CLI.
+
+- Independent audit of model, adapter, selector, renderer, mock pilot, tests, and regression.
+- bbbvision confirmed as a real editable Presence pilot/style preset, not a static clone.
+- All 22 local Playwright tests pass. All 38 Node unit tests pass.
+- TypeScript typecheck and production build pass cleanly.
+- Payload hygiene verified. RBAC negative verified. Legacy isolation verified.
+- Style switching (bbbvision → P2 → Christina) works correctly.
+- Evidence: `PRESENCE_STUDIO_V2_BBBVISION_PILOT_S6B_AUDIT.md`
+
+**S6B Audit Verdict: PASS.**

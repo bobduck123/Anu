@@ -81,7 +81,8 @@ test("Studio V2 public style presets persist and switch the public renderer safe
   const selector = page.getByTestId("presence-studio-v2-public-style-selector");
   await expect(selector).toBeVisible();
   await expect(page.getByTestId("presence-studio-v2-public-style-current")).toContainText("Gallery P2");
-  await expect(page.getByTestId("presence-studio-v2-public-style-option")).toHaveCount(2);
+  await expect(page.getByTestId("presence-studio-v2-public-style-option")).toHaveCount(3);
+  await expect(page.getByTestId("presence-studio-v2-public-style-option").filter({ hasText: "bbb.vision / Threshold Gallery" })).toBeVisible();
   await screenshot(page, "01-studio-style-selector-gallery-p2.png");
 
   await page.getByTestId("presence-studio-v2-public-style-option").filter({ hasText: "Christina / Liquid Gallery" }).click();

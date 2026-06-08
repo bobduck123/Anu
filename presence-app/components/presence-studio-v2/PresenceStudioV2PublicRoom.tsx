@@ -94,6 +94,23 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
     );
   }
 
+  if (isGallery && publicStylePreset === "bbbvision-threshold-gallery") {
+    return (
+      <BbbVisionThresholdGalleryPublicRoom
+        room={room}
+        worldName={world?.name ?? room.worldId}
+        style={style}
+        works={liquidWorks}
+        activeIndex={activeLiquidIndex}
+        onActiveIndexChange={setActiveLiquidIndex}
+        focusedArtwork={focusedArtwork}
+        onFocusArtwork={setFocusedArtwork}
+        ctaHref={ctaHref}
+        ctaLabel={ctaLabel}
+      />
+    );
+  }
+
   return (
     <main
       className={`presence-studio-v2-public world-${room.worldId} texture-${room.skin.texture} motion-${room.skin.motionIntensity}${thresholdImage?.src ? " has-threshold-image" : ""}`}
@@ -498,6 +515,228 @@ function ChristinaLiquidGalleryPublicRoom({
             className="v2-public-artwork-focus-backdrop"
             type="button"
             aria-label="Close artwork focus"
+            onClick={() => onFocusArtwork(null)}
+          />
+          <figure className="v2-public-artwork-focus-stage">
+            <button
+              className="v2-public-artwork-focus-close"
+              data-testid="presence-public-artwork-focus-close"
+              type="button"
+              onClick={() => onFocusArtwork(null)}
+            >
+              Close
+            </button>
+            <img
+              data-testid="presence-public-artwork-focus-image"
+              src={focusedArtwork.image.src}
+              alt={focusedArtwork.image.alt || focusedArtwork.title}
+            />
+            <figcaption>
+              <strong>{focusedArtwork.title}</strong>
+              {focusedArtwork.meta && <span>{focusedArtwork.meta}</span>}
+              {focusedArtwork.detail && <p>{focusedArtwork.detail}</p>}
+            </figcaption>
+          </figure>
+        </div>
+      )}
+    </main>
+  );
+}
+
+function BbbVisionThresholdGalleryPublicRoom({
+  room,
+  worldName,
+  style,
+  works,
+  activeIndex,
+  onActiveIndexChange,
+  focusedArtwork,
+  onFocusArtwork,
+  ctaHref,
+  ctaLabel,
+}: {
+  room: StudioV2PublicRoom;
+  worldName: string;
+  style: CSSProperties;
+  works: LiquidGalleryWork[];
+  activeIndex: number;
+  onActiveIndexChange: (index: number) => void;
+  focusedArtwork: StudioV2PublicObject | null;
+  onFocusArtwork: (object: StudioV2PublicObject | null) => void;
+  ctaHref?: string;
+  ctaLabel?: string;
+}) {
+  const activeWork = works[activeIndex] ?? works[0] ?? null;
+  const activeObject = activeWork?.object ?? null;
+  const previousIndex = works.length > 0 ? (activeIndex - 1 + works.length) % works.length : 0;
+  const nextIndex = works.length > 0 ? (activeIndex + 1) % works.length : 0;
+  const thresholdWorks = works.length > 0 ? works.slice(0, 10) : [];
+  const orbitWorks = works.length > 0 ? works.slice(0, 16) : [];
+  const storyObjects = room.chambers
+    .flatMap((chamber) => chamber.objects.map((object) => ({ object, chamberLabel: chamber.label })))
+    .filter(({ object }) => !object.image?.src || object.type === "text" || object.type === "note" || object.type === "proof")
+    .slice(0, 5);
+
+  return (
+    <main
+      className={`presence-studio-v2-public world-${room.worldId} style-bbbvision-threshold-gallery texture-${room.skin.texture} motion-${room.skin.motionIntensity}${activeObject?.image?.src ? " has-threshold-image" : ""}`}
+      style={style}
+      data-testid="presence-public-style-bbbvision-threshold-gallery"
+    >
+      <section
+        className="v2-bbb-threshold"
+        id="v2-bbb-threshold"
+        data-testid="presence-public-bbbvision-threshold"
+        aria-label={`${room.title} threshold`}
+      >
+        <div className="v2-bbb-slide-stack" aria-hidden="true">
+          {thresholdWorks.length > 0 ? thresholdWorks.map((work, index) => (
+            <img
+              key={work.object.id}
+              className={index === activeIndex ? "is-active" : ""}
+              src={work.object.image?.src}
+              alt=""
+              loading={index === 0 ? "eager" : "lazy"}
+            />
+          )) : <div className="v2-bbb-threshold-empty" />}
+        </div>
+        <div className="v2-bbb-threshold-wash" aria-hidden="true" />
+        <div className="v2-bbb-brand-mark">{room.title}</div>
+        {room.tagline && <p className="v2-bbb-threshold-line">{room.tagline}</p>}
+        <nav className="v2-bbb-dot-nav" aria-label="Threshold image path">
+          {thresholdWorks.map((work, index) => (
+            <button
+              key={work.object.id}
+              type="button"
+              aria-label={`Set opening image to ${work.object.title}`}
+              aria-current={index === activeIndex ? "true" : undefined}
+              className={index === activeIndex ? "is-active" : ""}
+              onClick={() => onActiveIndexChange(index)}
+            />
+          ))}
+        </nav>
+        <a className="v2-bbb-enter" data-testid="presence-public-bbbvision-enter" href="#v2-bbb-gallery">
+          Enter
+        </a>
+      </section>
+
+      <section
+        className="v2-bbb-gallery"
+        id="v2-bbb-gallery"
+        data-testid="presence-public-bbbvision-gallery"
+        aria-labelledby="v2-bbb-gallery-title"
+      >
+        <h2 className="v2-bbb-sr" id="v2-bbb-gallery-title">Gallery</h2>
+        <header className="v2-bbb-gallery-head">
+          <a href="#v2-bbb-threshold" className="v2-bbb-gallery-brand">{room.title}</a>
+          <nav aria-label="Gallery sections">
+            <a href="#v2-bbb-field">Gallery</a>
+            <a href="#v2-bbb-about">Practice</a>
+            {(ctaHref || ctaLabel) && <PublicLink href={ctaHref} className="v2-bbb-cta">{ctaLabel || "Begin"}</PublicLink>}
+          </nav>
+        </header>
+
+        <section className="v2-bbb-image-field" id="v2-bbb-field" aria-label={`${room.title} image field`}>
+          <div className="v2-bbb-orbit" aria-label="Gallery image selection">
+            {orbitWorks.length > 0 ? orbitWorks.map((work, index) => (
+              <button
+                key={`${work.object.id}-${index}`}
+                type="button"
+                className={index === activeIndex ? "is-active" : ""}
+                style={{ "--v2-bbb-orbit-index": index } as CSSProperties}
+                onClick={() => onActiveIndexChange(index)}
+                aria-label={`Select ${work.object.title}`}
+              >
+                <img src={work.object.image?.src} alt={work.object.image?.alt || work.object.title} loading="lazy" />
+              </button>
+            )) : (
+              <div className="v2-bbb-empty-note">No public gallery images are available yet.</div>
+            )}
+          </div>
+
+          <figure className="v2-bbb-stage">
+            {activeObject?.image?.src ? (
+              <button
+                type="button"
+                className="v2-bbb-stage-button"
+                onClick={() => onFocusArtwork(activeObject)}
+                aria-label={`View ${activeObject.title}`}
+              >
+                <img src={activeObject.image.src} alt={activeObject.image.alt || activeObject.title} loading="eager" />
+              </button>
+            ) : (
+              <div className="v2-bbb-stage-empty">Select a public image to open the gallery field.</div>
+            )}
+            {activeObject && (
+              <figcaption className="v2-bbb-caption">
+                <span>{activeWork?.chamberLabel || worldName}</span>
+                <strong>{activeObject.title}</strong>
+                {activeObject.meta && <p>{activeObject.meta}</p>}
+                {activeObject.detail && <p>{activeObject.detail}</p>}
+              </figcaption>
+            )}
+          </figure>
+
+          <div className="v2-bbb-gallery-controls" aria-label="Image controls">
+            <button
+              type="button"
+              data-testid="presence-public-bbbvision-prev"
+              onClick={() => onActiveIndexChange(previousIndex)}
+              disabled={works.length < 2}
+              aria-label="Previous image"
+            >
+              Prev
+            </button>
+            <div className="v2-bbb-control-line" aria-hidden="true" />
+            <button
+              type="button"
+              data-testid="presence-public-bbbvision-next"
+              onClick={() => onActiveIndexChange(nextIndex)}
+              disabled={works.length < 2}
+              aria-label="Next image"
+            >
+              Next
+            </button>
+          </div>
+        </section>
+
+        <section className="v2-bbb-about" id="v2-bbb-about" aria-labelledby="v2-bbb-about-title">
+          <div className="v2-bbb-about-copy">
+            <span>{worldName}</span>
+            <h2 id="v2-bbb-about-title">Practice</h2>
+            <p>{room.tagline || "This room is ready for a public practice note."}</p>
+          </div>
+          {storyObjects.length > 0 && (
+            <div className="v2-bbb-story-list">
+              {storyObjects.map(({ object, chamberLabel }) => (
+                <article key={object.id}>
+                  <span>{chamberLabel}</span>
+                  <strong>{object.title}</strong>
+                  {object.detail && <p>{object.detail}</p>}
+                  {object.link && (
+                    <PublicLink href={object.link} className="v2-bbb-story-link">
+                      Open
+                    </PublicLink>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      </section>
+
+      {focusedArtwork?.image?.src && (
+        <div
+          className="v2-public-artwork-focus v2-bbb-artwork-focus"
+          data-testid="presence-public-artwork-focus"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Image focus: ${focusedArtwork.title}`}
+        >
+          <button
+            className="v2-public-artwork-focus-backdrop"
+            type="button"
+            aria-label="Close image focus"
             onClick={() => onFocusArtwork(null)}
           />
           <figure className="v2-public-artwork-focus-stage">

@@ -1660,3 +1660,122 @@ Verdict:
 - Controlled operator-led pilot readiness: ready with operator support.
 - Public self-serve onboarding readiness: not ready.
 - S6A can be release-baselined before bbbvision work starts.
+
+## Studio Recovery bbbvision Pilot Style Preset - 2026-06-09
+
+Scope: Bring `bbbvision.vercel.app` into Presence as a reusable, selectable Studio V2 public style preset and local/mock editable pilot proof. Local only. No deploy. No hosted data mutation.
+
+Baseline gate:
+
+- S6A was already deployed, hosted-smoked, committed, and pushed before this pass.
+- Branch was clean before bbbvision implementation began.
+- S4A remained parked in `stash@{0}`.
+- Hosted owner Studio index returned `200` and showed no existing bbbvision/BBB room for the requested target owner account.
+
+Verified:
+
+- Local bbbvision source inspected under `C:\Dev\bbb-vision-site\bbb.vision`.
+- Live `https://bbbvision.vercel.app/` and `/gallery` HTML checked against local source structure.
+- New preset `bbbvision-threshold-gallery` round-trips through Studio V2 style DNA.
+- Invalid preset fallback remains `gallery-p2`.
+- Studio selector shows Gallery P2, Christina / Liquid Gallery, and `bbb.vision / Threshold Gallery`.
+- Selecting bbbvision marks draft dirty.
+- Save/reload preserves bbbvision selection in the mock owner flow.
+- Owner preview renders the bbbvision threshold/gallery branch.
+- Mock public publish path renders the bbbvision branch.
+- Switching back to Gallery P2 works.
+- Switching to Christina still works.
+- S5 Room Assets regression remains passing.
+- S2 direct manipulation and S3 inspector usability remain passing.
+- Public payload hygiene remains clean.
+- Legacy public route remains outside V2 renderer.
+- Local/mock owner negative returns no access for a non-owner token.
+
+Required QA passed:
+
+```txt
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\assets.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-direct-manipulation.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-inspector-usability.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-asset-library.spec.ts --project=chromium
+npx.cmd playwright test presence-public-output-gallery-quality.spec.ts --project=chromium
+npx.cmd playwright test presence-public-output-gallery-polish.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-public-style-presets.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-bbbvision-pilot.spec.ts --project=chromium
+```
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_BBBVISION_PILOT_REPORT.md
+docs/program/evidence/presence-studio-v2-bbbvision-pilot/
+```
+
+Known warnings:
+
+- Node direct TypeScript tests still emit the existing `MODULE_TYPELESS_PACKAGE_JSON` warning.
+- Next/Turbopack still warns about multiple lockfiles and inferred workspace root.
+
+Verdict:
+
+- bbbvision style preset is safe for Kimi audit.
+- Renderer/style-preset code is safe to deploy after audit if audit passes.
+- Hosted bbbvision room/content migration can begin after audit as a controlled create/seed/assign pass.
+- Public self-serve onboarding remains out of scope.
+
+---
+
+## Studio Recovery bbbvision Pilot S6B Audit - 2026-06-08
+
+Scope: Independent Kimi audit of S6B bbbvision integration.
+
+Auditor: Kimi Code CLI.
+
+Verified:
+
+- `StudioV2PublicStylePreset` union type includes `bbbvision-threshold-gallery` safely.
+- `normalizePublicStylePreset` validates against `STUDIO_V2_PUBLIC_STYLE_PRESETS` and falls back to `gallery-p2`.
+- Adapter round-trip unit test passes for bbbvision.
+- Public payload unit test covers bbbvision preset in sanitized projection.
+- Studio selector shows all 3 options; selection marks dirty and persists through save/reload.
+- bbbvision renderer is data-driven with zero hardcoded bbbvision content strings.
+- CSS is namespaced under `.style-bbbvision-threshold-gallery` and `.v2-bbb-*`.
+- Owner preview renders threshold, gallery, and image focus correctly.
+- Public local render passes hygiene scan (no restricted keys, no editor chrome).
+- Mobile viewport (390×844) renders threshold and gallery correctly.
+- Switch-back to Gallery P2 works.
+- Cross-switch to Christina works.
+- Legacy room isolation preserved.
+- RBAC negative (non-owner token) returns 403.
+- All existing S2/S3/S5/S6A Playwright tests pass (22/22 local).
+- All Node unit tests pass (38/38).
+- TypeScript typecheck and production build pass cleanly.
+
+Scores:
+
+| Dimension | Score |
+|-----------|-------|
+| Public style model / adapter | 9/10 |
+| Studio style selector UX | 9/10 |
+| bbbvision renderer quality | 8/10 |
+| Data-driven editability | 9/10 |
+| RBAC readiness | 8/10 |
+| Regression safety | 9/10 |
+| Test quality | 9/10 |
+
+**S6B Audit Verdict: PASS.**
+
+Evidence: `PRESENCE_STUDIO_V2_BBBVISION_PILOT_S6B_AUDIT.md`
+
+New report: `PRESENCE_STUDIO_V2_BBBVISION_PILOT_S6B_AUDIT.md`
+
