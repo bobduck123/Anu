@@ -134,6 +134,7 @@ test("public payload can include sanitized Studio V2 projection when the pilot f
       slug: "ggm-christina-goddard",
       title: "Published Artist",
       worldId: "gallery",
+      publicStylePreset: "gallery-p2",
       skin: DEFAULT_STUDIO_V2_SKIN,
       cta: { label: "Visit studio", href: "https://example.com/studio" },
       chambers: [{
@@ -199,6 +200,7 @@ test("public payload includes disclosed demo traces only when present in sanitiz
       slug: "ggm-christina-goddard",
       title: "Published Artist",
       worldId: "gallery",
+      publicStylePreset: "gallery-p2",
       skin: DEFAULT_STUDIO_V2_SKIN,
       cta: { label: "Visit studio", href: "https://example.com/studio" },
       chambers: [{ id: "wall", label: "Wall", objects: [] }],

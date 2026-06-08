@@ -1,4 +1,4 @@
-import type { StudioV2WorldId } from "@/lib/presence/studio-v2";
+import type { StudioV2PublicStylePreset, StudioV2WorldId } from "@/lib/presence/studio-v2";
 
 export interface WorldKit {
   id: StudioV2WorldId;
@@ -17,6 +17,25 @@ export const WORLD_KITS: WorldKit[] = [
   { id: "archive", name: "Evidence Archive", surface: "Filing cabinet / public proof room", verb: "The room documents", feel: "Documentary, organised, evidential, civic" },
   { id: "carpenter", name: "Carpenter Workbench", surface: "Workshop bench / proof wall", verb: "The room proves", feel: "Sturdy, raw, proof-first, tradesman" },
   { id: "consultant", name: "Consultant Desk", surface: "Advisory desk / memorandum stack", verb: "The room presents", feel: "Professional, precise, calm, partner-desk authority" },
+];
+
+export interface PublicStylePresetOption {
+  id: StudioV2PublicStylePreset;
+  label: string;
+  description: string;
+}
+
+export const PUBLIC_STYLE_PRESET_OPTIONS: PublicStylePresetOption[] = [
+  {
+    id: "gallery-p2",
+    label: "Gallery P2",
+    description: "Quiet gallery threshold, chamber placards, wall labels, and public-safe artwork focus.",
+  },
+  {
+    id: "christina-liquid-gallery",
+    label: "Christina / Liquid Gallery",
+    description: "Selected-works sequence, minimal art-site chrome, liquid atmosphere, and practice pathway.",
+  },
 ];
 
 export const SKIN_CONTROLS = [

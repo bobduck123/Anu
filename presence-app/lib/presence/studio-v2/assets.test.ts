@@ -36,6 +36,7 @@ function state(overrides: Partial<StudioV2State> = {}): StudioV2State {
     title: "Christina Kerkvliet Goddard",
     tagline: "Gallery room",
     worldId: "gallery",
+    publicStylePreset: "gallery-p2",
     skin: DEFAULT_STUDIO_V2_SKIN,
     cta: { label: "Begin a conversation", href: "mailto:studio@example.com" },
     chambers: [

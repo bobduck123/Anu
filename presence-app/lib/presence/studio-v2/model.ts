@@ -33,6 +33,7 @@ export type StudioV2ObjectType =
 export type StudioV2Texture = "none" | "paper" | "grain" | "scan" | "linen" | "timber" | "ledger";
 export type StudioV2BorderStyle = "none" | "hairline" | "framed" | "taped" | "ledger";
 export type StudioV2MotionIntensity = "still" | "gentle" | "living";
+export type StudioV2PublicStylePreset = "gallery-p2" | "christina-liquid-gallery";
 
 export interface StudioV2Skin {
   background: string;
@@ -124,6 +125,7 @@ export interface StudioV2State {
   title: string;
   tagline?: string;
   worldId: StudioV2WorldId;
+  publicStylePreset: StudioV2PublicStylePreset;
   skin: StudioV2Skin;
   cta: StudioV2Cta;
   chambers: StudioV2Chamber[];
@@ -162,6 +164,7 @@ export interface StudioV2PublicRoom {
   title: string;
   tagline?: string;
   worldId: StudioV2WorldId;
+  publicStylePreset: StudioV2PublicStylePreset;
   skin: StudioV2Skin;
   cta: StudioV2Cta;
   chambers: StudioV2PublicChamber[];
@@ -180,6 +183,13 @@ export const STUDIO_V2_WORLD_IDS: readonly StudioV2WorldId[] = [
   "carpenter",
   "consultant",
 ];
+
+export const STUDIO_V2_PUBLIC_STYLE_PRESETS: readonly StudioV2PublicStylePreset[] = [
+  "gallery-p2",
+  "christina-liquid-gallery",
+];
+
+export const DEFAULT_STUDIO_V2_PUBLIC_STYLE_PRESET: StudioV2PublicStylePreset = "gallery-p2";
 
 export const DEFAULT_STUDIO_V2_SKIN: StudioV2Skin = {
   background: "#f7f3ea",
@@ -201,4 +211,3 @@ export const DEFAULT_STUDIO_V2_TRANSFORM: StudioV2Transform = {
   rotation: 0,
   zIndex: 1,
 };
-

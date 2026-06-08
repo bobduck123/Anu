@@ -21,11 +21,12 @@ import type {
   StudioV2MediaHealth,
   StudioV2MoodboardReference,
   StudioV2Object,
+  StudioV2PublicStylePreset,
   StudioV2State,
 } from "@/lib/presence/studio-v2";
 import PresenceStudioV2Room from "./PresenceStudioV2Room";
 import { SkinLabSheet, AddObjectSheet, MoodboardSheet, WorldSwitcher } from "./PresenceStudioV2Panels";
-import { WORLD_KITS } from "./worlds";
+import { PUBLIC_STYLE_PRESET_OPTIONS, WORLD_KITS } from "./worlds";
 import "./presence-studio-v2.css";
 
 interface PresenceStudioV2EditorProps {
@@ -934,6 +935,7 @@ export default function PresenceStudioV2Editor({
           onSetInspectorTab={setInspectorTab}
           onUpdateRoom={updateRoom}
           onUpdateCta={updateCta}
+          onUpdatePublicStylePreset={(publicStylePreset) => updateState((prev) => ({ ...prev, publicStylePreset }))}
           onUpdateObject={(obj) => updateObject(obj.id, obj)}
           onReplaceAssetUrl={replaceAssetUrl}
           onSelectObject={(id) => selectObject(id)}
@@ -1322,6 +1324,7 @@ function StudioInspectorPanel({
   onSetInspectorTab,
   onUpdateRoom,
   onUpdateCta,
+  onUpdatePublicStylePreset,
   onUpdateObject,
   onReplaceAssetUrl,
   onSelectObject,
@@ -1348,6 +1351,7 @@ function StudioInspectorPanel({
   onSetInspectorTab: (tab: "content" | "style" | "motion") => void;
   onUpdateRoom: (patch: Partial<StudioV2State>) => void;
   onUpdateCta: (patch: Partial<StudioV2State["cta"]>) => void;
+  onUpdatePublicStylePreset: (publicStylePreset: StudioV2PublicStylePreset) => void;
   onUpdateObject: (object: StudioV2Object) => void;
   onReplaceAssetUrl: (objectId: string, value: string) => void;
   onSelectObject: (id: string) => void;
@@ -1364,6 +1368,8 @@ function StudioInspectorPanel({
   const deletePending = Boolean(object && deleteConfirmId === object.id);
   const objectBadges = object ? objectStateBadges(object, dirty) : [];
   const registryTotal = assetRegistry.health.total;
+  const currentStylePreset = PUBLIC_STYLE_PRESET_OPTIONS.find((option) => option.id === state.publicStylePreset) ??
+    PUBLIC_STYLE_PRESET_OPTIONS[0];
   const checklist = [
     { label: "Room title", ok: Boolean(state.title.trim()) },
     { label: "Public objects", ok: publicObjects > 0 },
@@ -1439,6 +1445,42 @@ function StudioInspectorPanel({
               <span>CTA / enquiry URL</span>
               <input value={state.cta.href || ""} onChange={(event) => onUpdateCta({ href: event.target.value })} />
             </label>
+          </div>
+
+          <div className="v2-inspector-section">
+            <div className="v2-inspector-section-title">Public output style</div>
+            <div
+              className="v2-public-style-selector"
+              data-testid="presence-studio-v2-public-style-selector"
+            >
+              <div className="v2-public-style-current" data-testid="presence-studio-v2-public-style-current">
+                <span>Current style</span>
+                <strong>{currentStylePreset.label}</strong>
+              </div>
+              <div className="v2-public-style-options" role="radiogroup" aria-label="Public output style">
+                {PUBLIC_STYLE_PRESET_OPTIONS.map((option) => {
+                  const selected = option.id === state.publicStylePreset;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      data-testid="presence-studio-v2-public-style-option"
+                      data-style-preset={option.id}
+                      className={`v2-public-style-option${selected ? " is-selected" : ""}`}
+                      onClick={() => onUpdatePublicStylePreset(option.id)}
+                    >
+                      <strong>{option.label}</strong>
+                      <span>{option.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="v2-honest-note">
+                Style controls public presentation only. Room content, assets, and publish flow stay unchanged.
+              </div>
+            </div>
           </div>
 
           <div className="v2-inspector-section">

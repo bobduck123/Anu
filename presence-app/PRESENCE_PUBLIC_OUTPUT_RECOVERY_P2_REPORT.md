@@ -100,6 +100,17 @@ The new artwork focus view uses only sanitized public image/title/meta/detail an
 - Lightbox focus is intentionally minimal: no carousel, no deep artwork archive, no upload/crop, no analytics.
 - Hosted verification has now passed; remaining hosted work is content/media correction for final client-facing Gallery/GGM screenshots.
 
+## S6A Compatibility Note - 2026-06-09
+
+S6A added selectable public-output style presets without replacing the P2 Gallery renderer.
+
+- `gallery-p2` remains the default preset for absent/invalid style config and preserves the P2 renderer.
+- `christina-liquid-gallery` is a new selectable gallery-world branch, derived from sanitized public room data.
+- P2 regression coverage still passes:
+  - `presence-public-output-gallery-quality.spec.ts`
+  - `presence-public-output-gallery-polish.spec.ts`
+- No hosted data was mutated and no deploy was run during S6A.
+
 ## Art-Direction Audit
 
 **Auditor:** Kimi Code CLI (2026-06-08)

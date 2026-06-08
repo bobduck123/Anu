@@ -79,6 +79,7 @@ export function stripEditorStateFromStudioV2(state: StudioV2State): StudioV2Publ
     title: state.title,
     tagline: state.tagline,
     worldId: state.worldId,
+    publicStylePreset: state.publicStylePreset,
     skin: state.skin,
     cta: state.cta,
     chambers: state.chambers.map((chamber) => ({
@@ -156,4 +157,3 @@ function visit(value: unknown, visitor: (key: string | null, value: unknown) => 
     visit(entry, visitor, entryKey);
   }
 }
-

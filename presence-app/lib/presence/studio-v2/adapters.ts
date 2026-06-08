@@ -3,10 +3,12 @@ import type { PresenceEditorConfigInput } from "../../api/editor.ts";
 import { studioRoomFromEditableConfig } from "../studio-room/adapters/fromEditableConfig.ts";
 import type { RoomObjectType } from "../studio-room/model.ts";
 import {
+  DEFAULT_STUDIO_V2_PUBLIC_STYLE_PRESET,
   DEFAULT_STUDIO_V2_SKIN,
   DEFAULT_STUDIO_V2_TRANSFORM,
   PRESENCE_STUDIO_V2_RENDERER_KEY,
   PRESENCE_STUDIO_V2_SCHEMA_VERSION,
+  STUDIO_V2_PUBLIC_STYLE_PRESETS,
   STUDIO_V2_WORLD_IDS,
   type StudioV2BorderStyle,
   type StudioV2Chamber,
@@ -14,6 +16,7 @@ import {
   type StudioV2MotionIntensity,
   type StudioV2Object,
   type StudioV2ObjectType,
+  type StudioV2PublicStylePreset,
   type StudioV2PublicRoom,
   type StudioV2Skin,
   type StudioV2State,
@@ -139,6 +142,7 @@ export function presenceConfigFromStudioV2State(
     scene_config: mergeNested(existing.scene_config, STUDIO_V2_CONFIG_KEY, sceneV2),
     style_dna: mergeNested(existing.style_dna, STUDIO_V2_CONFIG_KEY, {
       schemaVersion: studioState.schemaVersion,
+      publicStylePreset: normalizePublicStylePreset(studioState.publicStylePreset),
       skin: normalizeSkin(studioState.skin),
     }),
     motion_config: mergeNested(existing.motion_config, STUDIO_V2_CONFIG_KEY, {
@@ -225,6 +229,7 @@ function studioV2FromStoredConfig(
     title,
     tagline: text(contentV2.tagline) || text(node?.headline) || text(node?.bio),
     worldId: normalizeWorldId(sceneV2.worldId),
+    publicStylePreset: normalizePublicStylePreset(styleV2.publicStylePreset),
     skin: normalizeSkin({
       ...record(styleV2.skin),
       motionIntensity: motionV2.motionIntensity,
@@ -301,6 +306,7 @@ function studioV2FromLegacyPresenceConfig(
     title: room.title || safeNode.display_name || "Presence room",
     tagline: text(safeNode.headline) || text(safeNode.bio),
     worldId: worldIdFromLegacy(safeNode, config),
+    publicStylePreset: DEFAULT_STUDIO_V2_PUBLIC_STYLE_PRESET,
     skin,
     cta: {
       label: text(config?.enquiry_config?.cta_label) || text(safeNode.primary_cta_label) || "Begin a conversation",
@@ -494,6 +500,11 @@ export function normalizeTransform(value: unknown): StudioV2Transform {
 function normalizeWorldId(value: unknown): StudioV2WorldId {
   const candidate = text(value) as StudioV2WorldId;
   return STUDIO_V2_WORLD_IDS.includes(candidate) ? candidate : "gallery";
+}
+
+export function normalizePublicStylePreset(value: unknown): StudioV2PublicStylePreset {
+  const candidate = text(value) as StudioV2PublicStylePreset;
+  return STUDIO_V2_PUBLIC_STYLE_PRESETS.includes(candidate) ? candidate : DEFAULT_STUDIO_V2_PUBLIC_STYLE_PRESET;
 }
 
 function worldIdFromLegacy(node: PresenceNode, config: PresenceEditableConfig | null | undefined): StudioV2WorldId {

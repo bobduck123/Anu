@@ -786,3 +786,41 @@ tests/e2e/presence-public-output-gallery-quality.spec.ts
 ```
 
 P1 is ready for Kimi art-direction audit. It has not been deployed. S4A chamber-management work remains parked and is not included in this public-output pass.
+
+---
+
+## S6A Status - 2026-06-09
+
+Studio Recovery S6A Public Style Presets + Christina Liquid Gallery Archetype has been implemented locally.
+
+Recovered honestly:
+
+- Room-level Public Output Style selector in the Studio V2 inspector.
+- Persisted, normalized style preset field in `style_dna.studio_v2.publicStylePreset`.
+- Existing Gallery P2 public renderer preserved as the default `gallery-p2` style.
+- New `christina-liquid-gallery` public renderer branch for gallery worlds.
+- Christina-style selected-works sequence with large image stage, progress indicator, prev/next controls, dots, art label, practice/about section, mobile layout, and public-safe artwork focus.
+- Adapter tests for round-trip and invalid fallback.
+- Playwright coverage for selector persistence, owner preview, mock public publish path, switch-back to Gallery P2, public hygiene, and legacy negative.
+
+Still deferred beyond S6A:
+
+- Full style engine or style marketplace.
+- Real per-style artwork ordering model.
+- Explicit hero/threshold work selection.
+- Shader/WebGL liquid morphology.
+- Rich transition system.
+- Upload/crop/storage/library infrastructure.
+
+Evidence:
+
+```txt
+PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6A_REPORT.md
+docs/program/evidence/presence-studio-v2-public-style-presets-s6a/
+```
+
+S6A audit: `PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6A_AUDIT.md` — **PASS** (deploy to hosted smoke).
+
+Scores: model/adapter 9/10, Studio selector 9/10, Christina renderer 8/10, Gallery P2 preserved, style switching verified, payload hygiene clean, S5 regression absent, legacy isolation confirmed.
+
+S6A local QA passed. Gallery P2 remains available and unchanged as the default style. No hosted data was mutated. No deploy was run. S4A chamber-management work remains parked and is not included.

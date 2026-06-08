@@ -1392,6 +1392,8 @@ docs/program/evidence/presence-studio-v2-asset-library-s5/
 PRESENCE_STUDIO_V2_ASSET_LIBRARY_S5_REPORT.md
 ```
 
+## Studio Recovery S5 Asset / Media Library Foundations — 2026-06-08
+
 Audit:
 
 `PRESENCE_STUDIO_V2_ASSET_LIBRARY_S5_AUDIT.md` — CONDITIONAL PASS
@@ -1406,6 +1408,25 @@ Verdict:
 
 - Safe for Kimi audit.
 - Safe to deploy after audit if no hosted data mutation is bundled.
+- S4A remains parked in `stash@{0}`.
+
+## Studio Recovery S6A Public Style Presets — 2026-06-09
+
+Audit:
+
+`PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6A_AUDIT.md` — PASS
+
+- 21 Playwright regression tests passed (63.0s).
+- 50 Node unit tests passed.
+- TypeScript + build passed.
+- Payload hygiene passes. No leakage to public/preview.
+- S5 P1 fix completed: `lib/presence/studio-v2/assets.test.ts` added (8 tests, 378 lines).
+- Christina renderer is data-driven and reusable; no hardcoded content.
+- Gallery P2 preserved as default and fallback.
+
+Verdict:
+
+- Safe to deploy to hosted smoke.
 - S4A remains parked in `stash@{0}`.
 - Public self-serve onboarding remains out of scope.
 
@@ -1523,3 +1544,64 @@ Verdict:
 - Controlled operator-led pilot readiness: ready with operator support.
 - Public self-serve onboarding readiness: not ready.
 - S5 baseline can be locked after review.
+
+## Studio Recovery S6A Public Style Presets - 2026-06-09
+
+Scope: Add selectable public-output style presets to Studio V2 and implement the Christina / Liquid Gallery archetype as a data-driven public renderer branch. Local only. No deploy. No hosted data mutation.
+
+Verified:
+
+- S5 baseline was already locked on branch head before S6A work began.
+- S4A remained parked in `stash@{0}`.
+- Public style preset field round-trips through `style_dna.studio_v2.publicStylePreset`.
+- Invalid/absent style preset falls back to `gallery-p2`.
+- Studio room inspector shows the public style selector with Gallery P2 and Christina / Liquid Gallery options.
+- Selecting Christina marks the draft dirty, saves, reloads, and persists in the mock owner flow.
+- Owner preview renders the Christina Liquid Gallery branch.
+- Mock public publish path renders the Christina Liquid Gallery branch after publish.
+- Switching back to Gallery P2 restores the existing P2 public renderer.
+- Gallery P2 public-output quality and polish specs still pass.
+- S5 Room Assets, S2 direct manipulation, and S3 inspector usability still pass.
+- Public payload hygiene remains clean.
+- Legacy public route remains outside the V2 renderer.
+
+Required QA passed:
+
+```txt
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\assets.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-direct-manipulation.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-inspector-usability.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-asset-library.spec.ts --project=chromium
+npx.cmd playwright test presence-public-output-gallery-quality.spec.ts --project=chromium
+npx.cmd playwright test presence-public-output-gallery-polish.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-public-style-presets.spec.ts --project=chromium
+```
+
+Evidence:
+
+```txt
+docs/program/evidence/presence-studio-v2-public-style-presets-s6a/
+PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6A_REPORT.md
+```
+
+Known warnings:
+
+- Node direct TypeScript tests still emit the existing `MODULE_TYPELESS_PACKAGE_JSON` warning.
+- Next/Turbopack still warns about multiple lockfiles and inferred workspace root.
+- `presence-public-payload-hygiene.spec.ts` initially hit a Chromium browser-launch timeout; the same spec passed on rerun with no payload assertion failures.
+
+Verdict:
+
+- S6A is safe for Kimi design/QA audit.
+- S6A is safe to deploy after audit if the audit passes.
+- Public self-serve onboarding remains out of scope.

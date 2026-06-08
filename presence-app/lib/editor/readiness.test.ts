@@ -113,6 +113,7 @@ test("a valid Studio V2 draft is not blocked by legacy GGM scene readiness", () 
     title: "Studio V2 room ready to open",
     tagline: "A V2 public room",
     worldId: "gallery",
+    publicStylePreset: "gallery-p2",
     skin: DEFAULT_STUDIO_V2_SKIN,
     cta: { label: "Begin a conversation", href: "https://example.com/contact" },
     chambers: [

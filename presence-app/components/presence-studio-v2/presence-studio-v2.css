@@ -1664,6 +1664,85 @@ body.v2-is-manipulating {
   line-height: 1.45;
 }
 
+.presence-studio-v2 .v2-public-style-selector {
+  display: grid;
+  gap: 12px;
+}
+
+.presence-studio-v2 .v2-public-style-current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(248, 244, 236, 0.1);
+  border-radius: 8px;
+  background: rgba(248, 244, 236, 0.04);
+}
+
+.presence-studio-v2 .v2-public-style-current span {
+  color: rgba(248, 244, 236, 0.58);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.presence-studio-v2 .v2-public-style-current strong {
+  color: #fff6e8;
+  font-size: 13px;
+}
+
+.presence-studio-v2 .v2-public-style-options {
+  display: grid;
+  gap: 8px;
+}
+
+.presence-studio-v2 .v2-public-style-option {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(248, 244, 236, 0.1);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(248, 244, 236, 0.055), rgba(248, 244, 236, 0.025));
+  color: rgba(248, 244, 236, 0.76);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms var(--p-ease), border-color 160ms var(--p-ease), background 160ms var(--p-ease);
+}
+
+.presence-studio-v2 .v2-public-style-option strong {
+  color: #fffaf2;
+  font-size: 13px;
+}
+
+.presence-studio-v2 .v2-public-style-option span {
+  color: rgba(248, 244, 236, 0.6);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.presence-studio-v2 .v2-public-style-option:hover,
+.presence-studio-v2 .v2-public-style-option:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(248, 244, 236, 0.22);
+  background: rgba(248, 244, 236, 0.075);
+  outline: none;
+}
+
+.presence-studio-v2 .v2-public-style-option:focus-visible {
+  box-shadow: 0 0 0 2px rgba(215, 177, 95, 0.38);
+}
+
+.presence-studio-v2 .v2-public-style-option.is-selected {
+  border-color: color-mix(in srgb, var(--p-copper) 64%, transparent);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(215, 177, 95, 0.22), transparent 55%),
+    rgba(248, 244, 236, 0.065);
+  box-shadow: 0 0 0 1px rgba(183, 140, 78, 0.18);
+}
+
 .presence-studio-v2 .v2-stage-shell {
   position: relative;
   overflow: auto;

@@ -1742,6 +1742,589 @@
   outline-offset: 3px;
 }
 
+.presence-studio-v2-public.style-christina-liquid-gallery {
+  --liquid-bg: #f4f4f2;
+  --liquid-paper: #ece8df;
+  --liquid-ink: #111111;
+  --liquid-muted: #65635e;
+  --liquid-line: rgba(17, 17, 17, 0.16);
+  --liquid-blue: #6f91a6;
+  --liquid-rust: #9e6f4a;
+  min-height: 100svh;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), transparent 38%),
+    var(--liquid-bg);
+  color: var(--liquid-ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow-x: clip;
+  scroll-behavior: smooth;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px clamp(18px, 4vw, 56px);
+  color: #f8f8f5;
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-nav a,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-nav-cta {
+  pointer-events: auto;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-brand {
+  max-width: min(42vw, 420px);
+  color: inherit;
+  font-size: clamp(0.8rem, 1vw, 0.95rem);
+  font-weight: 650;
+  line-height: 1.1;
+  text-decoration: none;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-nav nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 2vw, 24px);
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-nav nav a,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-nav-cta {
+  color: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-nav nav a:focus-visible,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-nav-cta:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 5px;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-hero {
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  grid-template-columns: minmax(0, 0.72fr) minmax(320px, 1fr);
+  grid-template-rows: minmax(130px, auto) 1fr minmax(112px, auto);
+  gap: clamp(18px, 3vw, 44px);
+  padding: clamp(88px, 11vw, 142px) clamp(18px, 5vw, 72px) clamp(28px, 5vw, 58px);
+  overflow: hidden;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-field,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-dither {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-field {
+  background:
+    radial-gradient(circle at 14% 28%, color-mix(in srgb, var(--v2-public-accent) 28%, transparent), transparent 30%),
+    radial-gradient(circle at 78% 18%, rgba(111, 145, 166, 0.34), transparent 32%),
+    radial-gradient(circle at 62% 78%, rgba(158, 111, 74, 0.24), transparent 36%),
+    linear-gradient(120deg, rgba(236, 232, 223, 0.85), rgba(244, 244, 242, 0.18));
+  filter: blur(0.2px);
+  opacity: 0.9;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-dither {
+  background-image:
+    linear-gradient(rgba(17, 17, 17, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 17, 17, 0.025) 1px, transparent 1px);
+  background-size: 12px 12px;
+  mask-image: radial-gradient(circle at 50% 42%, black, transparent 72%);
+  opacity: 0.28;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-hero-copy,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-stage,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-ui,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-caption,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-primary-action {
+  position: relative;
+  z-index: 2;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-hero-copy {
+  grid-column: 1 / span 1;
+  align-self: end;
+  max-width: 640px;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-kicker,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-section-head span,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-caption span,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-work-label span,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-practice-notes article span {
+  color: var(--liquid-muted);
+  font-size: 0.68rem;
+  font-weight: 760;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery h1 {
+  margin: 10px 0 0;
+  color: var(--liquid-ink);
+  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+  font-size: clamp(3.6rem, 11vw, 12rem);
+  font-weight: 420;
+  line-height: 0.82;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-hero-copy p {
+  max-width: 520px;
+  margin: 22px 0 0;
+  color: rgba(17, 17, 17, 0.68);
+  font-size: clamp(1rem, 1.5vw, 1.28rem);
+  line-height: 1.45;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-stage {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  align-self: center;
+  justify-self: stretch;
+  display: grid;
+  min-height: min(72svh, 760px);
+  place-items: center;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-stage-image {
+  display: block;
+  width: min(100%, 820px);
+  height: min(72svh, 760px);
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+  padding: 0;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-stage-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: saturate(0.98) contrast(1.02);
+  transition: transform 900ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-stage-image:hover img,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-stage-image:focus-visible img {
+  transform: scale(1.018);
+  filter: saturate(1.04) contrast(1.04);
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-stage-image:focus-visible {
+  outline: 2px solid rgba(17, 17, 17, 0.82);
+  outline-offset: 8px;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-stage-empty {
+  display: grid;
+  width: min(100%, 720px);
+  min-height: min(56svh, 620px);
+  place-items: center;
+  border: 1px solid var(--liquid-line);
+  background: rgba(236, 232, 223, 0.58);
+  color: var(--liquid-muted);
+  text-align: center;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-ui {
+  grid-column: 1;
+  align-self: end;
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  width: min(100%, 520px);
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-arrow {
+  min-height: 44px;
+  border: 1px solid rgba(17, 17, 17, 0.22);
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.82);
+  color: #f8f8f5;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 760;
+  letter-spacing: 0.12em;
+  padding: 0 16px;
+  text-transform: uppercase;
+  transition: transform 180ms ease, background 180ms ease, opacity 180ms ease;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-arrow:hover,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-arrow:focus-visible {
+  transform: translateY(-1px);
+  background: var(--liquid-ink);
+  outline: none;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-arrow:focus-visible {
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.22);
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-arrow:disabled {
+  cursor: default;
+  opacity: 0.35;
+  transform: none;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-progress {
+  min-width: 68px;
+  color: rgba(17, 17, 17, 0.72);
+  font-size: 0.78rem;
+  font-weight: 760;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 96px;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-dots button {
+  width: 28px;
+  height: 8px;
+  border: 1px solid rgba(17, 17, 17, 0.24);
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.18);
+  cursor: pointer;
+  padding: 0;
+  transition: width 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-dots button.is-active {
+  width: 42px;
+  border-color: rgba(17, 17, 17, 0.74);
+  background: rgba(17, 17, 17, 0.82);
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-dots button:focus-visible {
+  outline: 2px solid rgba(17, 17, 17, 0.8);
+  outline-offset: 4px;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-caption {
+  grid-column: 1;
+  align-self: start;
+  max-width: 410px;
+  padding: 16px 0 0 16px;
+  border-left: 1px solid rgba(17, 17, 17, 0.32);
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-caption strong,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-work-label strong,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-practice-notes strong,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-reference-strip strong {
+  display: block;
+  color: var(--liquid-ink);
+  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+  font-size: clamp(1.2rem, 2vw, 2rem);
+  font-weight: 460;
+  line-height: 1.05;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-caption p,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-work-label p,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-practice-notes p,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-reference-strip p {
+  margin: 7px 0 0;
+  color: rgba(17, 17, 17, 0.62);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-caption button,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-primary-action,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-practice-action,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-note-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  margin-top: 12px;
+  border: 1px solid rgba(17, 17, 17, 0.28);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--liquid-ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 760;
+  letter-spacing: 0.12em;
+  padding: 0 16px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-primary-action {
+  position: absolute;
+  right: clamp(18px, 5vw, 72px);
+  bottom: clamp(28px, 5vw, 58px);
+  min-height: 48px;
+  background: rgba(17, 17, 17, 0.86);
+  color: #f8f8f5;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-caption button:hover,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-primary-action:hover,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-practice-action:hover,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-note-link:hover,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-caption button:focus-visible,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-primary-action:focus-visible,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-practice-action:focus-visible,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-note-link:focus-visible {
+  transform: translateY(-1px);
+  background: var(--liquid-ink);
+  color: #f8f8f5;
+  outline: none;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-caption button:focus-visible,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-primary-action:focus-visible,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-practice-action:focus-visible,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-note-link:focus-visible {
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.2);
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-works,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-practice,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-references {
+  padding: clamp(72px, 10vw, 140px) clamp(18px, 5vw, 72px);
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-section-head {
+  display: grid;
+  gap: 10px;
+  max-width: 780px;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-section-head h2 {
+  margin: 0;
+  color: var(--liquid-ink);
+  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+  font-size: clamp(2.4rem, 6vw, 6.2rem);
+  font-weight: 420;
+  line-height: 0.92;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-work-path {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: clamp(28px, 5vw, 72px);
+  margin-top: clamp(34px, 6vw, 80px);
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-work-path article {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-work-path article:nth-child(2n) {
+  padding-top: clamp(32px, 6vw, 86px);
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-work-path article button {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-work-path article img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-work-path article:hover img,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-work-path article.is-active img {
+  transform: translateY(-4px) scale(1.015);
+  filter: contrast(1.05);
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-work-path article button:focus-visible {
+  outline: 2px solid rgba(17, 17, 17, 0.82);
+  outline-offset: 8px;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-work-label {
+  min-height: 118px;
+  padding: 14px 0 0 14px;
+  border-left: 1px solid rgba(17, 17, 17, 0.28);
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-practice {
+  background:
+    radial-gradient(circle at 92% 12%, rgba(111, 145, 166, 0.16), transparent 32%),
+    linear-gradient(180deg, rgba(236, 232, 223, 0.72), rgba(244, 244, 242, 0.92));
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-practice-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(280px, 1fr);
+  gap: clamp(28px, 6vw, 96px);
+  margin-top: clamp(34px, 6vw, 80px);
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-practice-statement p {
+  margin: 0;
+  color: rgba(17, 17, 17, 0.74);
+  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 4.6vw, 5.2rem);
+  font-weight: 420;
+  line-height: 0.98;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-practice-notes {
+  display: grid;
+  gap: 20px;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-practice-notes article,
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-reference-strip article {
+  border-top: 1px solid rgba(17, 17, 17, 0.16);
+  padding-top: 16px;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-reference-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 18px;
+  margin-top: 36px;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-reference-strip article span {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  margin-bottom: 14px;
+}
+
+.presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-artwork-focus .v2-public-artwork-focus-stage {
+  background: rgba(244, 244, 242, 0.08);
+}
+
+@media (max-width: 860px) {
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-nav {
+    align-items: flex-start;
+    padding: 16px 14px;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-brand {
+    max-width: 52vw;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-nav nav {
+    gap: 10px;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-nav nav a:not(.v2-liquid-nav-cta) {
+    display: none;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-hero {
+    min-height: auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    padding: 84px 16px 28px;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery h1 {
+    font-size: clamp(3.6rem, 18vw, 6.8rem);
+    line-height: 0.86;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-stage {
+    grid-column: 1;
+    grid-row: auto;
+    min-height: auto;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-stage-image {
+    height: min(58svh, 540px);
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-ui {
+    grid-column: 1;
+    grid-template-columns: auto auto 1fr auto;
+    width: 100%;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-progress {
+    min-width: 62px;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-dots {
+    overflow: hidden;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-dots button {
+    width: 18px;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-dots button.is-active {
+    width: 30px;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-caption {
+    grid-column: 1;
+    max-width: 100%;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-primary-action {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: max-content;
+    max-width: 100%;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-works,
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-practice,
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-references {
+    padding: 64px 16px;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-work-path {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-work-path article:nth-child(2n) {
+    padding-top: 0;
+  }
+
+  .presence-studio-v2-public.style-christina-liquid-gallery .v2-liquid-practice-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (min-width: 861px) {
   .presence-studio-v2-public.world-gallery .v2-public-object.is-featured {
     grid-column: 1 / span 8;

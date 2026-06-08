@@ -39,6 +39,10 @@ function node(overrides: Partial<PresenceNode> = {}): PresenceNode {
   } as PresenceNode;
 }
 
+function record(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
 function studioState(): StudioV2State {
   return {
     schemaVersion: PRESENCE_STUDIO_V2_SCHEMA_VERSION,
@@ -48,6 +52,7 @@ function studioState(): StudioV2State {
     title: "Mara Vale Studio",
     tagline: "Painter and image-maker",
     worldId: "gallery",
+    publicStylePreset: "gallery-p2",
     skin: {
       ...DEFAULT_STUDIO_V2_SKIN,
       accentColor: "#8f6f3f",
@@ -142,6 +147,7 @@ test("Studio V2 config round-trips through the adapter without losing owner edit
   const restored = studioV2FromPresenceConfig(editable, node());
 
   assert.equal(restored.worldId, "gallery");
+  assert.equal(restored.publicStylePreset, "gallery-p2");
   assert.equal(restored.title, "Mara Vale Studio");
   assert.equal(restored.chambers[0].objects[0].locked, true);
   assert.equal(restored.chambers[0].objects[0].pinned, true);
@@ -155,6 +161,7 @@ test("public Studio V2 projection strips editor state and hidden public objects"
   const serialized = JSON.stringify(publicRoom);
 
   assert.equal(publicRoom.chambers[0].objects.length, 1);
+  assert.equal(publicRoom.publicStylePreset, "gallery-p2");
   assert.equal(publicRoom.chambers[0].objects[0].id, "work-1");
   assert.equal(publicRoom.chambers[0].objects[0].transform.x, 0);
   assert.equal(serialized.includes("draft-note"), false);
@@ -164,6 +171,41 @@ test("public Studio V2 projection strips editor state and hidden public objects"
   assert.equal(serialized.includes("hiddenMobile"), false);
   assert.deepEqual(findStudioV2PublicPayloadLeaks(publicRoom, { allowDemoTraces: true }), []);
   assert.deepEqual(findRestrictedPublicPayloadKeys(publicRoom), []);
+});
+
+test("Studio V2 public style preset round-trips through style DNA safely", () => {
+  const state: StudioV2State = {
+    ...studioState(),
+    publicStylePreset: "christina-liquid-gallery",
+  };
+  const editable = presenceConfigFromStudioV2State(state, null) as PresenceEditableConfig;
+
+  assert.equal(record(record(editable.style_dna).studio_v2).publicStylePreset, "christina-liquid-gallery");
+
+  const restored = studioV2FromPresenceConfig(editable, node());
+  const publicRoom = publicRoomFromStudioV2State(restored);
+
+  assert.equal(restored.publicStylePreset, "christina-liquid-gallery");
+  assert.equal(publicRoom.publicStylePreset, "christina-liquid-gallery");
+  assert.deepEqual(findStudioV2PublicPayloadLeaks(publicRoom, { allowDemoTraces: true }), []);
+  assert.deepEqual(findRestrictedPublicPayloadKeys(publicRoom), []);
+});
+
+test("invalid Studio V2 public style preset falls back to Gallery P2", () => {
+  const editable = presenceConfigFromStudioV2State(studioState(), null) as PresenceEditableConfig;
+  editable.style_dna = {
+    ...editable.style_dna,
+    studio_v2: {
+      ...record(record(editable.style_dna).studio_v2),
+      publicStylePreset: "unsupported-liquid-engine",
+    },
+  };
+
+  const restored = studioV2FromPresenceConfig(editable, node());
+  const publicRoom = publicRoomFromStudioV2State(restored);
+
+  assert.equal(restored.publicStylePreset, "gallery-p2");
+  assert.equal(publicRoom.publicStylePreset, "gallery-p2");
 });
 
 test("legacy editable config can be lifted into a safe Studio V2 fallback room", () => {
@@ -525,4 +567,3 @@ test("V2 editor title mutation produces saveable config payload and round-trips"
   assert.equal(roundTripped.worldId, state.worldId);
   assert.equal(roundTripped.chambers.length, state.chambers.length);
 });
-

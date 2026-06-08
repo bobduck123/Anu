@@ -12,6 +12,7 @@ interface PresenceStudioV2PublicRoomProps {
 
 export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2PublicRoomProps) {
   const [focusedArtwork, setFocusedArtwork] = useState<StudioV2PublicObject | null>(null);
+  const [activeLiquidIndex, setActiveLiquidIndex] = useState(0);
   const world = WORLD_KITS.find((kit) => kit.id === room.worldId);
   const style = {
     "--v2-public-bg": room.skin.background,
@@ -29,6 +30,16 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
   const entryHref = ctaHref || "#v2-public-room-space";
   const entryLabel = ctaLabel || "Enter room";
   const isGallery = room.worldId === "gallery";
+  const publicStylePreset = room.publicStylePreset || "gallery-p2";
+  const liquidWorks = room.chambers.flatMap((chamber) =>
+    chamber.objects
+      .filter((object) => Boolean(object.image?.src))
+      .map((object) => ({
+        object,
+        chamberId: chamber.id,
+        chamberLabel: chamber.label,
+      })),
+  );
   const thresholdIndex = isGallery
     ? room.chambers
         .filter((chamber) => chamber.objects.length > 0)
@@ -55,6 +66,33 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [focusedArtwork]);
+
+  useEffect(() => {
+    if (liquidWorks.length === 0 && activeLiquidIndex !== 0) {
+      setActiveLiquidIndex(0);
+      return;
+    }
+    if (activeLiquidIndex >= liquidWorks.length) {
+      setActiveLiquidIndex(Math.max(0, liquidWorks.length - 1));
+    }
+  }, [activeLiquidIndex, liquidWorks.length]);
+
+  if (isGallery && publicStylePreset === "christina-liquid-gallery") {
+    return (
+      <ChristinaLiquidGalleryPublicRoom
+        room={room}
+        worldName={world?.name ?? room.worldId}
+        style={style}
+        works={liquidWorks}
+        activeIndex={activeLiquidIndex}
+        onActiveIndexChange={setActiveLiquidIndex}
+        focusedArtwork={focusedArtwork}
+        onFocusArtwork={setFocusedArtwork}
+        ctaHref={ctaHref}
+        ctaLabel={ctaLabel}
+      />
+    );
+  }
 
   return (
     <main
@@ -211,6 +249,263 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
               data-testid="presence-public-artwork-focus-close"
               type="button"
               onClick={() => setFocusedArtwork(null)}
+            >
+              Close
+            </button>
+            <img
+              data-testid="presence-public-artwork-focus-image"
+              src={focusedArtwork.image.src}
+              alt={focusedArtwork.image.alt || focusedArtwork.title}
+            />
+            <figcaption>
+              <strong>{focusedArtwork.title}</strong>
+              {focusedArtwork.meta && <span>{focusedArtwork.meta}</span>}
+              {focusedArtwork.detail && <p>{focusedArtwork.detail}</p>}
+            </figcaption>
+          </figure>
+        </div>
+      )}
+    </main>
+  );
+}
+
+interface LiquidGalleryWork {
+  object: StudioV2PublicObject;
+  chamberId: string;
+  chamberLabel: string;
+}
+
+function ChristinaLiquidGalleryPublicRoom({
+  room,
+  worldName,
+  style,
+  works,
+  activeIndex,
+  onActiveIndexChange,
+  focusedArtwork,
+  onFocusArtwork,
+  ctaHref,
+  ctaLabel,
+}: {
+  room: StudioV2PublicRoom;
+  worldName: string;
+  style: CSSProperties;
+  works: LiquidGalleryWork[];
+  activeIndex: number;
+  onActiveIndexChange: (index: number) => void;
+  focusedArtwork: StudioV2PublicObject | null;
+  onFocusArtwork: (object: StudioV2PublicObject | null) => void;
+  ctaHref?: string;
+  ctaLabel?: string;
+}) {
+  const activeWork = works[activeIndex] ?? works[0] ?? null;
+  const activeObject = activeWork?.object ?? null;
+  const sequenceTotal = works.length;
+  const hasSequence = sequenceTotal > 0;
+  const previousIndex = sequenceTotal > 0 ? (activeIndex - 1 + sequenceTotal) % sequenceTotal : 0;
+  const nextIndex = sequenceTotal > 0 ? (activeIndex + 1) % sequenceTotal : 0;
+  const practiceObjects = room.chambers
+    .flatMap((chamber) => chamber.objects.map((object) => ({ object, chamberLabel: chamber.label })))
+    .filter(({ object }) => !object.image?.src || object.type === "text" || object.type === "note" || object.type === "proof")
+    .slice(0, 4);
+
+  return (
+    <main
+      className={`presence-studio-v2-public world-${room.worldId} style-christina-liquid-gallery texture-${room.skin.texture} motion-${room.skin.motionIntensity}${activeObject?.image?.src ? " has-threshold-image" : ""}`}
+      style={style}
+      data-testid="presence-public-style-christina-liquid-gallery"
+    >
+      <header className="v2-liquid-nav" aria-label={`${room.title} public navigation`}>
+        <a href="#v2-liquid-sequence" className="v2-liquid-brand">{room.title}</a>
+        <nav aria-label="Room sections">
+          <a href="#v2-liquid-works">Works</a>
+          <a href="#v2-liquid-practice">Practice</a>
+          {(ctaHref || ctaLabel) && <PublicLink href={ctaHref} className="v2-liquid-nav-cta">{ctaLabel || "Begin"}</PublicLink>}
+        </nav>
+      </header>
+
+      <section
+        className="v2-liquid-hero"
+        id="v2-liquid-sequence"
+        data-testid="presence-public-liquid-sequence"
+        aria-label={`${room.title} selected works sequence`}
+      >
+        <div className="v2-liquid-field" aria-hidden="true" />
+        <div className="v2-liquid-dither" aria-hidden="true" />
+        <div className="v2-liquid-hero-copy">
+          <div className="v2-liquid-kicker">{worldName} / selected works</div>
+          <h1>{room.title}</h1>
+          {room.tagline && <p>{room.tagline}</p>}
+        </div>
+
+        <div className="v2-liquid-stage">
+          {activeObject?.image?.src ? (
+            <button
+              type="button"
+              className="v2-liquid-stage-image"
+              onClick={() => onFocusArtwork(activeObject)}
+              aria-label={`View ${activeObject.title}`}
+            >
+              <img src={activeObject.image.src} alt={activeObject.image.alt || activeObject.title} loading="eager" />
+            </button>
+          ) : (
+            <div className="v2-liquid-stage-empty">
+              <span>No public work image is available yet.</span>
+            </div>
+          )}
+        </div>
+
+        <div className="v2-liquid-ui" aria-label="Selected works controls">
+          <button
+            type="button"
+            data-testid="presence-public-liquid-prev"
+            className="v2-liquid-arrow"
+            onClick={() => onActiveIndexChange(previousIndex)}
+            disabled={sequenceTotal < 2}
+            aria-label="Previous work"
+          >
+            Prev
+          </button>
+          {hasSequence && (
+            <div className="v2-liquid-progress" data-testid="presence-public-liquid-progress" aria-live="polite">
+              {String(activeIndex + 1).padStart(2, "0")} / {String(sequenceTotal).padStart(2, "0")}
+            </div>
+          )}
+          <div className="v2-liquid-dots" aria-label="Select work">
+            {works.map((work, index) => (
+              <button
+                key={work.object.id}
+                type="button"
+                className={index === activeIndex ? "is-active" : ""}
+                onClick={() => onActiveIndexChange(index)}
+                aria-label={`Show ${work.object.title}`}
+                aria-current={index === activeIndex ? "true" : undefined}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            data-testid="presence-public-liquid-next"
+            className="v2-liquid-arrow"
+            onClick={() => onActiveIndexChange(nextIndex)}
+            disabled={sequenceTotal < 2}
+            aria-label="Next work"
+          >
+            Next
+          </button>
+        </div>
+
+        {activeObject && (
+          <aside className="v2-liquid-caption" aria-label="Selected artwork label">
+            <span>{activeWork?.chamberLabel}</span>
+            <strong>{activeObject.title}</strong>
+            {activeObject.meta && <p>{activeObject.meta}</p>}
+            {activeObject.detail && <p>{activeObject.detail}</p>}
+            <button type="button" onClick={() => onFocusArtwork(activeObject)}>
+              View work
+            </button>
+          </aside>
+        )}
+
+        {(ctaHref || ctaLabel) && (
+          <PublicLink href={ctaHref || "#v2-liquid-practice"} className="v2-liquid-primary-action">
+            {ctaLabel || "Begin a conversation"}
+          </PublicLink>
+        )}
+      </section>
+
+      <section className="v2-liquid-works" id="v2-liquid-works" aria-labelledby="v2-liquid-works-title">
+        <div className="v2-liquid-section-head">
+          <span>Selected works pathway</span>
+          <h2 id="v2-liquid-works-title">Move through the room</h2>
+        </div>
+        <div className="v2-liquid-work-path">
+          {works.map((work, index) => (
+            <article className={index === activeIndex ? "is-active" : ""} key={work.object.id}>
+              <button type="button" onClick={() => onActiveIndexChange(index)} aria-label={`Select ${work.object.title}`}>
+                <img src={work.object.image?.src} alt={work.object.image?.alt || work.object.title} loading="lazy" />
+              </button>
+              <div className="v2-liquid-work-label">
+                <span>{work.chamberLabel}</span>
+                <strong>{work.object.title}</strong>
+                {work.object.meta && <p>{work.object.meta}</p>}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="v2-liquid-practice" id="v2-liquid-practice" aria-labelledby="v2-liquid-practice-title">
+        <div className="v2-liquid-section-head">
+          <span>Practice / about</span>
+          <h2 id="v2-liquid-practice-title">The room behind the works</h2>
+        </div>
+        <div className="v2-liquid-practice-grid">
+          <div className="v2-liquid-practice-statement">
+            <p>{room.tagline || "This room is still gathering its public statement."}</p>
+            {(ctaHref || ctaLabel) && (
+              <PublicLink href={ctaHref} className="v2-liquid-practice-action">
+                {ctaLabel || "Begin a conversation"}
+              </PublicLink>
+            )}
+          </div>
+          {practiceObjects.length > 0 && (
+            <div className="v2-liquid-practice-notes">
+              {practiceObjects.map(({ object, chamberLabel }) => (
+                <article key={object.id}>
+                  <span>{chamberLabel}</span>
+                  <strong>{object.title}</strong>
+                  {object.detail && <p>{object.detail}</p>}
+                  {object.link && (
+                    <PublicLink href={object.link} className="v2-liquid-note-link">
+                      Open path
+                    </PublicLink>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {room.moodboardRefs.length > 0 && (
+        <section className="v2-liquid-references" aria-labelledby="v2-liquid-references-title">
+          <div className="v2-liquid-section-head">
+            <span>Coordinates</span>
+            <h2 id="v2-liquid-references-title">References in the room</h2>
+          </div>
+          <div className="v2-liquid-reference-strip">
+            {room.moodboardRefs.map((reference) => (
+              <article key={reference.id}>
+                <span style={{ background: reference.dot || room.skin.accentColor }} aria-hidden="true" />
+                <strong>{reference.label}</strong>
+                {reference.detail && <p>{reference.detail}</p>}
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {focusedArtwork?.image?.src && (
+        <div
+          className="v2-public-artwork-focus v2-liquid-artwork-focus"
+          data-testid="presence-public-artwork-focus"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Artwork focus: ${focusedArtwork.title}`}
+        >
+          <button
+            className="v2-public-artwork-focus-backdrop"
+            type="button"
+            aria-label="Close artwork focus"
+            onClick={() => onFocusArtwork(null)}
+          />
+          <figure className="v2-public-artwork-focus-stage">
+            <button
+              className="v2-public-artwork-focus-close"
+              data-testid="presence-public-artwork-focus-close"
+              type="button"
+              onClick={() => onFocusArtwork(null)}
             >
               Close
             </button>
