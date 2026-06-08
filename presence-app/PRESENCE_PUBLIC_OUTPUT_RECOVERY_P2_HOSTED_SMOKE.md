@@ -257,3 +257,31 @@ P2 renderer baseline was locked in Git without hosted content mutation.
 - S4A: still parked in `stash@{0}`.
 
 Controlled content/media correction may begin after this baseline is pushed and reviewed.
+
+
+---
+
+## 15. Room 11 Content/Media Correction — 2026-06-08
+
+**Status:** COMPLETE
+
+The hosted media-content caveat noted in Section 4 has been resolved through a separate controlled data pass.
+
+Full report:
+`PRESENCE_ROOM_11_CONTENT_MEDIA_CORRECTION_REPORT.md`
+
+Summary:
+- Bad asset identified: Object 0 (`hero-image`) pointing to blue smoke-test PNG (`783471c01a894f9ebddd039f83d4ac68.png`).
+- Correction method: Replaced image src with existing clean artwork `/ggm/works/willow-of-port-arthur-2019.webp`.
+- Save/reload: Confirmed.
+- Publish: Confirmed.
+- Public routes `/p/ggm-christina-goddard` and `/presence/ggm-christina-goddard`: Clean.
+- Payload hygiene: `TOTAL_VIOLATIONS: 0`.
+- Legacy room `hesmaddw`: Remains legacy.
+- Studio V2 editor: Still mounts correctly.
+- S4A: Still parked in `stash@{0}`.
+
+Final client-facing screenshots captured in:
+`docs/program/evidence/presence-room-11-content-media-correction/`
+
+P2 Gallery/GGM public output is now fully clean for client-facing screenshots and pilot demos.

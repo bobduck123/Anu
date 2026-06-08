@@ -520,3 +520,22 @@ P2 hosted baseline was locked in Git on 2026-06-08:
 - Local QA rerun: passed.
 - Hosted data: not mutated during lock pass.
 - S4A: still parked in `stash@{0}`.
+
+
+---
+
+### Room 11 Content/Media Correction — 2026-06-08
+
+The hosted media-content caveat above has been resolved.
+
+Full report:
+`PRESENCE_ROOM_11_CONTENT_MEDIA_CORRECTION_REPORT.md`
+
+- Bad asset (`783471c01a894f9ebddd039f83d4ac68.png`) replaced with `/ggm/works/willow-of-port-arthur-2019.webp`.
+- Payload hygiene: `TOTAL_VIOLATIONS: 0`.
+- Public routes clean.
+- Legacy and Studio regression verified.
+- Final client-facing screenshots captured.
+
+Updated verdict:
+- Hosted Gallery/GGM P2 public output: **ready for client-facing screenshots and pilot demos**.
