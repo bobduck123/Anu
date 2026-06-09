@@ -9,6 +9,7 @@ import {
 } from "@/lib/presence/studio-v2";
 import type { StudioV2PublicChamber, StudioV2PublicObject, StudioV2PublicRoom } from "@/lib/presence/studio-v2";
 import { WORLD_KITS } from "./worlds";
+import BbbVisionCanvasGallery from "./BbbVisionCanvasGallery";
 import "./presence-studio-v2-public.css";
 
 interface PresenceStudioV2PublicRoomProps {
@@ -642,9 +643,6 @@ function BbbVisionThresholdGalleryPublicRoom({
 }) {
   const [view, setView] = useState<BbbVisionPublicView>("threshold");
   const [movement, setMovement] = useState<BbbVisionMovement | null>(null);
-  const [parallax, setParallax] = useState({ x: 0, y: 0 });
-  const [touchOffset, setTouchOffset] = useState({ x: 0, y: 0 });
-  const touchStartRef = useRef({ x: 0, y: 0 });
   const movementTimeoutRef = useRef<number | null>(null);
   const entryChamber = getStudioV2EntryChamber(room.chambers);
   const defaultChamber = getStudioV2DefaultChamber(room.chambers);
@@ -756,16 +754,7 @@ function BbbVisionThresholdGalleryPublicRoom({
     };
   }, []);
 
-  useEffect(() => {
-    const onMouseMove = (event: MouseEvent) => {
-      setParallax({
-        x: (event.clientX / window.innerWidth - 0.5) * 2,
-        y: (event.clientY / window.innerHeight - 0.5) * 2,
-      });
-    };
-    window.addEventListener("mousemove", onMouseMove);
-    return () => window.removeEventListener("mousemove", onMouseMove);
-  }, []);
+  // Canvas gallery handles its own mouse interaction; no global parallax needed.
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -911,39 +900,16 @@ function BbbVisionThresholdGalleryPublicRoom({
             </nav>
           </header>
 
-          <div
-            className="v2-bbb-constellation"
-            data-testid="presence-public-bbbvision-constellation"
-            aria-label={`${room.title} image constellation`}
-            style={{
-              "--parallax-x": parallax.x + touchOffset.x * 0.02,
-              "--parallax-y": parallax.y + touchOffset.y * 0.02,
-            } as CSSProperties}
-            onTouchStart={(e) => {
-              touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            }}
-            onTouchMove={(e) => {
-              const dx = e.touches[0].clientX - touchStartRef.current.x;
-              const dy = e.touches[0].clientY - touchStartRef.current.y;
-              setTouchOffset({ x: dx, y: dy });
-            }}
-            onTouchEnd={() => setTouchOffset({ x: 0, y: 0 })}
-          >
-            {galleryWorks.length > 0 ? galleryWorks.map((work, index) => (
-              <button
-                key={work.object.id}
-                type="button"
-                className={`v2-bbb-star${index === safeActiveIndex ? " is-active" : ""}`}
-                style={constellationStarStyle(index, galleryWorks.length)}
-                onClick={() => {
-                  setActiveImage(index, "index");
-                  onFocusArtwork(work.object);
-                }}
-                aria-label={`Open ${work.object.title}`}
-              >
-                <img src={work.object.image?.src} alt="" loading="lazy" />
-              </button>
-            )) : (
+          <div className="v2-bbb-constellation">
+            {galleryWorks.length > 0 ? (
+              <BbbVisionCanvasGallery
+                works={galleryWorks}
+                activeIndex={safeActiveIndex}
+                onSelectWork={(index) => setActiveImage(index, "index")}
+                onFocusWork={(object) => onFocusArtwork(object)}
+                focusOpen={Boolean(focusedArtwork)}
+              />
+            ) : (
               <div className="v2-bbb-empty-note">No public gallery images are available yet.</div>
             )}
           </div>

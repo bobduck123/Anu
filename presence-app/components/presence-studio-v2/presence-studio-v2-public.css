@@ -3467,12 +3467,17 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  transform: translate(
-    calc(var(--parallax-x, 0) * -20px),
-    calc(var(--parallax-y, 0) * -20px)
-  );
-  transition: transform 120ms ease-out;
   cursor: crosshair;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #000;
+  z-index: 0;
 }
 
 .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-star {

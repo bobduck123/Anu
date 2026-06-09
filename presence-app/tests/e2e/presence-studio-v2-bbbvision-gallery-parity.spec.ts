@@ -102,10 +102,8 @@ test("gallery renders editable image objects from room data", async ({ page, req
   await publishDraft(request);
 
   await page.goto("/p/test-presence-room#gallery", { waitUntil: "networkidle" });
-  const stars = page.locator(".v2-bbb-star");
-  await expect(stars).toHaveCount(4);
-  const firstImg = stars.first().locator("img");
-  await expect(firstImg).toHaveAttribute("src", /.+/);
+  const canvas = page.locator(".v2-bbb-canvas");
+  await expect(canvas).toBeVisible();
   await screenshot(page, "02-gallery-constellation.png");
 });
 
@@ -116,25 +114,23 @@ test("gallery layout is not a generic flat card stack", async ({ page, request }
   await publishDraft(request);
 
   await page.goto("/p/test-presence-room#gallery", { waitUntil: "networkidle" });
-  const stars = page.locator(".v2-bbb-star");
-  const count = await stars.count();
-  expect(count).toBeGreaterThan(0);
+  const canvas = page.locator(".v2-bbb-canvas");
+  await expect(canvas).toBeVisible();
 
-  // Verify stars are absolutely positioned (not in a flex/grid flow)
-  const firstStar = stars.first();
-  const position = await firstStar.evaluate((el) => getComputedStyle(el).position);
-  expect(position).toBe("absolute");
+  // Canvas should fill the constellation container (not a flex/grid card stack)
+  const display = await canvas.evaluate((el) => getComputedStyle(el).display);
+  expect(display).toBe("block");
 });
 
-test("clicking constellation star opens focus overlay", async ({ page, request }) => {
+test("clicking canvas field opens focus overlay", async ({ page, request }) => {
   await openBbbVisionStudio(page, request);
   await selectBbbVisionStyle(page);
   await saveDraft(page);
   await publishDraft(request);
 
   await page.goto("/p/test-presence-room#gallery", { waitUntil: "networkidle" });
-  const stars = page.locator(".v2-bbb-star");
-  await stars.nth(1).click({ force: true });
+  const canvas = page.locator(".v2-bbb-canvas");
+  await canvas.click();
   await expect(page.getByTestId("presence-public-bbbvision-focus")).toBeVisible();
   await expect(page.getByTestId("presence-public-bbbvision-focus-image")).toBeVisible();
   await screenshot(page, "03-gallery-focus-open.png");
@@ -160,8 +156,8 @@ test("keyboard movement works in gallery and focus", async ({ page, request }) =
   await expect.poll(async () => page.getByTestId("presence-public-bbbvision-progress").innerText()).toBe(initialProgress);
 
   // Open focus with keyboard
-  const stars = page.locator(".v2-bbb-star");
-  await stars.nth(0).focus();
+  const canvas = page.locator(".v2-bbb-canvas");
+  await canvas.focus();
   await page.keyboard.press("Enter");
   await expect(page.getByTestId("presence-public-bbbvision-focus")).toBeVisible();
 
@@ -190,12 +186,12 @@ test("mobile gallery is not a flat card stack", async ({ page, request, context 
   await mobile.goto("/p/test-presence-room#gallery", { waitUntil: "networkidle" });
 
   await expect(mobile.getByTestId("presence-public-bbbvision-constellation")).toBeVisible();
-  const stars = mobile.locator(".v2-bbb-star");
-  await expect(stars).toHaveCount(4);
+  const canvas = mobile.locator(".v2-bbb-canvas");
+  await expect(canvas).toBeVisible();
 
-  // Verify absolute positioning on mobile too
-  const position = await stars.first().evaluate((el) => getComputedStyle(el).position);
-  expect(position).toBe("absolute");
+  // Canvas should fill the container (not a flex/grid card stack)
+  const display = await canvas.evaluate((el) => getComputedStyle(el).display);
+  expect(display).toBe("block");
 
   await screenshot(mobile, "04-mobile-gallery-constellation.png");
   await mobile.close();
@@ -212,10 +208,10 @@ test("reduced motion gallery remains usable", async ({ page, request, context })
   await reducedMotion.goto("/p/test-presence-room#gallery", { waitUntil: "networkidle" });
 
   await expect(reducedMotion.getByTestId("presence-public-bbbvision-constellation")).toBeVisible();
-  const stars = reducedMotion.locator(".v2-bbb-star");
-  await expect(stars).toHaveCount(4);
+  const canvas = reducedMotion.locator(".v2-bbb-canvas");
+  await expect(canvas).toBeVisible();
 
-  await stars.nth(0).click({ force: true });
+  await canvas.click();
   await expect(reducedMotion.getByTestId("presence-public-bbbvision-focus")).toBeVisible();
   await reducedMotion.keyboard.press("Escape");
   await expect(reducedMotion.getByTestId("presence-public-bbbvision-focus")).toHaveCount(0);

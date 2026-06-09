@@ -156,7 +156,7 @@ test("bbbvision public output opens as a threshold and moves into a distinct gal
   await expect(page.getByTestId("presence-public-bbbvision-gallery")).toHaveAttribute("data-chamber-role", "fallback");
   await expect(page.getByTestId("presence-public-bbbvision-threshold")).toHaveCount(0);
   await expect(page.getByTestId("presence-public-bbbvision-constellation")).toBeVisible();
-  await expect(page.locator(".v2-bbb-star")).toHaveCount(4);
+  await expect(page.locator(".v2-bbb-canvas")).toBeVisible();
   await page.waitForTimeout(650);
   const initialProgress = await page.getByTestId("presence-public-bbbvision-progress").innerText();
   await screenshot(page, "03-owner-preview-gallery-active.png");
@@ -174,9 +174,8 @@ test("bbbvision public output opens as a threshold and moves into a distinct gal
   await page.waitForTimeout(300);
   await screenshot(page, "05-owner-preview-gallery-prev.png");
 
-  // Click a constellation star to open focus overlay
-  const stars = page.locator(".v2-bbb-star");
-  await stars.nth(1).click({ force: true });
+  // Click canvas field to open focus overlay
+  await page.locator(".v2-bbb-canvas").click();
   await expect(page.getByTestId("presence-public-bbbvision-focus")).toBeVisible();
   await expect(page.getByTestId("presence-public-bbbvision-focus-image")).toBeVisible();
   await page.waitForTimeout(300);
@@ -219,7 +218,7 @@ test("bbbvision public output opens as a threshold and moves into a distinct gal
   await mobile.getByTestId("presence-public-bbbvision-enter").click();
   await expect(mobile.getByTestId("presence-public-bbbvision-gallery")).toBeVisible();
   await expect(mobile.getByTestId("presence-public-bbbvision-constellation")).toBeVisible();
-  await expect(mobile.locator(".v2-bbb-star")).toHaveCount(4);
+  await expect(mobile.locator(".v2-bbb-canvas")).toBeVisible();
   await mobile.waitForTimeout(650);
   await screenshot(mobile, "12-mobile-gallery.png");
   await mobile.close();
@@ -281,7 +280,7 @@ test("bbbvision public state flow consumes chamber metadata when authored", asyn
   await expect(previewGallery).toHaveAttribute("data-chamber-layout", "field");
   await expect(previewGallery).toHaveAttribute("data-chamber-transition", "fade");
   await expect(page.getByTestId("presence-public-bbbvision-constellation")).toBeVisible();
-  await expect(page.locator(".v2-bbb-star")).toHaveCount(2);
+  await expect(page.locator(".v2-bbb-canvas")).toBeVisible();
   await expect(page.getByTestId("presence-public-bbbvision-progress")).toContainText("01 / 02");
   await screenshot(page, "17-preview-metadata-gallery.png");
 

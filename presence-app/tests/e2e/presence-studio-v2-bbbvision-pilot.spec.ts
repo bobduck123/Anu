@@ -123,9 +123,8 @@ test("bbbvision threshold gallery is selectable, editable, persistent, public-sa
   await page.waitForTimeout(650);
   await screenshot(page, "04-owner-preview-bbbvision-gallery.png");
 
-  // Click a constellation star to open focus
-  const stars = page.locator(".v2-bbb-star");
-  await stars.nth(1).click({ force: true });
+  // Click canvas field to open focus
+  await page.locator(".v2-bbb-canvas").click();
   await expect(page.getByTestId("presence-public-bbbvision-focus")).toBeVisible();
   await expect(page.getByTestId("presence-public-bbbvision-focus-image")).toBeVisible();
   await screenshot(page, "05-owner-preview-bbbvision-focus.png");
