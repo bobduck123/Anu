@@ -9,6 +9,14 @@
 
 ---
 
+## Baseline
+
+**Baseline commit:** `6cafb36` on `feature/presence-ecosystem-alpha`
+
+See full baseline report: `PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6_RELEASE_BASELINE_REPORT.md`
+
+---
+
 ## 1. Deployment Record
 
 | Field | Value |

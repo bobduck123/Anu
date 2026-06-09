@@ -5,6 +5,10 @@
 **Scope:** `lib/presence/studio-v2/model.ts`, `adapters.ts`, `sanitize.ts`, `PresenceStudioV2Editor.tsx` style selector, `PresenceStudioV2PublicRoom.tsx` bbbvision branch, `presence-studio-v2-public.css` bbbvision styles, `tests/e2e/presence-studio-v2-bbbvision-pilot.spec.ts`, mock API state, evidence screenshots
 **Deployed:** Yes — deployed 2026-06-08 as part of combined S6A/S6B style system deploy. Hosted data mutated: Minimal and restored (Room 11 style switching for smoke verification). S4A status: Parked in `stash@{0}`.
 
+**Baseline commit:** `6cafb36` on `feature/presence-ecosystem-alpha`
+
+See full baseline report: `PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6_RELEASE_BASELINE_REPORT.md`
+
 ---
 
 ## 1. Executive Verdict

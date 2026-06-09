@@ -647,6 +647,12 @@ docs/program/evidence/presence-studio-v2-asset-library-s5-hosted/
 
 ---
 
+## Baseline
+
+**Baseline commit:** `6cafb36` on `feature/presence-ecosystem-alpha`
+
+See full baseline report: `PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6_RELEASE_BASELINE_REPORT.md`
+
 ## S6 Public Style Presets Deployed — 2026-06-08
 
 Combined S6A/S6B deployment completed successfully:

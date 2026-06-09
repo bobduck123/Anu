@@ -1781,6 +1781,12 @@ New report: `PRESENCE_STUDIO_V2_BBBVISION_PILOT_S6B_AUDIT.md`
 
 ---
 
+## Baseline
+
+**Baseline commit:** `6cafb36` on `feature/presence-ecosystem-alpha`
+
+See full baseline report: `PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6_RELEASE_BASELINE_REPORT.md`
+
 ## S6 Public Style Presets Hosted Deploy — 2026-06-08
 
 Scope: Deploy S6A/S6B public style system to production and complete hosted smoke.

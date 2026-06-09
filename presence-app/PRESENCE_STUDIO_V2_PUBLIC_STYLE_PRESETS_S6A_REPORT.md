@@ -3,6 +3,12 @@
 Date: 2026-06-09
 Scope: Selectable public-output style presets and Christina Liquid Gallery archetype. Deployed and hosted-smoked after Kimi PASS.
 
+## Baseline
+
+**Baseline commit:** `6cafb36` on `feature/presence-ecosystem-alpha`
+
+See full baseline report: `PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6_RELEASE_BASELINE_REPORT.md`
+
 ## Deployment Update — 2026-06-08
 
 S6A style system deployed to production as part of the combined S6A/S6B deploy:
