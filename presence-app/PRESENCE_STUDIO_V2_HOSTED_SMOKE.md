@@ -2,6 +2,46 @@
 
 Date: 2026-06-03
 
+## 2026-06-09 bbbvision Hosted Migration Result
+
+Hosted bbbvision Studio V2 migration is now complete.
+
+```txt
+room id: 29
+slug: bbbvision
+owner: e4hatu@gmail.com
+renderer: presence-studio-v2-room
+public style preset: bbbvision-threshold-gallery
+published version: 2
+```
+
+Final owner/account checks:
+
+- target owner detail, analytics, passes, and room-key routes: `200`
+- unrelated owner negative checks: `403`
+- public room redaction: pass
+- no secrets/tokens printed
+
+Final public smoke:
+
+```txt
+/p/bbbvision: PASS
+/presence/bbbvision: PASS
+/p/ggm-christina-goddard: PASS
+/presence/ggm-christina-goddard: PASS
+/p/hesmaddw legacy negative: PASS
+TOTAL_VIOLATIONS: 0
+```
+
+Evidence:
+
+```txt
+docs/program/evidence/presence-studio-v2-bbbvision-hosted-migration/
+PRESENCE_STUDIO_V2_BBBVISION_HOSTED_MIGRATION_REPORT.md
+```
+
+Credential-bound browser sign-in was not run because no hosted owner password was available in process env or ignored env files. Owner-scoped API access, edit/save/preview/publish, and S5 assets access were proven through the approved subject-bound backend path.
+
 ## Current Status
 
 Hosted Studio V2 lifecycle smoke was run against the provided hosted URLs and failed before mutation.

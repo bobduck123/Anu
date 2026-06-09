@@ -1,0 +1,118 @@
+{
+  "checks": {
+    "ggm_room_owner": false,
+    "internal_lifetime_free_entitlement": true,
+    "normal_user_control_token_denied": true,
+    "normal_user_owner_analytics_denied": false,
+    "platform_admin_role": true,
+    "presence_app_user_exists": true,
+    "presence_email_unique": true,
+    "presence_required_account_fields": true,
+    "presence_user_active": true,
+    "public_room_redaction": false,
+    "supabase_auth_user_exists": true,
+    "supabase_auth_user_healthy": true,
+    "supabase_email_identity": true,
+    "supabase_subject_matches_presence": true,
+    "supabase_subject_unique_in_presence": true,
+    "target_owner_analytics_accept_supabase_subject": false,
+    "target_owner_nodes_accept_supabase_subject": true,
+    "target_room_keys_accept_supabase_subject": false
+  },
+  "compare_account": {
+    "email_redacted": null,
+    "requested": false,
+    "supabase": null
+  },
+  "email": "e4hatu@gmail.com",
+  "environment": "hosted_controlled_launch",
+  "ok": false,
+  "operation": "verify",
+  "presence": {
+    "active": true,
+    "email_count": 1,
+    "entitlement": {
+      "active_internal_lifetime_free": true,
+      "belongs_to_target": true,
+      "billing_mode": "internal_comp",
+      "ends_at": null,
+      "id": 1,
+      "lifetime": true,
+      "price_cents": 0,
+      "source": "controlled_launch_pilot",
+      "status": "active",
+      "user_id": 1
+    },
+    "optional_observer_profile_count": 1,
+    "required_account_fields_present": true,
+    "role": "platform_admin",
+    "room": {
+      "id": null,
+      "owned_by_target": false,
+      "owner_user_id": null,
+      "slug": null
+    },
+    "stored_subject_fingerprint": "ec6dd2ae7590",
+    "subject_matches_supabase": true,
+    "supabase_subject_bound_user_ids": [
+      1
+    ],
+    "user_id": 1
+  },
+  "repair": null,
+  "room_slug": "bbbvision",
+  "route_checks": {
+    "negative_control_token_issue": {
+      "ok": false,
+      "status": 403
+    },
+    "negative_owner_analytics": null,
+    "negative_user_id": 13,
+    "public_room": null,
+    "public_room_redacts_target_email_admin_entitlement": false,
+    "target_owner_analytics": null,
+    "target_owner_detail": null,
+    "target_owner_passes": null,
+    "target_owner_room_keys": null,
+    "target_supabase_subject_owner_nodes": {
+      "ok": true,
+      "status": 200
+    }
+  },
+  "secret_values_printed": false,
+  "supabase": {
+    "app_metadata_keys": [
+      "provider",
+      "providers"
+    ],
+    "aud": "authenticated",
+    "banned": false,
+    "deleted": false,
+    "email_confirmed": true,
+    "email_redacted": "e4***@gmail.com",
+    "exists": true,
+    "has_duplicate_provider_identity": false,
+    "has_email_identity": true,
+    "last_sign_in_present": true,
+    "provider_counts": {
+      "email": 1
+    },
+    "providers": [
+      "email"
+    ],
+    "role": "authenticated",
+    "subject_fingerprint": "ec6dd2ae7590",
+    "user_count": 1,
+    "user_metadata_keys": [
+      "display_name",
+      "email",
+      "email_verified",
+      "intended_presence_type",
+      "phone_verified",
+      "product",
+      "role",
+      "sub"
+    ]
+  },
+  "tokens_printed": false
+}

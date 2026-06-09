@@ -11,6 +11,35 @@ See full baseline report: `PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6_RELEASE_BA
 
 ---
 
+## 2026-06-09 Hosted Migration Update
+
+S6B has moved from selectable hosted preset to live hosted bbbvision room.
+
+| Item | Result |
+|------|--------|
+| Room | `29` / `bbbvision` |
+| Owner | `e4hatu@gmail.com` |
+| Creation path | Approved controlled-launch backend script plus owner editor API |
+| Public style preset | `bbbvision-threshold-gallery` |
+| Published editable config | version `2` |
+| Public `/p/bbbvision` | PASS |
+| Public `/presence/bbbvision` | PASS |
+| Mobile public bbbvision | PASS |
+| Payload hygiene | `TOTAL_VIOLATIONS: 0` |
+| Room 11 regression | PASS |
+| Legacy `hesmaddw` negative | PASS |
+
+Evidence:
+
+```txt
+docs/program/evidence/presence-studio-v2-bbbvision-hosted-migration/
+PRESENCE_STUDIO_V2_BBBVISION_HOSTED_MIGRATION_REPORT.md
+```
+
+The public renderer remains data-driven. No bbbvision content was hardcoded into the renderer, and no iframe/static clone was used.
+
+---
+
 ## 1. Executive Verdict
 
 **PASS — bbbvision is a real editable Presence pilot/style preset, not a static clone.**

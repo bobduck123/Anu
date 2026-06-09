@@ -2,6 +2,37 @@
 
 Date: 2026-06-03
 
+## 2026-06-09 bbbvision Hosted Migration QA Addendum
+
+Local/hosted migration support added:
+
+- `flora-fauna/backend/scripts/setup_presence_pilot_bbbvision.py`
+- `scripts/hosted-bbbvision-migration-smoke.mjs`
+- public fallback copy hygiene fix in `app/(public)/p/[slug]/not-found.tsx`
+
+Commands run:
+
+```powershell
+python -m py_compile flora-fauna\backend\scripts\setup_presence_pilot_bbbvision.py
+npm run build
+node scripts\hosted-bbbvision-migration-smoke.mjs
+```
+
+Results:
+
+- Python migration script compile: pass
+- Next production build: pass
+- Hosted bbbvision public smoke: pass
+- Hosted payload hygiene: `TOTAL_VIOLATIONS: 0`
+- Room 11 regression: pass
+- legacy `hesmaddw` remains legacy
+
+Evidence:
+
+```txt
+docs/program/evidence/presence-studio-v2-bbbvision-hosted-migration/
+```
+
 ## Scope
 
 Local QA for the Studio V2 integration slice, including Phase A adapter hardening:
@@ -1840,4 +1871,3 @@ Verdict:
 - Controlled operator-led pilots: ready with operator support.
 - Public self-serve onboarding: still not ready.
 - S6 style-system baseline can be locked.
-

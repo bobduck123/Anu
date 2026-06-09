@@ -1,0 +1,1886 @@
+{
+  "collections": [],
+  "draft": null,
+  "history": [
+    {
+      "archived_at": null,
+      "asset_config": {
+        "studio_v2": {
+          "assets": [
+            {
+              "alt": "bbb.vision Sparkle",
+              "objectId": "bbb-landing-sparkle",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/sparkle.JPG"
+            },
+            {
+              "alt": "bbb.vision Akka",
+              "objectId": "bbb-landing-akka",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/akka.JPG"
+            },
+            {
+              "alt": "bbb.vision Ballerina",
+              "objectId": "bbb-landing-ballerina",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/ballerina.JPG"
+            },
+            {
+              "alt": "bbb.vision Ballerina I",
+              "objectId": "bbb-landing-ballerina-1",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/ballerina%20%281%29.JPG"
+            },
+            {
+              "alt": "bbb.vision Ballerina II",
+              "objectId": "bbb-landing-ballerina-2",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/ballerina%20%282%29.JPG"
+            },
+            {
+              "alt": "bbb.vision CD",
+              "objectId": "bbb-landing-cd",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/CD.JPG"
+            },
+            {
+              "alt": "bbb.vision Fashion Week",
+              "objectId": "bbb-landing-fashion-week",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/fashion%20week_.JPG"
+            },
+            {
+              "alt": "bbb.vision Liv.e",
+              "objectId": "bbb-landing-liv-e",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/Liv.e.JPG"
+            },
+            {
+              "alt": "bbb.vision mk.gee",
+              "objectId": "bbb-landing-mk-gee",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/mk.gee.JPG"
+            },
+            {
+              "alt": "bbb.vision Tems",
+              "objectId": "bbb-landing-tems",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/tems.JPG"
+            },
+            {
+              "alt": "bbb.vision Klien",
+              "objectId": "bbb-gallery-klien",
+              "src": "https://bbbvision.vercel.app/assets/benny/klien.JPG"
+            },
+            {
+              "alt": "bbb.vision Klein",
+              "objectId": "bbb-gallery-klein",
+              "src": "https://bbbvision.vercel.app/assets/benny/klein.JPG"
+            },
+            {
+              "alt": "bbb.vision Kelela",
+              "objectId": "bbb-gallery-kelela",
+              "src": "https://bbbvision.vercel.app/assets/benny/kelela.JPG"
+            },
+            {
+              "alt": "bbb.vision Kelela I",
+              "objectId": "bbb-gallery-kelela-1",
+              "src": "https://bbbvision.vercel.app/assets/benny/kelela%20%281%29.JPG"
+            },
+            {
+              "alt": "bbb.vision Little Simz",
+              "objectId": "bbb-gallery-little-simz",
+              "src": "https://bbbvision.vercel.app/assets/benny/little%20simz.JPG"
+            },
+            {
+              "alt": "bbb.vision Niecy Blues",
+              "objectId": "bbb-gallery-niecy-blues",
+              "src": "https://bbbvision.vercel.app/assets/benny/Niecy%20Blues.JPG"
+            },
+            {
+              "alt": "bbb.vision Sparkle",
+              "objectId": "bbb-gallery-sparkle",
+              "src": "https://bbbvision.vercel.app/assets/benny/sparkle.JPG"
+            },
+            {
+              "alt": "bbb.vision Tems",
+              "objectId": "bbb-gallery-tems",
+              "src": "https://bbbvision.vercel.app/assets/benny/tems.JPG"
+            },
+            {
+              "alt": "bbb.vision Tems I",
+              "objectId": "bbb-gallery-tems-1",
+              "src": "https://bbbvision.vercel.app/assets/benny/tems%20%281%29.JPG"
+            },
+            {
+              "alt": "bbb.vision Yves Tumor",
+              "objectId": "bbb-gallery-yves-tumor",
+              "src": "https://bbbvision.vercel.app/assets/benny/yves%20tumor.JPG"
+            }
+          ]
+        }
+      },
+      "content_config": {
+        "studio_v2": {
+          "cta": {
+            "label": "Enter"
+          },
+          "moodboardRefs": [],
+          "objects": [
+            {
+              "detail": "Source asset from the local bbb.vision threshold sequence set.",
+              "id": "bbb-landing-sparkle",
+              "image": {
+                "alt": "bbb.vision Sparkle",
+                "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/sparkle.JPG"
+              },
+              "meta": "Threshold sequence",
+              "role": "work",
+              "title": "Sparkle",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision threshold sequence set.",
+              "id": "bbb-landing-akka",
+              "image": {
+                "alt": "bbb.vision Akka",
+                "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/akka.JPG"
+              },
+              "meta": "Threshold sequence",
+              "role": "work",
+              "title": "Akka",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision threshold sequence set.",
+              "id": "bbb-landing-ballerina",
+              "image": {
+                "alt": "bbb.vision Ballerina",
+                "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/ballerina.JPG"
+              },
+              "meta": "Threshold sequence",
+              "role": "work",
+              "title": "Ballerina",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision threshold sequence set.",
+              "id": "bbb-landing-ballerina-1",
+              "image": {
+                "alt": "bbb.vision Ballerina I",
+                "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/ballerina%20%281%29.JPG"
+              },
+              "meta": "Threshold sequence",
+              "role": "work",
+              "title": "Ballerina I",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision threshold sequence set.",
+              "id": "bbb-landing-ballerina-2",
+              "image": {
+                "alt": "bbb.vision Ballerina II",
+                "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/ballerina%20%282%29.JPG"
+              },
+              "meta": "Threshold sequence",
+              "role": "work",
+              "title": "Ballerina II",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision threshold sequence set.",
+              "id": "bbb-landing-cd",
+              "image": {
+                "alt": "bbb.vision CD",
+                "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/CD.JPG"
+              },
+              "meta": "Threshold sequence",
+              "role": "work",
+              "title": "CD",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision threshold sequence set.",
+              "id": "bbb-landing-fashion-week",
+              "image": {
+                "alt": "bbb.vision Fashion Week",
+                "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/fashion%20week_.JPG"
+              },
+              "meta": "Threshold sequence",
+              "role": "work",
+              "title": "Fashion Week",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision threshold sequence set.",
+              "id": "bbb-landing-liv-e",
+              "image": {
+                "alt": "bbb.vision Liv.e",
+                "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/Liv.e.JPG"
+              },
+              "meta": "Threshold sequence",
+              "role": "work",
+              "title": "Liv.e",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision threshold sequence set.",
+              "id": "bbb-landing-mk-gee",
+              "image": {
+                "alt": "bbb.vision mk.gee",
+                "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/mk.gee.JPG"
+              },
+              "meta": "Threshold sequence",
+              "role": "work",
+              "title": "mk.gee",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision threshold sequence set.",
+              "id": "bbb-landing-tems",
+              "image": {
+                "alt": "bbb.vision Tems",
+                "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/tems.JPG"
+              },
+              "meta": "Threshold sequence",
+              "role": "work",
+              "title": "Tems",
+              "type": "image"
+            },
+            {
+              "id": "bbb-enter-action",
+              "meta": "Public route action",
+              "role": "cta",
+              "title": "Enter",
+              "type": "cta"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision gallery field set.",
+              "id": "bbb-gallery-klien",
+              "image": {
+                "alt": "bbb.vision Klien",
+                "src": "https://bbbvision.vercel.app/assets/benny/klien.JPG"
+              },
+              "meta": "Gallery field",
+              "role": "work",
+              "title": "Klien",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision gallery field set.",
+              "id": "bbb-gallery-klein",
+              "image": {
+                "alt": "bbb.vision Klein",
+                "src": "https://bbbvision.vercel.app/assets/benny/klein.JPG"
+              },
+              "meta": "Gallery field",
+              "role": "work",
+              "title": "Klein",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision gallery field set.",
+              "id": "bbb-gallery-kelela",
+              "image": {
+                "alt": "bbb.vision Kelela",
+                "src": "https://bbbvision.vercel.app/assets/benny/kelela.JPG"
+              },
+              "meta": "Gallery field",
+              "role": "work",
+              "title": "Kelela",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision gallery field set.",
+              "id": "bbb-gallery-kelela-1",
+              "image": {
+                "alt": "bbb.vision Kelela I",
+                "src": "https://bbbvision.vercel.app/assets/benny/kelela%20%281%29.JPG"
+              },
+              "meta": "Gallery field",
+              "role": "work",
+              "title": "Kelela I",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision gallery field set.",
+              "id": "bbb-gallery-little-simz",
+              "image": {
+                "alt": "bbb.vision Little Simz",
+                "src": "https://bbbvision.vercel.app/assets/benny/little%20simz.JPG"
+              },
+              "meta": "Gallery field",
+              "role": "work",
+              "title": "Little Simz",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision gallery field set.",
+              "id": "bbb-gallery-niecy-blues",
+              "image": {
+                "alt": "bbb.vision Niecy Blues",
+                "src": "https://bbbvision.vercel.app/assets/benny/Niecy%20Blues.JPG"
+              },
+              "meta": "Gallery field",
+              "role": "work",
+              "title": "Niecy Blues",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision gallery field set.",
+              "id": "bbb-gallery-sparkle",
+              "image": {
+                "alt": "bbb.vision Sparkle",
+                "src": "https://bbbvision.vercel.app/assets/benny/sparkle.JPG"
+              },
+              "meta": "Gallery field",
+              "role": "work",
+              "title": "Sparkle",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision gallery field set.",
+              "id": "bbb-gallery-tems",
+              "image": {
+                "alt": "bbb.vision Tems",
+                "src": "https://bbbvision.vercel.app/assets/benny/tems.JPG"
+              },
+              "meta": "Gallery field",
+              "role": "work",
+              "title": "Tems",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision gallery field set.",
+              "id": "bbb-gallery-tems-1",
+              "image": {
+                "alt": "bbb.vision Tems I",
+                "src": "https://bbbvision.vercel.app/assets/benny/tems%20%281%29.JPG"
+              },
+              "meta": "Gallery field",
+              "role": "work",
+              "title": "Tems I",
+              "type": "image"
+            },
+            {
+              "detail": "Source asset from the local bbb.vision gallery field set.",
+              "id": "bbb-gallery-yves-tumor",
+              "image": {
+                "alt": "bbb.vision Yves Tumor",
+                "src": "https://bbbvision.vercel.app/assets/benny/yves%20tumor.JPG"
+              },
+              "meta": "Gallery field",
+              "role": "work",
+              "title": "Yves Tumor",
+              "type": "image"
+            },
+            {
+              "detail": "bbb.vision opens through a full-screen image threshold, then moves into a black gallery field of selected source images.",
+              "id": "bbb-practice-note",
+              "role": "statement",
+              "title": "Image-first threshold gallery",
+              "type": "text"
+            }
+          ],
+          "roomId": "29",
+          "schemaVersion": "presence-studio-v2-v1",
+          "slug": "bbbvision",
+          "tagline": "Image-first threshold gallery from the bbb.vision source archive.",
+          "title": "bbb.vision",
+          "traces": {
+            "demo": false,
+            "disclosure": "No public traces are enabled.",
+            "enabled": false
+          }
+        }
+      },
+      "created_at": "2026-06-09T00:31:19.721072",
+      "created_by_user_id": 1,
+      "enquiry_config": {
+        "studio_v2": {
+          "primaryCta": {
+            "label": "Enter"
+          }
+        }
+      },
+      "id": 68,
+      "locked_fields": {},
+      "motion_config": {
+        "studio_v2": {
+          "auraIntensity": 0.32,
+          "motionIntensity": "gentle"
+        }
+      },
+      "published_at": "2026-06-09T00:31:31.652691",
+      "published_by_user_id": 1,
+      "renderer_key": "presence-studio-v2-room",
+      "room_id": 29,
+      "roomkey_config": {
+        "studio_v2": {
+          "portals": [
+            {
+              "label": "Enter",
+              "objectId": "bbb-enter-action"
+            }
+          ]
+        }
+      },
+      "scene_config": {
+        "studio_v2": {
+          "chambers": [
+            {
+              "id": "threshold",
+              "label": "Threshold",
+              "objectIds": [
+                "bbb-landing-sparkle",
+                "bbb-landing-akka",
+                "bbb-landing-ballerina",
+                "bbb-landing-ballerina-1",
+                "bbb-landing-ballerina-2",
+                "bbb-landing-cd",
+                "bbb-landing-fashion-week",
+                "bbb-landing-liv-e",
+                "bbb-landing-mk-gee",
+                "bbb-landing-tems",
+                "bbb-enter-action"
+              ]
+            },
+            {
+              "id": "gallery",
+              "label": "Gallery Field",
+              "objectIds": [
+                "bbb-gallery-klien",
+                "bbb-gallery-klein",
+                "bbb-gallery-kelela",
+                "bbb-gallery-kelela-1",
+                "bbb-gallery-little-simz",
+                "bbb-gallery-niecy-blues",
+                "bbb-gallery-sparkle",
+                "bbb-gallery-tems",
+                "bbb-gallery-tems-1",
+                "bbb-gallery-yves-tumor"
+              ]
+            },
+            {
+              "id": "practice",
+              "label": "Practice",
+              "objectIds": [
+                "bbb-practice-note"
+              ]
+            }
+          ],
+          "mobileRecovery": {
+            "strategy": "suspend-mobile-transforms",
+            "transformsSuspendedOnMobile": true
+          },
+          "objectState": {
+            "bbb-enter-action": {
+              "chamberId": "threshold",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 11
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-gallery-kelela": {
+              "chamberId": "gallery",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 14
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-gallery-kelela-1": {
+              "chamberId": "gallery",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 15
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-gallery-klein": {
+              "chamberId": "gallery",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 13
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-gallery-klien": {
+              "chamberId": "gallery",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 12
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-gallery-little-simz": {
+              "chamberId": "gallery",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 16
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-gallery-niecy-blues": {
+              "chamberId": "gallery",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 17
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-gallery-sparkle": {
+              "chamberId": "gallery",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 18
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-gallery-tems": {
+              "chamberId": "gallery",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 19
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-gallery-tems-1": {
+              "chamberId": "gallery",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 20
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-gallery-yves-tumor": {
+              "chamberId": "gallery",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 21
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-landing-akka": {
+              "chamberId": "threshold",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 2
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-landing-ballerina": {
+              "chamberId": "threshold",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 3
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-landing-ballerina-1": {
+              "chamberId": "threshold",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 4
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-landing-ballerina-2": {
+              "chamberId": "threshold",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 5
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-landing-cd": {
+              "chamberId": "threshold",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 6
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-landing-fashion-week": {
+              "chamberId": "threshold",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 7
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-landing-liv-e": {
+              "chamberId": "threshold",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 8
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-landing-mk-gee": {
+              "chamberId": "threshold",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 9
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-landing-sparkle": {
+              "chamberId": "threshold",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 1
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-landing-tems": {
+              "chamberId": "threshold",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 10
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            },
+            "bbb-practice-note": {
+              "chamberId": "practice",
+              "locked": false,
+              "pinned": false,
+              "transform": {
+                "rotation": 0,
+                "scale": 1,
+                "x": 0,
+                "y": 0,
+                "zIndex": 22
+              },
+              "visibility": {
+                "mobile": true,
+                "public": true
+              }
+            }
+          },
+          "schemaVersion": "presence-studio-v2-v1",
+          "worldId": "gallery"
+        }
+      },
+      "schema_version": "presence-editable-config-v1",
+      "status": "published",
+      "style_dna": {
+        "studio_v2": {
+          "publicStylePreset": "bbbvision-threshold-gallery",
+          "schemaVersion": "presence-studio-v2-v1",
+          "skin": {
+            "accentColor": "#ffd84d",
+            "auraIntensity": 0.32,
+            "background": "#000000",
+            "borderStyle": "hairline",
+            "displayFont": "serif",
+            "headingWeight": 500,
+            "motionIntensity": "gentle",
+            "objectRadius": 2,
+            "shadowDepth": 0.42,
+            "texture": "none"
+          }
+        }
+      },
+      "updated_at": "2026-06-09T00:31:31.652691",
+      "updated_by_user_id": 1,
+      "version": 1
+    }
+  ],
+  "published": {
+    "archived_at": null,
+    "asset_config": {
+      "studio_v2": {
+        "assets": [
+          {
+            "alt": "bbb.vision Sparkle",
+            "objectId": "bbb-landing-sparkle",
+            "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/sparkle.JPG"
+          },
+          {
+            "alt": "bbb.vision Akka",
+            "objectId": "bbb-landing-akka",
+            "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/akka.JPG"
+          },
+          {
+            "alt": "bbb.vision Ballerina",
+            "objectId": "bbb-landing-ballerina",
+            "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/ballerina.JPG"
+          },
+          {
+            "alt": "bbb.vision Ballerina I",
+            "objectId": "bbb-landing-ballerina-1",
+            "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/ballerina%20%281%29.JPG"
+          },
+          {
+            "alt": "bbb.vision Ballerina II",
+            "objectId": "bbb-landing-ballerina-2",
+            "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/ballerina%20%282%29.JPG"
+          },
+          {
+            "alt": "bbb.vision CD",
+            "objectId": "bbb-landing-cd",
+            "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/CD.JPG"
+          },
+          {
+            "alt": "bbb.vision Fashion Week",
+            "objectId": "bbb-landing-fashion-week",
+            "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/fashion%20week_.JPG"
+          },
+          {
+            "alt": "bbb.vision Liv.e",
+            "objectId": "bbb-landing-liv-e",
+            "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/Liv.e.JPG"
+          },
+          {
+            "alt": "bbb.vision mk.gee",
+            "objectId": "bbb-landing-mk-gee",
+            "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/mk.gee.JPG"
+          },
+          {
+            "alt": "bbb.vision Tems",
+            "objectId": "bbb-landing-tems",
+            "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/tems.JPG"
+          },
+          {
+            "alt": "bbb.vision Klien",
+            "objectId": "bbb-gallery-klien",
+            "src": "https://bbbvision.vercel.app/assets/benny/klien.JPG"
+          },
+          {
+            "alt": "bbb.vision Klein",
+            "objectId": "bbb-gallery-klein",
+            "src": "https://bbbvision.vercel.app/assets/benny/klein.JPG"
+          },
+          {
+            "alt": "bbb.vision Kelela",
+            "objectId": "bbb-gallery-kelela",
+            "src": "https://bbbvision.vercel.app/assets/benny/kelela.JPG"
+          },
+          {
+            "alt": "bbb.vision Kelela I",
+            "objectId": "bbb-gallery-kelela-1",
+            "src": "https://bbbvision.vercel.app/assets/benny/kelela%20%281%29.JPG"
+          },
+          {
+            "alt": "bbb.vision Little Simz",
+            "objectId": "bbb-gallery-little-simz",
+            "src": "https://bbbvision.vercel.app/assets/benny/little%20simz.JPG"
+          },
+          {
+            "alt": "bbb.vision Niecy Blues",
+            "objectId": "bbb-gallery-niecy-blues",
+            "src": "https://bbbvision.vercel.app/assets/benny/Niecy%20Blues.JPG"
+          },
+          {
+            "alt": "bbb.vision Sparkle",
+            "objectId": "bbb-gallery-sparkle",
+            "src": "https://bbbvision.vercel.app/assets/benny/sparkle.JPG"
+          },
+          {
+            "alt": "bbb.vision Tems",
+            "objectId": "bbb-gallery-tems",
+            "src": "https://bbbvision.vercel.app/assets/benny/tems.JPG"
+          },
+          {
+            "alt": "bbb.vision Tems I",
+            "objectId": "bbb-gallery-tems-1",
+            "src": "https://bbbvision.vercel.app/assets/benny/tems%20%281%29.JPG"
+          },
+          {
+            "alt": "bbb.vision Yves Tumor",
+            "objectId": "bbb-gallery-yves-tumor",
+            "src": "https://bbbvision.vercel.app/assets/benny/yves%20tumor.JPG"
+          }
+        ]
+      }
+    },
+    "content_config": {
+      "studio_v2": {
+        "cta": {
+          "label": "Enter"
+        },
+        "moodboardRefs": [],
+        "objects": [
+          {
+            "detail": "Source asset from the local bbb.vision threshold sequence set.",
+            "id": "bbb-landing-sparkle",
+            "image": {
+              "alt": "bbb.vision Sparkle",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/sparkle.JPG"
+            },
+            "meta": "Threshold sequence",
+            "role": "work",
+            "title": "Sparkle",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision threshold sequence set.",
+            "id": "bbb-landing-akka",
+            "image": {
+              "alt": "bbb.vision Akka",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/akka.JPG"
+            },
+            "meta": "Threshold sequence",
+            "role": "work",
+            "title": "Akka",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision threshold sequence set.",
+            "id": "bbb-landing-ballerina",
+            "image": {
+              "alt": "bbb.vision Ballerina",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/ballerina.JPG"
+            },
+            "meta": "Threshold sequence",
+            "role": "work",
+            "title": "Ballerina",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision threshold sequence set.",
+            "id": "bbb-landing-ballerina-1",
+            "image": {
+              "alt": "bbb.vision Ballerina I",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/ballerina%20%281%29.JPG"
+            },
+            "meta": "Threshold sequence",
+            "role": "work",
+            "title": "Ballerina I",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision threshold sequence set.",
+            "id": "bbb-landing-ballerina-2",
+            "image": {
+              "alt": "bbb.vision Ballerina II",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/ballerina%20%282%29.JPG"
+            },
+            "meta": "Threshold sequence",
+            "role": "work",
+            "title": "Ballerina II",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision threshold sequence set.",
+            "id": "bbb-landing-cd",
+            "image": {
+              "alt": "bbb.vision CD",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/CD.JPG"
+            },
+            "meta": "Threshold sequence",
+            "role": "work",
+            "title": "CD",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision threshold sequence set.",
+            "id": "bbb-landing-fashion-week",
+            "image": {
+              "alt": "bbb.vision Fashion Week",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/fashion%20week_.JPG"
+            },
+            "meta": "Threshold sequence",
+            "role": "work",
+            "title": "Fashion Week",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision threshold sequence set.",
+            "id": "bbb-landing-liv-e",
+            "image": {
+              "alt": "bbb.vision Liv.e",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/Liv.e.JPG"
+            },
+            "meta": "Threshold sequence",
+            "role": "work",
+            "title": "Liv.e",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision threshold sequence set.",
+            "id": "bbb-landing-mk-gee",
+            "image": {
+              "alt": "bbb.vision mk.gee",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/mk.gee.JPG"
+            },
+            "meta": "Threshold sequence",
+            "role": "work",
+            "title": "mk.gee",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision threshold sequence set.",
+            "id": "bbb-landing-tems",
+            "image": {
+              "alt": "bbb.vision Tems",
+              "src": "https://bbbvision.vercel.app/assets/landing-slider-shots/tems.JPG"
+            },
+            "meta": "Threshold sequence",
+            "role": "work",
+            "title": "Tems",
+            "type": "image"
+          },
+          {
+            "id": "bbb-enter-action",
+            "meta": "Public route action",
+            "role": "cta",
+            "title": "Enter",
+            "type": "cta"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision gallery field set.",
+            "id": "bbb-gallery-klien",
+            "image": {
+              "alt": "bbb.vision Klien",
+              "src": "https://bbbvision.vercel.app/assets/benny/klien.JPG"
+            },
+            "meta": "Gallery field",
+            "role": "work",
+            "title": "Klien",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision gallery field set.",
+            "id": "bbb-gallery-klein",
+            "image": {
+              "alt": "bbb.vision Klein",
+              "src": "https://bbbvision.vercel.app/assets/benny/klein.JPG"
+            },
+            "meta": "Gallery field",
+            "role": "work",
+            "title": "Klein",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision gallery field set.",
+            "id": "bbb-gallery-kelela",
+            "image": {
+              "alt": "bbb.vision Kelela",
+              "src": "https://bbbvision.vercel.app/assets/benny/kelela.JPG"
+            },
+            "meta": "Gallery field",
+            "role": "work",
+            "title": "Kelela",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision gallery field set.",
+            "id": "bbb-gallery-kelela-1",
+            "image": {
+              "alt": "bbb.vision Kelela I",
+              "src": "https://bbbvision.vercel.app/assets/benny/kelela%20%281%29.JPG"
+            },
+            "meta": "Gallery field",
+            "role": "work",
+            "title": "Kelela I",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision gallery field set.",
+            "id": "bbb-gallery-little-simz",
+            "image": {
+              "alt": "bbb.vision Little Simz",
+              "src": "https://bbbvision.vercel.app/assets/benny/little%20simz.JPG"
+            },
+            "meta": "Gallery field",
+            "role": "work",
+            "title": "Little Simz",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision gallery field set.",
+            "id": "bbb-gallery-niecy-blues",
+            "image": {
+              "alt": "bbb.vision Niecy Blues",
+              "src": "https://bbbvision.vercel.app/assets/benny/Niecy%20Blues.JPG"
+            },
+            "meta": "Gallery field",
+            "role": "work",
+            "title": "Niecy Blues",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision gallery field set.",
+            "id": "bbb-gallery-sparkle",
+            "image": {
+              "alt": "bbb.vision Sparkle",
+              "src": "https://bbbvision.vercel.app/assets/benny/sparkle.JPG"
+            },
+            "meta": "Gallery field",
+            "role": "work",
+            "title": "Sparkle",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision gallery field set.",
+            "id": "bbb-gallery-tems",
+            "image": {
+              "alt": "bbb.vision Tems",
+              "src": "https://bbbvision.vercel.app/assets/benny/tems.JPG"
+            },
+            "meta": "Gallery field",
+            "role": "work",
+            "title": "Tems",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision gallery field set.",
+            "id": "bbb-gallery-tems-1",
+            "image": {
+              "alt": "bbb.vision Tems I",
+              "src": "https://bbbvision.vercel.app/assets/benny/tems%20%281%29.JPG"
+            },
+            "meta": "Gallery field",
+            "role": "work",
+            "title": "Tems I",
+            "type": "image"
+          },
+          {
+            "detail": "Source asset from the local bbb.vision gallery field set.",
+            "id": "bbb-gallery-yves-tumor",
+            "image": {
+              "alt": "bbb.vision Yves Tumor",
+              "src": "https://bbbvision.vercel.app/assets/benny/yves%20tumor.JPG"
+            },
+            "meta": "Gallery field",
+            "role": "work",
+            "title": "Yves Tumor",
+            "type": "image"
+          },
+          {
+            "detail": "bbb.vision opens through a full-screen image threshold, then moves into a black gallery field of selected source images.",
+            "id": "bbb-practice-note",
+            "role": "statement",
+            "title": "Image-first threshold gallery",
+            "type": "text"
+          }
+        ],
+        "roomId": "29",
+        "schemaVersion": "presence-studio-v2-v1",
+        "slug": "bbbvision",
+        "tagline": "Image-first threshold gallery from the bbb.vision source archive.",
+        "title": "bbb.vision",
+        "traces": {
+          "demo": false,
+          "disclosure": "No public traces are enabled.",
+          "enabled": false
+        }
+      }
+    },
+    "created_at": "2026-06-09T00:31:19.721072",
+    "created_by_user_id": 1,
+    "enquiry_config": {
+      "studio_v2": {
+        "primaryCta": {
+          "label": "Enter"
+        }
+      }
+    },
+    "id": 68,
+    "locked_fields": {},
+    "motion_config": {
+      "studio_v2": {
+        "auraIntensity": 0.32,
+        "motionIntensity": "gentle"
+      }
+    },
+    "published_at": "2026-06-09T00:31:31.652691",
+    "published_by_user_id": 1,
+    "renderer_key": "presence-studio-v2-room",
+    "room_id": 29,
+    "roomkey_config": {
+      "studio_v2": {
+        "portals": [
+          {
+            "label": "Enter",
+            "objectId": "bbb-enter-action"
+          }
+        ]
+      }
+    },
+    "scene_config": {
+      "studio_v2": {
+        "chambers": [
+          {
+            "id": "threshold",
+            "label": "Threshold",
+            "objectIds": [
+              "bbb-landing-sparkle",
+              "bbb-landing-akka",
+              "bbb-landing-ballerina",
+              "bbb-landing-ballerina-1",
+              "bbb-landing-ballerina-2",
+              "bbb-landing-cd",
+              "bbb-landing-fashion-week",
+              "bbb-landing-liv-e",
+              "bbb-landing-mk-gee",
+              "bbb-landing-tems",
+              "bbb-enter-action"
+            ]
+          },
+          {
+            "id": "gallery",
+            "label": "Gallery Field",
+            "objectIds": [
+              "bbb-gallery-klien",
+              "bbb-gallery-klein",
+              "bbb-gallery-kelela",
+              "bbb-gallery-kelela-1",
+              "bbb-gallery-little-simz",
+              "bbb-gallery-niecy-blues",
+              "bbb-gallery-sparkle",
+              "bbb-gallery-tems",
+              "bbb-gallery-tems-1",
+              "bbb-gallery-yves-tumor"
+            ]
+          },
+          {
+            "id": "practice",
+            "label": "Practice",
+            "objectIds": [
+              "bbb-practice-note"
+            ]
+          }
+        ],
+        "mobileRecovery": {
+          "strategy": "suspend-mobile-transforms",
+          "transformsSuspendedOnMobile": true
+        },
+        "objectState": {
+          "bbb-enter-action": {
+            "chamberId": "threshold",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 11
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-gallery-kelela": {
+            "chamberId": "gallery",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 14
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-gallery-kelela-1": {
+            "chamberId": "gallery",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 15
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-gallery-klein": {
+            "chamberId": "gallery",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 13
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-gallery-klien": {
+            "chamberId": "gallery",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 12
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-gallery-little-simz": {
+            "chamberId": "gallery",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 16
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-gallery-niecy-blues": {
+            "chamberId": "gallery",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 17
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-gallery-sparkle": {
+            "chamberId": "gallery",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 18
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-gallery-tems": {
+            "chamberId": "gallery",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 19
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-gallery-tems-1": {
+            "chamberId": "gallery",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 20
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-gallery-yves-tumor": {
+            "chamberId": "gallery",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 21
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-landing-akka": {
+            "chamberId": "threshold",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 2
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-landing-ballerina": {
+            "chamberId": "threshold",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 3
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-landing-ballerina-1": {
+            "chamberId": "threshold",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 4
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-landing-ballerina-2": {
+            "chamberId": "threshold",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 5
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-landing-cd": {
+            "chamberId": "threshold",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 6
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-landing-fashion-week": {
+            "chamberId": "threshold",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 7
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-landing-liv-e": {
+            "chamberId": "threshold",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 8
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-landing-mk-gee": {
+            "chamberId": "threshold",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 9
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-landing-sparkle": {
+            "chamberId": "threshold",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 1
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-landing-tems": {
+            "chamberId": "threshold",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 10
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          },
+          "bbb-practice-note": {
+            "chamberId": "practice",
+            "locked": false,
+            "pinned": false,
+            "transform": {
+              "rotation": 0,
+              "scale": 1,
+              "x": 0,
+              "y": 0,
+              "zIndex": 22
+            },
+            "visibility": {
+              "mobile": true,
+              "public": true
+            }
+          }
+        },
+        "schemaVersion": "presence-studio-v2-v1",
+        "worldId": "gallery"
+      }
+    },
+    "schema_version": "presence-editable-config-v1",
+    "status": "published",
+    "style_dna": {
+      "studio_v2": {
+        "publicStylePreset": "bbbvision-threshold-gallery",
+        "schemaVersion": "presence-studio-v2-v1",
+        "skin": {
+          "accentColor": "#ffd84d",
+          "auraIntensity": 0.32,
+          "background": "#000000",
+          "borderStyle": "hairline",
+          "displayFont": "serif",
+          "headingWeight": 500,
+          "motionIntensity": "gentle",
+          "objectRadius": 2,
+          "shadowDepth": 0.42,
+          "texture": "none"
+        }
+      }
+    },
+    "updated_at": "2026-06-09T00:31:31.652691",
+    "updated_by_user_id": 1,
+    "version": 1
+  },
+  "raw_room": {
+    "accent_color": "#ffd84d",
+    "archive_ready": true,
+    "archived_at": null,
+    "availability_status": null,
+    "bio": "A controlled Presence Studio V2 migration of bbb.vision source imagery into an editable public room.",
+    "business_functions_enabled": false,
+    "capability_statement": null,
+    "cover_image_url": null,
+    "created_at": "2026-06-09T00:31:06.421147",
+    "curatorial_statement": null,
+    "custom_spacing_config": null,
+    "custom_typography_config": null,
+    "directory_ready": true,
+    "display_mode": "artist_gallery",
+    "display_name": "bbb.vision",
+    "enquiry_email": null,
+    "featured_notice": null,
+    "headline": "Image-first threshold gallery from the bbb.vision source archive.",
+    "hero_image_url": null,
+    "hero_subtitle": null,
+    "hero_title": null,
+    "id": 29,
+    "landing_background_url": null,
+    "landing_enabled": true,
+    "landing_enter_label": "Enter",
+    "landing_subtitle": "Image-first threshold gallery.",
+    "landing_title": "bbb.vision",
+    "location_label": null,
+    "long_story": null,
+    "map_ready": false,
+    "marketplace_ready": false,
+    "media_embeds": null,
+    "node_metadata": {
+      "controlled_launch_pilot": true,
+      "created_by": "setup_presence_pilot_bbbvision",
+      "environment": "hosted_controlled_launch",
+      "owner_user_id": 1,
+      "pilot_code": "bbbvision",
+      "pilot_stage": "hosted_studio_v2_migration",
+      "public_style_preset": "bbbvision-threshold-gallery",
+      "source": {
+        "asset_url_origin": "https://bbbvision.vercel.app",
+        "kind": "local_source_assets",
+        "reference": "bbb-vision-site workspace source inspected during migration"
+      }
+    },
+    "node_type": "creative",
+    "organisation_id": 5,
+    "owner_user_id": 1,
+    "plan_type": "artist_presence",
+    "practice_statement": null,
+    "primary_cta_label": "Enter",
+    "primary_cta_url": null,
+    "procurement_summary": null,
+    "profile_image_url": null,
+    "proof_summary": null,
+    "public_email": null,
+    "public_phone": null,
+    "public_status": "public",
+    "published_at": "2026-06-09T00:31:06.660133",
+    "room_type": "artist_studio",
+    "seo_description": null,
+    "seo_title": null,
+    "service_area": null,
+    "short_bio": null,
+    "slug": "bbbvision",
+    "social_preview_image_url": null,
+    "status": "published",
+    "template_id": null,
+    "tenant_id": 5,
+    "theme_config": null,
+    "theme_preset": "minimal_mono",
+    "updated_at": "2026-06-09T00:31:06.661632",
+    "visibility": "public",
+    "visual_mood": "black-threshold-gallery",
+    "white_label_ready": false
+  },
+  "room": {
+    "accent_color": "#ffd84d",
+    "archive_ready": true,
+    "archived_at": null,
+    "availability_chips": [],
+    "availability_status": null,
+    "bio": "A controlled Presence Studio V2 migration of bbb.vision source imagery into an editable public room.",
+    "business_functions": [],
+    "business_functions_enabled": false,
+    "capability_statement": null,
+    "collections": [],
+    "connections": [],
+    "cover_image_url": null,
+    "created_at": "2026-06-09T00:31:06.421147",
+    "credentials": [],
+    "curatorial_statement": null,
+    "custom_spacing_config": {},
+    "custom_typography_config": {},
+    "directory_ready": true,
+    "display_mode": "artist_gallery",
+    "display_name": "bbb.vision",
+    "enquiry_email": null,
+    "featured_notice": null,
+    "gallery_items": [],
+    "handovers": [],
+    "headline": "Image-first threshold gallery from the bbb.vision source archive.",
+    "hero_image": null,
+    "hero_image_url": null,
+    "hero_subtitle": null,
+    "hero_title": null,
+    "id": 29,
+    "invoice_support_records": [],
+    "landing_background_url": null,
+    "landing_enabled": true,
+    "landing_enter_label": "Enter",
+    "landing_subtitle": "Image-first threshold gallery.",
+    "landing_title": "bbb.vision",
+    "links": [],
+    "location_label": null,
+    "long_story": null,
+    "map_ready": false,
+    "marketplace_ready": false,
+    "media_embeds": [],
+    "metadata": {
+      "controlled_launch_pilot": true,
+      "created_by": "setup_presence_pilot_bbbvision",
+      "environment": "hosted_controlled_launch",
+      "owner_user_id": 1,
+      "pilot_code": "bbbvision",
+      "pilot_stage": "hosted_studio_v2_migration",
+      "public_style_preset": "bbbvision-threshold-gallery",
+      "source": {
+        "asset_url_origin": "https://bbbvision.vercel.app",
+        "kind": "local_source_assets",
+        "reference": "bbb-vision-site workspace source inspected during migration"
+      }
+    },
+    "nfc_tags": [],
+    "node_type": "creative",
+    "organisation": {
+      "id": 5,
+      "name": "Presence bbbvision Pilot",
+      "slug": "presence-bbbvision-pilot",
+      "status": "active"
+    },
+    "organisation_id": 5,
+    "owner_user_id": 1,
+    "plan_type": "artist_presence",
+    "portfolio_items": [],
+    "practice_statement": null,
+    "primary_cta_label": "Enter",
+    "primary_cta_target": null,
+    "primary_cta_url": null,
+    "procurement_profile": null,
+    "procurement_summary": null,
+    "profile_image_url": null,
+    "proof_items": [],
+    "proof_summary": null,
+    "public_email": null,
+    "public_phone": null,
+    "public_status": "public",
+    "public_url": "https://anu-front-end.vercel.app, https://maanara.vercel.app/presence/bbbvision",
+    "published_at": "2026-06-09T00:31:06.660133",
+    "quotes": [],
+    "room_type": "artist_studio",
+    "sections": [],
+    "seo": {
+      "canonical_url": "https://anu-front-end.vercel.app, https://maanara.vercel.app/presence/bbbvision",
+      "description": "A controlled Presence Studio V2 migration of bbb.vision source imagery into an editable public room.",
+      "image": null,
+      "title": "bbb.vision Image-first threshold gallery from the bbb.vision source archive."
+    },
+    "seo_description": null,
+    "seo_title": null,
+    "service_area": null,
+    "services": [],
+    "short_bio": null,
+    "slug": "bbbvision",
+    "social_preview_image": null,
+    "social_preview_image_url": null,
+    "status": "published",
+    "template": null,
+    "template_id": null,
+    "tenant_id": 5,
+    "testimonials": [],
+    "theme_config": {},
+    "theme_preset": "minimal_mono",
+    "updated_at": "2026-06-09T00:31:06.661632",
+    "variations": [],
+    "visibility": "public",
+    "visual_mood": "black-threshold-gallery",
+    "white_label_ready": false,
+    "works": []
+  },
+  "services": [],
+  "works": []
+}

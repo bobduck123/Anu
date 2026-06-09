@@ -1,0 +1,254 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+import { chromium } from "playwright";
+
+const BASE = (process.env.PRESENCE_E2E_BASE_URL || "https://your-presence.vercel.app").replace(/\/+$/, "");
+const OUT = path.resolve(
+  process.env.PRESENCE_BBBVISION_EVIDENCE_DIR ||
+    "docs/program/evidence/presence-studio-v2-bbbvision-hosted-migration",
+);
+const SUMMARY_PATH = path.join(OUT, "hosted_bbbvision_public_smoke_result.json");
+const HYGIENE_PATH = path.join(OUT, "hosted_bbbvision_payload_hygiene_result.txt");
+
+const routes = [
+  { id: "bbbvision-p", path: "/p/bbbvision", kind: "bbbvision" },
+  { id: "bbbvision-presence", path: "/presence/bbbvision", kind: "bbbvision" },
+  { id: "room11-p", path: "/p/ggm-christina-goddard", kind: "room11" },
+  { id: "room11-presence", path: "/presence/ggm-christina-goddard", kind: "room11" },
+  { id: "legacy-hesmaddw", path: "/p/hesmaddw", kind: "legacy" },
+];
+
+const forbiddenTerms = [
+  "editable_config",
+  "draft",
+  "owner",
+  "hiddenPublic",
+  "hiddenMobile",
+  "locked",
+  "pinned",
+  "Room Assets",
+  "Derived from current room objects",
+  "Upload library later",
+  "Media health",
+  "Possible test asset",
+  "Replace image URL",
+  "presence-studio-v2-assets-panel",
+  "presence-studio-v2-asset-card",
+  "presence-studio-v2-media-health",
+  "Public output style",
+  "presence-studio-v2-public-style-selector",
+  "presence-studio-v2-public-style-option",
+  "style selector",
+  "TemplateKit",
+  "localStorage",
+  "auth-token",
+  "auth_token",
+  "access_token",
+  "refresh_token",
+  "session",
+  "service_role",
+  "bearer ",
+  "/api/presence/owner",
+  "/studio/",
+  "private_draft",
+  "signed_url",
+  "storage_key",
+];
+
+const fakeDataTerms = [
+  "followers",
+  "checkout",
+  "upload live",
+  "live sale",
+  "fake",
+  "demo social",
+];
+
+await fs.mkdir(OUT, { recursive: true });
+
+const browser = await chromium.launch({ headless: true });
+const summary = {
+  base: BASE,
+  checked_at: new Date().toISOString(),
+  routes: [],
+  screenshots: [],
+  violations: [],
+  runtime_errors: [],
+};
+
+try {
+  for (const route of routes) {
+    const context = await browser.newContext({ baseURL: BASE, viewport: { width: 1440, height: 960 } });
+    const page = await context.newPage();
+    collectRuntimeErrors(page, summary.runtime_errors, route.id);
+    const response = await page.goto(route.path, { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle", { timeout: 30_000 }).catch(() => undefined);
+    await page.waitForTimeout(1800);
+
+    const html = await page.content();
+    const text = await page.locator("body").innerText().catch(() => "");
+    summary.violations.push(...scan(route.id, "html", html, forbiddenTerms));
+    summary.violations.push(...scan(route.id, "text", text, forbiddenTerms));
+    summary.violations.push(...scan(route.id, "text", text, fakeDataTerms));
+
+    const routeResult = {
+      id: route.id,
+      path: route.path,
+      status: response?.status() ?? null,
+      ok: response?.ok() ?? false,
+      kind: route.kind,
+      title: await page.title(),
+      v2_public_count: await page.locator(".presence-studio-v2-public").count(),
+      bbbvision_style_count: await page.getByTestId("presence-public-style-bbbvision-threshold-gallery").count(),
+      bbbvision_threshold_count: await page.getByTestId("presence-public-bbbvision-threshold").count(),
+      bbbvision_gallery_count: await page.getByTestId("presence-public-bbbvision-gallery").count(),
+      source_asset_count: await page.locator('img[src*="bbbvision.vercel.app/assets/"]').count(),
+      broken_visible_image_count: await brokenImageCount(page),
+    };
+
+    if (route.kind === "bbbvision") {
+      assert(routeResult.ok, `${route.path} did not return HTTP 2xx`);
+      assert(routeResult.bbbvision_style_count > 0, `${route.path} did not render bbbvision public style`);
+      assert(routeResult.bbbvision_threshold_count > 0, `${route.path} did not render bbbvision threshold`);
+      assert(routeResult.bbbvision_gallery_count > 0, `${route.path} did not render bbbvision gallery`);
+      assert(routeResult.source_asset_count >= 10, `${route.path} did not expose expected source asset images`);
+      assert(text.includes("bbb.vision"), `${route.path} did not include bbb.vision title`);
+      assert(text.includes("Enter"), `${route.path} did not include Enter CTA`);
+      assert(routeResult.broken_visible_image_count === 0, `${route.path} had broken visible images`);
+
+      if (route.id === "bbbvision-p") {
+        await screenshot(page, "01-published-p-bbbvision-threshold-desktop.png", summary);
+        await page.getByTestId("presence-public-bbbvision-enter").click();
+        await page.waitForTimeout(900);
+        await screenshot(page, "02-published-p-bbbvision-gallery-desktop.png", summary);
+        await page.getByTestId("presence-public-bbbvision-next").click();
+        await page.waitForTimeout(500);
+        await screenshot(page, "03-published-p-bbbvision-gallery-next-state.png", summary);
+      } else {
+        await screenshot(page, "04-published-presence-bbbvision-desktop.png", summary);
+      }
+    }
+
+    if (route.kind === "room11") {
+      assert(routeResult.ok, `${route.path} did not return HTTP 2xx`);
+      assert(routeResult.v2_public_count > 0, `${route.path} did not render Studio V2 public output`);
+      if (route.id === "room11-p") {
+        await screenshot(page, "06-room11-regression-p-public.png", summary);
+      }
+    }
+
+    if (route.kind === "legacy") {
+      assert(routeResult.ok, `${route.path} did not return HTTP 2xx`);
+      assert(routeResult.v2_public_count === 0, `${route.path} unexpectedly rendered Studio V2 output`);
+      await screenshot(page, "07-legacy-hesmaddw-negative.png", summary);
+    }
+
+    summary.routes.push(routeResult);
+    await context.close();
+  }
+
+  const mobile = await browser.newContext({ baseURL: BASE, viewport: { width: 390, height: 844 }, isMobile: true });
+  const mobilePage = await mobile.newPage();
+  collectRuntimeErrors(mobilePage, summary.runtime_errors, "bbbvision-mobile");
+  const mobileResponse = await mobilePage.goto("/p/bbbvision", { waitUntil: "domcontentloaded" });
+  await mobilePage.waitForLoadState("networkidle", { timeout: 30_000 }).catch(() => undefined);
+  await mobilePage.waitForTimeout(1800);
+  const mobileHtml = await mobilePage.content();
+  const mobileText = await mobilePage.locator("body").innerText().catch(() => "");
+  summary.violations.push(...scan("bbbvision-mobile", "html", mobileHtml, forbiddenTerms));
+  summary.violations.push(...scan("bbbvision-mobile", "text", mobileText, forbiddenTerms));
+  const mobileResult = {
+    id: "bbbvision-mobile",
+    path: "/p/bbbvision",
+    status: mobileResponse?.status() ?? null,
+    ok: mobileResponse?.ok() ?? false,
+    kind: "bbbvision-mobile",
+    bbbvision_style_count: await mobilePage.getByTestId("presence-public-style-bbbvision-threshold-gallery").count(),
+    bbbvision_threshold_count: await mobilePage.getByTestId("presence-public-bbbvision-threshold").count(),
+    bbbvision_gallery_count: await mobilePage.getByTestId("presence-public-bbbvision-gallery").count(),
+    source_asset_count: await mobilePage.locator('img[src*="bbbvision.vercel.app/assets/"]').count(),
+    broken_visible_image_count: await brokenImageCount(mobilePage),
+  };
+  assert(mobileResult.ok, "mobile /p/bbbvision did not return HTTP 2xx");
+  assert(mobileResult.bbbvision_style_count > 0, "mobile /p/bbbvision did not render bbbvision public style");
+  assert(mobileResult.bbbvision_threshold_count > 0, "mobile /p/bbbvision did not render threshold");
+  assert(mobileResult.bbbvision_gallery_count > 0, "mobile /p/bbbvision did not render gallery");
+  assert(mobileText.includes("bbb.vision"), "mobile /p/bbbvision did not include bbb.vision title");
+  assert(mobileResult.broken_visible_image_count === 0, "mobile /p/bbbvision had broken visible images");
+  await screenshot(mobilePage, "05-published-p-bbbvision-mobile.png", summary);
+  summary.routes.push(mobileResult);
+  await mobile.close();
+
+  const uniqueViolations = unique(summary.violations);
+  const hygieneText = [
+    "=== HOSTED BBBVISION PAYLOAD HYGIENE ===",
+    `BASE: ${BASE}`,
+    `ROUTES: ${routes.map((route) => route.path).join(", ")}, /p/bbbvision mobile`,
+    `TOTAL_VIOLATIONS: ${uniqueViolations.length}`,
+    `VIOLATIONS: ${uniqueViolations.length ? uniqueViolations.map((item) => `${item.route}:${item.surface}:${item.term}`).join(", ") : "NONE"}`,
+    `RUNTIME_ERRORS: ${summary.runtime_errors.length}`,
+    `PASS: ${uniqueViolations.length === 0 && summary.runtime_errors.length === 0}`,
+    "",
+  ].join("\n");
+  await fs.writeFile(HYGIENE_PATH, hygieneText, "utf8");
+  await fs.writeFile(SUMMARY_PATH, JSON.stringify({ ...summary, violations: uniqueViolations }, null, 2) + "\n", "utf8");
+  console.log(hygieneText);
+
+  if (uniqueViolations.length > 0) {
+    process.exitCode = 1;
+  }
+  if (summary.runtime_errors.length > 0) {
+    process.exitCode = 1;
+  }
+} finally {
+  await browser.close();
+}
+
+function scan(route, surface, text, terms) {
+  const lowered = String(text || "").toLowerCase();
+  return terms
+    .filter((term) => lowered.includes(term.toLowerCase()))
+    .map((term) => ({ route, surface, term }));
+}
+
+function unique(violations) {
+  const seen = new Set();
+  const items = [];
+  for (const item of violations) {
+    const key = `${item.route}\0${item.surface}\0${item.term.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    items.push(item);
+  }
+  return items;
+}
+
+async function screenshot(page, fileName, summary) {
+  const filePath = path.join(OUT, fileName);
+  await page.screenshot({ path: filePath, fullPage: false });
+  summary.screenshots.push(fileName);
+}
+
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
+function collectRuntimeErrors(page, errors, route) {
+  page.on("console", (message) => {
+    const text = message.text();
+    if (message.type() === "error" && !text.includes("Failed to load resource: net::ERR_NAME_NOT_RESOLVED")) {
+      errors.push({ route, type: "console", message: text });
+    }
+  });
+  page.on("pageerror", (error) => errors.push({ route, type: "pageerror", message: error.message }));
+}
+
+async function brokenImageCount(page) {
+  return page.locator("img").evaluateAll((images) =>
+    images.filter((image) => {
+      const rect = image.getBoundingClientRect();
+      const visible = rect.width > 0 && rect.height > 0;
+      return visible && image.complete && image.naturalWidth === 0;
+    }).length,
+  );
+}

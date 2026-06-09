@@ -2,6 +2,38 @@
 
 Date: 2026-06-09
 
+## 2026-06-09 Hosted Migration Addendum
+
+bbbvision has now been created, assigned, seeded, previewed, published, and hosted-smoked as a real editable Studio V2 room.
+
+```txt
+room id: 29
+slug: bbbvision
+title: bbb.vision
+owner: e4hatu@gmail.com
+public style preset: bbbvision-threshold-gallery
+published version: 2
+public routes:
+  https://your-presence.vercel.app/p/bbbvision
+  https://your-presence.vercel.app/presence/bbbvision
+```
+
+Hosted migration evidence:
+
+```txt
+docs/program/evidence/presence-studio-v2-bbbvision-hosted-migration/
+```
+
+Final hosted payload hygiene:
+
+```txt
+TOTAL_VIOLATIONS: 0
+RUNTIME_ERRORS: 0
+PASS: true
+```
+
+Owner-scoped API evidence proves draft save, preview, publish, and S5 Room Assets access. Credential-bound browser sign-in was not run because no hosted owner password was available in process env or ignored env files.
+
 ## Summary
 
 S6A was already deployed, hosted-smoked, baselined, and pushed before this pass began. S4A remained parked in `stash@{0}` throughout.

@@ -9,6 +9,50 @@
 
 ---
 
+## 2026-06-09 bbbvision Hosted Room Migration Addendum
+
+The bbbvision style preset is now used by a live hosted room:
+
+```txt
+room id: 29
+slug: bbbvision
+public style preset: bbbvision-threshold-gallery
+published version: 2
+```
+
+Production gate update:
+
+```txt
+NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS=11,29,bbbvision
+PRESENCE_STUDIO_V2_PILOT_IDS=11,29,bbbvision
+```
+
+Production redeploys:
+
+```txt
+dpl_Aa4S8sEsAiRe5PiV7cQhsVTCQTmd
+dpl_6W9LWNmK7MggiykADKteQfRiBRKP
+```
+
+Final hosted route and hygiene result:
+
+```txt
+/p/bbbvision: 200, Studio V2 bbbvision threshold/gallery rendered
+/presence/bbbvision: 200, Studio V2 bbbvision threshold/gallery rendered
+/p/ggm-christina-goddard: 200, Room 11 clean
+/presence/ggm-christina-goddard: 200, Room 11 clean
+/p/hesmaddw: 200, legacy remains legacy
+TOTAL_VIOLATIONS: 0
+```
+
+Evidence:
+
+```txt
+docs/program/evidence/presence-studio-v2-bbbvision-hosted-migration/
+```
+
+---
+
 ## Baseline
 
 **Baseline commit:** `6cafb36` on `feature/presence-ecosystem-alpha`
