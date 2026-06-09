@@ -2,6 +2,59 @@
 
 Date: 2026-06-03
 
+## 2026-06-10 bbbvision Canvas Conditional Fix Pass Local QA
+
+Scope:
+
+- Close Kimi's three conditional-pass gaps for the bbbvision Canvas 2D Gallery Engine.
+- Local only. No deploy. No hosted smoke. No hosted data mutation.
+
+Commands/results:
+
+- `npm.cmd run typecheck`: pass
+- `npm.cmd run build`: pass
+- `node --experimental-strip-types --test lib\presence\studio-v2\chambers.test.ts`: 36 passed
+- `node --experimental-strip-types --test lib\presence\studio-v2\assets.test.ts`: 8 passed
+- `node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts`: 8 passed
+- `node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts`: 22 passed
+- `node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts`: 5 passed
+- `node --experimental-strip-types --test lib\presence\render\resolver.test.ts`: 8 passed
+- `node --experimental-strip-types --test lib\editor\readiness.test.ts`: 5 passed
+- `npx.cmd playwright test presence-studio-v2-bbbvision-canvas-gallery.spec.ts --project=chromium`: 5 passed
+- `npx.cmd playwright test presence-studio-v2-bbbvision-gallery-parity.spec.ts --project=chromium`: 12 passed
+- `npx.cmd playwright test presence-studio-v2-bbbvision-parity.spec.ts --project=chromium`: 2 passed
+- `npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium`: 2 passed
+- Broader one-worker Playwright regression batch: 29 passed
+
+Verified:
+
+- Loader covers the first frame and transitions to ready.
+- Canvas gallery still mounts.
+- Focus selection opens after canvas strip-burst transition.
+- Escape/back/keyboard behavior remains intact.
+- Reduced motion uses the simplified immediate-focus path.
+- Mobile canvas remains usable.
+- Scatter remains deterministic and editable-room driven.
+- No hardcoded image pool or fixed 20-image assumption was introduced.
+- Payload hygiene passes.
+- Gallery P2, Christina, and legacy negative regressions pass.
+
+Evidence:
+
+```txt
+docs/program/evidence/presence-v3-bbbvision-canvas-conditional-fixes/
+PRESENCE_V3_BBBVISION_CANVAS_CONDITIONAL_FIXES_REPORT.md
+```
+
+Warnings:
+
+- Direct Node TypeScript tests still emit the existing `MODULE_TYPELESS_PACKAGE_JSON` warning.
+- Build/Playwright still emit the existing Next/Turbopack multiple-lockfile workspace-root warning.
+
+Verdict:
+
+**PASS — ready for Kimi re-audit before deploy.**
+
 ## 2026-06-09 Chamber Dynamics Pass 4 Local QA Addendum
 
 Pass 4 local QA passed for public renderer metadata consumption.

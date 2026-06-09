@@ -2,6 +2,29 @@
 
 Date: 2026-06-03
 
+## 2026-06-10 bbbvision Canvas Conditional Fix Script Addendum
+
+This pass updated `scripts/hosted-bbbvision-migration-smoke.mjs` so future hosted bbbvision smoke checks assert the current Canvas 2D gallery engine via:
+
+```txt
+presence-public-bbbvision-constellation
+```
+
+The old `.v2-bbb-star` selector belonged to the previous DOM constellation pass and no longer represented the active canvas renderer.
+
+Status for this pass:
+
+- Hosted smoke: not run.
+- Hosted data mutation: none.
+- Deployment: not run.
+- Purpose: keep future hosted smoke aligned with the canvas engine before any post-audit deploy decision.
+
+Detailed local report:
+
+```txt
+PRESENCE_V3_BBBVISION_CANVAS_CONDITIONAL_FIXES_REPORT.md
+```
+
 ## 2026-06-09 Chamber Dynamics Pass 4 Script Addendum
 
 Pass 4 updated `scripts/hosted-bbbvision-migration-smoke.mjs` so a future hosted smoke records bbbvision threshold/gallery chamber-role data attributes and scans visible text for metadata/CMS label leakage.

@@ -7,6 +7,36 @@
 
 ---
 
+## 2026-06-10 Canvas Conditional Fix Addendum
+
+The DOM constellation gap documented below was superseded by the Canvas 2D engine at commit `c318847`, then followed by this conditional-fix pass.
+
+Fixes now applied:
+
+- Original-equivalent black/gold loading state for first frames.
+- Canvas strip-burst focus transition before the existing focus overlay opens.
+- Deterministic seeded scatter from editable room works, replacing visible modulo bands.
+- Mobile DPR/glitch guard and hidden-document RAF pause.
+
+Evidence:
+
+```txt
+docs/program/evidence/presence-v3-bbbvision-canvas-conditional-fixes/
+```
+
+QA:
+
+- `presence-studio-v2-bbbvision-canvas-gallery.spec.ts`: 5/5 pass.
+- `presence-studio-v2-bbbvision-gallery-parity.spec.ts`: 12/12 pass.
+- `presence-studio-v2-bbbvision-parity.spec.ts`: 2/2 pass.
+- Broader local regression batch including Christina, Gallery P2, draft preview, public render, asset library, and legacy negatives: 29/29 pass.
+
+Current verdict:
+
+**PASS — ready for Kimi visual-motion re-audit before deploy.**
+
+---
+
 ## Executive Summary
 
 The Presence bbbvision gallery is **not at parity** with the original separately hosted bbbvision gallery. The gap is structural and experiential, not merely cosmetic. Current score: **4/10** against the original. This pass must rebuild the gallery view into a spatial constellation layout with minimal chrome, or accept that exact parity requires a canvas engine.
