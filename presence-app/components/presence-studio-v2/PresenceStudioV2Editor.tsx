@@ -23,6 +23,8 @@ import type {
   StudioV2Object,
   StudioV2PublicStylePreset,
   StudioV2State,
+  StudioV2ChamberRole,
+  StudioV2ChamberMetadata,
 } from "@/lib/presence/studio-v2";
 import PresenceStudioV2Room from "./PresenceStudioV2Room";
 import { SkinLabSheet, AddObjectSheet, MoodboardSheet, WorldSwitcher } from "./PresenceStudioV2Panels";
@@ -610,6 +612,86 @@ export default function PresenceStudioV2Editor({
     setDeleteConfirmId(null);
   }
 
+  // ── Chamber helpers ──
+  function handleAddChamber() {
+    const nextIndex = (v2State?.chambers.length ?? 0) + 1;
+    const newChamber = {
+      id: makeId("chamber"),
+      label: `Chamber ${nextIndex}`,
+      objects: [] as StudioV2Object[],
+      metadata: { role: "custom" as StudioV2ChamberRole },
+    };
+    updateState((prev) => ({
+      ...prev,
+      chambers: [...prev.chambers, newChamber],
+    }));
+    setExpandedChambers((current) => {
+      const next = new Set(current);
+      next.add(newChamber.id);
+      return next;
+    });
+    setActiveChamberId(newChamber.id);
+    scrollToChamber(newChamber.id);
+  }
+
+  function handleRenameChamber(id: string, label: string) {
+    updateState((prev) => ({
+      ...prev,
+      chambers: prev.chambers.map((ch) => (ch.id === id ? { ...ch, label } : ch)),
+    }));
+  }
+
+  function handleMoveChamber(id: string, direction: "up" | "down") {
+    updateState((prev) => {
+      const idx = prev.chambers.findIndex((ch) => ch.id === id);
+      if (idx < 0) return prev;
+      const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+      if (swapIdx < 0 || swapIdx >= prev.chambers.length) return prev;
+      const next = [...prev.chambers];
+      [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
+      return { ...prev, chambers: next };
+    });
+  }
+
+  function updateChamberMetadata(chamberId: string, patch: Partial<StudioV2ChamberMetadata>) {
+    updateState((prev) => ({
+      ...prev,
+      chambers: prev.chambers.map((ch) =>
+        ch.id === chamberId
+          ? { ...ch, metadata: { ...ch.metadata, ...patch } }
+          : ch
+      ),
+    }));
+  }
+
+  function setChamberEntry(chamberId: string) {
+    updateState((prev) => ({
+      ...prev,
+      chambers: prev.chambers.map((ch) => {
+        if (ch.id === chamberId) {
+          return { ...ch, metadata: { ...ch.metadata, isEntry: true } };
+        }
+        const nextMeta = { ...ch.metadata };
+        delete nextMeta.isEntry;
+        return { ...ch, metadata: nextMeta };
+      }),
+    }));
+  }
+
+  function setChamberDefault(chamberId: string) {
+    updateState((prev) => ({
+      ...prev,
+      chambers: prev.chambers.map((ch) => {
+        if (ch.id === chamberId) {
+          return { ...ch, metadata: { ...ch.metadata, isDefault: true } };
+        }
+        const nextMeta = { ...ch.metadata };
+        delete nextMeta.isDefault;
+        return { ...ch, metadata: nextMeta };
+      }),
+    }));
+  }
+
   function handleFloatingAction(action: string) {
     if (!selectedId) return;
     switch (action) {
@@ -844,6 +926,9 @@ export default function PresenceStudioV2Editor({
           onSelectAsset={selectAsset}
           onSelectChamber={scrollToChamber}
           onAssetError={markAssetBroken}
+          onAddChamber={handleAddChamber}
+          onRenameChamber={handleRenameChamber}
+          onMoveChamber={handleMoveChamber}
         />
 
         {/* Room stage */}
@@ -944,6 +1029,10 @@ export default function PresenceStudioV2Editor({
           onOpenSkin={() => setActivePanel("skin")}
           onDuplicate={handleDuplicateObject}
           onDelete={handleDeleteObject}
+          onUpdateChamberMetadata={updateChamberMetadata}
+          onSetChamberEntry={setChamberEntry}
+          onSetChamberDefault={setChamberDefault}
+          activeChamberId={activeChamberId}
         />
       </div>
 
@@ -1032,6 +1121,9 @@ function StudioOutlinePanel({
   onSelectAsset,
   onSelectChamber,
   onAssetError,
+  onAddChamber,
+  onRenameChamber,
+  onMoveChamber,
 }: {
   state: StudioV2State;
   assetRegistry: StudioV2AssetRegistry;
@@ -1045,6 +1137,9 @@ function StudioOutlinePanel({
   onSelectAsset: (id: string) => void;
   onSelectChamber: (id: string) => void;
   onAssetError: (objectId: string) => void;
+  onAddChamber: () => void;
+  onRenameChamber: (id: string, label: string) => void;
+  onMoveChamber: (id: string, direction: "up" | "down") => void;
 }) {
   const assets = assetRegistry.assets;
 
@@ -1057,12 +1152,26 @@ function StudioOutlinePanel({
       <section className="v2-rail-section">
         <div className="v2-rail-title">
           <span>Room outline</span>
-          <strong>{state.chambers.length}</strong>
+          <div className="v2-rail-title-actions">
+            <strong>{state.chambers.length}</strong>
+            <button
+              type="button"
+              data-testid="presence-studio-v2-add-chamber"
+              className="v2-btn v2-add-chamber-btn"
+              onClick={onAddChamber}
+              title="Add chamber"
+            >
+              + Chamber
+            </button>
+          </div>
         </div>
         <div className="v2-outline-tree">
-          {state.chambers.map((chamber) => {
+          {state.chambers.map((chamber, index) => {
             const expanded = expandedChambers.has(chamber.id);
             const active = activeChamberId === chamber.id;
+            const roleLabel = chamber.metadata?.role && chamber.metadata.role !== "custom"
+              ? chamber.metadata.role
+              : null;
             return (
               <div
                 key={chamber.id}
@@ -1078,10 +1187,41 @@ function StudioOutlinePanel({
                   >
                     {expanded ? "-" : "+"}
                   </button>
-                  <button type="button" className="v2-outline-chamber-name" onClick={() => onSelectChamber(chamber.id)}>
-                    {chamber.label}
+                  <InlineRename
+                    value={chamber.label}
+                    onCommit={(label) => onRenameChamber(chamber.id, label)}
+                    onClick={() => onSelectChamber(chamber.id)}
+                    testId={`presence-studio-v2-chamber-rename-${chamber.id}`}
+                  />
+                  <span className="v2-outline-chamber-count">{chamber.objects.length}</span>
+                </div>
+                {roleLabel && (
+                  <div className="v2-outline-chamber-role-badge">
+                    <span>{roleLabel}</span>
+                    {chamber.metadata?.isEntry && <span className="v2-entry-badge">Entry</span>}
+                  </div>
+                )}
+                <div className="v2-outline-chamber-actions">
+                  <button
+                    type="button"
+                    data-testid={`presence-studio-v2-chamber-move-up-${chamber.id}`}
+                    className="v2-btn v2-chamber-action"
+                    disabled={index === 0}
+                    onClick={() => onMoveChamber(chamber.id, "up")}
+                    title="Move up"
+                  >
+                    ↑
                   </button>
-                  <span>{chamber.objects.length}</span>
+                  <button
+                    type="button"
+                    data-testid={`presence-studio-v2-chamber-move-down-${chamber.id}`}
+                    className="v2-btn v2-chamber-action"
+                    disabled={index === state.chambers.length - 1}
+                    onClick={() => onMoveChamber(chamber.id, "down")}
+                    title="Move down"
+                  >
+                    ↓
+                  </button>
                 </div>
                 {expanded && (
                   <div className="v2-outline-objects">
@@ -1333,6 +1473,10 @@ function StudioInspectorPanel({
   onOpenSkin,
   onDuplicate,
   onDelete,
+  onUpdateChamberMetadata,
+  onSetChamberEntry,
+  onSetChamberDefault,
+  activeChamberId,
 }: {
   state: StudioV2State;
   selectedObject: StudioV2Object | null;
@@ -1360,6 +1504,10 @@ function StudioInspectorPanel({
   onOpenSkin: () => void;
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
+  onUpdateChamberMetadata: (chamberId: string, patch: Partial<StudioV2ChamberMetadata>) => void;
+  onSetChamberEntry: (chamberId: string) => void;
+  onSetChamberDefault: (chamberId: string) => void;
+  activeChamberId: string | null;
 }) {
   const object = selectedObject;
   const world = WORLD_KITS.find((kit) => kit.id === state.worldId);
@@ -1376,6 +1524,7 @@ function StudioInspectorPanel({
     { label: "CTA path", ok: Boolean(state.cta.label || state.cta.href) },
     { label: "Mobile preview", ok: true },
   ];
+  const activeChamber = state.chambers.find((ch) => ch.id === activeChamberId) ?? state.chambers[0] ?? null;
 
   const updateObject = (patch: Partial<StudioV2Object>) => {
     if (!object) return;
@@ -1481,6 +1630,92 @@ function StudioInspectorPanel({
                 Style controls public presentation only. Room content, assets, and publish flow stay unchanged.
               </div>
             </div>
+          </div>
+
+          <div className="v2-inspector-section">
+            <div className="v2-inspector-section-title">Chamber dynamics</div>
+            {activeChamber ? (
+              <div data-testid="presence-studio-v2-chamber-dynamics">
+                <div className="v2-inspector-row">
+                  <span>Active chamber</span>
+                  <strong>{activeChamber.label}</strong>
+                </div>
+                <label className="v2-field">
+                  <span>Role</span>
+                  <select
+                    data-testid="presence-studio-v2-chamber-role"
+                    value={activeChamber.metadata?.role || "custom"}
+                    onChange={(e) => onUpdateChamberMetadata(activeChamber.id, { role: e.target.value as StudioV2ChamberRole })}
+                  >
+                    {["threshold","gallery","practice","about","archive","contact","index","custom"].map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="v2-field">
+                  <span>Layout hint</span>
+                  <select
+                    data-testid="presence-studio-v2-chamber-layout"
+                    value={activeChamber.metadata?.layout || "stack"}
+                    onChange={(e) => onUpdateChamberMetadata(activeChamber.id, { layout: e.target.value as StudioV2ChamberMetadata["layout"] })}
+                  >
+                    {["stack","focus","grid","sequence","wall","field"].map((l) => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="v2-field">
+                  <span>Transition hint</span>
+                  <select
+                    data-testid="presence-studio-v2-chamber-transition"
+                    value={activeChamber.metadata?.transition || "none"}
+                    onChange={(e) => onUpdateChamberMetadata(activeChamber.id, { transition: e.target.value as StudioV2ChamberMetadata["transition"] })}
+                  >
+                    {["none","fade","slide","recede","portal","snap"].map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="v2-field">
+                  <span>Description</span>
+                  <textarea
+                    data-testid="presence-studio-v2-chamber-description"
+                    value={activeChamber.metadata?.description || ""}
+                    onChange={(e) => onUpdateChamberMetadata(activeChamber.id, { description: e.target.value })}
+                    placeholder="What visitors see or feel in this chamber"
+                  />
+                </label>
+                <label className="v2-check-row v2-state-toggle">
+                  <input
+                    type="checkbox"
+                    data-testid="presence-studio-v2-chamber-entry-toggle"
+                    checked={activeChamber.metadata?.isEntry === true}
+                    onChange={(e) => e.target.checked ? onSetChamberEntry(activeChamber.id) : onUpdateChamberMetadata(activeChamber.id, { isEntry: undefined })}
+                  />
+                  <span>
+                    <strong>Entry chamber</strong>
+                    <em>Visitors land here first. Only one chamber can be the entry.</em>
+                  </span>
+                </label>
+                <label className="v2-check-row v2-state-toggle">
+                  <input
+                    type="checkbox"
+                    data-testid="presence-studio-v2-chamber-default-toggle"
+                    checked={activeChamber.metadata?.isDefault === true}
+                    onChange={(e) => e.target.checked ? onSetChamberDefault(activeChamber.id) : onUpdateChamberMetadata(activeChamber.id, { isDefault: undefined })}
+                  />
+                  <span>
+                    <strong>Default chamber</strong>
+                    <em>Fallback when no entry is set. Only one chamber can be the default.</em>
+                  </span>
+                </label>
+                <div className="v2-honest-note">
+                  Chambers shape how visitors move through the room. Public styles may use these roles differently. Transitions are saved as movement hints — advanced timeline controls arrive later.
+                </div>
+              </div>
+            ) : (
+              <div className="v2-honest-note">No chambers available. Add a chamber from the outline.</div>
+            )}
           </div>
 
           <div className="v2-inspector-section">
@@ -1888,6 +2123,71 @@ function ArchiveWorkbench({ state, hasDraft, dirty }: { state: StudioV2State; ha
         </dl>
       </div>
     </section>
+  );
+}
+
+/* ─── Inline Rename ─── */
+function InlineRename({
+  value,
+  onCommit,
+  onClick,
+  testId,
+}: {
+  value: string;
+  onCommit: (label: string) => void;
+  onClick?: () => void;
+  testId?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [editing]);
+
+  function commit() {
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== value) onCommit(trimmed);
+    setEditing(false);
+    setDraft(value);
+  }
+
+  function cancel() {
+    setEditing(false);
+    setDraft(value);
+  }
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        data-testid={testId}
+        className="v2-inline-rename"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit();
+          if (e.key === "Escape") cancel();
+        }}
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      data-testid={testId}
+      className="v2-outline-chamber-name"
+      onClick={() => { onClick?.(); setEditing(true); }}
+      title="Click to select and rename"
+    >
+      {value}
+    </button>
   );
 }
 

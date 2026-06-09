@@ -85,6 +85,7 @@ export function stripEditorStateFromStudioV2(state: StudioV2State): StudioV2Publ
     chambers: state.chambers.map((chamber) => ({
       id: chamber.id,
       label: chamber.label,
+      ...(chamber.metadata ? { metadata: chamber.metadata } : {}),
       objects: chamber.objects
         .filter((object) => object.visibility.public)
         .map((object) => ({

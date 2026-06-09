@@ -2600,6 +2600,77 @@ body.v2-is-manipulating {
   }
 }
 
+/* ── Chamber dynamics Pass 3 ── */
+.presence-studio-v2 .v2-rail-title-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.presence-studio-v2 .v2-add-chamber-btn {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+.presence-studio-v2 .v2-inline-rename {
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid rgba(248, 244, 236, 0.18);
+  border-radius: 8px;
+  background: rgba(248, 244, 236, 0.08);
+  color: var(--p-bone, var(--v2-bone));
+  font-size: 13px;
+}
+
+.presence-studio-v2 .v2-inline-rename:focus {
+  outline: none;
+  border-color: var(--p-copper, var(--v2-copper));
+  box-shadow: 0 0 0 3px rgba(183, 140, 78, 0.15);
+}
+
+.presence-studio-v2 .v2-outline-chamber-count {
+  color: rgba(248, 244, 236, 0.5);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.presence-studio-v2 .v2-outline-chamber-role-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 7px 4px;
+}
+
+.presence-studio-v2 .v2-outline-chamber-role-badge > span:first-child {
+  display: inline-block;
+  padding: 2px 7px;
+  border: 1px solid rgba(183, 140, 78, 0.35);
+  border-radius: 999px;
+  background: rgba(183, 140, 78, 0.1);
+  color: #ffe4a3;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2 .v2-entry-badge {
+  border-color: rgba(86, 125, 85, 0.4) !important;
+  background: rgba(86, 125, 85, 0.14) !important;
+  color: #cce9bd !important;
+}
+
+.presence-studio-v2 .v2-outline-chamber-actions {
+  display: flex;
+  gap: 4px;
+  padding: 0 7px 6px;
+}
+
+.presence-studio-v2 .v2-chamber-action {
+  padding: 3px 7px;
+  font-size: 11px;
+  line-height: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .presence-studio-v2 *,
   .presence-studio-v2 *::before,

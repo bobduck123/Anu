@@ -585,3 +585,226 @@ test("V2 editor title mutation produces saveable config payload and round-trips"
   assert.equal(roundTripped.worldId, state.worldId);
   assert.equal(roundTripped.chambers.length, state.chambers.length);
 });
+
+test("chamber metadata round-trips through adapter save and reload", () => {
+  const state: StudioV2State = {
+    ...studioState(),
+    chambers: [
+      {
+        id: "threshold-chamber",
+        label: "Threshold",
+        objects: [
+          {
+            id: "work-1",
+            type: "image",
+            role: "work",
+            title: "Bridle Road, after rain",
+            visibility: { public: true, mobile: true },
+            transform: DEFAULT_STUDIO_V2_TRANSFORM,
+            locked: false,
+            pinned: false,
+          },
+        ],
+        metadata: {
+          role: "threshold",
+          layout: "focus",
+          transition: "portal",
+          isEntry: true,
+          description: "The opening threshold",
+        },
+      },
+      {
+        id: "gallery-chamber",
+        label: "Gallery",
+        objects: [],
+        metadata: {
+          role: "gallery",
+          layout: "grid",
+          transition: "fade",
+        },
+      },
+    ],
+  };
+
+  const payload = presenceConfigFromStudioV2State(state, null);
+  const sceneV2 = (payload.scene_config as Record<string, unknown>).studio_v2 as Record<string, unknown>;
+  const persistedChambers = (sceneV2.chambers as Array<Record<string, unknown>>);
+
+  assert.equal(persistedChambers.length, 2);
+  const persistedThreshold = persistedChambers[0];
+  assert.equal(persistedThreshold.id, "threshold-chamber");
+  assert.equal((persistedThreshold.metadata as Record<string, unknown>).role, "threshold");
+  assert.equal((persistedThreshold.metadata as Record<string, unknown>).layout, "focus");
+  assert.equal((persistedThreshold.metadata as Record<string, unknown>).transition, "portal");
+  assert.equal((persistedThreshold.metadata as Record<string, unknown>).isEntry, true);
+  assert.equal((persistedThreshold.metadata as Record<string, unknown>).description, "The opening threshold");
+
+  const editable = { ...payload, status: "draft" } as PresenceEditableConfig;
+  const restored = studioV2FromPresenceConfig(editable, node());
+
+  assert.equal(restored.chambers[0].metadata?.role, "threshold");
+  assert.equal(restored.chambers[0].metadata?.layout, "focus");
+  assert.equal(restored.chambers[0].metadata?.transition, "portal");
+  assert.equal(restored.chambers[0].metadata?.isEntry, true);
+  assert.equal(restored.chambers[0].metadata?.description, "The opening threshold");
+  assert.equal(restored.chambers[1].metadata?.role, "gallery");
+  assert.equal(restored.chambers[1].metadata?.layout, "grid");
+  assert.equal(restored.chambers[1].metadata?.transition, "fade");
+});
+
+test("old chamber config without metadata still loads safely", () => {
+  const config = {
+    renderer_key: PRESENCE_STUDIO_V2_RENDERER_KEY,
+    scene_config: {
+      studio_v2: {
+        chambers: [{ id: "main", label: "Room", objectIds: ["a"] }],
+        objectState: { a: { chamberId: "main", visibility: { public: true, mobile: true }, transform: DEFAULT_STUDIO_V2_TRANSFORM, locked: false, pinned: false } },
+      },
+    },
+    content_config: {
+      studio_v2: {
+        title: "Legacy Room",
+        objects: [{ id: "a", type: "text", title: "Hello" }],
+        cta: { label: "Begin" },
+        moodboardRefs: [],
+        traces: { enabled: false },
+      },
+    },
+    style_dna: { studio_v2: { skin: {} } },
+    motion_config: { studio_v2: {} },
+    roomkey_config: {},
+    enquiry_config: {},
+  } as unknown as PresenceEditableConfig;
+
+  const restored = studioV2FromPresenceConfig(config, node());
+  assert.equal(restored.chambers.length, 1);
+  assert.equal(restored.chambers[0].id, "main");
+  assert.equal(restored.chambers[0].metadata, undefined);
+});
+
+test("invalid persisted metadata normalizes safely on load", () => {
+  const config = {
+    renderer_key: PRESENCE_STUDIO_V2_RENDERER_KEY,
+    scene_config: {
+      studio_v2: {
+        chambers: [{
+          id: "main",
+          label: "Room",
+          objectIds: [],
+          metadata: {
+            role: "invalid-role",
+            layout: "invalid-layout",
+            transition: "invalid-transition",
+            isEntry: "not-a-boolean",
+            isDefault: 123,
+            description: 456,
+          },
+        }],
+        objectState: {},
+      },
+    },
+    content_config: {
+      studio_v2: {
+        title: "Test Room",
+        objects: [],
+        cta: { label: "Begin" },
+        moodboardRefs: [],
+        traces: { enabled: false },
+      },
+    },
+    style_dna: { studio_v2: { skin: {} } },
+    motion_config: { studio_v2: {} },
+    roomkey_config: {},
+    enquiry_config: {},
+  } as unknown as PresenceEditableConfig;
+
+  const restored = studioV2FromPresenceConfig(config, node());
+  const metadata = restored.chambers[0].metadata;
+  assert.ok(metadata);
+  assert.equal(metadata?.role, "custom");
+  assert.equal(metadata?.layout, "stack");
+  assert.equal(metadata?.transition, "none");
+  assert.equal(metadata?.isEntry, undefined);
+  assert.equal(metadata?.isDefault, undefined);
+  assert.equal(metadata?.description, undefined);
+});
+
+test("metadata does not break public projection or payload hygiene", () => {
+  const state: StudioV2State = {
+    ...studioState(),
+    chambers: [
+      {
+        id: "threshold-chamber",
+        label: "Threshold",
+        objects: [
+          {
+            id: "work-1",
+            type: "image",
+            role: "work",
+            title: "Bridle Road, after rain",
+            visibility: { public: true, mobile: true },
+            transform: DEFAULT_STUDIO_V2_TRANSFORM,
+            locked: false,
+            pinned: false,
+          },
+        ],
+        metadata: {
+          role: "threshold",
+          layout: "focus",
+          transition: "portal",
+          isEntry: true,
+          description: "The opening threshold",
+        },
+      },
+    ],
+  };
+
+  const publicRoom = publicRoomFromStudioV2State(state);
+  assert.equal(publicRoom.chambers[0].metadata?.role, "threshold");
+  assert.equal(publicRoom.chambers[0].metadata?.layout, "focus");
+  assert.equal(publicRoom.chambers[0].metadata?.transition, "portal");
+  assert.equal(publicRoom.chambers[0].metadata?.isEntry, true);
+  assert.equal(publicRoom.chambers[0].metadata?.description, "The opening threshold");
+  assert.deepEqual(findStudioV2PublicPayloadLeaks(publicRoom, { allowDemoTraces: true }), []);
+  assert.deepEqual(findRestrictedPublicPayloadKeys(publicRoom), []);
+});
+
+test("existing bbbvision and Gallery P2 style fields still round-trip with metadata", () => {
+  for (const preset of ["gallery-p2", "christina-liquid-gallery", "bbbvision-threshold-gallery"] as const) {
+    const state: StudioV2State = {
+      ...studioState(),
+      publicStylePreset: preset,
+      chambers: [
+        {
+          id: "main",
+          label: "Room",
+          objects: [
+            {
+              id: "work-1",
+              type: "image",
+              role: "work",
+              title: "Test work",
+              visibility: { public: true, mobile: true },
+              transform: DEFAULT_STUDIO_V2_TRANSFORM,
+              locked: false,
+              pinned: false,
+            },
+          ],
+          metadata: { role: "threshold", layout: "focus" },
+        },
+      ],
+    };
+
+    const payload = presenceConfigFromStudioV2State(state, null);
+    const editable = { ...payload, status: "draft" } as PresenceEditableConfig;
+    const restored = studioV2FromPresenceConfig(editable, node());
+
+    assert.equal(restored.publicStylePreset, preset, `preset ${preset} should round-trip`);
+    assert.equal(restored.chambers[0].metadata?.role, "threshold", `preset ${preset} chamber metadata should round-trip`);
+
+    const publicRoom = publicRoomFromStudioV2State(restored);
+    assert.equal(publicRoom.publicStylePreset, preset, `preset ${preset} public projection should match`);
+    assert.deepEqual(findStudioV2PublicPayloadLeaks(publicRoom, { allowDemoTraces: true }), []);
+    assert.deepEqual(findRestrictedPublicPayloadKeys(publicRoom), []);
+  }
+});

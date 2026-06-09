@@ -82,10 +82,46 @@ export interface StudioV2Object {
   pinned: boolean;
 }
 
+export type StudioV2ChamberRole =
+  | "threshold"
+  | "gallery"
+  | "practice"
+  | "about"
+  | "archive"
+  | "contact"
+  | "index"
+  | "custom";
+
+export type StudioV2ChamberLayout =
+  | "stack"
+  | "focus"
+  | "grid"
+  | "sequence"
+  | "wall"
+  | "field";
+
+export type StudioV2ChamberTransition =
+  | "none"
+  | "fade"
+  | "slide"
+  | "recede"
+  | "portal"
+  | "snap";
+
+export interface StudioV2ChamberMetadata {
+  role?: StudioV2ChamberRole;
+  description?: string;
+  layout?: StudioV2ChamberLayout;
+  transition?: StudioV2ChamberTransition;
+  isEntry?: boolean;
+  isDefault?: boolean;
+}
+
 export interface StudioV2Chamber {
   id: string;
   label: string;
   objects: StudioV2Object[];
+  metadata?: StudioV2ChamberMetadata;
 }
 
 export interface StudioV2MoodboardReference {
@@ -157,6 +193,7 @@ export interface StudioV2PublicChamber {
   id: string;
   label: string;
   objects: StudioV2PublicObject[];
+  metadata?: StudioV2ChamberMetadata;
 }
 
 export interface StudioV2PublicRoom {

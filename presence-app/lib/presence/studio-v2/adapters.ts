@@ -24,6 +24,7 @@ import {
   type StudioV2Transform,
   type StudioV2WorldId,
 } from "./model.ts";
+import { normalizeStudioV2ChamberMetadata } from "./chambers.ts";
 import { stripEditorStateFromStudioV2 } from "./sanitize.ts";
 
 const STUDIO_V2_CONFIG_KEY = "studio_v2";
@@ -107,6 +108,7 @@ export function presenceConfigFromStudioV2State(
       id: chamber.id,
       label: chamber.label,
       objectIds: chamber.objects.map((object) => object.id),
+      ...(chamber.metadata ? { metadata: chamber.metadata } : {}),
     })),
     objectState,
     mobileRecovery: studioState.mobileRecovery,
@@ -207,12 +209,14 @@ function studioV2FromStoredConfig(
   const chambers = chamberLayouts.length > 0
     ? chamberLayouts.map((layout, index) => {
       const objectIds = Array.isArray(layout.objectIds) ? layout.objectIds.map(text).filter(Boolean) : [];
+      const metadata = record(layout.metadata);
       return {
         id: text(layout.id) || `chamber-${index + 1}`,
         label: text(layout.label) || `Room section ${index + 1}`,
         objects: objectIds
           .map((id) => objectFromStored(id, objectById.get(id), record(stateById[id])))
           .filter((object): object is StudioV2Object => Boolean(object)),
+        ...(Object.keys(metadata).length > 0 ? { metadata: normalizeStudioV2ChamberMetadata(metadata) } : {}),
       };
     })
     : chambersFromStoredObjects(storedObjects, stateById, fallbackChamberId);
