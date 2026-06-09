@@ -1779,3 +1779,59 @@ Evidence: `PRESENCE_STUDIO_V2_BBBVISION_PILOT_S6B_AUDIT.md`
 
 New report: `PRESENCE_STUDIO_V2_BBBVISION_PILOT_S6B_AUDIT.md`
 
+---
+
+## S6 Public Style Presets Hosted Deploy — 2026-06-08
+
+Scope: Deploy S6A/S6B public style system to production and complete hosted smoke.
+
+Deployment:
+
+- **Production URL:** `https://your-presence.vercel.app`
+- **Deployment ID:** `7yqscqF5Su93ovXPD99DN8qcuuXE`
+- **Source commit:** `535cdca`
+- **Deploy method:** Vercel CLI from local working tree
+- **Build:** Clean (TypeScript passed, static pages generated)
+
+Local pre-deploy QA:
+
+- TypeScript typecheck: Pass
+- Production build: Pass
+- Node unit tests: 51/51 Pass
+- Playwright local suite: 22/22 Pass
+
+Hosted smoke results:
+
+- Anonymous public checks: Pass (Room 11 Gallery P2, legacy room, payload hygiene)
+- Authenticated Studio smoke (Room 11): Pass (editor mounts, selector shows 3 options, dirty/save works)
+- Christina style owner preview: Pass (selected, saved, previewed, restored)
+- bbbvision style owner preview: Pass (selected, saved, previewed, restored)
+- Gallery P2 restored successfully: Pass
+- Legacy negative: Pass
+- Mobile public output: Pass
+- Hosted lifecycle spec: Pass (with cleanup)
+- Room 11 restored to original state: Pass
+
+Known issue:
+
+- `presence-studio-v2-hosted-s3-smoke.spec.ts` fails due to pre-existing test fragility (assumes first outline object has no image). Not a production regression.
+
+Evidence:
+
+```txt
+docs/program/evidence/presence-studio-v2-public-style-presets-s6-hosted/
+```
+
+Full report: `PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6_HOSTED_SMOKE.md`
+
+Verdict:
+
+- S6 style system is deployed and hosted-smoked.
+- Gallery P2: ready.
+- Christina Liquid Gallery: ready.
+- bbbvision style preset: ready for hosted room migration.
+- S5 asset library: ready.
+- Controlled operator-led pilots: ready with operator support.
+- Public self-serve onboarding: still not ready.
+- S6 style-system baseline can be locked.
+

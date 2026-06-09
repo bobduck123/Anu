@@ -3,6 +3,17 @@
 Date: 2026-06-09
 Scope: Selectable public-output style presets and Christina Liquid Gallery archetype. Deployed and hosted-smoked after Kimi PASS.
 
+## Deployment Update — 2026-06-08
+
+S6A style system deployed to production as part of the combined S6A/S6B deploy:
+
+- **Production URL:** `https://your-presence.vercel.app`
+- **Deployment ID:** `7yqscqF5Su93ovXPD99DN8qcuuXE`
+- **Source commit:** `535cdca`
+- **Hosted smoke:** Passed — Room 11 style selector verified, Christina preview verified, Gallery P2 restored
+
+See: `PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6_HOSTED_SMOKE.md`
+
 ## 1. Reference Site Analysis
 
 Local reference inspected:

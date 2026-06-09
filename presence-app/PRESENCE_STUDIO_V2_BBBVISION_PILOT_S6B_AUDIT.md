@@ -3,7 +3,7 @@
 **Date:** 2026-06-08
 **Auditor:** Kimi Code CLI (Studio V2 model-contract reviewer, renderer QA reviewer, payload hygiene tester, regression auditor)
 **Scope:** `lib/presence/studio-v2/model.ts`, `adapters.ts`, `sanitize.ts`, `PresenceStudioV2Editor.tsx` style selector, `PresenceStudioV2PublicRoom.tsx` bbbvision branch, `presence-studio-v2-public.css` bbbvision styles, `tests/e2e/presence-studio-v2-bbbvision-pilot.spec.ts`, mock API state, evidence screenshots
-**Deployed:** No. Hosted data mutated: No. S4A status: Parked in `stash@{0}`.
+**Deployed:** Yes — deployed 2026-06-08 as part of combined S6A/S6B style system deploy. Hosted data mutated: Minimal and restored (Room 11 style switching for smoke verification). S4A status: Parked in `stash@{0}`.
 
 ---
 

@@ -644,3 +644,31 @@ docs/program/evidence/presence-studio-v2-asset-library-s5-hosted/
 - Hosted lifecycle: **ready**
 - Controlled operator-led pilot: **ready with operator support**
 - Public self-serve onboarding: **not ready**
+
+---
+
+## S6 Public Style Presets Deployed — 2026-06-08
+
+Combined S6A/S6B deployment completed successfully:
+
+- **Production URL:** `https://your-presence.vercel.app`
+- **Deployment ID:** `7yqscqF5Su93ovXPD99DN8qcuuXE`
+- **Source commit:** `535cdca`
+- **Deploy method:** Vercel CLI from local working tree
+
+Hosted smoke results:
+
+- Room 11 Studio V2 editor mounts correctly
+- Public style selector shows all 3 options (Gallery P2, Christina / Liquid Gallery, bbb.vision / Threshold Gallery)
+- Style selection marks dirty and persists through save/reload
+- Christina style owner preview renders correctly
+- bbbvision style owner preview renders correctly
+- Gallery P2 restored successfully after testing
+- Legacy room `/p/hesmaddw` remains outside V2
+- Payload hygiene clean
+- Hosted lifecycle spec passes with cleanup
+- Room 11 restored to original state
+
+Evidence: `docs/program/evidence/presence-studio-v2-public-style-presets-s6-hosted/`
+
+Full report: `PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6_HOSTED_SMOKE.md`
