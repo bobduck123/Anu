@@ -3470,6 +3470,13 @@
   cursor: crosshair;
 }
 
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-canvas-shell {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+}
+
 .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-canvas {
   position: absolute;
   inset: 0;
@@ -3479,6 +3486,63 @@
   background: #000;
   z-index: 0;
 }
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-field-loader {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  background: #000;
+  color: var(--v2-bbb-gold);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 280ms ease;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-field-loader[data-state="ready"] {
+  opacity: 0;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-field-loader-copy {
+  align-self: end;
+  color: rgba(255, 216, 77, 0.72);
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-transform: uppercase;
+  text-shadow: 0 0 16px rgba(255, 216, 77, 0.36);
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-field-loader-line {
+  width: min(128px, 34vw);
+  height: 1px;
+  align-self: center;
+  background: linear-gradient(90deg, transparent, rgba(255, 216, 77, 0.92), transparent);
+  box-shadow: 0 0 18px rgba(255, 216, 77, 0.38);
+  animation: v2BbbFieldLoaderLine 980ms ease-in-out infinite alternate;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-field-loader-dots {
+  align-self: start;
+  display: flex;
+  gap: 10px;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-field-loader-dots i {
+  width: 3px;
+  height: 3px;
+  display: block;
+  background: rgba(255, 216, 77, 0.82);
+  box-shadow: 0 0 12px rgba(255, 216, 77, 0.42);
+  animation: v2BbbFieldLoaderDot 900ms ease-in-out infinite alternate;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-field-loader-dots i:nth-child(2) { animation-delay: 90ms; }
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-field-loader-dots i:nth-child(3) { animation-delay: 180ms; }
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-field-loader-dots i:nth-child(4) { animation-delay: 270ms; }
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-field-loader-dots i:nth-child(5) { animation-delay: 360ms; }
 
 .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-star {
   position: absolute;
@@ -3609,6 +3673,28 @@
   background: #111;
 }
 
+@keyframes v2BbbFieldLoaderLine {
+  from {
+    opacity: 0.42;
+    transform: scaleX(0.72);
+  }
+  to {
+    opacity: 0.96;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes v2BbbFieldLoaderDot {
+  from {
+    opacity: 0.22;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 0.88;
+    transform: translateY(-4px);
+  }
+}
+
 /* Minimal focus overlay */
 .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-focus {
   position: fixed;
@@ -3676,6 +3762,20 @@
 @keyframes v2BbbFocusHintIn {
   from { opacity: 0; transform: translateX(-50%) translateY(8px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-field-loader-line,
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-field-loader-dots i,
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-focus,
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-focus-image,
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-focus-hint {
+    animation: none;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-field-loader {
+    transition-duration: 80ms;
+  }
 }
 
 /* Mobile constellation */

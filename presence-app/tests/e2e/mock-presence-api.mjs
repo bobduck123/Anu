@@ -556,15 +556,15 @@ const server = createServer(async (req, res) => {
       state.failNextPreviewReads -= 1;
       return sendError(res, 503, "cold_start", "Preview read is warming up.");
     }
-    if (!state.editorDraft) state.editorDraft = buildEditorConfig("draft", state.nextEditorVersion++);
+    const previewBase = state.editorDraft || state.editorPublished || buildEditorConfig("draft", state.nextEditorVersion++);
     return sendData(res, {
       created_draft: false,
       preview: true,
       expires_at: Math.floor(Date.now() / 1000) + 900,
       preview_token: "mock-preview-token",
       preview_url: "/studio/101/preview?presencePreviewToken=mock-preview-token",
-      editable_config: { ...redactEditorConfig(state.editorDraft), status: "preview" },
-      draft: state.editorDraft,
+      editable_config: { ...redactEditorConfig(previewBase), status: "preview" },
+      draft: previewBase,
     });
   }
 
