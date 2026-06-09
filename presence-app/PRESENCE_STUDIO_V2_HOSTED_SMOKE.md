@@ -2,6 +2,21 @@
 
 Date: 2026-06-03
 
+## 2026-06-09 Chamber Dynamics Pass 4 Script Addendum
+
+Pass 4 updated `scripts/hosted-bbbvision-migration-smoke.mjs` so a future hosted smoke records bbbvision threshold/gallery chamber-role data attributes and scans visible text for metadata/CMS label leakage.
+
+Status for this pass:
+
+- Hosted smoke: not run.
+- Hosted data mutation: none.
+- Deployment: not run.
+- Purpose: prepare future hosted smoke for metadata-driven bbbvision verification after Kimi audit.
+
+Detailed local report:
+
+`PRESENCE_V3_CHAMBER_DYNAMICS_PASS4_PUBLIC_RENDERER_REPORT.md`
+
 ## 2026-06-09 bbbvision Hosted Migration Result
 
 Hosted bbbvision Studio V2 migration is now complete.

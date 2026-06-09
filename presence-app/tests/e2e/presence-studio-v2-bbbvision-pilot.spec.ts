@@ -119,17 +119,18 @@ test("bbbvision threshold gallery is selectable, editable, persistent, public-sa
 
   await page.getByTestId("presence-public-bbbvision-enter").click();
   await expect(page.getByTestId("presence-public-bbbvision-gallery")).toBeVisible();
-  await expect(page.getByTestId("presence-public-bbbvision-next")).toBeVisible();
+  await expect(page.getByTestId("presence-public-bbbvision-constellation")).toBeVisible();
   await page.waitForTimeout(650);
   await screenshot(page, "04-owner-preview-bbbvision-gallery.png");
 
-  await page.getByTestId("presence-public-bbbvision-next").click();
-  await page.waitForTimeout(650);
-  await page.locator(".v2-bbb-stage-button").click();
-  await expect(page.getByTestId("presence-public-artwork-focus")).toBeVisible();
+  // Click a constellation star to open focus
+  const stars = page.locator(".v2-bbb-star");
+  await stars.nth(1).click({ force: true });
+  await expect(page.getByTestId("presence-public-bbbvision-focus")).toBeVisible();
+  await expect(page.getByTestId("presence-public-bbbvision-focus-image")).toBeVisible();
   await screenshot(page, "05-owner-preview-bbbvision-focus.png");
   await page.keyboard.press("Escape");
-  await expect(page.getByTestId("presence-public-artwork-focus")).toHaveCount(0);
+  await expect(page.getByTestId("presence-public-bbbvision-focus")).toHaveCount(0);
 
   await publishDraft(request);
   await page.goto("/p/test-presence-room", { waitUntil: "networkidle" });

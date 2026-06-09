@@ -7,6 +7,14 @@
 
 ---
 
+## 2026-06-09 Pass 4 Follow-up
+
+Pass 4 has now connected the Studio-authored chamber metadata to the bbbvision public renderer. The Pass 3 editor controls remain the authoring surface; Pass 4 consumes the public-safe metadata in preview/public output without enabling destructive chamber delete, unstashing S4A, deploying, or mutating hosted data.
+
+See `PRESENCE_V3_CHAMBER_DYNAMICS_PASS4_PUBLIC_RENDERER_REPORT.md`.
+
+---
+
 ## Summary
 
 Pass 3 adds a complete **Chamber Dynamics** inspector panel to the Studio V2 editor, enabling room owners to configure per-chamber metadata: role, layout, transition, description, entry flag, and default flag. It also adds chamber list management (add, inline rename, reorder) to the Studio Outline panel.

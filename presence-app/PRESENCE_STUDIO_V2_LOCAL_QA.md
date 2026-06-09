@@ -2,6 +2,34 @@
 
 Date: 2026-06-03
 
+## 2026-06-09 Chamber Dynamics Pass 4 Local QA Addendum
+
+Pass 4 local QA passed for public renderer metadata consumption.
+
+Commands/results:
+
+- `npm.cmd run typecheck`: pass
+- `npm.cmd run build`: pass
+- Studio V2 chamber helpers: 36 passed
+- Studio V2 assets: 8 passed
+- Studio V2 feature flags: 8 passed
+- Studio V2 adapters: 22 passed
+- Public payload unit tests: 5 passed
+- Public resolver unit tests: 8 passed
+- Editor readiness unit tests: 5 passed
+- Required Playwright set: 26 passed across bbbvision parity, chamber dynamics, public style presets, public render, payload hygiene, and draft preview.
+- Optional broader Playwright set: 13 passed across direct manipulation, S5 asset library, inspector usability, and Gallery P2 quality/polish.
+
+Evidence:
+
+`docs/program/evidence/presence-v3-chamber-dynamics-p4-public-renderer/`
+
+Hosted status:
+
+- Hosted smoke: not run.
+- Hosted data mutation: none.
+- Deployment: not run.
+
 ## 2026-06-09 bbbvision Hosted Migration QA Addendum
 
 Local/hosted migration support added:

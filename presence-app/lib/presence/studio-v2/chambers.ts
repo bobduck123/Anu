@@ -2,9 +2,18 @@ import type {
   StudioV2Chamber,
   StudioV2ChamberLayout,
   StudioV2ChamberMetadata,
+  StudioV2PublicChamber,
   StudioV2ChamberRole,
   StudioV2ChamberTransition,
 } from "./model.ts";
+
+type StudioV2ChamberWithMetadata = {
+  metadata?: StudioV2ChamberMetadata;
+};
+
+type StudioV2ChamberWithObjects = StudioV2ChamberWithMetadata & {
+  objects: readonly unknown[];
+};
 
 const STUDIO_V2_CHAMBER_ROLES: readonly StudioV2ChamberRole[] = [
   "threshold",
@@ -67,7 +76,9 @@ export function normalizeStudioV2ChamberMetadata(value: unknown): StudioV2Chambe
   return result;
 }
 
-export function withNormalizedStudioV2ChamberMetadata(chamber: StudioV2Chamber): StudioV2Chamber {
+export function withNormalizedStudioV2ChamberMetadata<TChamber extends StudioV2ChamberWithMetadata>(
+  chamber: TChamber,
+): TChamber {
   if (!chamber.metadata) return chamber;
   return {
     ...chamber,
@@ -75,11 +86,15 @@ export function withNormalizedStudioV2ChamberMetadata(chamber: StudioV2Chamber):
   };
 }
 
-export function normalizeStudioV2Chambers(chambers: StudioV2Chamber[]): StudioV2Chamber[] {
+export function normalizeStudioV2Chambers<TChamber extends StudioV2ChamberWithMetadata>(
+  chambers: readonly TChamber[],
+): TChamber[] {
   return chambers.map((chamber) => withNormalizedStudioV2ChamberMetadata(chamber));
 }
 
-export function getStudioV2EntryChamber(chambers: StudioV2Chamber[]): StudioV2Chamber | undefined {
+export function getStudioV2EntryChamber<TChamber extends StudioV2ChamberWithMetadata>(
+  chambers: readonly TChamber[],
+): TChamber | undefined {
   if (chambers.length === 0) return undefined;
   const normalized = normalizeStudioV2Chambers(chambers);
   const explicitEntry = normalized.find((c) => c.metadata?.isEntry === true);
@@ -89,7 +104,9 @@ export function getStudioV2EntryChamber(chambers: StudioV2Chamber[]): StudioV2Ch
   return normalized[0];
 }
 
-export function getStudioV2DefaultChamber(chambers: StudioV2Chamber[]): StudioV2Chamber | undefined {
+export function getStudioV2DefaultChamber<TChamber extends StudioV2ChamberWithMetadata>(
+  chambers: readonly TChamber[],
+): TChamber | undefined {
   if (chambers.length === 0) return undefined;
   const normalized = normalizeStudioV2Chambers(chambers);
   const explicitDefault = normalized.find((c) => c.metadata?.isDefault === true);
@@ -100,15 +117,29 @@ export function getStudioV2DefaultChamber(chambers: StudioV2Chamber[]): StudioV2
 }
 
 export function getStudioV2ChambersByRole(
-  chambers: StudioV2Chamber[],
+  chambers: readonly StudioV2Chamber[],
   role: StudioV2ChamberRole,
 ): StudioV2Chamber[] {
   const normalized = normalizeStudioV2Chambers(chambers);
   return normalized.filter((c) => c.metadata?.role === role);
 }
 
-export function getStudioV2PublicChambers(chambers: StudioV2Chamber[]): StudioV2Chamber[] {
+export function getStudioV2PublicChambers(chambers: readonly StudioV2Chamber[]): StudioV2Chamber[] {
   return normalizeStudioV2Chambers(chambers).filter((chamber) =>
     chamber.objects.some((object) => object.visibility.public)
   );
+}
+
+export function getStudioV2PublicChambersByRole(
+  chambers: readonly StudioV2PublicChamber[],
+  role: StudioV2ChamberRole,
+): StudioV2PublicChamber[] {
+  const normalized = normalizeStudioV2Chambers(chambers);
+  return normalized.filter((c) => c.metadata?.role === role);
+}
+
+export function getStudioV2RenderablePublicChambers<TChamber extends StudioV2ChamberWithObjects>(
+  chambers: readonly TChamber[],
+): TChamber[] {
+  return normalizeStudioV2Chambers(chambers).filter((chamber) => chamber.objects.length > 0);
 }

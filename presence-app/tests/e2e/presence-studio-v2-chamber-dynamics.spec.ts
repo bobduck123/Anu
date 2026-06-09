@@ -242,7 +242,8 @@ test("public render remains unchanged from prior behaviour", async ({ page, requ
 
   await page.goto("/p/v2-public-room", { waitUntil: "networkidle" });
   await expect(page.locator(".presence-studio-v2-public")).toBeVisible();
-  // Public renderer should still show chambers normally (Pass 4 will consume roles)
+  // Generic public output still renders as normal chamber content; bbbvision-specific
+  // state consumption is covered in the bbbvision parity spec.
   await expect(page.getByTestId("presence-public-chamber-room").first()).toBeVisible();
 });
 

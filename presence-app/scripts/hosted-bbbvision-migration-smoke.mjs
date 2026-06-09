@@ -64,6 +64,16 @@ const fakeDataTerms = [
   "demo social",
 ];
 
+const visibleMetadataTerms = [
+  "metadata",
+  "isEntry",
+  "isDefault",
+  "role:",
+  "chamber role",
+  "chamber metadata",
+  "data-chamber",
+];
+
 await fs.mkdir(OUT, { recursive: true });
 
 const browser = await chromium.launch({ headless: true });
@@ -90,6 +100,7 @@ try {
     summary.violations.push(...scan(route.id, "html", html, forbiddenTerms));
     summary.violations.push(...scan(route.id, "text", text, forbiddenTerms));
     summary.violations.push(...scan(route.id, "text", text, fakeDataTerms));
+    summary.violations.push(...scan(route.id, "text", text, visibleMetadataTerms));
 
     const routeResult = {
       id: route.id,
@@ -102,6 +113,9 @@ try {
       bbbvision_style_count: await page.getByTestId("presence-public-style-bbbvision-threshold-gallery").count(),
       bbbvision_threshold_count: await page.getByTestId("presence-public-bbbvision-threshold").count(),
       bbbvision_gallery_count: await page.getByTestId("presence-public-bbbvision-gallery").count(),
+      bbbvision_threshold_role: await page.getByTestId("presence-public-bbbvision-threshold").first().getAttribute("data-chamber-role").catch(() => null),
+      bbbvision_threshold_layout: await page.getByTestId("presence-public-bbbvision-threshold").first().getAttribute("data-chamber-layout").catch(() => null),
+      bbbvision_threshold_transition: await page.getByTestId("presence-public-bbbvision-threshold").first().getAttribute("data-chamber-transition").catch(() => null),
       source_asset_count: await page.locator('img[src*="bbbvision.vercel.app/assets/"]').count(),
       broken_visible_image_count: await brokenImageCount(page),
     };
@@ -121,10 +135,21 @@ try {
         await page.getByTestId("presence-public-bbbvision-enter").click();
         await page.getByTestId("presence-public-bbbvision-gallery").waitFor({ state: "visible", timeout: 10_000 });
         routeResult.bbbvision_gallery_after_enter_count = await page.getByTestId("presence-public-bbbvision-gallery").count();
+        routeResult.bbbvision_gallery_role_after_enter = await page.getByTestId("presence-public-bbbvision-gallery").first().getAttribute("data-chamber-role").catch(() => null);
+        routeResult.bbbvision_gallery_layout_after_enter = await page.getByTestId("presence-public-bbbvision-gallery").first().getAttribute("data-chamber-layout").catch(() => null);
+        routeResult.bbbvision_metadata_source =
+          isMetadataRole(routeResult.bbbvision_threshold_role) || isMetadataRole(routeResult.bbbvision_gallery_role_after_enter)
+            ? "metadata"
+            : "fallback";
         assert(routeResult.bbbvision_gallery_after_enter_count > 0, `${route.path} did not enter bbbvision gallery`);
+        const constellationCount = await page.locator(".v2-bbb-star").count();
+        assert(constellationCount > 0, `${route.path} gallery regressed to flat page — no constellation stars found`);
+        const afterEnterText = await page.locator("body").innerText().catch(() => "");
+        summary.violations.push(...scan(route.id, "text-after-enter", afterEnterText, visibleMetadataTerms));
         await page.waitForTimeout(700);
         await screenshot(page, "02-published-p-bbbvision-gallery-desktop.png", summary);
-        await page.getByTestId("presence-public-bbbvision-next").click();
+        // Navigate with keyboard arrow to verify movement still works
+        await page.keyboard.press("ArrowRight");
         await page.waitForTimeout(700);
         await screenshot(page, "03-published-p-bbbvision-gallery-next-state.png", summary);
       } else {
@@ -132,7 +157,16 @@ try {
         await page.getByTestId("presence-public-bbbvision-enter").click();
         await page.getByTestId("presence-public-bbbvision-gallery").waitFor({ state: "visible", timeout: 10_000 });
         routeResult.bbbvision_gallery_after_enter_count = await page.getByTestId("presence-public-bbbvision-gallery").count();
+        routeResult.bbbvision_gallery_role_after_enter = await page.getByTestId("presence-public-bbbvision-gallery").first().getAttribute("data-chamber-role").catch(() => null);
+        routeResult.bbbvision_metadata_source =
+          isMetadataRole(routeResult.bbbvision_threshold_role) || isMetadataRole(routeResult.bbbvision_gallery_role_after_enter)
+            ? "metadata"
+            : "fallback";
         assert(routeResult.bbbvision_gallery_after_enter_count > 0, `${route.path} did not enter bbbvision gallery`);
+        const constellationCount = await page.locator(".v2-bbb-star").count();
+        assert(constellationCount > 0, `${route.path} gallery regressed to flat page — no constellation stars found`);
+        const afterEnterText = await page.locator("body").innerText().catch(() => "");
+        summary.violations.push(...scan(route.id, "text-after-enter", afterEnterText, visibleMetadataTerms));
       }
     }
 
@@ -164,6 +198,7 @@ try {
   const mobileText = await mobilePage.locator("body").innerText().catch(() => "");
   summary.violations.push(...scan("bbbvision-mobile", "html", mobileHtml, forbiddenTerms));
   summary.violations.push(...scan("bbbvision-mobile", "text", mobileText, forbiddenTerms));
+  summary.violations.push(...scan("bbbvision-mobile", "text", mobileText, visibleMetadataTerms));
   const mobileResult = {
     id: "bbbvision-mobile",
     path: "/p/bbbvision",
@@ -173,6 +208,7 @@ try {
     bbbvision_style_count: await mobilePage.getByTestId("presence-public-style-bbbvision-threshold-gallery").count(),
     bbbvision_threshold_count: await mobilePage.getByTestId("presence-public-bbbvision-threshold").count(),
     bbbvision_gallery_count: await mobilePage.getByTestId("presence-public-bbbvision-gallery").count(),
+    bbbvision_threshold_role: await mobilePage.getByTestId("presence-public-bbbvision-threshold").first().getAttribute("data-chamber-role").catch(() => null),
     source_asset_count: await mobilePage.locator('img[src*="bbbvision.vercel.app/assets/"]').count(),
     broken_visible_image_count: await brokenImageCount(mobilePage),
   };
@@ -186,7 +222,16 @@ try {
   await mobilePage.getByTestId("presence-public-bbbvision-enter").click();
   await mobilePage.getByTestId("presence-public-bbbvision-gallery").waitFor({ state: "visible", timeout: 10_000 });
   mobileResult.bbbvision_gallery_after_enter_count = await mobilePage.getByTestId("presence-public-bbbvision-gallery").count();
+  mobileResult.bbbvision_gallery_role_after_enter = await mobilePage.getByTestId("presence-public-bbbvision-gallery").first().getAttribute("data-chamber-role").catch(() => null);
+  mobileResult.bbbvision_metadata_source =
+    isMetadataRole(mobileResult.bbbvision_threshold_role) || isMetadataRole(mobileResult.bbbvision_gallery_role_after_enter)
+      ? "metadata"
+      : "fallback";
   assert(mobileResult.bbbvision_gallery_after_enter_count > 0, "mobile /p/bbbvision did not enter gallery");
+  const mobileConstellationCount = await mobilePage.locator(".v2-bbb-star").count();
+  assert(mobileConstellationCount > 0, "mobile /p/bbbvision gallery regressed to flat page — no constellation stars found");
+  const mobileAfterEnterText = await mobilePage.locator("body").innerText().catch(() => "");
+  summary.violations.push(...scan("bbbvision-mobile", "text-after-enter", mobileAfterEnterText, visibleMetadataTerms));
   await mobilePage.waitForTimeout(700);
   await screenshot(mobilePage, "05b-published-p-bbbvision-mobile-gallery.png", summary);
   summary.routes.push(mobileResult);
@@ -234,6 +279,10 @@ function unique(violations) {
     items.push(item);
   }
   return items;
+}
+
+function isMetadataRole(value) {
+  return Boolean(value && value !== "fallback");
 }
 
 async function screenshot(page, fileName, summary) {

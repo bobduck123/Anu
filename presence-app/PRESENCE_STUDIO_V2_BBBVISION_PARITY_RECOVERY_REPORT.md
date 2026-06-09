@@ -2,6 +2,24 @@
 
 Date: 2026-06-09
 
+## 2026-06-09 Pass 4 Addendum
+
+Presence V3 Chamber Dynamics Pass 4 now makes the recovered bbbvision public state flow consume chamber metadata when available.
+
+- Threshold resolves from `metadata.isEntry`, then `metadata.role === "threshold"`, then the recovered fallback.
+- Gallery resolves from `metadata.role === "gallery"`, then non-threshold `metadata.isDefault`, then the recovered fallback.
+- Practice/about resolves from `metadata.role === "practice"` or `metadata.role === "about"`, then the recovered fallback.
+- The no-metadata hosted-compatible fallback remains intact.
+- No hosted room 29 mutation, hosted smoke, or deployment was performed in Pass 4.
+
+Evidence and detailed QA:
+
+`docs/program/evidence/presence-v3-chamber-dynamics-p4-public-renderer/`
+
+Report:
+
+`PRESENCE_V3_CHAMBER_DYNAMICS_PASS4_PUBLIC_RENDERER_REPORT.md`
+
 ## Summary
 
 The previous Presence bbbvision public renderer was technically clean but artistically wrong: it rendered threshold, gallery, and practice as a single stacked public page. This pass recovers the original bbbvision movement model as a data-driven Studio V2 public state machine:
@@ -172,7 +190,8 @@ Key files:
 
 ## Remaining Gaps
 
-- The original bbbvision gallery uses a custom canvas/image-field engine with loading counter, hover focus rectangle, and sliced/glitch image opening. Presence now approximates the movement with React/CSS state and editable objects, not a cloned canvas engine.
+- The original bbbvision gallery uses a custom canvas/image-field engine with loading counter, hover focus rectangle, and sliced/glitch image opening. Presence now uses a DOM-based spatial constellation with mouse parallax, not a cloned canvas engine.
+- **2026-06-08 Gallery Parity Pass**: Rebuilt gallery view into scattered constellation layout. Removed orbit/stage/controls. Added mouse parallax. Simplified focus overlay. Scores improved from 4/10 to 7/10. See `PRESENCE_V3_BBBVISION_GALLERY_PARITY_REPORT.md`.
 - Local mock bbbvision content has four image objects; hosted room 29 has the real source bbbvision asset set.
 - Production owner Studio/preview was not rerun without secure owner credentials in environment.
 

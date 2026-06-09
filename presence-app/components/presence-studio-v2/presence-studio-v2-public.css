@@ -3460,3 +3460,252 @@
     transform: scale(1);
   }
 }
+
+/* === bbbvision gallery constellation pass === */
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-constellation {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transform: translate(
+    calc(var(--parallax-x, 0) * -20px),
+    calc(var(--parallax-y, 0) * -20px)
+  );
+  transition: transform 120ms ease-out;
+  cursor: crosshair;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-star {
+  position: absolute;
+  padding: 0;
+  border: 1px solid rgba(255, 216, 77, 0.22);
+  border-radius: 1px;
+  background: #080704;
+  box-shadow: 0 0 0 rgba(255, 216, 77, 0);
+  cursor: zoom-in;
+  pointer-events: auto;
+  overflow: hidden;
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 260ms var(--p-ease-out), opacity 220ms ease;
+  opacity: 0.72;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-star img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.88) contrast(1.04);
+  transition: transform 360ms ease, filter 360ms ease;
+  pointer-events: none;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-star:hover,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-star:focus-visible,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-star.is-active {
+  opacity: 1;
+  border-color: rgba(255, 216, 77, 0.92);
+  box-shadow: 0 0 24px rgba(255, 216, 77, 0.42), 0 0 48px rgba(255, 216, 77, 0.18);
+  transform: translate(-50%, -50%) rotate(var(--star-rotate, 0deg)) scale(1.18);
+  z-index: 1000 !important;
+  outline: 0;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-star:hover img,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-star:focus-visible img,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-star.is-active img {
+  filter: saturate(1.06) contrast(1.08);
+  transform: scale(1.08);
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-star:focus-visible {
+  outline: 1px solid var(--v2-bbb-soft-gold);
+  outline-offset: 3px;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-head {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 10;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 28px 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0));
+  pointer-events: none;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-head > * {
+  pointer-events: auto;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-brand {
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--v2-bbb-gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.45rem;
+  line-height: 1;
+  text-decoration: none;
+  text-shadow: 0 0 16px rgba(255, 216, 77, 0.48);
+  transition: opacity 180ms ease, text-shadow 180ms ease;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-brand:hover,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-brand:focus-visible {
+  opacity: 0.86;
+  text-shadow: 0 0 20px rgba(255, 216, 77, 0.7);
+  outline: 0;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-nav button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(255, 216, 77, 0.38);
+  border-radius: 50%;
+  background: rgba(255, 216, 77, 0.06);
+  cursor: pointer;
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+  position: relative;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-nav button:hover,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-nav button:focus-visible {
+  border-color: rgba(255, 216, 77, 0.88);
+  background: var(--v2-bbb-gold);
+  box-shadow: 0 0 14px rgba(255, 216, 77, 0.42);
+  outline: 0;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-nav button::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  background: var(--v2-bbb-gold);
+  border-radius: 50%;
+  opacity: 0.72;
+  transition: opacity 180ms ease;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-nav button:hover::before,
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-nav button:focus-visible::before {
+  opacity: 1;
+  background: #111;
+}
+
+/* Minimal focus overlay */
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-focus {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.88);
+  animation: v2BbbFocusIn 280ms ease both;
+  cursor: zoom-out;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-focus-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-out;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-focus-image {
+  position: relative;
+  z-index: 2;
+  max-width: min(92vw, 1200px);
+  max-height: min(86svh, 900px);
+  object-fit: contain;
+  display: block;
+  border: 1px solid rgba(255, 216, 77, 0.28);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.72), 0 0 48px rgba(255, 216, 77, 0.14);
+  animation: v2BbbFocusImageIn 420ms var(--p-ease-out) both;
+  pointer-events: none;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-focus-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 216, 77, 0.42);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  pointer-events: none;
+  animation: v2BbbFocusHintIn 800ms ease 600ms both;
+}
+
+@keyframes v2BbbFocusIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes v2BbbFocusImageIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(12px);
+    filter: saturate(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: saturate(1);
+  }
+}
+
+@keyframes v2BbbFocusHintIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Mobile constellation */
+@media (max-width: 900px) {
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-constellation {
+    transform: translate(
+      calc(var(--parallax-x, 0) * -12px),
+      calc(var(--parallax-y, 0) * -12px)
+    );
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-star {
+    opacity: 0.78;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-head {
+    min-height: 58px;
+    padding: 14px 16px 0;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-brand {
+    font-size: 1.2rem;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-nav button {
+    width: 28px;
+    height: 28px;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-gallery-nav button::before {
+    inset: 6px;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-focus-image {
+    max-width: 96vw;
+    max-height: 78dvh;
+  }
+}

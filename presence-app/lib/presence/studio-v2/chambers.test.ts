@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { StudioV2Chamber, StudioV2ChamberRole } from "./model.ts";
+import type { StudioV2Chamber, StudioV2ChamberRole, StudioV2PublicChamber } from "./model.ts";
 import {
   getStudioV2ChambersByRole,
   getStudioV2DefaultChamber,
   getStudioV2EntryChamber,
   getStudioV2PublicChambers,
+  getStudioV2PublicChambersByRole,
+  getStudioV2RenderablePublicChambers,
   normalizeStudioV2ChamberLayout,
   normalizeStudioV2ChamberMetadata,
   normalizeStudioV2ChamberRole,
@@ -39,6 +41,22 @@ function makeObject(overrides: { public?: boolean; mobile?: boolean } = {}): Stu
     pinned: false,
     ...overrides,
   } as StudioV2Chamber["objects"][number];
+}
+
+function makePublicChamber(
+  overrides: Omit<Partial<StudioV2PublicChamber>, "metadata"> & { metadata?: Record<string, unknown> } = {},
+): StudioV2PublicChamber {
+  return {
+    id: "public-chamber-1",
+    label: "Public Chamber",
+    objects: [],
+    ...overrides,
+    metadata: overrides.metadata
+      ? normalizeStudioV2ChamberMetadata(overrides.metadata)
+      : overrides.metadata === undefined
+        ? undefined
+        : normalizeStudioV2ChamberMetadata(overrides.metadata),
+  };
 }
 
 // ── Metadata normalization ──
@@ -346,4 +364,54 @@ test("getStudioV2PublicChambers normalizes metadata on output", () => {
   ];
   const publicChambers = getStudioV2PublicChambers(chambers);
   assert.equal(publicChambers[0].metadata?.role, "custom");
+});
+
+test("entry and default helpers support already-sanitized public chambers", () => {
+  const chambers: StudioV2PublicChamber[] = [
+    makePublicChamber({ id: "a", metadata: { role: "gallery" } }),
+    makePublicChamber({ id: "b", metadata: { isEntry: true, role: "threshold" } }),
+    makePublicChamber({ id: "c", metadata: { isDefault: true, role: "gallery" } }),
+  ];
+
+  assert.equal(getStudioV2EntryChamber(chambers)?.id, "b");
+  assert.equal(getStudioV2DefaultChamber(chambers)?.id, "c");
+});
+
+test("public chamber role helper normalizes and returns matching public chambers", () => {
+  const chambers: StudioV2PublicChamber[] = [
+    makePublicChamber({ id: "a", metadata: { role: "GALLERY" } }),
+    makePublicChamber({ id: "b", metadata: { role: "threshold" } }),
+    makePublicChamber({ id: "c", metadata: { role: "gallery" } }),
+  ];
+
+  const galleries = getStudioV2PublicChambersByRole(chambers, "gallery");
+  assert.equal(galleries.length, 2);
+  assert.equal(galleries[0].id, "a");
+  assert.equal(galleries[1].id, "c");
+  assert.equal(galleries[0].metadata?.role, "gallery");
+});
+
+test("renderable public chamber helper filters empty public chambers without mutating input", () => {
+  const chambers: StudioV2PublicChamber[] = [
+    makePublicChamber({ id: "a", objects: [] }),
+    makePublicChamber({
+      id: "b",
+      metadata: { role: "INVALID" as StudioV2ChamberRole },
+      objects: [{
+        id: "public-object",
+        type: "text",
+        title: "Public object",
+        mobileVisible: true,
+        transform: { x: 0, y: 0, scale: 1, rotation: 0, zIndex: 1 },
+      }],
+    }),
+  ];
+  const before = JSON.stringify(chambers);
+
+  const renderable = getStudioV2RenderablePublicChambers(chambers);
+
+  assert.equal(renderable.length, 1);
+  assert.equal(renderable[0].id, "b");
+  assert.equal(renderable[0].metadata?.role, "custom");
+  assert.equal(JSON.stringify(chambers), before);
 });

@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import type { StudioV2PublicObject, StudioV2PublicRoom } from "@/lib/presence/studio-v2";
+import {
+  getStudioV2DefaultChamber,
+  getStudioV2EntryChamber,
+  getStudioV2PublicChambersByRole,
+} from "@/lib/presence/studio-v2";
+import type { StudioV2PublicChamber, StudioV2PublicObject, StudioV2PublicRoom } from "@/lib/presence/studio-v2";
 import { WORLD_KITS } from "./worlds";
 import "./presence-studio-v2-public.css";
 
@@ -292,6 +297,11 @@ interface LiquidGalleryWork {
   chamberLabel: string;
 }
 
+interface BbbVisionStoryObject {
+  object: StudioV2PublicObject;
+  chamberLabel: string;
+}
+
 type BbbVisionPublicView = "threshold" | "gallery" | "practice";
 type BbbVisionMovement = "enter" | "prev" | "next" | "index";
 
@@ -309,6 +319,31 @@ function bbbVisionBrandStyle(index: number): CSSProperties {
     { top: "61%", left: "49%", transform: "rotate(7deg) scale(1.02)" },
   ];
   return positions[index % positions.length];
+}
+
+function bbbVisionWorksFromChambers(chambers: readonly StudioV2PublicChamber[]): LiquidGalleryWork[] {
+  return chambers.flatMap((chamber) =>
+    chamber.objects
+      .filter((object) => Boolean(object.image?.src))
+      .map((object) => ({
+        object,
+        chamberId: chamber.id,
+        chamberLabel: chamber.label,
+      })),
+  );
+}
+
+function bbbVisionStoriesFromChambers(chambers: readonly StudioV2PublicChamber[]): BbbVisionStoryObject[] {
+  return chambers
+    .flatMap((chamber) => chamber.objects.map((object) => ({ object, chamberLabel: chamber.label })))
+    .filter(({ object }) => !object.image?.src || object.type === "text" || object.type === "note" || object.type === "proof");
+}
+
+function bbbVisionFirstRoleChamber(
+  chambers: readonly StudioV2PublicChamber[],
+  role: "threshold" | "gallery" | "practice" | "about",
+): StudioV2PublicChamber | undefined {
+  return getStudioV2PublicChambersByRole(chambers, role)[0];
 }
 
 function ChristinaLiquidGalleryPublicRoom({
@@ -562,6 +597,26 @@ function ChristinaLiquidGalleryPublicRoom({
   );
 }
 
+function constellationStarStyle(index: number, total: number, seed = 7919): CSSProperties {
+  const fract = (n: number) => n - Math.floor(n);
+  const hash = (a: number, b: number) => fract(Math.sin((a + b) * 43758.5453) * 0.5 + 0.5);
+  const angle = hash(seed, index * 137.5) * Math.PI * 2;
+  const radius = 10 + hash(seed, index * 271.9) * 36;
+  const x = 50 + Math.cos(angle) * radius;
+  const y = 50 + Math.sin(angle) * radius;
+  const size = 78 + hash(seed, index * 93.7) * 74;
+  const rotate = (hash(seed, index * 53.3) - 0.5) * 18;
+  const zIndex = Math.floor(size);
+  return {
+    left: `${Math.max(6, Math.min(94, x))}%`,
+    top: `${Math.max(6, Math.min(94, y))}%`,
+    width: `${size}px`,
+    height: `${size}px`,
+    transform: `translate(-50%, -50%) rotate(${rotate}deg)`,
+    zIndex,
+  };
+}
+
 function BbbVisionThresholdGalleryPublicRoom({
   room,
   worldName,
@@ -587,22 +642,51 @@ function BbbVisionThresholdGalleryPublicRoom({
 }) {
   const [view, setView] = useState<BbbVisionPublicView>("threshold");
   const [movement, setMovement] = useState<BbbVisionMovement | null>(null);
+  const [parallax, setParallax] = useState({ x: 0, y: 0 });
+  const [touchOffset, setTouchOffset] = useState({ x: 0, y: 0 });
+  const touchStartRef = useRef({ x: 0, y: 0 });
   const movementTimeoutRef = useRef<number | null>(null);
-  const sequenceTotal = works.length;
+  const entryChamber = getStudioV2EntryChamber(room.chambers);
+  const defaultChamber = getStudioV2DefaultChamber(room.chambers);
+  const explicitEntryChamber = entryChamber?.metadata?.isEntry === true ? entryChamber : undefined;
+  const thresholdRoleChamber = bbbVisionFirstRoleChamber(room.chambers, "threshold");
+  const thresholdChamber = explicitEntryChamber ?? thresholdRoleChamber;
+  const galleryRoleChambers = getStudioV2PublicChambersByRole(room.chambers, "gallery");
+  const explicitDefaultChamber = defaultChamber?.metadata?.isDefault === true ? defaultChamber : undefined;
+  const galleryDefaultChamber =
+    explicitDefaultChamber && explicitDefaultChamber.id !== thresholdChamber?.id ? explicitDefaultChamber : undefined;
+  const galleryChambers = galleryRoleChambers.length > 0
+    ? galleryRoleChambers
+    : galleryDefaultChamber
+      ? [galleryDefaultChamber]
+      : [];
+  const practiceChamber =
+    bbbVisionFirstRoleChamber(room.chambers, "practice") ?? bbbVisionFirstRoleChamber(room.chambers, "about");
+  const metadataThresholdWorks = thresholdChamber ? bbbVisionWorksFromChambers([thresholdChamber]) : [];
+  const metadataGalleryWorks = galleryChambers.length > 0 ? bbbVisionWorksFromChambers(galleryChambers) : [];
+  const metadataStoryObjects = practiceChamber ? bbbVisionStoriesFromChambers([practiceChamber]) : [];
+  const fallbackStoryObjects = bbbVisionStoriesFromChambers(room.chambers).slice(0, 5);
+  const thresholdWorks = metadataThresholdWorks.length > 0 ? metadataThresholdWorks : works.length > 0 ? works.slice(0, 10) : [];
+  const galleryWorks = metadataGalleryWorks.length > 0 ? metadataGalleryWorks : works;
+  const storyObjects = practiceChamber ? metadataStoryObjects.slice(0, 5) : fallbackStoryObjects;
+  const sequenceTotal = galleryWorks.length;
   const safeActiveIndex = sequenceTotal > 0 ? Math.min(activeIndex, sequenceTotal - 1) : 0;
-  const activeWork = works[safeActiveIndex] ?? works[0] ?? null;
+  const activeWork = galleryWorks[safeActiveIndex] ?? galleryWorks[0] ?? null;
   const activeObject = activeWork?.object ?? null;
   const previousIndex = sequenceTotal > 0 ? (safeActiveIndex - 1 + sequenceTotal) % sequenceTotal : 0;
   const nextIndex = sequenceTotal > 0 ? (safeActiveIndex + 1) % sequenceTotal : 0;
-  const thresholdWorks = works.length > 0 ? works.slice(0, 10) : [];
   const thresholdActiveIndex = thresholdWorks.length > 0 ? safeActiveIndex % thresholdWorks.length : 0;
-  const orbitWorks = works.length > 0 ? works.slice(0, 20) : [];
-  const storyObjects = room.chambers
-    .flatMap((chamber) => chamber.objects.map((object) => ({ object, chamberLabel: chamber.label })))
-    .filter(({ object }) => !object.image?.src || object.type === "text" || object.type === "note" || object.type === "proof")
-    .slice(0, 5);
-  const hasPractice = Boolean(room.tagline || storyObjects.length > 0);
+  const hasPractice = Boolean(practiceChamber || room.tagline || storyObjects.length > 0);
   const enterLabel = ctaLabel || "Enter";
+  const thresholdRole = thresholdChamber?.metadata?.role || "fallback";
+  const galleryRole = galleryChambers[0]?.metadata?.role || "fallback";
+  const practiceRole = practiceChamber?.metadata?.role || "fallback";
+  const thresholdLayout = thresholdChamber?.metadata?.layout || "focus";
+  const galleryLayout = galleryChambers[0]?.metadata?.layout || "field";
+  const practiceLayout = practiceChamber?.metadata?.layout || "stack";
+  const thresholdTransition = thresholdChamber?.metadata?.transition || "recede";
+  const galleryTransition = galleryChambers[0]?.metadata?.transition || "fade";
+  const practiceTransition = practiceChamber?.metadata?.transition || "fade";
   const progressLabel =
     sequenceTotal > 0
       ? `${String(safeActiveIndex + 1).padStart(2, "0")} / ${String(sequenceTotal).padStart(2, "0")}`
@@ -673,9 +757,42 @@ function BbbVisionThresholdGalleryPublicRoom({
   }, []);
 
   useEffect(() => {
+    const onMouseMove = (event: MouseEvent) => {
+      setParallax({
+        x: (event.clientX / window.innerWidth - 0.5) * 2,
+        y: (event.clientY / window.innerHeight - 0.5) * 2,
+      });
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    return () => window.removeEventListener("mousemove", onMouseMove);
+  }, []);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (focusedArtwork) return;
-      if (view === "gallery") {
+      if (focusedArtwork && view === "gallery") {
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          const idx = sequenceTotal > 0 ? (safeActiveIndex - 1 + sequenceTotal) % sequenceTotal : 0;
+          setActiveImage(idx, "prev");
+          const work = galleryWorks[idx];
+          if (work?.object) onFocusArtwork(work.object);
+          return;
+        }
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          const idx = sequenceTotal > 0 ? (safeActiveIndex + 1) % sequenceTotal : 0;
+          setActiveImage(idx, "next");
+          const work = galleryWorks[idx];
+          if (work?.object) onFocusArtwork(work.object);
+          return;
+        }
+        if (event.key === "Escape") {
+          event.preventDefault();
+          onFocusArtwork(null);
+          return;
+        }
+      }
+      if (!focusedArtwork && view === "gallery") {
         if (event.key === "ArrowLeft") {
           event.preventDefault();
           setActiveImage(previousIndex, "prev");
@@ -696,7 +813,7 @@ function BbbVisionThresholdGalleryPublicRoom({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [focusedArtwork, moveToView, nextIndex, previousIndex, setActiveImage, view]);
+  }, [focusedArtwork, galleryWorks, moveToView, nextIndex, onFocusArtwork, previousIndex, safeActiveIndex, sequenceTotal, setActiveImage, view]);
 
   return (
     <main
@@ -712,6 +829,9 @@ function BbbVisionThresholdGalleryPublicRoom({
           id="v2-bbb-threshold"
           data-testid="presence-public-bbbvision-threshold"
           data-testid-state="threshold"
+          data-chamber-role={thresholdRole}
+          data-chamber-layout={thresholdLayout}
+          data-chamber-transition={thresholdTransition}
           aria-label={`${room.title} threshold`}
         >
           <div className="v2-bbb-slide-stack" aria-hidden="true">
@@ -758,6 +878,9 @@ function BbbVisionThresholdGalleryPublicRoom({
           className="v2-bbb-view v2-bbb-gallery"
           id="v2-bbb-gallery"
           data-testid="presence-public-bbbvision-gallery"
+          data-chamber-role={galleryRole}
+          data-chamber-layout={galleryLayout}
+          data-chamber-transition={galleryTransition}
           aria-labelledby="v2-bbb-gallery-title"
         >
           <h2 className="v2-bbb-sr" id="v2-bbb-gallery-title">Gallery</h2>
@@ -765,102 +888,90 @@ function BbbVisionThresholdGalleryPublicRoom({
             <button type="button" className="v2-bbb-gallery-brand" onClick={() => moveToView("threshold")}>
               {room.title}
             </button>
-            <div className="v2-bbb-progress" data-testid="presence-public-bbbvision-progress" aria-live="polite">
+            <div className="v2-bbb-progress v2-bbb-sr" data-testid="presence-public-bbbvision-progress" aria-live="polite">
               {progressLabel}
             </div>
-            <nav aria-label="Gallery states">
-              <button type="button" data-testid="presence-public-bbbvision-close" onClick={() => moveToView("threshold")}>
-                Threshold
-              </button>
+            <nav className="v2-bbb-gallery-nav" aria-label="Gallery states">
+              <button
+                type="button"
+                className="v2-bbb-nav-threshold"
+                data-testid="presence-public-bbbvision-close"
+                onClick={() => moveToView("threshold")}
+                aria-label="Return to threshold"
+              />
               {hasPractice && (
                 <button
                   type="button"
+                  className="v2-bbb-nav-practice"
                   data-testid="presence-public-bbbvision-practice-link"
                   onClick={() => moveToView("practice")}
-                >
-                  Practice
-                </button>
+                  aria-label="Open practice"
+                />
               )}
             </nav>
           </header>
 
-          <section className="v2-bbb-image-field" id="v2-bbb-field" aria-label={`${room.title} image field`}>
-            <div className="v2-bbb-side-ghosts" aria-hidden="true">
-              {works[previousIndex]?.object.image?.src && (
-                <img className="is-prev" src={works[previousIndex].object.image?.src} alt="" loading="lazy" />
-              )}
-              {works[nextIndex]?.object.image?.src && (
-                <img className="is-next" src={works[nextIndex].object.image?.src} alt="" loading="lazy" />
-              )}
-            </div>
+          <div
+            className="v2-bbb-constellation"
+            data-testid="presence-public-bbbvision-constellation"
+            aria-label={`${room.title} image constellation`}
+            style={{
+              "--parallax-x": parallax.x + touchOffset.x * 0.02,
+              "--parallax-y": parallax.y + touchOffset.y * 0.02,
+            } as CSSProperties}
+            onTouchStart={(e) => {
+              touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }}
+            onTouchMove={(e) => {
+              const dx = e.touches[0].clientX - touchStartRef.current.x;
+              const dy = e.touches[0].clientY - touchStartRef.current.y;
+              setTouchOffset({ x: dx, y: dy });
+            }}
+            onTouchEnd={() => setTouchOffset({ x: 0, y: 0 })}
+          >
+            {galleryWorks.length > 0 ? galleryWorks.map((work, index) => (
+              <button
+                key={work.object.id}
+                type="button"
+                className={`v2-bbb-star${index === safeActiveIndex ? " is-active" : ""}`}
+                style={constellationStarStyle(index, galleryWorks.length)}
+                onClick={() => {
+                  setActiveImage(index, "index");
+                  onFocusArtwork(work.object);
+                }}
+                aria-label={`Open ${work.object.title}`}
+              >
+                <img src={work.object.image?.src} alt="" loading="lazy" />
+              </button>
+            )) : (
+              <div className="v2-bbb-empty-note">No public gallery images are available yet.</div>
+            )}
+          </div>
 
-            <div className="v2-bbb-orbit" aria-label="Gallery image selection">
-              {orbitWorks.length > 0 ? orbitWorks.map((work, index) => (
-                <button
-                  key={`${work.object.id}-${index}`}
-                  type="button"
-                  className={index === safeActiveIndex ? "is-active" : ""}
-                  style={{ "--v2-bbb-orbit-index": index, "--v2-bbb-orbit-total": orbitWorks.length } as CSSProperties}
-                  onClick={() => setActiveImage(index, index > safeActiveIndex ? "next" : "prev")}
-                  aria-label={`Select ${work.object.title}`}
-                  aria-current={index === safeActiveIndex ? "true" : undefined}
-                >
-                  <img src={work.object.image?.src} alt={work.object.image?.alt || work.object.title} loading="lazy" />
-                </button>
-              )) : (
-                <div className="v2-bbb-empty-note">No public gallery images are available yet.</div>
-              )}
-            </div>
-
-            <figure
-              className="v2-bbb-stage"
-              data-testid="presence-public-bbbvision-active-image"
-              data-active-title={activeObject?.title || ""}
+          {focusedArtwork?.image?.src && view === "gallery" && (
+            <div
+              className="v2-bbb-focus"
+              data-testid="presence-public-bbbvision-focus"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Image focus"
+              onClick={() => onFocusArtwork(null)}
             >
-              {activeObject?.image?.src ? (
-                <button
-                  type="button"
-                  className="v2-bbb-stage-button"
-                  onClick={() => onFocusArtwork(activeObject)}
-                  aria-label={`View ${activeObject.title}`}
-                >
-                  <img src={activeObject.image.src} alt={activeObject.image.alt || activeObject.title} loading="eager" />
-                </button>
-              ) : (
-                <div className="v2-bbb-stage-empty">Select a public image to open the gallery field.</div>
-              )}
-              {activeObject && (
-                <figcaption className="v2-bbb-caption" data-testid="presence-public-bbbvision-active-title">
-                  <span>{activeWork?.chamberLabel || worldName}</span>
-                  <strong>{activeObject.title}</strong>
-                  {activeObject.meta && <p>{activeObject.meta}</p>}
-                  {activeObject.detail && <p>{activeObject.detail}</p>}
-                </figcaption>
-              )}
-            </figure>
-
-            <div className="v2-bbb-gallery-controls" aria-label="Image controls">
               <button
                 type="button"
-                data-testid="presence-public-bbbvision-prev"
-                onClick={() => setActiveImage(previousIndex, "prev")}
-                disabled={sequenceTotal < 2}
-                aria-label="Previous image"
-              >
-                Prev
-              </button>
-              <div className="v2-bbb-control-line" aria-hidden="true" />
-              <button
-                type="button"
-                data-testid="presence-public-bbbvision-next"
-                onClick={() => setActiveImage(nextIndex, "next")}
-                disabled={sequenceTotal < 2}
-                aria-label="Next image"
-              >
-                Next
-              </button>
+                className="v2-bbb-focus-backdrop"
+                aria-label="Close image focus"
+                onClick={() => onFocusArtwork(null)}
+              />
+              <img
+                className="v2-bbb-focus-image"
+                data-testid="presence-public-bbbvision-focus-image"
+                src={focusedArtwork.image.src}
+                alt={focusedArtwork.image.alt || focusedArtwork.title}
+              />
+              <span className="v2-bbb-focus-hint" aria-hidden="true">Click or press Escape to close</span>
             </div>
-          </section>
+          )}
         </section>
       )}
 
@@ -869,6 +980,9 @@ function BbbVisionThresholdGalleryPublicRoom({
           className="v2-bbb-view v2-bbb-practice"
           id="v2-bbb-practice"
           data-testid="presence-public-bbbvision-practice"
+          data-chamber-role={practiceRole}
+          data-chamber-layout={practiceLayout}
+          data-chamber-transition={practiceTransition}
           aria-labelledby="v2-bbb-practice-title"
         >
           <header className="v2-bbb-gallery-head">
@@ -915,7 +1029,7 @@ function BbbVisionThresholdGalleryPublicRoom({
         </section>
       )}
 
-      {focusedArtwork?.image?.src && (
+      {focusedArtwork?.image?.src && view !== "gallery" && (
         <div
           className="v2-public-artwork-focus v2-bbb-artwork-focus"
           data-testid="presence-public-artwork-focus"
