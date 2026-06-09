@@ -110,22 +110,29 @@ try {
       assert(routeResult.ok, `${route.path} did not return HTTP 2xx`);
       assert(routeResult.bbbvision_style_count > 0, `${route.path} did not render bbbvision public style`);
       assert(routeResult.bbbvision_threshold_count > 0, `${route.path} did not render bbbvision threshold`);
-      assert(routeResult.bbbvision_gallery_count > 0, `${route.path} did not render bbbvision gallery`);
+      assert(routeResult.bbbvision_gallery_count === 0, `${route.path} dumped bbbvision gallery on the threshold`);
       assert(routeResult.source_asset_count >= 10, `${route.path} did not expose expected source asset images`);
       assert(text.includes("bbb.vision"), `${route.path} did not include bbb.vision title`);
-      assert(text.includes("Enter"), `${route.path} did not include Enter CTA`);
+      assert(text.toLowerCase().includes("enter"), `${route.path} did not include Enter CTA`);
       assert(routeResult.broken_visible_image_count === 0, `${route.path} had broken visible images`);
 
       if (route.id === "bbbvision-p") {
         await screenshot(page, "01-published-p-bbbvision-threshold-desktop.png", summary);
         await page.getByTestId("presence-public-bbbvision-enter").click();
-        await page.waitForTimeout(900);
+        await page.getByTestId("presence-public-bbbvision-gallery").waitFor({ state: "visible", timeout: 10_000 });
+        routeResult.bbbvision_gallery_after_enter_count = await page.getByTestId("presence-public-bbbvision-gallery").count();
+        assert(routeResult.bbbvision_gallery_after_enter_count > 0, `${route.path} did not enter bbbvision gallery`);
+        await page.waitForTimeout(700);
         await screenshot(page, "02-published-p-bbbvision-gallery-desktop.png", summary);
         await page.getByTestId("presence-public-bbbvision-next").click();
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(700);
         await screenshot(page, "03-published-p-bbbvision-gallery-next-state.png", summary);
       } else {
         await screenshot(page, "04-published-presence-bbbvision-desktop.png", summary);
+        await page.getByTestId("presence-public-bbbvision-enter").click();
+        await page.getByTestId("presence-public-bbbvision-gallery").waitFor({ state: "visible", timeout: 10_000 });
+        routeResult.bbbvision_gallery_after_enter_count = await page.getByTestId("presence-public-bbbvision-gallery").count();
+        assert(routeResult.bbbvision_gallery_after_enter_count > 0, `${route.path} did not enter bbbvision gallery`);
       }
     }
 
@@ -172,10 +179,16 @@ try {
   assert(mobileResult.ok, "mobile /p/bbbvision did not return HTTP 2xx");
   assert(mobileResult.bbbvision_style_count > 0, "mobile /p/bbbvision did not render bbbvision public style");
   assert(mobileResult.bbbvision_threshold_count > 0, "mobile /p/bbbvision did not render threshold");
-  assert(mobileResult.bbbvision_gallery_count > 0, "mobile /p/bbbvision did not render gallery");
+  assert(mobileResult.bbbvision_gallery_count === 0, "mobile /p/bbbvision dumped gallery on the threshold");
   assert(mobileText.includes("bbb.vision"), "mobile /p/bbbvision did not include bbb.vision title");
   assert(mobileResult.broken_visible_image_count === 0, "mobile /p/bbbvision had broken visible images");
-  await screenshot(mobilePage, "05-published-p-bbbvision-mobile.png", summary);
+  await screenshot(mobilePage, "05-published-p-bbbvision-mobile-threshold.png", summary);
+  await mobilePage.getByTestId("presence-public-bbbvision-enter").click();
+  await mobilePage.getByTestId("presence-public-bbbvision-gallery").waitFor({ state: "visible", timeout: 10_000 });
+  mobileResult.bbbvision_gallery_after_enter_count = await mobilePage.getByTestId("presence-public-bbbvision-gallery").count();
+  assert(mobileResult.bbbvision_gallery_after_enter_count > 0, "mobile /p/bbbvision did not enter gallery");
+  await mobilePage.waitForTimeout(700);
+  await screenshot(mobilePage, "05b-published-p-bbbvision-mobile-gallery.png", summary);
   summary.routes.push(mobileResult);
   await mobile.close();
 

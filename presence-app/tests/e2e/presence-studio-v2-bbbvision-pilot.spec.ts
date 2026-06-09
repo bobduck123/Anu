@@ -120,9 +120,11 @@ test("bbbvision threshold gallery is selectable, editable, persistent, public-sa
   await page.getByTestId("presence-public-bbbvision-enter").click();
   await expect(page.getByTestId("presence-public-bbbvision-gallery")).toBeVisible();
   await expect(page.getByTestId("presence-public-bbbvision-next")).toBeVisible();
+  await page.waitForTimeout(650);
   await screenshot(page, "04-owner-preview-bbbvision-gallery.png");
 
   await page.getByTestId("presence-public-bbbvision-next").click();
+  await page.waitForTimeout(650);
   await page.locator(".v2-bbb-stage-button").click();
   await expect(page.getByTestId("presence-public-artwork-focus")).toBeVisible();
   await screenshot(page, "05-owner-preview-bbbvision-focus.png");
@@ -133,13 +135,15 @@ test("bbbvision threshold gallery is selectable, editable, persistent, public-sa
   await page.goto("/p/test-presence-room", { waitUntil: "networkidle" });
   await expect(page.getByTestId("presence-public-style-bbbvision-threshold-gallery")).toBeVisible();
   await expect(page.getByTestId("presence-public-bbbvision-threshold")).toBeVisible();
-  await expect(page.getByTestId("presence-public-bbbvision-gallery")).toBeVisible();
+  await expect(page.getByTestId("presence-public-bbbvision-gallery")).toHaveCount(0);
   await expect(page.getByText("Room Assets")).toHaveCount(0);
   await expect(page.getByText("Public output style")).toHaveCount(0);
   await expectPublicHygiene(page);
   await screenshot(page, "06-public-bbbvision-threshold-local.png");
 
   await page.getByTestId("presence-public-bbbvision-enter").click();
+  await expect(page.getByTestId("presence-public-bbbvision-gallery")).toBeVisible();
+  await page.waitForTimeout(650);
   await screenshot(page, "07-public-bbbvision-gallery-local.png");
 
   const mobile = await context.newPage();
@@ -150,6 +154,8 @@ test("bbbvision threshold gallery is selectable, editable, persistent, public-sa
   await expectPublicHygiene(mobile);
   await mobile.screenshot({ path: path.join(evidenceDir, "08-mobile-bbbvision-threshold.png"), fullPage: false });
   await mobile.getByTestId("presence-public-bbbvision-enter").click();
+  await expect(mobile.getByTestId("presence-public-bbbvision-gallery")).toBeVisible();
+  await mobile.waitForTimeout(650);
   await mobile.screenshot({ path: path.join(evidenceDir, "09-mobile-bbbvision-gallery.png"), fullPage: false });
   await mobile.close();
 

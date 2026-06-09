@@ -1,0 +1,103 @@
+{
+  "base": "https://your-presence.vercel.app",
+  "checked_at": "2026-06-09T02:32:36.299Z",
+  "routes": [
+    {
+      "id": "bbbvision-p",
+      "path": "/p/bbbvision",
+      "status": 200,
+      "ok": true,
+      "kind": "bbbvision",
+      "title": "Profile | Presence",
+      "v2_public_count": 1,
+      "bbbvision_style_count": 1,
+      "bbbvision_threshold_count": 1,
+      "bbbvision_gallery_count": 0,
+      "source_asset_count": 10,
+      "broken_visible_image_count": 0,
+      "bbbvision_gallery_after_enter_count": 1
+    },
+    {
+      "id": "bbbvision-presence",
+      "path": "/presence/bbbvision",
+      "status": 200,
+      "ok": true,
+      "kind": "bbbvision",
+      "title": "bbb.vision Image-first threshold gallery from the bbb.vision source archive. | Presence",
+      "v2_public_count": 1,
+      "bbbvision_style_count": 1,
+      "bbbvision_threshold_count": 1,
+      "bbbvision_gallery_count": 0,
+      "source_asset_count": 10,
+      "broken_visible_image_count": 0,
+      "bbbvision_gallery_after_enter_count": 1
+    },
+    {
+      "id": "room11-p",
+      "path": "/p/ggm-christina-goddard",
+      "status": 200,
+      "ok": true,
+      "kind": "room11",
+      "title": "Christina Kerkvliet Goddard Watercolour works across memory, colour, and lived landscape. | Presence",
+      "v2_public_count": 1,
+      "bbbvision_style_count": 0,
+      "bbbvision_threshold_count": 0,
+      "bbbvision_gallery_count": 0,
+      "source_asset_count": 0,
+      "broken_visible_image_count": 0
+    },
+    {
+      "id": "room11-presence",
+      "path": "/presence/ggm-christina-goddard",
+      "status": 200,
+      "ok": true,
+      "kind": "room11",
+      "title": "Christina Kerkvliet Goddard Watercolour works across memory, colour, and lived landscape. | Presence",
+      "v2_public_count": 1,
+      "bbbvision_style_count": 0,
+      "bbbvision_threshold_count": 0,
+      "bbbvision_gallery_count": 0,
+      "source_asset_count": 0,
+      "broken_visible_image_count": 0
+    },
+    {
+      "id": "legacy-hesmaddw",
+      "path": "/p/hesmaddw",
+      "status": 200,
+      "ok": true,
+      "kind": "legacy",
+      "title": "Emad wtf u think this is? | Presence",
+      "v2_public_count": 0,
+      "bbbvision_style_count": 0,
+      "bbbvision_threshold_count": 0,
+      "bbbvision_gallery_count": 0,
+      "source_asset_count": 0,
+      "broken_visible_image_count": 0
+    },
+    {
+      "id": "bbbvision-mobile",
+      "path": "/p/bbbvision",
+      "status": 200,
+      "ok": true,
+      "kind": "bbbvision-mobile",
+      "bbbvision_style_count": 1,
+      "bbbvision_threshold_count": 1,
+      "bbbvision_gallery_count": 0,
+      "source_asset_count": 10,
+      "broken_visible_image_count": 0,
+      "bbbvision_gallery_after_enter_count": 1
+    }
+  ],
+  "screenshots": [
+    "01-published-p-bbbvision-threshold-desktop.png",
+    "02-published-p-bbbvision-gallery-desktop.png",
+    "03-published-p-bbbvision-gallery-next-state.png",
+    "04-published-presence-bbbvision-desktop.png",
+    "06-room11-regression-p-public.png",
+    "07-legacy-hesmaddw-negative.png",
+    "05-published-p-bbbvision-mobile-threshold.png",
+    "05b-published-p-bbbvision-mobile-gallery.png"
+  ],
+  "violations": [],
+  "runtime_errors": []
+}
