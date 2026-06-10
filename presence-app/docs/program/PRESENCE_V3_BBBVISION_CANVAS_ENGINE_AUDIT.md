@@ -181,4 +181,22 @@ Hosted smoke was not run. No deploy was performed. No hosted data was mutated.
 
 Updated verdict after fix pass:
 
+Hosted release addendum - 2026-06-11:
+
+- Kimi visual-motion re-audit passed before deploy.
+- Baseline commit deployed: `3b8134fedeff4aae37091c42ad270c951bf96ec6`
+- Deployment ID: `dpl_3799dWREJvcSkuRyVR36qD9KAqFD`
+- Production alias: `https://your-presence.vercel.app`
+- Deployment URL: `https://presence-lwmmryqq1-emadhatu-2110s-projects.vercel.app`
+- Hosted smoke: PASS
+- Hosted payload hygiene: PASS, `TOTAL_VIOLATIONS: 0`
+- Direct `#gallery`: PASS on `/presence/bbbvision#gallery` and `/p/bbbvision#gallery`
+- Mobile: PASS
+- Reduced motion: PASS
+- Room 11 regression: PASS
+- Legacy negative: PASS
+- Evidence: `docs/program/evidence/presence-v3-bbbvision-canvas-hosted-smoke/`
+- Owner/editor credential-bound hosted smoke was not run because `PRESENCE_E2E_OWNER_EMAIL` and `PRESENCE_E2E_OWNER_PASSWORD` were not present in process env.
+- Hosted release verdict: **PASS - hosted bbbvision canvas gallery ready for controlled pilot presentation.**
+
 **PASS — ready for Kimi visual-motion re-audit before deploy.**

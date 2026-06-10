@@ -48,3 +48,31 @@ See `PRESENCE_V3_BBBVISION_CANVAS_CONDITIONAL_FIXES_REPORT.md` for full command 
 ## Verdict
 
 **PASS  ready for Kimi re-audit before deploy**
+
+---
+
+## Hosted Production Addendum - 2026-06-11
+
+Kimi re-audit passed and the canvas baseline was deployed to production.
+
+- Baseline commit deployed: `3b8134fedeff4aae37091c42ad270c951bf96ec6`
+- Deployment ID: `dpl_3799dWREJvcSkuRyVR36qD9KAqFD`
+- Production alias: `https://your-presence.vercel.app`
+- Deployment URL: `https://presence-lwmmryqq1-emadhatu-2110s-projects.vercel.app`
+- Hosted smoke: PASS
+- Payload hygiene: PASS, `TOTAL_VIOLATIONS: 0`
+- Hosted direct `#gallery`: PASS
+- Hosted focus overlay: PASS
+- Hosted mobile: PASS
+- Hosted reduced motion: PASS
+- Room 11 and legacy regressions: PASS
+
+Evidence:
+
+```txt
+docs/program/evidence/presence-v3-bbbvision-canvas-hosted-smoke/
+```
+
+Updated verdict:
+
+**PASS  hosted bbbvision canvas gallery ready for controlled pilot presentation**

@@ -1952,3 +1952,30 @@ Verdict:
 - Controlled operator-led pilots: ready with operator support.
 - Public self-serve onboarding: still not ready.
 - S6 style-system baseline can be locked.
+
+---
+
+## bbbvision Canvas Release QA - 2026-06-10/11
+
+Final pre-deploy local QA was rerun from the locked canvas baseline.
+
+Local results:
+
+- `npm.cmd run typecheck`: PASS
+- `npm.cmd run build`: PASS
+- Node unit tests: 92/92 PASS
+- bbbvision/payload Playwright batch: 21/21 PASS
+- broader Studio V2/public-output regression batch: 29/29 PASS
+
+The Playwright specs were run in serial Chromium batches with `--workers=1` to avoid known local mock-server port contention. This is equivalent coverage for the requested specs.
+
+Hosted release follow-up:
+
+- Baseline commit deployed: `3b8134fedeff4aae37091c42ad270c951bf96ec6`
+- Hosted smoke: PASS
+- Hosted payload hygiene: PASS, `TOTAL_VIOLATIONS: 0`
+- Evidence: `docs/program/evidence/presence-v3-bbbvision-canvas-hosted-smoke/`
+
+Remaining caveat:
+
+- Owner/editor credential-bound hosted browser smoke was not run because owner credentials were not available in process env.

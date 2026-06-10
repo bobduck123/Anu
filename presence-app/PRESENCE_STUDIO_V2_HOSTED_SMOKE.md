@@ -756,3 +756,48 @@ Hosted smoke results:
 Evidence: `docs/program/evidence/presence-studio-v2-public-style-presets-s6-hosted/`
 
 Full report: `PRESENCE_STUDIO_V2_PUBLIC_STYLE_PRESETS_S6_HOSTED_SMOKE.md`
+
+---
+
+## bbbvision Canvas Hosted Smoke - 2026-06-11
+
+Deployment:
+
+- Production alias: `https://your-presence.vercel.app`
+- Deployment URL: `https://presence-lwmmryqq1-emadhatu-2110s-projects.vercel.app`
+- Deployment ID: `dpl_3799dWREJvcSkuRyVR36qD9KAqFD`
+- Baseline commit deployed: `3b8134fedeff4aae37091c42ad270c951bf96ec6`
+- Deploy method: `npx.cmd vercel@latest --prod`
+
+Hosted smoke:
+
+- `/p/bbbvision`: PASS
+- `/presence/bbbvision`: PASS
+- `/presence/bbbvision#gallery`: PASS
+- `/p/bbbvision#gallery`: PASS
+- Hosted mobile gallery: PASS
+- Hosted reduced-motion gallery/focus: PASS
+- Hosted focus overlay: PASS
+- Payload hygiene: PASS, `TOTAL_VIOLATIONS: 0`
+- Runtime errors: PASS, `0`
+- Room 11 regression: PASS
+- Legacy `/p/hesmaddw`: PASS
+
+Smoke script note:
+
+- The hosted smoke now uses normal desktop/mobile browser user agents and bounded Enter retries to avoid HeadlessChrome-UA and hydration timing false negatives on production.
+
+Owner/editor caveat:
+
+- Credential-bound owner browser smoke was not run because `PRESENCE_E2E_OWNER_EMAIL` and `PRESENCE_E2E_OWNER_PASSWORD` were not present in process env.
+
+Evidence:
+
+```txt
+PRESENCE_V3_BBBVISION_CANVAS_HOSTED_SMOKE_REPORT.md
+docs/program/evidence/presence-v3-bbbvision-canvas-hosted-smoke/
+```
+
+Verdict:
+
+**PASS  hosted bbbvision canvas gallery ready for controlled pilot presentation**

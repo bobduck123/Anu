@@ -482,3 +482,29 @@ The score moved from 4/10 to 7/10. The remaining 3 points are the canvas engine 
 - `PRESENCE_V3_BBBVISION_GALLERY_PARITY_REPORT.md`
 - `PRESENCE_STUDIO_V2_BBBVISION_PARITY_RECOVERY_REPORT.md`
 - `PRESENCE_V3_CHAMBER_DYNAMICS_PASS4_PUBLIC_RENDERER_REPORT.md`
+
+---
+
+## Canvas Engine Hosted Release Addendum - 2026-06-11
+
+The later Canvas 2D engine and conditional fixes supersede the earlier DOM constellation gap above.
+
+- Canvas engine local baseline: `3b8134fedeff4aae37091c42ad270c951bf96ec6`
+- Deployment ID: `dpl_3799dWREJvcSkuRyVR36qD9KAqFD`
+- Production alias: `https://your-presence.vercel.app`
+- Hosted smoke: PASS
+- Hosted payload hygiene: PASS, `TOTAL_VIOLATIONS: 0`
+- `/p/bbbvision` threshold and Enter gallery: PASS
+- `/presence/bbbvision#gallery` and `/p/bbbvision#gallery`: PASS
+- Mobile/reduced motion: PASS
+- Room 11, Gallery P2, Christina, and legacy regressions: PASS through local QA plus hosted Room 11/legacy smoke.
+
+Evidence:
+
+```txt
+docs/program/evidence/presence-v3-bbbvision-canvas-hosted-smoke/
+```
+
+Updated verdict:
+
+**PASS  hosted bbbvision canvas gallery ready for controlled pilot presentation**

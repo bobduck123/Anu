@@ -114,3 +114,32 @@ Warnings observed:
 ## Deploy Recommendation
 
 Do not deploy until Kimi re-audit passes.
+
+---
+
+## Hosted Release Addendum - 2026-06-11
+
+Kimi re-audit passed before deploy. The canvas baseline was locked and deployed to Vercel production.
+
+- Baseline commit deployed: `3b8134fedeff4aae37091c42ad270c951bf96ec6`
+- Implementation commit: `e600153`
+- Deployment ID: `dpl_3799dWREJvcSkuRyVR36qD9KAqFD`
+- Deployment URL: `https://presence-lwmmryqq1-emadhatu-2110s-projects.vercel.app`
+- Production alias: `https://your-presence.vercel.app`
+- Hosted smoke: PASS
+- Hosted payload hygiene: PASS, `TOTAL_VIOLATIONS: 0`
+- Direct hosted `#gallery`: PASS
+- Mobile hosted gallery: PASS
+- Reduced-motion hosted gallery/focus: PASS
+- Room 11 regression: PASS
+- Legacy `/p/hesmaddw`: PASS
+
+Hosted evidence:
+
+```txt
+docs/program/evidence/presence-v3-bbbvision-canvas-hosted-smoke/
+```
+
+Credential-bound owner/editor browser smoke was not run because owner credentials were not available in process env.
+
+Updated deploy recommendation: deployed and hosted-smoked for controlled pilot presentation only. Do not call this public self-serve ready.

@@ -7,6 +7,13 @@ const OUT = path.resolve(
   process.env.PRESENCE_BBBVISION_EVIDENCE_DIR ||
     "docs/program/evidence/presence-v3-bbbvision-canvas-hosted-smoke",
 );
+const DESKTOP_USER_AGENT =
+  process.env.PRESENCE_E2E_USER_AGENT ||
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+const MOBILE_USER_AGENT =
+  process.env.PRESENCE_E2E_MOBILE_USER_AGENT ||
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
+const HYDRATION_WAIT_MS = Number(process.env.PRESENCE_E2E_HYDRATION_WAIT_MS || 5_000);
 const SUMMARY_PATH = path.join(OUT, "hosted_bbbvision_public_smoke_result.json");
 const HYGIENE_PATH = path.join(OUT, "hosted_bbbvision_payload_hygiene_result.txt");
 
@@ -93,7 +100,7 @@ const summary = {
 
 try {
   for (const route of routes) {
-    const context = await browser.newContext({ baseURL: BASE, viewport: { width: 1440, height: 960 } });
+    const context = await browser.newContext({ baseURL: BASE, viewport: { width: 1440, height: 960 }, userAgent: DESKTOP_USER_AGENT });
     const page = await context.newPage();
     collectRuntimeErrors(page, summary.runtime_errors, route.id);
     const response = await page.goto(route.path, { waitUntil: "domcontentloaded" });
@@ -137,8 +144,7 @@ try {
 
       if (route.id === "bbbvision-p") {
         await screenshot(page, "01-published-p-bbbvision-threshold-desktop.png", summary);
-        await page.getByTestId("presence-public-bbbvision-enter").click();
-        await page.getByTestId("presence-public-bbbvision-gallery").waitFor({ state: "visible", timeout: 10_000 });
+        await enterBbbVisionGallery(page, route.path);
         routeResult.bbbvision_gallery_after_enter_count = await page.getByTestId("presence-public-bbbvision-gallery").count();
         routeResult.bbbvision_gallery_role_after_enter = await page.getByTestId("presence-public-bbbvision-gallery").first().getAttribute("data-chamber-role").catch(() => null);
         routeResult.bbbvision_gallery_layout_after_enter = await page.getByTestId("presence-public-bbbvision-gallery").first().getAttribute("data-chamber-layout").catch(() => null);
@@ -165,8 +171,7 @@ try {
         await screenshot(page, "03-published-p-bbbvision-gallery-next-state.png", summary);
       } else {
         await screenshot(page, "04-published-presence-bbbvision-desktop.png", summary);
-        await page.getByTestId("presence-public-bbbvision-enter").click();
-        await page.getByTestId("presence-public-bbbvision-gallery").waitFor({ state: "visible", timeout: 10_000 });
+        await enterBbbVisionGallery(page, route.path);
         routeResult.bbbvision_gallery_after_enter_count = await page.getByTestId("presence-public-bbbvision-gallery").count();
         routeResult.bbbvision_gallery_role_after_enter = await page.getByTestId("presence-public-bbbvision-gallery").first().getAttribute("data-chamber-role").catch(() => null);
         routeResult.bbbvision_metadata_source =
@@ -201,7 +206,7 @@ try {
   }
 
   for (const route of directGalleryRoutes) {
-    const context = await browser.newContext({ baseURL: BASE, viewport: { width: 1440, height: 960 } });
+    const context = await browser.newContext({ baseURL: BASE, viewport: { width: 1440, height: 960 }, userAgent: DESKTOP_USER_AGENT });
     const page = await context.newPage();
     collectRuntimeErrors(page, summary.runtime_errors, route.id);
     const response = await page.goto(route.path, { waitUntil: "domcontentloaded" });
@@ -244,7 +249,7 @@ try {
     await context.close();
   }
 
-  const mobile = await browser.newContext({ baseURL: BASE, viewport: { width: 390, height: 844 }, isMobile: true });
+  const mobile = await browser.newContext({ baseURL: BASE, viewport: { width: 390, height: 844 }, isMobile: true, userAgent: MOBILE_USER_AGENT });
   const mobilePage = await mobile.newPage();
   collectRuntimeErrors(mobilePage, summary.runtime_errors, "bbbvision-mobile");
   const mobileResponse = await mobilePage.goto("/p/bbbvision", { waitUntil: "domcontentloaded" });
@@ -275,8 +280,7 @@ try {
   assert(mobileText.includes("bbb.vision"), "mobile /p/bbbvision did not include bbb.vision title");
   assert(mobileResult.broken_visible_image_count === 0, "mobile /p/bbbvision had broken visible images");
   await screenshot(mobilePage, "05-published-p-bbbvision-mobile-threshold.png", summary);
-  await mobilePage.getByTestId("presence-public-bbbvision-enter").click();
-  await mobilePage.getByTestId("presence-public-bbbvision-gallery").waitFor({ state: "visible", timeout: 10_000 });
+  await enterBbbVisionGallery(mobilePage, "mobile /p/bbbvision");
   mobileResult.bbbvision_gallery_after_enter_count = await mobilePage.getByTestId("presence-public-bbbvision-gallery").count();
   mobileResult.bbbvision_gallery_role_after_enter = await mobilePage.getByTestId("presence-public-bbbvision-gallery").first().getAttribute("data-chamber-role").catch(() => null);
   mobileResult.bbbvision_metadata_source =
@@ -297,6 +301,7 @@ try {
   const reduced = await browser.newContext({
     baseURL: BASE,
     viewport: { width: 1440, height: 960 },
+    userAgent: DESKTOP_USER_AGENT,
     reducedMotion: "reduce",
   });
   const reducedPage = await reduced.newPage();
@@ -376,6 +381,42 @@ async function screenshot(page, fileName, summary) {
   const filePath = path.join(OUT, fileName);
   await page.screenshot({ path: filePath, fullPage: false });
   summary.screenshots.push(fileName);
+}
+
+async function waitForHostedHydration(page) {
+  await page.waitForTimeout(HYDRATION_WAIT_MS);
+}
+
+async function enterBbbVisionGallery(page, route) {
+  const enter = page.getByTestId("presence-public-bbbvision-enter");
+  const gallery = page.getByTestId("presence-public-bbbvision-gallery");
+  for (let attempt = 1; attempt <= 4; attempt += 1) {
+    if ((await gallery.count()) > 0) return;
+    if ((await enter.count()) === 0) {
+      await waitForHostedHydration(page);
+      continue;
+    }
+    await enter.click({ timeout: 10_000 });
+    try {
+      await gallery.waitFor({ state: "visible", timeout: 10_000 });
+      return;
+    } catch (error) {
+      await waitForHostedHydration(page);
+    }
+  }
+  throw new Error(`${route} did not enter bbbvision gallery: ${await describeBbbVisionState(page)}`);
+}
+
+async function describeBbbVisionState(page) {
+  const text = await page.locator("body").innerText().catch(() => "");
+  return JSON.stringify({
+    url: page.url(),
+    hash: await page.evaluate(() => window.location.hash).catch(() => ""),
+    threshold: await page.getByTestId("presence-public-bbbvision-threshold").count().catch(() => -1),
+    enter: await page.getByTestId("presence-public-bbbvision-enter").count().catch(() => -1),
+    gallery: await page.getByTestId("presence-public-bbbvision-gallery").count().catch(() => -1),
+    text: text.slice(0, 160),
+  });
 }
 
 async function waitForCanvasReady(page, route) {
