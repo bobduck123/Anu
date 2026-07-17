@@ -6,13 +6,11 @@ This file prevents existing work from being lost. It converts delivered fragment
 
 ## Proof inventory table
 
-Update this table immediately.
-
-| ID | Project / Presence | Type | Current location | Public? | Permission status | Strength | Migration difficulty | Case study potential | Priority |
+| ID | Project / Presence | Type | Public status | Permission status | Migration status | Required next proof | Current risk | Next action | Launch archetype / offer |
 |---|---|---|---|---|---|---|---|---|---|
-| P001 | GGM | Working proof / reference | `C:\Dev\ggm` | No — private only | Do not publish | Artistic direction and migration learning | To assess | Private proof only | First internal proof loop |
-| P002 | BBB | Artist/cultural publish candidate | `C:\Dev\bbb-vision-site` | Eventual — not yet published | Client approval to publish confirmed | Artistic direction and first public candidate | To assess | High after system-native migration and review | First publication candidate |
-| P003 | TBD | Archive/campaign | TBD | TBD | TBD | TBD | TBD | TBD | TBD |
+| P001 | GGM | Artist / private working proof | Private only | Private proof only; public screenshots and case study are not approved | Not system-native yet | Owner-bound Studio private draft | A frontend fallback or visual copy must not be treated as real migration evidence | GGM migration intake/source map, then a read-only owner-bound diagnostic | Artist Presence / Presence Lite |
+| P002 | BBB Vision | Artist/visual project or cultural/client project | Approved for eventual publication; not yet public Presence proof | Eventual publish approved; system-native migration remains unproven | Intake/source map required | Source-to-Presence field map and system-native private/staging proof | A static mock, style preset, or screenshot is insufficient to claim Presence migration | BBB migration intake/content-source map after the cleanup boundary | Artist Presence or Cultural/Community Presence / Presence Lite or Presence Pro |
+| P003 | Generic demo profiles | Demo fixtures | Demo/fallback only | Not client proof | Not proof | Replace or clearly label with persisted backend rooms | Demos can make the product look more complete than it is | Defer production fallback policy until a truthful persisted replacement exists | Demo fixture only; no commercial offer claim |
 
 ## Evaluation rubric
 
@@ -98,7 +96,7 @@ What can be shown publicly.
 
 ## Screenshot checklist
 
-For every proof item capture:
+For approved public proof items, capture:
 
 - desktop hero;
 - mobile hero;
@@ -106,6 +104,8 @@ For every proof item capture:
 - media/gallery;
 - CTA/footer;
 - before/after if available.
+
+Private proof must not include screenshots in this library or any public-facing proof pack. Keep private review material out of this repository unless a separately scoped, privacy-reviewed task explicitly permits it.
 
 ## Proof rules
 
@@ -119,3 +119,7 @@ For every proof item capture:
 - BBB approval permits a future publication task; it does not prove migration, readiness, deployment, or publication.
 - A frontend fallback or visual copy does not count as a system-native migration.
 - Public proof must distinguish persisted backend rooms from demo or fallback content.
+- A route rendering visually is not enough proof.
+- System-native proof requires backend persistence, owner scope, draft save/reload, authenticated preview, and correct public/private visibility.
+- Private proof must not include screenshots, private URLs, account IDs, auth subjects, or client-private material.
+- Every proof item must map to a commercial offer or launch archetype; demo fixtures must be marked as having no commercial proof value.
