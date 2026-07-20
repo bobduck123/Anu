@@ -1,0 +1,92 @@
+[
+  {
+    "surface": "owner list",
+    "method": "GET",
+    "path": "/api/presence/owner/nodes",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Read-only proof route check; no payload body recorded."
+  },
+  {
+    "surface": "owner node detail",
+    "method": "GET",
+    "path": "/api/presence/owner/nodes/29",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Read-only proof route check; no payload body recorded."
+  },
+  {
+    "surface": "editor overview",
+    "method": "GET",
+    "path": "/api/presence/owner/rooms/29/editor",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Read-only proof route check; no payload body recorded."
+  },
+  {
+    "surface": "editor draft",
+    "method": "GET",
+    "path": "/api/presence/owner/rooms/29/editor/draft",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Read-only proof route check; no payload body recorded."
+  },
+  {
+    "surface": "before canonical public route",
+    "method": "BROWSER",
+    "path": "/p/bbbvision",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Read-only proof route check; no payload body recorded."
+  },
+  {
+    "surface": "before legacy public route",
+    "method": "BROWSER",
+    "path": "/presence/bbbvision",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Read-only proof route check; no payload body recorded."
+  },
+  {
+    "surface": "authenticated Studio editor",
+    "method": "BROWSER",
+    "path": "/studio/29/editor",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Read-only proof route check; no payload body recorded."
+  },
+  {
+    "surface": "authenticated private preview",
+    "method": "BROWSER",
+    "path": "/studio/29/editor/preview",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Read-only proof route check; no payload body recorded."
+  },
+  {
+    "surface": "after canonical public route",
+    "method": "BROWSER",
+    "path": "/p/bbbvision",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Read-only proof route check; no payload body recorded."
+  },
+  {
+    "surface": "after legacy public route",
+    "method": "BROWSER",
+    "path": "/presence/bbbvision",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Read-only proof route check; no payload body recorded."
+  }
+]
