@@ -1,0 +1,21 @@
+# BBB Hosted Draft Write/Revert Summary
+
+- Draft write flag: enabled
+- Room id: 29
+- Slug: bbbvision
+- Title: bbb.vision
+- Original editable draft payload: captured and normalized before mutation
+- Field changed: scene_config.studio_v2.objectState[object].chamberId
+- Original chamberId: captured
+- Temporary chamberId: captured
+- Reverted chamberId: captured
+- Save/reload result: passed
+- Private preview result: loaded from the temporary draft after mutation
+- Revert/reload result: exact normalized editable draft restored
+- Publish: not triggered
+- Public visibility/status change: not attempted
+- Backend/auth/control-plane change: not attempted
+- Canonical public route status: 200 -> 200
+- Legacy public route status: 200 -> 200
+- Route/status entries: 12
+- Real env values: not recorded

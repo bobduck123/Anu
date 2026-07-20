@@ -12,7 +12,7 @@ import { getNode } from "@/lib/api/owner";
 import type { PresenceEditableConfig, PresenceEditorOverview, PresenceEditorPreviewResponse, PresenceNode } from "@/lib/api/types";
 import PublishConfirmDialog from "./PublishConfirmDialog";
 import { buildReadinessReport } from "@/lib/editor/readiness";
-import { studioV2PublicRoomFromPresenceNode, type PresenceStudioV2FeatureEnv } from "@/lib/presence/studio-v2";
+import { studioV2PrivatePreviewRoomFromPresenceNode, type PresenceStudioV2FeatureEnv } from "@/lib/presence/studio-v2";
 import { isPubliclyContainedPresenceSlug } from "@/lib/presence/publicContainment";
 
 const STUDIO_V2_CLIENT_FEATURE_ENV: PresenceStudioV2FeatureEnv = {
@@ -91,7 +91,7 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
     return draftNodeForRenderer(node, previewConfig);
   }, [node, previewConfig]);
   const studioV2Room = useMemo(
-    () => (previewNode ? studioV2PublicRoomFromPresenceNode(previewNode, previewNode.editable_config, STUDIO_V2_CLIENT_FEATURE_ENV) : undefined),
+    () => (previewNode ? studioV2PrivatePreviewRoomFromPresenceNode(previewNode, previewNode.editable_config, STUDIO_V2_CLIENT_FEATURE_ENV) : undefined),
     [previewNode],
   );
   const rendererNode = useMemo(

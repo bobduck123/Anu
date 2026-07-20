@@ -163,6 +163,10 @@ const server = createServer(async (req, res) => {
     return sendData(res, studioV2PublicRoomFixture());
   }
 
+  if (url.pathname === "/api/presence/public/bbbvision" && req.method === "GET") {
+    return sendData(res, bbbVisionCandidatePublicRoomFixture());
+  }
+
   if (url.pathname === "/api/presence/public/nodes" && req.method === "GET") {
     return sendData(res, {
       items: [
@@ -498,7 +502,7 @@ const server = createServer(async (req, res) => {
     });
   }
 
-  const ownerNodeMatch = url.pathname.match(/^\/api\/presence\/owner\/nodes\/(101|11)$/);
+  const ownerNodeMatch = url.pathname.match(/^\/api\/presence\/owner\/nodes\/(101|11|29)$/);
   if (ownerNodeMatch && req.method === "GET") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
@@ -506,16 +510,39 @@ const server = createServer(async (req, res) => {
       state.failNextOwnerNodeReads -= 1;
       return sendError(res, 503, "cold_start", "Room read is warming up.");
     }
+    if (Number(ownerNodeMatch[1]) === 29) return sendData(res, bbbVisionCandidateOwnerNodeFixture());
     return sendData(res, publicRoomFixture(Number(ownerNodeMatch[1])));
   }
 
-  const editorOverviewMatch = url.pathname.match(/^\/api\/presence\/owner\/rooms\/(101|11)\/editor$/);
+  const editorOverviewMatch = url.pathname.match(/^\/api\/presence\/owner\/rooms\/(101|11|29)\/editor$/);
   if (editorOverviewMatch && req.method === "GET") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     if (state.failNextEditorReads > 0) {
       state.failNextEditorReads -= 1;
       return sendError(res, 503, "cold_start", "Editor read is warming up.");
+    }
+    if (Number(editorOverviewMatch[1]) === 29) {
+      const room = bbbVisionCandidateOwnerNodeFixture();
+      const published = buildBbbVisionEditorConfig("published", state.nextEditorVersion, { roomId: 29, slug: "bbbvision" });
+      return sendData(res, {
+        room: { id: room.id, slug: room.slug, display_name: room.display_name, owner_user_id: room.owner_user_id },
+        draft: null,
+        published,
+        published_public_config: redactEditorConfig(published),
+        suggested_config: null,
+        history: [published],
+        assets: buildBbbVisionEditorAssets(),
+        media_capability: {
+          private_draft_media_active: false,
+          v1b_fallback_available: true,
+          migration_ready: true,
+          protected_storage_configured: false,
+          protected_storage_verified: false,
+          reason: "private_storage_not_configured",
+          owner_message: "Private draft media is not enabled on this environment. Use only public-safe images.",
+        },
+      });
     }
     const room = publicRoomFixture(Number(editorOverviewMatch[1]));
     return sendData(res, {
@@ -540,10 +567,11 @@ const server = createServer(async (req, res) => {
       });
   }
 
-  const editorDraftMatch = url.pathname.match(/^\/api\/presence\/owner\/rooms\/(101|11)\/editor\/draft$/);
+  const editorDraftMatch = url.pathname.match(/^\/api\/presence\/owner\/rooms\/(101|11|29)\/editor\/draft$/);
   if (editorDraftMatch) {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
+    if (Number(editorDraftMatch[1]) === 29 && req.method === "GET") return sendData(res, { draft: null });
     if (req.method === "GET") return sendData(res, { draft: state.editorDraft });
     if (req.method === "POST" || req.method === "PATCH") {
       const base = state.editorDraft || state.editorPublished || buildEditorConfig("draft", state.nextEditorVersion++);
@@ -559,7 +587,7 @@ const server = createServer(async (req, res) => {
     }
   }
 
-  const editorPreviewMatch = url.pathname.match(/^\/api\/presence\/owner\/rooms\/(101|11)\/editor\/preview$/);
+  const editorPreviewMatch = url.pathname.match(/^\/api\/presence\/owner\/rooms\/(101|11|29)\/editor\/preview$/);
   if (editorPreviewMatch && req.method === "POST") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
@@ -567,7 +595,9 @@ const server = createServer(async (req, res) => {
       state.failNextPreviewReads -= 1;
       return sendError(res, 503, "cold_start", "Preview read is warming up.");
     }
-    const previewBase = state.editorDraft || state.editorPublished || buildEditorConfig("draft", state.nextEditorVersion++);
+    const previewBase = Number(editorPreviewMatch[1]) === 29
+      ? buildBbbVisionEditorConfig("published", state.nextEditorVersion, { roomId: 29, slug: "bbbvision" })
+      : state.editorDraft || state.editorPublished || buildEditorConfig("draft", state.nextEditorVersion++);
     return sendData(res, {
       created_draft: false,
       preview: true,
@@ -1589,6 +1619,32 @@ function publicRoomFixture(roomId = fixtures.room.id) {
   };
 }
 
+function bbbVisionCandidateOwnerNodeFixture() {
+  return {
+    ...fixtures.room,
+    id: 29,
+    slug: "bbbvision",
+    display_name: "bbb.vision",
+    headline: "Image-first threshold gallery converted into an editable Presence room.",
+    status: "published",
+    visibility: "public",
+    public_status: "public",
+    public_url: "/p/bbbvision",
+    renderer_key: null,
+    editable_config: null,
+    metadata: {},
+  };
+}
+
+function bbbVisionCandidatePublicRoomFixture() {
+  const config = buildBbbVisionEditorConfig("published", 29, { roomId: 29, slug: "bbbvision" });
+  return {
+    ...bbbVisionCandidateOwnerNodeFixture(),
+    renderer_key: null,
+    editable_config: redactEditorConfig(config),
+  };
+}
+
 function studioV2PublicRoomFixture() {
   const now = "2026-06-03T00:00:00.000Z";
   return {
@@ -1778,11 +1834,13 @@ function buildStudioV2EditorConfig(status = "draft", version = 1) {
   };
 }
 
-function buildBbbVisionEditorConfig(status = "draft", version = 1) {
+function buildBbbVisionEditorConfig(status = "draft", version = 1, options = {}) {
   const now = new Date().toISOString();
+  const roomId = options.roomId ?? fixtures.room.id;
+  const slug = options.slug ?? "bbbvision-pilot";
   return {
     id: 9900 + version,
-    room_id: fixtures.room.id,
+    room_id: roomId,
     schema_version: "presence-editable-config-v1",
     version,
     status,
@@ -1881,8 +1939,8 @@ function buildBbbVisionEditorConfig(status = "draft", version = 1) {
     content_config: {
       studio_v2: {
         schemaVersion: "presence-studio-v2-v1",
-        roomId: String(fixtures.room.id),
-        slug: "bbbvision-pilot",
+        roomId: String(roomId),
+        slug,
         title: "bbb.vision",
         tagline: "Image-first threshold gallery, brought into Presence as an editable pilot room.",
         objects: [

@@ -1,0 +1,22 @@
+# BBB Publish-Readiness Validation Record
+
+- Hosted frontend: production `your-presence.vercel.app`
+- Backend: hosted backend from ignored local env; private values not recorded
+- Room: `29`
+- Slug: `bbbvision`
+- Title: `bbb.vision`
+- Public canonical status before/after: 200 -> 200
+- Public legacy status before/after: 200 -> 200
+- Studio V2 editor: rendered
+- Private preview desktop/mobile: rendered
+- CTA/Enter path available: yes
+- Route/status entries: 9
+- Blocking QA issues: 0
+- Non-blocking QA issues: 0
+- Publish requests observed: 0
+- Owner mutation requests observed: 0
+- Safe private-preview POST requests observed: 2
+- Draft write/revert: not attempted in this readiness pass
+- Public state mutation: not attempted
+- Slug/title/domain/status mutation: not attempted
+- Secrets emitted: none by design
