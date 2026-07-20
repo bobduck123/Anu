@@ -71,14 +71,22 @@ Screenshots are generated only after the relevant proof condition passes. A fail
 
 ## Current run result
 
-Blocked. Hosted owner authentication reached the deployed Studio, and the V2 editor shell loaded, but the active hosted frontend did not expose the layout-composition controls required by this proof gate.
+Passed as a hosted read-only proof.
 
-Observed failure:
+Confirmed:
 
-- missing `presence-studio-v2-layout-label`
-- missing layout-composition proof condition before screenshots could be retained
+- hosted owner authentication reached Studio;
+- owner-scoped backend list, detail, editor overview, and draft reads returned 200;
+- hosted Studio V2 editor loaded for room `11`;
+- layout-composition controls rendered in the hosted editor;
+- private preview loaded with no editor instrumentation;
+- anonymous `/p/ggm-christina-goddard` returned a truthful unavailable/private 404;
+- anonymous `/presence/ggm-christina-goddard` returned a truthful unavailable/private 404;
+- no publish request was triggered;
+- no draft save/revert was attempted;
+- no public state mutation was attempted.
 
-This is not evidence of a local code failure. It indicates the active hosted frontend is not yet serving the completed local layout-composition slice, or the configured hosted room is not eligible for that slice.
+The private preview page uses the existing safe preview-generation endpoint, `POST /api/presence/owner/rooms/11/editor/preview`. The frontend client marks this as `ownerReadFetch` with `safeEnsurePost`; it does not publish or overwrite owner content.
 
 ## Known limits
 

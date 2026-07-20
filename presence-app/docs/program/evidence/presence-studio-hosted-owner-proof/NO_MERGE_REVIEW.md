@@ -1,14 +1,12 @@
-VERDICT: NO MERGE
+VERDICT: MERGE
 
 ## Summary
 
-Hosted owner authentication reached the deployed Studio, and the V2 editor shell loaded for the configured pilot room. The proof is blocked because the active hosted editor does not expose the layout-composition controls required by the completed local proof slice.
+Hosted read-only owner proof passed. The configured owner credential reached the hosted Studio for room `11`, owner-scoped backend GET routes returned 200, layout-composition controls rendered, private preview loaded, and anonymous GGM public routes remained unavailable/private.
 
 ## Blocking issues
 
-- Hosted read-only smoke failed on missing `presence-studio-v2-layout-label`.
-- The hosted frontend therefore does not currently prove the local layout-composition slice.
-- Route/status matrix was not generated because the proof stopped before the full route sweep.
+- None for the read-only proof gate.
 
 ## Non-blocking issues
 
@@ -18,14 +16,15 @@ Hosted owner authentication reached the deployed Studio, and the V2 editor shell
 
 - Hosted read-only smoke output from `tests/e2e/presence-studio-v2-hosted-owner-readonly.spec.ts`.
 - `README.md` current run result.
+- `route-status-matrix.json`.
+- `ROUTE_STATUS_MATRIX.md`.
+- Hosted screenshots in this evidence folder.
 
 ## Tests/build/typecheck
 
 - PASS: `npm.cmd run typecheck`
 - PASS: `npm.cmd run build`
-- FAIL/BLOCKED: `npm.cmd run test:e2e -- tests/e2e/presence-studio-v2-hosted-owner-readonly.spec.ts --project=chromium --retries=0 --workers=1`
-  - First run without escalation: blocked by sandbox network denial.
-  - Escalated hosted run reached the site and failed because `presence-studio-v2-layout-label` was not found.
+- PASS: `npm.cmd run test:e2e -- tests/e2e/presence-studio-v2-hosted-owner-readonly.spec.ts --project=chromium --retries=0 --workers=1`
 
 ## Files changed
 
@@ -37,6 +36,11 @@ Hosted owner authentication reached the deployed Studio, and the V2 editor shell
 - `docs/program/evidence/presence-studio-hosted-owner-proof/ROUTE_STATUS_MATRIX.md`
 - `docs/program/evidence/presence-studio-hosted-owner-proof/VALIDATION_RECORD.md`
 - `docs/program/evidence/presence-studio-hosted-owner-proof/NO_MERGE_REVIEW.md`
+- `docs/program/evidence/presence-studio-hosted-owner-proof/route-status-matrix.json`
+- `docs/program/evidence/presence-studio-hosted-owner-proof/01-hosted-layout-composition-controls.png`
+- `docs/program/evidence/presence-studio-hosted-owner-proof/02-hosted-private-preview-readonly.png`
+- `docs/program/evidence/presence-studio-hosted-owner-proof/03-public-canonical-route-readonly.png`
+- `docs/program/evidence/presence-studio-hosted-owner-proof/04-public-legacy-route-readonly.png`
 
 ## Unexpected changes
 
@@ -46,19 +50,22 @@ Hosted owner authentication reached the deployed Studio, and the V2 editor shell
 
 - Real hosted credentials must remain outside git.
 - Screenshots must not contain credentials, cookies, tokens, account IDs, or private auth values.
-- No hosted screenshots are retained from the failed run.
+- Real env file remains ignored: `.env.hosted-owner-proof.local`.
+- Staged/committed files must be secret-scanned before commit.
 
 ## Auth/tenant/routing risks
 
 - The proof uses hosted owner authentication and owner-scoped backend GET routes.
 - Any 401/403 from owner APIs must be treated as a hosted owner policy failure, not bypassed.
-- This run did not fail at the initial owner login/editor-shell access step; it failed at hosted feature availability.
+- Owner-scoped backend reads returned 200.
+- Anonymous public GGM routes returned 404 and did not expose editor instrumentation.
 
 ## Data persistence risks
 
 - Draft write is not attempted in this read-only proof.
 - The smoke fails if owner mutation or publish requests are observed.
 - No draft write/revert or publish action was attempted.
+- The private preview page uses the existing safe preview-generation endpoint, `POST /api/presence/owner/rooms/11/editor/preview`, which the client marks as `ownerReadFetch` with `safeEnsurePost`.
 
 ## UX/mobile/accessibility
 
@@ -75,10 +82,9 @@ Remove the read-only smoke, env example, ignore exception, and this evidence fol
 
 ## Required fixes
 
-- Deploy or otherwise point the hosted proof at a frontend build that contains the local layout-composition slice, then rerun the read-only proof.
-- If the configured room is not supposed to expose layout-composition controls, select a safe pilot room that is eligible for the slice.
+- None for read-only hosted owner proof.
 
 ## Recommended follow-up
 
-- Keep this branch as a proof harness/blocker record.
-- Next gate: hosted frontend/version alignment for the local layout-composition slice, then rerun the read-only proof.
+- If needed, scope a separate write/revert proof for a safe pilot room with `PRESENCE_HOSTED_DRAFT_WRITE_ENABLED=1`.
+- Do not use mutation-capable lifecycle specs that publish/restore unless separately approved.

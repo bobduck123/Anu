@@ -72,6 +72,7 @@ test.describe("hosted Studio V2 owner read-only proof", () => {
     const routeStatuses: RouteStatus[] = [];
     const mutatingRequests: string[] = [];
     const publishRequests: string[] = [];
+    const safePreviewRequests: string[] = [];
     const pageErrors: string[] = [];
     const consoleErrors: string[] = [];
 
@@ -80,6 +81,10 @@ test.describe("hosted Studio V2 owner read-only proof", () => {
       const url = req.url();
       const lowered = url.toLowerCase();
       if (lowered.includes("publish")) publishRequests.push(`${method} ${redactUrl(url)}`);
+      if (method === "POST" && lowered.includes(`/api/presence/owner/rooms/${roomId}/editor/preview`)) {
+        safePreviewRequests.push(`${method} ${redactUrl(url)}`);
+        return;
+      }
       if (["POST", "PUT", "PATCH", "DELETE"].includes(method) && lowered.includes("/api/presence/owner/")) {
         mutatingRequests.push(`${method} ${redactUrl(url)}`);
       }
@@ -168,6 +173,7 @@ test.describe("hosted Studio V2 owner read-only proof", () => {
 
     expect(mutatingRequests, "Read-only hosted proof must not issue owner draft/node mutations.").toEqual([]);
     expect(publishRequests, "Read-only hosted proof must not call or navigate to publish surfaces.").toEqual([]);
+    expect(safePreviewRequests.length, "Private preview should use the existing safe preview-generation endpoint.").toBeGreaterThanOrEqual(1);
     expect(pageErrors).toEqual([]);
     expect(consoleErrors).toEqual([]);
 

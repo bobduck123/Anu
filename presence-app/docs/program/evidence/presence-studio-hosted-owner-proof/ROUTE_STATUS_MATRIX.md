@@ -1,19 +1,18 @@
 # Route/status matrix
 
-This matrix records the blocked hosted owner read-only run. The full JSON matrix was not generated because the proof stopped before completing all route checks.
+This matrix records the successful hosted owner read-only run. The full machine-readable matrix is in `route-status-matrix.json`.
 
-| Surface | Method | Result | Notes |
-|---|---:|---|---|
-| Hosted sign-in | Browser | Reached | Owner sign-in reached the deployed app using local env credentials. No credentials were printed. |
-| `/studio/11/editor` | Browser | Reached | V2 editor shell loaded: root, top chrome, outline, and inspector were visible. |
-| Hosted layout-composition controls | Browser | Blocked | `presence-studio-v2-layout-label` was not found on the active hosted frontend. |
-| `/api/presence/owner/nodes` | GET | Not recorded | The test stopped before writing the full route-status file. |
-| `/api/presence/owner/nodes/11` | GET | Not recorded | The test stopped before writing the full route-status file. |
-| `/api/presence/owner/rooms/11/editor` | GET | Not recorded | The test stopped before writing the full route-status file. |
-| `/api/presence/owner/rooms/11/editor/draft` | GET | Not recorded | The test stopped before writing the full route-status file. |
-| `/studio/11/editor/preview` | Browser | Not reached | Private preview was not checked after the layout-control blocker. |
-| `/p/ggm-christina-goddard` | Browser | Not reached | Public route was not checked after the layout-control blocker. |
-| `/presence/ggm-christina-goddard` | Browser | Not reached | Public route was not checked after the layout-control blocker. |
+| Surface | Method | Status | Result | Notes |
+|---|---:|---:|---|---|
+| Hosted sign-in | Browser | n/a | Passed | Owner sign-in reached the deployed app using local env credentials. No credentials were printed. |
+| `/studio/11/editor` | Browser | n/a | Passed | V2 editor shell loaded, and layout-composition controls were visible. |
+| `/api/presence/owner/nodes` | GET | 200 | Passed | Owner-scoped list readable. |
+| `/api/presence/owner/nodes/11` | GET | 200 | Passed | Owner-scoped node detail readable. |
+| `/api/presence/owner/rooms/11/editor` | GET | 200 | Passed | Owner-scoped editor overview readable. |
+| `/api/presence/owner/rooms/11/editor/draft` | GET | 200 | Passed | Owner-scoped editor draft readable. |
+| `/studio/11/editor/preview` | Browser | 200 | Passed | Authenticated private preview loaded without editor instrumentation. |
+| `/p/ggm-christina-goddard` | Browser | 404 | Passed | Anonymous public canonical route stayed unavailable/private and had no editor instrumentation. |
+| `/presence/ggm-christina-goddard` | Browser | 404 | Passed | Anonymous public legacy route stayed unavailable/private and had no editor instrumentation. |
 
 ## Mutation/publication check
 
@@ -21,4 +20,5 @@ This matrix records the blocked hosted owner read-only run. The full JSON matrix
 - Publish: not attempted.
 - Backend mutation: not attempted.
 - Public state mutation: not attempted.
-- Screenshots retained: none from the blocked hosted run.
+- Safe preview generation: existing owner preview endpoint used `POST /api/presence/owner/rooms/11/editor/preview`; this is the repo's `ownerReadFetch` safe preview contract and did not publish or overwrite owner content.
+- Screenshots retained: four hosted proof screenshots.
