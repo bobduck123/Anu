@@ -266,6 +266,18 @@ Reason: This documentation task did not verify or change runtime fallback behavi
 Evidence: Founder direction.
 Impact: Do not use fallback rendering as migration evidence or public-launch readiness; public proof must distinguish persisted backend rooms from demo or fallback content.
 Next action: Create a separate fallback-removal work order only after the persisted replacement is ready.
+
+2026-07-20 â€” Decision: Keep Studio V2 as the single canonical eligible-room editor and refine it in place.
+Reason: The private persistence baseline and local Room 11-shaped proof already establish its owner workflow; another editor path would fragment evidence and behaviour.
+Evidence: `docs/program/evidence/presence-studio-working-state/` and the V2 Playwright suite.
+Impact: Improve the existing canvas, inspector, Guide, Style DNA, and mobile model rather than creating a parallel Studio.
+Next action: Use a separately authorised hosted owner proof before claiming real client self-service.
+
+2026-07-20 â€” Decision: Limit active Style DNA to renderer-visible fields.
+Reason: Aura, display type, and border controls were not truthfully projected by the current V2 renderer contract.
+Evidence: Studio source audit and on-brand local browser proof.
+Impact: Background, texture, motion, heading weight, object shape, shadow, and accent remain active; unsupported controls are absent rather than presented as functional.
+Next action: Add a field only when model, editor, preview, and public renderer all support it.
 ```
 
 ## Open questions

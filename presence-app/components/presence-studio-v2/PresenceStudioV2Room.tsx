@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, type CSSProperties } from "react";
 import type { StudioV2State, StudioV2Object } from "@/lib/presence/studio-v2";
 
 interface PresenceStudioV2RoomProps {
@@ -12,6 +12,16 @@ interface PresenceStudioV2RoomProps {
   onBeginDrag?: (id: string, event: React.PointerEvent<HTMLElement>) => void;
   onBeginResize?: (id: string, corner: "tl" | "tr" | "bl" | "br", event: React.PointerEvent<HTMLElement>) => void;
   onBeginRotate?: (id: string, event: React.PointerEvent<HTMLElement>) => void;
+}
+
+function roomForeground(background: string): string {
+  const hex = background.replace("#", "");
+  if (!/^[0-9a-f]{6}$/i.test(hex)) return "#17130f";
+  const red = Number.parseInt(hex.slice(0, 2), 16);
+  const green = Number.parseInt(hex.slice(2, 4), 16);
+  const blue = Number.parseInt(hex.slice(4, 6), 16);
+  const luminance = (red * 299 + green * 587 + blue * 114) / 1000;
+  return luminance < 132 ? "#f8f4ec" : "#17130f";
 }
 
 export default function PresenceStudioV2Room({
@@ -27,11 +37,19 @@ export default function PresenceStudioV2Room({
   const isWild = mode === "wild";
   const suspendTransforms = !isWild;
   const suppressRoomDeselectRef = useRef(false);
+  const skinStyle = {
+    "--v2-room-background": state.skin.background,
+    "--v2-room-accent": state.skin.accentColor,
+    "--v2-room-radius": `${state.skin.objectRadius}px`,
+    "--v2-room-shadow": state.skin.shadowDepth,
+    "--v2-room-ink": roomForeground(state.skin.background),
+  } as CSSProperties;
 
   return (
     <div className="v2-stage">
       <div
-        className={`v2-room world-${state.worldId} ${viewport === "mobile" ? "mobile-viewport" : ""}`}
+        className={`v2-room world-${state.worldId} texture-${state.skin.texture} motion-${state.skin.motionIntensity} ${viewport === "mobile" ? "mobile-viewport" : ""}`}
+        style={skinStyle}
         onClick={() => {
           if (suppressRoomDeselectRef.current) {
             suppressRoomDeselectRef.current = false;

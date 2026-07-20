@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef, type CSSProperties } from "react";
 import type { PresenceNode } from "@/lib/api/types";
 import {
   getPresenceEditor,
@@ -131,6 +131,37 @@ function objectStateBadges(object: StudioV2Object, dirty: boolean): string[] {
   if (hasMeaningfulTransform(object.transform)) badges.push("Transformed");
   if (dirty) badges.push("Unsaved draft");
   return badges.length > 0 ? badges : ["Public-ready"];
+}
+
+function StudioGuide({
+  selectedObject,
+  dirty,
+  saving,
+  publicObjects,
+}: {
+  selectedObject: StudioV2Object | null;
+  dirty: boolean;
+  saving: boolean;
+  publicObjects: number;
+}) {
+  const message = saving
+    ? "Saving your draft. Keep working here; this does not publish the room."
+    : dirty
+      ? "Your room has a new draft change. Ordinary edits save automatically; transformed objects need Save draft."
+      : selectedObject
+        ? selectedObject.visibility.public
+          ? `You are shaping ${selectedObject.title}. Use Content for its words and Style for its treatment.`
+          : `${selectedObject.title} is private to this room. Refine it here before deciding whether it belongs in the public composition.`
+        : publicObjects === 0
+          ? "Start with one public object in the current chamber, then use Preview to check the room's public projection."
+          : "Choose a chamber or an object in the room. The inspector will only show controls that change that selection.";
+
+  return (
+    <aside data-testid="presence-studio-v2-guide" className="v2-studio-guide" aria-live="polite">
+      <span className="v2-studio-guide-eyebrow">Studio guide</span>
+      <p>{message}</p>
+    </aside>
+  );
 }
 
 export default function PresenceStudioV2Editor({
@@ -859,7 +890,8 @@ export default function PresenceStudioV2Editor({
   return (
     <div
       data-testid="presence-studio-v2-root"
-      className={`presence-studio-v2 v2-cockpit${railOpen ? " rail-open" : " rail-closed"}${inspectorOpen ? " inspector-open" : " inspector-closed"}`}
+      className={`presence-studio-v2 v2-cockpit${railOpen ? " rail-open" : " rail-closed"}${inspectorOpen ? " inspector-open" : " inspector-closed"}${activePanel !== "none" ? " overlay-open" : ""}`}
+      style={{ "--p-copper": v2State.skin.accentColor } as CSSProperties}
     >
       {/* Top chrome */}
       <header data-testid="presence-studio-v2-top-chrome" className="v2-toolbar v2-top-chrome">
@@ -1032,6 +1064,13 @@ export default function PresenceStudioV2Editor({
               </button>
             ))}
           </div>
+
+          <StudioGuide
+            selectedObject={selectedObject}
+            dirty={dirty}
+            saving={saving}
+            publicObjects={publicObjects}
+          />
 
           {surfaceTab === "threshold" ? (
             <ThresholdWorkbench state={v2State} worldName={world?.name ?? v2State.worldId} />

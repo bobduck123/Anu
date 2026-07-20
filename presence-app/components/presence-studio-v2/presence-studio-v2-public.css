@@ -66,6 +66,31 @@
     linear-gradient(180deg, color-mix(in srgb, var(--v2-public-bg) 94%, #fff) 0%, var(--v2-public-bg) 54%, color-mix(in srgb, var(--v2-public-bg) 82%, #0e0d0b) 100%);
 }
 
+.presence-studio-v2-public.texture-grain,
+.presence-studio-v2-public.texture-scan {
+  background-image:
+    repeating-radial-gradient(circle at 22% 18%, rgba(13, 12, 10, 0.04) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, color-mix(in srgb, var(--v2-public-bg) 94%, #fff) 0%, var(--v2-public-bg) 54%, color-mix(in srgb, var(--v2-public-bg) 82%, #0e0d0b) 100%);
+}
+
+.presence-studio-v2-public.texture-timber {
+  background-image:
+    repeating-linear-gradient(4deg, rgba(78, 47, 26, 0.09) 0 1px, transparent 1px 9px),
+    linear-gradient(180deg, color-mix(in srgb, var(--v2-public-bg) 94%, #fff) 0%, var(--v2-public-bg) 54%, color-mix(in srgb, var(--v2-public-bg) 82%, #0e0d0b) 100%);
+}
+
+@keyframes v2-public-atmosphere-drift {
+  50% { background-position: 16px -10px; opacity: 0.52; }
+}
+
+.presence-studio-v2-public.motion-gentle::after {
+  animation: v2-public-atmosphere-drift 18s ease-in-out infinite;
+}
+
+.presence-studio-v2-public.motion-living::after {
+  animation: v2-public-atmosphere-drift 9s ease-in-out infinite;
+}
+
 .presence-studio-v2-public.world-zine,
 .presence-studio-v2-public.world-dj {
   color: #f3eadc;

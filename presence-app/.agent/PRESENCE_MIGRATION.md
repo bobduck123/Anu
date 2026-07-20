@@ -33,6 +33,12 @@ This documentation task neither verifies nor changes runtime fallback behaviour.
 
 A local owner-shaped fixture can prove editor UX, payload handling, and renderer hygiene. It cannot satisfy the owner-access or real-record parts of this gate; those require a separately authenticated, read-safe hosted proof against the intended backend room.
 
+## Studio working-state evidence rule
+
+Private local Studio evidence may be captured for interaction, mobile, renderer-projection, and persistence regressions. Label it as local fixture evidence and keep it private. It does not establish a client owner session, a real node mapping, durable media migration, or a public launch claim.
+
+Do not present a Style DNA control as complete unless the existing content model saves it and both the editor canvas and renderer projection visibly honour it. Remove or truthfully defer unsupported controls.
+
 ## Migration intake
 
 ```text

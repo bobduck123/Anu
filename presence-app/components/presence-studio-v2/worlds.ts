@@ -46,13 +46,10 @@ export const PUBLIC_STYLE_PRESET_OPTIONS: PublicStylePresetOption[] = [
 export const SKIN_CONTROLS = [
   { id: "background", label: "Background", type: "swatch" as const, cat: "ground" },
   { id: "texture", label: "Texture", type: "choice" as const, options: ["none", "paper", "grain", "scan", "linen", "timber", "ledger"], cat: "ground" },
-  { id: "auraIntensity", label: "Aura Intensity", type: "slider" as const, min: 0, max: 100, cat: "atmosphere" },
   { id: "motionIntensity", label: "Motion", type: "choice" as const, options: ["still", "gentle", "living"], cat: "atmosphere" },
-  { id: "displayFont", label: "Display Type", type: "choice" as const, options: ["system", "serif", "mono", "handwritten"], cat: "type" },
   { id: "headingWeight", label: "Weight", type: "slider" as const, min: 300, max: 900, step: 100, cat: "type" },
   { id: "objectRadius", label: "Object Shape", type: "slider" as const, min: 0, max: 40, cat: "objects" },
-  { id: "borderStyle", label: "Borders", type: "choice" as const, options: ["none", "hairline", "framed", "taped", "ledger"], cat: "objects" },
-  { id: "shadowDepth", label: "Shadow", type: "slider" as const, min: 0, max: 100, cat: "objects" },
+  { id: "shadowDepth", label: "Shadow", type: "slider" as const, min: 0, max: 1, step: 0.05, cat: "objects" },
   { id: "accentColor", label: "Accent", type: "swatch" as const, cat: "action" },
 ];
 

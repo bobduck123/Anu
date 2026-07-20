@@ -87,17 +87,18 @@
   box-shadow: var(--v2-shadow-1);
   min-height: 400px;
   position: relative;
+  color: var(--v2-room-ink, #17130f);
 }
 
 /* World backgrounds */
-.presence-studio-v2 .v2-room.world-gallery { background: #f7f3ea; }
-.presence-studio-v2 .v2-room.world-zine { background: #0a0a0a; color: #f0e8d0; }
-.presence-studio-v2 .v2-room.world-dj { background: #08070a; color: #e8e0f0; }
-.presence-studio-v2 .v2-room.world-healing { background: #e8efe2; color: #1e2a1f; }
-.presence-studio-v2 .v2-room.world-market { background: #f2e6d4; color: #3d2b1a; }
-.presence-studio-v2 .v2-room.world-archive { background: #efe8dc; color: #17130f; }
-.presence-studio-v2 .v2-room.world-carpenter { background: #f2eadf; color: #24170f; }
-.presence-studio-v2 .v2-room.world-consultant { background: #ffffff; color: #111111; }
+.presence-studio-v2 .v2-room.world-gallery { background: var(--v2-room-background, #f7f3ea); }
+.presence-studio-v2 .v2-room.world-zine { background: var(--v2-room-background, #0a0a0a); color: #f0e8d0; }
+.presence-studio-v2 .v2-room.world-dj { background: var(--v2-room-background, #08070a); color: #e8e0f0; }
+.presence-studio-v2 .v2-room.world-healing { background: var(--v2-room-background, #e8efe2); color: #1e2a1f; }
+.presence-studio-v2 .v2-room.world-market { background: var(--v2-room-background, #f2e6d4); color: #3d2b1a; }
+.presence-studio-v2 .v2-room.world-archive { background: var(--v2-room-background, #efe8dc); color: #17130f; }
+.presence-studio-v2 .v2-room.world-carpenter { background: var(--v2-room-background, #f2eadf); color: #24170f; }
+.presence-studio-v2 .v2-room.world-consultant { background: var(--v2-room-background, #ffffff); color: #111111; }
 
 /* Room header */
 .presence-studio-v2 .v2-room-header {
@@ -146,7 +147,7 @@
 .presence-studio-v2 .v2-obj {
   position: relative;
   padding: 16px;
-  border-radius: var(--v2-radius-md);
+  border-radius: var(--v2-room-radius, var(--v2-radius-md));
   border: 1px solid rgba(13,12,10,0.08);
   background: rgba(255,255,255,0.65);
   cursor: pointer;
@@ -163,8 +164,8 @@
   border-color: rgba(13,12,10,0.18);
 }
 .presence-studio-v2 .v2-obj.selected {
-  box-shadow: 0 0 0 2px var(--v2-copper), var(--v2-shadow-1);
-  border-color: var(--v2-copper);
+  box-shadow: 0 0 0 2px var(--v2-room-accent, var(--v2-copper)), var(--v2-shadow-1);
+  border-color: var(--v2-room-accent, var(--v2-copper));
 }
 .presence-studio-v2 .v2-obj.is-locked { opacity: 0.75; }
 .presence-studio-v2 .v2-obj.is-hidden-state { opacity: 0.55; }
@@ -621,6 +622,10 @@
   isolation: isolate;
 }
 
+.presence-studio-v2.v2-cockpit.overlay-open {
+  z-index: 50;
+}
+
 .presence-studio-v2.v2-cockpit::before,
 .presence-studio-v2 .v2-cockpit::before {
   content: "";
@@ -730,7 +735,7 @@
   max-width: 980px;
   border: 1px solid rgba(13, 12, 10, 0.1);
   box-shadow:
-    0 34px 110px -58px rgba(0, 0, 0, 0.72),
+    0 34px 110px -58px rgba(0, 0, 0, var(--v2-room-shadow, 0.72)),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   overflow: hidden;
 }
@@ -781,6 +786,7 @@
 }
 
 .presence-studio-v2 .v2-obj {
+  border-radius: var(--v2-room-radius, 18px);
   border-color: rgba(13, 12, 10, 0.12);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.52));
@@ -798,9 +804,9 @@
 }
 
 .presence-studio-v2 .v2-obj.selected {
-  border-color: var(--p-copper);
+  border-color: var(--v2-room-accent, var(--p-copper));
   box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--p-copper) 76%, #fff),
+    0 0 0 2px color-mix(in srgb, var(--v2-room-accent, var(--p-copper)) 76%, #fff),
     0 0 0 8px rgba(183, 140, 78, 0.16),
     0 28px 74px -40px rgba(0, 0, 0, 0.72);
 }
@@ -1044,27 +1050,27 @@ body.v2-is-manipulating {
 .presence-studio-v2 .v2-room.world-gallery {
   background:
     radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.82), transparent 28rem),
-    #f4efe5;
+    var(--v2-room-background, #f4efe5);
 }
 
 .presence-studio-v2 .v2-room.world-dj {
   background:
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 18px),
     radial-gradient(circle at 80% 10%, rgba(47, 95, 179, 0.25), transparent 18rem),
-    #08070a;
+    var(--v2-room-background, #08070a);
 }
 
 .presence-studio-v2 .v2-room.world-archive {
   background:
     linear-gradient(90deg, rgba(139, 41, 35, 0.14) 0 3px, transparent 3px 70px),
     repeating-linear-gradient(0deg, rgba(13, 12, 10, 0.04) 0 1px, transparent 1px 30px),
-    #efe7d8;
+    var(--v2-room-background, #efe7d8);
 }
 
 .presence-studio-v2 .v2-room.world-market {
   background:
     radial-gradient(circle at 18% 0%, rgba(215, 177, 95, 0.28), transparent 18rem),
-    #f1dfc5;
+    var(--v2-room-background, #f1dfc5);
 }
 
 .presence-studio-v2 .v2-float {
@@ -1806,6 +1812,65 @@ body.v2-is-manipulating {
   background:
     radial-gradient(circle at 50% 0%, rgba(248, 244, 236, 0.22), transparent 28rem),
     rgba(232, 225, 210, 0.82);
+}
+
+.presence-studio-v2 .v2-room.texture-paper,
+.presence-studio-v2 .v2-room.texture-linen {
+  background-image: repeating-linear-gradient(0deg, rgba(13, 12, 10, 0.025) 0 1px, transparent 1px 5px);
+}
+
+.presence-studio-v2 .v2-room.texture-grain,
+.presence-studio-v2 .v2-room.texture-scan {
+  background-image: repeating-radial-gradient(circle at 20% 20%, rgba(13, 12, 10, 0.05) 0 1px, transparent 1px 4px);
+}
+
+.presence-studio-v2 .v2-room.texture-timber {
+  background-image: repeating-linear-gradient(4deg, rgba(78, 47, 26, 0.1) 0 1px, transparent 1px 9px);
+}
+
+.presence-studio-v2 .v2-room.texture-ledger {
+  background-image:
+    linear-gradient(90deg, transparent 0 52px, rgba(139, 41, 35, 0.16) 52px 54px, transparent 54px),
+    repeating-linear-gradient(0deg, rgba(13, 12, 10, 0.045) 0 1px, transparent 1px 28px);
+}
+
+@keyframes v2-studio-atmosphere-drift {
+  50% { background-position: 12px -8px; opacity: 0.9; }
+}
+
+.presence-studio-v2 .v2-room.motion-gentle::before {
+  animation: v2-studio-atmosphere-drift 18s ease-in-out infinite;
+}
+
+.presence-studio-v2 .v2-room.motion-living::before {
+  animation: v2-studio-atmosphere-drift 9s ease-in-out infinite;
+}
+
+.presence-studio-v2 .v2-studio-guide {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 22px 12px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--p-copper) 26%, rgba(248, 244, 236, 0.1));
+  border-radius: 14px;
+  background: rgba(13, 12, 10, 0.28);
+  color: rgba(248, 244, 236, 0.72);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.presence-studio-v2 .v2-studio-guide-eyebrow {
+  flex: 0 0 auto;
+  color: #ffe4a3;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2 .v2-studio-guide p {
+  margin: 0;
 }
 
 .presence-studio-v2 .v2-inspector-head {
@@ -2567,19 +2632,35 @@ body.v2-is-manipulating {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 860px) {
   .presence-studio-v2 .v2-top-chrome {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
     padding: 10px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
   }
 
   .presence-studio-v2 .v2-toolbar-group {
-    width: 100%;
+    width: auto;
+    flex: 0 0 auto;
     justify-content: flex-start;
-    overflow-x: auto;
+    overflow: visible;
   }
 
   .presence-studio-v2 .v2-surface-tabs {
-    width: 100%;
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  .presence-studio-v2 .v2-breadcrumb {
+    display: none;
+  }
+
+  .presence-studio-v2 .v2-save-status {
+    white-space: nowrap;
   }
 
   .presence-studio-v2 .v2-stage-frame-head,
@@ -2677,5 +2758,14 @@ body.v2-is-manipulating {
   .presence-studio-v2 *::after {
     animation: none !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .presence-studio-v2 .v2-studio-guide {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0 12px 10px;
   }
 }
