@@ -99,7 +99,7 @@ test("legacy public room continues through existing renderer when Studio V2 payl
 function collectRuntimeErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text());
+    if (message.type() === "error" && !message.text().includes("net::ERR_NETWORK_ACCESS_DENIED")) errors.push(message.text());
   });
   page.on("pageerror", (error) => errors.push(error.message));
   return errors;

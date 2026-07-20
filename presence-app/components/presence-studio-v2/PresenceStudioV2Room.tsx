@@ -3,7 +3,7 @@
 import { useRef, useState, type CSSProperties } from "react";
 import type { StudioV2State, StudioV2Object } from "@/lib/presence/studio-v2";
 import { deriveStudioV2Environment } from "@/lib/presence/studio-v2/environment";
-import { normalizeStudioV2Composition, studioV2Layout } from "@/lib/presence/studio-v2/layouts";
+import { normalizeStudioV2Composition, placementMoveError, studioV2Layout } from "@/lib/presence/studio-v2/layouts";
 import PresenceStudioV2EnvironmentLayer from "./PresenceStudioV2EnvironmentLayer";
 
 interface PresenceStudioV2RoomProps {
@@ -123,8 +123,10 @@ export default function PresenceStudioV2Room({
               {studioV2Layout(chamber.composition?.layoutId).zones.map((zone) => {
                 const composition = normalizeStudioV2Composition(chamber.composition, chamber.id, chamber.objects);
                 const placements = composition.placements.filter((placement) => placement.zoneId === zone.id).sort((a, b) => a.order - b.order);
+                const draggedObject = draggingChamberId === chamber.id ? chamber.objects.find((item) => item.id === draggingObjectId) : null;
+                const canDropDraggedObject = Boolean(draggedObject && !placementMoveError(composition, draggedObject, zone.id));
                 return (
-                <section key={zone.id} className={`v2-layout-zone zone-${zone.id}${draggingObjectId ? " is-layout-drop-active" : ""}`} data-testid="presence-studio-v2-layout-zone" data-zone-id={zone.id} data-layout-drop-zone={zone.id} onPointerUp={() => finishLayoutDrag(zone.id)}>
+                <section key={zone.id} className={`v2-layout-zone zone-${zone.id}${canDropDraggedObject ? " is-layout-drop-active" : ""}`} data-testid="presence-studio-v2-layout-zone" data-zone-id={zone.id} data-layout-drop-zone={zone.id} onPointerUp={() => finishLayoutDrag(zone.id)}>
                   <div className="v2-layout-zone-head"><strong>{zone.label}</strong><span>{zone.description}</span></div>
                   <div className="v2-objects">
               {placements.map((placement) => {
