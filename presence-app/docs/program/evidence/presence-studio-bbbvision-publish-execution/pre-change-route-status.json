@@ -1,0 +1,56 @@
+[
+  {
+    "phase": "pre-change",
+    "surface": "owner room detail",
+    "method": "GET",
+    "path": "/api/presence/owner/nodes/29",
+    "status": 200,
+    "ok": true,
+    "notes": "Owner-scoped read; payload body not recorded."
+  },
+  {
+    "phase": "pre-change",
+    "surface": "editor overview",
+    "method": "GET",
+    "path": "/api/presence/owner/rooms/29/editor",
+    "status": 200,
+    "ok": true,
+    "notes": "Owner-scoped read; payload body not recorded."
+  },
+  {
+    "phase": "pre-change",
+    "surface": "editor draft",
+    "method": "GET",
+    "path": "/api/presence/owner/rooms/29/editor/draft",
+    "status": 200,
+    "ok": true,
+    "notes": "Owner-scoped read; payload body not recorded."
+  },
+  {
+    "phase": "pre-change",
+    "surface": "public /p/bbbvision",
+    "method": "BROWSER",
+    "path": "/p/bbbvision",
+    "status": 200,
+    "ok": true,
+    "notes": "Anonymous public render."
+  },
+  {
+    "phase": "pre-change",
+    "surface": "public /presence/bbbvision",
+    "method": "BROWSER",
+    "path": "/presence/bbbvision",
+    "status": 200,
+    "ok": true,
+    "notes": "Anonymous public render."
+  },
+  {
+    "phase": "pre-change",
+    "surface": "owner private preview",
+    "method": "BROWSER",
+    "path": "/studio/29/editor/preview",
+    "status": 200,
+    "ok": true,
+    "notes": "Owner-authenticated private preview."
+  }
+]

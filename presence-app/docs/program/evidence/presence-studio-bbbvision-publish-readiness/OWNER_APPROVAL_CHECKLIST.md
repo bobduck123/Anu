@@ -9,12 +9,12 @@ Do not mark this checklist approved until the human gives explicit final approva
 - [ ] Contact/CTA behaviour approved.
 - [ ] Mobile view approved.
 - [ ] No private content visible.
-- [ ] Publish timing approved.
+- [x] Publish timing approved for the controlled room `29 / bbbvision / bbb.vision` publish execution action.
 - [ ] Rollback plan accepted.
-- [ ] Human explicitly approves the publish/migration action.
+- [x] Human explicitly approves the publish/migration action for the controlled room `29 / bbbvision / bbb.vision` execution.
 
 ## Current status
 
 Technical readiness evidence passed.
 
-Owner approval is not marked complete in this evidence pack.
+Owner approval is not marked complete in full. Only the explicit controlled publish/migration action approval has been marked.
