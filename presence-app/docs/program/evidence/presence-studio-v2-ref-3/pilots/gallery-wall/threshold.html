@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Christina Kerkvliet-Goddard — Threshold</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="threshold.css">
+</head>
+<body>
+
+<!-- Painting layer (background, full bleed) -->
+<div class="paint-stage" aria-hidden="true">
+  <div class="paint-slide is-active" data-idx="0" style="background-image: url('img/willow.webp');"></div>
+  <div class="paint-slide" data-idx="1" style="background-image: url('img/portrait.webp');"></div>
+  <div class="paint-slide" data-idx="2" style="background-image: url('img/bridle-road.webp');"></div>
+  <div class="paint-slide" data-idx="3" style="background-image: url('img/gothic-tapestry.webp');"></div>
+  <div class="paint-slide" data-idx="4" style="background-image: url('img/burgundy-peaches.webp');"></div>
+  <div class="paint-vignette"></div>
+  <canvas class="paint-grain" aria-hidden="true"></canvas>
+</div>
+
+<!-- Title plate -->
+<header class="t-mark" aria-label="Studio name">
+  <div class="t-mark-line">Christina</div>
+  <div class="t-mark-line t-mark-line--italic">Kerkvliet&#8209;Goddard</div>
+  <div class="t-mark-tagline">paintings, drawings,<br>field studies &amp; ephemera</div>
+</header>
+
+<!-- Top-left status -->
+<div class="t-status" aria-label="Studio status">
+  <span class="t-status-dot"></span>
+  <span class="t-status-text">Studio open by appointment</span>
+  <span class="t-status-sep"></span>
+  <span class="t-status-meta">Tyrone, Vermont · 06.06.26</span>
+</div>
+
+<!-- Right vertical index of works -->
+<nav class="t-index" aria-label="Works on view">
+  <div class="t-index-header">
+    <span class="t-index-label">5 works on view</span>
+    <span class="t-index-rule"></span>
+  </div>
+  <ol class="t-index-list">
+    <li class="t-index-item is-active" data-idx="0">
+      <span class="t-index-num">i.</span>
+      <span class="t-index-title">Willow on the South Lawn</span>
+      <span class="t-index-year">2024</span>
+    </li>
+    <li class="t-index-item" data-idx="1">
+      <span class="t-index-num">ii.</span>
+      <span class="t-index-title">The Forest in Late Winter</span>
+      <span class="t-index-year">2023</span>
+    </li>
+    <li class="t-index-item" data-idx="2">
+      <span class="t-index-num">iii.</span>
+      <span class="t-index-title">Bridle Road, October</span>
+      <span class="t-index-year">2023</span>
+    </li>
+    <li class="t-index-item" data-idx="3">
+      <span class="t-index-num">iv.</span>
+      <span class="t-index-title">Hedgerow, Gothic</span>
+      <span class="t-index-year">2022</span>
+    </li>
+    <li class="t-index-item" data-idx="4">
+      <span class="t-index-num">v.</span>
+      <span class="t-index-title">Burgundy Peaches in a Cut&#8209;Glass Bowl</span>
+      <span class="t-index-year">2021</span>
+    </li>
+  </ol>
+</nav>
+
+<!-- Plate (museum-label style metadata, syncs with active painting) -->
+<aside class="t-plate" aria-live="polite">
+  <div class="t-plate-roman">i.</div>
+  <div class="t-plate-stack">
+    <div class="t-plate-title">Willow on the South Lawn</div>
+    <div class="t-plate-meta">
+      <span>Watercolour &amp; ink on Arches</span>
+      <span>·</span>
+      <span>76 × 56 cm</span>
+      <span>·</span>
+      <span>2024</span>
+    </div>
+  </div>
+</aside>
+
+<!-- Enter affordance -->
+<a class="t-enter" href="chamber.html" aria-label="Enter the studio">
+  <span class="t-enter-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="14" height="14"><path d="M4 12h15M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </span>
+  <span class="t-enter-text">Enter the studio</span>
+  <span class="t-enter-sub">five works · room I</span>
+</a>
+
+<!-- Bottom rail -->
+<footer class="t-rail">
+  <span class="t-rail-item">Est. 1981</span>
+  <span class="t-rail-dot"></span>
+  <span class="t-rail-item">Member, Vermont Watercolor Society</span>
+  <span class="t-rail-dot"></span>
+  <span class="t-rail-item">Studio prints &amp; commissions on request</span>
+</footer>
+
+<!-- Fade-out overlay for transition -->
+<div class="t-veil"></div>
+
+<script src="threshold.js"></script>
+</body>
+</html>

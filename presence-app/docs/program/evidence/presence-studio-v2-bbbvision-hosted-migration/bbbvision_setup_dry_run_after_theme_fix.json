@@ -1,0 +1,57 @@
+{
+  "operation": {
+    "environment": "hosted_controlled_launch",
+    "hosted_account_action_required": null,
+    "mode": "dry_run",
+    "owner": {
+      "email_redacted": "e4***@gmail.com",
+      "presence_app_user_exists": true,
+      "presence_app_user_id": 1,
+      "presence_role": "platform_admin",
+      "presence_user_active": true,
+      "secret_values_printed": false,
+      "stored_subject_fingerprint": "ec6dd2ae7590",
+      "supabase_auth_user_exists": true,
+      "supabase_email_confirmed": true,
+      "supabase_providers": [
+        "email"
+      ],
+      "supabase_subject_fingerprint": "ec6dd2ae7590",
+      "supabase_subject_matches_presence": true,
+      "tokens_printed": false
+    },
+    "search": {
+      "matches": [],
+      "plan": "create_new",
+      "selected_room_id": null,
+      "slugs": [
+        "bbbvision",
+        "bbb-vision",
+        "bbb.vision",
+        "bbb"
+      ]
+    },
+    "secret_values_printed": false,
+    "tokens_printed": false,
+    "would_seed": {
+      "asset_url_origin": "https://bbbvision.vercel.app",
+      "cta_objects": 1,
+      "gallery_assets": 10,
+      "public_style_preset": "bbbvision-threshold-gallery",
+      "slug": "bbbvision",
+      "text_story_objects": 1,
+      "threshold_assets": 10,
+      "title": "bbb.vision"
+    }
+  },
+  "schema": {
+    "required_tables_present": [
+      "node",
+      "presence_editable_config",
+      "presence_node",
+      "user"
+    ]
+  },
+  "secret_values_printed": false,
+  "tokens_printed": false
+}

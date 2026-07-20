@@ -1,0 +1,132 @@
+{
+  "public_style_preset": "bbbvision-threshold-gallery",
+  "renderer_key": "presence-studio-v2-room",
+  "room_id": 29,
+  "slug": "bbbvision",
+  "source_assets": {
+    "gallery": [
+      {
+        "id": "bbb-gallery-klien",
+        "local_path": "C:/Dev/bbb-vision-site/assets/benny/klien.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/benny/klien.JPG",
+        "title": "Klien"
+      },
+      {
+        "id": "bbb-gallery-klein",
+        "local_path": "C:/Dev/bbb-vision-site/assets/benny/klein.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/benny/klein.JPG",
+        "title": "Klein"
+      },
+      {
+        "id": "bbb-gallery-kelela",
+        "local_path": "C:/Dev/bbb-vision-site/assets/benny/kelela.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/benny/kelela.JPG",
+        "title": "Kelela"
+      },
+      {
+        "id": "bbb-gallery-kelela-1",
+        "local_path": "C:/Dev/bbb-vision-site/assets/benny/kelela (1).JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/benny/kelela%20%281%29.JPG",
+        "title": "Kelela I"
+      },
+      {
+        "id": "bbb-gallery-little-simz",
+        "local_path": "C:/Dev/bbb-vision-site/assets/benny/little simz.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/benny/little%20simz.JPG",
+        "title": "Little Simz"
+      },
+      {
+        "id": "bbb-gallery-niecy-blues",
+        "local_path": "C:/Dev/bbb-vision-site/assets/benny/Niecy Blues.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/benny/Niecy%20Blues.JPG",
+        "title": "Niecy Blues"
+      },
+      {
+        "id": "bbb-gallery-sparkle",
+        "local_path": "C:/Dev/bbb-vision-site/assets/benny/sparkle.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/benny/sparkle.JPG",
+        "title": "Sparkle"
+      },
+      {
+        "id": "bbb-gallery-tems",
+        "local_path": "C:/Dev/bbb-vision-site/assets/benny/tems.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/benny/tems.JPG",
+        "title": "Tems"
+      },
+      {
+        "id": "bbb-gallery-tems-1",
+        "local_path": "C:/Dev/bbb-vision-site/assets/benny/tems (1).JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/benny/tems%20%281%29.JPG",
+        "title": "Tems I"
+      },
+      {
+        "id": "bbb-gallery-yves-tumor",
+        "local_path": "C:/Dev/bbb-vision-site/assets/benny/yves tumor.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/benny/yves%20tumor.JPG",
+        "title": "Yves Tumor"
+      }
+    ],
+    "landing": [
+      {
+        "id": "bbb-landing-sparkle",
+        "local_path": "C:/Dev/bbb-vision-site/assets/landing-slider-shots/sparkle.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/landing-slider-shots/sparkle.JPG",
+        "title": "Sparkle"
+      },
+      {
+        "id": "bbb-landing-akka",
+        "local_path": "C:/Dev/bbb-vision-site/assets/landing-slider-shots/akka.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/landing-slider-shots/akka.JPG",
+        "title": "Akka"
+      },
+      {
+        "id": "bbb-landing-ballerina",
+        "local_path": "C:/Dev/bbb-vision-site/assets/landing-slider-shots/ballerina.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/landing-slider-shots/ballerina.JPG",
+        "title": "Ballerina"
+      },
+      {
+        "id": "bbb-landing-ballerina-1",
+        "local_path": "C:/Dev/bbb-vision-site/assets/landing-slider-shots/ballerina (1).JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/landing-slider-shots/ballerina%20%281%29.JPG",
+        "title": "Ballerina I"
+      },
+      {
+        "id": "bbb-landing-ballerina-2",
+        "local_path": "C:/Dev/bbb-vision-site/assets/landing-slider-shots/ballerina (2).JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/landing-slider-shots/ballerina%20%282%29.JPG",
+        "title": "Ballerina II"
+      },
+      {
+        "id": "bbb-landing-cd",
+        "local_path": "C:/Dev/bbb-vision-site/assets/landing-slider-shots/CD.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/landing-slider-shots/CD.JPG",
+        "title": "CD"
+      },
+      {
+        "id": "bbb-landing-fashion-week",
+        "local_path": "C:/Dev/bbb-vision-site/assets/landing-slider-shots/fashion week_.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/landing-slider-shots/fashion%20week_.JPG",
+        "title": "Fashion Week"
+      },
+      {
+        "id": "bbb-landing-liv-e",
+        "local_path": "C:/Dev/bbb-vision-site/assets/landing-slider-shots/Liv.e.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/landing-slider-shots/Liv.e.JPG",
+        "title": "Liv.e"
+      },
+      {
+        "id": "bbb-landing-mk-gee",
+        "local_path": "C:/Dev/bbb-vision-site/assets/landing-slider-shots/mk.gee.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/landing-slider-shots/mk.gee.JPG",
+        "title": "mk.gee"
+      },
+      {
+        "id": "bbb-landing-tems",
+        "local_path": "C:/Dev/bbb-vision-site/assets/landing-slider-shots/tems.JPG",
+        "public_url": "https://bbbvision.vercel.app/assets/landing-slider-shots/tems.JPG",
+        "title": "Tems"
+      }
+    ]
+  }
+}

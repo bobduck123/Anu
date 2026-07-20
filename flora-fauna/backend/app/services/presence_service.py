@@ -41,6 +41,7 @@ from ..models import (
     User,
 )
 from ..time_utils import now_utc
+from .presence_editor_config import public_config_for_room, renderer_key_for_room
 
 
 PRESENCE_NODE_STATUSES = {
@@ -360,33 +361,465 @@ PRESENCE_DNA_CATEGORIES = {
     "composition",
     "signature",
 }
-PRESENCE_DNA_SOURCES = {"inferred", "demo_overlay", "node_metadata", "backend_persisted"}
+PRESENCE_DNA_SOURCES = {"inferred", "node_metadata", "backend_persisted"}
 PRESENCE_DNA_MAX_BYTES = 16 * 1024  # serialized size guard (16 KiB)
 PRESENCE_METADATA_MAX_BYTES = 64 * 1024
+PRESENCE_DNA_ENTITY_TYPES = {"individual", "studio", "collective", "organisation", "venue", "project"}
+PRESENCE_DNA_RELATIONSHIPS = {
+    "maker",
+    "performer",
+    "service_provider",
+    "teacher",
+    "organiser",
+    "consultant",
+    "host",
+    "caretaker",
+    "seller",
+    "advocate",
+}
+PRESENCE_DNA_PRACTICE_FIELDS = {
+    "music",
+    "visual_art",
+    "building_trade",
+    "healing",
+    "consulting",
+    "hospitality",
+    "education",
+    "community",
+    "culture",
+    "design",
+    "wellbeing",
+    "events",
+}
+PRESENCE_DNA_PRACTICE_MODES = {
+    "performance",
+    "commission",
+    "service",
+    "portfolio",
+    "program",
+    "product",
+    "space",
+    "advisory",
+    "craft",
+    "teaching",
+    "care",
+}
+PRESENCE_DNA_WORK_RHYTHMS = {
+    "one_off",
+    "recurring",
+    "project_based",
+    "seasonal",
+    "appointment_based",
+    "event_based",
+    "ongoing_relationship",
+}
+PRESENCE_DNA_PRIMARY_AUDIENCES = {
+    "clients",
+    "collectors",
+    "bookers",
+    "venues",
+    "families",
+    "funders",
+    "community",
+    "buyers",
+    "partners",
+    "employers",
+    "media",
+}
+PRESENCE_DNA_AUDIENCE_TEMPERATURES = {"cold", "warm", "referred", "existing_network", "institutional"}
+PRESENCE_DNA_DECISION_NEEDS = {
+    "trust",
+    "taste",
+    "proof",
+    "clarity",
+    "status",
+    "availability",
+    "safety",
+    "alignment",
+    "competence",
+}
+PRESENCE_DNA_PRIMARY_GOALS = {
+    "bookings",
+    "enquiries",
+    "commissions",
+    "sales",
+    "credibility",
+    "grant_readiness",
+    "press",
+    "donations",
+    "volunteers",
+    "memberships",
+    "event_attendance",
+}
+PRESENCE_DNA_CONVERSION_STYLES = {"direct", "soft", "premium", "editorial", "community", "application", "invitation"}
+PRESENCE_DNA_TEMPERAMENTS = {
+    "quiet",
+    "bold",
+    "warm",
+    "precise",
+    "raw",
+    "refined",
+    "playful",
+    "serious",
+    "spiritual",
+    "technical",
+    "experimental",
+    "grounded",
+}
+PRESENCE_DNA_ENERGIES = {"still", "slow", "alive", "kinetic", "ceremonial", "sharp", "soft", "dense", "minimal"}
+PRESENCE_DNA_STATUS_SIGNALS = {"accessible", "premium", "institutional", "underground", "community", "luxury", "craft", "expert"}
+PRESENCE_DNA_PROOF_TYPES = {
+    "portfolio",
+    "case_studies",
+    "testimonials",
+    "press",
+    "event_history",
+    "before_after",
+    "client_logos",
+    "certifications",
+    "program_outcomes",
+    "materials_process",
+    "community_endorsement",
+}
+PRESENCE_DNA_PROOF_DENSITIES = {"light", "moderate", "heavy"}
+PRESENCE_DNA_PROOF_POSITIONS = {"early", "midpage", "after_story", "near_cta"}
+PRESENCE_DNA_PALETTE_MODES = {
+    "earth",
+    "nocturnal",
+    "gallery_white",
+    "warm_neutral",
+    "high_contrast",
+    "soft_gradient",
+    "monochrome",
+    "material_based",
+    "cultural",
+    "cinematic",
+}
+PRESENCE_DNA_TEXTURES = {"none", "grain", "paper", "timber", "fabric", "stone", "light_leak", "scanline", "paint", "dust"}
+PRESENCE_DNA_IMAGE_TREATMENTS = {
+    "editorial",
+    "documentary",
+    "cinematic",
+    "clean_product",
+    "archive",
+    "warm_portrait",
+    "high_gloss",
+    "raw",
+    "glitch",
+    "duotone",
+    "halftone",
+    "polaroid",
+    "photocopy",
+    "projection",
+    "gallery_matte",
+}
+PRESENCE_DNA_ENTRY_TYPES = {
+    "portrait_hero",
+    "statement_hero",
+    "work_first",
+    "audio_first",
+    "service_first",
+    "map_first",
+    "quote_first",
+    "material_first",
+    "event_first",
+    "gallery_first",
+    "archive_first",
+}
+PRESENCE_DNA_SECTION_RHYTHMS = {
+    "editorial_scroll",
+    "modular_cards",
+    "gallery_flow",
+    "portal_sections",
+    "case_study_stack",
+    "timeline",
+    "service_ladder",
+    "split_panels",
+    "collage",
+    "index_wall",
+    "cinematic_chapters",
+}
+PRESENCE_DNA_NAVIGATION_MODES = {
+    "single_scroll",
+    "room_tabs",
+    "anchor_nav",
+    "portal_cards",
+    "story_path",
+    "mobile_drawer",
+    "bottom_sheet",
+    "glyph_nav",
+    "floating_index",
+}
+PRESENCE_DNA_SIGNATURE_MODULES = {
+    "audio_strip",
+    "gallery_wall",
+    "materials_board",
+    "before_after_slider",
+    "availability_panel",
+    "press_wall",
+    "project_timeline",
+    "map_memory",
+    "ritual_booking_panel",
+    "impact_counter",
+    "quote_oracle",
+    "process_reel",
+    "program_grid",
+    "commission_pathway",
+    "glitch_gallery",
+    "archive_wall",
+    "mobile_room_switcher",
+}
+PRESENCE_DNA_SIGNATURE_INTENSITIES = {"subtle", "featured", "hero_level"}
+PRESENCE_DNA_BLUEPRINTS = {
+    "editorial_identity",
+    "trust_conversion",
+    "proof_wall",
+    "atmosphere",
+    "program",
+    "craft",
+    "archive",
+    "booking",
+    "commission",
+    "civic",
+    "glitch_gallery",
+    "material_studio",
+    "nocturnal_sonic",
+    "field_record",
+}
+PRESENCE_DNA_MOTION_PRESETS = {
+    "controlled_glitch",
+    "archival_flicker",
+    "cinematic_drift",
+    "material_reveal",
+    "gallery_breath",
+    "scanline_noise",
+    "soft_parallax",
+    "editorial_snap",
+    "kinetic_index",
+    "tactile_hover",
+    "image_displacement",
+    "mobile_portal_nav",
+}
+PRESENCE_DNA_MOTION_INTENSITIES = {"off", "subtle", "featured", "high"}
+PRESENCE_DNA_TOP_LEVEL_KEYS = PRESENCE_DNA_CATEGORIES | {"source", "notes", "blueprint", "motion", "category", "tags"}
+PRESENCE_DNA_RESTRICTED_KEYS = {
+    "admin",
+    "apikey",
+    "authsubject",
+    "bearer",
+    "contactemail",
+    "contactphone",
+    "draftconfig",
+    "editableconfig",
+    "editoronly",
+    "email",
+    "internal",
+    "motionconfig",
+    "organisationid",
+    "owneremail",
+    "ownerid",
+    "owneruserid",
+    "phone",
+    "private",
+    "raweditableconfig",
+    "secret",
+    "servicerole",
+    "signedurl",
+    "styledna",
+    "tenantid",
+    "token",
+}
+PRESENCE_DNA_CATEGORY_SCHEMAS: dict[str, dict[str, Any]] = {
+    "entity": {
+        "entity_type": PRESENCE_DNA_ENTITY_TYPES,
+        "public_name": "string",
+        "relationship_to_work": PRESENCE_DNA_RELATIONSHIPS,
+    },
+    "practice": {
+        "field": PRESENCE_DNA_PRACTICE_FIELDS,
+        "practice_mode": PRESENCE_DNA_PRACTICE_MODES,
+        "work_rhythm": PRESENCE_DNA_WORK_RHYTHMS,
+    },
+    "audience": {
+        "primary_audience": PRESENCE_DNA_PRIMARY_AUDIENCES,
+        "audience_temperature": PRESENCE_DNA_AUDIENCE_TEMPERATURES,
+        "decision_need": PRESENCE_DNA_DECISION_NEEDS,
+    },
+    "goal": {
+        "primary_goal": PRESENCE_DNA_PRIMARY_GOALS,
+        "secondary_goals": ("list_enum", PRESENCE_DNA_PRIMARY_GOALS),
+        "conversion_style": PRESENCE_DNA_CONVERSION_STYLES,
+    },
+    "personality": {
+        "temperament": PRESENCE_DNA_TEMPERAMENTS,
+        "energy": PRESENCE_DNA_ENERGIES,
+        "status_signal": PRESENCE_DNA_STATUS_SIGNALS,
+    },
+    "proof": {
+        "proof_type": ("list_enum", PRESENCE_DNA_PROOF_TYPES),
+        "proof_density": PRESENCE_DNA_PROOF_DENSITIES,
+        "proof_position": PRESENCE_DNA_PROOF_POSITIONS,
+    },
+    "visual": {
+        "references": "string_list",
+        "palette_mode": PRESENCE_DNA_PALETTE_MODES,
+        "texture": PRESENCE_DNA_TEXTURES,
+        "image_treatment": PRESENCE_DNA_IMAGE_TREATMENTS,
+    },
+    "composition": {
+        "entry_type": PRESENCE_DNA_ENTRY_TYPES,
+        "section_rhythm": PRESENCE_DNA_SECTION_RHYTHMS,
+        "navigation_mode": PRESENCE_DNA_NAVIGATION_MODES,
+    },
+    "signature": {
+        "signature_module": PRESENCE_DNA_SIGNATURE_MODULES,
+        "signature_intensity": PRESENCE_DNA_SIGNATURE_INTENSITIES,
+    },
+}
+_CUSTOM_PRESENCE_PUBLIC_KEYS = {
+    "schema_version",
+    "custom_renderer_key",
+    "renderer_key",
+    "fidelity_status",
+    "updated_at",
+}
+_CUSTOM_PRESENCE_PUBLIC_SOURCE_KEYS = {
+    "reference_id",
+    "label",
+    "public_url",
+    "origin_url",
+}
+_PRESENCE_PUBLIC_PRIVATE_METADATA_KEYS = {
+    # Provisioning notes preserve ownership/audit context for operators,
+    # but the public Room contract must not expose internal user linkage.
+    "pilot_admin_provisioning",
+}
+
+
+def _compact_presence_dna_key(key: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", str(key).lower())
+
+
+def _assert_no_restricted_presence_dna_keys(value: Any, *, path: str = "presence_dna") -> None:
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            _assert_no_restricted_presence_dna_keys(item, path=f"{path}[{index}]")
+        return
+    if not isinstance(value, dict):
+        return
+    for key, child in value.items():
+        compact = _compact_presence_dna_key(key)
+        if compact in PRESENCE_DNA_RESTRICTED_KEYS or str(key).startswith("_"):
+            raise PresenceValidationError(f"{path}.{key} is not allowed in presence_dna.")
+        _assert_no_restricted_presence_dna_keys(child, path=f"{path}.{key}")
+
+
+def _validate_presence_dna_public_string(value: Any, *, path: str, max_length: int = 240) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise PresenceValidationError(f"{path} must be a string.")
+    cleaned = value.strip()
+    if len(cleaned) > max_length:
+        raise PresenceValidationError(f"{path} must be {max_length} characters or fewer.")
+    return cleaned
+
+
+def _validate_presence_dna_enum(value: Any, allowed: set[str], *, path: str) -> str | None:
+    cleaned = _validate_presence_dna_public_string(value, path=path, max_length=120)
+    if cleaned is None:
+        return None
+    if cleaned not in allowed:
+        raise PresenceValidationError(f"{path} must be one of {sorted(allowed)}.")
+    return cleaned
+
+
+def _validate_presence_dna_string_list(
+    value: Any,
+    *,
+    path: str,
+    max_items: int = 12,
+    max_length: int = 160,
+    allowed: set[str] | None = None,
+) -> list[str] | None:
+    if value is None:
+        return None
+    if not isinstance(value, list):
+        raise PresenceValidationError(f"{path} must be a list of strings.")
+    if len(value) > max_items:
+        raise PresenceValidationError(f"{path} supports at most {max_items} values.")
+    cleaned: list[str] = []
+    for index, item in enumerate(value):
+        text = _validate_presence_dna_public_string(item, path=f"{path}[{index}]", max_length=max_length)
+        if text is None:
+            continue
+        if allowed is not None and text not in allowed:
+            raise PresenceValidationError(f"{path}[{index}] must be one of {sorted(allowed)}.")
+        cleaned.append(text)
+    return cleaned
+
+
+def _validate_presence_dna_category(key: str, category_value: Any) -> dict[str, Any]:
+    if not isinstance(category_value, dict):
+        raise PresenceValidationError(f"presence_dna.{key} must be a JSON object.")
+    schema = PRESENCE_DNA_CATEGORY_SCHEMAS[key]
+    cleaned: dict[str, Any] = {}
+    for field, field_value in category_value.items():
+        if field not in schema:
+            raise PresenceValidationError(f"presence_dna.{key}.{field} is not supported.")
+        rule = schema[field]
+        path = f"presence_dna.{key}.{field}"
+        if rule == "string":
+            normalized = _validate_presence_dna_public_string(field_value, path=path)
+        elif rule == "string_list":
+            normalized = _validate_presence_dna_string_list(field_value, path=path)
+        elif isinstance(rule, tuple) and rule[0] == "list_enum":
+            normalized = _validate_presence_dna_string_list(field_value, path=path, allowed=rule[1])
+        else:
+            normalized = _validate_presence_dna_enum(field_value, rule, path=path)
+        if normalized is not None:
+            cleaned[field] = normalized
+    return cleaned
+
+
+def _validate_presence_dna_motion(value: Any) -> dict[str, Any] | None:
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise PresenceValidationError("presence_dna.motion must be a JSON object.")
+    cleaned: dict[str, Any] = {}
+    for key, sub in value.items():
+        if key == "preset":
+            normalized = _validate_presence_dna_enum(sub, PRESENCE_DNA_MOTION_PRESETS, path="presence_dna.motion.preset")
+        elif key == "intensity":
+            normalized = _validate_presence_dna_enum(sub, PRESENCE_DNA_MOTION_INTENSITIES, path="presence_dna.motion.intensity")
+        else:
+            raise PresenceValidationError(f"presence_dna.motion.{key} is not supported.")
+        if normalized is not None:
+            cleaned[key] = normalized
+    return cleaned
 
 
 def normalize_presence_dna(value: Any) -> dict[str, Any] | None:
     """Validate and return a sanitized Presence DNA dict, or None.
 
-    Validation is intentionally permissive: the frontend `lib/presence/dna/types.ts`
-    is the canonical authority. The backend ensures the shape is a dict,
-    enforces top-level keys, and rejects oversize payloads. Per-field
-    enum validation is deferred to a future pass.
+    Backend validation mirrors the frontend Presence DNA vocabulary for all
+    persisted enum-bearing fields while keeping categories optional for older
+    partial owner saves. Unknown and private/editor-only keys are rejected
+    recursively so public metadata remains a deterministic, public-safe record.
     """
     if value is None or value == "":
         return None
     if not isinstance(value, dict):
         raise PresenceValidationError("presence_dna must be a JSON object.")
+    _assert_no_restricted_presence_dna_keys(value)
     cleaned: dict[str, Any] = {}
+    for key in value:
+        if key not in PRESENCE_DNA_TOP_LEVEL_KEYS:
+            raise PresenceValidationError(f"presence_dna.{key} is not supported.")
     for key in PRESENCE_DNA_CATEGORIES:
-        if key not in value:
-            continue
-        category_value = value[key]
-        if not isinstance(category_value, dict):
-            raise PresenceValidationError(
-                f"presence_dna.{key} must be a JSON object."
-            )
-        cleaned[key] = category_value
+        if key in value:
+            cleaned[key] = _validate_presence_dna_category(key, value[key])
     if "source" in value:
         source = value.get("source")
         if source is not None and source not in PRESENCE_DNA_SOURCES:
@@ -397,15 +830,25 @@ def normalize_presence_dna(value: Any) -> dict[str, Any] | None:
         if source is not None:
             cleaned["source"] = source
     if "notes" in value:
-        notes = value.get("notes")
-        if notes is not None and not (
-            isinstance(notes, list) and all(isinstance(item, str) for item in notes)
-        ):
-            raise PresenceValidationError(
-                "presence_dna.notes must be a list of strings."
-            )
+        notes = _validate_presence_dna_string_list(value.get("notes"), path="presence_dna.notes", max_items=8, max_length=400)
         if notes is not None:
-            cleaned["notes"] = notes[:8]
+            cleaned["notes"] = notes
+    if "blueprint" in value:
+        blueprint = _validate_presence_dna_enum(value.get("blueprint"), PRESENCE_DNA_BLUEPRINTS, path="presence_dna.blueprint")
+        if blueprint is not None:
+            cleaned["blueprint"] = blueprint
+    if "motion" in value:
+        motion = _validate_presence_dna_motion(value.get("motion"))
+        if motion is not None:
+            cleaned["motion"] = motion
+    if "category" in value:
+        category = _validate_presence_dna_public_string(value.get("category"), path="presence_dna.category", max_length=80)
+        if category is not None:
+            cleaned["category"] = category
+    if "tags" in value:
+        tags = _validate_presence_dna_string_list(value.get("tags"), path="presence_dna.tags", max_items=12, max_length=80)
+        if tags is not None:
+            cleaned["tags"] = tags
     try:
         size = len(json.dumps(cleaned, ensure_ascii=False))
     except (TypeError, ValueError) as exc:
@@ -434,6 +877,8 @@ def normalize_presence_metadata(value: Any) -> dict[str, Any] | None:
             if normalized_dna is not None:
                 cleaned["presence_dna"] = normalized_dna
             continue
+        if key == "custom_presence" and sub is not None and not isinstance(sub, dict):
+            raise PresenceValidationError("metadata.custom_presence must be a JSON object.")
         cleaned[key] = sub
     try:
         size = len(json.dumps(cleaned, ensure_ascii=False))
@@ -444,6 +889,50 @@ def normalize_presence_metadata(value: Any) -> dict[str, Any] | None:
             f"metadata exceeds {PRESENCE_METADATA_MAX_BYTES} bytes."
         )
     return cleaned or None
+
+
+def public_presence_metadata(value: Any) -> dict[str, Any] | None:
+    metadata = dict(value or {}) if isinstance(value, dict) else {}
+    for key in _PRESENCE_PUBLIC_PRIVATE_METADATA_KEYS:
+        metadata.pop(key, None)
+    if "presence_dna" in metadata:
+        try:
+            normalized_dna = normalize_presence_dna(metadata.get("presence_dna"))
+        except PresenceValidationError:
+            metadata.pop("presence_dna", None)
+        else:
+            if normalized_dna is None:
+                metadata.pop("presence_dna", None)
+            else:
+                metadata["presence_dna"] = normalized_dna
+    custom = metadata.get("custom_presence")
+    if not isinstance(custom, dict):
+        return metadata or None
+
+    public_custom = {
+        key: custom[key]
+        for key in _CUSTOM_PRESENCE_PUBLIC_KEYS
+        if key in custom and custom.get(key) is not None
+    }
+    public_style = custom.get("public_style_dna")
+    if isinstance(public_style, dict):
+        public_custom["style_dna"] = public_style
+
+    source_reference = custom.get("source_site_reference")
+    if isinstance(source_reference, dict):
+        public_reference = {
+            key: source_reference[key]
+            for key in _CUSTOM_PRESENCE_PUBLIC_SOURCE_KEYS
+            if key in source_reference and source_reference.get(key) is not None
+        }
+        if public_reference:
+            public_custom["source_site_reference"] = public_reference
+
+    if public_custom:
+        metadata["custom_presence"] = public_custom
+    else:
+        metadata.pop("custom_presence", None)
+    return metadata or None
 
 
 def normalize_media_embeds(value: Any) -> list[dict[str, Any]]:
@@ -681,10 +1170,11 @@ def serialize_presence_node(
             "canonical_url": public_url_for_node(node),
             "image": node.social_preview_image_url or node.hero_image_url or node.cover_image_url or node.profile_image_url,
         },
-        # Presence DNA persistence. Public response exposes the full
-        # node_metadata so the DNA-driven renderer can read
-        # node.metadata.presence_dna directly.
-        "metadata": node.node_metadata or None,
+        # Presence DNA remains public for the DNA-driven renderer. Custom
+        # ingestion metadata exposes only its explicit public style subset.
+        "metadata": public_presence_metadata(node.node_metadata)
+        if public
+        else node.node_metadata or None,
     }
     if include_admin and not public:
         payload.update(
@@ -810,6 +1300,14 @@ def serialize_presence_node(
                     "handovers": [serialize_handover(item) for item in sorted(node.handovers, key=lambda row: (row.updated_at or now_utc()), reverse=True)[:50]],
                 }
             )
+    if public:
+        editable_config = public_config_for_room(node)
+        payload["editable_config"] = editable_config
+        payload["renderer_key"] = (
+            editable_config.get("renderer_key")
+            if isinstance(editable_config, dict) and editable_config.get("renderer_key")
+            else renderer_key_for_room(node)
+        )
     return payload
 
 
@@ -4324,15 +4822,12 @@ def seed_presence_demo_data() -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Presence DNA Pass 2 — seed the six DNA demo rooms with persisted DNA.
+# Presence DNA demo seed data.
 #
-# These six slugs map 1:1 to the frontend demo overlay
-# (`presence-app/lib/presence/dna/demoOverlays.ts`). Once they are
-# present in the backend, the frontend resolver picks the persisted DNA
-# over the demo overlay automatically (priority: persisted > overlay >
-# inferred). The frontend demo overlay therefore becomes a no-op for
-# these slugs; it can be safely retired once the backend seed has run
-# in every environment (see PRESENCE_DNA_PASS_2_REPORT.md).
+# These slugs are backend-persisted at node_metadata["presence_dna"] and
+# mirrored by local frontend fixtures at metadata.presence_dna. The old
+# frontend demo overlay fallback has been retired; resolver priority is
+# persisted metadata first, inferred DNA last.
 # ---------------------------------------------------------------------------
 
 _DNA_DEMO_BLUEPRINT: list[dict[str, Any]] = [
@@ -4447,6 +4942,108 @@ _DNA_DEMO_BLUEPRINT: list[dict[str, Any]] = [
             "visual": {"references": [], "palette_mode": "gallery_white", "texture": "paper", "image_treatment": "gallery_matte"},
             "composition": {"entry_type": "work_first", "section_rhythm": "gallery_flow", "navigation_mode": "anchor_nav"},
             "signature": {"signature_module": "gallery_wall", "signature_intensity": "featured"},
+        },
+    },
+    {
+        "slug": "ggm-christina-goddard",
+        "display_name": "Christina Kerkvliet Goddard",
+        "headline": "Christina Kerkvliet Goddard - practice archive and cultural memory",
+        "short_bio": "Australian cultural-community artist working across memory, colour, and lived landscape.",
+        "bio": (
+            "Christina Kerkvliet Goddard's practice moves between drawing, craft, "
+            "painting, and installation while holding memory, place, and everyday "
+            "observation as public story."
+        ),
+        "long_story": (
+            "This room treats Christina's work as a practice archive: a public "
+            "record of convergences, chance encounters, life-cycles, and the places "
+            "where memory appears through colour, line, and material."
+        ),
+        "practice_statement": (
+            "Memory Colours revisits and haunts its sites of episode as a way to "
+            "present how colour can generate memory, cultural context, and public story."
+        ),
+        "node_type": "artist",
+        "display_mode": "studio_practice",
+        "room_type": "artist_studio",
+        "theme_preset": "cultural_org",
+        "accent_color": "#111111",
+        "hero_title": "Colour as Memory",
+        "hero_subtitle": "A practice archive of watercolour, memory, and lived landscape.",
+        "hero_image_url": "https://christina-goddard.vercel.app/ggm/works/willow-of-port-arthur-2019.webp",
+        "cover_image_url": "https://christina-goddard.vercel.app/ggm/works/willow-of-port-arthur-2019.webp",
+        "profile_image_url": "https://christina-goddard.vercel.app/ggm/portrait/christina-kerkvliet-goddard-portrait.webp",
+        "location_label": "Moana, South Australia",
+        "availability_status": "Open to cultural/community partnerships and practice archive conversations",
+        "primary_cta_label": "Partner with us",
+        "works": [
+            {"title": "Bridle Road", "year": "2005", "medium": "Watercolour on paper", "image_url": "https://christina-goddard.vercel.app/ggm/works/bridle-road-2005.webp"},
+            {"title": "Thomas Road", "year": "2007", "medium": "Watercolour on paper", "image_url": "https://christina-goddard.vercel.app/ggm/works/thomas-road-2007.webp"},
+            {"title": "Goodnight Kiss", "year": "2007", "medium": "Watercolour on paper", "image_url": "https://christina-goddard.vercel.app/ggm/works/goodnight-kiss-2007.webp"},
+            {"title": "Gothic Tapestry", "year": "2008", "medium": "Watercolour on paper", "image_url": "https://christina-goddard.vercel.app/ggm/works/gothic-tapestry-2008.webp"},
+            {"title": "Burgundy Peaches", "year": "2008", "medium": "Watercolour on paper", "image_url": "https://christina-goddard.vercel.app/ggm/works/burgundy-peaches-2008.webp"},
+            {"title": "Last Dash", "year": "2009", "medium": "Watercolour on paper", "image_url": "https://christina-goddard.vercel.app/ggm/works/last-dash-2009.webp"},
+            {"title": "Empty Nest", "year": "2014", "medium": "Watercolour on paper", "image_url": "https://christina-goddard.vercel.app/ggm/works/empty-nest-2014.webp"},
+            {"title": "Willow of Port Arthur", "year": "2019", "medium": "Watercolour on paper", "image_url": "https://christina-goddard.vercel.app/ggm/works/willow-of-port-arthur-2019.webp"},
+        ],
+        "services": [
+            {
+                "title": "Practice archive conversation",
+                "description": "A guided conversation around Memory Colours, site memory, and the public context of selected works.",
+                "price_label": "On enquiry",
+                "duration_label": "60 min",
+            },
+            {
+                "title": "Community story session",
+                "description": "A small-group session for schools, community programs, or cultural partners exploring colour, memory, and place.",
+                "price_label": "On enquiry",
+                "duration_label": "Workshop format",
+            },
+        ],
+        "proof_items": [
+            {
+                "title": "Memory Colours practice archive",
+                "client_label": "Public story record",
+                "testimonial": "Selected works are held together here as a record of place, memory, material, and everyday observations behind the practice.",
+                "outcome": "Practice archive, 2005-2019",
+            },
+            {
+                "title": "GGM cultural-community pilot",
+                "client_label": "Presence pilot room",
+                "testimonial": "The room is shaped as a public cultural surface: artwork, story, evidence, and invitation without reducing the practice to a storefront.",
+                "outcome": "Cultural-community artist profile",
+            },
+        ],
+        "links": [
+            {"label": "Source portfolio", "url": "https://christina-goddard.vercel.app/", "link_type": "website"},
+            {"label": "Art Scene Today profile", "url": "http://artscenetoday.com/juried-exhibitions/coloring_outside_the_lines/christina_kerkvliet_goddard/", "link_type": "press"},
+        ],
+        "metadata": {
+            "custom_presence": {
+                "schema_version": "custom-presence-style-dna-v1",
+                "custom_renderer_key": "ggm-faithful-room-v1",
+                "fidelity_status": "source_dna_extracted",
+                "public_style_dna": {
+                    "renderer_key": "ggm-faithful-room-v1",
+                    "palette_mode": "cultural",
+                    "image_treatment": "archive",
+                    "entry_type": "archive_first",
+                },
+            }
+        },
+        "presence_dna": {
+            "entity": {"entity_type": "individual", "public_name": "Christina Kerkvliet Goddard", "relationship_to_work": "caretaker"},
+            "practice": {"field": "culture", "practice_mode": "program", "work_rhythm": "project_based"},
+            "audience": {"primary_audience": "community", "audience_temperature": "institutional", "decision_need": "alignment"},
+            "goal": {"primary_goal": "grant_readiness", "secondary_goals": ["credibility", "enquiries"], "conversion_style": "community"},
+            "personality": {"temperament": "serious", "energy": "ceremonial", "status_signal": "institutional"},
+            "proof": {"proof_type": ["portfolio", "program_outcomes", "community_endorsement", "press"], "proof_density": "heavy", "proof_position": "early"},
+            "visual": {"references": [], "palette_mode": "cultural", "texture": "paper", "image_treatment": "archive"},
+            "composition": {"entry_type": "archive_first", "section_rhythm": "timeline", "navigation_mode": "story_path"},
+            "signature": {"signature_module": "archive_wall", "signature_intensity": "featured"},
+            "notes": [
+                "Cultural/community artist DNA persisted as a practice archive and public story surface.",
+            ],
         },
     },
     {
@@ -4669,7 +5266,7 @@ _DNA_DEMO_BLUEPRINT: list[dict[str, Any]] = [
 
 
 def seed_presence_dna_demo_data() -> dict[str, Any]:
-    """Seed the six Presence DNA demo rooms with persisted DNA in node_metadata.
+    """Seed Presence DNA demo rooms with persisted DNA in node_metadata.
 
     Idempotent: if a slug already exists, the function updates its
     node_metadata['presence_dna'] in place rather than re-creating the
@@ -4708,9 +5305,15 @@ def seed_presence_dna_demo_data() -> dict[str, Any]:
 
         if existing:
             metadata = dict(existing.node_metadata or {})
+            entry_metadata = entry.get("metadata") if isinstance(entry.get("metadata"), dict) else {}
+            for key, value in entry_metadata.items():
+                if key not in metadata:
+                    metadata[key] = value
+                elif isinstance(metadata.get(key), dict) and isinstance(value, dict):
+                    metadata[key] = {**value, **metadata[key]}
             if presence_dna:
                 metadata["presence_dna"] = presence_dna
-            existing.node_metadata = metadata or None
+            existing.node_metadata = normalize_presence_metadata(metadata) or None
             summary.append({"slug": slug, "action": "metadata_updated"})
             continue
 

@@ -1,0 +1,110 @@
+{
+  "date": "2026-05-29",
+  "scope": "Retire GGM frontend demo DNA overlay dependency by using backend-backed Presence DNA persistence",
+  "persistenceContract": {
+    "location": "PresenceNode.node_metadata.presence_dna",
+    "publicShape": "PresenceNode.metadata.presence_dna",
+    "frontendFixtureMirror": "presence-app/lib/presence/demo/profiles.ts metadata.presence_dna",
+    "migrationRequired": false,
+    "reason": "PresenceNode.node_metadata already exists, is normalized, is serialized through the existing metadata contract, and requires no schema change."
+  },
+  "ggmDna": {
+    "slug": "ggm-christina-goddard",
+    "source": "backend_persisted",
+    "practiceField": "culture",
+    "practiceMode": "program",
+    "paletteMode": "cultural",
+    "imageTreatment": "archive",
+    "entryType": "archive_first",
+    "navigationMode": "story_path",
+    "signatureModule": "archive_wall",
+    "primaryGoal": "grant_readiness"
+  },
+  "overlayRetirement": {
+    "demoOverlaysContainsGgmEntry": false,
+    "ggmResolvesWithOverlayDisabled": true,
+    "remainingOverlayPurpose": "superseded: the later presence-dna-enum-hardening-overlay-retirement pass removed the remaining overlay module"
+  },
+  "safety": {
+    "publicRoutesChanged": false,
+    "studioRoomPublicPublishingAdded": false,
+    "privateDraftDnaPublicRouteStatus": 404,
+    "publicMetadataExposesPresenceDna": true,
+    "publicMetadataExposesEditorInternalFields": false,
+    "broadContactMappingAdded": false,
+    "runtimeAiAdded": false,
+    "candidateKitExposureChanged": false
+  },
+  "tests": [
+    {
+      "command": "python -m pytest tests\\test_presence_dna_persistence.py",
+      "result": "pass",
+      "details": "9 passed"
+    },
+    {
+      "command": "python -m pytest tests\\test_presence_dna_persistence.py tests\\test_presence_template_kit_draft_persistence.py tests\\test_presence_studio_editor_foundation.py",
+      "result": "pass",
+      "details": "29 passed; SQLAlchemy legacy warnings only"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\dna\\overlay.test.ts",
+      "result": "pass",
+      "details": "1 passed"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\uniqueness.test.ts",
+      "result": "pass",
+      "details": "all pairs distinct; rooms-gallery-painter and ggm-christina-goddard score 0.045"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\studio-room\\*.test.ts",
+      "result": "pass",
+      "details": "59 passed"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\**\\*.test.ts",
+      "result": "pass",
+      "details": "82 passed"
+    },
+    {
+      "command": "npm.cmd run typecheck",
+      "result": "pass",
+      "details": "tsc --noEmit passed"
+    },
+    {
+      "command": "npm.cmd run build",
+      "result": "pass",
+      "details": "Next.js build passed; emitted pre-existing multiple-lockfile workspace-root warning"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "details": "no whitespace errors"
+    },
+    {
+      "command": "runtime AI/LLM scan over changed runtime areas",
+      "result": "pass",
+      "details": "no OpenAI/Anthropic/langchain/AI SDK/runtime AI matches"
+    },
+    {
+      "command": "public route isolation grep",
+      "result": "pass",
+      "details": "no StudioRoomCanvas/editor/template draft imports found in public app/components surfaces"
+    },
+    {
+      "command": "changed-hunk broad contact/private field grep",
+      "result": "pass",
+      "details": "no changed-line broad contact/private field matches"
+    },
+    {
+      "command": "demo overlay dependency grep",
+      "result": "pass",
+      "details": "superseded: no active demoOverlays.ts dependency remains after the later hardening pass"
+    }
+  ],
+  "knownLimitations": [
+    "Superseded: backend enum validation is hardened in docs/program/evidence/presence-dna-enum-hardening-overlay-retirement/.",
+    "Superseded: six legacy local demo overlays were retired in docs/program/evidence/presence-dna-enum-hardening-overlay-retirement/.",
+    "Playwright owner lifecycle browser smoke was deferred in this DNA pass and is now covered by docs/program/evidence/presence-studio-browser-owner-lifecycle-smoke/."
+  ]
+}

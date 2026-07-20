@@ -1,5 +1,5 @@
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 os.environ["FLASK_ENV"] = "testing"
 os.environ["SECRET_KEY"] = "test-secret-key-for-control-token-scope-1234"
@@ -292,3 +292,24 @@ def test_forged_or_absent_managed_node_ids_do_not_widen_access_beyond_persisted_
         base_url="http://control.test",
     )
     assert absent_managed_denied.status_code == 403
+
+
+def test_control_token_grant_accepts_aware_hosted_expiry():
+    app = _build_app()
+    _seed_scope_fixture(app)
+
+    from manara_backend_app.extensions import db
+    from manara_backend_app.models import ControlTokenGrant, User
+    from manara_backend_app.security.control_plane import _is_control_token_grant_active
+
+    with app.app_context():
+        admin = User.query.filter_by(username="platform-admin").one()
+        grant = ControlTokenGrant(
+            jti="aware-hosted-expiry-grant",
+            user_id=admin.id,
+            expires_at=datetime.now(timezone.utc) + timedelta(minutes=5),
+        )
+        db.session.add(grant)
+        db.session.flush()
+
+        assert _is_control_token_grant_active({"jti": grant.jti}, admin.id) is True

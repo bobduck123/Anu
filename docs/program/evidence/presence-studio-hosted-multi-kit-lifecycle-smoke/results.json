@@ -1,0 +1,79 @@
+{
+  "date": "2026-05-31",
+  "agent": "Kimi",
+  "hosted_smoke_ran": true,
+  "hosted_smoke_passed": true,
+  "frontend_domain": "your-presence.vercel.app",
+  "backend_domain": "anu-back-end.vercel.app",
+  "kits_tested": [
+    {
+      "id": "gallery-artist",
+      "name": "Gallery Artist",
+      "duration_ms": 17600,
+      "passed": true
+    },
+    {
+      "id": "cultural-community-artist",
+      "name": "Cultural-Community Artist / Practice Archive",
+      "duration_ms": 17000,
+      "passed": true
+    },
+    {
+      "id": "material-tradie-proof-card",
+      "name": "Material / Tradie Proof Card",
+      "duration_ms": 16900,
+      "passed": true
+    },
+    {
+      "id": "healing-practitioner",
+      "name": "Healing Practitioner",
+      "duration_ms": 15900,
+      "passed": true
+    },
+    {
+      "id": "consultant-contractor",
+      "name": "Consultant / Contractor",
+      "duration_ms": 17800,
+      "passed": true
+    }
+  ],
+  "assertions": {
+    "template_kits_visible": "passed",
+    "candidate_kit_hidden": "passed",
+    "draft_created_per_kit": "passed",
+    "draft_state": "draft/private/unpublished",
+    "editor_shell_loads": "passed",
+    "studio_guide_visible": "passed",
+    "kit_identity_rendered": "passed",
+    "mobile_cta_visible": "passed",
+    "save_lifecycle": "passed",
+    "reload_persistence": "passed",
+    "no_publish_button": "passed",
+    "no_publish_requests": "passed",
+    "public_api_404": "passed",
+    "public_page_non_public": "passed",
+    "candidate_rejection_403": "passed"
+  },
+  "cleanup": {
+    "strategy": "manual",
+    "reason": "PRESENCE_E2E_CLEANUP_STRATEGY=control-delete and control credentials not provided",
+    "drafts_created": 5,
+    "annotation_types": ["hosted-created-room-id", "hosted-created-room-slug", "hosted-cleanup"]
+  },
+  "local_regression": {
+    "owner_lifecycle_chromium": "1 passed",
+    "multi_kit_chromium": "5 passed",
+    "unit_tests": "157 passed",
+    "typecheck": "pass",
+    "build": "pass"
+  },
+  "safety": {
+    "public_route_isolation": "unchanged",
+    "no_publish_flow": "verified",
+    "runtime_ai_llm": "none",
+    "secret_exposure": "none",
+    "broad_private_contact_mapping": "none"
+  },
+  "release_decision": "GO",
+  "caveat": "Five manual cleanup items exist (one per kit). Non-blocking for pilot readiness."
+}

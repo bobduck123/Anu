@@ -1,0 +1,61 @@
+{
+  "evidence": "presence-auth-gate-session-persistence-proof",
+  "date": "2026-05-25",
+  "scope": "Owner auth persistence and standard/debug/preview route gate parity",
+  "hosted_status": "NOT_RUN_AFTER_FIX",
+  "acceptance": {
+    "standard_editor_owner_access": "passed_local",
+    "debug_editor_owner_access": "passed_local",
+    "standard_debug_parity": "passed_local",
+    "preview_owner_access": "passed_local",
+    "anonymous_editor_denial": "passed_local",
+    "anonymous_preview_denial": "passed_local",
+    "non_owner_denial": "passed_local",
+    "one_login_editor_access": "passed_local",
+    "hard_refresh_editor_access": "passed_local",
+    "transient_recovery": "passed_local",
+    "save_publish_regression": "passed_local",
+    "public_boundary": "passed_local",
+    "RoomKey_published_only": "passed_local"
+  },
+  "tests": {
+    "typecheck": {
+      "command": "npm.cmd run typecheck",
+      "status": "passed"
+    },
+    "build": {
+      "command": "npm.cmd run build",
+      "status": "passed"
+    },
+    "unit_contracts": {
+      "command": "node --test --experimental-strip-types lib\\api\\client.test.ts lib\\editor\\readiness.test.ts lib\\presence\\render\\resolver.test.ts lib\\presence\\widgets\\registry.test.ts lib\\presence\\option-packs\\registry.test.ts lib\\presence\\typography\\registry.test.ts lib\\editor\\canvasModel.test.ts lib\\editor\\canvasMutations.test.ts lib\\editor\\assetValidator.test.ts lib\\editor\\diffEngine.test.ts lib\\api\\editor.test.ts lib\\api\\presenceGraph.test.ts",
+      "status": "passed",
+      "passed": 38,
+      "failed": 0
+    },
+    "backend_boundaries": {
+      "command": "python -m pytest tests\\test_presence_studio_editor_foundation.py tests\\test_presence_graph_integration_proof.py tests\\test_presence_pass_paths.py tests\\test_presence_cors.py -q -p no:cacheprovider",
+      "status": "passed",
+      "passed": 25,
+      "failed": 0
+    },
+    "browser_regressions": {
+      "command": "npx playwright test tests/e2e/canvas-builder-auth-gate-session.spec.ts tests/e2e/canvas-builder-preview-publish-p0.spec.ts tests/e2e/canvas-builder-parity.spec.ts tests/e2e/presence-canvas-direct-manipulation.spec.ts tests/e2e/presence-studio-editor.spec.ts tests/e2e/presence-pass-paths.spec.ts --workers=1 --retries=0 --reporter=list",
+      "status": "passed",
+      "passed": 22,
+      "failed": 0
+    },
+    "diff_check": {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  },
+  "hosted_required": [
+    "Fresh incognito owner sign-in exactly once.",
+    "Standard editor and hard refresh render without debug query.",
+    "Debug editor renders the same Canvas plus display-only diagnostics.",
+    "Standard private preview renders the saved draft.",
+    "Anonymous standard/debug/preview routes remain denied.",
+    "Save, explicit publish, public update, RoomKey check, and cleanup complete."
+  ]
+}

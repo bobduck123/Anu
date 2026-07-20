@@ -1,0 +1,51 @@
+{
+  "date": "2026-05-31",
+  "agent": "Kimi",
+  "hosted_smoke_ran": true,
+  "hosted_smoke_passed": true,
+  "frontend_domain": "your-presence.vercel.app",
+  "backend_domain": "anu-back-end.vercel.app",
+  "primary_kit": "cultural-community-artist",
+  "auth_strategy": "hosted Supabase email/password sign-in via /auth/sign-in; cookie-based token extraction",
+  "spec_fix": "readSupabaseAccessToken updated to support cookie-based auth (sb-<ref>-auth-token.0/.1 cookies with base64- prefix)",
+  "assertions": {
+    "sign_in": "passed",
+    "template_kits_visible": "passed",
+    "candidate_kit_hidden": "passed",
+    "draft_created": "passed",
+    "draft_state": "draft/private/unpublished/support_state=primary",
+    "editor_shell_loads": "passed",
+    "studio_guide_visible": "passed",
+    "kit_identity_rendered": "passed",
+    "mobile_cta_visible": "passed",
+    "save_lifecycle": "passed",
+    "reload_persistence": "passed",
+    "no_publish_button": "passed",
+    "no_publish_requests": "passed",
+    "no_public_editor_links": "passed",
+    "public_api_404": "passed",
+    "public_page_non_public": "passed",
+    "candidate_rejection_403": "passed"
+  },
+  "cleanup": {
+    "strategy": "manual",
+    "reason": "PRESENCE_E2E_CLEANUP_STRATEGY=control-delete and control credentials not provided",
+    "annotation_types": ["hosted-created-room-id", "hosted-created-room-slug", "hosted-cleanup"]
+  },
+  "local_regression": {
+    "owner_lifecycle_chromium": "1 passed",
+    "multi_kit_chromium": "5 passed",
+    "unit_tests": "157 passed",
+    "typecheck": "pass",
+    "build": "pass"
+  },
+  "safety": {
+    "public_route_isolation": "unchanged",
+    "no_publish_flow": "verified",
+    "runtime_ai_llm": "none",
+    "secret_exposure": "none",
+    "broad_private_contact_mapping": "none"
+  },
+  "release_decision": "GO",
+  "caveat": "One manual cleanup item exists (created test draft). Non-blocking for pilot readiness."
+}

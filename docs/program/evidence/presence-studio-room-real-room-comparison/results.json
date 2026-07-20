@@ -1,0 +1,38 @@
+{
+  "date": "2026-05-29",
+  "route": "/internal/studio-room-comparison/[roomRef]",
+  "owner_gated": true,
+  "query_param_bypass": false,
+  "hidden_from_navigation": true,
+  "public_routes_replaced": false,
+  "studio_room_public_route_import": false,
+  "loads_real_room_data": "owner/staff protected owner endpoints only",
+  "uses_draft_when_available": true,
+  "sanitized_payload_used": true,
+  "raw_editable_config_displayed": false,
+  "raw_owner_auth_fields_displayed": false,
+  "private_contact_fields_mapped": false,
+  "explicit_public_contact_fields_mapped": true,
+  "media_embeds_added": false,
+  "ai_runtime_added": false,
+  "tests": {
+    "studioRoom": "pass",
+    "studioRoomAdapters": "pass",
+    "studioRoomSemanticAdapter": "pass",
+    "studioRoomAssessment": "pass",
+    "studioRoomInternalPreview": "pass",
+    "studioRoomPublicRender": "pass",
+    "presenceWorldNavigator": "pass",
+    "typecheck": "pass",
+    "build": "pass",
+    "gitDiffCheck": "pass",
+    "aiRuntimeScan": "pass_no_matches",
+    "localTestSweepExceptUniqueness": "pass",
+    "presenceUniquenessTest": "fail_existing_demo_fixture_similarity"
+  },
+  "remaining_risks": [
+    "The route is client-gated using the existing Studio owner access pattern; server-rendered HTML contains no room data before protected client reads complete.",
+    "Hosted owner/staff behavior should be smoke-tested before using this as an operator workflow."
+  ],
+  "recommended_next_pass": "Prototype kit extraction from assessed high-coverage Studio Room candidates."
+}

@@ -1,0 +1,248 @@
+{
+  "date": "2026-05-30",
+  "scope": "Retire remaining frontend Presence DNA demo overlays and harden backend Presence DNA enum/allowlist validation",
+  "persistenceContract": {
+    "location": "PresenceNode.node_metadata.presence_dna",
+    "publicShape": "metadata.presence_dna",
+    "migrationRequired": false,
+    "resolverPriority": ["backend_persisted", "inferred"],
+    "reason": "node_metadata already persists public-safe JSON and is compatible with backend seeds, owner/control-plane reads, and existing public metadata serialization."
+  },
+  "overlayRetirement": {
+    "runtimeOverlayFileRemoved": "presence-app/lib/presence/dna/demoOverlays.ts",
+    "activeOverlayImportsRemaining": false,
+    "slugsMigrated": [
+      "rooms-underground-dj",
+      "rooms-gallery-painter",
+      "rooms-material-carpenter",
+      "rooms-local-carpenter",
+      "rooms-community-healer",
+      "rooms-sharp-consultant",
+      "ggm-christina-goddard"
+    ],
+    "fixtureBackedMetadata": true,
+    "backendSeededMetadata": true
+  },
+  "validationContract": {
+    "sources": ["inferred", "node_metadata", "backend_persisted"],
+    "blueprints": [
+      "editorial_identity",
+      "trust_conversion",
+      "proof_wall",
+      "atmosphere",
+      "program",
+      "craft",
+      "archive",
+      "booking",
+      "commission",
+      "civic",
+      "glitch_gallery",
+      "material_studio",
+      "nocturnal_sonic",
+      "field_record"
+    ],
+    "signatureModules": [
+      "audio_strip",
+      "gallery_wall",
+      "materials_board",
+      "before_after_slider",
+      "availability_panel",
+      "press_wall",
+      "project_timeline",
+      "map_memory",
+      "ritual_booking_panel",
+      "impact_counter",
+      "quote_oracle",
+      "process_reel",
+      "program_grid",
+      "commission_pathway",
+      "glitch_gallery",
+      "archive_wall",
+      "mobile_room_switcher"
+    ],
+    "motionPresets": [
+      "controlled_glitch",
+      "archival_flicker",
+      "cinematic_drift",
+      "material_reveal",
+      "gallery_breath",
+      "scanline_noise",
+      "soft_parallax",
+      "editorial_snap",
+      "kinetic_index",
+      "tactile_hover",
+      "image_displacement",
+      "mobile_portal_nav"
+    ],
+    "motionIntensities": ["off", "subtle", "featured", "high"],
+    "paletteModes": [
+      "earth",
+      "nocturnal",
+      "gallery_white",
+      "warm_neutral",
+      "high_contrast",
+      "soft_gradient",
+      "monochrome",
+      "material_based",
+      "cultural",
+      "cinematic"
+    ],
+    "imageTreatments": [
+      "editorial",
+      "documentary",
+      "cinematic",
+      "clean_product",
+      "archive",
+      "warm_portrait",
+      "high_gloss",
+      "raw",
+      "glitch",
+      "duotone",
+      "halftone",
+      "polaroid",
+      "photocopy",
+      "projection",
+      "gallery_matte"
+    ],
+    "entryTypes": [
+      "portrait_hero",
+      "statement_hero",
+      "work_first",
+      "audio_first",
+      "service_first",
+      "map_first",
+      "quote_first",
+      "material_first",
+      "event_first",
+      "gallery_first",
+      "archive_first"
+    ],
+    "navigationModes": [
+      "single_scroll",
+      "room_tabs",
+      "anchor_nav",
+      "portal_cards",
+      "story_path",
+      "mobile_drawer",
+      "bottom_sheet",
+      "glyph_nav",
+      "floating_index"
+    ],
+    "boundedOpenFields": ["category", "tags", "notes", "entity.public_name", "visual.references"],
+    "restrictedKeysRejectedRecursively": [
+      "admin",
+      "apikey",
+      "authsubject",
+      "contactemail",
+      "contactphone",
+      "draftconfig",
+      "editableconfig",
+      "editoronly",
+      "email",
+      "internal",
+      "motionconfig",
+      "owner_user_id",
+      "phone",
+      "private",
+      "raweditableconfig",
+      "secret",
+      "styledna",
+      "tenantid",
+      "token"
+    ]
+  },
+  "rejectedExamplesCovered": [
+    "presence_dna.entity as string",
+    "presence_dna.source = demo_overlay",
+    "presence_dna.practice.field = crypto_astrology",
+    "presence_dna.visual.palette unsupported field",
+    "presence_dna.signature.editorOnly nested private key",
+    "legacy persisted public presence_dna with editorOnly key omitted from public metadata"
+  ],
+  "safety": {
+    "publicRoutesChanged": false,
+    "studioRoomPublicPublishingAdded": false,
+    "runtimeAiAdded": false,
+    "candidateKitExposureChanged": false,
+    "privateDraftDnaPublicRouteStatus": 404,
+    "publicSerializerOmitsInvalidLegacyDna": true,
+    "broadContactMappingAdded": false
+  },
+  "tests": [
+    {
+      "command": "python -m pytest tests\\test_presence_dna_persistence.py",
+      "result": "pass",
+      "details": "10 passed; SQLAlchemy legacy warnings and local pytest cache permission warning only"
+    },
+    {
+      "command": "python -m pytest tests\\test_presence_dna_persistence.py tests\\test_presence_template_kit_draft_persistence.py tests\\test_presence_studio_editor_foundation.py",
+      "result": "pass",
+      "details": "30 passed; SQLAlchemy legacy warnings and local pytest cache permission warning only"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\dna\\overlay.test.ts",
+      "result": "pass",
+      "details": "2 passed"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\uniqueness.test.ts",
+      "result": "pass",
+      "details": "all seven demo rooms distinct; gallery-painter vs GGM score 0.045; threshold unchanged"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\studio-room\\*.test.ts",
+      "result": "pass",
+      "details": "59 passed"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\**\\*.test.ts",
+      "result": "pass",
+      "details": "82 passed"
+    },
+    {
+      "command": "npm.cmd run typecheck",
+      "result": "pass",
+      "details": "tsc --noEmit passed"
+    },
+    {
+      "command": "npm.cmd run build",
+      "result": "pass",
+      "details": "Next.js build passed; emitted pre-existing multiple-lockfile workspace-root warning"
+    },
+    {
+      "command": "npx playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=chromium",
+      "result": "pass",
+      "details": "1 passed"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "details": "no whitespace errors; git emitted CRLF-to-LF warning for backend service file"
+    },
+    {
+      "command": "public route isolation grep",
+      "result": "pass",
+      "details": "no StudioRoomCanvas/editor/template draft imports found in public app/components surfaces"
+    },
+    {
+      "command": "runtime AI/LLM changed-hunk scan",
+      "result": "pass",
+      "details": "no changed OpenAI/Anthropic/langchain/AI SDK/chatbot/model-inference references"
+    },
+    {
+      "command": "broad contact/private changed-hunk grep",
+      "result": "pass",
+      "details": "only denylist additions for email and phone inside rejected presence_dna keys"
+    },
+    {
+      "command": "active demo overlay dependency grep",
+      "result": "pass",
+      "details": "no demoOverlays.ts import, demoDnaForSlug call, or overlay feature flag remains"
+    }
+  ],
+  "knownLimitations": [
+    "category and tags remain bounded strings/lists rather than fixed enums.",
+    "Historical documentation may still mention earlier overlay phases.",
+    "Cross-browser Playwright owner lifecycle smoke remains a recommended next pass."
+  ]
+}

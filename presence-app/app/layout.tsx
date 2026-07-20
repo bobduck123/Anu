@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: "Presence", template: "%s | Presence" },
-  description: "Creative portfolio and professional presence",
+  description: "Not a profile. A place people can enter.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ??
       process.env.NEXT_PUBLIC_PRESENCE_PUBLIC_ORIGIN ??
@@ -24,6 +24,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        />
+        <style>{`
+          :root {
+            --font-presence-display: "Instrument Serif", "Cormorant Garamond", "Times New Roman", serif;
+            --font-presence-ui: "Geist", "Helvetica Neue", Helvetica, ui-sans-serif, sans-serif;
+            --font-presence-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+          }
+        `}</style>
+      </head>
       <body>{children}</body>
     </html>
   );

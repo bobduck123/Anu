@@ -1,0 +1,93 @@
+{
+  "operation": {
+    "assignment_plan": "convert_existing_exact_slug",
+    "backup": {
+      "backup_dir": "C:\\Dev\\Flora_fauna\\presence-app\\docs\\program\\evidence\\presence-studio-v2-bbbvision-hosted-migration\\backup",
+      "files": [
+        "room-29-bbbvision-backup.json",
+        "backup_manifest.json"
+      ],
+      "room_count": 1
+    },
+    "creation": {
+      "room_created": false,
+      "tenant_created": false
+    },
+    "environment": "hosted_controlled_launch",
+    "mode": "apply",
+    "mutated": true,
+    "owner": {
+      "email_redacted": "e4***@gmail.com",
+      "presence_app_user_exists": true,
+      "presence_app_user_id": 1,
+      "presence_role": "platform_admin",
+      "presence_user_active": true,
+      "secret_values_printed": false,
+      "stored_subject_fingerprint": "ec6dd2ae7590",
+      "supabase_auth_user_exists": true,
+      "supabase_email_confirmed": true,
+      "supabase_providers": [
+        "email"
+      ],
+      "supabase_subject_fingerprint": "ec6dd2ae7590",
+      "supabase_subject_matches_presence": true,
+      "tokens_printed": false
+    },
+    "public_api_checks": {
+      "public_api_forbidden_terms_absent": true,
+      "public_api_has_bbbvision_style": true,
+      "public_api_has_renderer": true,
+      "public_api_ok": true,
+      "public_api_status": 200
+    },
+    "rollback": {
+      "backup_dir": "C:\\Dev\\Flora_fauna\\presence-app\\docs\\program\\evidence\\presence-studio-v2-bbbvision-hosted-migration\\backup",
+      "created_new_room": false,
+      "recommended_path": "restore the backed-up room fields and editable config versions"
+    },
+    "room": {
+      "id": 29,
+      "owner_user_id": 1,
+      "public_status": "public",
+      "slug": "bbbvision",
+      "status": "published",
+      "title": "bbb.vision",
+      "visibility": "public"
+    },
+    "secret_values_printed": false,
+    "seed": {
+      "asset_url_origin": "https://bbbvision.vercel.app",
+      "cta_objects": 1,
+      "editor_api": {
+        "asset_count": 20,
+        "assets_status": 200,
+        "draft_save_status": 201,
+        "draft_version": 2,
+        "overview_after_status": 200,
+        "overview_before_status": 200,
+        "preview_status": 200,
+        "publish_status": 200,
+        "published_version": 2
+      },
+      "gallery_assets": 10,
+      "method": "owner_editor_api_via_existing_supabase_subject",
+      "public_style_preset": "bbbvision-threshold-gallery",
+      "renderer_key": "presence-studio-v2-room",
+      "source_local_path": "C:/Dev/bbb-vision-site",
+      "text_story_objects": 1,
+      "threshold_assets": 10
+    },
+    "status": "applied",
+    "tokens_printed": false
+  },
+  "schema": {
+    "required_tables_present": [
+      "node",
+      "presence_editable_config",
+      "presence_node",
+      "user"
+    ]
+  },
+  "secret_values_printed": false,
+  "tokens_printed": false
+}

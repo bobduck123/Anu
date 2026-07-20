@@ -4,7 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { fetchPublicWorkDetail } from "@/lib/api/public";
+import { fetchDemoOrPublicNode } from "@/lib/presence/demo/fetch";
 import { Chip } from "@/components/ui";
+import { isGgmFaithfulRoom } from "@/lib/presence/ggm/activate";
+import { ggmWorkBySlug } from "@/lib/presence/ggm/source";
+import GgmFaithfulRoom from "@/components/presence/ggm/GgmFaithfulRoom";
+import { createPublicRenderPayload } from "@/lib/presence/render/publicPayload";
+import { canUsePublicDemoProfileFallback } from "@/lib/presence/publicContainment";
 
 interface Props {
   params: Promise<{ slug: string; workId: string }>;
@@ -25,20 +31,51 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     };
   } catch {
+    // GGM fallback metadata when the backend doesn't yet hold the work.
+    const ggm = canUsePublicDemoProfileFallback(slug) ? ggmWorkBySlug(workId) : null;
+    if (ggm) {
+      return {
+        title: `${ggm.title} — Christina Kerkvliet Goddard`,
+        description: ggm.description,
+      };
+    }
     return { title: "Work" };
   }
 }
 
 export default async function WorkDetailPage({ params }: Props) {
   const { slug, workId } = await params;
+
+  // GGM faithful renderer path. We try the standard backend work-detail
+  // fetch first; if the backend has the work it wins. Otherwise — and for
+  // every GGM Room as identified by `isGgmFaithfulRoom` — we render the
+  // faithful detail UI from our canonical source content.
   let detail;
   try {
     detail = await fetchPublicWorkDetail(slug, workId);
   } catch {
+    // Detail not available in backend — only retry through GGM faithful
+    // path if the Room itself is recognised as GGM.
+    try {
+      const node = await fetchDemoOrPublicNode(slug);
+      if (isGgmFaithfulRoom(node)) {
+        const publicPayload = createPublicRenderPayload(node);
+        return <GgmFaithfulRoom node={publicPayload.node} model={publicPayload.renderModel} focusWorkSlug={workId} />;
+      }
+    } catch {
+      // ignore — falls through to notFound below.
+    }
     notFound();
   }
 
   const { node, work, collection } = detail;
+
+  // If the Room is GGM, prefer the faithful detail surface even when the
+  // backend returned data.
+  if (isGgmFaithfulRoom(node)) {
+    const publicPayload = createPublicRenderPayload(node);
+    return <GgmFaithfulRoom node={publicPayload.node} model={publicPayload.renderModel} focusWorkSlug={workId} />;
+  }
 
   return (
     <div className="min-h-dvh bg-[var(--p-bg)]">

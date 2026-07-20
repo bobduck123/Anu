@@ -1,0 +1,48 @@
+{
+  "schema": {
+    "required_tables_present": [
+      "encounter",
+      "node",
+      "presence_enquiry",
+      "presence_node",
+      "presence_pass",
+      "room_key",
+      "user"
+    ]
+  },
+  "secret_values_printed": false,
+  "setup": {
+    "actions": [
+      "verified_tenant",
+      "verified_owner",
+      "verified_room",
+      "verified_isolation_room",
+      "verified_pass"
+    ],
+    "enquiry_destination_configured": false,
+    "enquiry_expected": "capture_only",
+    "environment": "hosted_controlled_launch",
+    "foreign_room_id": 12,
+    "hall_id": null,
+    "halls": "deferred",
+    "mode": "apply",
+    "owner_user_id": 21,
+    "presence_pass_id": 2,
+    "private_env_written": true,
+    "qr_payload_template": "https://your-presence.vercel.app/r/<roomkey-token>",
+    "revoked_room_key_id": 3,
+    "rollback_owner": "controlled launch operator",
+    "room_id": 11,
+    "room_key_id": 2,
+    "room_slug": "ggm-christina-goddard",
+    "room_status": "published",
+    "room_visibility": "public",
+    "secret_values_printed": false,
+    "tenant_id": 3,
+    "tokens_written": {
+      "owner_token": true,
+      "revoked_room_key_token": true,
+      "room_key_token": true
+    }
+  }
+}

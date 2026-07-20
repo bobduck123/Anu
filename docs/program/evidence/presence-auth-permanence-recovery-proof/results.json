@@ -1,0 +1,29 @@
+{
+  "date": "2026-05-22",
+  "decision": "NO_GO",
+  "root_cause": "Supabase SSR browser/server clients were present without the Next proxy session refresh path required for cookie-backed auth permanence.",
+  "implemented": [
+    "presence-app proxy session update path using auth.getClaims",
+    "hosted real-session Playwright auth permanence harness",
+    "Supabase public publishable-key fallback"
+  ],
+  "local_checks": [
+    {
+      "command": "npm.cmd run typecheck",
+      "result": "pass"
+    },
+    {
+      "command": "npm.cmd run build",
+      "result": "pass",
+      "note": "Next production build reports Proxy (Middleware)."
+    }
+  ],
+  "hosted_auth_smoke": {
+    "result": "pending",
+    "reason": "No authenticated hosted browser storage state or interactive GGM owner sign-in was available in this workspace after the local fix."
+  },
+  "blockers": [
+    "Deploy the frontend proxy auth fix.",
+    "Run hosted real-session navigation, refresh, analytics, passes, logout, and protected-page denial smoke."
+  ]
+}

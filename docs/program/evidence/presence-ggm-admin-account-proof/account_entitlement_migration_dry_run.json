@@ -1,0 +1,24 @@
+{
+  "after": {
+    "columns": [],
+    "indexes": [],
+    "table_exists": false
+  },
+  "before": {
+    "columns": [],
+    "indexes": [],
+    "table_exists": false
+  },
+  "destructive_reset_run": false,
+  "environment": "hosted_controlled_launch",
+  "migration_path": "flora-fauna\\backend\\migrations\\versions\\20260522_presence_plan_entitlements.sql",
+  "operation": "dry_run",
+  "secret_values_printed": false,
+  "target": {
+    "database": "postgres",
+    "driver": "postgresql",
+    "host": "aws-1-us-east-1.pooler.supabase.com",
+    "password_printed": false,
+    "port": 6543
+  }
+}

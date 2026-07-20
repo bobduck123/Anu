@@ -1,0 +1,136 @@
+{
+  "generated_at": "2026-05-22T06:52:54Z",
+  "inputs": {
+    "backend_url": "https://anu-back-end.vercel.app",
+    "room_id": "11",
+    "room_slug": "ggm-christina-goddard",
+    "submit_enquiry": true
+  },
+  "name": "ggm_owner_analytics_verification",
+  "notes": [
+    "Save/follow, Hall, portal, stall, and Path events are not required by the GGM first-pilot plan unless those surfaces are enabled.",
+    "Both analytics APIs are checked: graph RoomKey encounter metrics and Presence Node view/enquiry metrics."
+  ],
+  "result": "pass",
+  "secret_values_printed": false,
+  "steps": [
+    {
+      "data": {
+        "encounters_count": 1,
+        "payload_shape": [
+          "data",
+          "ok",
+          "request_id"
+        ]
+      },
+      "http_status": 200,
+      "latency_ms": 1490,
+      "name": "graph_analytics_baseline",
+      "reason": "Graph analytics baseline returned aggregate RoomKey metrics.",
+      "response_shape_matched": true,
+      "route": "/api/presence/owner/rooms/11/analytics",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "payload_shape": [
+          "data",
+          "ok"
+        ],
+        "total_enquiries": 2,
+        "total_views": 3
+      },
+      "http_status": 200,
+      "latency_ms": 1197,
+      "name": "node_analytics_baseline",
+      "reason": "Node analytics baseline returned Room view/enquiry counts.",
+      "response_shape_matched": true,
+      "route": "/api/presence/owner/nodes/11/analytics",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "encounter_id": 10
+      },
+      "http_status": 200,
+      "latency_ms": 1197,
+      "name": "pilot_roomkey_interaction",
+      "reason": "RoomKey interaction executed for analytics proof.",
+      "response_shape_matched": true,
+      "route": "/api/presence/keys/<roomkey-token>/resolve",
+      "status": "pass"
+    },
+    {
+      "data": {},
+      "http_status": 200,
+      "latency_ms": 1459,
+      "name": "pilot_public_room_open",
+      "reason": "Public Room open interaction executed for analytics proof.",
+      "response_shape_matched": true,
+      "route": "/api/presence/public/ggm-christina-goddard",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "delivery_status": "logged_fallback",
+        "expected_routing": "capture_only"
+      },
+      "http_status": 201,
+      "latency_ms": 1261,
+      "name": "pilot_enquiry_interaction",
+      "reason": "Safe enquiry interaction executed for analytics proof.",
+      "response_shape_matched": true,
+      "route": "/api/presence/public/ggm-christina-goddard/enquiries",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "encounters_after": 2,
+        "encounters_before": 1,
+        "private_identity_key_seen": false
+      },
+      "http_status": 200,
+      "latency_ms": 1472,
+      "name": "graph_analytics_after_interactions",
+      "reason": "Owner graph analytics increments without private Observer identity keys.",
+      "response_shape_matched": true,
+      "route": "/api/presence/owner/rooms/11/analytics",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "enquiries_after": 3,
+        "enquiries_before": 2,
+        "private_identity_key_seen": false,
+        "views_after": 4,
+        "views_before": 3
+      },
+      "http_status": 200,
+      "latency_ms": 1179,
+      "name": "node_analytics_after_interactions",
+      "reason": "Owner node analytics reflects public activity with aggregate-safe shape.",
+      "response_shape_matched": true,
+      "route": "/api/presence/owner/nodes/11/analytics",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "payload_shape": [
+          "error",
+          "ok",
+          "request_id"
+        ]
+      },
+      "http_status": 403,
+      "latency_ms": 1754,
+      "name": "owner_analytics_isolation",
+      "reason": "GGM owner token cannot read another owner's Room analytics.",
+      "response_shape_matched": true,
+      "route": "/api/presence/owner/rooms/12/analytics",
+      "status": "pass"
+    }
+  ],
+  "summary": {
+    "pass": 8
+  }
+}

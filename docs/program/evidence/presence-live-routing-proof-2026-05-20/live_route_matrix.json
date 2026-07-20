@@ -1,0 +1,222 @@
+{
+  "proof_name": "Presence live routing proof",
+  "date": "2026-05-20",
+  "frontend_origin": "https://your-presence.vercel.app",
+  "backend_origin": "https://anu-back-end.vercel.app",
+  "observed_commit": {
+    "sha": "86dded077a8715f0ad45c72d955051884d09db37",
+    "short_sha": "86dded0",
+    "evidence": "Production root HTML contains the route and copy introduced by commit 86dded0: Start your Presence links to /presence-chooser, top navigation says Owner login, and owner card copy says Open owner workspace.",
+    "direct_vercel_commit_header_available": false
+  },
+  "vercel_audit": {
+    "production_domain": "your-presence.vercel.app",
+    "project_name": "not available from local repo or public response headers",
+    "vercel_cli_available": false,
+    "local_vercel_project_link": "none found",
+    "deployed_branch": "inferred: main or feature/presence-ecosystem-alpha; production route behavior reflects routing commit 86dded0",
+    "build_root": "inferred: presence-app",
+    "evidence": [
+      "presence-app has no local .vercel project link and no vercel.json.",
+      "vercel CLI is not installed in this workspace.",
+      "Production routes and Next chunks match the presence-app Next application.",
+      "At route verification time, production route behavior reflected 86dded077a8715f0ad45c72d955051884d09db37. The feature branch later advanced with the docs-only evidence commit."
+    ]
+  },
+  "public_cta_path": {
+    "before": "/auth/sign-up?returnTo=%2Fonboarding",
+    "after": "/presence-chooser",
+    "status": "corrected"
+  },
+  "routes": [
+    {
+      "route": "/",
+      "status": 200,
+      "final_url": "https://your-presence.vercel.app/?proof=86dded0",
+      "component_file": "presence-app/app/page.tsx",
+      "classification": "updated public landing",
+      "access": "public",
+      "evidence_flags": ["start-cta", "links-presence-chooser", "landing-copy"]
+    },
+    {
+      "route": "/presence-chooser",
+      "status": 200,
+      "final_url": "https://your-presence.vercel.app/presence-chooser?proof=86dded0",
+      "component_file": "presence-app/app/(public)/presence-chooser/page.tsx",
+      "component": "presence-app/components/presence/studio/PresenceStudio.tsx",
+      "classification": "new Presence Studio",
+      "access": "public",
+      "evidence_flags": ["presence-studio-shell"]
+    },
+    {
+      "route": "/onboarding",
+      "status": 200,
+      "final_url": "https://your-presence.vercel.app/presence-chooser",
+      "component_file": "presence-app/app/onboarding/page.tsx",
+      "classification": "public alias redirect to Presence Studio",
+      "access": "public",
+      "evidence_flags": ["presence-studio-shell"]
+    },
+    {
+      "route": "/studio",
+      "status": 200,
+      "final_url": "https://your-presence.vercel.app/studio?proof=86dded0",
+      "component_file": "presence-app/app/(studio)/studio/page.tsx",
+      "classification": "owner workspace",
+      "access": "auth-gated client owner/admin surface",
+      "evidence_flags": ["owner-studio-copy", "owner-loading-copy"]
+    },
+    {
+      "route": "/auth/sign-up?returnTo=/onboarding",
+      "status": 200,
+      "final_url": "https://your-presence.vercel.app/auth/sign-up?returnTo=/onboarding&proof=86dded0",
+      "component_file": "presence-app/app/auth/sign-up/page.tsx",
+      "classification": "auth signup compatibility route",
+      "access": "public auth route",
+      "evidence_flags": ["auth-copy"]
+    },
+    {
+      "route": "/auth/sign-up",
+      "status": 200,
+      "final_url": "https://your-presence.vercel.app/auth/sign-up?proof=86dded0",
+      "component_file": "presence-app/app/auth/sign-up/page.tsx",
+      "classification": "auth signup",
+      "access": "public auth route",
+      "evidence_flags": ["auth-copy"]
+    },
+    {
+      "route": "/p/rooms-gallery-painter",
+      "status": 200,
+      "final_url": "https://your-presence.vercel.app/p/rooms-gallery-painter?proof=86dded0",
+      "component_file": "presence-app/app/(public)/p/[slug]/page.tsx",
+      "classification": "public Presence demo",
+      "access": "public",
+      "title": "Naoko Sato | Presence"
+    },
+    {
+      "route": "/p/rooms-underground-dj",
+      "status": 200,
+      "final_url": "https://your-presence.vercel.app/p/rooms-underground-dj?proof=86dded0",
+      "component_file": "presence-app/app/(public)/p/[slug]/page.tsx",
+      "classification": "public Presence demo",
+      "access": "public",
+      "title": "Mira K. | Presence"
+    },
+    {
+      "route": "/p/rooms-material-carpenter",
+      "status": 200,
+      "final_url": "https://your-presence.vercel.app/p/rooms-material-carpenter?proof=86dded0",
+      "component_file": "presence-app/app/(public)/p/[slug]/page.tsx",
+      "classification": "public Presence demo",
+      "access": "public",
+      "title": "Salt & Grain Studio | Presence"
+    },
+    {
+      "route": "/p/rooms-local-carpenter",
+      "status": 200,
+      "final_url": "https://your-presence.vercel.app/p/rooms-local-carpenter?proof=86dded0",
+      "component_file": "presence-app/app/(public)/p/[slug]/page.tsx",
+      "classification": "public Presence demo",
+      "access": "public",
+      "title": "Dave Carpentry - Bega Valley | Presence"
+    },
+    {
+      "route": "/p/rooms-community-healer",
+      "status": 200,
+      "final_url": "https://your-presence.vercel.app/p/rooms-community-healer?proof=86dded0",
+      "component_file": "presence-app/app/(public)/p/[slug]/page.tsx",
+      "classification": "public Presence demo",
+      "access": "public",
+      "title": "Mara Lin | Presence"
+    },
+    {
+      "route": "/p/rooms-sharp-consultant",
+      "status": 200,
+      "final_url": "https://your-presence.vercel.app/p/rooms-sharp-consultant?proof=86dded0",
+      "component_file": "presence-app/app/(public)/p/[slug]/page.tsx",
+      "classification": "public Presence demo",
+      "access": "public",
+      "title": "Heron Strategy | Presence"
+    },
+    {
+      "route": "/dynamics/orbit",
+      "status": 200,
+      "final_url": "https://your-presence.vercel.app/dynamics/orbit?proof=86dded0",
+      "component_file": "presence-app/app/(public)/dynamics/orbit/page.tsx",
+      "classification": "public dynamic demo",
+      "access": "public"
+    },
+    {
+      "route": "/dynamics/tableau",
+      "status": 200,
+      "final_url": "https://your-presence.vercel.app/dynamics/tableau?proof=86dded0",
+      "component_file": "presence-app/app/(public)/dynamics/tableau/page.tsx",
+      "classification": "public dynamic demo",
+      "access": "public"
+    },
+    {
+      "route": "/dynamics/cascade",
+      "status": 200,
+      "final_url": "https://your-presence.vercel.app/dynamics/cascade?proof=86dded0",
+      "component_file": "presence-app/app/(public)/dynamics/cascade/page.tsx",
+      "classification": "public dynamic demo",
+      "access": "public"
+    }
+  ],
+  "backend_contract_checks": {
+    "health": 200,
+    "readiness": 200,
+    "manifest": 200,
+    "recommendations_artist": 200,
+    "preview_seed": {
+      "status": 200,
+      "schema_version_present": true,
+      "room_graph_present": true
+    },
+    "public_setup_request": {
+      "status": 201,
+      "status_field": "submitted",
+      "presence_status": "setup_request",
+      "test_request_id": 3,
+      "email_redacted": true,
+      "published_presence_created": false
+    },
+    "owner_beta_start_without_auth": {
+      "status": 401,
+      "code": "auth_required"
+    },
+    "presence_rooms_smoke": "passed with auth-dependent hidden checks skipped"
+  },
+  "canonical_origin_checks": {
+    "public_api_public_url": "https://your-presence.vercel.app/presence/rooms-consultant",
+    "public_api_seo_canonical_url": "https://your-presence.vercel.app/presence/rooms-consultant",
+    "qr_title": "https://your-presence.vercel.app/presence/rooms-consultant",
+    "vcard_url": "https://your-presence.vercel.app/presence/rooms-consultant",
+    "page_canonical": "https://your-presence.vercel.app/presence/rooms-consultant",
+    "page_og_url": "https://your-presence.vercel.app/presence/rooms-consultant",
+    "presence_gilt_references_observed_in_live_samples": false
+  },
+  "commands_run": [
+    "git status --short --branch",
+    "git log -1 --oneline",
+    "curl.exe -i https://your-presence.vercel.app/",
+    "route matrix curl probes for required frontend routes",
+    "curl.exe production backend health/readiness/manifest/recommendations probes",
+    "curl.exe POST /api/presence/customisation/preview-seed",
+    "curl.exe POST /api/presence/setup-requests with controlled test payload",
+    "curl.exe OPTIONS /api/presence/setup-requests",
+    "curl.exe POST /api/presence/owner/beta/start without auth",
+    "PRESENCE_ROOMS_SMOKE_API_BASE=https://anu-back-end.vercel.app PRESENCE_ROOMS_SMOKE_WEB_BASE=https://your-presence.vercel.app python scripts/presence_rooms_v1_smoke.py",
+    "cmd /c npm run build",
+    "cmd /c npm run typecheck",
+    "node --experimental-strip-types lib/presence/url.test.ts",
+    "git diff --check"
+  ],
+  "remaining_risks": [
+    "Direct Vercel project metadata was not available from this workspace because no .vercel project link exists and the vercel CLI is not installed.",
+    "The /studio owner workspace remains a client-side auth-gated owner/admin surface; this pass did not perform authenticated owner editing.",
+    "The controlled setup request remains in production as clearly test-labelled submitted intake data."
+  ],
+  "judgement": "go",
+  "readiness": "Ready for public routing to Presence Studio and controlled pilot intake."
+}

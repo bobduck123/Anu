@@ -1,0 +1,14 @@
+{
+  "files": [
+    "room-29-bbbvision-backup.json"
+  ],
+  "room_count": 1,
+  "rooms": [
+    {
+      "id": 29,
+      "slug": "bbbvision",
+      "title": "bbb.vision"
+    }
+  ],
+  "status": "existing_bbbvision_room_backup"
+}

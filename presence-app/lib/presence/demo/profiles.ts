@@ -2,24 +2,114 @@
 // TEMPORARY DEMO PROFILE FIXTURES — NOT A PERMANENT DATA SOURCE.
 // ============================================================================
 //
-// These are synthetic PresenceNode payloads for the six Presence DNA
+// These are synthetic PresenceNode payloads for seeded Presence DNA
 // demo rooms. They exist for one reason: to let the public route render
-// these rooms without requiring a backend seed/migration first.
+// these rooms in local/dev when the backend seed data is unavailable.
 //
 // Resolution order in `fetchDemoOrPublicNode`:
 //   1. Real backend response  (existing, unmodified)
 //   2. Demo fixture           (this file)         ← removable
 //
-// Once the backend seeds these slugs as real PresenceNodes, this file
-// becomes a dead branch and can be deleted with no other code changes.
+// Each fixture mirrors the backend-persisted metadata.presence_dna shape.
+// Once every environment serves these slugs as real PresenceNodes, this
+// file becomes a dead branch and can be deleted with no other code changes.
 //
 // Image URLs use Unsplash (allowed in next.config.ts remotePatterns) so
 // the demos look populated without bundling assets.
 // ============================================================================
 
 import type { PresenceNode, PresenceWork, PresenceService } from "@/lib/api/types";
+import type { PresenceDna } from "@/lib/presence/dna/types";
 
 const UNSPLASH = (id: string, w = 1400) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=80`;
+type PersistedDemoDna = Omit<PresenceDna, "source">;
+
+const PERSISTED_DEMO_DNA: Record<string, PersistedDemoDna> = {
+  "rooms-underground-dj": {
+    entity: { entity_type: "individual", public_name: "Mira K.", relationship_to_work: "performer" },
+    practice: { field: "music", practice_mode: "performance", work_rhythm: "event_based" },
+    audience: { primary_audience: "bookers", audience_temperature: "warm", decision_need: "taste" },
+    goal: { primary_goal: "bookings", secondary_goals: ["press"], conversion_style: "direct" },
+    personality: { temperament: "experimental", energy: "kinetic", status_signal: "underground" },
+    proof: { proof_type: ["event_history", "press"], proof_density: "moderate", proof_position: "midpage" },
+    visual: { references: [], palette_mode: "nocturnal", texture: "scanline", image_treatment: "glitch" },
+    composition: { entry_type: "audio_first", section_rhythm: "cinematic_chapters", navigation_mode: "floating_index" },
+    signature: { signature_module: "glitch_gallery", signature_intensity: "hero_level" },
+    notes: ["Nocturnal Sonic blueprint. Glitch behaviour at hero-level intensity."],
+  },
+  "rooms-gallery-painter": {
+    entity: { entity_type: "individual", public_name: "Naoko Sato", relationship_to_work: "maker" },
+    practice: { field: "visual_art", practice_mode: "commission", work_rhythm: "project_based" },
+    audience: { primary_audience: "collectors", audience_temperature: "referred", decision_need: "taste" },
+    goal: { primary_goal: "commissions", secondary_goals: ["press", "credibility"], conversion_style: "editorial" },
+    personality: { temperament: "refined", energy: "still", status_signal: "premium" },
+    proof: { proof_type: ["portfolio", "press"], proof_density: "moderate", proof_position: "after_story" },
+    visual: { references: [], palette_mode: "gallery_white", texture: "paper", image_treatment: "gallery_matte" },
+    composition: { entry_type: "work_first", section_rhythm: "gallery_flow", navigation_mode: "anchor_nav" },
+    signature: { signature_module: "gallery_wall", signature_intensity: "featured" },
+    notes: ["Editorial Identity blueprint. Restrained gallery_breath behaviour."],
+  },
+  "rooms-material-carpenter": {
+    entity: { entity_type: "studio", public_name: "Salt & Grain Studio", relationship_to_work: "maker" },
+    practice: { field: "building_trade", practice_mode: "craft", work_rhythm: "project_based" },
+    audience: { primary_audience: "collectors", audience_temperature: "referred", decision_need: "taste" },
+    goal: { primary_goal: "commissions", secondary_goals: ["press"], conversion_style: "premium" },
+    personality: { temperament: "refined", energy: "slow", status_signal: "craft" },
+    proof: { proof_type: ["portfolio", "materials_process"], proof_density: "moderate", proof_position: "after_story" },
+    visual: { references: [], palette_mode: "material_based", texture: "timber", image_treatment: "warm_portrait" },
+    composition: { entry_type: "material_first", section_rhythm: "collage", navigation_mode: "single_scroll" },
+    signature: { signature_module: "materials_board", signature_intensity: "hero_level" },
+    notes: ["Material Studio blueprint. Same profession as local-carpenter, deliberately different world."],
+  },
+  "rooms-local-carpenter": {
+    entity: { entity_type: "individual", public_name: "Dave Carpentry - Bega Valley", relationship_to_work: "service_provider" },
+    practice: { field: "building_trade", practice_mode: "service", work_rhythm: "recurring" },
+    audience: { primary_audience: "clients", audience_temperature: "cold", decision_need: "trust" },
+    goal: { primary_goal: "enquiries", secondary_goals: ["bookings"], conversion_style: "direct" },
+    personality: { temperament: "grounded", energy: "alive", status_signal: "accessible" },
+    proof: { proof_type: ["before_after", "testimonials", "certifications"], proof_density: "heavy", proof_position: "early" },
+    visual: { references: [], palette_mode: "warm_neutral", texture: "none", image_treatment: "documentary" },
+    composition: { entry_type: "quote_first", section_rhythm: "service_ladder", navigation_mode: "anchor_nav" },
+    signature: { signature_module: "before_after_slider", signature_intensity: "hero_level" },
+    notes: ["Trust Conversion blueprint. Same profession as material-carpenter, deliberately different world."],
+  },
+  "rooms-community-healer": {
+    entity: { entity_type: "individual", public_name: "Mara Lin", relationship_to_work: "service_provider" },
+    practice: { field: "healing", practice_mode: "care", work_rhythm: "appointment_based" },
+    audience: { primary_audience: "community", audience_temperature: "warm", decision_need: "safety" },
+    goal: { primary_goal: "bookings", secondary_goals: ["memberships"], conversion_style: "soft" },
+    personality: { temperament: "warm", energy: "soft", status_signal: "community" },
+    proof: { proof_type: ["testimonials", "certifications"], proof_density: "moderate", proof_position: "near_cta" },
+    visual: { references: [], palette_mode: "soft_gradient", texture: "paper", image_treatment: "warm_portrait" },
+    composition: { entry_type: "service_first", section_rhythm: "case_study_stack", navigation_mode: "single_scroll" },
+    signature: { signature_module: "ritual_booking_panel", signature_intensity: "featured" },
+    notes: ["Program/Care blueprint."],
+  },
+  "rooms-sharp-consultant": {
+    entity: { entity_type: "individual", public_name: "Heron Strategy", relationship_to_work: "consultant" },
+    practice: { field: "consulting", practice_mode: "advisory", work_rhythm: "ongoing_relationship" },
+    audience: { primary_audience: "partners", audience_temperature: "referred", decision_need: "competence" },
+    goal: { primary_goal: "enquiries", secondary_goals: ["credibility"], conversion_style: "premium" },
+    personality: { temperament: "precise", energy: "sharp", status_signal: "expert" },
+    proof: { proof_type: ["case_studies", "client_logos"], proof_density: "heavy", proof_position: "near_cta" },
+    visual: { references: [], palette_mode: "monochrome", texture: "none", image_treatment: "editorial" },
+    composition: { entry_type: "statement_hero", section_rhythm: "editorial_scroll", navigation_mode: "anchor_nav" },
+    signature: { signature_module: "quote_oracle", signature_intensity: "featured" },
+    notes: ["Editorial Identity blueprint with consulting DNA, distinct from painter despite same blueprint."],
+  },
+  "ggm-christina-goddard": {
+    entity: { entity_type: "individual", public_name: "Christina Kerkvliet Goddard", relationship_to_work: "caretaker" },
+    practice: { field: "culture", practice_mode: "program", work_rhythm: "project_based" },
+    audience: { primary_audience: "community", audience_temperature: "institutional", decision_need: "alignment" },
+    goal: { primary_goal: "grant_readiness", secondary_goals: ["credibility", "enquiries"], conversion_style: "community" },
+    personality: { temperament: "serious", energy: "ceremonial", status_signal: "institutional" },
+    proof: { proof_type: ["portfolio", "program_outcomes", "community_endorsement", "press"], proof_density: "heavy", proof_position: "early" },
+    visual: { references: [], palette_mode: "cultural", texture: "paper", image_treatment: "archive" },
+    composition: { entry_type: "archive_first", section_rhythm: "timeline", navigation_mode: "story_path" },
+    signature: { signature_module: "archive_wall", signature_intensity: "featured" },
+    notes: ["Cultural/community artist DNA persisted as a practice archive and public story surface."],
+  },
+};
 
 function work(id: number, title: string, year: string, medium: string, imageId: string): PresenceWork {
   return {
@@ -67,6 +157,7 @@ const DEMOS: Record<string, PresenceNode> = {
     primary_cta_url: null,
     public_email: "bookings@mirak.fm",
     public_phone: null,
+    metadata: { presence_dna: PERSISTED_DEMO_DNA["rooms-underground-dj"] },
     media_embeds: [
       { label: "Latest set — Trauma Bar", url: "https://soundcloud.com/example/trauma-bar-set", provider: "SoundCloud", type: "audio" },
       { label: "Live at Floe — 2024", url: "https://soundcloud.com/example/floe-2024", provider: "SoundCloud", type: "audio" },
@@ -120,6 +211,7 @@ const DEMOS: Record<string, PresenceNode> = {
     primary_cta_url: null,
     public_email: "studio@naokosato.work",
     public_phone: null,
+    metadata: { presence_dna: PERSISTED_DEMO_DNA["rooms-gallery-painter"] },
     media_embeds: [],
     works: [
       work(10, "Asagao", "2024", "oil on linen, 160 × 110 cm", "photo-1547891654-e66ed7ebb968"),
@@ -175,6 +267,7 @@ const DEMOS: Record<string, PresenceNode> = {
     primary_cta_url: null,
     public_email: "studio@saltandgrain.au",
     public_phone: null,
+    metadata: { presence_dna: PERSISTED_DEMO_DNA["rooms-material-carpenter"] },
     media_embeds: [],
     works: [
       work(50, "Long table for Mongarlowe", "2024", "Spotted gum, hand-rubbed oil, 2.8m × 0.95m", "photo-1503602642458-232111445657"),
@@ -225,6 +318,7 @@ const DEMOS: Record<string, PresenceNode> = {
     primary_cta_url: null,
     public_email: "dave@davecarpentry.au",
     public_phone: "0455 100 200",
+    metadata: { presence_dna: PERSISTED_DEMO_DNA["rooms-local-carpenter"] },
     media_embeds: [],
     // Works are paired Before/After for the slider signature.
     works: [
@@ -284,6 +378,7 @@ const DEMOS: Record<string, PresenceNode> = {
     primary_cta_url: null,
     public_email: "hello@maralin.care",
     public_phone: null,
+    metadata: { presence_dna: PERSISTED_DEMO_DNA["rooms-community-healer"] },
     media_embeds: [],
     works: [],
     services: [
@@ -333,6 +428,7 @@ const DEMOS: Record<string, PresenceNode> = {
     primary_cta_url: null,
     public_email: "office@heronstrategy.eu",
     public_phone: null,
+    metadata: { presence_dna: PERSISTED_DEMO_DNA["rooms-sharp-consultant"] },
     media_embeds: [],
     works: [],
     services: [
@@ -350,6 +446,129 @@ const DEMOS: Record<string, PresenceNode> = {
       { id: 170, label: "Selected writing", url: "https://heronstrategy.eu/writing", is_visible: true },
     ],
     collections: [],
+  } as unknown as PresenceNode,
+
+  // -------------------------------------------------------------------------
+  // GGM first-pilot — Christina Kerkvliet Goddard
+  //
+  // This demo entry only fires when the backend has not yet seeded the GGM
+  // pilot Room. It carries the `ggm-faithful-room-v1` renderer key so the
+  // frontend PresenceDnaRenderer dispatches to the GGM faithful surface
+  // (see lib/presence/ggm/activate.ts).
+  //
+  // Note: the asset URLs all live under /public/ggm so this entry never
+  // depends on a network-hosted asset host.
+  // -------------------------------------------------------------------------
+  "ggm-christina-goddard": {
+    id: -1100,
+    slug: "ggm-christina-goddard",
+    display_name: "Christina Kerkvliet Goddard",
+    headline: "Christina Kerkvliet Goddard · practice archive and cultural memory",
+    bio: "Born in Victoria and raised in South Australia, Christina grew up around the active art scene of the 1960s and 70s. Her practice moves between drawing, craft, painting, and installation while holding memory, place, and everyday observation as public story.",
+    short_bio: "Australian cultural-community artist working across memory, colour, and lived landscape.",
+    long_story:
+      "This room treats Christina's work as a practice archive: a public record of convergences, chance encounters, life-cycles, and the places where memory appears through colour, line, and material. The Memory Colours body of work becomes both selected artwork and cultural evidence of lived landscape.",
+    node_type: "creative",
+    display_mode: "cultural_archive",
+    status: "published",
+    visibility: "public",
+    room_type: "artist_studio",
+    accent_color: "#111111",
+    hero_title: "Colour as Memory",
+    hero_subtitle: "A practice archive of watercolour, memory, and lived landscape.",
+    hero_image_url: "/ggm/works/willow-of-port-arthur-2019.webp",
+    cover_image_url: "/ggm/works/willow-of-port-arthur-2019.webp",
+    profile_image_url: "/ggm/portrait/christina-kerkvliet-goddard-portrait.webp",
+    location_label: "Moana, South Australia",
+    practice_statement:
+      "Memory Colours revisits and haunts its sites of episode as a way to present how colour can generate memory, cultural context, and public story.",
+    public_email: "christina.8@bigpond.com",
+    primary_cta_label: "Begin a conversation",
+    primary_cta_url: null,
+    works: [
+      work(1101, "Bridle Road", "2005", "Watercolour on paper", "ggm-bridle"),
+      work(1102, "Thomas Road", "2007", "Watercolour on paper", "ggm-thomas"),
+      work(1103, "Goodnight Kiss", "2007", "Watercolour on paper", "ggm-goodnight"),
+      work(1104, "Gothic Tapestry", "2008", "Watercolour on paper", "ggm-gothic"),
+      work(1105, "Burgundy Peaches", "2008", "Watercolour on paper", "ggm-burgundy"),
+      work(1106, "Last Dash", "2009", "Watercolour on paper", "ggm-last-dash"),
+      work(1107, "Empty Nest", "2014", "Watercolour on paper", "ggm-empty-nest"),
+      work(1108, "Willow of Port Arthur", "2019", "Watercolour on paper", "ggm-willow"),
+    ].map((w, i) => {
+      const slugs = [
+        "bridle-road-2005",
+        "thomas-road-2007",
+        "goodnight-kiss-2007",
+        "gothic-tapestry-2008",
+        "burgundy-peaches-2008",
+        "last-dash-2009",
+        "empty-nest-2014",
+        "willow-of-port-arthur-2019",
+      ];
+      return {
+        ...w,
+        image_url: `/ggm/works/${slugs[i]}.webp`,
+        thumbnail_url: `/ggm/thumbs/${slugs[i]}.webp`,
+      };
+    }),
+    links: [
+      {
+        id: 1110,
+        label: "Source portfolio (Vercel mock-up)",
+        url: "https://christina-goddard.vercel.app/",
+        is_visible: true,
+      },
+      {
+        id: 1111,
+        label: "Art Scene Today profile",
+        url: "http://artscenetoday.com/juried-exhibitions/coloring_outside_the_lines/christina_kerkvliet_goddard/",
+        is_visible: true,
+      },
+    ],
+    services: [
+      service(
+        1120,
+        "Practice archive conversation",
+        "A guided conversation around Memory Colours, site memory, and the public context of selected works.",
+        "On enquiry",
+        "60 min",
+      ),
+      service(
+        1121,
+        "Community story session",
+        "A small-group session for schools, community programs, or cultural partners exploring colour, memory, and place.",
+        "On enquiry",
+        "Workshop format",
+      ),
+    ],
+    collections: [],
+    proof_items: [
+      {
+        id: 1130,
+        title: "Memory Colours practice archive",
+        client_label: "Public story record",
+        testimonial:
+          "Selected works are held together here as a record of place, memory, material, and the everyday observations behind the practice.",
+        outcome: "Practice archive, 2005-2019",
+      },
+      {
+        id: 1131,
+        title: "GGM cultural-community pilot",
+        client_label: "Presence pilot room",
+        testimonial:
+          "The room is shaped as a public cultural surface: artwork, story, evidence, and invitation without reducing the practice to a storefront.",
+        outcome: "Cultural-community artist profile",
+      },
+    ],
+    credentials: [],
+    metadata: {
+      presence_dna: PERSISTED_DEMO_DNA["ggm-christina-goddard"],
+      custom_presence: {
+        style_dna: {
+          renderer_key: "ggm-faithful-room-v1",
+        },
+      },
+    },
   } as unknown as PresenceNode,
 };
 

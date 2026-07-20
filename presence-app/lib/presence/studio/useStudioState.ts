@@ -210,6 +210,22 @@ export function buildSetupRequestPayload(
       material: resolved.material ? { id: resolved.material.id, label: resolved.material.label } : null,
       contact: resolved.contact ? { id: resolved.contact.id, label: resolved.contact.label } : null,
       tone: resolved.tone,
+      // selected_raw — the visitor's literal local-id picks, kept alongside
+      // the canonical backend IDs above so the backend can audit what the
+      // visitor actually selected (vs the canonical id it normalised to).
+      // Backend response echoes this block back; we send it explicitly so
+      // it is always present, even when local fallback ids drift from
+      // backend canonicals.
+      selected_raw: {
+        archetype: resolved.identity?.id ?? null,
+        room_world: resolved.world?.id ?? null,
+        engagement_dynamic: resolved.movement?.id ?? null,
+        motion_profile: resolved.pace?.id ?? null,
+        object_skin_pack: resolved.material?.id ?? null,
+        atmosphere_pack: resolved.mood?.id ?? null,
+        contact_style: resolved.contact?.id ?? null,
+        copy_tone: resolved.tone ?? null,
+      },
     },
   };
 }

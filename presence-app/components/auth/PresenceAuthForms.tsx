@@ -10,6 +10,10 @@ import {
   sanitizeReturnTo,
   savePendingReturnTo,
 } from "@/lib/auth/returnTo";
+import {
+  getAuthCallbackUrl,
+  getPasswordRecoveryUrl,
+} from "@/lib/auth/siteUrl";
 import { createClient } from "@/lib/supabase/client";
 import {
   isEmailVerificationRequired,
@@ -18,6 +22,7 @@ import {
   studioContactHref,
   SUPABASE_MISSING_MESSAGE,
 } from "@/lib/supabase/config";
+import { waitForPersistedOwnerSession } from "@/components/studio/ownerSession";
 
 function AuthShell({
   eyebrow,
@@ -124,16 +129,22 @@ export function SignInForm() {
     setError(null);
     savePendingReturnTo(returnTo);
     const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    setBusy(false);
     if (signInError) {
+      setBusy(false);
       setError(signInError.message);
       return;
     }
+    if (!signInData.session?.access_token || !(await waitForPersistedOwnerSession())) {
+      setBusy(false);
+      setError("Your sign-in succeeded, but Studio could not confirm the session yet. Please try again.");
+      return;
+    }
     clearPendingReturnTo();
+    setBusy(false);
     router.replace(resolvePostAuthReturnTo(returnTo, "/studio"));
   }
 
@@ -223,7 +234,7 @@ export function SignUpForm() {
     setError(null);
     setMessage(null);
     const onboardingReturnTo = "/onboarding";
-    const redirectTo = `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(onboardingReturnTo)}`;
+    const redirectTo = getAuthCallbackUrl(onboardingReturnTo);
     const supabase = createClient();
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: normalizedEmail,
@@ -494,7 +505,7 @@ export function VerifyEmailForm() {
     setResending(true);
     setError(null);
     setMessage(null);
-    const redirectTo = `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(returnTo)}`;
+    const redirectTo = getAuthCallbackUrl(returnTo);
     const supabase = createClient();
     const { error: resendError } = await supabase.auth.resend({
       type: "signup",
@@ -579,7 +590,7 @@ export function ForgotPasswordForm() {
     setBusy(true);
     setMessage(null);
     setError(null);
-    const redirectTo = `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent("/auth/reset-password")}`;
+    const redirectTo = getPasswordRecoveryUrl();
     const supabase = createClient();
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo,

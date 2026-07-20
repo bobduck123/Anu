@@ -9,7 +9,7 @@ export default function PresenceNotFound() {
         <div>
           <h1 className="text-2xl font-semibold">Presence not public yet</h1>
           <p className="mt-3 text-sm leading-6 text-[var(--p-text-muted)]">
-            This public page is unavailable. It may still be a private draft, unpublished, or using a different slug.
+            This public page is unavailable. It may still be private, unpublished, or using a different slug.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">

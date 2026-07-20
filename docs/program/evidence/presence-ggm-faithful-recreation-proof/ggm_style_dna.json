@@ -1,0 +1,217 @@
+{
+  "schema_version": "custom-presence-style-dna-v1",
+  "pilot_code": "ggm",
+  "source": {
+    "kind": "static_site",
+    "operator_source_root": "C:\\Dev\\ggm",
+    "identity": "Christina Kerkvliet Goddard",
+    "stack": [
+      "static_html",
+      "css",
+      "vanilla_javascript",
+      "json_content",
+      "vercel_static_hosting"
+    ],
+    "runtime_dependencies": [
+      "external Slater stylesheet on home",
+      "GSAP home motion",
+      "Three.js home WebGL slideshow"
+    ]
+  },
+  "routes": [
+    {
+      "path": "/",
+      "role": "artwork-first home entry"
+    },
+    {
+      "path": "/work/",
+      "role": "filterable selected work index"
+    },
+    {
+      "path": "/work/<work-slug>/",
+      "role": "work detail with story and memory response"
+    },
+    {
+      "path": "/about/",
+      "role": "artist bio, working path, inspiration, contact"
+    },
+    {
+      "path": "/safe/",
+      "role": "safe static mirror"
+    }
+  ],
+  "content_inventory": {
+    "artist": {
+      "name": "Christina Kerkvliet Goddard",
+      "location": "Moana, South Australia",
+      "hero_caption": "selected watercolour works",
+      "practice_topics": [
+        "memory",
+        "colour",
+        "lived landscape",
+        "daily encounter",
+        "life-cycles"
+      ]
+    },
+    "works": [
+      "Bridle Road",
+      "Thomas Road",
+      "Goodnight Kiss",
+      "Gothic Tapestry",
+      "Burgundy Peaches",
+      "Last Dash",
+      "Empty Nest",
+      "Willow of Port Arthur"
+    ],
+    "work_fields": [
+      "slug",
+      "title",
+      "year",
+      "medium",
+      "dimensions",
+      "image",
+      "thumb",
+      "alt",
+      "description",
+      "context",
+      "process",
+      "memory",
+      "moodTags"
+    ]
+  },
+  "assets": {
+    "works_images": 8,
+    "work_thumbnails": 8,
+    "portrait_images": 1,
+    "hero_sequence": [
+      "willow-of-port-arthur-2019",
+      "bridle-road-2005",
+      "thomas-road-2007",
+      "gothic-tapestry-2008",
+      "empty-nest-2014"
+    ],
+    "required_for_faithful_room": [
+      "approved hosted work images",
+      "approved hosted thumbnails",
+      "hero artwork sequence",
+      "artist copy and work metadata",
+      "source attribution and license review"
+    ]
+  },
+  "typography": {
+    "heading_family": "Haffer XH",
+    "body_family": "Haffer",
+    "safe_fallbacks": [
+      "Arial",
+      "system sans-serif"
+    ],
+    "traits": [
+      "light editorial headings",
+      "tight heading rhythm",
+      "uppercase nav labels",
+      "positive tracking on labels and pills"
+    ]
+  },
+  "palette": {
+    "background": "#f4f4f4",
+    "paper": "#eceae7",
+    "ink": "#111111",
+    "muted": "#6a6a6a",
+    "rule": "rgba(0,0,0,0.12)",
+    "hero_note": "#f4f4f4",
+    "atmosphere": [
+      "white liquid bloom",
+      "muted blue-green wash",
+      "muted warm wash"
+    ]
+  },
+  "layout": {
+    "container": "min(1200px, 92vw)",
+    "entry": "full viewport artwork hero with fixed mixed-blend nav",
+    "section_rhythm": "quiet ruled gallery bands",
+    "home_intro": "two-column statement and action split",
+    "home_featured": "four-up artwork strip desktop, two-up mobile",
+    "work_index": "filters, list/grid toggle, serendipity path, work cards",
+    "work_detail": "contained art hero, detail head, memory prompt, story triptych",
+    "about": "bio split, timeline split, strand cards, moving inspiration board"
+  },
+  "image_treatment": {
+    "home_hero": "cover artwork stage",
+    "work_detail": "contain artwork on paper frame",
+    "featured_cards": "image first with bottom gradient title/year",
+    "work_cards": "gallery object with metadata and slight perspective tilt",
+    "avoid": [
+      "stock hero image",
+      "generic split card hero",
+      "cropping away inspectable artwork"
+    ]
+  },
+  "motion": {
+    "motifs": [
+      "Willow dither intro",
+      "liquid WebGL artwork morph",
+      "scroll reveal",
+      "page transition wipe",
+      "bottom zoom blur",
+      "difference cursor",
+      "hover image reveal",
+      "gallery card tilt"
+    ],
+    "reduced_motion": "disable decorative canvas, custom cursor, and reveal transforms",
+    "touch_behavior": "compact controls and single-column layouts remain usable"
+  },
+  "presence_translation": {
+    "renderer_key": "ggm-faithful-room-v1",
+    "room_type_base": "artist_studio",
+    "preserve": [
+      "artwork-first home signal",
+      "Christina identity",
+      "paper gallery palette",
+      "work route semantics",
+      "about route rhythm",
+      "source image hierarchy"
+    ],
+    "presence_native": [
+      "RoomKey entry",
+      "per-Room enquiry capture",
+      "owner analytics",
+      "safe public Room graph actions",
+      "external source-site portal"
+    ],
+    "defer": [
+      "World exposure",
+      "realtime claims",
+      "generic Hall insertion"
+    ]
+  },
+  "public_style_subset": {
+    "palette": {
+      "background": "#f4f4f4",
+      "paper": "#eceae7",
+      "ink": "#111111",
+      "muted": "#6a6a6a"
+    },
+    "typography": {
+      "heading_family": "Haffer XH with approved fallback",
+      "body_family": "Haffer with approved fallback"
+    },
+    "entry": "artwork_first_full_viewport",
+    "gallery": "selected_watercolour_wall",
+    "motion": [
+      "dither_intro_reviewed",
+      "liquid_artwork_morph_reviewed"
+    ]
+  },
+  "current_presence_gap": [
+    "current Room uses generic gallery_white artist_studio renderer",
+    "current first viewport is not the source artwork stage",
+    "current Room lacks approved source work asset inventory and source route hierarchy",
+    "current CTA prioritizes external portfolio over a faithful custom entry"
+  ],
+  "risks": [
+    "font and vendor motion license review",
+    "public metadata redaction for operator source paths",
+    "responsive canvas and reduced-motion fidelity",
+    "UTF-8 copy review"
+  ]
+}

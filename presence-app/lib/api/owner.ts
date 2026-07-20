@@ -1,4 +1,4 @@
-import { ownerFetch, ownerMultipartFetch } from "./client";
+import { ownerFetch, ownerMultipartFetch, ownerReadFetch } from "./client";
 import type {
   PresenceNode,
   PresenceNodeInput,
@@ -16,10 +16,10 @@ const BASE = "/api/presence/owner";
 
 // Nodes
 export const listNodes = (t: string) =>
-  ownerFetch<PresenceNode[]>(`${BASE}/nodes`, t);
+  ownerReadFetch<PresenceNode[]>(`${BASE}/nodes`, t, {}, { sessionPresent: true, retryAuthOnce: true });
 
 export const getNode = (id: number, t: string) =>
-  ownerFetch<PresenceNode>(`${BASE}/nodes/${id}`, t);
+  ownerReadFetch<PresenceNode>(`${BASE}/nodes/${id}`, t, {}, { sessionPresent: true, retryAuthOnce: true });
 
 export const updateNode = (id: number, payload: PresenceNodeInput, t: string) =>
   ownerFetch<PresenceNode>(`${BASE}/nodes/${id}`, t, {
@@ -68,7 +68,7 @@ export const unpublishNode = (id: number, t: string) =>
 
 // Works
 export const listWorks = (nodeId: number, t: string) =>
-  ownerFetch<PresenceWork[]>(`${BASE}/nodes/${nodeId}/works`, t);
+  ownerReadFetch<PresenceWork[]>(`${BASE}/nodes/${nodeId}/works`, t, {}, { sessionPresent: true, retryAuthOnce: true });
 
 export const createWork = (nodeId: number, payload: Partial<PresenceWork>, t: string) =>
   ownerFetch<PresenceWork>(`${BASE}/nodes/${nodeId}/works`, t, {
@@ -89,7 +89,7 @@ export const deleteWork = (workId: number, t: string) =>
 
 // Collections
 export const listCollections = (nodeId: number, t: string) =>
-  ownerFetch<PresenceCollection[]>(`${BASE}/nodes/${nodeId}/collections`, t);
+  ownerReadFetch<PresenceCollection[]>(`${BASE}/nodes/${nodeId}/collections`, t, {}, { sessionPresent: true, retryAuthOnce: true });
 
 export const createCollection = (nodeId: number, payload: Partial<PresenceCollection>, t: string) =>
   ownerFetch<PresenceCollection>(`${BASE}/nodes/${nodeId}/collections`, t, {
@@ -110,7 +110,7 @@ export const deleteCollection = (id: number, t: string) =>
 
 // Services
 export const listServices = (nodeId: number, t: string) =>
-  ownerFetch<PresenceService[]>(`${BASE}/nodes/${nodeId}/services`, t);
+  ownerReadFetch<PresenceService[]>(`${BASE}/nodes/${nodeId}/services`, t, {}, { sessionPresent: true, retryAuthOnce: true });
 
 export const createService = (nodeId: number, payload: Partial<PresenceService>, t: string) =>
   ownerFetch<PresenceService>(`${BASE}/nodes/${nodeId}/services`, t, {
@@ -126,7 +126,7 @@ export const updateService = (id: number, payload: Partial<PresenceService>, t: 
 
 // NFC Tags
 export const listNfcTags = (nodeId: number, t: string) =>
-  ownerFetch<PresenceNfcTag[]>(`${BASE}/nodes/${nodeId}/nfc-tags`, t);
+  ownerReadFetch<PresenceNfcTag[]>(`${BASE}/nodes/${nodeId}/nfc-tags`, t, {}, { sessionPresent: true, retryAuthOnce: true });
 
 export const createNfcTag = (nodeId: number, payload: Partial<PresenceNfcTag>, t: string) =>
   ownerFetch<PresenceNfcTag>(`${BASE}/nodes/${nodeId}/nfc-tags`, t, {
@@ -142,7 +142,7 @@ export const updateNfcTag = (id: number, payload: Partial<PresenceNfcTag>, t: st
 
 // Enquiries
 export const listEnquiries = (nodeId: number, t: string) =>
-  ownerFetch<PresenceEnquiry[]>(`${BASE}/nodes/${nodeId}/enquiries`, t);
+  ownerReadFetch<PresenceEnquiry[]>(`${BASE}/nodes/${nodeId}/enquiries`, t, {}, { sessionPresent: true, retryAuthOnce: true });
 
 export const updateEnquiry = (id: number, status: string, t: string) =>
   ownerFetch<PresenceEnquiry>(`${BASE}/enquiries/${id}`, t, {
@@ -152,4 +152,4 @@ export const updateEnquiry = (id: number, status: string, t: string) =>
 
 // Analytics
 export const getAnalytics = (nodeId: number, t: string) =>
-  ownerFetch<PresenceAnalyticsSummary>(`${BASE}/nodes/${nodeId}/analytics`, t);
+  ownerReadFetch<PresenceAnalyticsSummary>(`${BASE}/nodes/${nodeId}/analytics`, t, {}, { sessionPresent: true, retryAuthOnce: true });

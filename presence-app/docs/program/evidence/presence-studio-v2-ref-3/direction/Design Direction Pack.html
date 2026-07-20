@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Presence — Design Direction Pack · Studio V2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../assets/colors_and_type.css">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--p-paper);color:var(--p-on-paper);font-family:var(--p-f-ui);min-height:100%}
+
+  body{
+    background-image:
+      radial-gradient(60% 32% at 20% 0%, color-mix(in oklab, var(--p-copper) 8%, transparent), transparent 65%),
+      radial-gradient(60% 50% at 100% 92%, color-mix(in oklab, var(--p-moss) 6%, transparent), transparent 65%);
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      radial-gradient(1px 1px at 22% 28%, rgba(90,60,30,0.06) 1px, transparent 2px),
+      radial-gradient(1px 1px at 71% 78%, rgba(60,50,30,0.04) 1px, transparent 2px),
+      radial-gradient(1px 1px at 47% 62%, rgba(90,70,40,0.04) 1px, transparent 2px);
+    background-size:140px 140px, 200px 200px, 260px 260px;
+    mix-blend-mode:multiply;opacity:0.55;
+  }
+
+  .wrap{position:relative;z-index:5;max-width:1280px;margin:0 auto;padding:0 40px}
+  .wrap-tight{position:relative;z-index:5;max-width:1080px;margin:0 auto;padding:0 40px}
+
+  /* ============ Top rail ============ */
+  .rail{
+    display:flex;align-items:center;justify-content:space-between;gap:24px;
+    padding:18px 40px;border-bottom:1px solid var(--p-rule);
+    position:sticky;top:0;z-index:50;
+    background:color-mix(in oklab, var(--p-paper) 92%, transparent);
+    backdrop-filter:blur(8px);
+  }
+  .rail-l{display:flex;align-items:center;gap:14px}
+  .glyph{width:18px;height:18px;border-radius:50%;border:1px solid var(--p-ink);position:relative}
+  .glyph::after{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--p-copper)}
+  .brand{font-family:var(--p-f-display);font-style:italic;font-size:20px;color:var(--p-ink);line-height:1}
+  .meta{font-family:var(--p-f-mono);font-size:10.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--p-on-paper-mute);display:flex;align-items:center;gap:14px}
+  .rule-x{width:18px;height:1px;background:var(--p-rule-strong)}
+  .status{display:inline-flex;align-items:center;gap:7px;color:var(--p-on-paper)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--p-copper)}
+  .rail-back{font-family:var(--p-f-mono);font-size:10.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--p-on-paper-mute);text-decoration:none;border:1px solid var(--p-rule-strong);padding:8px 12px;transition:background var(--p-dur-tap) var(--p-ease-tactile),color var(--p-dur-tap) var(--p-ease-tactile)}
+  .rail-back:hover{background:var(--p-ink);color:var(--p-bone);border-color:var(--p-ink)}
+
+  /* ============ Cover ============ */
+  .cover{padding:120px 0 100px}
+  .cover-supra{display:flex;align-items:center;gap:14px;margin-bottom:48px;font-family:var(--p-f-mono);font-size:10.5px;letter-spacing:0.24em;text-transform:uppercase;color:var(--p-on-paper-mute)}
+  .cover-supra .r{flex:0 0 56px;height:1px;background:var(--p-rule-strong)}
+  .cover-h{margin:0;font-family:var(--p-f-display);font-weight:400;font-size:clamp(56px,8vw,140px);line-height:0.98;letter-spacing:-0.028em;color:var(--p-on-paper)}
+  .cover-h em{font-style:italic;color:var(--p-copper)}
+  .cover-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:64px;align-items:end;margin-top:56px}
+  .cover-lede{font-family:var(--p-f-ui);font-size:clamp(17px,1.4vw,21px);line-height:1.55;color:var(--p-on-paper-mute);margin:0;max-width:56ch}
+  .cover-lede em{color:var(--p-on-paper);font-style:italic}
+  .cover-side{border-top:1px solid var(--p-rule-strong);padding-top:18px;display:flex;flex-direction:column;gap:8px;font-size:13px}
+  .cover-side .row{display:grid;grid-template-columns:110px 1fr;gap:14px;align-items:baseline}
+  .cover-side .k{font-family:var(--p-f-mono);font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--p-on-paper-dim)}
+  .cover-side .v{color:var(--p-on-paper);font-family:var(--p-f-ui)}
+  .cover-side .v em{font-family:var(--p-f-display);font-style:italic;color:var(--p-copper);font-size:15px}
+
+  /* ============ Contents ============ */
+  .contents{
+    margin-top:96px;padding:32px 40px;
+    border:1px solid var(--p-rule-strong);background:var(--p-bone);box-shadow:var(--p-sh-2);
+  }
+  .contents h3{margin:0 0 18px;font-family:var(--p-f-mono);font-size:10.5px;letter-spacing:0.22em;text-transform:uppercase;color:var(--p-on-paper-mute);font-weight:500}
+  .contents-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 36px}
+  .contents-grid a{display:grid;grid-template-columns:38px 1fr auto;gap:14px;align-items:baseline;text-decoration:none;color:var(--p-on-paper);padding:8px 0;border-bottom:1px dotted var(--p-rule)}
+  .contents-grid a:hover{background:color-mix(in oklab, var(--p-copper) 5%, transparent)}
+  .contents-grid .n{font-family:var(--p-f-display);font-style:italic;color:var(--p-copper);font-size:17px}
+  .contents-grid .t{font-family:var(--p-f-ui);font-size:14.5px;line-height:1.35}
+  .contents-grid .p{font-family:var(--p-f-mono);font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--p-on-paper-dim)}
+
+  /* ============ Section scaffold ============ */
+  .sec{padding:104px 0 60px;position:relative;z-index:5}
+  .sec.stage{background:var(--p-stage);color:var(--p-on-stage)}
+  .sec.stage::before{content:"";position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(70% 40% at 30% 10%, color-mix(in oklab, var(--p-copper) 10%, transparent), transparent 60%),radial-gradient(50% 50% at 100% 100%, color-mix(in oklab, var(--p-vermilion) 8%, transparent), transparent 60%);z-index:0}
+  .sec.stage > *{position:relative;z-index:1}
+
+  .sec-head{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:end;border-bottom:1px solid var(--p-rule-strong);padding-bottom:18px;margin-bottom:40px}
+  .sec.stage .sec-head{border-bottom-color:var(--p-rule-dark)}
+  .sec-no{font-family:var(--p-f-display);font-style:italic;font-size:36px;color:var(--p-copper);line-height:1}
+  .sec-h{margin:0;font-family:var(--p-f-display);font-weight:400;font-size:clamp(32px,4.2vw,56px);line-height:1.02;letter-spacing:-0.018em;color:inherit}
+  .sec-h em{font-style:italic;color:var(--p-copper)}
+  .sec-tag{font-family:var(--p-f-mono);font-size:10.5px;letter-spacing:0.22em;text-transform:uppercase;color:var(--p-on-paper-mute);align-self:end;padding-bottom:6px}
+  .sec.stage .sec-tag{color:var(--p-on-stage-mute)}
+
+  .sec-lede{font-family:var(--p-f-display);font-style:italic;font-size:clamp(22px,2.2vw,30px);line-height:1.35;color:var(--p-on-paper);max-width:36ch;margin:0 0 28px}
+  .sec.stage .sec-lede{color:var(--p-on-stage)}
+  .sec-lede strong{font-style:normal;color:var(--p-copper);font-weight:400}
+
+  .prose{font-family:var(--p-f-ui);font-size:16px;line-height:1.7;color:var(--p-on-paper-mute);max-width:62ch}
+  .sec.stage .prose{color:var(--p-on-stage-mute)}
+  .prose strong{color:var(--p-on-paper);font-weight:500}
+  .sec.stage .prose strong{color:var(--p-on-stage)}
+  .prose em{font-style:italic}
+  .prose + .prose{margin-top:14px}
+
+  /* ============ Position diagram (four-world) ============ */
+  .four-world{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:1px;
+    background:var(--p-rule-strong);
+    border:1px solid var(--p-rule-strong);
+    margin-top:32px;
+  }
+  .fw{background:var(--p-bone);padding:28px 28px 32px;display:flex;flex-direction:column;gap:10px}
+  .fw-k{font-family:var(--p-f-mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--p-on-paper-dim)}
+  .fw-h{margin:0;font-family:var(--p-f-display);font-weight:400;font-size:30px;line-height:1.05;letter-spacing:-0.01em;color:var(--p-on-paper)}
+  .fw-h em{font-style:italic;color:var(--p-copper)}
+  .fw-p{margin:0;font-family:var(--p-f-ui);font-size:14.5px;line-height:1.55;color:var(--p-on-paper-mute)}
+  .fw-give{font-family:var(--p-f-mono);font-size:11px;letter-spacing:0.12em;color:var(--p-on-paper);margin-top:6px;display:flex;flex-wrap:wrap;gap:6px 14px}
+  .fw-give span::before{content:"·  ";color:var(--p-copper)}
+
+  /* ============ Threshold→Chamber model ============ */
+  .flow{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+    margin-top:36px;border:1px solid var(--p-rule-strong);background:var(--p-bone);
+  }
+  .fl{padding:24px 22px;border-right:1px solid var(--p-rule);display:flex;flex-direction:column;gap:10px;position:relative}
+  .fl:last-child{border-right:0}
+  .fl::after{content:"→";position:absolute;right:-9px;top:50%;transform:translateY(-50%);background:var(--p-bone);width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--p-copper);border:1px solid var(--p-rule-strong)}
+  .fl:last-child::after{display:none}
+  .fl-k{font-family:var(--p-f-mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--p-copper)}
+  .fl-h{margin:0;font-family:var(--p-f-display);font-style:italic;font-size:30px;line-height:1;letter-spacing:-0.01em;color:var(--p-on-paper)}
+  .fl-p{margin:0;font-family:var(--p-f-ui);font-size:13.5px;line-height:1.55;color:var(--p-on-paper-mute)}
+
+  /* ============ Three layers ============ */
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:32px}
+  .layer{
+    border:1px solid var(--p-rule-strong);background:var(--p-bone);
+    padding:28px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--p-sh-2);
+    position:relative;
+  }
+  .layer-k{font-family:var(--p-f-mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--p-on-paper-dim)}
+  .layer-h{margin:0;font-family:var(--p-f-display);font-weight:400;font-size:26px;line-height:1.06;letter-spacing:-0.01em;color:var(--p-on-paper)}
+  .layer-h em{font-style:italic;color:var(--p-copper)}
+  .layer-p{margin:0;font-family:var(--p-f-ui);font-size:14px;line-height:1.55;color:var(--p-on-paper-mute)}
+  .layer-rule{font-family:var(--p-f-mono);font-size:10.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--p-on-paper);margin-top:auto;padding-top:14px;border-top:1px solid var(--p-rule)}
+  .layer-rule strong{color:var(--p-copper);font-weight:500}
+  .layer.studio{background:var(--p-stage);color:var(--p-on-stage)}
+  .layer.studio .layer-k{color:var(--p-on-stage-dim)}
+  .layer.studio .layer-h{color:var(--p-on-stage)}
+  .layer.studio .layer-p{color:var(--p-on-stage-mute)}
+  .layer.studio .layer-rule{color:var(--p-on-stage);border-color:var(--p-rule-dark)}
+
+  /* ============ Room-world atlas ============ */
+  .atlas{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:32px}
+  .world{
+    border:1px solid var(--p-rule-strong);background:var(--p-bone);
+    box-shadow:var(--p-sh-2);overflow:hidden;
+    display:flex;flex-direction:column;
+  }
+  .world-canvas{
+    aspect-ratio:5/3;position:relative;overflow:hidden;
+    border-bottom:1px solid var(--p-rule-strong);
+  }
+  .world-body{padding:18px 20px 22px;display:flex;flex-direction:column;gap:8px}
+  .world-eyebrow{font-family:var(--p-f-mono);font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--p-on-paper-dim);display:flex;align-items:center;gap:8px}
+  .world-h{margin:0;font-family:var(--p-f-display);font-weight:400;font-size:24px;line-height:1.05;letter-spacing:-0.01em;color:var(--p-on-paper)}
+  .world-h em{font-style:italic;color:var(--p-copper)}
+  .world-p{margin:0;font-family:var(--p-f-ui);font-size:13.5px;line-height:1.55;color:var(--p-on-paper-mute)}
+  .world-verbs{font-family:var(--p-f-mono);font-size:10.5px;letter-spacing:0.12em;color:var(--p-on-paper);margin-top:6px;padding-top:10px;border-top:1px dotted var(--p-rule)}
+  .world-verbs em{font-family:var(--p-f-display);font-style:italic;color:var(--p-on-paper-dim);font-size:13px;letter-spacing:0;margin-right:6px}
+
+  /* world canvas illustrations — CSS sketches */
+  .c-gallery{background:linear-gradient(180deg,#0d0c0a 0%,#1a1814 100%)}
+  .c-gallery::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 40%, rgba(255,235,200,0.18), transparent 36%),radial-gradient(circle at 70% 60%, rgba(255,235,200,0.12), transparent 40%)}
+  .c-gallery::after{content:"";position:absolute;inset:18% 22%;border:1px solid rgba(248,244,236,0.18);background:linear-gradient(135deg, rgba(248,244,236,0.06), rgba(248,244,236,0.02));box-shadow:inset 0 0 40px rgba(13,12,10,0.5)}
+
+  .c-dj{background:#0a0a08;position:relative}
+  .c-dj::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg, transparent 0 3px, rgba(226,255,52,0.04) 3px 4px)}
+  .c-dj::after{content:"T.AMP";position:absolute;left:14px;bottom:14px;color:#e2ff34;font-family:"Anton","Archivo Black",sans-serif;font-size:52px;letter-spacing:-0.02em;text-shadow:0 0 24px rgba(226,255,52,0.4)}
+
+  .c-altar{background:linear-gradient(180deg,#eef3e8,#fbf7ef)}
+  .c-altar::before{content:"";position:absolute;left:50%;top:30%;transform:translateX(-50%);width:96px;height:96px;border-radius:50%;background:radial-gradient(circle, rgba(86,125,85,0.35), transparent 70%);filter:blur(8px)}
+  .c-altar::after{content:"";position:absolute;left:50%;top:46%;transform:translateX(-50%);width:54px;height:54px;border-radius:50%;border:1px solid rgba(86,125,85,0.45);background:rgba(255,255,255,0.5)}
+
+  .c-archive{background:#efe8dc}
+  .c-archive::before{content:"";position:absolute;inset:14% 12% 14% 28%;background:repeating-linear-gradient(180deg, transparent 0 22px, rgba(143,58,47,0.16) 22px 23px, transparent 23px 44px, rgba(23,19,15,0.06) 44px 45px)}
+  .c-archive::after{content:"";position:absolute;top:0;bottom:0;left:18%;width:1px;background:rgba(143,58,47,0.45)}
+
+  .c-stall{background:#f2eadf}
+  .c-stall::before{content:"";position:absolute;inset:8% 8% 8% 8%;background:#fff8ec;border:1px solid rgba(36,23,15,0.18);box-shadow:0 6px 18px rgba(36,23,15,0.12),inset 0 0 0 6px #fff8ec, inset 0 0 0 7px rgba(36,23,15,0.1)}
+  .c-stall::after{content:"OPEN · 8A · 4P";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#a85221;font-family:"DM Serif Display","Times New Roman",serif;font-size:22px;letter-spacing:0.04em}
+
+  .c-clothing{background:linear-gradient(135deg,#1b1714,#2a2218)}
+  .c-clothing::before{content:"";position:absolute;inset:16% 20%;background:linear-gradient(180deg, rgba(248,244,236,0.04), rgba(248,244,236,0.0));border:1px dashed rgba(248,244,236,0.18)}
+  .c-clothing::after{content:"DROP 04";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#efe9da;font-family:"Anton","Archivo Black",sans-serif;font-size:36px;letter-spacing:0.04em}
+
+  .c-desk{background:#f3f1ed}
+  .c-desk::before{content:"";position:absolute;left:8%;right:8%;top:18%;height:1px;background:#111}
+  .c-desk::after{content:"";position:absolute;left:8%;right:8%;bottom:18%;height:48%;background:repeating-linear-gradient(180deg, transparent 0 10px, rgba(17,17,17,0.05) 10px 11px)}
+
+  .c-workshop{background:#f4ecdb}
+  .c-workshop::before{content:"";position:absolute;left:14%;right:14%;top:34%;height:8%;background:linear-gradient(180deg,#8b6f3f,#5a4322);border:1px solid rgba(26,24,20,0.6);box-shadow:0 8px 0 -2px #4a3624}
+  .c-workshop::after{content:"";position:absolute;left:22%;top:42%;width:6%;height:30%;background:#5a4322;border-left:1px solid rgba(26,24,20,0.6);border-right:1px solid rgba(26,24,20,0.6)}
+
+  .c-corridor{background:linear-gradient(180deg,#0d0c0a,#1a1814)}
+  .c-corridor::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:60%;transform:translateX(-50%);background:linear-gradient(180deg, transparent 0%, rgba(183,140,78,0.22) 70%, rgba(183,140,78,0.5) 100%);clip-path:polygon(40% 0, 60% 0, 100% 100%, 0 100%)}
+  .c-corridor::after{content:"";position:absolute;left:50%;bottom:10%;transform:translateX(-50%);width:60px;height:96px;border-radius:60px 60px 0 0;background:radial-gradient(ellipse at 50% 100%, rgba(248,244,236,0.32), transparent 70%)}
+
+  .c-shrine{background:#1b1714;position:relative}
+  .c-shrine::before{content:"";position:absolute;inset:18% 32%;border-radius:50% 50% 0 0 / 70% 70% 0 0;background:radial-gradient(ellipse at 50% 80%, rgba(255,160,80,0.4), transparent 70%);border:1px solid rgba(255,160,80,0.25)}
+  .c-shrine::after{content:"";position:absolute;left:50%;bottom:16%;transform:translateX(-50%);width:18px;height:48px;background:linear-gradient(180deg,#ffd089,#a85221)}
+
+  /* ============ Object vocabulary ============ */
+  .obj-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:32px}
+  .obj{border:1px solid var(--p-rule-strong);background:var(--p-bone);padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--p-sh-1);min-height:220px}
+  .obj-vis{height:84px;display:flex;align-items:center;justify-content:center;border-bottom:1px dotted var(--p-rule);padding-bottom:12px}
+  .obj-k{font-family:var(--p-f-mono);font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--p-on-paper-dim)}
+  .obj-h{margin:0;font-family:var(--p-f-display);font-weight:400;font-size:21px;line-height:1.05;color:var(--p-on-paper)}
+  .obj-h em{font-style:italic;color:var(--p-copper)}
+  .obj-p{margin:0;font-family:var(--p-f-ui);font-size:12.5px;line-height:1.5;color:var(--p-on-paper-mute)}
+  /* visual specimens */
+  .v-frame{width:84px;height:64px;border:6px solid var(--p-ink);background:linear-gradient(135deg,#b78c4e 0%, #5a4322 100%);box-shadow:0 1px 0 var(--p-rule-strong),0 6px 14px rgba(13,12,10,0.18)}
+  .v-text{width:84px;height:64px;background:repeating-linear-gradient(0deg,transparent 0 10px, var(--p-ink) 10px 11px);opacity:0.65;border-left:2px solid var(--p-copper);padding-left:6px}
+  .v-doc{width:64px;height:80px;background:var(--p-bone);border:1px solid var(--p-rule-strong);position:relative;box-shadow:var(--p-sh-2)}
+  .v-doc::before{content:"";position:absolute;inset:8px;background:repeating-linear-gradient(0deg,transparent 0 6px, var(--p-on-paper-dim) 6px 7px);opacity:0.4}
+  .v-doc::after{content:"PROOF";position:absolute;top:-7px;right:-7px;background:var(--p-vermilion);color:#fff;font-family:var(--p-f-mono);font-size:8px;letter-spacing:0.16em;padding:2px 5px;transform:rotate(8deg)}
+  .v-event{width:80px;height:80px;background:var(--p-bone);border:1px solid var(--p-ink);text-align:center;font-family:var(--p-f-mono);font-size:9px;letter-spacing:0.12em;color:var(--p-on-paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .v-event .d{font-family:var(--p-f-display);font-style:italic;font-size:28px;color:var(--p-vermilion);line-height:1}
+  .v-mix{width:84px;height:36px;background:linear-gradient(90deg, var(--p-stage) 0%, var(--p-stage) 100%);position:relative;overflow:hidden}
+  .v-mix::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg, transparent 0 4px, rgba(226,255,52,0.8) 4px 5px, transparent 5px 8px, rgba(226,255,52,0.4) 8px 9px, transparent 9px 14px);mask-image:linear-gradient(180deg, transparent 0%, #000 25%, #000 75%, transparent 100%)}
+  .v-drop{width:80px;height:80px;background:linear-gradient(180deg,#f8f4ec 70%, #ddd4c1 100%);border:1px solid var(--p-rule-strong);position:relative;box-shadow:var(--p-sh-2)}
+  .v-drop::before{content:"€38";position:absolute;left:6px;bottom:6px;font-family:var(--p-f-display);font-style:italic;font-size:18px;color:var(--p-on-paper)}
+  .v-drop::after{content:"";position:absolute;top:8px;left:8px;width:6px;height:6px;border-radius:50%;background:var(--p-moss)}
+  .v-portal{width:64px;height:80px;border-radius:32px 32px 0 0;background:radial-gradient(ellipse at 50% 100%, var(--p-copper-soft), transparent 70%);border:1px solid var(--p-copper);border-bottom:0;position:relative}
+  .v-portal::after{content:"";position:absolute;left:50%;top:30%;width:14px;height:14px;border-radius:50%;background:var(--p-copper);transform:translateX(-50%);box-shadow:0 0 0 6px color-mix(in oklab, var(--p-copper) 30%, transparent)}
+  .v-trace{width:84px;height:64px;background:var(--p-bone);border:1px solid var(--p-rule);position:relative;padding:8px;font-family:"Cormorant Garamond",serif;font-size:11px;font-style:italic;color:var(--p-on-paper-mute);line-height:1.2}
+  .v-trace::before{content:"\"thanks for the room\"";display:block}
+  .v-trace::after{content:"— J. · 06.04";display:block;font-family:var(--p-f-mono);font-size:8px;letter-spacing:0.12em;color:var(--p-on-paper-dim);margin-top:4px;font-style:normal}
+  .v-cta{padding:10px 16px;background:var(--p-ink);color:var(--p-bone);font-family:var(--p-f-mono);font-size:10px;letter-spacing:0.18em;text-transform:uppercase}
+  .v-archive{width:84px;height:64px;background:var(--p-linen);position:relative;border:1px solid var(--p-rule-strong)}
+  .v-archive::before{content:"";position:absolute;inset:8px;background:repeating-linear-gradient(180deg, transparent 0 8px, var(--p-rule) 8px 9px)}
+  .v-archive::after{content:"\#0421";position:absolute;top:-8px;right:6px;background:var(--p-bone);font-family:var(--p-f-mono);font-size:9px;letter-spacing:0.1em;color:var(--p-on-paper-mute);padding:1px 5px;border:1px solid var(--p-rule)}
+  .v-mood{width:84px;height:64px;display:grid;grid-template-columns:1fr 1fr;gap:2px}
+  .v-mood span{background:var(--p-copper)}
+  .v-mood span:nth-child(2){background:var(--p-moss)}
+  .v-mood span:nth-child(3){background:var(--p-vermilion);transform:rotate(2deg)}
+  .v-mood span:nth-child(4){background:var(--p-ink)}
+  .v-test{width:84px;height:64px;background:var(--p-bone);border-left:2px solid var(--p-copper);padding:6px 8px;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:11px;color:var(--p-on-paper);line-height:1.25}
+  .v-test::after{content:"— Helena, curator";display:block;font-family:var(--p-f-mono);font-size:8px;letter-spacing:0.12em;color:var(--p-on-paper-dim);margin-top:4px;font-style:normal;text-transform:uppercase}
+  .v-img{width:84px;height:64px;background:linear-gradient(135deg,#2a2218 0%, #b78c4e 60%, #efe9da 100%);box-shadow:inset 0 0 12px rgba(13,12,10,0.4)}
+
+  /* ============ Motion grammar table ============ */
+  .motion{margin-top:32px;border:1px solid var(--p-rule-strong);background:var(--p-bone);box-shadow:var(--p-sh-2);overflow:hidden}
+  .motion-row{display:grid;grid-template-columns:140px 1fr 1fr 1fr 1fr;gap:0;border-bottom:1px solid var(--p-rule);align-items:center}
+  .motion-row:last-child{border-bottom:0}
+  .motion-row.h{background:var(--p-paper-2);font-family:var(--p-f-mono);font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--p-on-paper-mute)}
+  .motion-cell{padding:14px 16px;border-right:1px solid var(--p-rule);min-height:56px;display:flex;align-items:center;font-family:var(--p-f-mono);font-size:12px;color:var(--p-on-paper);line-height:1.35}
+  .motion-cell:last-child{border-right:0}
+  .motion-cell.world{font-family:var(--p-f-display);font-style:italic;font-size:18px;color:var(--p-copper)}
+  .motion-cell em{font-family:var(--p-f-display);font-style:italic;color:var(--p-on-paper-dim);font-size:14px;letter-spacing:0;margin-right:4px}
+
+  /* ============ Token architecture ============ */
+  .tokens-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:32px}
+  .tok-col{border:1px solid var(--p-rule-strong);background:var(--p-bone);padding:22px;box-shadow:var(--p-sh-2)}
+  .tok-k{font-family:var(--p-f-mono);font-size:10.5px;letter-spacing:0.22em;text-transform:uppercase;color:var(--p-copper);margin-bottom:6px}
+  .tok-h{margin:0 0 4px;font-family:var(--p-f-display);font-weight:400;font-size:24px;line-height:1.05;color:var(--p-on-paper)}
+  .tok-meta{font-family:var(--p-f-mono);font-size:10px;letter-spacing:0.14em;color:var(--p-on-paper-dim);margin-bottom:14px}
+  .tok-list{font-family:var(--p-f-mono);font-size:12px;line-height:1.75;color:var(--p-on-paper);margin:0;padding:0;list-style:none}
+  .tok-list li{display:grid;grid-template-columns:1fr auto;gap:14px;padding:2px 0;border-bottom:1px dotted var(--p-rule)}
+  .tok-list li:last-child{border-bottom:0}
+  .tok-list .v{color:var(--p-on-paper-dim);text-align:right}
+  .tok-mutable{display:inline-block;padding:2px 6px;border:1px solid var(--p-copper);color:var(--p-copper);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;border-radius:2px;margin-left:6px;vertical-align:1px}
+  .tok-fixed{display:inline-block;padding:2px 6px;border:1px solid var(--p-on-paper-dim);color:var(--p-on-paper-dim);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;border-radius:2px;margin-left:6px;vertical-align:1px}
+
+  /* ============ Cockpit mocks ============ */
+  .cockpit-modes{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:32px}
+  .cm{border:1px solid var(--p-rule-dark);background:#0e0d0b;overflow:hidden;box-shadow:var(--p-sh-cinema)}
+  .cm-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.07);background:#16140f}
+  .cm-head .l{display:flex;align-items:center;gap:8px;font-family:var(--p-f-display);font-style:italic;color:var(--p-bone);font-size:13px}
+  .cm-head .l .g{width:11px;height:11px;border-radius:50%;border:1px solid var(--p-bone);position:relative}
+  .cm-head .l .g::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--p-copper)}
+  .cm-head .r{font-family:var(--p-f-mono);font-size:9.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--p-on-stage-mute);display:flex;align-items:center;gap:8px}
+  .cm-head .r .d{width:6px;height:6px;border-radius:50%;background:var(--p-moss)}
+  .cm-body{aspect-ratio:5/3.6;position:relative;overflow:hidden;background:#0e0d0b}
+  .cm-tag{position:absolute;top:10px;left:10px;font-family:var(--p-f-mono);font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--p-on-stage-dim);background:rgba(0,0,0,0.4);padding:4px 8px;border:1px solid var(--p-rule-dark);z-index:3}
+
+  /* guided mode mock — clean spine, hero card, calm controls */
+  .cm-guided .cm-body{display:grid;grid-template-columns:32% 1fr 30%;gap:0}
+  .cm-guided .sp{border-right:1px solid rgba(255,255,255,0.08);padding:14px 12px;background:rgba(248,244,236,0.02)}
+  .cm-guided .sp-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-family:var(--p-f-mono);font-size:10px;letter-spacing:0.06em;color:var(--p-on-stage-mute);border-bottom:1px dotted rgba(255,255,255,0.06)}
+  .cm-guided .sp-row.a{color:var(--p-bone)}
+  .cm-guided .sp-row .h{width:4px;height:4px;border-radius:50%;background:var(--p-copper)}
+  .cm-guided .stg{background:linear-gradient(180deg,#1a1814,#0e0d0b);position:relative;padding:18px}
+  .cm-guided .stg::after{content:"";position:absolute;inset:30px 40px;border:1px solid rgba(248,244,236,0.12);background:linear-gradient(135deg,rgba(183,140,78,0.06),rgba(248,244,236,0.02))}
+  .cm-guided .stg-label{position:absolute;left:46px;top:38px;font-family:"Cormorant Garamond",serif;font-style:italic;color:var(--p-on-stage);font-size:16px;z-index:2}
+  .cm-guided .ins{border-left:1px solid rgba(255,255,255,0.08);padding:14px 12px}
+  .cm-guided .ins-h{font-family:var(--p-f-mono);font-size:9px;letter-spacing:0.2em;color:var(--p-copper);text-transform:uppercase;margin-bottom:8px}
+  .cm-guided .ins-row{margin-bottom:10px}
+  .cm-guided .ins-row .k{font-family:var(--p-f-mono);font-size:8.5px;letter-spacing:0.16em;color:var(--p-on-stage-dim);text-transform:uppercase}
+  .cm-guided .ins-row .f{margin-top:3px;padding:6px 8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--p-bone);font-family:"Cormorant Garamond",serif;font-style:italic;font-size:13px}
+
+  /* wild mode mock — freeform canvas, floating tools, layered objects */
+  .cm-wild .cm-body{background:#1a1814;position:relative}
+  .cm-wild .cm-body::before{content:"";position:absolute;inset:0;background:radial-gradient(70% 60% at 30% 30%, rgba(255,58,46,0.18), transparent 60%),radial-gradient(60% 60% at 80% 80%, rgba(183,140,78,0.18), transparent 60%)}
+  .cm-wild .ob{position:absolute;background:rgba(248,244,236,0.06);border:1px solid rgba(248,244,236,0.18);padding:6px 8px;font-family:"Cormorant Garamond",serif;font-style:italic;color:var(--p-bone);font-size:12px}
+  .cm-wild .ob.o1{top:18%;left:14%;width:38%;height:30%;background:linear-gradient(135deg,#b78c4e,#5a4322);border:0}
+  .cm-wild .ob.o2{top:42%;left:36%;transform:rotate(-3deg)}
+  .cm-wild .ob.o3{top:30%;left:60%;width:24%;height:46%;background:rgba(255,58,46,0.4);border:1px solid rgba(255,58,46,0.6)}
+  .cm-wild .ob.o4{bottom:14%;left:22%;font-family:"Anton",sans-serif;font-style:normal;font-size:20px;background:transparent;border:0;color:#e2ff34;text-shadow:0 0 12px rgba(226,255,52,0.5);letter-spacing:0.04em}
+  .cm-wild .float-tool{position:absolute;top:18%;left:14%;display:flex;gap:2px}
+  .cm-wild .float-tool span{width:18px;height:18px;background:rgba(13,12,10,0.85);border:1px solid rgba(248,244,236,0.2);display:flex;align-items:center;justify-content:center;font-family:var(--p-f-mono);font-size:8px;color:var(--p-bone)}
+
+  /* operator mode mock — terminal-like, ledger of system state */
+  .cm-op .cm-body{padding:14px 16px;font-family:var(--p-f-mono);color:var(--p-on-stage);font-size:11px;line-height:1.7;display:flex;flex-direction:column;gap:2px}
+  .cm-op .l{display:grid;grid-template-columns:60px 1fr auto;gap:12px;border-bottom:1px dotted rgba(255,255,255,0.08);padding-bottom:3px}
+  .cm-op .l .t{color:var(--p-on-stage-dim);font-size:9.5px;letter-spacing:0.1em}
+  .cm-op .l .m{color:var(--p-on-stage)}
+  .cm-op .l .m strong{color:var(--p-copper);font-weight:500}
+  .cm-op .l .s{color:var(--p-moss);font-size:9.5px;letter-spacing:0.16em;text-transform:uppercase}
+  .cm-op .l .s.err{color:var(--p-vermilion)}
+  .cm-foot{padding:8px 14px;background:rgba(248,244,236,0.04);border-top:1px solid rgba(255,255,255,0.08);font-family:var(--p-f-mono);font-size:9.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--p-on-stage-mute);display:flex;justify-content:space-between}
+
+  .cm-cap{padding:18px 22px;border-top:1px solid rgba(255,255,255,0.08);background:#16140f;display:flex;flex-direction:column;gap:6px}
+  .cm-cap .k{font-family:var(--p-f-mono);font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--p-copper)}
+  .cm-cap .h{font-family:var(--p-f-display);font-weight:400;font-size:22px;line-height:1.1;color:var(--p-bone)}
+  .cm-cap .h em{font-style:italic;color:var(--p-copper-soft)}
+  .cm-cap .p{font-family:var(--p-f-ui);font-size:13px;line-height:1.55;color:var(--p-on-stage-mute);margin-top:4px}
+
+  /* ============ Mobile sketches ============ */
+  .mobile-row{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:32px;align-items:start}
+  .ph{
+    aspect-ratio:9/19;width:100%;max-width:200px;margin:0 auto;
+    border-radius:34px;background:#0e0d0b;
+    padding:10px;box-shadow:var(--p-sh-3),inset 0 0 0 1px rgba(255,255,255,0.06);
+    position:relative;overflow:hidden;
+  }
+  .ph-screen{position:relative;width:100%;height:100%;border-radius:26px;overflow:hidden;background:var(--p-paper)}
+  .ph-notch{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:38%;height:14px;background:#0e0d0b;border-radius:0 0 12px 12px;z-index:3}
+  .ph-label{font-family:var(--p-f-mono);font-size:10.5px;letter-spacing:0.22em;text-transform:uppercase;color:var(--p-on-paper-dim);text-align:center;margin-top:14px}
+  .ph-sub{font-family:var(--p-f-display);font-style:italic;font-size:16px;color:var(--p-on-paper);text-align:center;margin-top:2px}
+
+  /* mobile screen contents */
+  .m-threshold{background:linear-gradient(180deg,#0d0c0a 0%, #1a1814 60%, #2a2218 100%);height:100%;position:relative;padding:36px 16px 24px;color:var(--p-on-stage);display:flex;flex-direction:column;justify-content:space-between}
+  .m-threshold::before{content:"";position:absolute;inset:24% 18% 30%;background:linear-gradient(135deg,#b78c4e,#5a4322);box-shadow:0 8px 24px rgba(0,0,0,0.5)}
+  .m-threshold .top{position:relative;z-index:1;font-family:var(--p-f-mono);font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--p-on-stage-mute);display:flex;justify-content:space-between}
+  .m-threshold .name{position:relative;z-index:1;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:22px;color:var(--p-bone)}
+  .m-threshold .cta{position:relative;z-index:1;display:flex;flex-direction:column;gap:8px}
+  .m-threshold .cta .b{background:var(--p-bone);color:var(--p-ink);padding:10px 12px;font-family:var(--p-f-mono);font-size:9px;letter-spacing:0.18em;text-transform:uppercase;text-align:center}
+
+  .m-chamber{background:var(--p-paper);height:100%;padding:30px 12px 14px;display:flex;flex-direction:column;gap:8px}
+  .m-chamber .eyebrow{font-family:var(--p-f-mono);font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--p-on-paper-dim)}
+  .m-chamber .name{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:18px;color:var(--p-ink);line-height:1.1;margin-bottom:8px}
+  .m-chamber .work{aspect-ratio:4/5;background:linear-gradient(135deg,#5a4322,#b78c4e);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+  .m-chamber .work + .work{margin-top:6px}
+  .m-chamber .meta{font-family:var(--p-f-mono);font-size:7.5px;letter-spacing:0.18em;color:var(--p-on-paper-dim);text-transform:uppercase;margin-top:2px}
+  .m-chamber .dock{margin-top:auto;display:flex;gap:4px}
+  .m-chamber .dock .d{flex:1;background:var(--p-ink);color:var(--p-bone);padding:8px 6px;font-family:var(--p-f-mono);font-size:8px;letter-spacing:0.18em;text-transform:uppercase;text-align:center}
+  .m-chamber .dock .d.s{background:transparent;color:var(--p-ink);border:1px solid var(--p-ink)}
+
+  .m-cockpit{background:#0e0d0b;color:var(--p-on-stage);height:100%;padding:30px 10px 10px;display:flex;flex-direction:column;gap:6px}
+  .m-cockpit .top{display:flex;align-items:center;justify-content:space-between;font-family:var(--p-f-mono);font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--p-on-stage-mute)}
+  .m-cockpit .stg{flex:1;background:linear-gradient(180deg,#1a1814,#0e0d0b);border:1px solid rgba(255,255,255,0.08);position:relative;margin:6px 0;overflow:hidden}
+  .m-cockpit .stg::after{content:"";position:absolute;inset:20% 18%;background:linear-gradient(135deg,#b78c4e,#5a4322)}
+  .m-cockpit .sheet{background:rgba(255,255,255,0.04);border-top:1px solid rgba(255,255,255,0.1);padding:8px 6px;border-radius:8px 8px 0 0}
+  .m-cockpit .sheet .k{font-family:var(--p-f-mono);font-size:7.5px;letter-spacing:0.18em;color:var(--p-copper);text-transform:uppercase;margin-bottom:3px}
+  .m-cockpit .sheet .f{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:6px 7px;font-family:"Cormorant Garamond",serif;font-style:italic;color:var(--p-bone);font-size:11px}
+  .m-cockpit .fab{margin-top:6px;background:var(--p-copper);color:var(--p-ink);padding:8px;font-family:var(--p-f-mono);font-size:8px;letter-spacing:0.2em;text-align:center;text-transform:uppercase}
+
+  .m-archive{background:#efe8dc;height:100%;padding:30px 12px 14px;display:flex;flex-direction:column;gap:6px;position:relative}
+  .m-archive::before{content:"";position:absolute;top:30px;bottom:14px;left:22px;width:1px;background:rgba(143,58,47,0.35)}
+  .m-archive .item{padding-left:14px;font-family:"Crimson Pro",serif;font-size:11px;color:var(--p-on-paper);line-height:1.3}
+  .m-archive .item .y{font-family:var(--p-f-mono);font-size:8px;letter-spacing:0.18em;color:#8f3a2f;text-transform:uppercase;display:block;margin-bottom:2px}
+  .m-archive .head{font-family:"DM Serif Display",serif;font-size:15px;color:var(--p-on-paper);margin-bottom:6px;padding-left:14px}
+
+  /* ============ Do not flatten rulebook ============ */
+  .rules{display:grid;grid-template-columns:repeat(2,1fr);gap:0;margin-top:32px;border:1px solid var(--p-rule-strong);background:var(--p-bone)}
+  .rule{padding:24px 28px;border-bottom:1px solid var(--p-rule);border-right:1px solid var(--p-rule);display:flex;gap:18px}
+  .rule:nth-child(2n){border-right:0}
+  .rule:nth-last-child(-n+2){border-bottom:0}
+  .rule-n{font-family:var(--p-f-display);font-style:italic;color:var(--p-vermilion);font-size:30px;line-height:1;flex:0 0 auto}
+  .rule-body{flex:1}
+  .rule-h{margin:0 0 6px;font-family:var(--p-f-ui);font-weight:600;font-size:15.5px;line-height:1.25;color:var(--p-on-paper);letter-spacing:-0.005em}
+  .rule-p{margin:0;font-family:var(--p-f-ui);font-size:13.5px;line-height:1.55;color:var(--p-on-paper-mute)}
+  .rule-p em{color:var(--p-on-paper);font-style:italic}
+
+  /* ============ Handoff ============ */
+  .handoff{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:32px}
+  .ho{padding:24px;border:1px solid var(--p-rule-strong);background:var(--p-bone);display:flex;flex-direction:column;gap:10px;box-shadow:var(--p-sh-1)}
+  .ho-k{font-family:var(--p-f-mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--p-copper)}
+  .ho-h{margin:0;font-family:var(--p-f-display);font-weight:400;font-size:21px;line-height:1.1;color:var(--p-on-paper)}
+  .ho ul{margin:6px 0 0;padding-left:18px;font-family:var(--p-f-ui);font-size:13.5px;line-height:1.6;color:var(--p-on-paper-mute)}
+  .ho ul li{margin-bottom:3px}
+  .ho ul li strong{color:var(--p-on-paper);font-weight:500}
+
+  /* ============ Foot ============ */
+  .foot{padding:48px 40px 80px;border-top:1px solid var(--p-rule);display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:32px;align-items:start;font-family:var(--p-f-mono);font-size:10.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--p-on-paper-mute);max-width:1280px;margin:120px auto 0}
+  .foot strong{display:block;color:var(--p-on-paper);font-weight:500;margin-bottom:10px;letter-spacing:0.18em}
+  .foot a{color:var(--p-copper);text-decoration:none;border-bottom:1px dotted var(--p-copper)}
+  .foot p{margin:0 0 6px;line-height:1.7;letter-spacing:0.12em}
+
+  @media (max-width:980px){
+    .cover-grid{grid-template-columns:1fr;gap:36px}
+    .contents-grid{grid-template-columns:1fr}
+    .four-world{grid-template-columns:1fr}
+    .flow{grid-template-columns:1fr 1fr}
+    .fl::after{display:none}
+    .layers{grid-template-columns:1fr}
+    .atlas{grid-template-columns:1fr 1fr}
+    .obj-grid{grid-template-columns:1fr 1fr}
+    .motion-row{grid-template-columns:1fr 1fr}
+    .motion-row.h{display:none}
+    .tokens-grid{grid-template-columns:1fr}
+    .cockpit-modes{grid-template-columns:1fr}
+    .mobile-row{grid-template-columns:1fr 1fr}
+    .rules{grid-template-columns:1fr}
+    .rule{border-right:0}
+    .handoff{grid-template-columns:1fr}
+    .foot{grid-template-columns:1fr}
+    .wrap,.wrap-tight{padding:0 24px}
+    .rail{padding:14px 24px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Top rail ============ -->
+<header class="rail">
+  <div class="rail-l">
+    <span class="glyph" aria-hidden="true"></span>
+    <span class="brand">Presence</span>
+    <span class="meta">
+      <span class="rule-x"></span>
+      <span>design direction · studio v2</span>
+    </span>
+  </div>
+  <div class="meta">
+    <span class="status"><span class="dot"></span> draft 01 · internal</span>
+    <a class="rail-back" href="../pilots/index-v2.html">← Catalogue</a>
+  </div>
+</header>
+
+<!-- ============ Cover ============ -->
+<section class="wrap cover">
+  <div class="cover-supra">
+    <span>direction pack</span>
+    <span class="r"></span>
+    <span>studio v2</span>
+    <span class="r"></span>
+    <span>not a website builder</span>
+  </div>
+
+  <h1 class="cover-h">A grammar for <em>rooms</em>,<br />not a kit of <em>pages</em>.</h1>
+
+  <div class="cover-grid">
+    <p class="cover-lede">
+      Presence is a system for creating public digital rooms — expressive, atmospheric, spatial places people can enter. This pack defines the system that holds it: <em>the layers, the room-world atlas, the object vocabulary, the motion grammar, the studio cockpit, the mobile model, and the rules that keep it from flattening.</em>
+    </p>
+    <aside class="cover-side">
+      <div class="row"><span class="k">document</span><span class="v">Design Direction Pack · <em>01</em></span></div>
+      <div class="row"><span class="k">scope</span><span class="v">Public rooms · studio · mobile · system</span></div>
+      <div class="row"><span class="k">audience</span><span class="v">Designers · engineers · operators</span></div>
+      <div class="row"><span class="k">paired with</span><span class="v">Pilot catalogue · batch 01</span></div>
+      <div class="row"><span class="k">version</span><span class="v">v2 · 06 · 06 · 26</span></div>
+    </aside>
+  </div>
+
+  <div class="contents">
+    <h3>Contents</h3>
+    <div class="contents-grid">
+      <a href="#position"><span class="n">i.</span><span class="t">Where Presence sits</span><span class="p">§ 01</span></a>
+      <a href="#model"><span class="n">ii.</span><span class="t">Threshold → Chamber → Object → Action</span><span class="p">§ 02</span></a>
+      <a href="#layers"><span class="n">iii.</span><span class="t">The three layers</span><span class="p">§ 03</span></a>
+      <a href="#atlas"><span class="n">iv.</span><span class="t">Room-world atlas</span><span class="p">§ 04</span></a>
+      <a href="#objects"><span class="n">v.</span><span class="t">Object vocabulary</span><span class="p">§ 05</span></a>
+      <a href="#motion"><span class="n">vi.</span><span class="t">Motion grammar</span><span class="p">§ 06</span></a>
+      <a href="#tokens"><span class="n">vii.</span><span class="t">Token architecture</span><span class="p">§ 07</span></a>
+      <a href="#cockpit"><span class="n">viii.</span><span class="t">Studio cockpit</span><span class="p">§ 08</span></a>
+      <a href="#mobile"><span class="n">ix.</span><span class="t">Mobile</span><span class="p">§ 09</span></a>
+      <a href="#rules"><span class="n">x.</span><span class="t">Do not flatten</span><span class="p">§ 10</span></a>
+      <a href="#handoff"><span class="n">xi.</span><span class="t">Implementation handoff</span><span class="p">§ 11</span></a>
+      <a href="../pilots/index-v2.html"><span class="n">→</span><span class="t">Pilot catalogue · batch 01</span><span class="p">live</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ § 01 · Position ============ -->
+<section class="sec" id="position">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no">i.</span>
+      <h2 class="sec-h">Where Presence <em>sits</em></h2>
+      <span class="sec-tag">§ 01 · position</span>
+    </div>
+    <p class="sec-lede">Presence sits between four worlds. A design choice that serves only one is probably <strong>wrong</strong>; good Presence design serves at least two.</p>
+
+    <div class="four-world">
+      <div class="fw">
+        <span class="fw-k">i. business website</span>
+        <h3 class="fw-h">The <em>useful</em> shop</h3>
+        <p class="fw-p">Booking, pricing, credibility, search, commerce. Presence is genuinely useful — it can take an enquiry, take a deposit, hold a calendar.</p>
+        <span class="fw-give"><span>booking</span><span>pricing</span><span>credibility</span><span>search</span></span>
+      </div>
+      <div class="fw">
+        <span class="fw-k">ii. myspace</span>
+        <h3 class="fw-h">Identity, <em>authored</em></h3>
+        <p class="fw-p">Self-expression that breaks the template. A presence that is unmistakably the person whose room it is. The freedom to be weird in public.</p>
+        <span class="fw-give"><span>authorship</span><span>weirdness</span><span>aura</span><span>voice</span></span>
+      </div>
+      <div class="fw">
+        <span class="fw-k">iii. tumblr</span>
+        <h3 class="fw-h">Known by <em>taste</em></h3>
+        <p class="fw-p">A moodboard graph — be known by what you collect, who you reference, what you'd be seen near, not by what you post.</p>
+        <span class="fw-give"><span>moodboard</span><span>influence</span><span>signal</span><span>archive</span></span>
+      </div>
+      <div class="fw">
+        <span class="fw-k">iv. a physical room</span>
+        <h3 class="fw-h">Somewhere <em>spatial</em></h3>
+        <p class="fw-p">A booth, an archive, a desk, an altar, a wall, a doorway. The visitor walks in. The room holds them. They leave a trace.</p>
+        <span class="fw-give"><span>threshold</span><span>chamber</span><span>object</span><span>trace</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ § 02 · Model ============ -->
+<section class="sec stage" id="model">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no" style="color:var(--p-copper-soft)">ii.</span>
+      <h2 class="sec-h">Threshold → Chamber → Object → <em>Action</em></h2>
+      <span class="sec-tag">§ 02 · model</span>
+    </div>
+    <p class="sec-lede" style="color:var(--p-on-stage)">The whole product is this arc, repeated. Every Presence design — owner side and visitor side — should map cleanly to <strong>one of these four stages</strong>.</p>
+
+    <div class="flow">
+      <div class="fl"><span class="fl-k">i. threshold</span><h3 class="fl-h">Desire to enter</h3><p class="fl-p">The entry state. Cinematic, atmospheric, alive before interaction. The visitor decides whether to cross.</p></div>
+      <div class="fl"><span class="fl-k">ii. chamber</span><h3 class="fl-h">The room itself</h3><p class="fl-p">Where objects live. Story, work, offers, proof, archive, sound, contact. Mood shifts by world. Mobile-safe.</p></div>
+      <div class="fl"><span class="fl-k">iii. object</span><h3 class="fl-h">Focus &amp; aura</h3><p class="fl-p">A single thing held in attention — an artwork, a mix, a piece, a document. Carries identity, proof, action.</p></div>
+      <div class="fl"><span class="fl-k">iv. action</span><h3 class="fl-h">A trace, a portal</h3><p class="fl-p">An enquiry, a booking, a save, a guestbook entry, a step into another room. Never a checkout flow.</p></div>
+    </div>
+
+    <p class="prose" style="margin-top:32px;color:var(--p-on-stage-mute)">
+      <strong>Vocabulary discipline.</strong> The system uses these words and only these words for the public surface: <em>room, threshold, chamber, object, surface, skin, portal, trace, moodboard, signal, archive, offering, proof, mode</em>. Banned in user-facing copy: <em>page, section, block, widget, template, dashboard, profile</em>. Engineers may use whatever internal vocabulary is needed; the user never sees it.
+    </p>
+  </div>
+</section>
+
+<!-- ============ § 03 · Three layers ============ -->
+<section class="sec" id="layers">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no">iii.</span>
+      <h2 class="sec-h">The <em>three</em> layers</h2>
+      <span class="sec-tag">§ 03 · architecture</span>
+    </div>
+    <p class="sec-lede">Calm shell. Wild rooms. Living traces. <strong>If the system collapses into one look, it has failed.</strong></p>
+
+    <div class="layers">
+      <div class="layer studio">
+        <span class="layer-k">layer a · studio cockpit</span>
+        <h3 class="layer-h">The <em>calm shell</em></h3>
+        <p class="layer-p">The room-direction tool. One visual language, always. Dark studio chrome, hairline borders, slow motion. The shell follows the room's accent — it never expresses personality. Mobile-first: bottom-sheet inspector, thumb-zone action bar, save FAB.</p>
+        <span class="layer-rule"><strong>Rule:</strong> The cockpit <em>frames</em> personality. It does not compete with it.</span>
+      </div>
+      <div class="layer">
+        <span class="layer-k">layer b · public rooms</span>
+        <h3 class="layer-h">The <em>wild space</em></h3>
+        <p class="layer-p">Many visual languages by design. Each room is a kit (spatial logic) plus a skin (atmosphere). Switching kits changes how space <em>behaves</em>, not just what colour it is. Gallery floats. Archive rules and documents. Booth pulses. Altar breathes.</p>
+        <span class="layer-rule"><strong>Rule:</strong> Each kit is a spatial logic, not a palette.</span>
+      </div>
+      <div class="layer">
+        <span class="layer-k">layer c · social traces</span>
+        <h3 class="layer-h">The <em>evidence</em></h3>
+        <p class="layer-p">Footfall, guestbook, seed, attended, signed, signal, portal, corridor. Traces are not notifications — they are spatial marks discovered <em>inside</em> a room. A sticker on a wall. A name in a guestbook. A doorway to another room. They make the room feel alive before the network exists.</p>
+        <span class="layer-rule"><strong>Rule:</strong> Traces are evidence, never push notifications.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ § 04 · Room atlas ============ -->
+<section class="sec" id="atlas">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no">iv.</span>
+      <h2 class="sec-h">Room-world <em>atlas</em></h2>
+      <span class="sec-tag">§ 04 · ten archetypes</span>
+    </div>
+    <p class="sec-lede">Each world implies different radius, density, motion, type weight, object shapes, and background material. <strong>None of them are a "theme."</strong> Each is a way space behaves.</p>
+
+    <div class="atlas">
+      <article class="world">
+        <div class="world-canvas c-gallery"></div>
+        <div class="world-body">
+          <span class="world-eyebrow">i · gallery wall</span>
+          <h3 class="world-h">Private <em>exhibition</em></h3>
+          <p class="world-p">A spotlight. Frameless walls. Quiet editorial. The room <em>recedes</em> so the work can speak. Mobile: one work at a time, full-bleed, swipe across the wall.</p>
+          <span class="world-verbs"><em>spotlight · recede · hush · focus · drift</em></span>
+        </div>
+      </article>
+
+      <article class="world">
+        <div class="world-canvas c-dj"></div>
+        <div class="world-body">
+          <span class="world-eyebrow">ii · dj booth</span>
+          <h3 class="world-h">The <em>booth</em></h3>
+          <p class="world-p">Crate, signal, waveform, vinyl. Marquee at the door; pinned zine board on the wall. Loud, rhythmic, but restrained — strobe used <em>once</em>, never as wallpaper.</p>
+          <span class="world-verbs"><em>pulse · scan · marquee · spin · strobe-restraint</em></span>
+        </div>
+      </article>
+
+      <article class="world">
+        <div class="world-canvas c-altar"></div>
+        <div class="world-body">
+          <span class="world-eyebrow">iii · healing altar</span>
+          <h3 class="world-h">A <em>holding</em> place</h3>
+          <p class="world-p">Round cards, soft chamber, sage atmosphere. The room <em>breathes</em>. Booking is calm, never insistent. New-age without astrology-app cliché — no zodiac, no crystals, no purple.</p>
+          <span class="world-verbs"><em>breath · glow · soft · still · warm</em></span>
+        </div>
+      </article>
+
+      <article class="world">
+        <div class="world-canvas c-archive"></div>
+        <div class="world-body">
+          <span class="world-eyebrow">iv · archive / evidence</span>
+          <h3 class="world-h">The <em>record</em></h3>
+          <p class="world-p">Cultural orgs, oral history, grant-facing proof. Ledger left rule, archive prefixes, document treatment. Consent and sensitivity are <em>visible</em> in the visual language.</p>
+          <span class="world-verbs"><em>reveal · evidence · drawer · paper · memory</em></span>
+        </div>
+      </article>
+
+      <article class="world">
+        <div class="world-canvas c-stall"></div>
+        <div class="world-body">
+          <span class="world-eyebrow">v · market stall</span>
+          <h3 class="world-h">A <em>shop card</em></h3>
+          <p class="world-p">Makers, stalls, independent businesses. Printed card and hand-kept ledger. Honest, tactile, unhurried — the work on the bench ticks toward delivery; pieces carry status at a glance.</p>
+          <span class="world-verbs"><em>stack · sort · touch · table · offer</em></span>
+        </div>
+      </article>
+
+      <article class="world">
+        <div class="world-canvas c-clothing"></div>
+        <div class="world-body">
+          <span class="world-eyebrow">vi · clothing label</span>
+          <h3 class="world-h">A <em>drop</em></h3>
+          <p class="world-p">Label, garment, cultural signal, collection. The room is a lookbook plus a stockroom plus a story. Drops arrive on the wall; sold-out states are part of the aesthetic.</p>
+          <span class="world-verbs"><em>drop · texture · runway · sold-out · signal</em></span>
+        </div>
+      </article>
+
+      <article class="world">
+        <div class="world-canvas c-desk"></div>
+        <div class="world-body">
+          <span class="world-eyebrow">vii · consultant desk</span>
+          <h3 class="world-h">A <em>desk</em></h3>
+          <p class="world-p">Sharp office. Paper, margin notes, framework, proof. Monochrome hairlines, an inverted invitation, authority through precision. For practitioners selling clarity.</p>
+          <span class="world-verbs"><em>paper · margin · framework · proof · invitation</em></span>
+        </div>
+      </article>
+
+      <article class="world">
+        <div class="world-canvas c-workshop"></div>
+        <div class="world-body">
+          <span class="world-eyebrow">viii · workshop</span>
+          <h3 class="world-h">A <em>bench</em></h3>
+          <p class="world-p">Material, tool marks, before/after, process. The room shows work in progress; the visitor can see the maker's hand. Status is a chip, not a SKU.</p>
+          <span class="world-verbs"><em>material · process · before-after · tool-mark</em></span>
+        </div>
+      </article>
+
+      <article class="world">
+        <div class="world-canvas c-shrine"></div>
+        <div class="world-body">
+          <span class="world-eyebrow">ix · shrine / ritual</span>
+          <h3 class="world-h">A <em>flame</em></h3>
+          <p class="world-p">For community programmes, memorials, sacred archives. A single light. A name. A consent layer. Used sparingly. <em>If your design system can't hold this, it can't hold real people.</em></p>
+          <span class="world-verbs"><em>vigil · flame · name · stillness · consent</em></span>
+        </div>
+      </article>
+
+      <article class="world">
+        <div class="world-canvas c-corridor"></div>
+        <div class="world-body">
+          <span class="world-eyebrow">x · corridor / path</span>
+          <h3 class="world-h">A <em>walk</em></h3>
+          <p class="world-p">Several rooms arranged into a path. Festival lineups, tours, programmes, group shows. The visitor walks one room into the next without leaving the system.</p>
+          <span class="world-verbs"><em>step · doorway · sequence · drift</em></span>
+        </div>
+      </article>
+    </div>
+
+    <p class="prose" style="margin-top:36px">
+      <strong>The atlas is open.</strong> New worlds are added by writing a new kit — its spatial logic, type stack, motion verbs, object shapes, and room tokens. <em>A kit is never just a recolour.</em> The bbb.vision pilot is a "Gallery wall · photographer" kit pushed to its ceiling — the same kit could host a printmaker, a film stills photographer, a tattoo artist, each as a distinct skin within the same spatial behaviour.
+    </p>
+  </div>
+</section>
+
+<!-- ============ § 05 · Object vocabulary ============ -->
+<section class="sec" id="objects">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no">v.</span>
+      <h2 class="sec-h">Object <em>vocabulary</em></h2>
+      <span class="sec-tag">§ 05 · fifteen specimens</span>
+    </div>
+    <p class="sec-lede">Objects are the nouns of the room. <strong>Each one should feel like something on a wall, on a desk, in a drawer</strong> — not like a web card with a border-radius.</p>
+
+    <div class="obj-grid">
+      <div class="obj"><div class="obj-vis"><div class="v-frame"></div></div><span class="obj-k">i · artwork</span><h3 class="obj-h">Framed <em>work</em></h3><p class="obj-p">Image inside a held frame. Caption sits below; spotlight on hover. The room recedes to let it speak.</p></div>
+      <div class="obj"><div class="obj-vis"><div class="v-img"></div></div><span class="obj-k">ii · image</span><h3 class="obj-h">A <em>still</em></h3><p class="obj-p">Frameless image with grain. Used for portraits, mood images, in-situ photographs. Sits inside an object container, not a card.</p></div>
+      <div class="obj"><div class="obj-vis"><div class="v-text"></div></div><span class="obj-k">iii · text / story</span><h3 class="obj-h">A <em>passage</em></h3><p class="obj-p">Editorial body; one italic emphasis word; copper rule on the left margin. Never centred unless ritual context demands it.</p></div>
+      <div class="obj"><div class="obj-vis"><div class="v-doc"></div></div><span class="obj-k">iv · proof / document</span><h3 class="obj-h">A <em>page</em></h3><p class="obj-p">Press clipping, certificate, grant record. Paper-stock, a stamp, an archive number. Carries weight.</p></div>
+
+      <div class="obj"><div class="obj-vis"><div class="v-event"><span class="d">06</span><span>Jun · 21:00</span><span>Berghain</span></div></div><span class="obj-k">v · event</span><h3 class="obj-h">A <em>date</em></h3><p class="obj-p">Date as the largest type. Venue and time below. Status chip (announced · sold-out · attended).</p></div>
+      <div class="obj"><div class="obj-vis"><div class="v-mix"></div></div><span class="obj-k">vi · mix / audio</span><h3 class="obj-h">A <em>signal</em></h3><p class="obj-p">Waveform across the object's width. Number, title, BPM, length in mono. Plays inline; never autoplay.</p></div>
+      <div class="obj"><div class="obj-vis"><div class="v-drop"></div></div><span class="obj-k">vii · product / drop</span><h3 class="obj-h">A <em>piece</em></h3><p class="obj-p">A still of the thing. Price in display italic. Status dot (available · on the bench · spoken for · sold).</p></div>
+      <div class="obj"><div class="obj-vis"><div class="v-cta">Enquire</div></div><span class="obj-k">viii · booking / contact</span><h3 class="obj-h">An <em>invitation</em></h3><p class="obj-p">A line, a step, a calendar — never a "lead-gen form." Single-question first. Calm primary, never urgent.</p></div>
+
+      <div class="obj"><div class="obj-vis"><div class="v-test"><em>"The room is a quiet place to be still."</em></div></div><span class="obj-k">ix · testimonial</span><h3 class="obj-h">A <em>witness</em></h3><p class="obj-p">Pull-quote in display italic. Author in mono. Credit line, not a star rating. Never carousel.</p></div>
+      <div class="obj"><div class="obj-vis"><div class="v-mood"><span></span><span></span><span></span><span></span></div></div><span class="obj-k">x · moodboard / influence</span><h3 class="obj-h">A <em>moodboard</em></h3><p class="obj-p">Four to nine tiles, asymmetric, slightly torn. References, influences, what you'd be seen near. Identity by adjacency.</p></div>
+      <div class="obj"><div class="obj-vis"><div class="v-portal"></div></div><span class="obj-k">xi · portal / link</span><h3 class="obj-h">A <em>doorway</em></h3><p class="obj-p">Not a link — a passage to another room. Aperture mark, soft glow, the receiving room's accent leaking through.</p></div>
+      <div class="obj"><div class="obj-vis"><div class="v-trace"></div></div><span class="obj-k">xii · trace / guestbook</span><h3 class="obj-h">A <em>mark</em></h3><p class="obj-p">A handwritten line, an initial, a date in mono. Pinned to the wall. Visible to all visitors; moderated by the owner.</p></div>
+
+      <div class="obj"><div class="obj-vis"><div class="v-cta" style="background:transparent;color:var(--p-ink);border:1px solid var(--p-ink)">Cross the threshold →</div></div><span class="obj-k">xiii · cta</span><h3 class="obj-h">A <em>step</em></h3><p class="obj-p">Two words in mono uppercase, slight tracking. Sharp corners. Hover is a quiet swap, not a colour explosion.</p></div>
+      <div class="obj"><div class="obj-vis"><div class="v-archive"></div></div><span class="obj-k">xiv · archive item</span><h3 class="obj-h">A <em>record</em></h3><p class="obj-p">Catalogue number, date, brief. Hairline rules. Reads as a ledger row, not a card. Ages well.</p></div>
+      <div class="obj"><div class="obj-vis"><div style="display:flex;align-items:center;gap:6px;font-family:var(--p-f-mono);font-size:11px;color:var(--p-on-paper);text-transform:uppercase;letter-spacing:0.18em"><span class="dot" style="background:var(--p-moss)"></span> live tonight</div></div><span class="obj-k">xv · signal / status</span><h3 class="obj-h">A <em>state</em></h3><p class="obj-p">Dot plus mono uppercase. Six states max per room: <em>live, soon, open, paused, archived, sold</em>. Never a badge swarm.</p></div>
+
+      <div class="obj" style="background:linear-gradient(180deg,var(--p-bone),color-mix(in oklab, var(--p-copper) 6%, var(--p-bone)));min-height:auto;justify-content:center;align-items:flex-start"><span class="obj-k">→ closed list</span><h3 class="obj-h" style="font-size:18px">No new object types <em>per release</em>.</h3><p class="obj-p">If a room needs a sixteenth, it goes to the system designer. The closed list is what keeps rooms differentiable without proliferation.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ § 06 · Motion grammar ============ -->
+<section class="sec stage" id="motion">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no" style="color:var(--p-copper-soft)">vi.</span>
+      <h2 class="sec-h" style="color:var(--p-on-stage)">Motion <em>grammar</em></h2>
+      <span class="sec-tag">§ 06 · per-world verbs</span>
+    </div>
+    <p class="sec-lede" style="color:var(--p-on-stage)">Motion is a vocabulary, not a feature. Each world has named verbs; <strong>no world borrows another's verbs without permission</strong>. Cinematic eases, generous durations, never utility-app snap.</p>
+
+    <div class="motion" style="background:#16140f;border-color:rgba(255,255,255,0.08)">
+      <div class="motion-row h" style="background:#221e16;color:var(--p-on-stage-mute)">
+        <div class="motion-cell" style="color:var(--p-on-stage-mute);border-color:rgba(255,255,255,0.06)">world</div>
+        <div class="motion-cell" style="color:var(--p-on-stage-mute);border-color:rgba(255,255,255,0.06)">threshold entry</div>
+        <div class="motion-cell" style="color:var(--p-on-stage-mute);border-color:rgba(255,255,255,0.06)">chamber reveal</div>
+        <div class="motion-cell" style="color:var(--p-on-stage-mute);border-color:rgba(255,255,255,0.06)">object focus</div>
+        <div class="motion-cell" style="color:var(--p-on-stage-mute);border-color:rgba(255,255,255,0.06)">trace appearance</div>
+      </div>
+      <div class="motion-row" style="border-color:rgba(255,255,255,0.06)">
+        <div class="motion-cell world" style="color:var(--p-bone);border-color:rgba(255,255,255,0.06)">Gallery</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>spotlight-in</em> · 1400ms cinema</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>hush</em> · room recedes 6%</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>focus</em> · ken burns 0.5%</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>dust</em> · drifts in</div>
+      </div>
+      <div class="motion-row" style="border-color:rgba(255,255,255,0.06)">
+        <div class="motion-cell world" style="color:var(--p-bone);border-color:rgba(255,255,255,0.06)">DJ booth</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>marquee</em> · scroll 14s</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>scan</em> · line wipes down</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>pulse</em> · sync to BPM</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>signal</em> · waveform tick</div>
+      </div>
+      <div class="motion-row" style="border-color:rgba(255,255,255,0.06)">
+        <div class="motion-cell world" style="color:var(--p-bone);border-color:rgba(255,255,255,0.06)">Altar</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>breath</em> · 4s scale 0.4%</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>glow</em> · soft halo</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>still</em> · hover suppresses</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>warmth</em> · accent fades up</div>
+      </div>
+      <div class="motion-row" style="border-color:rgba(255,255,255,0.06)">
+        <div class="motion-cell world" style="color:var(--p-bone);border-color:rgba(255,255,255,0.06)">Archive</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>reveal</em> · drawer slides 720ms</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>page-turn</em> · slow</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>evidence</em> · pull-out lift</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>residue</em> · ink-bleed</div>
+      </div>
+      <div class="motion-row" style="border-color:rgba(255,255,255,0.06)">
+        <div class="motion-cell world" style="color:var(--p-bone);border-color:rgba(255,255,255,0.06)">Stall</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>none</em> · paper is still</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>sort</em> · column re-orders</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>touch</em> · tactile press</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>stamp</em> · status flips</div>
+      </div>
+      <div class="motion-row" style="border-color:rgba(255,255,255,0.06)">
+        <div class="motion-cell world" style="color:var(--p-bone);border-color:rgba(255,255,255,0.06)">Drop</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>fall</em> · garment drops in</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>rack</em> · lookbook slide</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>turn</em> · 360 on hover</div>
+        <div class="motion-cell" style="color:var(--p-on-stage);border-color:rgba(255,255,255,0.06)"><em>sold</em> · cross-out stamp</div>
+      </div>
+    </div>
+
+    <p class="prose" style="margin-top:24px;color:var(--p-on-stage-mute)">
+      <strong>Cross-world rules.</strong>
+      Every motion respects <em>prefers-reduced-motion</em> (static fallback to end state). Threshold motion plays once; chamber motion is on demand. Object focus uses <em>p-ease-camera</em> at 720ms. Portal hover uses <em>p-ease-tactile</em> at 180ms. Mode transitions (Guided → Wild) cross-fade at 360ms. <strong>If a motion needs explanation, it is wrong.</strong>
+    </p>
+  </div>
+</section>
+
+<!-- ============ § 07 · Tokens ============ -->
+<section class="sec" id="tokens">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no">vii.</span>
+      <h2 class="sec-h">Token <em>architecture</em></h2>
+      <span class="sec-tag">§ 07 · three layers, three prefixes</span>
+    </div>
+    <p class="sec-lede">Tokens split by layer. <strong>The shell is fixed; the room is mutable.</strong> An owner can repaint a room; an owner can never repaint the cockpit.</p>
+
+    <div class="tokens-grid">
+      <div class="tok-col">
+        <span class="tok-k">layer · world</span>
+        <h3 class="tok-h">World tokens<span class="tok-fixed">fixed</span></h3>
+        <div class="tok-meta">prefix <strong style="color:var(--p-on-paper)">--p-*</strong> · public network</div>
+        <ul class="tok-list">
+          <li>--p-paper<span class="v">#f0ebe1</span></li>
+          <li>--p-bone<span class="v">#f8f4ec</span></li>
+          <li>--p-stage<span class="v">#0e0d0b</span></li>
+          <li>--p-ink<span class="v">#0d0c0a</span></li>
+          <li>--p-copper<span class="v">oklch 38</span></li>
+          <li>--p-moss<span class="v">oklch 138</span></li>
+          <li>--p-vermilion<span class="v">oklch 32</span></li>
+          <li>--p-brass<span class="v">oklch 82</span></li>
+          <li>--p-cobalt<span class="v">oklch 250</span></li>
+          <li>--p-f-display<span class="v">Instrument</span></li>
+          <li>--p-f-ui<span class="v">Geist</span></li>
+          <li>--p-f-mono<span class="v">JetBrains</span></li>
+        </ul>
+      </div>
+      <div class="tok-col">
+        <span class="tok-k">layer · cockpit</span>
+        <h3 class="tok-h">Studio tokens<span class="tok-fixed">fixed</span></h3>
+        <div class="tok-meta">prefix <strong style="color:var(--p-on-paper)">--ck-*</strong> · editor chrome</div>
+        <ul class="tok-list">
+          <li>--ck-bg<span class="v">stage</span></li>
+          <li>--ck-text<span class="v">bone</span></li>
+          <li>--ck-accent<span class="v">↑ room</span></li>
+          <li>--ck-aurora-tint<span class="v">↑ room</span></li>
+          <li>--ck-rule<span class="v">8% bone</span></li>
+          <li>--ck-rule-strong<span class="v">18% bone</span></li>
+          <li>--ck-glow<span class="v">↑ room</span></li>
+          <li>--ck-spine-bg<span class="v">stage-2</span></li>
+          <li>--ck-inspector-bg<span class="v">stage-2</span></li>
+          <li>--ck-thumb-zone<span class="v">88px</span></li>
+          <li>--ck-radius<span class="v">2px</span></li>
+          <li>--ck-motion<span class="v">studio ease</span></li>
+        </ul>
+      </div>
+      <div class="tok-col">
+        <span class="tok-k">layer · room</span>
+        <h3 class="tok-h">Room tokens<span class="tok-mutable">mutable per kit + skin</span></h3>
+        <div class="tok-meta">prefix <strong style="color:var(--p-on-paper)">--r*</strong> · rendered room</div>
+        <ul class="tok-list">
+          <li>--rb<span class="v">background</span></li>
+          <li>--rs<span class="v">surface</span></li>
+          <li>--rt<span class="v">text</span></li>
+          <li>--rm<span class="v">muted</span></li>
+          <li>--ra<span class="v">accent</span></li>
+          <li>--rg<span class="v">glow / selection</span></li>
+          <li>--rr<span class="v">radius</span></li>
+          <li>--rhw<span class="v">heading weight</span></li>
+          <li>.kit-gallery-artist<span class="v">↪</span></li>
+          <li>.kit-archive-evidence<span class="v">↪</span></li>
+          <li>.kit-dj-booth<span class="v">↪</span></li>
+          <li>.kit-stall<span class="v">↪</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="prose" style="margin-top:36px">
+      <strong>Authority.</strong> Owners may override room tokens via skin (with system-supplied legibility checks). Owners may never override world or cockpit tokens — those are the system's promise to visitors. <em>Aura tokens</em> (glow, halo, grain density) are room-level and shimmer-aware: motion intensity attenuates with <em>prefers-reduced-motion</em> and at small viewports.
+    </p>
+  </div>
+</section>
+
+<!-- ============ § 08 · Cockpit ============ -->
+<section class="sec stage" id="cockpit">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no" style="color:var(--p-copper-soft)">viii.</span>
+      <h2 class="sec-h" style="color:var(--p-on-stage)">Studio <em>cockpit</em></h2>
+      <span class="sec-tag">§ 08 · guided · wild · operator</span>
+    </div>
+    <p class="sec-lede" style="color:var(--p-on-stage)">A room-direction tool for non-technical people. Three conceptual modes on one spectrum. <strong>The visitor never sees any of them.</strong></p>
+
+    <div class="cockpit-modes">
+
+      <!-- Guided -->
+      <article class="cm cm-guided">
+        <header class="cm-head">
+          <div class="l"><span class="g"></span><span>Kerkvliet-Goddard</span></div>
+          <div class="r"><span class="d"></span> Private draft</div>
+        </header>
+        <div class="cm-body">
+          <span class="cm-tag">Mode · guided</span>
+          <div class="sp">
+            <div class="sp-row a"><span class="h"></span><span>Threshold</span></div>
+            <div class="sp-row"><span class="h" style="background:transparent;border:1px solid var(--p-rule-dark)"></span><span>The wall · 5 works</span></div>
+            <div class="sp-row"><span class="h" style="background:transparent;border:1px solid var(--p-rule-dark)"></span><span>i. Willow</span></div>
+            <div class="sp-row"><span class="h" style="background:transparent;border:1px solid var(--p-rule-dark)"></span><span>ii. The Forest</span></div>
+            <div class="sp-row"><span class="h" style="background:transparent;border:1px solid var(--p-rule-dark)"></span><span>iii. Bridle Road</span></div>
+            <div class="sp-row"><span class="h" style="background:transparent;border:1px solid var(--p-rule-dark)"></span><span>iv. Hedgerow</span></div>
+          </div>
+          <div class="stg">
+            <span class="stg-label">ii. The Forest in Late Winter</span>
+          </div>
+          <div class="ins">
+            <div class="ins-h">Object · artwork</div>
+            <div class="ins-row"><span class="k">title</span><div class="f">The Forest in Late Winter</div></div>
+            <div class="ins-row"><span class="k">medium</span><div class="f">Watercolour on cotton</div></div>
+            <div class="ins-row"><span class="k">price</span><div class="f">€4 200</div></div>
+            <div class="ins-row"><span class="k">curator note</span><div class="f" style="font-size:11px;line-height:1.5">"The oak survives because the pines around it die first."</div></div>
+          </div>
+        </div>
+        <div class="cm-cap">
+          <span class="k">i · guided</span>
+          <h3 class="h">"The system <em>helps</em> you."</h3>
+          <p class="p">For most clients. Kit defaults, validated object placement, safe mobile recovery. Cannot break the room. Inspector is calm, copy is plain-and-warm. Save is always reachable.</p>
+        </div>
+      </article>
+
+      <!-- Wild -->
+      <article class="cm cm-wild">
+        <header class="cm-head">
+          <div class="l"><span class="g"></span><span>T.AMP</span></div>
+          <div class="r"><span class="d" style="background:var(--p-vermilion)"></span> Wild · draft</div>
+        </header>
+        <div class="cm-body">
+          <span class="cm-tag">Mode · wild</span>
+          <div class="ob o1"></div>
+          <div class="float-tool"><span>+</span><span>↻</span><span>⤢</span><span>×</span></div>
+          <div class="ob o3"></div>
+          <div class="ob o2">"offline bpm"</div>
+          <div class="ob o4">DROP 04</div>
+        </div>
+        <div class="cm-cap">
+          <span class="k">ii · wild</span>
+          <h3 class="h">"The system <em>listens</em>."</h3>
+          <p class="p">For confident users. Move, resize, rotate, layer, pin. The MySpace/Tumblr freedom layer — controlled weirdness inside a safe grammar. Mobile always has a clean recovery view.</p>
+        </div>
+      </article>
+
+      <!-- Operator -->
+      <article class="cm cm-op">
+        <header class="cm-head">
+          <div class="l"><span class="g"></span><span>Operator · all rooms</span></div>
+          <div class="r"><span class="d" style="background:var(--p-brass)"></span> internal only</div>
+        </header>
+        <div class="cm-body">
+          <span class="cm-tag" style="left:auto;right:10px;top:30px">Mode · operator</span>
+          <div class="l"><span class="t">06:12</span><span class="m">bbb.vision · <strong>publish</strong></span><span class="s">ok</span></div>
+          <div class="l"><span class="t">06:11</span><span class="m">kerk.goddard · qa <strong>spotlight</strong></span><span class="s">ok</span></div>
+          <div class="l"><span class="t">06:09</span><span class="m">t.amp · migrate <strong>r2 → r3</strong></span><span class="s">ok</span></div>
+          <div class="l"><span class="t">06:04</span><span class="m">halberg · inspect <strong>17 objects</strong></span><span class="s">ok</span></div>
+          <div class="l"><span class="t">05:58</span><span class="m">[skin lab] · tint <strong>+04°h</strong></span><span class="s">staged</span></div>
+          <div class="l"><span class="t">05:46</span><span class="m">halberg · recover <strong>obj #0421</strong></span><span class="s err">repaired</span></div>
+          <div class="l"><span class="t">05:32</span><span class="m">t.amp.threshold · cap fps <strong>60→48</strong></span><span class="s">ok</span></div>
+          <div class="l"><span class="t">05:18</span><span class="m">kerk.goddard · audit <strong>reduced motion</strong></span><span class="s">pass</span></div>
+        </div>
+        <div class="cm-foot"><span>op-shell · 0.21.4</span><span>4 rooms live · 0 errors</span></div>
+        <div class="cm-cap">
+          <span class="k">iii · operator</span>
+          <h3 class="h">"The system <em>follows</em>."</h3>
+          <p class="p">For internal &amp; advanced users. Fix, migrate, inspect, recover, QA. Hidden by default behind a long-press on the glyph. Never client-facing.</p>
+        </div>
+      </article>
+    </div>
+
+    <p class="prose" style="margin-top:36px;color:var(--p-on-stage-mute)">
+      <strong>One spectrum, not two toggles.</strong> Every room starts Guided. Wild features unlock progressively as the owner reaches for them — never as a "Pro plan" upsell. Operator mode lives behind an internal-only handshake; clients should not know it exists unless something needed to be recovered, and even then the recovery is presented in their language, not ours.
+    </p>
+  </div>
+</section>
+
+<!-- ============ § 09 · Mobile ============ -->
+<section class="sec" id="mobile">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no">ix.</span>
+      <h2 class="sec-h"><em>Mobile</em> is the room</h2>
+      <span class="sec-tag">§ 09 · designed, not collapsed</span>
+    </div>
+    <p class="sec-lede">Most rooms will be entered through a phone. <strong>Mobile is the primary surface, not a fallback.</strong> Every Threshold → Chamber → Object → Action arc has a mobile-native variant.</p>
+
+    <div class="mobile-row">
+      <div>
+        <div class="ph"><div class="ph-notch"></div>
+          <div class="ph-screen"><div class="m-threshold">
+            <div class="top"><span>● live</span><span>06.06</span></div>
+            <div class="name">bbb.<em style="color:var(--p-copper-soft)">vision</em></div>
+            <div class="cta">
+              <div class="b">Enter the gallery →</div>
+              <div class="b" style="background:transparent;color:var(--p-bone);border:1px solid rgba(248,244,236,0.4)">Read · 3 works on view</div>
+            </div>
+          </div></div>
+        </div>
+        <div class="ph-label">i · threshold</div>
+        <div class="ph-sub">Cinematic, thumb-safe</div>
+      </div>
+      <div>
+        <div class="ph"><div class="ph-notch"></div>
+          <div class="ph-screen"><div class="m-chamber">
+            <span class="eyebrow">ii · the wall</span>
+            <div class="name">5 works</div>
+            <div class="work"></div>
+            <div class="meta">i. Willow · 2024</div>
+            <div class="work" style="background:linear-gradient(135deg,#2a2218,#5a4322 70%, #b78c4e)"></div>
+            <div class="meta">ii. The Forest · 2023</div>
+            <div class="dock"><div class="d">Enquire</div><div class="d s">Wall</div></div>
+          </div></div>
+        </div>
+        <div class="ph-label">ii · chamber</div>
+        <div class="ph-sub">Objects as room items</div>
+      </div>
+      <div>
+        <div class="ph"><div class="ph-notch"></div>
+          <div class="ph-screen"><div class="m-cockpit">
+            <div class="top"><span>● draft</span><span>kerk · ii</span></div>
+            <div class="stg"></div>
+            <div class="sheet">
+              <div class="k">object · artwork</div>
+              <div class="f">The Forest in Late Winter</div>
+            </div>
+            <div class="fab">+ save · publish</div>
+          </div></div>
+        </div>
+        <div class="ph-label">iii · cockpit · mobile</div>
+        <div class="ph-sub">Bottom-sheet inspector</div>
+      </div>
+      <div>
+        <div class="ph"><div class="ph-notch"></div>
+          <div class="ph-screen"><div class="m-archive">
+            <div class="head">Field Notes</div>
+            <div class="item"><span class="y">2024 · oral</span>"The river never ran low that summer. The elders remembered when it did."</div>
+            <div class="item"><span class="y">2023 · letter</span>"Council minutes, June 14. The bridge stays."</div>
+            <div class="item"><span class="y">2022 · photo</span>"South path, harvest day, 18 figures."</div>
+          </div></div>
+        </div>
+        <div class="ph-label">iv · archive</div>
+        <div class="ph-sub">Ledger on the phone</div>
+      </div>
+    </div>
+
+    <p class="prose" style="margin-top:36px">
+      <strong>Mobile rules.</strong>
+      Hit targets ≥ 44px. Thumb-zone action bar on every chamber. Threshold motion ≤ 1.4s, cap fps to 48. Wild Mode mobile recovery is always one tap — the system can re-flow a wild desktop room into a safe stacked phone view without the owner doing anything. <em>Public views never expose editor chrome.</em> An incognito visit from the owner's phone shows the visitor's experience exactly, no inspector ghosts.
+    </p>
+  </div>
+</section>
+
+<!-- ============ § 10 · Do not flatten ============ -->
+<section class="sec" id="rules">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no">x.</span>
+      <h2 class="sec-h">Do not <em>flatten</em></h2>
+      <span class="sec-tag">§ 10 · rulebook</span>
+    </div>
+    <p class="sec-lede">Twelve rules for future designers and engineers. <strong>If a release violates one of these, it does not ship.</strong></p>
+
+    <div class="rules">
+      <div class="rule"><span class="rule-n">i.</span><div class="rule-body"><h4 class="rule-h">Rooms are not website templates.</h4><p class="rule-p">A room is a place, not a layout. If you can describe it as "header · hero · features · CTA · footer," it has flattened. <em>Rebuild from the kit's spatial logic, not from a sitemap.</em></p></div></div>
+      <div class="rule"><span class="rule-n">ii.</span><div class="rule-body"><h4 class="rule-h">Not all rooms should look clean.</h4><p class="rule-p">Some rooms are loud. Some are loose. Some are torn. The system supports controlled weirdness. <em>If every room renders to the same beige editorial, the system has failed.</em></p></div></div>
+      <div class="rule"><span class="rule-n">iii.</span><div class="rule-body"><h4 class="rule-h">Do not remove weirdness in the name of polish.</h4><p class="rule-p">A glitch, a marquee, a torn moodboard tile, an asymmetric arrangement — these are the system's signature. <em>Polish without identity is slop.</em></p></div></div>
+      <div class="rule"><span class="rule-n">iv.</span><div class="rule-body"><h4 class="rule-h">Never hide the spatial metaphor.</h4><p class="rule-p">"Page," "section," "block," "widget" are banned from user-facing copy. Use <em>room, chamber, object, threshold, portal, trace</em>. If engineers need internal vocabulary, fine — the user never sees it.</p></div></div>
+      <div class="rule"><span class="rule-n">v.</span><div class="rule-body"><h4 class="rule-h">The cockpit is not a CMS.</h4><p class="rule-p">No fill-in forms as the primary surface. The owner edits by touching the live room. The inspector is secondary. <em>"Enter your headline" is forbidden.</em></p></div></div>
+      <div class="rule"><span class="rule-n">vi.</span><div class="rule-body"><h4 class="rule-h">Do not invent live social proof.</h4><p class="rule-p">No fake "27 people viewing." No invented attendees. Traces show what actually happened in the room. <em>Honesty is part of the premium.</em></p></div></div>
+      <div class="rule"><span class="rule-n">vii.</span><div class="rule-body"><h4 class="rule-h">Public rooms never expose editor state.</h4><p class="rule-p">No selection rings, no hover handles, no "draft" watermarks bleeding into the visitor view. <em>The visitor and the owner see different surfaces. Always.</em></p></div></div>
+      <div class="rule"><span class="rule-n">viii.</span><div class="rule-body"><h4 class="rule-h">Never sacrifice mobile safety for desktop wildness.</h4><p class="rule-p">However wild a desktop room becomes, a mobile-safe recovery view must exist. CTAs always reachable. Chambers stack cleanly. <em>Commercial function is a baseline, not a tier.</em></p></div></div>
+      <div class="rule"><span class="rule-n">ix.</span><div class="rule-body"><h4 class="rule-h">Do not over-polish away identity.</h4><p class="rule-p">A room that looks "almost good enough for Apple" is wrong. A room should look like the person whose room it is — <em>even if that person's taste is loud, regional, devotional, or strange.</em></p></div></div>
+      <div class="rule"><span class="rule-n">x.</span><div class="rule-body"><h4 class="rule-h">Do not borrow another world's verbs.</h4><p class="rule-p">A gallery does not "marquee." A booth does not "breathe." Motion verbs are the world's signature. <em>Mixing them dissolves both.</em></p></div></div>
+      <div class="rule"><span class="rule-n">xi.</span><div class="rule-body"><h4 class="rule-h">"New age" is not astrology-app generic.</h4><p class="rule-p">No zodiac, no crystals, no purple gradients, no fake spirituality. "New age" means <em>ritualised entry, aura, breath, trace, threshold</em> — atmosphere, not aesthetic cliché.</p></div></div>
+      <div class="rule"><span class="rule-n">xii.</span><div class="rule-body"><h4 class="rule-h">If you can ship it from a Figma template, you have failed.</h4><p class="rule-p">Each pilot is hand-directed. Templates are the floor of the industry; <em>Presence's floor is bbb.vision</em>. Anything less is template work and should not enter the catalogue.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ § 11 · Handoff ============ -->
+<section class="sec" id="handoff">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-no">xi.</span>
+      <h2 class="sec-h">Implementation <em>handoff</em></h2>
+      <span class="sec-tag">§ 11 · for engineers</span>
+    </div>
+    <p class="sec-lede">Where the design system lives, what each room owns, how to add a new world. <strong>Read before designing or building the fifth room.</strong></p>
+
+    <div class="handoff">
+      <div class="ho">
+        <span class="ho-k">i · architecture</span>
+        <h3 class="ho-h">Where things live</h3>
+        <ul>
+          <li><strong>assets/colors_and_type.css</strong> — single token source. All <code style="font-family:var(--p-f-mono);font-size:12px">--p-*</code>, <code style="font-family:var(--p-f-mono);font-size:12px">--ck-*</code>, kit themes.</li>
+          <li><strong>pilots/&lt;room&gt;/</strong> — one folder per room. Own CSS, JS, threshold + chamber.</li>
+          <li><strong>pilots/editor.html</strong> — cockpit shell. Reads the room as data, never embeds it.</li>
+          <li><strong>direction/</strong> — this pack. Versioned.</li>
+        </ul>
+      </div>
+      <div class="ho">
+        <span class="ho-k">ii · adding a world</span>
+        <h3 class="ho-h">How to add the fifth room</h3>
+        <ul>
+          <li>Write the world's <strong>spatial logic</strong> (atlas card) before any CSS.</li>
+          <li>Declare its <strong>motion verbs</strong> — six max — and add them to the grammar table.</li>
+          <li>Add a <strong>.kit-*</strong> class with <code style="font-family:var(--p-f-mono);font-size:12px">--rb, --rs, --rt, --rm, --ra, --rg, --rr, --rhw</code>.</li>
+          <li>Reuse object types from the closed list. <strong>No new object types per release.</strong></li>
+          <li>Cleared the floor? Add it to the catalogue.</li>
+        </ul>
+      </div>
+      <div class="ho">
+        <span class="ho-k">iii · accessibility</span>
+        <h3 class="ho-h">Non-negotiables</h3>
+        <ul>
+          <li><strong>prefers-reduced-motion</strong> always honoured; static fallback shows end state.</li>
+          <li>Mobile hit targets ≥ <strong>44px</strong>.</li>
+          <li>Public visitor view never exposes editor chrome.</li>
+          <li>Save state every action; never lose work on a refresh.</li>
+          <li>Premium &gt; performance, but never &gt; legibility.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Foot ============ -->
+<footer class="foot">
+  <div>
+    <strong>Presence · direction</strong>
+    <p>Studio v2 · draft 01</p>
+    <p>Paired with pilot batch 01</p>
+    <p>06 · 06 · 26</p>
+  </div>
+  <div>
+    <strong>Layers</strong>
+    <p><a href="#layers">Cockpit · room · traces</a></p>
+    <p><a href="#atlas">Room-world atlas</a></p>
+    <p><a href="#tokens">Token architecture</a></p>
+  </div>
+  <div>
+    <strong>Catalogue</strong>
+    <p><a href="../pilots/index-v2.html">Pilot batch 01</a></p>
+    <p><a href="../pilots/bbb-vision/index.html">bbb.vision · the floor</a></p>
+    <p><a href="../pilots/editor.html">Cockpit preview</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

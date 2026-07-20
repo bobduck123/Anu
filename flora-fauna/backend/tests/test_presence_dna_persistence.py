@@ -5,7 +5,7 @@ Covers:
 - update-DNA via PATCH
 - public serializer exposes metadata.presence_dna
 - validator rejects shape violations and oversize payloads
-- seed_presence_dna_demo_data is idempotent and writes DNA for the six demo slugs
+- seed_presence_dna_demo_data is idempotent and writes DNA for demo/GGM slugs
 """
 
 import os
@@ -95,6 +95,21 @@ def _headers(app, *, scopes=None):
     return {"Authorization": f"Bearer {token}", "X-Control-Plane-Secret": CONTROL_SECRET}
 
 
+def _public_headers(app):
+    with app.app_context():
+        token = create_access_token(
+            identity="dna-admin",
+            additional_claims={
+                "aud": "public",
+                "token_use": "public",
+                "role": "platform_admin",
+                "username": "dna-admin",
+            },
+            expires_delta=timedelta(minutes=30),
+        )
+    return {"Authorization": f"Bearer {token}"}
+
+
 def _node_payload(tenant_id, **extra):
     base = {
         "tenant_id": tenant_id,
@@ -169,6 +184,128 @@ def test_update_replaces_presence_dna():
     assert updated["metadata"]["presence_dna"]["signature"]["signature_intensity"] == "hero_level"
 
 
+def test_private_draft_presence_dna_does_not_resolve_publicly():
+    app = _build_app()
+    tenant_id = _seed_tenant(app)
+    client = app.test_client()
+    headers = _headers(app)
+
+    create = client.post(
+        "/api/control/presence/nodes",
+        json=_node_payload(
+            tenant_id,
+            slug="private-dna-room",
+            presence_dna=VALID_DNA,
+            status="draft",
+            visibility="private",
+        ),
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert create.status_code == 201, create.get_json()
+    body = create.get_json()["data"]
+    assert body["metadata"]["presence_dna"]["signature"]["signature_module"] == "gallery_wall"
+
+    public = client.get("/api/presence/public/private-dna-room")
+    assert public.status_code == 404
+
+
+def test_custom_presence_style_dna_owner_full_public_safe_and_optional():
+    app = _build_app()
+    tenant_id = _seed_tenant(app)
+    client = app.test_client()
+    headers = _headers(app)
+    custom_presence = {
+        "schema_version": "custom-presence-style-dna-v1",
+        "custom_renderer_key": "ggm-faithful-room-v1",
+        "fidelity_status": "source_dna_extracted",
+        "source_site_reference": {
+            "reference_id": "ggm-source-site",
+            "label": "GGM static portfolio",
+            "public_url": "https://example.test/ggm",
+            "filesystem_path": "C:\\Dev\\ggm",
+        },
+        "public_style_dna": {
+            "palette": {"paper": "#f4f4f4", "ink": "#111111"},
+            "entry": "artwork_first",
+        },
+        "style_dna": {
+            "palette": {"paper": "#f4f4f4", "ink": "#111111"},
+            "source": {"filesystem_path": "C:\\Dev\\ggm"},
+            "motion": {"hero": "dither_morph"},
+        },
+        "source_site_internal": {"filesystem_path": "C:\\Dev\\ggm"},
+        "fidelity": {"status": "owner_review_pending", "visual_parity": "required"},
+    }
+
+    create = client.post(
+        "/api/control/presence/nodes",
+        json=_node_payload(
+            tenant_id,
+            slug="custom-style-dna",
+            metadata={
+                "custom_presence": custom_presence,
+                "pilot_admin_provisioning": {
+                    "target_owner_user_id": 44,
+                    "created_by": "provision_presence_pilot_admin",
+                },
+            },
+        ),
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert create.status_code == 201, create.get_json()
+    node_id = create.get_json()["data"]["id"]
+    assert create.get_json()["data"]["metadata"]["custom_presence"]["style_dna"]["source"]["filesystem_path"] == "C:\\Dev\\ggm"
+
+    publish = client.post(
+        f"/api/control/presence/nodes/{node_id}/publish",
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert publish.status_code == 200
+
+    public = client.get("/api/presence/public/custom-style-dna")
+    assert public.status_code == 200, public.get_json()
+    public_custom = public.get_json()["data"]["metadata"]["custom_presence"]
+    assert public_custom["custom_renderer_key"] == "ggm-faithful-room-v1"
+    assert public_custom["style_dna"]["entry"] == "artwork_first"
+    assert "public_style_dna" not in public_custom
+    assert "style_dna" not in public_custom["source_site_reference"]
+    assert "filesystem_path" not in public_custom["source_site_reference"]
+    assert "source_site_internal" not in public_custom
+    assert public_custom["style_dna"] != custom_presence["style_dna"]
+    assert "pilot_admin_provisioning" not in public.get_json()["data"]["metadata"]
+
+    owner = client.get(
+        f"/api/presence/owner/nodes/{node_id}",
+        headers=_public_headers(app),
+        base_url="http://public.test",
+    )
+    assert owner.status_code == 200, owner.get_json()
+    owner_custom = owner.get_json()["data"]["metadata"]["custom_presence"]
+    assert owner_custom["style_dna"]["source"]["filesystem_path"] == "C:\\Dev\\ggm"
+    assert owner_custom["fidelity"]["status"] == "owner_review_pending"
+    assert owner.get_json()["data"]["metadata"]["pilot_admin_provisioning"]["target_owner_user_id"] == 44
+
+    legacy = client.post(
+        "/api/control/presence/nodes",
+        json=_node_payload(tenant_id, slug="custom-style-legacy"),
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert legacy.status_code == 201
+    legacy_id = legacy.get_json()["data"]["id"]
+    assert client.post(
+        f"/api/control/presence/nodes/{legacy_id}/publish",
+        headers=headers,
+        base_url="http://control.test",
+    ).status_code == 200
+    legacy_public = client.get("/api/presence/public/custom-style-legacy")
+    assert legacy_public.status_code == 200
+    assert not (legacy_public.get_json()["data"].get("metadata") or {}).get("custom_presence")
+
+
 def test_invalid_presence_dna_rejected():
     app = _build_app()
     tenant_id = _seed_tenant(app)
@@ -200,6 +337,60 @@ def test_invalid_presence_dna_rejected():
         base_url="http://control.test",
     )
     assert bad_source.status_code == 400
+
+    # Legacy frontend overlay source is no longer authoritative backend DNA.
+    legacy_overlay_source = client.post(
+        "/api/control/presence/nodes",
+        json=_node_payload(
+            tenant_id,
+            slug="legacy-overlay-source",
+            presence_dna={**VALID_DNA, "source": "demo_overlay"},
+        ),
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert legacy_overlay_source.status_code == 400
+
+    # Enum values are explicit; arbitrary new archetypes must be added to the contract first.
+    bad_enum = client.post(
+        "/api/control/presence/nodes",
+        json=_node_payload(
+            tenant_id,
+            slug="bad-dna-enum",
+            presence_dna={**VALID_DNA, "practice": {**VALID_DNA["practice"], "field": "crypto_astrology"}},
+        ),
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert bad_enum.status_code == 400
+
+    # Unknown fields and private/editor-only keys are blocked recursively.
+    bad_field = client.post(
+        "/api/control/presence/nodes",
+        json=_node_payload(
+            tenant_id,
+            slug="bad-dna-field",
+            presence_dna={**VALID_DNA, "visual": {**VALID_DNA["visual"], "palette": "red"}},
+        ),
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert bad_field.status_code == 400
+
+    restricted = client.post(
+        "/api/control/presence/nodes",
+        json=_node_payload(
+            tenant_id,
+            slug="bad-dna-restricted",
+            presence_dna={
+                **VALID_DNA,
+                "signature": {**VALID_DNA["signature"], "editorOnly": {"secret": "do-not-publish"}},
+            },
+        ),
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert restricted.status_code == 400
 
 
 def test_oversize_presence_dna_rejected():
@@ -255,6 +446,7 @@ def test_seed_presence_dna_demo_data_is_idempotent():
         assert {row["slug"] for row in first["rooms"]} == {
             "rooms-underground-dj",
             "rooms-gallery-painter",
+            "ggm-christina-goddard",
             "rooms-material-carpenter",
             "rooms-local-carpenter",
             "rooms-community-healer",
@@ -262,12 +454,23 @@ def test_seed_presence_dna_demo_data_is_idempotent():
         }
         assert all(row["action"] == "created" for row in first["rooms"])
 
-        # Each seeded node has presence_dna in node_metadata.
+        expected_signatures = {
+            "rooms-underground-dj": "glitch_gallery",
+            "rooms-gallery-painter": "gallery_wall",
+            "ggm-christina-goddard": "archive_wall",
+            "rooms-material-carpenter": "materials_board",
+            "rooms-local-carpenter": "before_after_slider",
+            "rooms-community-healer": "ritual_booking_panel",
+            "rooms-sharp-consultant": "quote_oracle",
+        }
+        # Each seeded node has validated, persisted presence_dna in node_metadata.
         for slug in [row["slug"] for row in first["rooms"]]:
             node = PresenceNode.query.filter_by(slug=slug).first()
             assert node is not None
             dna = (node.node_metadata or {}).get("presence_dna")
             assert dna and "practice" in dna and "signature" in dna
+            assert dna.get("source") != "demo_overlay"
+            assert dna["signature"]["signature_module"] == expected_signatures[slug]
 
         # Second run: idempotent, all actions become metadata_updated.
         second = seed_presence_dna_demo_data()
@@ -276,6 +479,97 @@ def test_seed_presence_dna_demo_data_is_idempotent():
 
         # No duplicates created.
         assert PresenceNode.query.filter_by(slug="rooms-underground-dj").count() == 1
+
+
+def test_seed_presence_dna_demo_data_persists_ggm_cultural_archive_dna_without_overlay_fields():
+    app = _build_app()
+    _seed_tenant(app)
+    with app.app_context():
+        from manara_backend_app.extensions import db
+        from manara_backend_app.models import PresenceNode
+        from manara_backend_app.services.presence_service import (
+            public_presence_node_by_slug,
+            serialize_presence_node,
+            seed_presence_dna_demo_data,
+            seed_presence_templates,
+        )
+
+        seed_presence_templates()
+        db.session.commit()
+        seed_presence_dna_demo_data()
+        db.session.commit()
+
+        node = PresenceNode.query.filter_by(slug="ggm-christina-goddard").first()
+        assert node is not None
+        assert node.status == "published"
+        assert node.visibility == "public"
+        assert node.public_status == "public"
+
+        dna = node.node_metadata["presence_dna"]
+        assert dna["practice"]["field"] == "culture"
+        assert dna["practice"]["practice_mode"] == "program"
+        assert dna["composition"]["entry_type"] == "archive_first"
+        assert dna["composition"]["navigation_mode"] == "story_path"
+        assert dna["visual"]["palette_mode"] == "cultural"
+        assert dna["visual"]["image_treatment"] == "archive"
+        assert dna["signature"]["signature_module"] == "archive_wall"
+        assert dna["goal"]["primary_goal"] == "grant_readiness"
+
+        public_node = public_presence_node_by_slug("ggm-christina-goddard")
+        assert public_node is not None
+        public_metadata = serialize_presence_node(public_node, public=True)["metadata"]
+        assert public_metadata["presence_dna"]["signature"]["signature_module"] == "archive_wall"
+        public_json = str(public_metadata).lower()
+        assert "editoronly" not in public_json
+        assert "owner_user_id" not in public_json
+        assert "authsubject" not in public_json
+        assert "contactemail" not in public_json
+        assert "contactphone" not in public_json
+
+
+def test_public_serializer_omits_invalid_legacy_presence_dna():
+    app = _build_app()
+    tenant_id = _seed_tenant(app)
+    client = app.test_client()
+    headers = _headers(app)
+
+    create = client.post(
+        "/api/control/presence/nodes",
+        json=_node_payload(tenant_id, slug="legacy-dna-sanitizer"),
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert create.status_code == 201, create.get_json()
+    node_id = create.get_json()["data"]["id"]
+    publish = client.post(
+        f"/api/control/presence/nodes/{node_id}/publish",
+        headers=headers,
+        base_url="http://control.test",
+    )
+    assert publish.status_code == 200, publish.get_json()
+
+    with app.app_context():
+        from manara_backend_app.extensions import db
+        from manara_backend_app.models import PresenceNode
+
+        node = PresenceNode.query.get(node_id)
+        assert node is not None
+        node.node_metadata = {
+            "public_note": "kept",
+            "presence_dna": {
+                **VALID_DNA,
+                "signature": {**VALID_DNA["signature"], "editorOnly": {"secret": "do-not-publish"}},
+            },
+        }
+        db.session.commit()
+
+    public = client.get("/api/presence/public/legacy-dna-sanitizer")
+    assert public.status_code == 200, public.get_json()
+    metadata = public.get_json()["data"]["metadata"]
+    assert metadata["public_note"] == "kept"
+    assert "presence_dna" not in metadata
+    assert "editorOnly" not in str(metadata)
+    assert "do-not-publish" not in str(metadata)
 
 
 def test_two_carpenters_have_distinct_persisted_dna():

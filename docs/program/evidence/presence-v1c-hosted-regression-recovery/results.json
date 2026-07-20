@@ -1,0 +1,45 @@
+{
+  "date": "2026-05-27",
+  "editor_api_500_root_cause": "V1C unconditionally queried the optional presence_media_asset table during owner editor reads and draft serialization; hosted deployment can fail when the additive migration has not been applied.",
+  "editor_api_restored": {
+    "local": true,
+    "hosted": "pending redeploy and re-smoke"
+  },
+  "roomkey_404_root_cause": "The frontend shipped /r/[token] but did not include a /room/[id]/key published direct-entry route.",
+  "roomkey_restored": {
+    "local": true,
+    "hosted": "pending redeploy and re-smoke"
+  },
+  "v1c_private_mode_active": {
+    "default_hosted_posture": false,
+    "local_protected_mode_tested": true,
+    "activation_rule": "media migration present plus protected storage configured plus deployment verification flag plus per-upload privacy verification"
+  },
+  "v1b_fallback_available": true,
+  "migration_required": "20260526_presence_media_flow_v1c_private_draft.sql",
+  "draft_bucket_required": "PRESENCE_MEDIA_DRAFT_BUCKET",
+  "draft_bucket_private_verified": "not proven on hosted in this pass",
+  "public_payload_hygiene_clean": {
+    "local": true,
+    "hosted": "pending recovery deployment re-smoke"
+  },
+  "auth_signout_green": {
+    "local": true,
+    "hosted": "previous baseline passed; reconfirm after deployment"
+  },
+  "upload_lifecycle_status": {
+    "v1b_fallback_local": "passed",
+    "v1c_local_protected_path": "passed",
+    "hosted": "not run after recovery"
+  },
+  "private_media_status": "Capability-gated; not claimed for hosted until deployment readiness and smoke are complete.",
+  "tests": {
+    "backend_targeted": "121 passed",
+    "frontend_typecheck": "passed",
+    "frontend_build": "passed",
+    "frontend_unit_contract": "35 passed",
+    "playwright_targeted": "24 passed",
+    "git_diff_check": "passed"
+  },
+  "final_recommendation": "GO for operator-led pilots with non-sensitive uploads after hosted smoke."
+}

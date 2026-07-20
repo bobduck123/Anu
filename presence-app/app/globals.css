@@ -4306,8 +4306,10 @@ body[data-shell="studio"] {
 .presence-studio-chips button[data-state="done"] { color: var(--studio-copper); }
 .chip-num { opacity: 0.7; }
 
-/* Mobile actions */
-.presence-studio-mobile-actions { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; gap: 10px; padding: 12px 16px calc(env(safe-area-inset-bottom, 0) + 12px); background: var(--studio-card); border-top: 1px solid var(--studio-rule); z-index: 40; box-shadow: 0 -12px 28px rgba(13,12,10,0.08); }
+/* Mobile actions — sit above the always-visible drawer handle (56px) so the
+   Back / Continue pair stays tappable. The drawer (z-index 46) already eats
+   the safe-area-inset-bottom via its own padding, so we don't add it here. */
+.presence-studio-mobile-actions { position: fixed; left: 0; right: 0; bottom: 56px; display: flex; justify-content: space-between; gap: 10px; padding: 12px 16px; background: var(--studio-card); border-top: 1px solid var(--studio-rule); z-index: 47; box-shadow: 0 -12px 28px rgba(13,12,10,0.08); }
 
 /* Preview column */
 .presence-studio-preview { border-left: 1px solid var(--studio-rule); padding: 28px 24px; background: linear-gradient(180deg, var(--studio-cream-2), var(--studio-cream)); position: sticky; top: 0; align-self: start; height: 100dvh; overflow: auto; }
@@ -4433,3 +4435,1562 @@ textarea.presence-studio-input { resize: vertical; min-height: 80px; }
 @media (prefers-reduced-motion: reduce) {
   .studio-option-card, .studio-btn, .presence-studio-mobile-drawer { transition: none !important; }
 }
+
+/* =========================================================================
+ * PRESENCE — Gardens + Halls
+ * "Rooms let you be entered. Gardens let you be known by taste.
+ *  Halls let you gather. Paths let you move."
+ *
+ * Brand pack tokens (from /docs/program/evidence/presence-gardens-halls-frontend-proof
+ * design inventory). Adapted into the existing globals namespace so the
+ * Garden / Mask / Halls shells can coexist with the studio chrome and the
+ * Room renderer without clashing variables.
+ * ========================================================================= */
+
+:root {
+  /* — paper surfaces (Garden / Mask / Halls light shells) — */
+  --presence-paper:       #f0ebe1;
+  --presence-paper-2:     #e8e1d2;
+  --presence-linen:       #ddd4c1;
+  --presence-bone:        #f8f4ec;
+  --presence-ink:         #0d0c0a;
+  --presence-ink-2:       #1a1814;
+
+  /* — stage surfaces (Hall lobby, hero apertures, splash) — */
+  --presence-stage:       #0e0d0b;
+  --presence-stage-2:     #16140f;
+  --presence-stage-3:     #221e16;
+
+  /* — on-surface text — */
+  --presence-on-paper:        #161410;
+  --presence-on-paper-mute:   #5a5347;
+  --presence-on-paper-dim:    #8a8270;
+  --presence-on-stage:        #efe9da;
+  --presence-on-stage-mute:   #a59c87;
+  --presence-on-stage-dim:    #6c6452;
+
+  /* — accents (oklch, shared chroma/lightness, varying hue) — */
+  --presence-vermilion:   oklch(0.58 0.16 32);
+  --presence-brass:       oklch(0.74 0.13 82);
+  --presence-moss:        oklch(0.52 0.08 138);
+  --presence-cobalt:      oklch(0.55 0.13 250);
+  --presence-copper:      oklch(0.62 0.13 38);
+  --presence-copper-soft: oklch(0.86 0.06 60);
+  --presence-moss-soft:   oklch(0.68 0.06 138);
+
+  /* — semantic accents per surface — */
+  --garden-accent:        var(--presence-moss);     /* Gardens are living / sage */
+  --halls-accent:         var(--presence-vermilion);/* Halls are gathering / red */
+  --rooms-accent:         var(--presence-copper);   /* Rooms are commerce / copper */
+  --seed-active:          var(--presence-moss);
+  --seed-watered:         var(--presence-brass);
+  --seed-wilting:         oklch(0.68 0.09 60);      /* warm amber */
+  --seed-composted:       var(--presence-on-paper-dim);
+  --seed-pruned:          var(--presence-on-paper-mute);
+
+  /* — hairlines — */
+  --presence-rule:        color-mix(in oklab, var(--presence-ink) 14%, transparent);
+  --presence-rule-strong: color-mix(in oklab, var(--presence-ink) 28%, transparent);
+  --presence-rule-dark:   color-mix(in oklab, var(--presence-on-stage) 14%, transparent);
+
+  /* — radius (premium = sharp) — */
+  --presence-r-0: 0px;
+  --presence-r-1: 2px;
+  --presence-r-2: 4px;
+  --presence-r-3: 8px;
+  --presence-r-pill: 999px;
+
+  /* — depth — */
+  --presence-sh-1: 0 1px 0 color-mix(in oklab, var(--presence-ink) 6%, transparent);
+  --presence-sh-2: 0 1px 2px rgba(13,12,10,0.06), 0 8px 24px -16px rgba(13,12,10,0.25);
+  --presence-sh-3: 0 18px 60px -28px rgba(13,12,10,0.45), 0 2px 0 rgba(13,12,10,0.04);
+  --presence-sh-cinema: 0 30px 90px -32px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04) inset;
+
+  /* — motion — */
+  --presence-ease-cinema:  cubic-bezier(0.2, 0.7, 0.1, 1);
+  --presence-ease-camera:  cubic-bezier(0.45, 0, 0.15, 1);
+  --presence-ease-tactile: cubic-bezier(0.32, 0.72, 0, 1);
+  --presence-dur-tap:    180ms;
+  --presence-dur-glide:  360ms;
+  --presence-dur-cine:   720ms;
+  --presence-dur-air:    1400ms;
+
+  /* — type stacks (Instrument Serif loaded by next/font in layout) — */
+  --presence-f-display: var(--font-presence-display, "Instrument Serif", "Cormorant Garamond", "Times New Roman", serif);
+  --presence-f-ui:      var(--font-presence-ui, "Geist", "Helvetica Neue", Helvetica, ui-sans-serif, sans-serif);
+  --presence-f-mono:    var(--font-presence-mono, "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace);
+}
+
+/* === Surfaces === */
+.presence-paper {
+  background: var(--presence-paper);
+  color: var(--presence-on-paper);
+}
+.presence-stage-surface {
+  background: var(--presence-stage);
+  color: var(--presence-on-stage);
+}
+
+/* Paper grain — subtle, multiply. Use on hero panels and Mask headers. */
+.presence-grain { position: relative; isolation: isolate; }
+.presence-grain::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image:
+    radial-gradient(rgba(13,12,10,0.045) 1px, transparent 1.2px),
+    radial-gradient(rgba(13,12,10,0.025) 1px, transparent 1.2px);
+  background-size: 3px 3px, 7px 7px;
+  background-position: 0 0, 2px 1px;
+}
+.presence-grain.is-dark::after {
+  background-image:
+    radial-gradient(rgba(255,250,235,0.04) 1px, transparent 1.2px),
+    radial-gradient(rgba(255,250,235,0.02) 1px, transparent 1.2px);
+  mix-blend-mode: screen;
+  opacity: 0.7;
+}
+
+/* === Type primitives === */
+.presence-display {
+  font-family: var(--presence-f-display);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 0.98;
+}
+.presence-display em { font-style: italic; color: var(--garden-accent); }
+.presence-eyebrow {
+  font-family: var(--presence-f-mono);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--presence-on-paper-mute);
+  font-weight: 500;
+}
+.presence-stage-surface .presence-eyebrow,
+.presence-eyebrow.on-stage {
+  color: var(--presence-on-stage-mute);
+}
+
+/* === Chips === */
+.presence-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--presence-rule-strong);
+  border-radius: var(--presence-r-pill);
+  font-family: var(--presence-f-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-mute);
+  background: transparent;
+  white-space: nowrap;
+}
+.presence-chip.is-dark { border-color: var(--presence-rule-dark); color: var(--presence-on-stage-mute); }
+.presence-chip.is-accent { color: var(--garden-accent); border-color: color-mix(in oklab, var(--garden-accent) 50%, transparent); }
+.presence-chip.is-halls { color: var(--halls-accent); border-color: color-mix(in oklab, var(--halls-accent) 50%, transparent); }
+.presence-chip.is-rooms { color: var(--rooms-accent); border-color: color-mix(in oklab, var(--rooms-accent) 50%, transparent); }
+.presence-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.presence-chip .dot.live { background: var(--halls-accent); box-shadow: 0 0 0 4px color-mix(in oklab, var(--halls-accent) 24%, transparent); animation: presence-pulse 2.4s var(--presence-ease-cinema) infinite; }
+
+@keyframes presence-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--halls-accent) 28%, transparent); }
+  50%      { box-shadow: 0 0 0 6px color-mix(in oklab, var(--halls-accent) 8%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .presence-chip .dot.live { animation: none; }
+}
+
+/* === Buttons === */
+.presence-btn {
+  font-family: var(--presence-f-ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 12px 18px;
+  border-radius: var(--presence-r-1);
+  border: 1px solid var(--presence-ink);
+  background: var(--presence-ink);
+  color: var(--presence-bone);
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 10px;
+  text-decoration: none;
+  transition: transform var(--presence-dur-tap) var(--presence-ease-tactile),
+              background var(--presence-dur-tap) var(--presence-ease-tactile),
+              color var(--presence-dur-tap) var(--presence-ease-tactile),
+              border-color var(--presence-dur-tap) var(--presence-ease-tactile);
+}
+.presence-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.presence-btn:active:not(:disabled) { transform: translateY(0); }
+.presence-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.presence-btn.is-ghost { background: transparent; color: var(--presence-ink); }
+.presence-btn.is-ghost:hover:not(:disabled) { background: var(--presence-ink); color: var(--presence-bone); }
+.presence-btn.is-accent {
+  background: var(--garden-accent);
+  border-color: var(--garden-accent);
+  color: var(--presence-bone);
+}
+.presence-btn.is-halls {
+  background: var(--halls-accent);
+  border-color: var(--halls-accent);
+  color: var(--presence-bone);
+}
+.presence-btn.on-stage { background: var(--presence-bone); color: var(--presence-ink); border-color: var(--presence-bone); }
+.presence-btn.on-stage.is-ghost { background: transparent; color: var(--presence-bone); border-color: var(--presence-bone); }
+.presence-btn.is-small { padding: 8px 12px; font-size: 12px; }
+
+/* === Cards === */
+.presence-card {
+  background: var(--presence-bone);
+  border: 1px solid var(--presence-rule);
+  border-radius: var(--presence-r-2);
+  box-shadow: var(--presence-sh-1);
+  transition: box-shadow var(--presence-dur-glide) var(--presence-ease-cinema),
+              transform var(--presence-dur-glide) var(--presence-ease-cinema),
+              border-color var(--presence-dur-glide) var(--presence-ease-cinema);
+}
+.presence-card:hover { box-shadow: var(--presence-sh-2); border-color: var(--presence-rule-strong); }
+.presence-card.is-dark {
+  background: var(--presence-stage-2);
+  border-color: var(--presence-rule-dark);
+  color: var(--presence-on-stage);
+}
+.presence-card.is-tappable { cursor: pointer; }
+.presence-card.is-tappable:hover { transform: translateY(-1px); }
+
+/* === Hairline rule === */
+.presence-rule {
+  height: 1px;
+  background: var(--presence-rule);
+  border: 0;
+}
+.presence-stage-surface .presence-rule,
+.presence-rule.on-stage { background: var(--presence-rule-dark); }
+
+/* === Section frame === */
+.presence-section {
+  padding: 64px 32px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+@media (max-width: 920px) { .presence-section { padding: 40px 20px; } }
+
+.presence-section-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 56px;
+  align-items: end;
+  margin-bottom: 40px;
+}
+@media (max-width: 920px) {
+  .presence-section-head { grid-template-columns: 1fr; gap: 20px; margin-bottom: 28px; }
+}
+.presence-lede {
+  font-family: var(--presence-f-display);
+  font-size: clamp(28px, 4vw, 56px);
+  letter-spacing: -0.015em;
+  line-height: 1.02;
+  text-wrap: balance;
+  margin: 0;
+}
+.presence-lede em { color: var(--garden-accent); font-style: italic; }
+.presence-lede.is-halls em { color: var(--halls-accent); }
+.presence-note {
+  font-size: 15px;
+  color: var(--presence-on-paper-mute);
+  max-width: 56ch;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* === Aperture (cinema stage panel) === */
+.presence-aperture {
+  position: relative;
+  border-radius: var(--presence-r-2);
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--presence-stage);
+  color: var(--presence-on-stage);
+  box-shadow: var(--presence-sh-cinema);
+}
+.presence-aperture::before {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(255,250,235,0.06), transparent 60%),
+    radial-gradient(80% 60% at 50% 100%, rgba(0,0,0,0.5), transparent 60%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* === Garden shell === */
+.garden-shell {
+  background: linear-gradient(180deg, var(--presence-paper) 0%, var(--presence-paper-2) 100%);
+  min-height: 100dvh;
+  color: var(--presence-on-paper);
+}
+.garden-shell .presence-display em { color: var(--garden-accent); }
+
+.garden-top {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  background: color-mix(in oklab, var(--presence-paper) 92%, transparent);
+  border-bottom: 1px solid var(--presence-rule);
+  backdrop-filter: blur(10px);
+}
+.garden-brand {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--presence-f-display);
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  color: var(--presence-ink);
+  text-decoration: none;
+}
+.garden-brand .glyph {
+  position: relative;
+  width: 22px; height: 22px;
+}
+.garden-brand .glyph::before, .garden-brand .glyph::after {
+  content: "";
+  position: absolute; inset: 0;
+  border: 1.5px solid var(--presence-ink);
+  border-radius: 50%;
+}
+.garden-brand .glyph::after {
+  inset: 4px;
+  border-color: var(--garden-accent);
+  background: var(--garden-accent);
+}
+
+/* Section labels & rhythm */
+.garden-section-eyebrow {
+  display: flex; align-items: center; gap: 12px;
+  font-family: var(--presence-f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-mute);
+  margin: 0 0 14px;
+}
+.garden-section-eyebrow .num {
+  font-variant-numeric: tabular-nums;
+  color: var(--garden-accent);
+}
+.garden-section-title {
+  font-family: var(--presence-f-display);
+  font-size: clamp(24px, 3vw, 32px);
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  margin: 0 0 6px;
+  text-wrap: balance;
+}
+.garden-section-blurb {
+  font-size: 14px;
+  color: var(--presence-on-paper-mute);
+  max-width: 60ch;
+  line-height: 1.55;
+  margin: 0 0 22px;
+}
+
+/* Garden grids — column-density tied to reason */
+.garden-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.garden-grid.is-wide {
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+.garden-grid.is-list {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+/* === Mask header === */
+.mask-header {
+  position: relative;
+  padding: 64px 32px 40px;
+  background:
+    radial-gradient(140% 80% at 50% -10%, rgba(255,250,235,0.7), transparent 60%),
+    linear-gradient(180deg, var(--presence-bone) 0%, var(--presence-paper) 100%);
+  border-bottom: 1px solid var(--presence-rule);
+  overflow: hidden;
+  isolation: isolate;
+}
+@media (max-width: 720px) { .mask-header { padding: 40px 20px 28px; } }
+.mask-avatar {
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  background: var(--presence-stage);
+  color: var(--presence-on-stage);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--presence-f-display);
+  font-style: italic;
+  font-size: 42px;
+  border: 1px solid var(--presence-rule-strong);
+  box-shadow: var(--presence-sh-2);
+  flex-shrink: 0;
+}
+.mask-alias {
+  font-family: var(--presence-f-display);
+  font-size: clamp(36px, 5vw, 56px);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 0;
+  text-wrap: balance;
+}
+.mask-status {
+  font-style: italic;
+  color: var(--presence-on-paper-mute);
+  font-size: 15px;
+  line-height: 1.5;
+  max-width: 56ch;
+  margin: 0;
+}
+
+/* === Seed card === */
+.seed-card {
+  position: relative;
+  background: var(--presence-bone);
+  border: 1px solid var(--presence-rule);
+  border-radius: var(--presence-r-2);
+  padding: 18px;
+  display: flex; flex-direction: column; gap: 12px;
+  transition: border-color var(--presence-dur-glide) var(--presence-ease-cinema),
+              transform var(--presence-dur-glide) var(--presence-ease-cinema),
+              box-shadow var(--presence-dur-glide) var(--presence-ease-cinema);
+}
+.seed-card::before {
+  content: "";
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--seed-active);
+  border-radius: var(--presence-r-2) 0 0 var(--presence-r-2);
+  transition: background var(--presence-dur-glide) var(--presence-ease-cinema);
+}
+.seed-card:hover {
+  border-color: var(--presence-rule-strong);
+  box-shadow: var(--presence-sh-2);
+  transform: translateY(-1px);
+}
+.seed-card[data-state="active"]::before        { background: var(--seed-active); }
+.seed-card[data-state="recently_watered"]::before { background: var(--seed-watered); }
+.seed-card[data-state="wilting"]::before       { background: var(--seed-wilting); }
+.seed-card[data-state="composted"]::before     { background: var(--seed-composted); }
+.seed-card[data-state="pruned"]::before        { background: var(--seed-pruned); }
+.seed-card[data-state="blocked"]::before       { background: var(--presence-ink); }
+
+.seed-card[data-state="wilting"]    { background: color-mix(in oklab, var(--seed-wilting) 5%, var(--presence-bone)); }
+.seed-card[data-state="composted"]  { opacity: 0.72; }
+.seed-card[data-state="pruned"]     { background: var(--presence-paper); opacity: 0.65; }
+
+/* === Observation card === */
+.observation-card {
+  position: relative;
+  background: var(--presence-bone);
+  border: 1px solid var(--presence-rule);
+  border-radius: var(--presence-r-2);
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 14px;
+  transition: border-color var(--presence-dur-glide) var(--presence-ease-cinema),
+              box-shadow var(--presence-dur-glide) var(--presence-ease-cinema);
+}
+.observation-card:hover { border-color: var(--presence-rule-strong); box-shadow: var(--presence-sh-2); }
+.observation-meta {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap;
+  font-family: var(--presence-f-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-mute);
+}
+.observation-body {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--presence-on-paper);
+  margin: 0;
+  text-wrap: pretty;
+}
+.observation-body.is-display {
+  font-family: var(--presence-f-display);
+  font-size: clamp(18px, 2vw, 22px);
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+}
+.observation-actions {
+  display: flex; align-items: center; gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--presence-rule);
+}
+.observation-action {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--presence-on-paper-mute);
+  font-family: var(--presence-f-ui);
+  font-size: 12px;
+  letter-spacing: 0.005em;
+  cursor: pointer;
+  border-radius: var(--presence-r-1);
+  transition: color var(--presence-dur-tap) var(--presence-ease-tactile),
+              background var(--presence-dur-tap) var(--presence-ease-tactile);
+}
+.observation-action:hover:not(:disabled) {
+  color: var(--presence-ink);
+  background: var(--presence-paper-2);
+}
+.observation-action.is-on {
+  color: var(--garden-accent);
+}
+.observation-action:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* === Observation composer === */
+.observation-composer {
+  background: var(--presence-bone);
+  border: 1px solid var(--presence-rule-strong);
+  border-radius: var(--presence-r-2);
+  padding: 18px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.observation-composer textarea {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  border: 0;
+  background: transparent;
+  font-family: var(--presence-f-display);
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--presence-ink);
+  outline: none;
+}
+.observation-composer textarea::placeholder {
+  color: var(--presence-on-paper-dim);
+  font-style: italic;
+}
+.observation-composer-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.observation-composer-types {
+  display: flex; gap: 4px; flex-wrap: wrap;
+}
+.observation-type-pill {
+  border: 1px solid var(--presence-rule-strong);
+  background: transparent;
+  font-family: var(--presence-f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: var(--presence-r-pill);
+  color: var(--presence-on-paper-mute);
+  cursor: pointer;
+  transition: all var(--presence-dur-tap) var(--presence-ease-tactile);
+}
+.observation-type-pill[aria-pressed="true"] {
+  background: var(--presence-ink);
+  border-color: var(--presence-ink);
+  color: var(--presence-bone);
+}
+
+/* === Halls === */
+.halls-shell {
+  min-height: 100dvh;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(255,250,235,0.04), transparent 60%),
+    linear-gradient(180deg, var(--presence-stage) 0%, var(--presence-stage-2) 100%);
+  color: var(--presence-on-stage);
+}
+.halls-shell .presence-display em { color: var(--halls-accent); }
+.halls-top {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  background: color-mix(in oklab, var(--presence-stage) 86%, transparent);
+  border-bottom: 1px solid var(--presence-rule-dark);
+  backdrop-filter: blur(10px);
+}
+.halls-top .garden-brand { color: var(--presence-on-stage); }
+.halls-top .garden-brand .glyph::before { border-color: var(--presence-on-stage); }
+.halls-top .garden-brand .glyph::after { border-color: var(--halls-accent); background: var(--halls-accent); }
+
+/* Hall card on dark surface */
+.hall-card {
+  position: relative;
+  background: var(--presence-stage-2);
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: var(--presence-r-2);
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 14px;
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  isolation: isolate;
+  transition: border-color var(--presence-dur-glide) var(--presence-ease-cinema),
+              transform var(--presence-dur-glide) var(--presence-ease-cinema),
+              box-shadow var(--presence-dur-glide) var(--presence-ease-cinema);
+}
+.hall-card::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(140% 60% at 0% 0%, color-mix(in oklab, var(--halls-accent) 14%, transparent), transparent 60%);
+  opacity: 0.5;
+  z-index: -1;
+  transition: opacity var(--presence-dur-glide) var(--presence-ease-cinema);
+}
+.hall-card:hover { border-color: color-mix(in oklab, var(--halls-accent) 70%, transparent); transform: translateY(-1px); box-shadow: 0 18px 60px -32px rgba(0,0,0,0.55); }
+.hall-card:hover::before { opacity: 1; }
+.hall-card[data-status="live"] { border-color: color-mix(in oklab, var(--halls-accent) 60%, transparent); }
+
+/* Hall zone tiles */
+.hall-zone {
+  position: relative;
+  background: var(--presence-stage-2);
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: var(--presence-r-2);
+  padding: 18px;
+  display: flex; flex-direction: column; gap: 12px;
+  overflow: hidden;
+  isolation: isolate;
+}
+.hall-zone .zone-eyebrow {
+  font-family: var(--presence-f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--presence-on-stage-mute);
+}
+.hall-zone .zone-title {
+  font-family: var(--presence-f-display);
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  margin: 0;
+  color: var(--presence-on-stage);
+}
+.hall-zone .zone-blurb {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--presence-on-stage-mute);
+  margin: 0;
+}
+.hall-zone[data-kind="stage"]::after,
+.hall-zone[data-kind="lobby"]::after,
+.hall-zone[data-kind="table"]::after,
+.hall-zone[data-kind="stall"]::after,
+.hall-zone[data-kind="portal"]::after,
+.hall-zone[data-kind="noticeboard"]::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.5;
+}
+.hall-zone[data-kind="stage"]::after  { inset: -40% -40% auto auto; width: 180px; height: 180px; background: radial-gradient(circle, color-mix(in oklab, var(--halls-accent) 24%, transparent), transparent 70%); }
+.hall-zone[data-kind="lobby"]::after  { inset: -20% auto auto -20%; width: 220px; height: 220px; background: radial-gradient(circle, rgba(255,250,235,0.06), transparent 70%); }
+.hall-zone[data-kind="table"]::after  { inset: auto -30% -30% auto; width: 160px; height: 160px; background: radial-gradient(circle, color-mix(in oklab, var(--presence-brass) 22%, transparent), transparent 70%); }
+.hall-zone[data-kind="stall"]::after  { inset: -30% auto auto -30%; width: 200px; height: 200px; background: radial-gradient(circle, color-mix(in oklab, var(--rooms-accent) 22%, transparent), transparent 70%); }
+.hall-zone[data-kind="portal"]::after { inset: -20% -20% -20% -20%; background: repeating-radial-gradient(circle at 50% 50%, rgba(255,250,235,0.05) 0 2px, transparent 2px 18px); }
+.hall-zone[data-kind="noticeboard"]::after { inset: -10% -10% -10% -10%; background: repeating-linear-gradient(135deg, rgba(255,250,235,0.04) 0 1px, transparent 1px 12px); }
+
+/* Participant pill */
+.participant-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: var(--presence-r-pill);
+  background: var(--presence-stage-2);
+  color: var(--presence-on-stage);
+  font-size: 12px;
+}
+.participant-pill .avatar {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--presence-stage-3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--presence-f-display);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--halls-accent);
+}
+
+/* Teleport menu */
+.teleport-menu {
+  position: relative;
+}
+.teleport-trigger {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--presence-r-pill);
+  background: var(--presence-ink);
+  color: var(--presence-bone);
+  border: 1px solid var(--presence-ink);
+  font-family: var(--presence-f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform var(--presence-dur-tap) var(--presence-ease-tactile);
+}
+.teleport-trigger:hover { transform: translateY(-1px); }
+.teleport-sheet {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(340px, calc(100vw - 32px));
+  background: var(--presence-stage);
+  color: var(--presence-on-stage);
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: var(--presence-r-2);
+  box-shadow: var(--presence-sh-cinema);
+  padding: 12px;
+  z-index: 70;
+  display: flex; flex-direction: column; gap: 2px;
+  animation: teleport-in var(--presence-dur-glide) var(--presence-ease-cinema);
+}
+@keyframes teleport-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.teleport-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--presence-r-1);
+  background: transparent;
+  color: var(--presence-on-stage);
+  font-size: 13px;
+  text-decoration: none;
+  border: 0;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--presence-dur-tap) var(--presence-ease-tactile);
+}
+.teleport-item:hover { background: var(--presence-stage-2); }
+.teleport-item .kbd {
+  margin-left: auto;
+  font-family: var(--presence-f-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--presence-on-stage-dim);
+  text-transform: uppercase;
+}
+.teleport-section-label {
+  font-family: var(--presence-f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--presence-on-stage-dim);
+  padding: 8px 12px 4px;
+}
+
+/* Hall analytics tiles */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.analytics-tile {
+  background: var(--presence-bone);
+  border: 1px solid var(--presence-rule);
+  border-radius: var(--presence-r-2);
+  padding: 18px;
+}
+.analytics-tile .label {
+  font-family: var(--presence-f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-mute);
+}
+.analytics-tile .value {
+  font-family: var(--presence-f-display);
+  font-size: clamp(28px, 4vw, 40px);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  margin: 8px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Mobile bottom action bar (Hall detail, Mask page) */
+.presence-actionbar {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: color-mix(in oklab, var(--presence-bone) 96%, transparent);
+  border-top: 1px solid var(--presence-rule-strong);
+  display: flex; gap: 8px;
+  backdrop-filter: blur(8px);
+}
+.halls-shell .presence-actionbar {
+  background: color-mix(in oklab, var(--presence-stage) 92%, transparent);
+  border-top-color: var(--presence-rule-dark);
+}
+.presence-actionbar .presence-btn { flex: 1; justify-content: center; min-height: 44px; }
+
+/* Empty states */
+.presence-empty {
+  border: 1px dashed var(--presence-rule-strong);
+  border-radius: var(--presence-r-2);
+  padding: 32px 24px;
+  background: var(--presence-paper);
+  display: flex; flex-direction: column; gap: 12px;
+  align-items: flex-start;
+  max-width: 56ch;
+}
+.halls-shell .presence-empty {
+  background: var(--presence-stage-2);
+  border-color: var(--presence-rule-dark);
+  color: var(--presence-on-stage);
+}
+
+/* Focus */
+.garden-shell :focus-visible,
+.halls-shell :focus-visible,
+.presence-paper :focus-visible {
+  outline: 2px solid var(--garden-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.halls-shell :focus-visible { outline-color: var(--halls-accent); }
+
+/* Selection */
+.garden-shell ::selection { background: var(--garden-accent); color: var(--presence-bone); }
+.halls-shell ::selection  { background: var(--halls-accent);  color: var(--presence-bone); }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .presence-card, .hall-card, .seed-card, .observation-card, .presence-btn, .teleport-sheet, .observation-action {
+    transition: none !important;
+  }
+  .teleport-sheet { animation: none; }
+}
+
+/* Hide the top-bar Hall Join button on phone viewports — the sticky bottom
+ * action bar provides Join/Leave there so the top frame doesn't overflow. */
+@media (min-width: 640px) {
+  .hall-top-join { display: flex !important; }
+}
+
+/* Landing page top-nav: hide secondary destinations on phone viewports.
+ * The hero already has direct CTAs into every section, so the top frame
+ * stays clean below 640px. */
+@media (max-width: 639px) {
+  .presence-top-nav-link { display: none; }
+}
+
+/* =========================================================================
+ * Presence flagship surfaces — landing, gallery, design-lab.
+ * Grounded in the Visual System Bible v0.4: verbs over sections, designed
+ * proof, cinematic threshold, mobile-native rhythm.
+ * ========================================================================= */
+
+/* Shell — paper or stage with grain, full-bleed safe areas. */
+.presence-shell {
+  min-height: 100dvh;
+  background:
+    radial-gradient(120% 80% at 50% -10%, color-mix(in oklab, var(--presence-bone) 50%, transparent), transparent 60%),
+    linear-gradient(180deg, var(--presence-paper) 0%, var(--presence-paper-2) 100%);
+  color: var(--presence-on-paper);
+  font-family: var(--presence-f-ui);
+  position: relative;
+}
+.presence-shell.is-stage {
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(255,250,235,0.04), transparent 60%),
+    linear-gradient(180deg, var(--presence-stage) 0%, var(--presence-stage-2) 100%);
+  color: var(--presence-on-stage);
+}
+
+/* Atmospheric film signal field — a slow, subtle drift. Pure CSS so it
+   stays inside Tier-1 of the Atmosphere Engine (no JS, no Canvas). */
+.presence-signal-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+.presence-signal-field::before,
+.presence-signal-field::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(220px 220px at 12% 18%, color-mix(in oklab, var(--presence-vermilion) 12%, transparent), transparent 70%),
+    radial-gradient(260px 260px at 78% 26%, color-mix(in oklab, var(--presence-brass) 10%, transparent), transparent 70%),
+    radial-gradient(180px 180px at 30% 78%, color-mix(in oklab, var(--presence-moss) 14%, transparent), transparent 70%),
+    radial-gradient(220px 220px at 84% 86%, color-mix(in oklab, var(--presence-cobalt) 8%, transparent), transparent 70%);
+  filter: blur(40px);
+  opacity: 0.7;
+  animation: presence-signal-drift 30s linear infinite;
+}
+.presence-signal-field::after {
+  background:
+    radial-gradient(160px 160px at 70% 10%, color-mix(in oklab, var(--presence-copper) 12%, transparent), transparent 70%),
+    radial-gradient(180px 180px at 20% 60%, color-mix(in oklab, var(--presence-moss-soft) 14%, transparent), transparent 70%);
+  animation-duration: 44s;
+  animation-direction: reverse;
+  opacity: 0.45;
+}
+@keyframes presence-signal-drift {
+  0%   { transform: translate3d(-3%, -2%, 0) rotate(0deg); }
+  50%  { transform: translate3d(3%, 2%, 0) rotate(1deg); }
+  100% { transform: translate3d(-3%, -2%, 0) rotate(0deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .presence-signal-field::before,
+  .presence-signal-field::after { animation: none; }
+}
+
+/* Threshold — the opening hero. Uses paper grain on top, ink stage below,
+   horizontal hairline rule between. */
+.presence-threshold {
+  position: relative;
+  padding: clamp(56px, 9vw, 120px) clamp(20px, 5vw, 56px) clamp(48px, 8vw, 96px);
+  isolation: isolate;
+  overflow: hidden;
+}
+.presence-threshold.is-stage {
+  background: var(--presence-stage);
+  color: var(--presence-on-stage);
+}
+.presence-threshold .threshold-eyebrow {
+  font-family: var(--presence-f-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-mute);
+  margin: 0 0 18px;
+}
+.presence-shell.is-stage .threshold-eyebrow,
+.presence-threshold.is-stage .threshold-eyebrow { color: var(--presence-on-stage-mute); }
+
+.presence-threshold .threshold-display {
+  font-family: var(--presence-f-display);
+  font-size: clamp(48px, 8vw, 120px);
+  line-height: 0.92;
+  letter-spacing: -0.025em;
+  margin: 0;
+  text-wrap: balance;
+}
+.presence-threshold .threshold-display em {
+  font-style: italic;
+  color: var(--presence-vermilion);
+}
+.presence-shell.is-stage .threshold-display em,
+.presence-threshold.is-stage .threshold-display em { color: var(--presence-brass); }
+.presence-threshold .threshold-lede {
+  margin-top: 18px;
+  max-width: 60ch;
+  font-size: clamp(16px, 1.6vw, 19px);
+  line-height: 1.5;
+  color: var(--presence-on-paper-mute);
+  font-family: var(--presence-f-ui);
+}
+.presence-threshold.is-stage .threshold-lede { color: var(--presence-on-stage-mute); }
+
+/* Threshold actions row */
+.presence-threshold .threshold-actions {
+  margin-top: clamp(20px, 3vw, 32px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Section primitives shared by landing + gallery + design-lab */
+.presence-stack-section {
+  padding: clamp(56px, 8vw, 120px) clamp(20px, 5vw, 56px);
+  max-width: 1240px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+.presence-stack-section.is-tight { padding-top: clamp(32px, 4vw, 64px); padding-bottom: clamp(32px, 4vw, 64px); }
+
+.presence-stack-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--presence-f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-mute);
+}
+.presence-stack-eyebrow .num {
+  font-variant-numeric: tabular-nums;
+  color: var(--presence-vermilion);
+}
+.presence-shell.is-stage .presence-stack-eyebrow .num { color: var(--presence-brass); }
+
+.presence-stack-title {
+  font-family: var(--presence-f-display);
+  font-size: clamp(32px, 4.5vw, 56px);
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  margin: 14px 0 16px;
+  text-wrap: balance;
+  max-width: 22ch;
+}
+.presence-stack-title em { color: var(--presence-vermilion); font-style: italic; }
+.presence-shell.is-stage .presence-stack-title em { color: var(--presence-brass); }
+.presence-stack-blurb {
+  font-size: clamp(15px, 1.4vw, 17px);
+  line-height: 1.55;
+  color: var(--presence-on-paper-mute);
+  max-width: 56ch;
+  margin: 0;
+}
+
+/* Layer cards — one per Presence layer (Rooms, Gardens, Halls, Paths, World) */
+.presence-layer-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  margin-top: clamp(28px, 4vw, 40px);
+}
+.presence-layer-card {
+  position: relative;
+  background: var(--presence-bone);
+  border: 1px solid var(--presence-rule);
+  border-radius: var(--presence-r-2);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+  isolation: isolate;
+  text-decoration: none;
+  color: inherit;
+  transition: transform var(--presence-dur-glide) var(--presence-ease-cinema),
+              border-color var(--presence-dur-glide) var(--presence-ease-cinema),
+              box-shadow var(--presence-dur-glide) var(--presence-ease-cinema);
+}
+.presence-layer-card::before {
+  content: "";
+  position: absolute;
+  inset: auto -30% -50% -30%;
+  height: 120px;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--accent, var(--presence-vermilion)) 18%, transparent), transparent 80%);
+  z-index: -1;
+  opacity: 0.7;
+  transition: opacity var(--presence-dur-glide) var(--presence-ease-cinema);
+}
+.presence-layer-card[data-layer="rooms"]   { --accent: var(--rooms-accent); }
+.presence-layer-card[data-layer="gardens"] { --accent: var(--garden-accent); }
+.presence-layer-card[data-layer="halls"]   { --accent: var(--halls-accent); }
+.presence-layer-card[data-layer="paths"]   { --accent: var(--presence-brass); }
+.presence-layer-card[data-layer="world"]   { --accent: var(--presence-cobalt); }
+.presence-layer-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: var(--presence-sh-2);
+}
+.presence-layer-card:hover::before { opacity: 1; }
+.presence-layer-card .layer-verb {
+  font-family: var(--presence-f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.presence-layer-card .layer-name {
+  font-family: var(--presence-f-display);
+  font-size: clamp(26px, 2.6vw, 32px);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  margin: 0;
+}
+.presence-layer-card .layer-blurb {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--presence-on-paper-mute);
+  margin: 0;
+}
+.presence-layer-card .layer-action {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+/* Problem rows — for the "dead links, scattered profiles…" section */
+.presence-problem-row {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  margin-top: clamp(24px, 3vw, 36px);
+}
+.presence-problem-row .item {
+  border-top: 1px solid var(--presence-rule);
+  padding: 16px 0 0;
+}
+.presence-problem-row .item .label {
+  font-family: var(--presence-f-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-dim);
+}
+.presence-problem-row .item .body {
+  font-size: 14.5px;
+  line-height: 1.5;
+  margin: 8px 0 0;
+  color: var(--presence-on-paper);
+  font-family: var(--presence-f-display);
+}
+
+/* Marquee strip — anti-corporate, editorial. */
+.presence-marquee {
+  margin-top: clamp(32px, 5vw, 56px);
+  padding: 18px 0;
+  border-top: 1px solid var(--presence-rule);
+  border-bottom: 1px solid var(--presence-rule);
+  overflow: hidden;
+}
+.presence-marquee-track {
+  display: inline-flex;
+  white-space: nowrap;
+  gap: 56px;
+  animation: presence-marquee 38s linear infinite;
+  font-family: var(--presence-f-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-mute);
+}
+.presence-marquee-track > span { display: inline-block; }
+.presence-marquee-track > span .dot {
+  display: inline-block;
+  width: 5px; height: 5px;
+  margin: 0 14px 2px;
+  border-radius: 50%;
+  background: var(--presence-vermilion);
+}
+@keyframes presence-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .presence-marquee-track { animation: none; }
+}
+
+/* Beta gallery — exhibition grid that doesn't feel like a grid */
+.presence-gallery-grid {
+  display: grid;
+  gap: clamp(14px, 1.6vw, 20px);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  margin-top: clamp(28px, 4vw, 40px);
+}
+.presence-gallery-grid.is-feature {
+  grid-template-columns: minmax(0, 1.4fr) repeat(auto-fill, minmax(240px, 1fr));
+}
+.presence-room-card {
+  position: relative;
+  background: var(--presence-bone);
+  border: 1px solid var(--presence-rule);
+  border-radius: var(--presence-r-2);
+  overflow: hidden;
+  isolation: isolate;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+  transition: transform var(--presence-dur-glide) var(--presence-ease-cinema),
+              border-color var(--presence-dur-glide) var(--presence-ease-cinema),
+              box-shadow var(--presence-dur-glide) var(--presence-ease-cinema);
+}
+.presence-room-card .card-art {
+  position: relative;
+  flex: 1;
+  min-height: 180px;
+  background: var(--presence-stage);
+  overflow: hidden;
+}
+.presence-room-card .card-art::before {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(255,250,235,0.08), transparent 60%),
+    radial-gradient(80% 60% at 50% 100%, rgba(0,0,0,0.45), transparent 60%);
+}
+.presence-room-card .card-art[data-tone="quiet"] {
+  background: linear-gradient(180deg, #fbfaf6 0%, #ece6d8 100%);
+}
+.presence-room-card .card-art[data-tone="sound"] {
+  background: radial-gradient(circle at 30% 40%, rgba(255,216,77,0.12), transparent 50%), linear-gradient(160deg, #06060b 0%, #131022 60%, #06060b);
+}
+.presence-room-card .card-art[data-tone="wood"] {
+  background: radial-gradient(circle at 30% 30%, rgba(224,164,85,0.16), transparent 50%), linear-gradient(160deg, #1c1109 0%, #2d1f12 60%, #1c1109);
+}
+.presence-room-card .card-art[data-tone="archive"] {
+  background: linear-gradient(180deg, #efe6d8 0%, #cfc5ad 100%);
+}
+.presence-room-card .card-art[data-tone="market"] {
+  background: linear-gradient(160deg, #221814 0%, #422714 50%, #1c1109 100%);
+}
+.presence-room-card .card-body {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--presence-bone);
+}
+.presence-room-card .card-eyebrow {
+  font-family: var(--presence-f-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-mute);
+}
+.presence-room-card .card-name {
+  font-family: var(--presence-f-display);
+  font-size: 24px;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  margin: 0;
+}
+.presence-room-card .card-summary {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--presence-on-paper-mute);
+  margin: 0;
+}
+.presence-room-card .card-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.presence-room-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--presence-rule-strong);
+  box-shadow: var(--presence-sh-2);
+}
+.presence-room-card.is-feature .card-art { min-height: 280px; }
+.presence-room-card.is-feature .card-name { font-size: 32px; }
+.presence-room-card.is-feature { min-height: 460px; }
+
+/* Status pill — Live / Beta / Preview / Coming */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--presence-f-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  background: color-mix(in oklab, var(--presence-on-paper) 88%, transparent);
+  color: var(--presence-bone);
+  border: 1px solid color-mix(in oklab, var(--presence-ink) 30%, transparent);
+}
+.status-pill[data-status="live"]    { background: var(--halls-accent); border-color: var(--halls-accent); }
+.status-pill[data-status="beta"]    { background: var(--presence-brass); color: var(--presence-ink); border-color: var(--presence-brass); }
+.status-pill[data-status="preview"] { background: transparent; color: var(--presence-vermilion); border-color: var(--presence-vermilion); }
+.status-pill[data-status="coming"]  { background: transparent; color: var(--presence-on-paper-mute); border-color: var(--presence-rule-strong); }
+
+/* V2 preview banner — clearly marks design-lab content as non-production. */
+.v2-banner {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 18px;
+  margin: 0 auto 28px;
+  max-width: 1200px;
+  border: 1px dashed var(--presence-brass);
+  background: color-mix(in oklab, var(--presence-brass) 8%, transparent);
+  border-radius: var(--presence-r-2);
+  color: var(--presence-on-paper);
+}
+.v2-banner .v2-tag {
+  font-family: var(--presence-f-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  background: var(--presence-brass);
+  color: var(--presence-ink);
+  border-radius: 999px;
+}
+.v2-banner .v2-msg {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--presence-on-paper-mute);
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Spatial Hall preview (V2 prototype) — purely decorative SVG-like field. */
+.v2-spatial-hall {
+  position: relative;
+  aspect-ratio: 16/9;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(255,250,235,0.06), transparent 60%),
+    linear-gradient(180deg, var(--presence-stage) 0%, var(--presence-stage-2) 60%, #06060b 100%);
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: var(--presence-r-2);
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--presence-on-stage);
+}
+.v2-spatial-hall .floor {
+  position: absolute;
+  inset: 60% 0 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,250,235,0.04) 0 1px, transparent 1px 60px),
+    linear-gradient(180deg, #08070a 0%, #0e0c0a 100%);
+  transform: perspective(800px) rotateX(58deg);
+  transform-origin: top;
+}
+.v2-spatial-hall .stage-light {
+  position: absolute;
+  left: 30%; right: 30%; top: 8%;
+  height: 50%;
+  background: radial-gradient(ellipse at 50% 0%, color-mix(in oklab, var(--halls-accent) 30%, transparent), transparent 70%);
+  pointer-events: none;
+}
+.v2-spatial-hall .stage {
+  position: absolute;
+  left: 36%; right: 36%; top: 38%;
+  height: 12%;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--presence-bone) 14%, transparent), transparent);
+  border-radius: 999px / 100%;
+  border: 1px solid var(--presence-rule-dark);
+}
+.v2-spatial-hall .mask {
+  position: absolute;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--presence-brass);
+  border: 1px solid rgba(255,250,235,0.4);
+  box-shadow: 0 0 14px color-mix(in oklab, var(--presence-brass) 50%, transparent);
+}
+.v2-spatial-hall .mask.is-vermilion { background: var(--presence-vermilion); box-shadow: 0 0 14px color-mix(in oklab, var(--presence-vermilion) 50%, transparent); }
+.v2-spatial-hall .mask.is-moss { background: var(--presence-moss-soft); box-shadow: 0 0 14px color-mix(in oklab, var(--presence-moss-soft) 50%, transparent); }
+.v2-spatial-hall .label {
+  position: absolute;
+  font-family: var(--presence-f-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--presence-on-stage-mute);
+  pointer-events: none;
+}
+
+/* Garden seed lifecycle preview (V2) — six dots in a row, each a state. */
+.v2-seed-lifecycle {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  padding: 24px;
+  background: var(--presence-bone);
+  border: 1px solid var(--presence-rule);
+  border-radius: var(--presence-r-2);
+}
+.v2-seed-lifecycle .state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  text-align: left;
+}
+.v2-seed-lifecycle .dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--seed-active);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--seed-active) 14%, transparent);
+}
+.v2-seed-lifecycle .state[data-state="recently_watered"] .dot { background: var(--seed-watered); box-shadow: 0 0 0 4px color-mix(in oklab, var(--seed-watered) 18%, transparent); }
+.v2-seed-lifecycle .state[data-state="wilting"]    .dot { background: var(--seed-wilting);   box-shadow: 0 0 0 4px color-mix(in oklab, var(--seed-wilting) 18%, transparent); opacity: 0.85; }
+.v2-seed-lifecycle .state[data-state="composted"]  .dot { background: var(--seed-composted); opacity: 0.7; }
+.v2-seed-lifecycle .state[data-state="pruned"]     .dot { background: var(--seed-pruned); opacity: 0.55; }
+.v2-seed-lifecycle .state[data-state="blocked"]    .dot { background: var(--presence-ink); opacity: 0.7; }
+.v2-seed-lifecycle .state .label {
+  font-family: var(--presence-f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--presence-on-paper-mute);
+}
+.v2-seed-lifecycle .state .blurb {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--presence-on-paper-mute);
+  font-family: var(--presence-f-display);
+}
+
+/* Market Hall stall preview (V2) — Rooms-as-storefronts in a Hall row. */
+.v2-stall-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 24px;
+  background: var(--presence-stage-2);
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: var(--presence-r-2);
+}
+.v2-stall-row .stall {
+  background: var(--presence-stage);
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: var(--presence-r-2);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 140px;
+}
+.v2-stall-row .stall::before {
+  content: "";
+  position: absolute;
+  inset: -30% -30% 50% -30%;
+  background: radial-gradient(ellipse, color-mix(in oklab, var(--rooms-accent) 18%, transparent), transparent 70%);
+  z-index: -1;
+}
+.v2-stall-row .stall .stall-name {
+  font-family: var(--presence-f-display);
+  font-size: 17px;
+  letter-spacing: -0.005em;
+  color: var(--presence-on-stage);
+  margin: 0;
+}
+.v2-stall-row .stall .stall-mode {
+  font-family: var(--presence-f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--presence-on-stage-mute);
+}
+.v2-stall-row .stall .stall-action {
+  margin-top: auto;
+  font-family: var(--presence-f-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--rooms-accent);
+}
+
+/* World preview cluster (V2) — symbolic districts, not a real map. */
+.v2-world-cluster {
+  position: relative;
+  aspect-ratio: 4/3;
+  background:
+    radial-gradient(80% 60% at 50% 50%, rgba(255,250,235,0.04), transparent 70%),
+    linear-gradient(180deg, #06060b 0%, #0d0c0a 100%);
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: var(--presence-r-2);
+  overflow: hidden;
+  isolation: isolate;
+}
+.v2-world-cluster .district {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed color-mix(in oklab, var(--presence-on-stage) 16%, transparent);
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--district-accent, var(--presence-brass)) 18%, transparent), transparent 80%);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--presence-f-display);
+  font-size: 14px;
+  color: var(--presence-on-stage);
+}
+.v2-world-cluster .district[data-kind="rooms"]   { --district-accent: var(--rooms-accent);  width: 36%; height: 36%; left: 8%; top: 18%; }
+.v2-world-cluster .district[data-kind="gardens"] { --district-accent: var(--garden-accent); width: 30%; height: 30%; right: 6%; top: 12%; }
+.v2-world-cluster .district[data-kind="halls"]   { --district-accent: var(--halls-accent);  width: 34%; height: 34%; right: 18%; bottom: 10%; }
+.v2-world-cluster .district[data-kind="paths"]   { --district-accent: var(--presence-brass);width: 30%; height: 30%; left: 14%; bottom: 6%; }
+.v2-world-cluster .path-line {
+  position: absolute;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--presence-brass) 40%, transparent), transparent 80%);
+  height: 1px;
+  pointer-events: none;
+}
+.v2-world-cluster .locked {
+  position: absolute;
+  inset: auto 0 16px 0;
+  text-align: center;
+  font-family: var(--presence-f-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--presence-on-stage-mute);
+}
+
+/* Listening Hall preview (V2) — stage + audience masks. */
+.v2-listening-hall {
+  position: relative;
+  aspect-ratio: 16/10;
+  background:
+    radial-gradient(60% 40% at 50% 30%, color-mix(in oklab, var(--halls-accent) 22%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--presence-stage) 0%, var(--presence-stage-2) 100%);
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: var(--presence-r-2);
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--presence-on-stage);
+}
+.v2-listening-hall .platform {
+  position: absolute;
+  inset: 28% 34% auto 34%;
+  height: 80px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--presence-bone) 8%, transparent), transparent);
+  border: 1px solid var(--presence-rule-dark);
+  border-radius: 6px;
+}
+.v2-listening-hall .platform-host {
+  position: absolute;
+  left: 50%; top: 32%;
+  transform: translate(-50%, 0);
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--presence-brass);
+  box-shadow: 0 0 26px color-mix(in oklab, var(--presence-brass) 60%, transparent);
+}
+.v2-listening-hall .audience {
+  position: absolute;
+  inset: auto 8% 8% 8%;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 6px;
+}
+.v2-listening-hall .audience .mask {
+  height: 12px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--presence-on-stage) 30%, transparent);
+}
+
+/* Inline link in landing/gallery — small underline shimmer */
+.presence-link-underline {
+  position: relative;
+  color: inherit;
+  text-decoration: none;
+  font-weight: 500;
+}
+.presence-link-underline::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -2px;
+  height: 1px;
+  background: currentColor;
+  transform-origin: left;
+  transition: transform var(--presence-dur-tap) var(--presence-ease-tactile);
+}
+.presence-link-underline:hover::after { transform: scaleX(0.6); }

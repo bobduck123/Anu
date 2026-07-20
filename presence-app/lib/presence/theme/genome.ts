@@ -70,8 +70,8 @@ function pickGrid(dna: PresenceDna): GridBehaviour {
 }
 
 function pickMotion(dna: PresenceDna): { preset: BehaviourPreset; intensity: BehaviourIntensity } {
-  // Map DNA to motion. Demo overlays may force specific behaviours via
-  // signature module, but inference defaults sensibly.
+  // Map persisted or inferred DNA to motion. Signature modules can force
+  // specific behaviours, while older inferred nodes still default sensibly.
   if (dna.visual.image_treatment === "glitch") return { preset: "controlled_glitch", intensity: "high" };
   if (dna.signature.signature_module === "glitch_gallery") return { preset: "controlled_glitch", intensity: "high" };
   if (dna.signature.signature_module === "materials_board") return { preset: "material_reveal", intensity: "featured" };

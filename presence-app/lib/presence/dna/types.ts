@@ -445,7 +445,7 @@ export interface PresenceDna {
   composition: CompositionDna;
   signature: SignatureDna;
   // provenance + diagnostics
-  source: "inferred" | "demo_overlay" | "node_metadata" | "backend_persisted";
+  source: "inferred" | "node_metadata" | "backend_persisted";
   notes?: string[];
 }
 

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Room I — Christina Kerkvliet-Goddard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="chamber.css">
+</head>
+<body>
+
+<!-- The wall: paintings hung along a horizontal scroll -->
+<main class="wall" id="wall">
+  <div class="wall-strip" id="wallStrip">
+
+    <!-- Room-name marker at start of strip -->
+    <div class="wall-marker">
+      <div class="wall-marker-roman">Room I</div>
+      <div class="wall-marker-name">South Studio</div>
+      <div class="wall-marker-sub">Tyrone, Vermont · est. 1981<br>Five works · winter hang</div>
+      <div class="wall-marker-arrow">↓ continue along the wall →</div>
+    </div>
+
+    <article class="work" data-idx="0" data-aspect="landscape">
+      <div class="work-frame">
+        <img src="img/willow.webp" alt="Willow on the South Lawn" loading="eager">
+      </div>
+      <div class="work-plate">
+        <div class="work-plate-roman">i.</div>
+        <div class="work-plate-title">Willow on the South Lawn</div>
+        <div class="work-plate-meta">Watercolour &amp; ink on Arches · 76 × 56 cm · 2024</div>
+        <div class="work-plate-note">"The willow began to weep in late April; I painted it for three mornings before the leaves filled in."</div>
+      </div>
+    </article>
+
+    <article class="work" data-idx="1" data-aspect="landscape">
+      <div class="work-frame">
+        <img src="img/portrait.webp" alt="The Forest in Late Winter" loading="eager">
+      </div>
+      <div class="work-plate">
+        <div class="work-plate-roman">ii.</div>
+        <div class="work-plate-title">The Forest in Late Winter</div>
+        <div class="work-plate-meta">Watercolour on cotton · 64 × 48 cm · 2023</div>
+        <div class="work-plate-note">"The oak survives because the pines around it die first. Their bones make the light it stands in."</div>
+      </div>
+    </article>
+
+    <article class="work" data-idx="2" data-aspect="wide">
+      <div class="work-frame">
+        <img src="img/bridle-road.webp" alt="Bridle Road, October" loading="eager">
+      </div>
+      <div class="work-plate">
+        <div class="work-plate-roman">iii.</div>
+        <div class="work-plate-title">Bridle Road, October</div>
+        <div class="work-plate-meta">Gouache &amp; pencil on paper · 72 × 30 cm · 2023</div>
+        <div class="work-plate-note">"A study for a larger work that I never made. The road kept walking away from me."</div>
+      </div>
+    </article>
+
+    <article class="work" data-idx="3" data-aspect="panorama">
+      <div class="work-frame">
+        <img src="img/gothic-tapestry.webp" alt="Hedgerow, Gothic" loading="eager">
+      </div>
+      <div class="work-plate">
+        <div class="work-plate-roman">iv.</div>
+        <div class="work-plate-title">Hedgerow, Gothic</div>
+        <div class="work-plate-meta">Watercolour on Saunders · 110 × 48 cm · 2022</div>
+        <div class="work-plate-note">"The hedgerow at the back of the orchard. I think of it as a cathedral that grew on its own."</div>
+      </div>
+    </article>
+
+    <article class="work" data-idx="4" data-aspect="landscape">
+      <div class="work-frame">
+        <img src="img/burgundy-peaches.webp" alt="Burgundy Peaches in a Cut-Glass Bowl" loading="eager">
+      </div>
+      <div class="work-plate">
+        <div class="work-plate-roman">v.</div>
+        <div class="work-plate-title">Burgundy Peaches in a Cut&#8209;Glass Bowl</div>
+        <div class="work-plate-meta">Oil on prepared linen · 40 × 60 cm · 2021</div>
+        <div class="work-plate-note">"My mother's bowl, my mother's peaches. Painted the week she stopped recognising them."</div>
+      </div>
+    </article>
+
+    <!-- End-of-room marker -->
+    <div class="wall-end">
+      <div class="wall-end-rule"></div>
+      <div class="wall-end-stack">
+        <div class="wall-end-label">End of Room I</div>
+        <div class="wall-end-note">Studio archive &amp; commissions<br>by appointment</div>
+        <a class="wall-end-link" href="threshold.html">← return to threshold</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Floor (sits below the strip, parallax-driven) -->
+  <div class="wall-floor" aria-hidden="true"></div>
+  <!-- Wall texture overlay -->
+  <div class="wall-texture" aria-hidden="true"></div>
+  <!-- Cursor spotlight -->
+  <div class="wall-spot" id="wallSpot" aria-hidden="true"></div>
+  <!-- Dust particles -->
+  <canvas class="wall-dust" id="wallDust" aria-hidden="true"></canvas>
+</main>
+
+<!-- TOP RAIL: where you are -->
+<header class="rail-top">
+  <a class="rail-back" href="threshold.html" aria-label="Back to threshold">
+    <svg viewBox="0 0 24 24" width="14" height="14"><path d="M20 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Threshold
+  </a>
+  <div class="rail-title">
+    <span class="rail-title-mark">Christina <em>Kerkvliet&#8209;Goddard</em></span>
+    <span class="rail-title-sep">·</span>
+    <span class="rail-title-room">Room I — South Studio</span>
+  </div>
+  <div class="rail-progress" aria-label="Position in room">
+    <span class="rail-progress-num" id="railNum">i</span>
+    <span class="rail-progress-of">of v</span>
+  </div>
+</header>
+
+<!-- BOTTOM RAIL: minimap -->
+<footer class="rail-bottom">
+  <div class="rail-mini">
+    <button class="rail-mini-item is-active" data-idx="0" aria-label="Willow on the South Lawn">
+      <span class="rail-mini-num">i</span>
+      <span class="rail-mini-title">Willow on the South Lawn</span>
+    </button>
+    <button class="rail-mini-item" data-idx="1" aria-label="The Forest in Late Winter">
+      <span class="rail-mini-num">ii</span>
+      <span class="rail-mini-title">The Forest in Late Winter</span>
+    </button>
+    <button class="rail-mini-item" data-idx="2" aria-label="Bridle Road, October">
+      <span class="rail-mini-num">iii</span>
+      <span class="rail-mini-title">Bridle Road, October</span>
+    </button>
+    <button class="rail-mini-item" data-idx="3" aria-label="Hedgerow, Gothic">
+      <span class="rail-mini-num">iv</span>
+      <span class="rail-mini-title">Hedgerow, Gothic</span>
+    </button>
+    <button class="rail-mini-item" data-idx="4" aria-label="Burgundy Peaches">
+      <span class="rail-mini-num">v</span>
+      <span class="rail-mini-title">Burgundy Peaches</span>
+    </button>
+  </div>
+  <div class="rail-hint">
+    <span class="rail-hint-keys">scroll · drag · ← →</span>
+    <span class="rail-hint-sep"></span>
+    <span class="rail-hint-action">click any work to view it</span>
+  </div>
+</footer>
+
+<!-- FOCUS OVERLAY: when a work is clicked -->
+<div class="focus" id="focus" aria-hidden="true">
+  <div class="focus-stage">
+    <img class="focus-img" id="focusImg" alt="">
+    <div class="focus-meta" id="focusMeta">
+      <div class="focus-meta-roman" id="focusRoman">i.</div>
+      <div class="focus-meta-title" id="focusTitle"></div>
+      <div class="focus-meta-medium" id="focusMedium"></div>
+      <div class="focus-meta-note" id="focusNote"></div>
+      <div class="focus-meta-actions">
+        <span class="focus-meta-tag">Available</span>
+        <span class="focus-meta-tag focus-meta-tag--ghost">Edition of one</span>
+        <a class="focus-meta-cta" href="#enquire">Enquire about this work →</a>
+      </div>
+    </div>
+  </div>
+  <button class="focus-close" id="focusClose" aria-label="Close">
+    <svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    <span>close · esc</span>
+  </button>
+</div>
+
+<script src="chamber.js"></script>
+</body>
+</html>

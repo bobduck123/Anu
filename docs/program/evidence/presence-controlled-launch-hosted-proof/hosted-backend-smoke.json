@@ -1,0 +1,505 @@
+{
+  "backend_url": "https://anu-back-end.vercel.app",
+  "bypass_header_configured": false,
+  "dry_run": false,
+  "frontend_origin": "https://your-presence.vercel.app",
+  "generated_at": "2026-05-22T06:15:53Z",
+  "mutating_fixture_steps_enabled": true,
+  "result": "pass",
+  "secret_values_printed": false,
+  "steps": [
+    {
+      "detail": {},
+      "latency_ms": 1428,
+      "reason": "Liveness endpoint returned the minimal ok payload.",
+      "route": "/healthz",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "healthz"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1417,
+      "reason": "Health endpoint reports configured, ready dependencies.",
+      "route": "/health",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "health"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1113,
+      "reason": "Approved frontend CORS preflight returned the expected allow-origin.",
+      "route": "/api/halls",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "cors_halls"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1141,
+      "reason": "Approved frontend CORS preflight returned the expected allow-origin.",
+      "route": "/api/garden/home",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "cors_garden_home"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1145,
+      "reason": "Approved frontend CORS preflight returned the expected allow-origin.",
+      "route": "/api/observer/garden",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "cors_observer_garden"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1137,
+      "reason": "Approved frontend CORS preflight returned the expected allow-origin.",
+      "route": "/api/observations",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "cors_observations"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1099,
+      "reason": "Approved frontend CORS preflight returned the expected allow-origin.",
+      "route": "/api/presence/owner/halls",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "cors_owner_halls"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1137,
+      "reason": "Approved frontend CORS preflight returned the expected allow-origin.",
+      "route": "/api/paths/from-hall/1",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "cors_path_from_hall"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1396,
+      "reason": "Approved frontend CORS preflight returned the expected allow-origin.",
+      "route": "/api/presence/keys/<room-key-token>/resolve",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "cors_room_key"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1157,
+      "reason": "Approved frontend CORS preflight returned the expected allow-origin.",
+      "route": "/api/presence/public/<room-slug>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "cors_public_room"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1101,
+      "reason": "Unapproved CORS origin was not reflected.",
+      "route": "/api/halls",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "cors_disallowed_origin"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1444,
+      "reason": "Unknown route returned a safe 404 response.",
+      "route": "/__presence_controlled_launch_missing__",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 404,
+      "step": "safe_404"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1407,
+      "reason": "Invalid bearer auth failed safely.",
+      "route": "/api/garden/home",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 401,
+      "step": "invalid_auth"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1438,
+      "reason": "Public Hall list returned the canonical envelope.",
+      "route": "/api/halls",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "public_halls"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1441,
+      "reason": "Public Hall detail returned Hall identifiers and shape.",
+      "route": "/api/halls/<hall-slug>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "public_hall_detail"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1407,
+      "reason": "Public Hall participants omitted raw user id and email fields.",
+      "route": "/api/halls/<hall-slug>/participants",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "public_hall_participants_identity_safe"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1273,
+      "reason": "Public Mask alias returned a Mask/Garden payload.",
+      "route": "/api/masks/<alias>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "public_mask"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1460,
+      "reason": "Public Garden alias returned a Garden payload.",
+      "route": "/api/gardens/<alias>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "public_garden"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1437,
+      "reason": "Private smoke Mask alias did not leak publicly.",
+      "route": "/api/masks/<private-alias>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 404,
+      "step": "private_mask_not_public"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1402,
+      "reason": "Private smoke Garden alias did not leak publicly.",
+      "route": "/api/gardens/<private-alias>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 404,
+      "step": "private_garden_not_public"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1147,
+      "reason": "Private smoke Hall detail did not leak publicly.",
+      "route": "/api/halls/<private-hall-slug>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 403,
+      "step": "private_hall_not_public"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1533,
+      "reason": "Public Presence Room API returned the room payload.",
+      "route": "/api/presence/public/<room-slug>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "public_room"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1203,
+      "reason": "Hosted RoomKey resolved and captured one fixture encounter.",
+      "route": "/api/presence/keys/<room-key-token>/resolve",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "room_key_resolve"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1140,
+      "reason": "World readiness/admin data is not public.",
+      "route": "/api/admin/presence/world-readiness",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 401,
+      "step": "world_admin_not_public"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1304,
+      "reason": "Observer Garden home returned canonical sections.",
+      "route": "/api/garden/home",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "observer_garden_home"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1196,
+      "reason": "Observer Seed list returned the canonical envelope.",
+      "route": "/api/garden/seeds",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "observer_list_seeds"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1211,
+      "reason": "Observer fixture created a tagged Observation.",
+      "route": "/api/observations",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 201,
+      "step": "observer_observation"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1215,
+      "reason": "Observer fixture created an Echo with commentary.",
+      "route": "/api/observations/<observation-id>/echoes",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 201,
+      "step": "observer_echo"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1193,
+      "reason": "Observer fixture reported smoke content through moderation.",
+      "route": "/api/observations/<observation-id>/report",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 201,
+      "step": "observer_report_observation"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1456,
+      "reason": "Self-promotion Observation was rejected safely.",
+      "route": "/api/observations",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 400,
+      "step": "observer_self_promotion_guard"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1199,
+      "reason": "Fixture Seed nurture action succeeded.",
+      "route": "/api/garden/seeds/<seed-id>/nurture",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 201,
+      "step": "observer_nurture_seed"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1533,
+      "reason": "Fixture Seed prune action succeeded.",
+      "route": "/api/garden/seeds/<seed-id>/prune",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 201,
+      "step": "observer_prune_seed"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1224,
+      "reason": "Mood Board fixture item planted into Garden.",
+      "route": "/api/observer/mood-boards/<board-id>/items/<item-id>/seed",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 201,
+      "step": "observer_mood_board_seed"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1205,
+      "reason": "Observer fixture joined the Hall.",
+      "route": "/api/halls/<hall-slug>/join",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 201,
+      "step": "observer_join_hall"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1511,
+      "reason": "Observer fixture created a Hall Observation.",
+      "route": "/api/halls/<hall-slug>/observations",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 201,
+      "step": "observer_hall_observation"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1219,
+      "reason": "Observer fixture left or marked away from the Hall.",
+      "route": "/api/halls/<hall-slug>/leave",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "observer_leave_hall"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1181,
+      "reason": "Hall portal click recorded an activity event.",
+      "route": "/api/halls/<hall-slug>/portals/<portal-id>/click",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 201,
+      "step": "hall_portal_click"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1477,
+      "reason": "Hall stall visit recorded an activity event.",
+      "route": "/api/halls/<hall-slug>/stalls/<stall-id>/visit",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 201,
+      "step": "hall_stall_visit"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1444,
+      "reason": "Path from Hall returned the Hall trailhead path.",
+      "route": "/api/paths/from-hall/<hall-id>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "path_from_hall"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1524,
+      "reason": "Fixture generated a Path from Hall.",
+      "route": "/api/paths/generate/from-hall/<hall-id>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 201,
+      "step": "generate_path_from_hall"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1548,
+      "reason": "Owner Hall list returned owner-scoped envelope.",
+      "route": "/api/presence/owner/halls?room_id=<owner-room-id>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "owner_halls"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1471,
+      "reason": "Owner Hall detail returned owner-scoped Hall.",
+      "route": "/api/presence/owner/halls/<owner-hall-id>?room_id=<owner-room-id>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "owner_hall_detail"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1512,
+      "reason": "Owner Hall analytics returned canonical metrics.",
+      "route": "/api/presence/owner/halls/<owner-hall-id>/analytics?room_id=<owner-room-id>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "owner_hall_analytics"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1545,
+      "reason": "Owner analytics exposes Hall activity metrics for event verification.",
+      "route": "/api/presence/owner/halls/<owner-hall-id>/analytics?room_id=<owner-room-id>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "hall_activity_metrics"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1481,
+      "reason": "Safe owner fixture created tagged draft Hall.",
+      "route": "/api/presence/owner/halls",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 201,
+      "step": "owner_draft_hall_create"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1229,
+      "reason": "Tagged draft Hall was archived through owner API cleanup.",
+      "route": "/api/presence/owner/halls/<hall-id>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "owner_draft_hall_archive"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1463,
+      "reason": "Owner token could not read another owner Hall scope.",
+      "route": "/api/presence/owner/halls/<foreign-hall-id>?room_id=<foreign-room-id>",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 403,
+      "step": "owner_cross_owner_denial"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1150,
+      "reason": "Admin Hall internals reject unauthenticated requests.",
+      "route": "/api/admin/presence/halls",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 401,
+      "step": "admin_halls_without_auth"
+    },
+    {
+      "detail": {},
+      "latency_ms": 1194,
+      "reason": "Admin/control fixture can read World readiness internals.",
+      "route": "/api/admin/presence/world-readiness",
+      "shape_matched": true,
+      "status": "pass",
+      "status_code": 200,
+      "step": "admin_world_with_auth"
+    }
+  ],
+  "summary": {
+    "pass": 49
+  }
+}

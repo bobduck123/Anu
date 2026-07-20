@@ -1,0 +1,231 @@
+/* Presence Studio V2 — Room World Data
+   Each kit defines spatial BEHAVIOUR, not just a palette. */
+
+const STUDIO_KITS = [
+  {
+    id: "gallery", name: "Gallery Wall", surface: "Frameless wall", verb: "The room recedes",
+    spatial: "Objects float in air; the wall disappears so work can speak.",
+    feel: "Museum-quiet, editorial, delicate",
+    persona: { name: "Christina Kerkvliet-Goddard", tagline: "Contemporary painter · Cape Town & Byron Bay", avatar: "CKG" },
+    tokens: { bg: "#f7f3ea", surface: "#fffdf7", text: "#191815", muted: "#746f63", accent: "#8f6f3f", glow: "#b78c4e", radius: 2, headingWeight: 500 },
+    fonts: { display: "'Cormorant Garamond', serif", body: "'Inter', sans-serif" },
+    layout: { type: "float", columns: 1 },
+    cta: { text: "Enquire about this work →" },
+    chambers: [
+      { id: "ch-g1", label: "Works", objects: [
+        { id: "g1", role: "image", title: "Bridle Road, 2005", meta: "Oil on canvas · 1200 × 900", img: "studio/img/work-bridle-road.webp" },
+        { id: "g2", role: "image", title: "Gothic Tapestry, 2019", meta: "Mixed media on linen · 2400 × 1800", img: "studio/img/work-gothic-tapestry.webp" },
+        { id: "g3", role: "image", title: "Willow, 2021", meta: "Oil on board · 600 × 800", img: "studio/img/work-willow.webp" },
+      ]},
+      { id: "ch-g2", label: "About", objects: [
+        { id: "g4", role: "text", title: "Artist Statement", meta: "\"I paint what remains after memory has finished with a place.\"" },
+        { id: "g5", role: "credential", title: "Represented by", meta: "Everard Read · Cape Town & Johannesburg" },
+        { id: "g6", role: "cta", title: "Commissions", meta: "Open quarterly · enquire →" },
+      ]},
+    ],
+    traces: { entries: 847, seeds: 23, guestbook: 4 },
+  },
+  {
+    id: "zine", name: "Zine Board", surface: "Bedroom wall / gig board", verb: "The room shouts",
+    spatial: "Objects layered, rotated, overlapping. Stickers and tape. Punk energy.",
+    feel: "DIY, chaotic, alive, loud",
+    persona: { name: "The Waiting Room", tagline: "Live music · zines · community", avatar: "TWR" },
+    tokens: { bg: "#0a0a0a", surface: "rgba(255,255,255,0.04)", text: "#f0e8d0", muted: "rgba(240,232,208,0.5)", accent: "#ff6b9d", glow: "#ff6b9d", radius: 0, headingWeight: 800 },
+    fonts: { display: "'Inter Tight', sans-serif", body: "'Inter', sans-serif" },
+    layout: { type: "chaos", columns: 2 },
+    cta: { text: "COME THRU →" },
+    chambers: [
+      { id: "ch-z1", label: "The Board", objects: [
+        { id: "z1", role: "event", title: "FRI 9PM — LIVE SET", meta: "@ The Waiting Room", detail: "w/ DJ Moss + guests" },
+        { id: "z2", role: "media", title: "NEW TAPE OUT", meta: "SOLD OUT", detail: "Limited 50 copies" },
+        { id: "z3", role: "event", title: "OPEN MIC WED", meta: "Sign up on the night" },
+        { id: "z4", role: "shop", title: "MERCH DROP", meta: "Tees · Pins · Zines", detail: "Pre-order open" },
+        { id: "z5", role: "cta", title: "COME THRU →", meta: "Bandcamp · IG · Mixcloud" },
+      ]},
+    ],
+    traces: { entries: 2103, seeds: 67, guestbook: 19 },
+  },
+  {
+    id: "dj", name: "DJ Booth", surface: "Club booth / dark stage", verb: "The room pulses",
+    spatial: "Dense grid, packed tight, glowing borders. The room has a heartbeat.",
+    feel: "Club, nocturnal, vibrant, dense",
+    persona: { name: "DJ MOSS", tagline: "Deep house · vinyl · bookings", avatar: "DJM" },
+    tokens: { bg: "#08070a", surface: "rgba(168,85,247,0.06)", text: "#e8e0f0", muted: "rgba(232,224,240,0.4)", accent: "#a855f7", glow: "#a855f7", radius: 3, headingWeight: 800 },
+    fonts: { display: "'Inter Tight', sans-serif", body: "'Inter', sans-serif" },
+    layout: { type: "dense-grid", columns: 3 },
+    cta: { text: "BOOK NOW" },
+    chambers: [
+      { id: "ch-d1", label: "The Booth", objects: [
+        { id: "d1", role: "label", title: "RESIDENT DJ", meta: "Saturday nights · The Den" },
+        { id: "d2", role: "media", title: "LATEST MIX", meta: "Deep house · 2hr set" },
+        { id: "d3", role: "event", title: "UPCOMING", meta: "Jun 14 · Warehouse party" },
+        { id: "d4", role: "shop", title: "VINYL", meta: "12 records for sale" },
+        { id: "d5", role: "portal", title: "PRESS KIT", meta: "Bio · Photos · Rider" },
+        { id: "d6", role: "cta", title: "BOOK", meta: "Enquiries open" },
+      ]},
+    ],
+    traces: { entries: 4210, seeds: 89, guestbook: 31 },
+  },
+  {
+    id: "healing", name: "Healing Altar", surface: "Soft chamber / altar", verb: "The room holds",
+    spatial: "Round cards, generous space, breathing motion. Sanctuary.",
+    feel: "Calm, held, slow breath, sanctuary",
+    persona: { name: "Sage & Stone Bodywork", tagline: "Somatic bodywork · craniosacral · breathwork", avatar: "S&S" },
+    tokens: { bg: "#e8efe2", surface: "rgba(251,247,239,0.85)", text: "#1e2a1f", muted: "#61715d", accent: "#567d55", glow: "#6f9a6c", radius: 22, headingWeight: 400 },
+    fonts: { display: "'Cormorant Garamond', serif", body: "'Inter', sans-serif" },
+    layout: { type: "centered", columns: 1 },
+    cta: { text: "Book a session" },
+    chambers: [
+      { id: "ch-h1", label: "Welcome", objects: [
+        { id: "h1", role: "text", title: "A quiet room to slow down and feel held", meta: "Somatic bodywork · craniosacral · breathwork" },
+        { id: "h2", role: "service", title: "Individual Session", meta: "90 min · $140 · in-person or online" },
+        { id: "h3", role: "event", title: "Breathwork Circle", meta: "Thursdays 6:30pm · by donation" },
+        { id: "h4", role: "cta", title: "Book a Session", meta: "Online or in-person" },
+      ]},
+    ],
+    traces: { entries: 392, seeds: 41, guestbook: 12 },
+  },
+  {
+    id: "market", name: "Market Stall", surface: "Booth / vendor table", verb: "The room sells",
+    spatial: "Packed cards with price chips, warm colours, booth energy.",
+    feel: "Bazaar, abundant, warm, direct",
+    persona: { name: "Byron Sourdough Co.", tagline: "Artisan bread & preserves · Northern Rivers", avatar: "BSC" },
+    tokens: { bg: "#f2e6d4", surface: "#fff8ec", text: "#3d2b1a", muted: "#735f4a", accent: "#c4622a", glow: "#c4622a", radius: 10, headingWeight: 700 },
+    fonts: { display: "'Inter Tight', sans-serif", body: "'Inter', sans-serif" },
+    layout: { type: "packed-grid", columns: 2 },
+    cta: { text: "See all products" },
+    chambers: [
+      { id: "ch-m1", label: "Today's Produce", objects: [
+        { id: "m1", role: "product", title: "Sourdough Loaf", meta: "$8.50", detail: "Baked fresh daily" },
+        { id: "m2", role: "product", title: "Seasonal Preserve Box", meta: "$24.00", detail: "3 × 250ml jars" },
+        { id: "m3", role: "product", title: "Raw Honeycomb", meta: "$18.00", detail: "Local · unprocessed" },
+        { id: "m4", role: "event", title: "Saturday Markets", meta: "7am–1pm · Bangalow" },
+        { id: "m5", role: "cta", title: "Wholesale Enquiries", meta: "Get in touch →" },
+      ]},
+    ],
+    traces: { entries: 1534, seeds: 112, guestbook: 8 },
+  },
+  {
+    id: "archive", name: "Evidence Archive", surface: "Filing cabinet / ledger", verb: "The room documents",
+    spatial: "Left-ruled cards, dashed ledger lines, mono labels. Everything is filed.",
+    feel: "Documentary, organised, evidential, civic",
+    persona: { name: "Redfern Community Archive", tagline: "Community-owned evidence collection", avatar: "RCA" },
+    tokens: { bg: "#efe8dc", surface: "rgba(255,250,242,0.7)", text: "#17130f", muted: "#62635c", accent: "#8f3a2f", glow: "#b9542f", radius: 2, headingWeight: 600 },
+    fonts: { display: "'Inter Tight', sans-serif", body: "'Inter', sans-serif" },
+    layout: { type: "ledger", columns: 1 },
+    cta: { text: "Submit evidence →" },
+    chambers: [
+      { id: "ch-a1", label: "Evidence Collection", objects: [
+        { id: "a1", role: "evidence", title: "Solidarity Mural Project", meta: "Redfern · Documented 14 Mar 2018", detail: "12 contributors · archived" },
+        { id: "a2", role: "evidence", title: "Community Planting Day", meta: "23 participants · evidence file" },
+        { id: "a3", role: "evidence", title: "Oral History: June Moriarty", meta: "Transcript · 48 min recorded" },
+        { id: "a4", role: "evidence", title: "Fundraiser Outcome", meta: "$4,200 raised · acquitted" },
+        { id: "a5", role: "cta", title: "Submit a Record", meta: "Contribute to the archive →" },
+      ]},
+    ],
+    traces: { entries: 621, seeds: 34, guestbook: 7 },
+  },
+  {
+    id: "carpenter", name: "Carpenter Workbench", surface: "Workshop bench / proof wall", verb: "The room proves",
+    spatial: "Heavy borders, block typography, proof photos, specs chips.",
+    feel: "Sturdy, raw, proof-first, tradesman",
+    persona: { name: "Matt Lawson Carpentry", tagline: "Licensed builder · Northern Rivers · Est. 2011", avatar: "MLC" },
+    tokens: { bg: "#f2eadf", surface: "#fff8ec", text: "#24170f", muted: "#735f4a", accent: "#a85221", glow: "#c4622a", radius: 4, headingWeight: 800 },
+    fonts: { display: "'Inter Tight', sans-serif", body: "'Inter', sans-serif" },
+    layout: { type: "block-grid", columns: 2 },
+    cta: { text: "GET A QUOTE →" },
+    chambers: [
+      { id: "ch-c1", label: "Proof Wall", objects: [
+        { id: "c1", role: "credential", title: "Licensed & Insured", meta: "Lic. No. 298471C · ABN 12 345 678 901" },
+        { id: "c2", role: "proof", title: "Current Project", meta: "Residential renovation · Byron Bay", detail: "Timber frame + deck · 16 weeks" },
+        { id: "c3", role: "testimonial", title: "\"Best tradie we've ever used\"", meta: "— Sarah & Mick, Bangalow" },
+        { id: "c4", role: "cta", title: "Quotes Within 24 Hours", meta: "Call or SMS · 0412 345 678" },
+      ]},
+    ],
+    traces: { entries: 287, seeds: 8, guestbook: 3 },
+  },
+  {
+    id: "consultant", name: "Consultant Desk", surface: "Clean office / boardroom", verb: "The room presents",
+    spatial: "Hairline borders, monochrome, cobalt focus. Sharp and professional.",
+    feel: "Professional, precise, clean, corporate-but-human",
+    persona: { name: "Clearpath Advisory", tagline: "Strategy · Transformation · Advisory", avatar: "CPA" },
+    tokens: { bg: "#ffffff", surface: "#fafafa", text: "#111111", muted: "#5f5f5b", accent: "#111111", glow: "#2f6df0", radius: 5, headingWeight: 700 },
+    fonts: { display: "'Inter', sans-serif", body: "'Inter', sans-serif" },
+    layout: { type: "clean-grid", columns: 2 },
+    cta: { text: "Schedule a call" },
+    chambers: [
+      { id: "ch-co1", label: "Services", objects: [
+        { id: "co1", role: "service", title: "Strategy & Advisory", meta: "Business transformation · 12 years experience" },
+        { id: "co2", role: "portfolio", title: "Case Studies", meta: "12 projects · 3 industries" },
+        { id: "co3", role: "credential", title: "Credentials", meta: "MBA · AICD · ISO 27001 Lead" },
+        { id: "co4", role: "cta", title: "Schedule a Call", meta: "30 min · free · online" },
+      ]},
+    ],
+    traces: { entries: 156, seeds: 5, guestbook: 1 },
+  },
+];
+
+const SKIN_CONTROLS = [
+  { id: "bg", label: "Background", type: "swatch", cat: "ground" },
+  { id: "texture", label: "Texture", type: "choice", options: ["none","grain","paper","concrete","cloth"], cat: "ground" },
+  { id: "auraIntensity", label: "Aura Intensity", type: "slider", min: 0, max: 100, cat: "atmosphere" },
+  { id: "motionIntensity", label: "Motion", type: "slider", min: 0, max: 100, cat: "atmosphere" },
+  { id: "displayFont", label: "Display Type", type: "choice", options: ["Cormorant Garamond","Inter Tight","Instrument Serif","JetBrains Mono"], cat: "type" },
+  { id: "headingWeight", label: "Weight", type: "slider", min: 400, max: 900, step: 100, cat: "type" },
+  { id: "objectRadius", label: "Object Shape", type: "slider", min: 0, max: 32, cat: "objects" },
+  { id: "borderStyle", label: "Borders", type: "choice", options: ["none","hairline","ruled","heavy","glow","neon"], cat: "objects" },
+  { id: "shadowDepth", label: "Shadow", type: "choice", options: ["flat","subtle","deep","cinema"], cat: "objects" },
+  { id: "accent", label: "Accent", type: "swatch", cat: "action" },
+];
+
+const MOODBOARD_TYPES = [
+  { id: "image", label: "Image", icon: "image" },
+  { id: "link", label: "Link", icon: "link" },
+  { id: "room", label: "Presence Room", icon: "doorOpen" },
+  { id: "song", label: "Song", icon: "music" },
+  { id: "place", label: "Place", icon: "mapPin" },
+  { id: "quote", label: "Quote", icon: "quote" },
+  { id: "material", label: "Material", icon: "palette" },
+  { id: "inspiration", label: "Inspiration", icon: "sparkles" },
+];
+
+/* Lucide icon paths — plain strings, no JSX needed */
+const ICONS = {
+  move: "M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20",
+  copy: "M20 9h-9a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2zM5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1",
+  eyeOff: "M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22",
+  lock: "M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2zM7 11V7a5 5 0 0 1 10 0v4",
+  layers: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
+  rotateCw: "M21 2v6h-6M21 13a9 9 0 1 1-3-7.7L21 8",
+  trash: "M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
+  pin: "M12 17v5M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 2-2V3H6v1a2 2 0 0 0 2 2 1 1 0 0 1 1 1v3.76z",
+  group: "M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2",
+  resize: "M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7",
+  x: "M18 6L6 18M6 6l12 12",
+  edit: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7",
+  link: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71",
+  footprints: "M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5 10 7.89 8 10 8 12h-.5M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 2.39 2 4.51 2 6.51H15.5M6 18h1M18 22h1",
+  book: "M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20",
+  doorOpen: "M13 4h3a2 2 0 0 1 2 2v14M2 20h3M13 20h7M10 12v.01M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561z",
+  star: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z",
+  image: "M21 15l-5-5L5 21M5 5h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5",
+  music: "M9 18V5l12-2v13",
+  mapPin: "M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z",
+  quote: "M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z",
+  palette: "M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z",
+  plus: "M12 5v14M5 12h14",
+  phone: "M5 4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4zM12 18h.01",
+  monitor: "M2 5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5zM8 21h8M12 17v4",
+  maximize: "M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3",
+  globe: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20",
+  sliders: "M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6",
+  eye: "M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z",
+  shield: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+  wand: "M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19 13M17.8 6.2L19 5M12.2 11.8L11 13M12.2 6.2L11 5M15 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM3 21l9-9",
+  sparkle: "M12 3v1m0 16v1m-8-9H3m18 0h-1M5.6 5.6l.7.7m12.1 12.1l.7.7M5.6 18.4l.7-.7m12.1-12.1l.7-.7",
+};
+
+window.STUDIO_KITS = STUDIO_KITS;
+window.SKIN_CONTROLS = SKIN_CONTROLS;
+window.MOODBOARD_TYPES = MOODBOARD_TYPES;
+window.ICONS = ICONS;

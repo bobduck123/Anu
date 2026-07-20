@@ -1,0 +1,88 @@
+{
+  "generated_at": "2026-05-22T06:50:18Z",
+  "inputs": {
+    "backend_url": "https://anu-back-end.vercel.app",
+    "expected_routing": "capture_only",
+    "room_id_present": true,
+    "room_slug": "ggm-christina-goddard"
+  },
+  "name": "ggm_enquiry_verification",
+  "notes": [
+    "Forwarding is proven only when the API reports `sent`; `logged_fallback` proves durable capture with fallback handling.",
+    "This smoke stores a clearly labelled safe enquiry row and avoids visitor PII beyond an example.test smoke address."
+  ],
+  "result": "pass",
+  "secret_values_printed": false,
+  "steps": [
+    {
+      "data": {
+        "payload_shape": [
+          "data",
+          "ok",
+          "request_id"
+        ]
+      },
+      "http_status": 200,
+      "latency_ms": 1628,
+      "name": "public_room_for_enquiry",
+      "reason": "Public GGM Room exists before enquiry verification.",
+      "response_shape_matched": true,
+      "route": "/api/presence/public/ggm-christina-goddard",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "delivery_status": "logged_fallback",
+        "enquiry_id": 9,
+        "expected_routing": "capture_only",
+        "payload_shape": [
+          "data",
+          "ok",
+          "request_id"
+        ]
+      },
+      "http_status": 201,
+      "latency_ms": 1573,
+      "name": "safe_enquiry_submit",
+      "reason": "Enquiry accepted into capture-only fallback handling.",
+      "response_shape_matched": true,
+      "route": "/api/presence/public/ggm-christina-goddard/enquiries",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "payload_shape": [
+          "error",
+          "ok",
+          "request_id"
+        ]
+      },
+      "http_status": 400,
+      "latency_ms": 1103,
+      "name": "honeypot_validation",
+      "reason": "Honeypot payload was rejected safely.",
+      "response_shape_matched": true,
+      "route": "/api/presence/public/ggm-christina-goddard/enquiries",
+      "status": "pass"
+    },
+    {
+      "data": {
+        "enquiry_id": 9,
+        "payload_shape": [
+          "data",
+          "ok"
+        ]
+      },
+      "http_status": 200,
+      "latency_ms": 1155,
+      "name": "owner_enquiry_storage",
+      "reason": "Owner inbox includes the durable safe enquiry row.",
+      "response_shape_matched": true,
+      "route": "/api/presence/owner/nodes/11/enquiries",
+      "status": "pass"
+    }
+  ],
+  "summary": {
+    "pass": 4
+  }
+}

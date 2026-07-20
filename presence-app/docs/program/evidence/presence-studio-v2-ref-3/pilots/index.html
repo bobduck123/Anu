@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Presence — Pilot Batch 01</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../assets/colors_and_type.css">
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--p-paper);color:var(--p-on-paper);font-family:var(--p-f-ui);min-height:100%}
+
+  /* Paper texture under everything */
+  body{
+    background-image:
+      radial-gradient(70% 40% at 50% 0%, color-mix(in oklab, var(--p-copper) 7%, transparent), transparent 60%),
+      radial-gradient(50% 50% at 90% 100%, color-mix(in oklab, var(--p-moss) 6%, transparent), transparent 70%);
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(90,60,30,0.06) 1px, transparent 2px),
+      radial-gradient(1px 1px at 70% 80%, rgba(60,50,30,0.05) 1px, transparent 2px),
+      radial-gradient(1px 1px at 45% 60%, rgba(90,70,40,0.04) 1px, transparent 2px);
+    background-size:120px 120px, 180px 180px, 240px 240px;
+    mix-blend-mode:multiply;
+    opacity:0.7;
+  }
+
+  /* ============ Top rail ============ */
+  .px-rail{
+    position:relative;z-index:5;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 32px;
+    border-bottom:1px solid var(--p-rule);
+  }
+  .px-rail-left{display:flex;align-items:center;gap:14px}
+  .px-glyph{
+    /* concentric aperture — the Presence mark */
+    width:18px;height:18px;border-radius:50%;
+    border:1px solid var(--p-ink);
+    position:relative;
+  }
+  .px-glyph::after{
+    content:"";position:absolute;inset:5px;border-radius:50%;
+    background:var(--p-copper);
+  }
+  .px-rail-name{
+    font-family:var(--p-f-display);font-style:italic;
+    font-size:20px;color:var(--p-ink);
+    line-height:1;
+  }
+  .px-rail-meta{
+    font-family:var(--p-f-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+    color:var(--p-on-paper-mute);
+    display:flex;align-items:center;gap:14px;
+  }
+  .px-rail-sep{width:18px;height:1px;background:var(--p-rule-strong)}
+  .px-rail-status{
+    display:inline-flex;align-items:center;gap:6px;
+    color:var(--p-on-paper);
+  }
+  .px-rail-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--p-copper);
+  }
+
+  /* ============ Hero ============ */
+  .px-hero{
+    position:relative;z-index:5;
+    padding:96px 32px 36px;
+    max-width:1320px;margin:0 auto;
+  }
+  .px-hero-supra{
+    display:flex;align-items:center;gap:14px;
+    margin-bottom:28px;
+    font-family:var(--p-f-mono);font-size:11px;letter-spacing:0.22em;text-transform:uppercase;
+    color:var(--p-on-paper-mute);
+  }
+  .px-hero-supra-rule{flex:0 0 56px;height:1px;background:var(--p-rule-strong)}
+  .px-hero-h{
+    margin:0 0 36px;
+    font-family:var(--p-f-display);
+    font-weight:400;
+    font-size:clamp(44px, 7vw, 116px);
+    line-height:1.02;letter-spacing:-0.022em;
+    color:var(--p-on-paper);
+    max-width:16ch;
+  }
+  .px-hero-h em{font-style:italic;color:var(--p-copper)}
+  .px-hero-lede{
+    max-width:64ch;
+    font-family:var(--p-f-ui);
+    font-size:clamp(17px, 1.4vw, 20px);
+    line-height:1.55;color:var(--p-on-paper-mute);
+    margin:0;
+  }
+  .px-hero-lede em{color:var(--p-on-paper);font-style:italic}
+
+  /* ============ Reference card ============ */
+  .px-ref{
+    max-width:1320px;margin:48px auto 0;
+    padding:0 32px;
+    position:relative;z-index:5;
+  }
+  .px-ref-card{
+    display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:24px;
+    padding:18px 24px;
+    border:1px solid var(--p-rule-strong);
+    background:var(--p-bone);
+    box-shadow:var(--p-sh-2);
+  }
+  .px-ref-mark{
+    font-family:"UnifrakturCook","Times New Roman",serif;
+    font-size:30px;color:var(--p-copper);
+    line-height:1;
+  }
+  .px-ref-text{
+    font-family:var(--p-f-ui);font-size:14.5px;line-height:1.55;color:var(--p-on-paper-mute);
+    max-width:64ch;
+  }
+  .px-ref-text strong{color:var(--p-on-paper);font-weight:500}
+  .px-ref-link{
+    font-family:var(--p-f-mono);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;
+    color:var(--p-ink);text-decoration:none;
+    border:1px solid var(--p-ink);padding:8px 14px;
+    transition:background var(--p-dur-tap) var(--p-ease-tactile), color var(--p-dur-tap) var(--p-ease-tactile);
+  }
+  .px-ref-link:hover{background:var(--p-ink);color:var(--p-bone)}
+
+  /* ============ Pilots grid header ============ */
+  .px-pilots-h{
+    position:relative;z-index:5;
+    max-width:1320px;margin:64px auto 0;
+    padding:0 32px;
+    display:flex;align-items:baseline;justify-content:space-between;gap:24px;
+    border-bottom:1px solid var(--p-rule-strong);
+    padding-bottom:14px;
+  }
+  .px-pilots-h h2{
+    margin:0;
+    font-family:var(--p-f-display);font-weight:400;
+    font-size:clamp(28px, 3.4vw, 44px);line-height:1;letter-spacing:-0.01em;
+    color:var(--p-on-paper);
+  }
+  .px-pilots-h h2 em{font-style:italic;color:var(--p-copper)}
+  .px-pilots-h-meta{
+    font-family:var(--p-f-mono);font-size:10.5px;letter-spacing:0.2em;text-transform:uppercase;
+    color:var(--p-on-paper-mute);
+  }
+
+  /* ============ Rooms ============ */
+  .px-pilots{
+    position:relative;z-index:5;
+    max-width:1320px;margin:0 auto;
+    padding:32px 32px 80px;
+    display:flex;flex-direction:column;gap:30px;
+  }
+
+  .px-room{
+    display:grid;
+    grid-template-columns:minmax(0, 1.05fr) minmax(0, 1fr);
+    gap:0;
+    border:1px solid var(--p-rule-strong);
+    background:var(--p-bone);
+    box-shadow:var(--p-sh-2);
+    overflow:hidden;
+    transition:box-shadow var(--p-dur-glide) var(--p-ease-cinema);
+  }
+  .px-room:hover{box-shadow:var(--p-sh-3)}
+
+  /* Image side */
+  .px-room-img{
+    position:relative;
+    min-width:0;
+    aspect-ratio:16/10;
+    background:var(--p-stage) center/cover no-repeat;
+    border-right:1px solid var(--p-rule-strong);
+  }
+  .px-room-img::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(120deg, transparent 55%, rgba(13,12,10,0.35) 100%);
+  }
+  .px-room-img-tag{
+    position:absolute;top:14px;left:14px;
+    padding:6px 10px;
+    background:rgba(13,12,10,0.85);
+    color:var(--p-on-stage);
+    font-family:var(--p-f-mono);font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
+    border-radius:var(--p-r-1);
+    z-index:2;
+  }
+  .px-room-img-stamp{
+    position:absolute;bottom:14px;right:14px;z-index:2;
+    display:inline-flex;align-items:center;gap:6px;
+    padding:4px 10px;
+    background:rgba(248,244,236,0.92);
+    border-radius:var(--p-r-pill);
+    font-family:var(--p-f-mono);font-size:10px;letter-spacing:0.16em;text-transform:uppercase;
+    color:var(--p-ink);
+  }
+  .px-room-img-stamp .dot{width:6px;height:6px;border-radius:50%;background:var(--p-moss)}
+
+  /* Body side */
+  .px-room-body{
+    padding:28px 32px 24px;
+    display:flex;flex-direction:column;justify-content:space-between;gap:22px;
+  }
+  .px-room-top{display:flex;flex-direction:column;gap:14px}
+  .px-room-eyebrow{
+    display:flex;align-items:center;gap:12px;
+    font-family:var(--p-f-mono);font-size:10.5px;letter-spacing:0.2em;text-transform:uppercase;
+    color:var(--p-on-paper-mute);
+  }
+  .px-room-roman{
+    color:var(--p-copper);font-family:var(--p-f-display);font-style:italic;
+    font-size:15px;letter-spacing:0;text-transform:none;
+  }
+  .px-room-eyebrow-rule{flex:1;height:1px;background:var(--p-rule);max-width:120px}
+  .px-room-h{
+    margin:0;
+    font-family:var(--p-f-display);font-weight:400;
+    font-size:clamp(30px, 3.2vw, 42px);
+    line-height:0.98;letter-spacing:-0.015em;
+    color:var(--p-on-paper);
+    overflow-wrap:break-word;
+    hyphens:auto;
+  }
+  .px-room-h em{font-style:italic;color:var(--p-copper)}
+  .px-room-byline{
+    font-family:var(--p-f-mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--p-on-paper-mute);
+  }
+  .px-room-desc{
+    font-family:var(--p-f-ui);
+    font-size:15.5px;line-height:1.55;
+    color:var(--p-on-paper-mute);
+    max-width:48ch;margin:0;
+  }
+  .px-room-desc em{color:var(--p-on-paper);font-style:italic}
+  .px-room-grammar{
+    display:grid;grid-template-columns:auto 1fr;gap:6px 16px;
+    font-family:var(--p-f-mono);font-size:11px;letter-spacing:0.04em;
+    color:var(--p-on-paper);
+    margin:0;
+  }
+  .px-room-grammar dt{color:var(--p-on-paper-dim);text-transform:uppercase;letter-spacing:0.16em;font-size:10px}
+  .px-room-grammar dd{margin:0}
+
+  .px-room-actions{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    border-top:1px solid var(--p-rule);
+    padding-top:18px;
+  }
+  .px-room-link{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:10px 16px;
+    color:var(--p-on-paper);text-decoration:none;
+    font-family:var(--p-f-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+    border:1px solid var(--p-rule-strong);
+    border-radius:var(--p-r-1);
+    background:transparent;
+    transition:background var(--p-dur-tap) var(--p-ease-tactile), border-color var(--p-dur-tap) var(--p-ease-tactile), color var(--p-dur-tap) var(--p-ease-tactile);
+  }
+  .px-room-link:hover{
+    background:color-mix(in oklab, var(--p-copper) 8%, transparent);
+    border-color:var(--p-copper);
+    color:var(--p-on-paper);
+  }
+  .px-room-link--primary{
+    background:var(--p-ink);color:var(--p-bone);border-color:var(--p-ink);
+  }
+  .px-room-link--primary:hover{background:var(--p-copper);border-color:var(--p-copper);color:var(--p-bone)}
+  .px-room-link-arrow{font-size:14px;line-height:1}
+
+  /* I — bbb.vision (the floor) */
+  .px-room--bbb{
+    background:linear-gradient(180deg, var(--p-bone) 0%, var(--p-paper-2) 100%);
+  }
+  .px-room--bbb .px-room-roman{color:var(--p-vermilion)}
+  .px-room--bbb .px-room-link--primary{background:var(--p-stage);border-color:var(--p-stage)}
+  .px-room--bbb .px-room-link--primary:hover{background:var(--p-copper);border-color:var(--p-copper)}
+
+  /* II — Gallery wall (copper) */
+  .px-room--gallery .px-room-roman{color:var(--p-copper)}
+  /* III — DJ booth (vermilion stand-in for heat/marquee) */
+  .px-room--dj .px-room-roman{color:var(--p-vermilion)}
+  /* IV — Market stall (moss / wood) */
+  .px-room--ms .px-room-roman{color:var(--p-moss)}
+
+  /* ============ Approach / criteria ============ */
+  .px-criteria{
+    position:relative;z-index:5;
+    max-width:1320px;margin:0 auto;
+    padding:0 32px 60px;
+    display:grid;grid-template-columns:1fr 1fr;gap:48px;
+  }
+  .px-crit-block h3{
+    margin:0 0 12px;
+    font-family:var(--p-f-mono);font-size:10.5px;letter-spacing:0.22em;text-transform:uppercase;
+    color:var(--p-on-paper-mute);font-weight:500;
+  }
+  .px-crit-block p{
+    margin:0 0 12px;
+    font-family:var(--p-f-ui);font-size:15px;line-height:1.6;
+    color:var(--p-on-paper-mute);max-width:60ch;
+  }
+  .px-crit-block p strong{color:var(--p-on-paper);font-weight:500}
+  .px-crit-list{
+    list-style:none;padding:0;margin:0;
+    display:flex;flex-direction:column;gap:8px;
+    font-family:var(--p-f-ui);font-size:14.5px;
+    color:var(--p-on-paper);
+  }
+  .px-crit-list li{
+    display:grid;grid-template-columns:18px 1fr;gap:10px;align-items:baseline;
+  }
+  .px-crit-list .dot{
+    width:6px;height:6px;border-radius:50%;background:var(--p-moss);margin-top:7px;justify-self:center;
+  }
+  .px-crit-list em{color:var(--p-on-paper-mute);font-style:italic;font-family:var(--p-f-display);font-size:16px}
+
+  /* ============ Footer rule ============ */
+  .px-foot{
+    position:relative;z-index:5;
+    max-width:1320px;margin:0 auto;
+    padding:24px 32px 60px;
+    border-top:1px solid var(--p-rule);
+    display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;
+    font-family:var(--p-f-mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--p-on-paper-mute);
+  }
+  .px-foot strong{color:var(--p-on-paper);font-weight:500}
+  .px-foot a{color:var(--p-copper);text-decoration:none;border-bottom:1px dotted var(--p-copper)}
+
+  @media (max-width:880px){
+    .px-room{grid-template-columns:1fr}
+    .px-room-img{aspect-ratio:16/9;border-right:0;border-bottom:1px solid var(--p-rule-strong)}
+    .px-ref-card{grid-template-columns:1fr}
+    .px-criteria{grid-template-columns:1fr;gap:32px}
+    .px-hero{padding:64px 24px 24px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Top rail ============ -->
+<header class="px-rail">
+  <div class="px-rail-left">
+    <span class="px-glyph" aria-hidden="true"></span>
+    <span class="px-rail-name">Presence</span>
+    <span class="px-rail-meta">
+      <span>pilot programme · batch 01</span>
+    </span>
+  </div>
+  <div class="px-rail-meta">
+    <span class="px-rail-status"><span class="px-rail-dot"></span> four rooms · published draft</span>
+    <span class="px-rail-sep"></span>
+    <span>06 · 06 · 26</span>
+  </div>
+</header>
+
+<!-- ============ Hero ============ -->
+<section class="px-hero">
+  <div class="px-hero-supra">
+    <span>four pilots</span>
+    <span class="px-hero-supra-rule"></span>
+    <span>four worlds</span>
+    <span class="px-hero-supra-rule"></span>
+    <span>one quality floor</span>
+  </div>
+  <h1 class="px-hero-h">Places people can <em>enter</em>.<br />Not profiles.</h1>
+  <p class="px-hero-lede">
+    Four rooms built to the standard set by <em>bbb.vision</em>. Image-first, motion-first, atmospheric &mdash; unmistakably the person whose room it is. Below this bar a room is template work. At this bar a room is a place. We will only ship rooms that meet it.
+  </p>
+</section>
+
+<!-- ============ Reference card ============ -->
+<section class="px-ref">
+  <div class="px-ref-card">
+    <span class="px-ref-mark">bbb.vision</span>
+    <p class="px-ref-text">
+      <strong>The floor, not the ceiling.</strong>
+      The cinematic landing &amp; canvas-rendered gallery built for Benny Bonafé is the minimum every Presence room must clear &mdash; sustained over two pages or more, with full creative freedom inside each room.
+    </p>
+    <a class="px-ref-link" href="bbb-vision/index.html">Pilot I &nbsp;→</a>
+  </div>
+</section>
+
+<!-- ============ Pilots ============ -->
+<header class="px-pilots-h">
+  <h2>The <em>four</em> pilots</h2>
+  <span class="px-pilots-h-meta">owner · kit · pages · status</span>
+</header>
+
+<section class="px-pilots">
+
+  <!-- I — bbb.vision -->
+  <article class="px-room px-room--bbb">
+    <div class="px-room-img" style="background-image:url('_thumbs/bbb-vision.png')">
+      <span class="px-room-img-tag">Threshold &middot; landing</span>
+      <span class="px-room-img-stamp"><span class="dot"></span> the floor</span>
+    </div>
+    <div class="px-room-body">
+      <div class="px-room-top">
+        <div class="px-room-eyebrow">
+          <span class="px-room-roman">Pilot i.</span>
+          <span>Gallery wall &middot; photographer</span>
+          <span class="px-room-eyebrow-rule"></span>
+          <span>2 pages &middot; live</span>
+        </div>
+        <h3 class="px-room-h">bbb.<em>vision</em></h3>
+        <div class="px-room-byline">Benny Bonafé &middot; photographer &middot; London &middot; the reference build</div>
+        <p class="px-room-desc">
+          A roaming gothic mark over a slow slideshow; then a canvas-rendered sphere of photographs you orbit through. Cinematic transitions, glitch on click, a single name carried across both pages. <em>This is the bar.</em>
+        </p>
+        <dl class="px-room-grammar">
+          <dt>palette</dt><dd>Ink · gold · light through skin</dd>
+          <dt>type</dt><dd>UnifrakturCook · Oxanium</dd>
+          <dt>motion</dt><dd>Crossfade, glow, glitch, 3D orbit, sliced reveal</dd>
+          <dt>canvas</dt><dd>WebGL gallery sphere</dd>
+        </dl>
+      </div>
+      <div class="px-room-actions">
+        <a class="px-room-link px-room-link--primary" href="bbb-vision/index.html">Enter the landing <span class="px-room-link-arrow">→</span></a>
+        <a class="px-room-link" href="bbb-vision/gallery.html">Skip to gallery</a>
+      </div>
+    </div>
+  </article>
+
+  <!-- II — Gallery wall -->
+  <article class="px-room px-room--gallery">
+    <div class="px-room-img" style="background-image:url('_thumbs/gallery-wall.png')">
+      <span class="px-room-img-tag">Threshold &middot; museum hush</span>
+      <span class="px-room-img-stamp"><span class="dot"></span> meets the floor</span>
+    </div>
+    <div class="px-room-body">
+      <div class="px-room-top">
+        <div class="px-room-eyebrow">
+          <span class="px-room-roman">Pilot ii.</span>
+          <span>Gallery wall &middot; painter</span>
+          <span class="px-room-eyebrow-rule"></span>
+          <span>2 pages &middot; ready</span>
+        </div>
+        <h3 class="px-room-h">Christina <em>Kerkvliet&#8209;Goddard</em></h3>
+        <div class="px-room-byline">Painter &middot; Tyrone, Vermont &middot; est. 1981 &middot; 5 works on view</div>
+        <p class="px-room-desc">
+          A hush. A spotlight that follows the cursor. The threshold breathes through five paintings; the chamber lets you walk past them like a museum at night. <em>The quietest of the four.</em>
+        </p>
+        <dl class="px-room-grammar">
+          <dt>palette</dt><dd>Ink, parchment, gold-leaf, ox-blood</dd>
+          <dt>type</dt><dd>Cormorant Garamond · JetBrains Mono</dd>
+          <dt>motion</dt><dd>Breathe, Ken Burns, drift, spotlight, dust</dd>
+          <dt>canvas</dt><dd>Film grain · dust particles</dd>
+        </dl>
+      </div>
+      <div class="px-room-actions">
+        <a class="px-room-link px-room-link--primary" href="gallery-wall/threshold.html">Enter the threshold <span class="px-room-link-arrow">→</span></a>
+        <a class="px-room-link" href="gallery-wall/chamber.html">Skip to the wall</a>
+      </div>
+    </div>
+  </article>
+
+  <!-- III — DJ booth -->
+  <article class="px-room px-room--dj">
+    <div class="px-room-img" style="background-image:url('_thumbs/dj-booth.png')">
+      <span class="px-room-img-tag">Threshold &middot; marquee</span>
+      <span class="px-room-img-stamp"><span class="dot"></span> meets the floor</span>
+    </div>
+    <div class="px-room-body">
+      <div class="px-room-top">
+        <div class="px-room-eyebrow">
+          <span class="px-room-roman">Pilot iii.</span>
+          <span>DJ booth &middot; zine board</span>
+          <span class="px-room-eyebrow-rule"></span>
+          <span>2 pages &middot; ready</span>
+        </div>
+        <h3 class="px-room-h">T.<em>AMP</em></h3>
+        <div class="px-room-byline">DJ &amp; producer &middot; Lagos × Berlin &middot; 15 mixes &middot; live tonight</div>
+        <p class="px-room-desc">
+          Marquees, scan-lines, hazard-yellow, a vinyl that spins. The threshold is the door of the club; the chamber is the booth, the crate, and a zine board pinned with stubs and flyers. <em>The loudest of the four.</em>
+        </p>
+        <dl class="px-room-grammar">
+          <dt>palette</dt><dd>Bone-black, signal-yellow, cyan, hot-red</dd>
+          <dt>type</dt><dd>Anton · Archivo · Space Mono</dd>
+          <dt>motion</dt><dd>Marquee, jitter, vinyl spin, EQ pulse, glitch</dd>
+          <dt>canvas</dt><dd>CRT noise · waveform · scan-lines</dd>
+        </dl>
+      </div>
+      <div class="px-room-actions">
+        <a class="px-room-link px-room-link--primary" href="dj-booth/threshold.html">Enter the threshold <span class="px-room-link-arrow">→</span></a>
+        <a class="px-room-link" href="dj-booth/chamber.html">Skip to the booth</a>
+      </div>
+    </div>
+  </article>
+
+  <!-- IV — Market stall -->
+  <article class="px-room px-room--ms">
+    <div class="px-room-img" style="background-image:url('_thumbs/market-stall.png')">
+      <span class="px-room-img-tag">Threshold &middot; shop card</span>
+      <span class="px-room-img-stamp"><span class="dot"></span> meets the floor</span>
+    </div>
+    <div class="px-room-body">
+      <div class="px-room-top">
+        <div class="px-room-eyebrow">
+          <span class="px-room-roman">Pilot iv.</span>
+          <span>Market stall &middot; bench</span>
+          <span class="px-room-eyebrow-rule"></span>
+          <span>2 pages &middot; ready</span>
+        </div>
+        <h3 class="px-room-h">Otto Halberg <em>Woodworks</em></h3>
+        <div class="px-room-byline">Furniture maker &middot; Tyrone, Vermont &middot; since 1989 &middot; 17 pieces</div>
+        <p class="px-room-desc">
+          A printed shop card and a hand-kept workshop ledger. Honest, tactile, unhurried &mdash; the work on the bench has a progress bar that ticks toward delivery, and every piece carries its status at a glance. <em>The most domestic of the four.</em>
+        </p>
+        <dl class="px-room-grammar">
+          <dt>palette</dt><dd>Paper, ink, moss, rust, amber</dd>
+          <dt>type</dt><dd>DM Serif Display · Crimson Pro · Space Mono</dd>
+          <dt>motion</dt><dd>None &middot; the room is paper</dd>
+          <dt>canvas</dt><dd>Paper fibres &amp; age marks</dd>
+        </dl>
+      </div>
+      <div class="px-room-actions">
+        <a class="px-room-link px-room-link--primary" href="market-stall/threshold.html">Enter the shop card <span class="px-room-link-arrow">→</span></a>
+        <a class="px-room-link" href="market-stall/chamber.html">Skip to the workshop</a>
+      </div>
+    </div>
+  </article>
+
+</section>
+
+<!-- ============ Approach ============ -->
+<section class="px-criteria">
+  <div class="px-crit-block">
+    <h3>How a pilot is built</h3>
+    <p>
+      Each room is its own world &mdash; own type, own palette, own motion vocabulary, own page architecture. <strong>No shared CSS, no template chrome.</strong> The brand of the person is the brand of the room.
+    </p>
+    <p>
+      Pages can extend beyond two: a gallery could grow a studio archive; a DJ booth could grow a tour calendar; a workshop could grow a process journal. The threshold and the first chamber are <em>the floor</em>.
+    </p>
+    <p>
+      The studio cockpit (editor) lives at a separate layer &mdash; <a href="editor.html" style="color:var(--p-copper);text-decoration:none;border-bottom:1px dotted var(--p-copper)">preview the editor view</a> &mdash; and never expresses personality. It frames the room's personality.
+    </p>
+  </div>
+  <div class="px-crit-block">
+    <h3>Quality checks before we ship</h3>
+    <ul class="px-crit-list">
+      <li><span class="dot"></span><span>Image-first &middot; type-loud &middot; the person inhabits this place</span></li>
+      <li><span class="dot"></span><span>At least one canvas effect &mdash; grain, noise, waveform, fibres, particles</span></li>
+      <li><span class="dot"></span><span>At least one piece of named motion &mdash; spotlight, marquee, vinyl, dust, glitch</span></li>
+      <li><span class="dot"></span><span>Scrolling beyond the fold is the same person, not a generic footer</span></li>
+      <li><span class="dot"></span><span>The room is alive before anyone enters it &mdash; <em>atmospheric, breathing, worth entering</em></span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ Foot ============ -->
+<footer class="px-foot">
+  <span><strong>Floor</strong> &middot; bbb.vision &middot; &nbsp;<a href="bbb-vision/index.html">re-enter the reference</a></span>
+  <span>Presence &middot; semi launchable &middot; batch 01</span>
+</footer>
+
+</body>
+</html>

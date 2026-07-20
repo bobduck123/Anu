@@ -1,0 +1,132 @@
+{
+  "date": "2026-05-29",
+  "scope": "Presence Studio owner TemplateKit contract drift prevention and private draft lifecycle smoke",
+  "sharedContract": {
+    "path": "flora-fauna/backend/app/data/presence_studio_template_kits.json",
+    "schemaVersion": "presence-studio-template-kit-contract-v1",
+    "studioRoomSchemaVersion": "presence-studio-room-v1",
+    "approach": "Backend derives primary/candidate owner-creation policy from JSON; frontend registry is validated against the same contract by tests.",
+    "primaryOwnerCreatableKits": [
+      "gallery-artist",
+      "cultural-community-artist",
+      "material-tradie-proof-card",
+      "healing-practitioner",
+      "consultant-contractor"
+    ],
+    "candidateInternalKits": [
+      "underground-dj-portal"
+    ]
+  },
+  "lifecycleCoverage": {
+    "primaryKitCreatesPrivateDraft": true,
+    "allPrimaryKitsAcceptedByBackendContract": true,
+    "candidateKitRejected": true,
+    "ownerEditorDraftLoadCovered": true,
+    "safeEditSaveCovered": true,
+    "reloadReturnsEditedValue": true,
+    "noPublishedConfigCreated": true,
+    "publicRouteReturns404ForDraftSlug": true,
+    "unsafeUrlRejected": true,
+    "restrictedKeysRejected": true,
+    "broadContactFieldsRejected": true
+  },
+  "draftPublishSafety": {
+    "createdStatus": "draft",
+    "createdVisibility": "private",
+    "createdPublicStatus": "draft",
+    "autoPublishPathAdded": false,
+    "publicPublishingAdded": false
+  },
+  "publicRouteIsolation": {
+    "publicRouteImportsStudioRoomCanvas": false,
+    "publicRouteImportsStudioRoomOwnerEditorShell": false,
+    "publicRouteImportsTemplateKitStarter": false,
+    "publicRouteImportsTemplateDrafts": false,
+    "publicRouteImportsEditorApiHelpers": false
+  },
+  "payloadHygiene": {
+    "publicSerializationStripsStudioRoomDraft": true,
+    "privateContactFieldsRejected": true,
+    "editorOnlyRestrictedKeysRejected": true
+  },
+  "runtimeAiScan": {
+    "runtimeAiIntroduced": false,
+    "scannedTerms": [
+      "openai",
+      "anthropic",
+      "langchain",
+      "@ai-sdk",
+      "chatbot",
+      "model inference",
+      "runtime ai"
+    ]
+  },
+  "tests": [
+    {
+      "command": "python -m pytest tests\\test_presence_template_kit_draft_persistence.py",
+      "result": "pass",
+      "details": "9 passed"
+    },
+    {
+      "command": "python -m pytest tests\\test_presence_dna_persistence.py tests\\test_presence_template_kit_draft_persistence.py tests\\test_presence_studio_editor_foundation.py",
+      "result": "pass",
+      "details": "29 passed"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\studio-room\\studioRoomTemplateDrafts.test.ts",
+      "result": "pass",
+      "details": "13 passed"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\uniqueness.test.ts",
+      "result": "pass",
+      "details": "uniqueness threshold unchanged; all pairs distinct"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\studio-room\\*.test.ts",
+      "result": "pass",
+      "details": "59 passed"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\**\\*.test.ts",
+      "result": "pass",
+      "details": "82 passed"
+    },
+    {
+      "command": "npm.cmd run typecheck",
+      "result": "pass",
+      "details": "tsc --noEmit completed"
+    },
+    {
+      "command": "npm.cmd run build",
+      "result": "pass",
+      "details": "Next build completed with existing workspace-root warning"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "details": "no whitespace errors"
+    },
+    {
+      "command": "runtime AI/LLM rg scan over changed runtime areas",
+      "result": "pass",
+      "details": "no non-test runtime matches; published_state validation tightened"
+    },
+    {
+      "command": "public route isolation rg scan",
+      "result": "pass",
+      "details": "no public route matches for Studio Room editor/canvas/TemplateKit internals"
+    },
+    {
+      "command": "broad contact/private field rg scan",
+      "result": "pass",
+      "details": "expected validator, tests, public-only semantic adapter references only"
+    }
+  ],
+  "knownLimitations": [
+    "Contract is checked JSON plus drift tests, not a generated artifact.",
+    "This pass's lifecycle proof is API-backed; Playwright browser E2E is now covered by docs/program/evidence/presence-studio-browser-owner-lifecycle-smoke/.",
+    "Studio Room public publishing remains deferred.",
+    "Advanced inspector controls and renderer/mobile visual polish remain deferred."
+  ]
+}

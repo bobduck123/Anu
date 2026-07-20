@@ -113,7 +113,7 @@ export default function StepSubmit({
         <p className="card-eyebrow">Your direction reads as</p>
         <p className="direction-line">{directionLine}</p>
         <p className="direction-meta">
-          {resolved.mood?.label} light · {resolved.material?.label?.toLowerCase()} materials
+          {resolved.mood?.label} · {resolved.material?.label?.toLowerCase()}
           {resolved.pace ? ` · ${resolved.pace.label.toLowerCase()} pace` : ""}
           {resolved.contact ? ` · ${resolved.contact.label.toLowerCase()}` : ""}.
         </p>

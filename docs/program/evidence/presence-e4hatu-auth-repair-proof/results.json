@@ -1,0 +1,39 @@
+{
+  "date": "2026-05-23",
+  "decision": "NO_GO_PENDING_TARGET_BROWSER_PROOF",
+  "target_email": "e4hatu@gmail.com",
+  "failed_layer": "Presence app subject binding before owner route hydration",
+  "root_cause": "The active hosted Supabase auth subject for the target account did not match the existing privileged Presence User.global_subject_id.",
+  "known_good_baseline": {
+    "result": "user_reported_only",
+    "reason": "A comparison account was reported healthy, but no comparison email or approved browser auth state was available in this workspace."
+  },
+  "repair": {
+    "result": "applied",
+    "target_presence_user_id": 1,
+    "target_room_id": 11,
+    "target_room_slug": "ggm-christina-goddard",
+    "changed_field": "user.global_subject_id",
+    "before_subject_fingerprint": "e38adbff3f70",
+    "after_subject_fingerprint": "ec6dd2ae7590",
+    "role_changed": false,
+    "entitlement_changed": false,
+    "room_owner_changed": false
+  },
+  "post_repair": {
+    "account_integrity_verify": "pass",
+    "subject_shaped_deployed_backend_smoke": "pass",
+    "studio_owner_route": "pass",
+    "analytics_route": "pass",
+    "passes_route": "pass",
+    "roomkeys_route": "pass",
+    "public_redaction": "pass",
+    "normal_user_denial": "pass",
+    "clean_browser_target_session": "pending"
+  },
+  "security": {
+    "tokens_printed": false,
+    "secrets_printed": false,
+    "email_specific_auth_bypass_added": false
+  }
+}

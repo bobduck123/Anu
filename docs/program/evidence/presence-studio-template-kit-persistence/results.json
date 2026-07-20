@@ -1,0 +1,119 @@
+{
+  "date": "2026-05-29",
+  "persistenceContract": {
+    "id": "presence-editable-config-compat-v1",
+    "decision": "Store TemplateKit-created Studio Room drafts in an owner-private PresenceNode plus draft PresenceEditableConfig.content_config.studio_room_draft.",
+    "migrationRequired": false,
+    "reason": "The existing editor draft table already supports owner-scoped JSON payloads, draft/published status separation, URL sanitization, and public redaction."
+  },
+  "endpoint": {
+    "method": "POST",
+    "path": "/api/presence/owner/studio-rooms/from-template-kit",
+    "auth": "alpha_jwt_required owner session",
+    "rejectsCandidateKits": true,
+    "rejectsUnsafeUrls": true,
+    "rejectsBroadContactFields": true
+  },
+  "editorShell": {
+    "path": "/studio/[id]/studio-room",
+    "ownerGate": "useOwnerNode + StudioNodeGate",
+    "canvas": "StudioRoomCanvas with toPublicRoomPayload",
+    "publishActionPresent": false
+  },
+  "ownerCreatableKits": [
+    "gallery-artist",
+    "cultural-community-artist",
+    "material-tradie-proof-card",
+    "healing-practitioner",
+    "consultant-contractor"
+  ],
+  "candidateKits": [
+    "underground-dj-portal"
+  ],
+  "draftPublishSeparation": {
+    "createdStatus": "draft",
+    "createdVisibility": "private",
+    "createdPublicStatus": "draft",
+    "publishedConfigCreated": false,
+    "publishedAt": null,
+    "basePublishedVersion": 0,
+    "publicRouteVisible": false
+  },
+  "payloadHygiene": {
+    "studioRoomDraftPublicRedacted": true,
+    "sourceCandidateContentScrubbed": true,
+    "privateContactMappingAdded": false,
+    "editorOnlyFieldsExposed": false,
+    "unsafeUrlBlocked": true
+  },
+  "publicRouteIsolation": {
+    "publicRouteImportsStudioRoomCanvas": false,
+    "publicRouteImportsTemplateKitStarter": false,
+    "publicRouteImportsTemplateDrafts": false,
+    "publicRouteImportsStudioRoomOwnerEditorShell": false,
+    "publicRouteImportsPersistenceClient": false
+  },
+  "runtimeAiScan": {
+    "openai": false,
+    "anthropic": false,
+    "langchain": false,
+    "aiSdk": false,
+    "chatbot": false,
+    "runtimeModelInference": false
+  },
+  "tests": [
+    {
+      "command": "python -m pytest tests\\test_presence_template_kit_draft_persistence.py",
+      "cwd": "flora-fauna/backend",
+      "result": "passed",
+      "summary": "3 passed"
+    },
+    {
+      "command": "python -m pytest tests\\test_presence_studio_editor_foundation.py tests\\test_presence_template_kit_draft_persistence.py",
+      "cwd": "flora-fauna/backend",
+      "result": "passed",
+      "summary": "14 passed"
+    },
+    {
+      "command": "npx.cmd tsx --test lib/presence/uniqueness.test.ts",
+      "cwd": "presence-app",
+      "result": "passed",
+      "summary": "uniqueness guard green"
+    },
+    {
+      "command": "npx.cmd tsx --test lib/presence/studio-room/*.test.ts",
+      "cwd": "presence-app",
+      "result": "passed",
+      "summary": "56 passed"
+    },
+    {
+      "command": "npx.cmd tsx --test lib/presence/**/*.test.ts",
+      "cwd": "presence-app",
+      "result": "passed",
+      "summary": "79 passed"
+    },
+    {
+      "command": "npm.cmd run typecheck",
+      "cwd": "presence-app",
+      "result": "passed",
+      "summary": "tsc --noEmit passed"
+    },
+    {
+      "command": "npm.cmd run build",
+      "cwd": "presence-app",
+      "result": "passed",
+      "summary": "Next build passed with existing workspace-root warning"
+    },
+    {
+      "command": "git diff --check",
+      "cwd": "repo root",
+      "result": "passed",
+      "summary": "no whitespace errors"
+    }
+  ],
+  "knownLimitations": [
+    "No chamber/object inspector or drag/drop editing in this pass.",
+    "Backend allowlist mirrors frontend primary TemplateKit ids until a shared registry contract exists.",
+    "Studio Room public publishing remains deferred; public Presence routes are unchanged."
+  ]
+}

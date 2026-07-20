@@ -27,7 +27,7 @@ export default function TrustConversionRoom({ node, theme, ctaLabel }: Props) {
   const works = visibleWorks(node);
   const proof = visibleProof(node);
   const credentials = (node.credentials ?? []).filter((c) => c.is_public !== false);
-  // Allow demo overlays to ship explicit before/after pairs via node.metadata
+  // Allow backend/fixture metadata to ship explicit before/after pairs.
   type NodeMeta = { metadata?: { before_after_pairs?: BeforeAfterPair[] } | null };
   const pairs = (node as PresenceNode & NodeMeta).metadata?.before_after_pairs ?? [];
 

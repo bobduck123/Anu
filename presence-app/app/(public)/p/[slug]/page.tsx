@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import PortfolioRenderer from "@/components/portfolio/PortfolioRenderer";
 import { canonicalPublicUrl } from "@/lib/presence/url";
 import { fetchDemoOrPublicNode } from "@/lib/presence/demo/fetch";
+import { createPublicRenderPayload } from "@/lib/presence/render/publicPayload";
 import type { PresenceNode } from "@/lib/api/types";
 
 interface Props {
@@ -41,13 +42,18 @@ export default async function PortfolioPage({ params }: Props) {
   } catch {
     notFound();
   }
+  const publicPayload = createPublicRenderPayload(node);
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLd(presenceStructuredData(node)) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(presenceStructuredData(publicPayload.node)) }}
       />
-      <PortfolioRenderer node={node} />
+      <PortfolioRenderer
+        node={publicPayload.node}
+        renderModel={publicPayload.renderModel}
+        studioV2Room={publicPayload.studioV2Room}
+      />
     </>
   );
 }

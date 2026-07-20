@@ -1,0 +1,272 @@
+{
+  "data": {
+    "accent_color": null,
+    "analytics": {
+      "conversion_rate": 0.88,
+      "last_30_days": {
+        "enquiry_submitted": 7,
+        "node_viewed": 799,
+        "qr_viewed": 1
+      },
+      "last_7_days": {
+        "node_viewed": 238
+      },
+      "quote_requests": 0,
+      "recent_events": [
+        {
+          "created_at": "2026-06-07T22:00:53.145859",
+          "event_type": "node_viewed",
+          "id": 1735,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T22:00:53.140551",
+          "event_type": "node_viewed",
+          "id": 1734,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:59:46.336395",
+          "event_type": "node_viewed",
+          "id": 1733,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:59:46.329521",
+          "event_type": "node_viewed",
+          "id": 1732,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:59:44.125451",
+          "event_type": "node_viewed",
+          "id": 1731,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:59:44.110326",
+          "event_type": "node_viewed",
+          "id": 1730,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:59:20.315627",
+          "event_type": "node_viewed",
+          "id": 1729,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:59:20.314778",
+          "event_type": "node_viewed",
+          "id": 1728,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:37:10.727582",
+          "event_type": "node_viewed",
+          "id": 1727,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:37:10.722040",
+          "event_type": "node_viewed",
+          "id": 1726,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:37:03.542508",
+          "event_type": "node_viewed",
+          "id": 1725,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:37:03.445582",
+          "event_type": "node_viewed",
+          "id": 1724,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:36:55.487864",
+          "event_type": "node_viewed",
+          "id": 1723,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:36:55.487022",
+          "event_type": "node_viewed",
+          "id": 1722,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:36:48.759395",
+          "event_type": "node_viewed",
+          "id": 1721,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:36:48.747139",
+          "event_type": "node_viewed",
+          "id": 1720,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:36:48.016517",
+          "event_type": "node_viewed",
+          "id": 1719,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:36:48.008846",
+          "event_type": "node_viewed",
+          "id": 1718,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:36:29.582022",
+          "event_type": "node_viewed",
+          "id": 1717,
+          "metadata": {
+            "source": "public_route"
+          }
+        },
+        {
+          "created_at": "2026-06-07T21:36:29.577107",
+          "event_type": "node_viewed",
+          "id": 1716,
+          "metadata": {
+            "source": "public_route"
+          }
+        }
+      ],
+      "top_links": [],
+      "top_sources": [],
+      "total_enquiries": 7,
+      "total_views": 799
+    },
+    "archive_ready": true,
+    "availability_chips": [],
+    "availability_status": null,
+    "bio": "Christina Kerkvliet Goddard's external artist portfolio.",
+    "business_functions": [],
+    "business_functions_enabled": true,
+    "capability_statement": null,
+    "collections": [],
+    "cover_image_url": null,
+    "created_at": "2026-05-22T06:46:57.291170",
+    "credentials": [],
+    "curatorial_statement": null,
+    "custom_spacing_config": {},
+    "custom_typography_config": {},
+    "directory_ready": true,
+    "display_mode": "room",
+    "display_name": "Christina Kerkvliet Goddard",
+    "enquiry_email": null,
+    "featured_notice": null,
+    "gallery_items": [],
+    "headline": "Watercolour works across memory, colour, and lived landscape.",
+    "hero_image": null,
+    "hero_image_url": null,
+    "hero_subtitle": null,
+    "hero_title": null,
+    "id": 11,
+    "landing_background_url": null,
+    "landing_enabled": false,
+    "landing_enter_label": null,
+    "landing_subtitle": null,
+    "landing_title": null,
+    "links": [],
+    "location_label": "Moana, South Australia",
+    "long_story": null,
+    "map_ready": false,
+    "marketplace_ready": false,
+    "media_embeds": [],
+    "metadata": {
+      "custom_presence": {
+        "custom_renderer_key": "presence-studio-v2-room",
+        "renderer_key": "presence-studio-v2-room"
+      },
+      "custom_renderer_key": "presence-studio-v2-room"
+    },
+    "node_type": "studio",
+    "plan_type": "artist_presence",
+    "portfolio_items": [],
+    "practice_statement": null,
+    "primary_cta_label": null,
+    "primary_cta_target": null,
+    "primary_cta_url": null,
+    "procurement_profile": null,
+    "procurement_summary": null,
+    "profile_image_url": null,
+    "proof_items": [],
+    "proof_summary": null,
+    "public_email": null,
+    "public_phone": null,
+    "public_status": "public",
+    "public_url": "https://your-presence.vercel.app/presence/ggm-christina-goddard",
+    "published_at": null,
+    "room_type": "artist_studio",
+    "sections": [],
+    "seo": {
+      "canonical_url": "https://your-presence.vercel.app/presence/ggm-christina-goddard",
+      "description": "Artist portfolio entry Room for selected watercolour works.",
+      "image": null,
+      "title": "Christina Kerkvliet Goddard Watercolour works across memory, colour, and lived landscape."
+    },
+    "seo_description": "Artist portfolio entry Room for selected watercolour works.",
+    "seo_title": "Christina Kerkvliet Goddard Watercolour works across memory, colour, and lived landscape.",
+    "service_area": null,
+    "services": [],
+    "short_bio": "Selected watercolour works.",
+    "slug": "ggm-christina-goddard",
+    "social_preview_image": null,
+    "social_preview_image_url": null,
+    "status": "published",
+    "template": null,
+    "template_id": null,
+    "testimonials": [],
+    "theme_config": {},
+    "theme_preset": "gallery_white",
+    "updated_at": "2026-06-03T03:28:50.094520",
+    "visibility": "public",
+    "visual_mood": null,
+    "white_label_ready": false,
+    "works": []
+  },
+  "ok": true
+}

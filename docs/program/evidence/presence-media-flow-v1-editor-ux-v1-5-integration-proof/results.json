@@ -1,0 +1,53 @@
+{
+  "evidence_version": "presence-media-flow-v1-editor-ux-v1-5-integration-proof",
+  "date": "2026-05-25",
+  "build_mode_default": true,
+  "look_mode_available": true,
+  "images_mode_available": true,
+  "media_drawer_available": true,
+  "existing_image_selection": true,
+  "upload_real_or_deferred": "deferred: no Canvas draft-scoped upload contract",
+  "alt_text_editing": true,
+  "focal_point_real_or_deferred": "deferred: no proven draft/render parity mapping",
+  "draft_live_status_strip": true,
+  "advanced_hidden_from_owner": true,
+  "copy_banned_words_check": "passed in normal Build mode browser proof",
+  "save_draft": true,
+  "public_unchanged_before_publish": true,
+  "preview_shows_draft": true,
+  "publish_success": true,
+  "public_updates_after_publish": true,
+  "RoomKey_published_only": true,
+  "cleanup_status": "local mock fixture reset after browser flow",
+  "hosted_smoke_after_integration": "NOT RUN - deployment and owner credentials required",
+  "tests": [
+    {
+      "command": "npm.cmd run typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "npm.cmd run build",
+      "result": "passed"
+    },
+    {
+      "command": "node --test --experimental-strip-types lib/api/client.test.ts lib/api/editor.test.ts lib/api/presenceGraph.test.ts lib/editor/assetValidator.test.ts lib/editor/canvasModel.test.ts lib/editor/canvasMutations.test.ts lib/editor/diffEngine.test.ts lib/editor/readiness.test.ts lib/presence/option-packs/registry.test.ts lib/presence/render/resolver.test.ts lib/presence/typography/registry.test.ts lib/presence/widgets/registry.test.ts",
+      "result": "passed",
+      "passed": 38
+    },
+    {
+      "command": "python -m pytest tests/test_presence_studio_editor_foundation.py tests/test_presence_graph_integration_proof.py tests/test_presence_pass_paths.py tests/test_presence_cors.py tests/test_presence_nodes.py -q",
+      "result": "passed with pre-existing SQLAlchemy legacy warnings",
+      "passed": 105
+    },
+    {
+      "command": "npx playwright test selected local Studio, Canvas, auth, RoomKey and UX/Media specs",
+      "result": "passed with one hosted-credential-only test skipped",
+      "passed": 26,
+      "skipped": 1
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ]
+}

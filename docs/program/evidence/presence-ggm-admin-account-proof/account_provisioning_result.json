@@ -1,0 +1,73 @@
+{
+  "operation": {
+    "app_user": {
+      "created": false,
+      "global_subject_bound": true,
+      "id": 1
+    },
+    "email": "e4hatu@gmail.com",
+    "entitlement": {
+      "billing_mode": "internal_comp",
+      "created": true,
+      "ends_at": null,
+      "exists": true,
+      "id": 1,
+      "lifetime": true,
+      "plan_code": "internal_lifetime_free",
+      "price_cents": 0,
+      "reason": "first_pilot_owner_admin",
+      "source": "controlled_launch_pilot",
+      "status": "active"
+    },
+    "environment": "hosted_controlled_launch",
+    "mode": "apply",
+    "mutated": true,
+    "role_grant": {
+      "assigned_role": "platform_admin",
+      "changed": true,
+      "previous_role": "organizer"
+    },
+    "room": {
+      "id": 11,
+      "owner_user_id": 1,
+      "previous_owner_user_id": 21,
+      "slug": "ggm-christina-goddard"
+    },
+    "secret_values_printed": false,
+    "status": "applied",
+    "verification": {
+      "checks": {
+        "app_user_exists": true,
+        "ggm_room_owner": true,
+        "internal_lifetime_free_entitlement": true,
+        "platform_admin_role": true
+      },
+      "entitlement": {
+        "billing_mode": "internal_comp",
+        "ends_at": null,
+        "exists": true,
+        "id": 1,
+        "lifetime": true,
+        "plan_code": "internal_lifetime_free",
+        "price_cents": 0,
+        "reason": "first_pilot_owner_admin",
+        "source": "controlled_launch_pilot",
+        "status": "active"
+      },
+      "global_subject_bound": true,
+      "ok": true,
+      "room_id": 11,
+      "room_owner_user_id": 1,
+      "room_slug": "ggm-christina-goddard",
+      "user_id": 1
+    }
+  },
+  "schema": {
+    "required_tables_present": [
+      "presence_node",
+      "presence_plan_entitlement",
+      "user"
+    ]
+  },
+  "secret_values_printed": false
+}

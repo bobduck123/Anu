@@ -1,15 +1,12 @@
-// Merge: backend persisted DNA > demo overlay > inferred DNA.
+// Merge: backend persisted DNA > inferred DNA.
 //
-// The renderer always calls `resolvePresenceDna(node)`. Once the backend
-// migration lands (see Phase 10 report), this layer reads the persisted
-// DNA from node.metadata.presence_dna and the demo overlay becomes a
-// no-op for production slugs.
+// The renderer always calls `resolvePresenceDna(node)`. Backend-seeded
+// and fixture-backed demo rooms carry DNA at node.metadata.presence_dna;
+// inferred DNA remains only a fallback for legacy nodes without metadata.
 
 import type { PresenceNode } from "@/lib/api/types";
 import { inferPresenceDna } from "./infer";
 import type { PresenceDna } from "./types";
-import { demoDnaForSlug } from "./demoOverlays";
-import { isDemoDnaOverlayDisabled } from "@/lib/presence/feature";
 
 interface NodeWithMetadata extends PresenceNode {
   metadata?: { presence_dna?: PresenceDna | Partial<PresenceDna> } | null;
@@ -46,14 +43,6 @@ export function resolvePresenceDna(node: PresenceNode): PresenceDna {
   const persisted = readPersistedDna(node);
   if (persisted) {
     return mergeDna(base, persisted, "backend_persisted");
-  }
-
-  // Next: demo overlay, unless explicitly disabled by env flag.
-  if (!isDemoDnaOverlayDisabled()) {
-    const demo = demoDnaForSlug(node.slug);
-    if (demo) {
-      return mergeDna(base, demo, "demo_overlay");
-    }
   }
 
   // Last: inferred from existing node fields.

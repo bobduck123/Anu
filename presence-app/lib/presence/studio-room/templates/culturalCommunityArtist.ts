@@ -1,0 +1,133 @@
+import type { ThemeTokens } from "../model.ts";
+import { buildTemplateKit, makeMoodPreset } from "./shared.ts";
+
+const theme: ThemeTokens = {
+  background: "#efe8dc",
+  surface: "#fffaf2",
+  text: "#17130f",
+  muted: "#62635c",
+  accent: "#8f3a2f",
+  radius: "soft",
+  fontHeading: "Cormorant Garamond, Georgia, serif",
+  fontBody: "Inter, system-ui, sans-serif",
+  motion: "gentle",
+  spacing: "gallery",
+};
+
+export const culturalCommunityArtistKit = buildTemplateKit({
+  id: "cultural-community-artist",
+  name: "Cultural-Community Artist / Practice Archive",
+  description: "An archive-first public story room for artists, cultural workers, community storytellers, and grant-facing creative projects.",
+  intendedUserTypes: [
+    "cultural-community artist",
+    "cultural worker",
+    "community storyteller",
+    "practice-led organisation",
+    "grant-facing creative project",
+    "community archive project",
+  ],
+  sourceSlug: "ggm-christina-goddard",
+  sourceLabel: "GGM cultural-community practice archive",
+  themeTokens: theme,
+  moodPreset: makeMoodPreset("cultural-archive", "Cultural Archive", "Paper archive warmth, deep public-story contrast, and measured room pacing.", theme),
+  chamberOrder: ["field", "studio", "wall", "services", "proof", "portal", "card", "contact"],
+  chamberTitles: {
+    field: {
+      title: "Archive Threshold",
+      summary: "Place, practice, and public purpose before any transaction.",
+      type: "threshold",
+      mobileLabel: "Archive",
+    },
+    studio: {
+      title: "Practice / Story",
+      summary: "The cultural or community practice, told as public context rather than sales copy.",
+      type: "story",
+      mobileLabel: "Story",
+    },
+    wall: {
+      title: "Community Archive / Evidence Wall",
+      summary: "Visual records, project traces, documents, and story evidence gathered into a public wall.",
+      type: "proof",
+      mobileLabel: "Evidence",
+    },
+    services: {
+      title: "Programs / Services",
+      summary: "Archive conversations, story sessions, documentation work, consulting, and workshops.",
+      type: "services",
+      mobileLabel: "Programs",
+    },
+    proof: {
+      title: "Proof / Trust",
+      summary: "Public story records, partner evidence, pilot proof, and community trust signals.",
+      type: "proof",
+      mobileLabel: "Trust",
+    },
+    portal: {
+      title: "Links / Portal",
+      summary: "Public-safe external paths connected to the practice or archive.",
+      type: "portal",
+      mobileLabel: "Links",
+    },
+    card: {
+      title: "Contact / Invitation",
+      summary: "A partnership, invitation, or archive conversation pathway.",
+      type: "invitation",
+      mobileLabel: "Invite",
+    },
+    contact: {
+      title: "Public Contact",
+      summary: "Explicitly public ways to begin a conversation.",
+      type: "contact",
+      mobileLabel: "Contact",
+    },
+  },
+  ctaStrategy: {
+    label: "Invite a practice archive conversation",
+    target: "contact",
+    primaryChamberId: "card",
+    appearsEarlyOnMobile: true,
+  },
+  requiredFields: [
+    "public practice or project name",
+    "archive threshold statement",
+    "practice/story statement",
+    "at least three archive or evidence items",
+    "program or service pathway",
+    "public partnership/contact CTA",
+  ],
+  optionalFields: [
+    "place/context note",
+    "grant or funding note",
+    "partner proof",
+    "archive document link",
+    "community testimonial",
+    "public resource link",
+  ],
+  copyScaffolds: [
+    { field: "hero_title", label: "Archive threshold", placeholder: "Your practice, project, or organisation name", required: true },
+    { field: "hero_subtitle", label: "Public purpose line", placeholder: "A practice archive for memory, place, story, and community evidence", required: true },
+    { field: "practice_statement", label: "Practice story", placeholder: "Describe the cultural context, community purpose, and care boundaries of the work.", required: true },
+    { field: "archive_items", label: "Archive evidence", placeholder: "Add visual records, documents, story traces, project records, or selected works.", required: true },
+    { field: "services", label: "Programs and services", placeholder: "Name the archive conversations, workshops, documentation support, or consulting pathways.", required: true },
+    { field: "proof_items", label: "Proof and trust", placeholder: "Add public story records, partner evidence, outcomes, or community proof." },
+    { field: "public_contact", label: "Public contact", placeholder: "Add an explicitly public email, website, or enquiry pathway.", required: true },
+    { field: "primary_cta_label", label: "Invitation", placeholder: "Invite a practice archive conversation", required: true },
+  ],
+  validationExpectations: [
+    { rule: "room-valid", severity: "error", message: "Template room must validate as a Studio Room." },
+    { rule: "archive-story-proof-contact", severity: "error", message: "Template must cover archive, story, services, proof, links, and public contact semantics." },
+    { rule: "source-scrubbed-draft", severity: "error", message: "Owner draft instantiation must scrub source-candidate content into placeholders." },
+    { rule: "public-safe", severity: "error", message: "Template payload must remain public-safe after sanitisation." },
+    { rule: "cta-visible", severity: "warning", message: "Primary partnership/contact CTA should appear early on mobile." },
+  ],
+  publicSafeDefaults: [
+    "Only explicit public contact fields are mapped.",
+    "Public links must pass the adapter safe-url gate.",
+    "No media embeds or audio players are activated.",
+    "Internal/editor-only data is stripped before rendering.",
+    "Source-candidate copy is scrubbed from owner draft instantiation.",
+  ],
+  previewNotes: [
+    "Extracted after GGM uniqueness differentiation: archive-first, community memory, practice evidence, and partner invitation rather than gallery-commerce.",
+  ],
+});

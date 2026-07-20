@@ -1,0 +1,298 @@
+/* Market Stall — Chamber
+   Workshop catalogue. Three-column ledger. Honest, tactile, dense. */
+
+:root{
+  --paper:#f1ead8;
+  --paper-2:#e5dcc4;
+  --paper-3:#ddd1b3;
+  --cream:#fbf5e3;
+  --ink:#1b1814;
+  --ink-soft:#3b342b;
+  --ink-mute:#7a6e5c;
+  --ink-faint:#a89b81;
+  --rust:#9b3a1a;
+  --moss:#2e4a2a;
+  --amber:#c48a2e;
+  --font-display:"DM Serif Display",Georgia,serif;
+  --font-body:"Crimson Pro",Georgia,serif;
+  --font-mono:"Space Mono",ui-monospace,Menlo,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;background:var(--paper);color:var(--ink);font-family:var(--font-body);overflow:hidden}
+
+.ms-paper{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;opacity:0.55;mix-blend-mode:multiply}
+
+/* ---------- Rail ---------- */
+.ms-rail{
+  position:fixed;top:0;left:0;right:0;z-index:20;
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:24px;
+  padding:14px 22px;
+  background:var(--paper);
+  border-bottom:1px solid var(--ink);
+  font-family:var(--font-mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--ink-mute);
+}
+.ms-rail-back{
+  justify-self:start;
+  color:var(--ink);text-decoration:none;
+  padding:6px 12px;border:1px solid var(--ink);
+  transition:background 0.2s ease, color 0.2s ease;
+}
+.ms-rail-back:hover{background:var(--ink);color:var(--paper)}
+.ms-rail-mark{
+  display:flex;align-items:baseline;gap:8px;
+  color:var(--ink);font-family:var(--font-display);font-size:20px;letter-spacing:0;
+  text-transform:none;
+}
+.ms-rail-mark em{color:var(--moss);font-style:italic}
+.ms-rail-room{color:var(--ink-mute);font-family:var(--font-mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase}
+.ms-rail-right{justify-self:end;display:flex;align-items:center;gap:14px}
+.ms-rail-status{color:var(--moss)}
+.ms-rail-stamp{font-family:var(--font-mono);font-weight:700;color:var(--ink)}
+
+/* ---------- Shop layout ---------- */
+.ms-shop{
+  position:fixed;top:50px;left:0;right:0;bottom:0;
+  display:grid;grid-template-columns:260px 1fr 320px;
+  z-index:5;
+  overflow:hidden;
+}
+
+/* ---------- Side ---------- */
+.ms-side{
+  background:var(--paper-2);
+  border-right:1px solid var(--ink);
+  overflow-y:auto;padding:20px 22px 36px;
+  scrollbar-width:thin;scrollbar-color:rgba(27,24,20,0.25) transparent;
+}
+.ms-side-block{margin-bottom:24px}
+.ms-side-block--legend{margin-bottom:0}
+.ms-side-h{
+  margin:0 0 10px;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--ink-mute);
+}
+.ms-side-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.ms-side-list li{
+  display:flex;align-items:center;gap:10px;justify-content:space-between;
+  padding:7px 0;
+  font-family:var(--font-body);font-size:16px;color:var(--ink-soft);
+  cursor:pointer;
+  border-bottom:1px dashed rgba(27,24,20,0.15);
+  transition:color 0.2s ease;
+}
+.ms-side-list li:hover{color:var(--ink)}
+.ms-side-list li.is-on{color:var(--rust)}
+.ms-side-list li span:not(.ms-swatch):not(.ms-pip){
+  font-family:var(--font-mono);font-size:11px;color:var(--ink-mute);letter-spacing:0.04em;
+}
+.ms-swatch{
+  display:inline-block;width:14px;height:14px;border-radius:2px;
+  border:1px solid rgba(27,24,20,0.4);
+  margin-right:auto;
+}
+.ms-side-list--wood li{display:grid;grid-template-columns:20px 1fr auto;align-items:center}
+
+.ms-pip{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:auto}
+.ms-pip--avail{background:var(--moss)}
+.ms-pip--comm{background:var(--amber)}
+.ms-pip--sold{background:var(--ink-faint)}
+.ms-pip--bench{background:var(--rust)}
+.ms-side-list--status li{display:grid;grid-template-columns:14px 1fr auto;align-items:center;gap:8px}
+
+.ms-side-legend{
+  font-family:var(--font-body);font-style:italic;font-size:14px;line-height:1.55;
+  color:var(--ink-soft);
+  padding-top:8px;border-top:1px dashed rgba(27,24,20,0.2);
+  margin:0;
+}
+
+/* ---------- Grid ---------- */
+.ms-grid{
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.ms-grid-head{
+  display:flex;justify-content:space-between;align-items:flex-end;gap:16px;
+  padding:18px 26px 12px;
+  border-bottom:1px solid var(--ink);
+  background:var(--paper);
+}
+.ms-grid-title{display:flex;flex-direction:column;gap:2px}
+.ms-grid-h{
+  font-family:var(--font-display);font-size:28px;line-height:1;color:var(--ink);
+}
+.ms-grid-count{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--ink-mute);
+}
+.ms-grid-sort{display:flex;gap:0}
+.ms-grid-sort button{
+  background:none;border:1px solid var(--ink);border-right-width:0;
+  padding:6px 12px;cursor:pointer;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--ink-mute);
+}
+.ms-grid-sort button:last-child{border-right-width:1px}
+.ms-grid-sort button.is-on{background:var(--ink);color:var(--paper)}
+
+/* Pieces */
+.ms-pieces{
+  flex:1;overflow-y:auto;
+  padding:18px 26px 28px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+  gap:14px;
+  align-content:start;
+  scrollbar-width:thin;scrollbar-color:rgba(27,24,20,0.25) transparent;
+}
+
+.ms-piece{
+  background:var(--cream);
+  border:1px solid var(--ink);
+  position:relative;
+  display:flex;flex-direction:column;
+  box-shadow:2px 2px 0 rgba(27,24,20,0.08);
+  transition:transform 0.2s ease, box-shadow 0.2s ease;
+  cursor:pointer;
+}
+.ms-piece:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 rgba(27,24,20,0.12)}
+.ms-piece-img{
+  height:130px;
+  border-bottom:1px solid var(--ink);
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+/* The piece "image" is a wood-tone background + a thin sketched silhouette overlay */
+.ms-piece-img::before{
+  content:"";position:absolute;inset:0;
+  background-image:
+    repeating-linear-gradient(90deg,
+      rgba(255,255,255,0.0) 0px, rgba(255,255,255,0.0) 18px,
+      rgba(0,0,0,0.04) 18px, rgba(0,0,0,0.04) 19px),
+    repeating-linear-gradient(180deg,
+      rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px,
+      transparent 1px, transparent 4px);
+  background-color:var(--piece-wood, #caa170);
+}
+.ms-piece-img svg{position:relative;z-index:2;color:var(--ink);width:75%;height:75%}
+.ms-piece-tag{
+  position:absolute;top:6px;left:6px;z-index:3;
+  padding:2px 6px;
+  font-family:var(--font-mono);font-size:9px;letter-spacing:0.18em;text-transform:uppercase;
+  background:var(--paper);color:var(--ink);border:1px solid var(--ink);
+}
+.ms-piece-tag--avail{background:var(--moss);color:var(--cream);border-color:var(--moss)}
+.ms-piece-tag--comm{background:var(--amber);color:var(--ink);border-color:var(--amber)}
+.ms-piece-tag--sold{background:var(--paper-3);color:var(--ink-mute)}
+.ms-piece-tag--bench{background:var(--rust);color:var(--cream);border-color:var(--rust)}
+
+.ms-piece-stamp{
+  position:absolute;top:6px;right:6px;z-index:3;
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.1em;
+  color:var(--ink-mute);
+}
+
+.ms-piece-body{
+  padding:10px 12px 12px;
+  display:flex;flex-direction:column;gap:4px;
+}
+.ms-piece-name{
+  font-family:var(--font-display);font-size:18px;line-height:1.15;color:var(--ink);
+}
+.ms-piece-spec{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:0.08em;
+  color:var(--ink-mute);text-transform:uppercase;
+}
+.ms-piece-price{
+  display:flex;justify-content:space-between;align-items:baseline;
+  margin-top:6px;
+  padding-top:8px;border-top:1px dashed rgba(27,24,20,0.2);
+}
+.ms-piece-price-num{
+  font-family:var(--font-display);font-size:22px;color:var(--ink);
+}
+.ms-piece-price-num em{font-style:normal;color:var(--ink-mute);font-size:14px}
+.ms-piece-price-cta{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--rust);
+}
+
+/* ---------- Journal ---------- */
+.ms-journal{
+  background:var(--paper-2);
+  border-left:1px solid var(--ink);
+  overflow-y:auto;
+  padding:20px 22px 24px;
+  scrollbar-width:thin;scrollbar-color:rgba(27,24,20,0.25) transparent;
+}
+
+.ms-bench{
+  background:var(--cream);
+  border:1px solid var(--ink);
+  padding:12px 14px 14px;
+  margin-bottom:20px;
+}
+.ms-bench-head{
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--rust);
+  margin-bottom:8px;
+}
+.ms-bench-day{color:var(--ink-mute)}
+.ms-bench-sketch{width:100%;height:80px;color:var(--ink);display:block}
+.ms-bench-title{
+  font-family:var(--font-display);font-size:18px;color:var(--ink);
+  margin-top:6px;
+}
+.ms-bench-meta{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--ink-mute);margin-top:4px;
+}
+.ms-bench-bar{
+  margin-top:10px;height:6px;background:var(--paper-3);border:1px solid var(--ink);
+  overflow:hidden;
+}
+.ms-bench-bar span{display:block;height:100%;background:var(--rust)}
+
+.ms-letters{display:flex;flex-direction:column;gap:0}
+.ms-letters-h{
+  margin:0 0 10px;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--ink-mute);
+}
+.ms-letter{
+  border-top:1px dashed rgba(27,24,20,0.3);
+  padding:14px 0;
+}
+.ms-letter:first-of-type{border-top:1px solid var(--ink)}
+.ms-letter:last-of-type{border-bottom:1px solid var(--ink)}
+.ms-letter header{
+  display:flex;justify-content:space-between;align-items:baseline;gap:14px;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:0.16em;text-transform:uppercase;
+  color:var(--ink-mute);margin-bottom:8px;
+}
+.ms-letter-date{color:var(--ink)}
+.ms-letter-tag{color:var(--rust)}
+.ms-letter p{
+  margin:0;
+  font-family:var(--font-body);font-style:italic;font-size:14.5px;line-height:1.55;
+  color:var(--ink-soft);
+}
+.ms-letters-more{
+  display:inline-block;margin-top:12px;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--rust);text-decoration:none;
+  border-bottom:1px solid var(--rust);
+  align-self:flex-start;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1100px){
+  .ms-shop{grid-template-columns:220px 1fr}
+  .ms-journal{display:none}
+}
+@media (max-width:760px){
+  .ms-shop{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .ms-side{max-height:200px}
+  .ms-pieces{grid-template-columns:repeat(auto-fill, minmax(160px, 1fr))}
+}

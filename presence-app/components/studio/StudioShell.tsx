@@ -2,17 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, Globe, LayoutDashboard, Image, FolderOpen, Inbox, QrCode, BarChart2, Settings, LogOut, Sparkles } from "lucide-react";
+import { ArrowLeft, Globe, LayoutDashboard, Image, FolderOpen, Inbox, QrCode, BarChart2, Settings, Sparkles, CreditCard, Users, SlidersHorizontal } from "lucide-react";
 import type { PresenceNode } from "@/lib/api/types";
+import SignOutButton from "@/components/auth/SignOutButton";
 import { StatusPill } from "@/components/ui";
 import { canonicalPublicUrl } from "@/lib/presence/url";
 
 const NAV_TABS = [
   { label: "Overview", icon: LayoutDashboard, sub: "" },
+  { label: "Editor", icon: SlidersHorizontal, sub: "editor" },
   { label: "Works", icon: Image, sub: "works" },
   { label: "Collections", icon: FolderOpen, sub: "collections" },
+  { label: "Halls", icon: Users, sub: "halls" },
   { label: "Enquiries", icon: Inbox, sub: "enquiries" },
   { label: "DNA", icon: Sparkles, sub: "dna" },
+  { label: "Passes", icon: CreditCard, sub: "passes" },
   { label: "QR & NFC", icon: QrCode, sub: "qr" },
   { label: "Analytics", icon: BarChart2, sub: "analytics" },
   { label: "Settings", icon: Settings, sub: "settings" },
@@ -57,13 +61,9 @@ export default function StudioShell({
           )}
         </div>
         <StatusPill status={node.status} />
-        <Link
-          href="/auth/sign-out"
+        <SignOutButton
           className="hidden rounded-xl border border-[var(--p-studio-border)] px-3 py-2 text-xs font-semibold text-[var(--p-studio-muted)] transition hover:border-[var(--p-studio-accent)]/60 hover:text-[var(--p-studio-text)] sm:inline-flex sm:items-center sm:gap-1.5"
-        >
-          <LogOut className="h-3.5 w-3.5" />
-          Sign out
-        </Link>
+        />
       </header>
 
       {/* Horizontal scroll tab bar */}

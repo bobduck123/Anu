@@ -1,0 +1,405 @@
+# Presence Studio V2 Phase E Hosted Smoke Report
+
+Date: 2026-06-03
+
+## Verdict
+
+Phase E hosted lifecycle smoke failed before any mutation.
+
+Owner sign-in and owner room access worked, but candidate room `11` did not mount Studio V2. It rendered the existing Canvas/GGM editor, and owner API inspection showed the published renderer is `ggm-faithful-room-v1`, not `presence-studio-v2-room`.
+
+No edit, save, publish, or public mutation occurred.
+
+## Hosted URLs Tested
+
+```txt
+Frontend: https://your-presence.vercel.app
+API: https://anu-back-end.vercel.app
+```
+
+## Room ID / Slug Tested
+
+```txt
+Room ID: 11
+Slug: ggm-christina-goddard
+Display name: Christina Kerkvliet Goddard
+Status: published
+Published renderer: ggm-faithful-room-v1
+Draft renderer: none
+Studio V2 root visible: false
+Legacy Studio Room shell visible: false
+```
+
+## Room ID Verification
+
+Verified with a non-mutating hosted preflight:
+
+1. Signed into hosted Studio with the supplied owner account.
+2. Opened `/studio/11/editor`.
+3. Confirmed owner access was real.
+4. Fetched `GET /api/presence/owner/rooms/11/editor` with the owner bearer token.
+5. Confirmed room `11` resolves to `ggm-christina-goddard`.
+6. Confirmed `presence-studio-v2-root` did not appear.
+7. Confirmed published renderer is `ggm-faithful-room-v1`.
+
+The preflight reported:
+
+```json
+{
+  "ok": true,
+  "status": 200,
+  "roomId": 11,
+  "slug": "ggm-christina-goddard",
+  "displayName": "Christina Kerkvliet Goddard",
+  "v2Visible": false,
+  "legacyCount": 0,
+  "hasDraft": false,
+  "hasPublished": true,
+  "draftRenderer": "",
+  "publishedRenderer": "ggm-faithful-room-v1",
+  "pageErrors": [],
+  "consoleErrorCount": 0
+}
+```
+
+## Hosted Candidate Scan
+
+A read-only owner room scan found 28 owner rooms.
+
+Result:
+
+- No room had `presence-studio-v2-room` as node, draft, or published renderer.
+- Rooms `19` to `28` are hosted TemplateKit draft rooms with `studio-room-template-kit-v1`.
+- Room `11` is the published GGM room with `ggm-faithful-room-v1`.
+- Several older public/demo rooms returned editor status `500` from the owner editor endpoint and were not V2 candidates.
+
+Conclusion: there is no currently discoverable hosted Studio V2 pilot candidate for this owner account.
+
+## Feature Flag State
+
+The hosted runtime did not activate V2 for room `11`.
+
+Possible causes:
+
+- hosted V2 feature flag is not enabled on the deployed frontend, or
+- room `11` is not in `NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS`, or
+- room `11` is not a Studio V2 config, which is confirmed by its `ggm-faithful-room-v1` published renderer.
+
+Repo rollback path remains:
+
+```txt
+NEXT_PUBLIC_PRESENCE_STUDIO_V2=0
+NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS=
+PRESENCE_STUDIO_V2_ENABLED=0
+PRESENCE_STUDIO_V2_PILOT_IDS=
+```
+
+## Hosted Lifecycle Result
+
+Command run:
+
+```powershell
+npx.cmd playwright test presence-studio-v2-hosted-lifecycle.spec.ts --project=chromium --workers=1
+```
+
+Environment used:
+
+```txt
+PRESENCE_HOSTED_SMOKE=1
+PRESENCE_E2E_BASE_URL=https://your-presence.vercel.app
+PRESENCE_E2E_API_URL=https://anu-back-end.vercel.app
+PRESENCE_STUDIO_V2_HOSTED_PILOT_ROOM_ID=11
+```
+
+Result:
+
+```txt
+1 failed
+```
+
+Failing step:
+
+```txt
+open V2 owner editor
+```
+
+Failure:
+
+```txt
+getByTestId('presence-studio-v2-root') was not found after 30000ms
+```
+
+What passed before failure:
+
+- Hosted owner sign-in.
+- Owner session/token extraction.
+- Anonymous context did not see `presence-studio-v2-root` on the owner editor route.
+- Owner editor route for room `11` loaded.
+- Owner editor overview API returned `200`.
+
+What did not run because the test stopped safely:
+
+- V2 object edit/add.
+- Save draft.
+- Reload persistence.
+- V2 owner draft preview.
+- Real publish.
+- Anonymous V2 public render.
+- Hosted public payload hygiene.
+- Cleanup/restoration mutation.
+
+## Evidence Paths
+
+Playwright failure evidence:
+
+```txt
+test-results/presence-studio-v2-hosted--16269--a-flagged-V2-room-publicly-chromium/error-context.md
+test-results/presence-studio-v2-hosted--16269--a-flagged-V2-room-publicly-chromium-retry1/error-context.md
+```
+
+The error context snapshot shows the hosted room rendering the existing Canvas/GGM editor with title `Christina Kerkvliet Goddard`, not the Studio V2 cockpit.
+
+No explicit success screenshots were captured because the lifecycle failed before reaching V2 editor, preview, or public render states.
+
+## Console / Page Error Status
+
+Safe room verification:
+
+- page errors: none
+- console error count: 0
+
+Formal hosted lifecycle:
+
+- failed due missing V2 root selector
+- no content mutation occurred
+
+## Payload Hygiene
+
+Hosted public payload hygiene was not reached because the smoke failed before publish/public V2 render.
+
+Local payload hygiene still passes:
+
+- nested editable config names are stripped from sanitized V2 public payloads
+- editor-only lock/pin/hidden state is not rendered publicly
+- TemplateKit/control-plane paths are absent from local public output
+- hidden public objects are removed from public projection
+
+## Cleanup / Restoration Status
+
+No cleanup was required.
+
+The hosted smoke failed before:
+
+- adding objects
+- saving draft
+- publishing
+- changing public content
+
+Room `11` remains on its original published GGM state.
+
+## Conversion Pass (Kimi, 2026-06-03)
+
+A subsequent conversion pass executed the minimal fix plan:
+
+1. ✅ **Backed up** room 11 original state to `docs/program/evidence/studio-v2-hosted-room-11-backup/`.
+2. ✅ **Converted** published config to V2 via owner editor draft API (`POST /api/presence/owner/rooms/11/editor/draft` with `renderer_key: presence-studio-v2-room`, then `POST .../publish`).
+3. ✅ **Updated** node metadata via `PATCH /api/presence/owner/nodes/11` to set `metadata.custom_renderer_key: presence-studio-v2-room`.
+4. ✅ **Added frontend metadata fallback** in `lib/presence/studio-v2/feature.ts` so `shouldUsePresenceStudioV2` checks metadata when owner API omits `node.renderer_key`.
+5. ✅ **Added unit tests** for metadata fallback (`lib/presence/studio-v2/feature.test.ts`, 8/8 pass).
+6. ⚠️ **Pending:** Vercel env var confirmation + frontend redeployment.
+
+Post-conversion backend state:
+- Published config version: 27, renderer_key: `presence-studio-v2-room`
+- Public API node.renderer_key: `presence-studio-v2-room`
+- Owner API metadata.custom_renderer_key: `presence-studio-v2-room`
+- Public page still renders legacy GGM (deployed frontend lacks fix + env vars)
+- Owner editor still renders legacy GGM (same reason)
+
+## Remaining Blockers
+
+1. **Frontend deployment:** The metadata fallback fix is not deployed to Vercel.
+2. **Vercel env vars:** `NEXT_PUBLIC_PRESENCE_STUDIO_V2` and `NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS` must be set and the frontend redeployed.
+3. **Hosted smoke rerun:** After deployment, run `presence-studio-v2-hosted-lifecycle.spec.ts`.
+
+## Rollback
+
+If conversion causes problems, run:
+```bash
+ROOM11_OWNER_TOKEN=<token> npx tsx scripts/restore-room-11-from-backup.mts
+```
+
+## Readiness Verdicts
+
+- Local integration readiness: ready.
+- Backend V2 data readiness: converted.
+- Frontend code readiness: fixed, pending deployment.
+- Hosted V2 editor readiness: blocked; pending deployment + env vars.
+- Hosted owner preview readiness: blocked; depends on editor mount.
+- Hosted public render readiness: blocked; depends on env vars + deployment.
+- Controlled operator-led pilot readiness: not ready until hosted lifecycle smoke passes.
+- Public self-serve onboarding readiness: not ready.
+
+---
+
+## 2026-05-31 Hosted Smoke Attempt — BLOCKED
+
+### Attempted by
+Kimi (hosted QA engineer)
+
+### Blocker
+**`NEXT_PUBLIC_PRESENCE_STUDIO_V2` is NOT present in the deployed production build.**
+
+### Evidence
+- Grep for `NEXT_PUBLIC_PRESENCE_STUDIO_V2` in deployed JS/HTML: **0 occurrences**
+- Grep for `PRESENCE_STUDIO_V2` in deployed JS/HTML: **0 occurrences**
+- `/studio/11/editor` renders **legacy editor** (Canvas, Inspector, font pickers, "Pilot mode" copy)
+- `data-testid="presence-studio-v2-root"`: **not found**
+- Playwright hosted smoke fails at first step with:
+  ```
+  Error: expect(locator).toBeVisible() failed
+  Locator: getByTestId('presence-studio-v2-root')
+  Timeout: 30000ms
+  ```
+
+### Root Cause
+`app/(studio)/studio/[id]/editor/page.tsx` is a `"use client"` component that calls `shouldUsePresenceStudioV2()`, which checks `process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2` at **build time**. The deployed build was produced without this env var, so V2 eligibility always evaluates to `false`.
+
+### Impact
+- V2 editor: blocked
+- V2 public render: blocked (server-side `publicProjection.ts` also checks env)
+- All rooms render legacy paths
+- No hosted content was modified
+
+### Next Fix
+1. Verify env vars are set in **production** environment (not preview/development)
+2. Trigger fresh production build: `vercel --prod`
+3. Verify env vars appear in new build output
+4. Re-run hosted smoke
+
+### Verdict
+**NOT READY for pilot.** Deployment configuration issue.
+
+
+---
+
+## 2026-05-31 — Second Hosted Smoke Attempt (Post-Redeploy)
+
+### Attempted by
+Kimi (hosted QA engineer)
+
+### Redeploy context
+User rebuilt with `PRESENCE_STUDIO_V2_ENABLED=1` and `PRESENCE_STUDIO_V2_PILOT_IDS=11`.
+
+### Result: PARTIAL PROGRESS
+
+**Public render: ✅ WORKING**
+- `/p/ggm-christina-goddard` SSR HTML now contains:
+  - `presence-studio-v2-public`
+  - `v2-public-threshold`
+  - `world-gallery`
+  - `texture-paper`
+- Server-side env vars are correctly enabling V2 public render
+
+**Editor: ❌ STILL BLOCKED**
+- `/studio/11/editor` after real sign-in still renders **legacy editor**
+- `data-testid="presence-studio-v2-root"`: **not found**
+- Legacy Canvas/Inspector/Font pickers still present
+
+### Root Cause
+The editor page (`app/(studio)/studio/[id]/editor/page.tsx`) is a `"use client"` component. It evaluates `process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2` at **build time**. The deployed build has **server-side** env vars but **no `NEXT_PUBLIC_*` client env vars**.
+
+Server components (public render) see `PRESENCE_STUDIO_V2_ENABLED` → work.
+Client components (editor) need `NEXT_PUBLIC_PRESENCE_STUDIO_V2` → blocked.
+
+### Next Fix
+Add to Vercel production environment:
+```
+NEXT_PUBLIC_PRESENCE_STUDIO_V2=1
+NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS=11
+```
+Then `vercel --prod` and re-run Stage 1.
+
+### Verdict
+**NOT READY for full pilot.** Public render is live. Editor is one env var away.
+
+
+
+---
+
+## 2026-06-03 — Final Hosted Smoke Result (POST-ENV-FIX)
+
+**Status:** ✅ **PASSED**
+
+### Root Cause Fix Applied
+
+`lib/presence/studio-v2/feature.ts` was corrected to directly access `process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2` instead of using an `env` parameter alias. Next.js only inlines `NEXT_PUBLIC_*` vars when accessed directly as `process.env.VAR_NAME`, not through aliases.
+
+The corrected build was redeployed to production.
+
+### Stage 1 Fast Gate — PASSED
+
+```
+V2_ROOT:          1
+V2_SAVE:          1
+LEGACY_CANVAS:    0
+LEGACY_INSPECTOR: 0
+HAS_GUIDED_WILD:  true
+HAS_MOOD:         true
+ERRORS:           none
+```
+
+- ✅ `[data-testid="presence-studio-v2-root"]` appears for Room 11 editor
+- ✅ Legacy Canvas/Inspector/GGM editor does NOT appear for Room 11
+- ✅ Anonymous users blocked from editor (sign-in gate shown)
+- ✅ Room 1 still renders legacy editor (CANVAS/INSPECTOR present)
+- ✅ No page errors
+- ✅ No console errors
+
+### Stage 2 Full Hosted Lifecycle Smoke — PASSED
+
+Playwright test `presence-studio-v2-hosted-lifecycle.spec.ts` passed in **17.7s**.
+
+Steps verified:
+- ✅ Real owner sign-in
+- ✅ V2 editor root appears (`presence-studio-v2-root`)
+- ✅ Edit/save works (draft PATCH succeeds)
+- ✅ Reload persistence works from backend
+- ✅ Owner preview renders V2, not DNA/legacy
+- ✅ Real publish succeeds (POST to publish endpoint)
+- ✅ Anonymous `/p/ggm-christina-goddard` renders V2
+- ✅ Anonymous `/presence/ggm-christina-goddard` renders V2
+- ✅ Payload hygiene is clean
+- ✅ Mobile viewport public render clean
+- ✅ `/room/11/key` remains hygienic/safe
+- ✅ Cleanup/restoration completed in `finally` block
+
+### Payload Hygiene Scan — PASSED
+
+Zero violations found across:
+- `/p/ggm-christina-goddard` (desktop)
+- `/presence/ggm-christina-goddard` (desktop)
+- `/p/ggm-christina-goddard` (mobile viewport)
+- `/room/11/key`
+
+No restricted terms leaked:
+`style_dna`, `scene_config`, `motion_config`, `asset_config`, `content_config`, `roomkey_config`, `enquiry_config`, `editable_config`, `hiddenPublic`, `hiddenMobile`, `WILD TRANSFORM SUSPENDED`, `localStorage`, `TemplateKit`, `presence-studio-v2-toolbar`, `presence-studio-v2-panel`, `/api/presence/owner`, `auth-token`, `service_role`, `bearer `, `locked`, `pinned`, `/studio/`
+
+### Cleanup / Rollback Status
+
+- Smoke test created temporary draft objects with unique timestamped titles.
+- Test `finally` block restored original published config and draft state via owner API.
+- Public page verified clean of all smoke markers.
+- **No manual rollback required.**
+
+### Verdicts
+
+| Gate | Verdict |
+|------|---------|
+| Room 11 V2 conversion readiness | ✅ **READY** |
+| Hosted V2 editor readiness | ✅ **READY for flagged Room 11** |
+| Hosted owner preview readiness | ✅ **READY for flagged Room 11** |
+| Hosted public render readiness | ✅ **READY for flagged Room 11** |
+| Controlled operator-led pilot | ✅ **READY with curated/public-safe content** |
+| Public self-serve onboarding | ❌ **NOT READY** (intentionally scoped out) |
+
+**Overall: Phase E hosted lifecycle smoke PASSED. Room 11 is cleared for controlled pilot use.**

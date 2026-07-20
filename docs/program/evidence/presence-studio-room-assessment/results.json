@@ -1,0 +1,207 @@
+{
+  "generatedAt": "2026-05-29T00:00:00.000Z",
+  "scope": "preview-only Studio Room semantic adapter assessment",
+  "publicRoutesChanged": false,
+  "runtimeAiAdded": false,
+  "discoveredRoomCount": 8,
+  "assessedRoomCount": 8,
+  "payloadHygiene": {
+    "pass": 8,
+    "fail": 0
+  },
+  "beforeGapCounts": {
+    "contact methods": 7,
+    "services": 6,
+    "proof/testimonials": 6,
+    "links/portal cards": 5,
+    "credentials": 3,
+    "media embeds": 1
+  },
+  "semanticCoverage": {
+    "contact methods": {
+      "mapped": 7,
+      "unmapped": 1,
+      "absent": 0,
+      "deferred": 0
+    },
+    "services": {
+      "mapped": 7,
+      "unmapped": 0,
+      "absent": 1,
+      "deferred": 0
+    },
+    "proof/testimonials": {
+      "mapped": 7,
+      "unmapped": 0,
+      "absent": 1,
+      "deferred": 0
+    },
+    "links/portal cards": {
+      "mapped": 4,
+      "unmapped": 1,
+      "absent": 3,
+      "deferred": 0
+    },
+    "credentials": {
+      "mapped": 3,
+      "unmapped": 0,
+      "absent": 5,
+      "deferred": 0
+    },
+    "media embeds": {
+      "mapped": 0,
+      "unmapped": 0,
+      "absent": 7,
+      "deferred": 1
+    }
+  },
+  "remainingPresentButUnmapped": {
+    "contact methods": 1,
+    "links/portal cards": 1
+  },
+  "intentionallyDeferred": {
+    "media embeds": 1
+  },
+  "rooms": [
+    {
+      "id": "demo:rooms-underground-dj",
+      "label": "Mira K.",
+      "source": "lib/presence/demo/profiles.ts",
+      "studioChambers": 6,
+      "studioObjects": 18,
+      "semanticStatus": {
+        "contact methods": "mapped",
+        "services": "absent",
+        "proof/testimonials": "absent",
+        "links/portal cards": "mapped",
+        "credentials": "absent",
+        "media embeds": "deferred"
+      },
+      "templateKitCandidate": "candidate"
+    },
+    {
+      "id": "demo:rooms-gallery-painter",
+      "label": "Naoko Sato",
+      "source": "lib/presence/demo/profiles.ts",
+      "studioChambers": 8,
+      "studioObjects": 20,
+      "semanticStatus": {
+        "contact methods": "mapped",
+        "services": "mapped",
+        "proof/testimonials": "mapped",
+        "links/portal cards": "mapped",
+        "credentials": "absent",
+        "media embeds": "absent"
+      },
+      "templateKitCandidate": "strong"
+    },
+    {
+      "id": "demo:rooms-material-carpenter",
+      "label": "Salt & Grain Studio",
+      "source": "lib/presence/demo/profiles.ts",
+      "studioChambers": 7,
+      "studioObjects": 21,
+      "semanticStatus": {
+        "contact methods": "mapped",
+        "services": "mapped",
+        "proof/testimonials": "mapped",
+        "links/portal cards": "absent",
+        "credentials": "absent",
+        "media embeds": "absent"
+      },
+      "templateKitCandidate": "strong"
+    },
+    {
+      "id": "demo:rooms-local-carpenter",
+      "label": "Dave Carpentry - Bega Valley",
+      "source": "lib/presence/demo/profiles.ts",
+      "studioChambers": 8,
+      "studioObjects": 25,
+      "semanticStatus": {
+        "contact methods": "mapped",
+        "services": "mapped",
+        "proof/testimonials": "mapped",
+        "links/portal cards": "absent",
+        "credentials": "mapped",
+        "media embeds": "absent"
+      },
+      "templateKitCandidate": "strong"
+    },
+    {
+      "id": "demo:rooms-community-healer",
+      "label": "Mara Lin",
+      "source": "lib/presence/demo/profiles.ts",
+      "studioChambers": 8,
+      "studioObjects": 22,
+      "semanticStatus": {
+        "contact methods": "mapped",
+        "services": "mapped",
+        "proof/testimonials": "mapped",
+        "links/portal cards": "absent",
+        "credentials": "mapped",
+        "media embeds": "absent"
+      },
+      "templateKitCandidate": "strong"
+    },
+    {
+      "id": "demo:rooms-sharp-consultant",
+      "label": "Heron Strategy",
+      "source": "lib/presence/demo/profiles.ts",
+      "studioChambers": 8,
+      "studioObjects": 22,
+      "semanticStatus": {
+        "contact methods": "mapped",
+        "services": "mapped",
+        "proof/testimonials": "mapped",
+        "links/portal cards": "mapped",
+        "credentials": "absent",
+        "media embeds": "absent"
+      },
+      "templateKitCandidate": "strong"
+    },
+    {
+      "id": "demo:ggm-christina-goddard",
+      "label": "Christina Kerkvliet Goddard",
+      "source": "lib/presence/demo/profiles.ts",
+      "studioChambers": 8,
+      "studioObjects": 21,
+      "semanticStatus": {
+        "contact methods": "mapped",
+        "services": "mapped",
+        "proof/testimonials": "mapped",
+        "links/portal cards": "mapped",
+        "credentials": "absent",
+        "media embeds": "absent"
+      },
+      "templateKitCandidate": "strong",
+      "suggestedKit": "Cultural-community artist / archive room"
+    },
+    {
+      "id": "graph:test-presence-room",
+      "label": "Mara Vale Test Room",
+      "source": "tests/fixtures/presenceGraph.json",
+      "studioChambers": 7,
+      "studioObjects": 17,
+      "semanticStatus": {
+        "contact methods": "unmapped",
+        "services": "mapped",
+        "proof/testimonials": "mapped",
+        "links/portal cards": "unmapped",
+        "credentials": "mapped",
+        "media embeds": "absent"
+      },
+      "templateKitCandidate": "strong",
+      "unmappedReason": "fixture URLs point at localhost, /studio, or test/control-plane-style paths and are intentionally blocked"
+    }
+  ],
+  "bestFutureTemplateKitCandidates": [
+    "demo:rooms-gallery-painter",
+    "demo:rooms-material-carpenter",
+    "demo:rooms-local-carpenter",
+    "demo:rooms-community-healer",
+    "demo:rooms-sharp-consultant",
+    "demo:ggm-christina-goddard",
+    "graph:test-presence-room"
+  ],
+  "recommendedNextPass": "Extract a GGM Cultural-Community Artist TemplateKit from the differentiated GGM room, while keeping media embeds deferred until the embed policy is explicit."
+}

@@ -106,6 +106,27 @@ def test_options_preflight_on_owner_media_upload_from_presence_frontend_succeeds
     assert "OPTIONS" in allow_methods, f"OPTIONS must be allowed for media upload: {allow_methods}"
 
 
+def test_options_preflight_on_editor_draft_image_upload_succeeds():
+    app = _build_app([PRESENCE_ORIGIN])
+    client = app.test_client()
+
+    response = client.options(
+        "/api/presence/owner/rooms/1/assets/upload",
+        headers={
+            "Origin": PRESENCE_ORIGIN,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "authorization,content-type",
+        },
+    )
+
+    assert response.status_code in (200, 204)
+    assert response.headers.get("Access-Control-Allow-Origin") == PRESENCE_ORIGIN
+    allow_headers = (response.headers.get("Access-Control-Allow-Headers") or "").lower()
+    assert "authorization" in allow_headers
+    assert "content-type" in allow_headers
+    assert "POST" in (response.headers.get("Access-Control-Allow-Methods") or "").upper()
+
+
 def test_options_preflight_on_beta_start_from_current_presence_frontend_succeeds():
     # Production previously allowed presence-gilt but the live frontend moved
     # to your-presence. The repo-owned alias must be granted even when the
@@ -193,6 +214,20 @@ def test_post_owner_media_without_auth_returns_401_with_cors_header_not_404():
         f"protected media route without auth should return 401, got {response.status_code}"
     )
     assert response.status_code != 404
+    assert response.headers.get("Access-Control-Allow-Origin") == PRESENCE_ORIGIN
+
+
+def test_post_editor_draft_image_upload_without_auth_returns_401_with_cors_header():
+    app = _build_app([PRESENCE_ORIGIN])
+    client = app.test_client()
+
+    response = client.post(
+        "/api/presence/owner/rooms/1/assets/upload",
+        headers={"Origin": PRESENCE_ORIGIN},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 401
     assert response.headers.get("Access-Control-Allow-Origin") == PRESENCE_ORIGIN
 
 

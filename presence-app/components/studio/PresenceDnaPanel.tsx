@@ -4,7 +4,7 @@
 //
 // What it does:
 // - shows the currently-rendering DNA (resolved by the same path as
-//   the public renderer: backend_persisted > demo_overlay > inferred)
+//   the public renderer: backend_persisted > inferred)
 // - shows a provenance badge
 // - lets the owner edit the raw DNA JSON
 // - validates JSON shape + top-level keys client-side before save
@@ -86,14 +86,12 @@ function parseDnaJson(input: string): ParsedDna | ParseError {
 const SOURCE_LABEL: Record<PresenceDna["source"], string> = {
   backend_persisted: "Backend-persisted",
   node_metadata: "Node metadata",
-  demo_overlay: "Demo overlay (temporary)",
   inferred: "Inferred from existing fields",
 };
 
 const SOURCE_TONE: Record<PresenceDna["source"], string> = {
   backend_persisted: "presence-dna-prov ok",
   node_metadata: "presence-dna-prov ok",
-  demo_overlay: "presence-dna-prov warn",
   inferred: "presence-dna-prov subtle",
 };
 

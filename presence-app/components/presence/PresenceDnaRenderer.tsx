@@ -17,6 +17,8 @@ import { ctaLabel, selectBlueprint } from "@/lib/presence/blueprints/select";
 import { fallbackBlueprint } from "@/lib/presence/blueprints/registry";
 import { selectRoomWorld } from "@/lib/presence/world/select";
 import { isImplementedWorld } from "@/lib/presence/world/registry";
+import { GGM_RENDERER_KEY, resolveCustomRendererKey } from "@/lib/presence/ggm/activate";
+import type { PresenceRenderModel } from "@/lib/presence/render/model";
 
 import NocturnalSonicRoom from "./blueprints/NocturnalSonicRoom";
 import EditorialIdentityRoom from "./blueprints/EditorialIdentityRoom";
@@ -30,6 +32,9 @@ import GalleryRoom from "./blueprints/GalleryRoom";
 import SoundRoom from "./blueprints/SoundRoom";
 import MaterialStudioDesk from "./blueprints/MaterialStudioDesk";
 
+// Custom (per-pilot) faithful renderers — these short-circuit the DNA chain.
+import GgmFaithfulRoom from "./ggm/GgmFaithfulRoom";
+
 interface PresenceDnaRendererProps {
   node: PresenceNode;
   // When provided, overrides the blueprint selection. Used by Studio
@@ -38,12 +43,14 @@ interface PresenceDnaRendererProps {
   // When true, skip the Pass 3 room-world dispatch and use the Pass 1/2
   // blueprint chain only. Reserved for fallback / debugging.
   forceLegacyBlueprints?: boolean;
+  renderModel?: PresenceRenderModel;
 }
 
 export default function PresenceDnaRenderer({
   node,
   forceBlueprint,
   forceLegacyBlueprints = false,
+  renderModel,
 }: PresenceDnaRendererProps) {
   const plan = useMemo(() => {
     const dnaResolved = resolvePresenceDna(node);
@@ -53,6 +60,19 @@ export default function PresenceDnaRenderer({
     const safe = fallbackBlueprint(selected as ReturnType<typeof selectBlueprint>);
     return { dna: dnaResolved, theme: themeResolved, blueprint: safe, world };
   }, [node, forceBlueprint]);
+
+  // Per-pilot custom renderer dispatch runs AFTER the hook call (rules of
+  // hooks) but BEFORE the DNA chain dispatch. This is how GGM (and any
+  // future pilot with an authored renderer key) gets a faithful surface
+  // while every other Room continues through the existing DNA chain. The
+  // `forceBlueprint` escape hatch still bypasses the custom renderer so
+  // Studio preview can compare against blueprint variants.
+  if (!forceBlueprint) {
+    const customKey = renderModel?.identity.rendererKey ?? resolveCustomRendererKey(node);
+    if (customKey === GGM_RENDERER_KEY) {
+      return <GgmFaithfulRoom node={node} model={renderModel} />;
+    }
+  }
 
   const cta = ctaLabel(plan.dna);
   const sharedProps = { node, dna: plan.dna, theme: plan.theme as ThemeGenome, ctaLabel: cta };

@@ -1,0 +1,308 @@
+/* Gallery Wall — Threshold
+   Mood: museum hush. Painted, breathing. Single human inhabits this room. */
+
+:root{
+  --ink:#0e0a07;
+  --paper:#efe6d6;
+  --paper-soft:#d8cdb8;
+  --paper-dim:#a8997d;
+  --oxblood:#5a1b14;
+  --gold:#c69148;
+  --gold-soft:#d9b27a;
+  --shadow:#000;
+  --font-display:"Cormorant Garamond","EB Garamond",Georgia,serif;
+  --font-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;background:var(--ink);color:var(--paper);overflow:hidden;font-family:var(--font-display)}
+body{
+  /* base warm vignette under everything */
+  background:
+    radial-gradient(120% 100% at 50% 50%, #1a120c 0%, #0a0703 70%, #000 100%);
+}
+
+/* ------------ Painting stage ------------ */
+.paint-stage{position:fixed;inset:0;z-index:0}
+.paint-slide{
+  position:absolute;inset:-4%;
+  background-size:cover;background-position:center;background-repeat:no-repeat;
+  opacity:0;
+  transition:opacity 2.2s ease;
+  filter:saturate(0.95) brightness(0.78) contrast(1.04);
+  transform-origin:50% 50%;
+  animation:paint-breathe 28s ease-in-out infinite;
+  will-change:opacity, transform;
+}
+.paint-slide.is-active{opacity:1}
+@keyframes paint-breathe{
+  0%{transform:scale(1.04) translate3d(0,0,0)}
+  50%{transform:scale(1.10) translate3d(-0.6%,0.6%,0)}
+  100%{transform:scale(1.04) translate3d(0,0,0)}
+}
+
+/* Painted vignette — softens edges so type can land */
+.paint-vignette{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(90% 75% at 55% 50%, transparent 0%, rgba(8,5,2,0.35) 75%, rgba(0,0,0,0.7) 100%),
+    linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 18%, rgba(0,0,0,0) 75%, rgba(0,0,0,0.7) 100%),
+    linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 70%, rgba(0,0,0,0.55) 100%);
+  mix-blend-mode:multiply;
+}
+
+/* Grain canvas */
+.paint-grain{
+  position:absolute;inset:0;width:100%;height:100%;
+  pointer-events:none;opacity:0.18;mix-blend-mode:overlay;
+}
+
+/* ------------ Title plate (left, large) ------------ */
+.t-mark{
+  position:fixed;
+  left:7vw;top:30vh;
+  z-index:5;
+  max-width:46vw;
+  color:var(--paper);
+  text-shadow:0 1px 0 rgba(0,0,0,0.55), 0 2px 30px rgba(0,0,0,0.7), 0 0 50px rgba(0,0,0,0.4);
+  opacity:1;
+}
+.t-mark-line{
+  font-family:var(--font-display);
+  font-weight:400;
+  font-size:clamp(54px, 7.6vw, 124px);
+  line-height:0.96;
+  letter-spacing:-0.012em;
+}
+.t-mark-line--italic{
+  font-style:italic;
+  font-weight:300;
+  margin-top:-0.02em;
+  color:var(--gold-soft);
+  text-shadow:0 1px 0 rgba(0,0,0,0.5), 0 0 22px rgba(120,80,30,0.35);
+}
+.t-mark-tagline{
+  margin-top:18px;
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:var(--paper-dim);
+  line-height:1.6;
+}
+@keyframes mark-in{
+  0%{opacity:0;transform:translateY(14px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+/* entrance animation removed for reliability */
+
+/* ------------ Status ------------ */
+.t-status{
+  position:fixed;top:28px;left:32px;z-index:6;
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--font-mono);
+  font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--paper-dim);
+}
+.t-status-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:#9ec88a;
+  box-shadow:0 0 8px rgba(158,200,138,0.65);
+  animation:status-pulse 2.4s ease-in-out infinite;
+}
+@keyframes status-pulse{
+  0%,100%{opacity:0.9;transform:scale(1)}
+  50%{opacity:0.55;transform:scale(0.85)}
+}
+.t-status-text{color:var(--paper)}
+.t-status-sep{width:18px;height:1px;background:rgba(168,153,125,0.5)}
+
+/* ------------ Index (right) ------------ */
+.t-index{
+  position:fixed;
+  top:50%;right:32px;
+  transform:translateY(-50%);
+  z-index:5;
+  min-width:280px;max-width:34vw;
+  opacity:1;
+}
+@keyframes index-in{
+  0%{opacity:0;transform:translate(8px,-50%)}
+  100%{opacity:1;transform:translate(0,-50%)}
+}
+/* entrance animation removed */
+.t-index-header{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:14px;
+  font-family:var(--font-mono);
+  font-size:10px;letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--paper-dim);
+}
+.t-index-rule{flex:1;height:1px;background:linear-gradient(90deg, rgba(168,153,125,0.5), transparent)}
+.t-index-list{
+  list-style:none;padding:0;margin:0;
+  display:flex;flex-direction:column;gap:2px;
+}
+.t-index-item{
+  display:grid;
+  grid-template-columns:32px 1fr auto;
+  align-items:baseline;
+  gap:14px;
+  padding:9px 0;
+  cursor:pointer;
+  border-top:1px solid rgba(168,153,125,0.18);
+  transition:background 0.3s ease, color 0.3s ease;
+  color:var(--paper-soft);
+}
+.t-index-item:last-child{border-bottom:1px solid rgba(168,153,125,0.18)}
+.t-index-num{
+  font-family:var(--font-mono);
+  font-size:10px;letter-spacing:0.1em;
+  color:var(--paper-dim);
+  text-transform:uppercase;
+}
+.t-index-title{
+  font-family:var(--font-display);
+  font-style:italic;
+  font-size:18px;
+  line-height:1.25;
+  letter-spacing:0;
+  text-shadow:0 1px 0 rgba(0,0,0,0.45), 0 0 14px rgba(0,0,0,0.45);
+}
+.t-index-year{
+  font-family:var(--font-mono);
+  font-size:10.5px;letter-spacing:0.1em;
+  color:var(--paper-dim);
+}
+.t-index-item:hover{
+  color:var(--paper);
+}
+.t-index-item:hover .t-index-num,
+.t-index-item:hover .t-index-year{color:var(--gold-soft)}
+.t-index-item.is-active{color:var(--gold-soft)}
+.t-index-item.is-active .t-index-num{color:var(--gold)}
+.t-index-item.is-active .t-index-title{color:var(--gold-soft)}
+
+/* ------------ Plate (museum label) ------------ */
+.t-plate{
+  position:fixed;
+  left:7vw;bottom:14vh;
+  z-index:5;
+  display:flex;align-items:flex-start;gap:18px;
+  padding-left:18px;
+  border-left:1px solid rgba(214,178,122,0.45);
+  opacity:1;
+}
+@keyframes plate-in{
+  0%{opacity:0;transform:translateY(8px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+/* entrance animation removed */
+.t-plate-roman{
+  font-family:var(--font-mono);
+  font-size:11px;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--gold);
+  padding-top:4px;
+}
+.t-plate-title{
+  font-family:var(--font-display);
+  font-style:italic;
+  font-size:22px;line-height:1.1;
+  color:var(--paper);
+  margin-bottom:6px;
+}
+.t-plate-meta{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-family:var(--font-mono);
+  font-size:10.5px;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--paper-dim);
+}
+
+/* ------------ Enter ------------ */
+.t-enter{
+  position:fixed;right:32px;bottom:32px;z-index:6;
+  display:grid;
+  grid-template-columns:auto 1fr;
+  align-items:center;
+  gap:6px 14px;
+  padding:18px 22px 16px;
+  background:rgba(14,10,7,0.55);
+  border:1px solid rgba(214,178,122,0.4);
+  color:var(--paper);
+  text-decoration:none;
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  transition:background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  opacity:1;
+}
+@keyframes enter-in{
+  0%{opacity:0;transform:translateY(8px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+/* entrance animation removed */
+.t-enter:hover{
+  background:rgba(90,27,20,0.65);
+  border-color:var(--gold);
+  transform:translateY(-1px);
+}
+.t-enter-icon{
+  grid-row:1/3;
+  display:flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border-radius:50%;
+  border:1px solid rgba(214,178,122,0.5);
+  color:var(--gold-soft);
+}
+.t-enter:hover .t-enter-icon{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.t-enter-text{
+  font-family:var(--font-display);
+  font-style:italic;
+  font-size:20px;line-height:1;
+}
+.t-enter-sub{
+  font-family:var(--font-mono);
+  font-size:9.5px;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--paper-dim);
+  grid-column:2/3;
+}
+
+/* ------------ Bottom rail ------------ */
+.t-rail{
+  position:fixed;left:7vw;bottom:32px;z-index:5;
+  display:flex;align-items:center;gap:14px;
+  font-family:var(--font-mono);
+  font-size:9.5px;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--paper-dim);
+  opacity:1;
+}
+@keyframes rail-in{
+  0%{opacity:0}
+  100%{opacity:1}
+}
+/* entrance animation removed */
+.t-rail-dot{width:3px;height:3px;border-radius:50%;background:rgba(214,178,122,0.5)}
+
+/* ------------ Veil (transition out) ------------ */
+.t-veil{
+  position:fixed;inset:0;z-index:30;
+  background:#000;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.7s ease;
+}
+body.is-leaving .t-veil{opacity:1;pointer-events:auto}
+body.is-leaving .t-mark,
+body.is-leaving .t-index,
+body.is-leaving .t-plate,
+body.is-leaving .t-enter,
+body.is-leaving .t-rail,
+body.is-leaving .t-status{
+  opacity:0;transform:translateY(-4px);
+  transition:opacity 0.5s ease, transform 0.5s ease;
+}
+
+@media (max-width:900px){
+  .t-mark{top:18vh;max-width:90vw}
+  .t-mark-line{font-size:clamp(42px, 12vw, 84px)}
+  .t-index{display:none}
+  .t-plate{bottom:18vh}
+  .t-rail{display:none}
+}

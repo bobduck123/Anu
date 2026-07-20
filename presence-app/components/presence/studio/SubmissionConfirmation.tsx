@@ -92,7 +92,7 @@ export default function SubmissionConfirmation({ result, resolved, onReset }: Pr
 
       {resolved.identity && (
         <p className="confirmation-recall">
-          For our records: a {resolved.world?.label ?? "place"} for {resolved.identity.label.toLowerCase()},
+          For our records: {resolved.world?.label ?? "a place"} for the {resolved.identity.label.toLowerCase()},
           moving as {resolved.movement?.label?.toLowerCase() ?? "chosen later"}.
         </p>
       )}

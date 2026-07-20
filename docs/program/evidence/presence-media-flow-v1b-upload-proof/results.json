@@ -1,0 +1,51 @@
+{
+  "evidence_version": "presence-media-flow-v1b-upload-proof",
+  "date": "2026-05-25",
+  "storage_backend_identified": "existing backend-owned Supabase Storage in production; local filesystem fallback in tests",
+  "upload_intent_available": "atomic authenticated editor upload endpoint; no separate signed-upload intent",
+  "upload_confirm_available": "upload response creates draft media record atomically after validated storage write",
+  "owner_scope_enforced": true,
+  "accepted_file_types": ["image/jpeg", "image/png", "image/webp"],
+  "blocked_file_types": ["image/svg+xml", "text/html", "application/pdf", "application/octet-stream"],
+  "max_file_size": "8 MB",
+  "media_drawer_upload_enabled": true,
+  "alt_text_supported": true,
+  "focal_point_supported": false,
+  "crop_supported": false,
+  "draft_upload_private_or_public": "public-unlisted storage object; unused URL omitted from public and preview-render payloads",
+  "public_unchanged_before_publish": true,
+  "preview_shows_uploaded_image": true,
+  "publish_updates_public": true,
+  "RoomKey_published_only": true,
+  "cleanup_status": "local mock reset complete; hosted V1B cleanup not run pending deployment",
+  "hosted_smoke_status": "NOT RUN for V1B - requires deployment and owner session",
+  "tests": [
+    {
+      "command": "npm.cmd run typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "npm.cmd run build",
+      "result": "passed"
+    },
+    {
+      "command": "node --test --experimental-strip-types relevant editor/media/resolver test files",
+      "result": "passed",
+      "passed": 41
+    },
+    {
+      "command": "python -m pytest tests/test_presence_studio_editor_foundation.py tests/test_presence_graph_integration_proof.py tests/test_presence_pass_paths.py tests/test_presence_cors.py tests/test_presence_nodes.py -q -p no:cacheprovider",
+      "result": "passed with existing SQLAlchemy legacy warnings",
+      "passed": 109
+    },
+    {
+      "command": "npx.cmd playwright test selected auth/editor/Canvas/RoomKey/V1A/V1B specs --workers=1 --retries=0 --reporter=list",
+      "result": "passed",
+      "passed": 27
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ]
+}

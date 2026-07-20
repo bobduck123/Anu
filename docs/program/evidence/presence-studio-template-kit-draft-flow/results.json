@@ -1,0 +1,51 @@
+{
+  "date": "2026-05-29",
+  "route": "/studio/template-kits",
+  "owner_authenticated": true,
+  "hidden_from_navigation": true,
+  "public_routes_changed": false,
+  "public_renderer_wired": false,
+  "persistence": "staged-only",
+  "published_state_created": false,
+  "candidate_kits_exposed_to_owner_creation": false,
+  "owner_exposed_kits": [
+    "gallery-artist",
+    "material-tradie-proof-card",
+    "healing-practitioner",
+    "consultant-contractor"
+  ],
+  "candidate_internal_only": [
+    "underground-dj-portal"
+  ],
+  "draft_instantiation": {
+    "schema_version": true,
+    "chambers": true,
+    "objects": true,
+    "theme_tokens": true,
+    "mood_preset": true,
+    "mobile_variants": true,
+    "cta_strategy": true,
+    "required_optional_fields": true,
+    "copy_scaffolds": true,
+    "source_candidate_values_scrubbed": true
+  },
+  "security": {
+    "private_contact_fields_mapped": false,
+    "public_payload_hygiene": "pass",
+    "runtime_ai_added": false
+  },
+  "tests": {
+    "studioRoomTemplateDrafts": "pass",
+    "studioRoomTemplateKits": "pass",
+    "studioRoomSuite": "pass",
+    "assessmentSemanticTests": "pass",
+    "presenceWorldGraphTests": "pass",
+    "typecheck": "pass",
+    "build": "pass",
+    "gitDiffCheck": "pass",
+    "aiRuntimeScan": "pass_no_matches",
+    "localTestSweepExceptUniqueness": "pass",
+    "presenceUniquenessTest": "fail_existing_demo_fixture_similarity"
+  },
+  "recommended_next_pass": "Add a backend Studio Room draft persistence contract, then wire the starter into the Studio Editor shell."
+}

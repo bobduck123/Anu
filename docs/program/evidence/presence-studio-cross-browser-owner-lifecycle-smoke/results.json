@@ -1,0 +1,148 @@
+{
+  "date": "2026-05-30",
+  "scope": "Extend Studio Room owner lifecycle Playwright smoke to Chromium, Firefox, and WebKit",
+  "playwrightProjects": [
+    {
+      "name": "chromium",
+      "device": "Desktop Chrome",
+      "result": "pass",
+      "tests": 1
+    },
+    {
+      "name": "firefox",
+      "device": "Desktop Firefox",
+      "result": "pass",
+      "tests": 1,
+      "environmentNote": "Initial run failed because the local Playwright Firefox binary was missing; npx playwright install firefox webkit installed it."
+    },
+    {
+      "name": "webkit",
+      "device": "Desktop Safari",
+      "result": "pass",
+      "tests": 1,
+      "environmentNote": "WebKit binary installed with npx playwright install firefox webkit before execution."
+    }
+  ],
+  "filesChangedThisPass": [
+    "presence-app/playwright.config.ts",
+    "docs/program/evidence/presence-studio-cross-browser-owner-lifecycle-smoke/README.md",
+    "docs/program/evidence/presence-studio-cross-browser-owner-lifecycle-smoke/results.json",
+    "docs/program/evidence/presence-dna-enum-hardening-overlay-retirement/results.json"
+  ],
+  "fixesMade": [
+    "Added Firefox and WebKit Playwright projects using existing Playwright device descriptors.",
+    "Installed missing local Playwright Firefox and WebKit browser binaries.",
+    "No lifecycle spec assertion was loosened and no product code was changed."
+  ],
+  "assertionsPreserved": [
+    "primary kits visible",
+    "underground-dj-portal hidden",
+    "primary kit draft creation succeeds",
+    "created draft is private/draft/unpublished",
+    "redirect to /studio/[id]/studio-room",
+    "draft-only warning visible",
+    "chamber panel visible",
+    "inspector panel visible",
+    "preview/canvas visible",
+    "safe edit updates preview",
+    "save persists draft",
+    "dirty state clears",
+    "reload preserves edit",
+    "publish button absent",
+    "publish requests absent",
+    "public API for draft slug returns 404",
+    "public page does not expose draft edit",
+    "candidate kit direct create is rejected"
+  ],
+  "testResults": [
+    {
+      "command": "npx playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=chromium",
+      "result": "pass",
+      "details": "1 passed"
+    },
+    {
+      "command": "npx playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=firefox",
+      "result": "pass",
+      "details": "1 passed after installing missing Firefox binary"
+    },
+    {
+      "command": "npx playwright test tests/e2e/presence-studio-room-owner-lifecycle.spec.ts --project=webkit",
+      "result": "pass",
+      "details": "1 passed after installing missing WebKit binary"
+    },
+    {
+      "command": "python -m pytest tests\\test_presence_dna_persistence.py tests\\test_presence_template_kit_draft_persistence.py tests\\test_presence_studio_editor_foundation.py",
+      "result": "pass",
+      "details": "30 passed; SQLAlchemy legacy warnings and local pytest cache permission warning only"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\uniqueness.test.ts",
+      "result": "pass",
+      "details": "threshold unchanged; gallery-painter vs GGM score remains 0.045"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\studio-room\\*.test.ts",
+      "result": "pass",
+      "details": "59 passed"
+    },
+    {
+      "command": "npx.cmd tsx --test lib\\presence\\**\\*.test.ts",
+      "result": "pass",
+      "details": "82 passed"
+    },
+    {
+      "command": "npm.cmd run typecheck",
+      "result": "pass",
+      "details": "tsc --noEmit passed"
+    },
+    {
+      "command": "npm.cmd run build",
+      "result": "pass",
+      "details": "Next.js build passed; pre-existing multiple-lockfile workspace-root warning only"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "details": "no whitespace errors"
+    },
+    {
+      "command": "git diff --cached --check",
+      "result": "pass",
+      "details": "no staged whitespace errors"
+    },
+    {
+      "command": "public route isolation grep",
+      "result": "pass",
+      "details": "no Studio Room/editor/template draft imports found in public route surfaces"
+    },
+    {
+      "command": "runtime AI/LLM changed-hunk scan",
+      "result": "pass",
+      "details": "no changed OpenAI/Anthropic/langchain/AI SDK/chatbot/model-inference references"
+    },
+    {
+      "command": "broad contact/private changed-hunk scan",
+      "result": "pass",
+      "details": "no matches in this pass"
+    },
+    {
+      "command": "active demo overlay dependency grep",
+      "result": "pass",
+      "details": "no active demoOverlays.ts import or demoDnaForSlug call remains"
+    }
+  ],
+  "safety": {
+    "publicRoutesChanged": false,
+    "studioRoomPublicRenderingAdded": false,
+    "publishFlowAdded": false,
+    "runtimeAiAdded": false,
+    "coreAssertionsWeakened": false,
+    "candidateKitHidden": true,
+    "publicDraftHidden": true
+  },
+  "knownLimitations": [
+    "Uses deterministic local mock API/auth harness rather than real hosted backend session.",
+    "Browser smoke covers cultural-community-artist end-to-end; API tests cover all five primary kits.",
+    "Real-backend/hosted owner lifecycle smoke remains a separate next pass."
+  ]
+}

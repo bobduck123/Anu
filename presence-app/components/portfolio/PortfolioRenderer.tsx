@@ -8,6 +8,10 @@ import { Chip, StatusPill } from "@/components/ui";
 import { PublicEnquiryDialog } from "@/components/portfolio/PublicEnquiryDialog";
 import PresenceRoomRenderer, { isPresenceRoomNode } from "@/components/portfolio/PresenceRoomRenderer";
 import PresenceDnaRenderer from "@/components/presence/PresenceDnaRenderer";
+import PresenceStudioV2PublicRoom from "@/components/presence-studio-v2/PresenceStudioV2PublicRoom";
+import { resolveRenderModel } from "@/lib/presence/render/resolver";
+import type { PresenceRenderModel, RenderMode } from "@/lib/presence/render/model";
+import type { StudioV2PublicRoom } from "@/lib/presence/studio-v2";
 
 interface PortfolioRendererProps {
   node: PresenceNode;
@@ -17,6 +21,9 @@ interface PortfolioRendererProps {
   // VenueView remain callable for non-regression comparisons until
   // they are safely retired. See docs/PRESENCE_DNA_BEAUTY_QA.md.
   legacyMode?: boolean;
+  renderMode?: RenderMode;
+  renderModel?: PresenceRenderModel;
+  studioV2Room?: StudioV2PublicRoom;
 }
 
 // ── Shared sub-components ──────────────────────────────────────────────────
@@ -925,9 +932,13 @@ function VenueView({ node }: { node: PresenceNode }) {
 // but no longer selects the final layout. The legacy renderers below stay
 // callable behind `legacyMode` for non-regression comparison only.
 
-export default function PortfolioRenderer({ node, legacyMode = false }: PortfolioRendererProps) {
+export default function PortfolioRenderer({ node, legacyMode = false, renderMode = "published", renderModel, studioV2Room }: PortfolioRendererProps) {
+  if (studioV2Room) {
+    return <PresenceStudioV2PublicRoom room={studioV2Room} />;
+  }
+
   if (!legacyMode) {
-    return <PresenceDnaRenderer node={node} />;
+    return <PresenceDnaRenderer node={node} renderModel={renderModel ?? resolveRenderModel(node, renderMode)} />;
   }
 
   // ── LEGACY OPT-IN ONLY (not reached from the default public routes) ──

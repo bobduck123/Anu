@@ -1,0 +1,80 @@
+{
+  "date": "2026-05-24",
+  "scope": "Presence Canvas direct-manipulation v1 integration in canonical Studio editor",
+  "route_strategy": {
+    "canonical_owner_route": "/studio/[id]/editor",
+    "new_canvas_route_created": false,
+    "advanced_controls": "available but demoted in pilot mode",
+    "preview_route_preserved": "/studio/[id]/editor/preview"
+  },
+  "architecture": {
+    "draft_contract": "nested PresenceEditableConfig retained",
+    "canvas_registry": "typed deterministic registry",
+    "dom_scanning_used": false,
+    "backend_or_migration_changes": false,
+    "published_mutation_from_canvas": false,
+    "public_draft_endpoint_added": false
+  },
+  "integrated": [
+    "stable selection metadata and overlays",
+    "inline core copy editing",
+    "floating toolbar and desktop inspector",
+    "existing image picker and alt text editor",
+    "constrained work-wall reorder with arrow fallback",
+    "contextual readiness chips",
+    "GGM-visible palette, text style, safe motion presets, and protected entrance text contrast",
+    "mobile bottom-sheet inspector",
+    "pilot mode and owner-facing publish copy"
+  ],
+  "deferred": [
+    "draft-scoped device upload",
+    "crop controls",
+    "focal point controls",
+    "complete touch drag gesture",
+    "style and mood wiring for non-GGM rooms",
+    "hosted production proof"
+  ],
+  "verification": [
+    {
+      "command": "npm.cmd run typecheck",
+      "cwd": "presence-app",
+      "result": "passed"
+    },
+    {
+      "command": "npm.cmd run build",
+      "cwd": "presence-app",
+      "result": "passed",
+      "warnings": ["Existing Next.js multiple-lockfile workspace-root warning"]
+    },
+    {
+      "command": "node --test --experimental-strip-types lib\\api\\editor.test.ts lib\\api\\presenceGraph.test.ts lib\\editor\\assetValidator.test.ts lib\\editor\\diffEngine.test.ts lib\\editor\\canvasModel.test.ts",
+      "cwd": "presence-app",
+      "result": "passed",
+      "tests_passed": 15,
+      "warnings": ["Existing Node typeless package warning"]
+    },
+    {
+      "command": "npx.cmd playwright test tests/e2e/presence-canvas-direct-manipulation.spec.ts tests/e2e/presence-studio-editor.spec.ts --workers=1",
+      "cwd": "presence-app",
+      "result": "passed",
+      "tests_passed": 2,
+      "screenshots_generated": 14
+    },
+    {
+      "command": "python -m pytest tests\\test_presence_studio_editor_foundation.py tests\\test_presence_graph_integration_proof.py tests\\test_presence_pass_paths.py -q -p no:cacheprovider",
+      "cwd": "flora-fauna/backend",
+      "result": "passed",
+      "tests_passed": 12,
+      "warnings": ["Existing SQLAlchemy Query.get legacy warnings"]
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "pilot_assessment": {
+    "friendly_controlled_pilot": "ready after hosted smoke verification and prepared image set",
+    "paid_self_serve_pilot": "not ready",
+    "reason": "device upload, crop/focal controls, non-GGM expansion, and hosted proof remain outstanding"
+  }
+}

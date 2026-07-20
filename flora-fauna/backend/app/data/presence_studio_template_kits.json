@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "presence-studio-template-kit-contract-v1",
+  "studioRoomSchemaVersion": "presence-studio-room-v1",
+  "updatedAt": "2026-05-29",
+  "kits": [
+    {
+      "id": "gallery-artist",
+      "displayName": "Gallery Artist",
+      "supportState": "primary",
+      "ownerCreatable": true,
+      "version": 1,
+      "schemaVersion": "presence-studio-room-v1",
+      "backendDefaults": {
+        "description": "A quiet editorial gallery room for artists, photographers, designers, and portfolio-led creative practices.",
+        "node_type": "artist",
+        "display_mode": "artist_gallery",
+        "room_type": "artist_studio",
+        "theme_preset": "gallery_white"
+      }
+    },
+    {
+      "id": "cultural-community-artist",
+      "displayName": "Cultural-Community Artist / Practice Archive",
+      "supportState": "primary",
+      "ownerCreatable": true,
+      "version": 1,
+      "schemaVersion": "presence-studio-room-v1",
+      "backendDefaults": {
+        "description": "An archive-first public story room for artists, cultural workers, community storytellers, and grant-facing creative projects.",
+        "node_type": "artist",
+        "display_mode": "studio_practice",
+        "room_type": "artist_studio",
+        "theme_preset": "cultural_org"
+      }
+    },
+    {
+      "id": "material-tradie-proof-card",
+      "displayName": "Material / Tradie Proof Card",
+      "supportState": "primary",
+      "ownerCreatable": true,
+      "version": 1,
+      "schemaVersion": "presence-studio-room-v1",
+      "backendDefaults": {
+        "description": "A practical trust-first room for tradies, makers, contractors, and hands-on service providers.",
+        "node_type": "tradie",
+        "display_mode": "tradie_profile",
+        "room_type": "minimal_card",
+        "theme_preset": "warm_earth"
+      }
+    },
+    {
+      "id": "healing-practitioner",
+      "displayName": "Healing Practitioner",
+      "supportState": "primary",
+      "ownerCreatable": true,
+      "version": 1,
+      "schemaVersion": "presence-studio-room-v1",
+      "backendDefaults": {
+        "description": "A soft, grounded room for practitioners, cultural workers, coaches, and community care providers.",
+        "node_type": "practitioner",
+        "display_mode": "practitioner_profile",
+        "room_type": "practitioner",
+        "theme_preset": "soft_healing"
+      }
+    },
+    {
+      "id": "consultant-contractor",
+      "displayName": "Consultant / Contractor",
+      "supportState": "primary",
+      "ownerCreatable": true,
+      "version": 1,
+      "schemaVersion": "presence-studio-room-v1",
+      "backendDefaults": {
+        "description": "A crisp advisory room for independent consultants, specialists, and project-based professionals.",
+        "node_type": "consultant",
+        "display_mode": "professional_contract",
+        "room_type": "minimal_card",
+        "theme_preset": "clean_light"
+      }
+    },
+    {
+      "id": "underground-dj-portal",
+      "displayName": "Underground DJ / Minimal Performer Portal",
+      "supportState": "candidate",
+      "ownerCreatable": false,
+      "version": 1,
+      "schemaVersion": "presence-studio-room-v1",
+      "backendDefaults": {
+        "description": "A compact performer portal for bookings, selected signals, and public links. Media embeds remain deferred.",
+        "node_type": "performer",
+        "display_mode": "performer_portal",
+        "room_type": "minimal_card",
+        "theme_preset": "nocturnal_signal"
+      }
+    }
+  ]
+}

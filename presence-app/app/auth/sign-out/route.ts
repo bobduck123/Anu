@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  // This route can be requested by Next Link prefetch/RSC navigation. Reads
+  // must never destroy an authenticated owner session.
   return NextResponse.redirect(new URL("/", request.url));
 }

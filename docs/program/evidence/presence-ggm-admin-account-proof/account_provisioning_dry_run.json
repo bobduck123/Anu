@@ -1,0 +1,41 @@
+{
+  "operation": {
+    "app_user": {
+      "exists": true,
+      "global_subject_bound": true,
+      "id": 1,
+      "role": "organizer"
+    },
+    "email": "e4hatu@gmail.com",
+    "entitlement": {
+      "billing_mode": null,
+      "ends_at": null,
+      "exists": false,
+      "lifetime": null,
+      "plan_code": null,
+      "price_cents": null,
+      "status": null
+    },
+    "environment": "hosted_controlled_launch",
+    "hosted_account_action_required": null,
+    "mode": "dry_run",
+    "room": {
+      "current_owner_user_id": 21,
+      "id": 11,
+      "slug": "ggm-christina-goddard",
+      "would_set_owner_user_id": 1
+    },
+    "secret_values_printed": false,
+    "would_assign_entitlement": true,
+    "would_assign_role": true,
+    "would_create_local_app_user": false
+  },
+  "schema": {
+    "required_tables_present": [
+      "presence_node",
+      "presence_plan_entitlement",
+      "user"
+    ]
+  },
+  "secret_values_printed": false
+}

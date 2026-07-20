@@ -1,0 +1,236 @@
+# Presence Public Output Recovery P1 Report
+
+Date: 2026-06-06
+Branch: `feature/presence-ecosystem-alpha`
+Scope: Gallery / GGM public room output recovery, based on the hosted-verified S3 baseline.
+
+## Executive Verdict
+
+Public Output Recovery P1 is **deployed to production** and has passed hosted smoke verification.
+
+The Gallery/GGM public renderer is materially closer to a threshold experience: the room now opens with a full-viewport image-led entry, reduced chrome, spatial title composition, and an exhibition-path chamber rhythm. The pass did not touch editor behavior, backend contracts, feature gating, or public payload shape.
+
+S4A chamber-management work was found in the working tree at preflight and parked in a named stash before this pass:
+
+```txt
+stash: park S4A chamber management safety-audited local work
+```
+
+S4A was **not deployed**. Working tree was clean at deploy time.
+
+**Deployment:**
+- URL: `https://your-presence.vercel.app`
+- Deployment ID: `2a88iBaAgYm1v1QUPqeiLZjCUdfJ`
+- Build: 29 static pages, 0 errors
+
+## Public Output Weaknesses Addressed
+
+- Replaced the contained rounded threshold panel with a full-viewport Gallery threshold.
+- Uses the first suitable public image as an atmospheric room entry field.
+- Reduced visible system vocabulary: removed object-count pseudo text and no longer renders `image`, `text`, `note`, `link`, or same-as-type role labels.
+- Hid Gallery object role labels visually, including non-essential labels like `work` and `proof`.
+- Removed the generic `Proof` stamp pseudo-label from public object cards.
+- Reworked Gallery chambers from framed panels into unframed exhibition-path bands.
+- Replaced the generic Gallery object grid with a 12-column editorial/exhibition rhythm on desktop.
+- Upgraded Gallery image treatment to sharp museum-frame images with `object-fit: contain`.
+- Added hover/focus detail reveal for Gallery objects; mobile keeps detail visible for readability.
+- Reworked Gallery moodboard references into scattered influence fragments.
+- Reworked Gallery trace strip into marginal residue instead of metric chips.
+- Reworked CTA treatment into a low-chrome threshold portal style.
+- Improved mobile Gallery threshold and chamber readability.
+
+## bbbvision Lessons Translated
+
+- Threshold first: the first viewport now behaves as an entry state, not a hero card.
+- Minimal chrome: secondary metadata is quiet, and mobile hides the extra world-surface line.
+- Gallery immersion: public images lead the room and are allowed to become monumental.
+- Simple action: CTA reads as a spatial entry mark rather than a SaaS button.
+- Memorable navigation: threshold index remains as a quiet object path instead of a dashboard list.
+
+This pass does not copy bbbvision literally and does not add canvas/WebGL/glitch behavior.
+
+## Files Changed
+
+Product:
+
+- `components/presence-studio-v2/PresenceStudioV2PublicRoom.tsx`
+- `components/presence-studio-v2/presence-studio-v2-public.css`
+
+Tests/evidence:
+
+- `tests/e2e/presence-public-output-gallery-quality.spec.ts`
+- `tests/e2e/presence-public-output-recovery-p1-capture.spec.ts`
+- `docs/program/evidence/presence-public-output-recovery-p1/`
+
+Reports:
+
+- `PRESENCE_PUBLIC_OUTPUT_RECOVERY_P1_REPORT.md`
+- `docs/program/presence-studio-v2-public-output-quality/PRESENCE_PUBLIC_ROOM_OUTPUT_QUALITY_AUDIT.md`
+- `PRESENCE_STUDIO_V2_LOCAL_QA.md`
+- `PRESENCE_STUDIO_V2_PROTOTYPE_SUPERIORITY_AUDIT.md`
+
+## Tests Run
+
+Passed:
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run build
+node --experimental-strip-types --test lib\presence\studio-v2\feature.test.ts
+node --experimental-strip-types --test lib\presence\studio-v2\studioV2Adapters.test.ts
+node --experimental-strip-types --test lib\presence\render\publicPayload.test.ts
+node --experimental-strip-types --test lib\presence\render\resolver.test.ts
+node --experimental-strip-types --test lib\editor\readiness.test.ts
+npx.cmd playwright test presence-studio-v2-public-render.spec.ts --project=chromium
+npx.cmd playwright test presence-studio-v2-draft-preview.spec.ts --project=chromium --workers=1
+npx.cmd playwright test presence-public-payload-hygiene.spec.ts --project=chromium
+npx.cmd playwright test presence-public-output-gallery-quality.spec.ts --project=chromium
+```
+
+Results:
+
+- Typecheck: passed.
+- Build: passed.
+- Feature tests: 8 passed.
+- Studio V2 adapter tests: 14 passed.
+- Public payload tests: 5 passed.
+- Resolver tests: 8 passed.
+- Editor readiness tests: 5 passed.
+- V2 public render Playwright: 3 passed.
+- V2 draft preview Playwright: 2 passed.
+- Public payload hygiene Playwright: 2 passed.
+- New Gallery quality Playwright: 3 passed.
+
+Evidence capture:
+
+```powershell
+$env:PRESENCE_VISUAL_CAPTURE='1'
+$env:PRESENCE_VISUAL_CAPTURE_OUT='docs/program/evidence/presence-public-output-recovery-p1'
+npx.cmd playwright test presence-public-output-recovery-p1-capture.spec.ts --project=chromium --workers=1
+```
+
+The capture test body reported `ok` and wrote screenshots. The shell command timed out during Playwright web-server teardown, matching the prior local capture teardown behavior. The screenshots are present and timestamped.
+
+## Evidence Path
+
+```txt
+docs/program/evidence/presence-public-output-recovery-p1/
+```
+
+Screenshots:
+
+- `01-gallery-threshold-desktop.png`
+- `02-gallery-chamber-desktop.png`
+- `03-artwork-image-treatment.png`
+- `04-threshold-cta-portal-treatment.png`
+- `05-moodboard-influence-layer.png`
+- `06-traces-residue-treatment.png`
+- `07-gallery-mobile-threshold.png`
+- `08-gallery-mobile-chamber.png`
+- `09-owner-preview-clean.png`
+- `10-legacy-negative.png`
+
+## Payload Hygiene
+
+Payload hygiene passed through:
+
+- `lib/presence/render/publicPayload.test.ts`
+- `tests/e2e/presence-public-payload-hygiene.spec.ts`
+- `tests/e2e/presence-studio-v2-public-render.spec.ts`
+- `tests/e2e/presence-studio-v2-draft-preview.spec.ts`
+- `tests/e2e/presence-public-output-gallery-quality.spec.ts`
+
+No restricted editor/control-plane terms were exposed in public output.
+
+## Remaining Visual Gaps
+
+- Full artwork focus mode remains P2; P1 uses hover/focus detail reveal and mobile-visible details.
+- The Gallery threshold uses the first public image; future pilot quality depends on curated public-safe imagery.
+- Non-gallery worlds were intentionally not deeply redesigned in this pass.
+- Local evidence screenshots include the normal Next dev indicator because screenshots were captured through Playwright dev server, not hosted production.
+- The original Kimi audit document path was absent on the clean S3 baseline, so this pass creates the expected audit path with the known audit findings and P1 status.
+
+## Hosted Smoke Results
+
+Hosted smoke completed 2026-06-07. Full report:
+`docs/program/evidence/presence-public-output-recovery-p1-hosted/PRESENCE_PUBLIC_OUTPUT_RECOVERY_P1_HOSTED_SMOKE.md`
+
+Key findings:
+- Threshold renders at 950px height with full-bleed atmospheric image ✅
+- 12-column editorial grid confirmed on hosted Room 11 ✅
+- Museum-frame treatment (`contain`, `border-radius: 0`) verified ✅
+- Role labels hidden via `display: none` in gallery context ✅
+- Mobile threshold and chamber flow functional ✅
+- Payload hygiene: 0 violations ✅
+- Owner preview: draft banner renders, threshold visible, no chrome leaks ✅
+- Studio regression: editor mounts, S1/S2/S3 features present ✅
+- Legacy negative: room `hesmaddw` confirmed legacy, no V2 leakage ✅
+- Full hosted lifecycle: 18.5s pass, edit/save/preview/publish/public/hygiene/cleanup ✅
+- Payload hygiene post-lifecycle: 0 violations ✅
+
+## Art-Direction Audit
+
+Kimi art-direction audit score: **7.6/10** (meets 7.5 deploy floor).
+
+Full audit:
+`docs/program/evidence/presence-public-output-recovery-p1/PRESENCE_PUBLIC_OUTPUT_RECOVERY_P1_ART_DIRECTION_AUDIT.md`
+
+## Recommendation
+
+**DEPLOYED AND HOSTED-VERIFIED.** P1 baseline is locked.
+
+All hosted verification gaps are closed:
+- ✅ Public output smoke
+- ✅ Owner preview
+- ✅ Studio regression
+- ✅ Legacy negative (`hesmaddw`)
+- ✅ Full hosted lifecycle (18.5s)
+- ✅ Payload hygiene (pre + post lifecycle)
+- ✅ Evidence captured (14 screenshots)
+
+Safe for controlled operator-led pilot. Public self-serve onboarding should wait for P2 polish (transition continuity, CTA refinement, wall labels, zoom/lightbox).
+
+S4A remains parked in `stash@{0}`.
+
+## P2 Follow-On Status - 2026-06-07
+
+Public Output Recovery P2 has now been implemented locally, but not deployed.
+
+P2 addressed the remaining P1 visual gaps:
+
+- threshold-to-chamber transition continuity
+- CTA portal refinement
+- softened chamber wayfinding
+- chamber labels as wall placards
+- artwork wall-label treatment
+- hover/focus micro-interactions
+- lightweight artwork focus/lightbox
+- stronger curatorial hierarchy
+
+Full local report:
+
+```txt
+PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_REPORT.md
+```
+
+## P2 Art-Direction Audit Result — 2026-06-08
+
+**Auditor:** Kimi Code CLI
+**Score:** **8.3/10** (up from P1: 7.6/10)
+**Verdict:** **PASS — deploy to hosted smoke**
+
+Full audit:
+`PRESENCE_PUBLIC_OUTPUT_RECOVERY_P2_ART_DIRECTION_AUDIT.md`
+
+P2 successfully addressed all remaining P1 visual gaps:
+- Threshold-to-chamber transition continuity (gradient bridge band)
+- CTA portal refinement (text-first with circular glyph and animated rule)
+- Softened chamber wayfinding (numbers removed for gallery)
+- Chamber labels as wall placards (small uppercase with border rules)
+- Artwork wall-label treatment (top rule, uppercase meta, restrained title)
+- Hover/focus micro-interactions (frame offset, image lift, shadow deepen)
+- Lightweight artwork focus/lightbox (fixed overlay, museum matting, curatorial caption)
+- Lead artwork curatorial hierarchy (featured span on desktop)
+- Mobile continuity preserved
+
+P2 meets all deploy thresholds. Hosted smoke should be run after deployment.

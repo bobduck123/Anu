@@ -1,0 +1,65 @@
+[
+  {
+    "surface": "owner list",
+    "method": "GET",
+    "path": "/api/presence/owner/nodes",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Readable with owner token."
+  },
+  {
+    "surface": "owner node detail",
+    "method": "GET",
+    "path": "/api/presence/owner/nodes/11",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Readable with owner token."
+  },
+  {
+    "surface": "editor overview",
+    "method": "GET",
+    "path": "/api/presence/owner/rooms/11/editor",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Readable with owner token."
+  },
+  {
+    "surface": "editor draft",
+    "method": "GET",
+    "path": "/api/presence/owner/rooms/11/editor/draft",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Readable with owner token."
+  },
+  {
+    "surface": "private preview",
+    "method": "BROWSER",
+    "path": "/studio/11/editor/preview",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Authenticated owner private preview."
+  },
+  {
+    "surface": "canonical public route",
+    "method": "BROWSER",
+    "path": "/p/ggm-christina-goddard",
+    "status": 404,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Anonymous public route was loaded without editor instrumentation."
+  },
+  {
+    "surface": "legacy public route",
+    "method": "BROWSER",
+    "path": "/presence/ggm-christina-goddard",
+    "status": 404,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Anonymous public route was loaded without editor instrumentation."
+  }
+]

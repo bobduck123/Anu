@@ -32,6 +32,7 @@ from ..services.presence_media_storage import (
     build_presence_media_path,
     store_presence_image,
 )
+from ..services.presence_editor_config import PresenceEditorConfigError
 from ..services.presence_owner_identity import resolve_or_provision_presence_owner
 from ..services.presence_service import (
     PresenceValidationError,
@@ -57,6 +58,11 @@ from ..services.presence_service import (
     update_presence_node,
     update_presence_service,
     update_presence_work,
+)
+from ..services.presence_template_kit_drafts import (
+    TemplateKitDraftPersistenceError,
+    create_template_kit_studio_room_draft,
+    update_template_kit_studio_room_draft,
 )
 
 
@@ -181,6 +187,60 @@ def _filter_owner_node_update_payload(data):
     if not isinstance(data, dict):
         return data
     return {key: value for key, value in data.items() if key in _OWNER_NODE_MUTABLE_FIELDS}
+
+
+@presence_owner_bp.route("/studio-rooms/from-template-kit", methods=["POST"])
+@alpha_jwt_required()
+def create_owner_studio_room_from_template_kit():
+    user = _resolve_owner_user()
+    if not user:
+        return _err("unauthorized", "Authentication required", 401)
+
+    try:
+        _node, _draft, payload = create_template_kit_studio_room_draft(
+            request.get_json(silent=True) or {},
+            actor=user,
+        )
+        db.session.commit()
+        return _ok(payload, 201)
+    except TemplateKitDraftPersistenceError as exc:
+        db.session.rollback()
+        return _err(exc.code, str(exc), exc.status, **exc.details)
+    except PresenceEditorConfigError as exc:
+        db.session.rollback()
+        return _err("validation_error", str(exc), 422, **(getattr(exc, "details", None) or {}))
+    except PresenceValidationError as exc:
+        db.session.rollback()
+        return _validation_error(exc)
+
+
+@presence_owner_bp.route("/studio-rooms/<int:room_id>/draft", methods=["PATCH"])
+@alpha_jwt_required()
+def update_owner_studio_room_draft(room_id):
+    room, err = _load_owned_node(room_id)
+    if err:
+        return err
+    user = _resolve_owner_user()
+    if not user:
+        return _err("unauthorized", "Authentication required", 401)
+
+    try:
+        _draft, payload = update_template_kit_studio_room_draft(
+            room,
+            request.get_json(silent=True) or {},
+            actor=user,
+        )
+        db.session.commit()
+        return _ok(payload)
+    except TemplateKitDraftPersistenceError as exc:
+        db.session.rollback()
+        return _err(exc.code, str(exc), exc.status, **exc.details)
+    except PresenceEditorConfigError as exc:
+        db.session.rollback()
+        return _err("validation_error", str(exc), 422, **(getattr(exc, "details", None) or {}))
+    except PresenceValidationError as exc:
+        db.session.rollback()
+        return _validation_error(exc)
 
 
 def _require_owner_suspend_access():

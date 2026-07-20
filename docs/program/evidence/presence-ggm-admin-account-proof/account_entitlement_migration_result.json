@@ -1,0 +1,45 @@
+{
+  "after": {
+    "columns": [
+      "billing_mode",
+      "created_at",
+      "currency",
+      "ends_at",
+      "id",
+      "lifetime",
+      "metadata",
+      "plan_code",
+      "price_cents",
+      "reason",
+      "source",
+      "starts_at",
+      "status",
+      "updated_at",
+      "user_id"
+    ],
+    "indexes": [
+      "ix_presence_plan_entitlement_plan_code",
+      "ix_presence_plan_entitlement_source",
+      "ix_presence_plan_entitlement_user_status",
+      "uq_presence_plan_entitlement_user_plan_source"
+    ],
+    "table_exists": true
+  },
+  "before": {
+    "columns": [],
+    "indexes": [],
+    "table_exists": false
+  },
+  "destructive_reset_run": false,
+  "environment": "hosted_controlled_launch",
+  "migration_path": "flora-fauna\\backend\\migrations\\versions\\20260522_presence_plan_entitlements.sql",
+  "operation": "apply",
+  "secret_values_printed": false,
+  "target": {
+    "database": "postgres",
+    "driver": "postgresql",
+    "host": "aws-1-us-east-1.pooler.supabase.com",
+    "password_printed": false,
+    "port": 6543
+  }
+}

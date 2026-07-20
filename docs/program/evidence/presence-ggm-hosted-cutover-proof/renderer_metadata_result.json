@@ -1,0 +1,17 @@
+{
+  "renderer_metadata": {
+    "changed": true,
+    "custom_presence_renderer_key": "ggm-faithful-room-v1",
+    "environment": "hosted_controlled_launch",
+    "mode": "apply",
+    "public_style_dna_renderer_key": "ggm-faithful-room-v1",
+    "renderer_key": "ggm-faithful-room-v1",
+    "room_id": 11,
+    "room_public": true,
+    "room_slug": "ggm-christina-goddard",
+    "secret_values_printed": false,
+    "signature_fallback_required": false,
+    "style_dna_renderer_key": "ggm-faithful-room-v1"
+  },
+  "secret_values_printed": false
+}

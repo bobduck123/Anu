@@ -1,0 +1,120 @@
+{
+  "date": "2026-05-24",
+  "scope": "Kimi salvage integration into existing Presence Studio editor",
+  "hosted_verification_performed": false,
+  "kimi_bundle_used_as_patch": false,
+  "backend_files_applied_from_kimi": false,
+  "public_draft_preview_endpoint_added": false,
+  "schema_contract": {
+    "model": "PresenceEditableConfig",
+    "uses_config_json_model": false,
+    "sections": [
+      "renderer_key",
+      "scene_config",
+      "style_dna",
+      "motion_config",
+      "asset_config",
+      "content_config",
+      "roomkey_config",
+      "enquiry_config",
+      "locked_fields"
+    ]
+  },
+  "kept_from_kimi": [
+    "asset safety validator concept",
+    "draft-vs-published comparison concept",
+    "readiness scoring concept",
+    "full-screen draft preview shell concept",
+    "publish confirmation modal concept",
+    "Room DNA preset concept limited to renderer-visible tokens"
+  ],
+  "rejected_from_kimi": [
+    "migration_20260523.sql",
+    "config_json backend model",
+    "presence_editor.py backend replacement",
+    "presence_preview_token_store.py",
+    "public token preview endpoint",
+    "full-file backend snapshots",
+    "flattened EditorConfig assumptions"
+  ],
+  "features": {
+    "asset_safety": "implemented",
+    "draft_vs_published_comparison": "implemented",
+    "fullscreen_authenticated_draft_preview": "implemented",
+    "readiness_panel": "implemented",
+    "improvement_tips": "implemented",
+    "room_dna_presets": "implemented for renderer-visible GGM tokens only",
+    "style_motion_audit": "completed",
+    "media_upload_crop": "not implemented; draft-scoped backend endpoint required"
+  },
+  "security": {
+    "owner_only_preview_route": true,
+    "preview_token_rendered_in_ui": false,
+    "public_draft_config_exposure": false,
+    "public_renderer_published_only": true,
+    "roomkey_published_only": true,
+    "hard_coded_owner_email_added": false,
+    "platform_admin_leak_added": false,
+    "internal_lifetime_free_leak_added": false,
+    "auth_subject_leak_added": false,
+    "audit_metadata_leak_added": false,
+    "local_filesystem_path_exposure_added": false
+  },
+  "tests": [
+    {
+      "command": "cmd /c npm run typecheck",
+      "status": "passed"
+    },
+    {
+      "command": "cmd /c npm run build",
+      "status": "passed",
+      "warnings": [
+        "Next.js workspace root warning due multiple lockfiles"
+      ]
+    },
+    {
+      "command": "node --test --experimental-strip-types lib\\api\\editor.test.ts lib\\api\\presenceGraph.test.ts lib\\editor\\assetValidator.test.ts lib\\editor\\diffEngine.test.ts",
+      "status": "passed",
+      "tests": 7,
+      "warnings": [
+        "MODULE_TYPELESS_PACKAGE_JSON"
+      ]
+    },
+    {
+      "command": "npx playwright test tests/e2e/presence-studio-editor.spec.ts",
+      "status": "passed",
+      "tests": 1,
+      "screenshots": 9,
+      "warnings": [
+        "Next.js workspace root warning due multiple lockfiles"
+      ]
+    },
+    {
+      "command": "python -m pytest tests\\test_presence_studio_editor_foundation.py tests\\test_presence_pass_paths.py -q",
+      "status": "passed",
+      "tests": 9,
+      "warnings": [
+        "SQLAlchemy legacy Query.get warnings",
+        "pytest cache permission warning"
+      ]
+    }
+  ],
+  "screenshots": [
+    "screenshots/editor-overview-readiness.png",
+    "screenshots/fullscreen-draft-preview.png",
+    "screenshots/mobile-draft-preview.png",
+    "screenshots/draft-vs-published-comparison.png",
+    "screenshots/assets-unsafe-warning.png",
+    "screenshots/style-motion-disabled-controls.png",
+    "screenshots/publish-confirmation.png",
+    "screenshots/public-room-after-publish.png",
+    "screenshots/forbidden-non-owner-state.png"
+  ],
+  "known_limitations": [
+    "Hosted owner-auth verification was not run.",
+    "Screenshots use mock auth/backend.",
+    "No draft-scoped upload/crop endpoint exists yet.",
+    "Validation is not generated from a shared backend/frontend schema.",
+    "Non-GGM editable renderer mapping remains out of scope."
+  ]
+}

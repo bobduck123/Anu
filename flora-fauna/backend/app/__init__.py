@@ -295,8 +295,22 @@ def _init_jwt_key_routing(app):
 def _init_jwt_error_handlers(app):
     """Expose structured JWT auth failures and log cause for diagnostics."""
 
+    presence_prefixes = (
+        "/api/presence/",
+        "/api/observer/",
+        "/api/garden",
+        "/api/gardens/",
+        "/api/halls",
+        "/api/masks/",
+        "/api/observations",
+        "/api/paths/",
+    )
+
+    def _is_presence_contract_path() -> bool:
+        return request.path.startswith(presence_prefixes)
+
     def _presence_auth_error(code, message, status):
-        if request.path.startswith("/api/presence/"):
+        if _is_presence_contract_path():
             return (
                 jsonify(
                     {
@@ -312,7 +326,7 @@ def _init_jwt_error_handlers(app):
     @jwt.invalid_token_loader
     def _invalid_token(reason):
         app.logger.warning(f"JWT invalid token: {reason}")
-        status = 401 if request.path.startswith("/api/presence/") else 422
+        status = 401 if _is_presence_contract_path() else 422
         return _presence_auth_error("invalid_token", reason, status)
 
     @jwt.unauthorized_loader
