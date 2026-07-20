@@ -836,6 +836,15 @@
   box-shadow: 0 28px 68px -44px color-mix(in srgb, var(--v2-room-accent, var(--p-copper)) 56%, #000);
 }
 
+.presence-studio-v2 .v2-layout-label { color: var(--v2-room-accent); font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; margin: 4px 0 12px; }
+.presence-studio-v2 .v2-layout-zones { display: grid; gap: 12px; }
+.presence-studio-v2 .v2-layout-zone { min-height: 76px; padding: 12px; border: 1px dashed color-mix(in srgb, var(--v2-room-accent) 34%, transparent); border-radius: 16px; background: rgba(255,255,255,0.16); }
+.presence-studio-v2 .v2-layout-zone-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; font-size: 0.72rem; color: var(--v2-room-ink); }
+.presence-studio-v2 .v2-layout-zone-head span { opacity: 0.62; text-align: right; }
+.presence-studio-v2 .v2-layout-composer { margin: 12px 16px 0; padding: 14px; border: 1px solid rgba(248,244,236,.12); border-radius: 14px; background: rgba(248,244,236,.04); }
+.presence-studio-v2 .v2-layout-help { margin: 7px 0 10px; font-size: .78rem; line-height: 1.4; opacity: .72; }
+.presence-studio-v2 .v2-layout-actions { display: flex; gap: 8px; margin: 8px 0; }
+
 .presence-studio-v2 .v2-room-header,
 .presence-studio-v2 .v2-chamber,
 .presence-studio-v2 .v2-influence-layer,

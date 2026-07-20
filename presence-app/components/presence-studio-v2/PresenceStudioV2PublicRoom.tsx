@@ -9,6 +9,7 @@ import {
 } from "@/lib/presence/studio-v2";
 import type { StudioV2PublicChamber, StudioV2PublicObject, StudioV2PublicRoom } from "@/lib/presence/studio-v2";
 import { deriveStudioV2Environment } from "@/lib/presence/studio-v2/environment";
+import { normalizeStudioV2Composition, studioV2Layout } from "@/lib/presence/studio-v2/layouts";
 import { WORLD_KITS } from "./worlds";
 import BbbVisionCanvasGallery from "./BbbVisionCanvasGallery";
 import PresenceStudioV2EnvironmentLayer from "./PresenceStudioV2EnvironmentLayer";
@@ -204,17 +205,17 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
               <span>{isGallery ? "Gallery room" : world?.verb ?? "The room opens"}</span>
               <h2 id={`v2-public-chamber-${chamber.id}`}>{chamber.label}</h2>
             </div>
-            <div className="v2-public-object-grid">
-              {chamber.objects.map((object, objectIndex) => (
-                <PublicObjectCard
-                  key={object.id}
-                  object={object}
-                  radius={room.skin.objectRadius}
-                  isGallery={isGallery}
-                  isFeatured={isGallery && chamberIndex === 0 && objectIndex === 0 && Boolean(object.image?.src)}
-                  onFocusArtwork={isGallery ? setFocusedArtwork : undefined}
-                />
-              ))}
+            <div className={`v2-public-layout layout-${studioV2Layout(chamber.composition?.layoutId).id}`}>
+              {studioV2Layout(chamber.composition?.layoutId).zones.map((zone) => {
+                const composition = normalizeStudioV2Composition(chamber.composition, chamber.id, chamber.objects.map((object) => ({ ...object, visibility: { public: true, mobile: object.mobileVisible }, locked: false, pinned: false })));
+                const placements = composition.placements.filter((placement) => placement.zoneId === zone.id).sort((a, b) => a.order - b.order);
+                return placements.length > 0 ? <section className={`v2-public-layout-zone zone-${zone.id}`} key={zone.id} data-zone-id={zone.id}>
+                  {placements.map((placement, objectIndex) => {
+                    const object = chamber.objects.find((item) => item.id === placement.objectId);
+                    return object ? <PublicObjectCard key={object.id} object={object} radius={room.skin.objectRadius} isGallery={isGallery} isFeatured={placement.size === "feature" || (chamberIndex === 0 && objectIndex === 0 && Boolean(object.image?.src))} onFocusArtwork={isGallery ? setFocusedArtwork : undefined} /> : null;
+                  })}
+                </section> : null;
+              })}
             </div>
           </section>
         ))}

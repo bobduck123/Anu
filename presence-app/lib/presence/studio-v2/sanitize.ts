@@ -1,4 +1,5 @@
 import type { StudioV2PublicRoom, StudioV2State } from "./model.ts";
+import { normalizeStudioV2Composition } from "./layouts.ts";
 
 export const STUDIO_V2_PUBLIC_RESTRICTED_KEYS = [
   "scene_config",
@@ -82,11 +83,8 @@ export function stripEditorStateFromStudioV2(state: StudioV2State): StudioV2Publ
     publicStylePreset: state.publicStylePreset,
     skin: state.skin,
     cta: state.cta,
-    chambers: state.chambers.map((chamber) => ({
-      id: chamber.id,
-      label: chamber.label,
-      ...(chamber.metadata ? { metadata: chamber.metadata } : {}),
-      objects: chamber.objects
+    chambers: state.chambers.map((chamber) => {
+      const objects = chamber.objects
         .filter((object) => object.visibility.public)
         .map((object) => ({
           id: object.id,
@@ -101,8 +99,15 @@ export function stripEditorStateFromStudioV2(state: StudioV2State): StudioV2Publ
           transform: state.mobileRecovery.transformsSuspendedOnMobile
             ? { x: 0, y: 0, scale: 1, rotation: 0, zIndex: object.transform.zIndex }
             : object.transform,
-        })),
-    })),
+        }));
+      return ({
+      id: chamber.id,
+      label: chamber.label,
+      ...(chamber.metadata ? { metadata: chamber.metadata } : {}),
+      objects,
+      composition: normalizeStudioV2Composition(chamber.composition, chamber.id, objects.map((object) => ({ ...object, visibility: { public: true, mobile: object.mobileVisible }, locked: false, pinned: false }))),
+    });
+    }),
     moodboardRefs: state.moodboardRefs,
     traces: state.traces.enabled && state.traces.demo
       ? { ...state.traces, disclosure: state.traces.disclosure || "Demo traces" }

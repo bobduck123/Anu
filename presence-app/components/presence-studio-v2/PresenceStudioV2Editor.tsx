@@ -26,6 +26,7 @@ import type {
   StudioV2ChamberRole,
   StudioV2ChamberMetadata,
 } from "@/lib/presence/studio-v2";
+import { normalizeStudioV2Composition, placementMoveError, STUDIO_V2_LAYOUTS, studioV2Layout, type PresenceStudioV2LayoutId, type StudioV2ChamberComposition, type StudioV2PlacementSize } from "@/lib/presence/studio-v2";
 import PresenceStudioV2Room from "./PresenceStudioV2Room";
 import { SkinLabSheet, AddObjectSheet, MoodboardSheet, WorldSwitcher } from "./PresenceStudioV2Panels";
 import { PUBLIC_STYLE_PRESET_OPTIONS, WORLD_KITS } from "./worlds";
@@ -161,6 +162,53 @@ function StudioGuide({
       <span className="v2-studio-guide-eyebrow">Studio guide</span>
       <p>{message}</p>
     </aside>
+  );
+}
+
+function LayoutCompositionControls({
+  chamber,
+  selectedObject,
+  onChange,
+}: {
+  chamber: StudioV2State["chambers"][number];
+  selectedObject: StudioV2Object | null;
+  onChange: (chamberId: string, composition: StudioV2ChamberComposition) => void;
+}) {
+  const composition = normalizeStudioV2Composition(chamber.composition, chamber.id, chamber.objects);
+  const layout = studioV2Layout(composition.layoutId);
+  const placement = selectedObject ? composition.placements.find((item) => item.objectId === selectedObject.id) : null;
+  const update = (next: StudioV2ChamberComposition) => onChange(chamber.id, next);
+  const setLayout = (layoutId: PresenceStudioV2LayoutId) => update(normalizeStudioV2Composition({ layoutId, placements: [] }, chamber.id, chamber.objects));
+  const move = (zoneId: string) => {
+    if (!selectedObject || !placement) return;
+    const issue = placementMoveError(composition, selectedObject, zoneId);
+    if (issue) return;
+    update({ ...composition, placements: composition.placements.map((item) => item.objectId === selectedObject.id ? { ...item, zoneId, order: composition.placements.filter((candidate) => candidate.zoneId === zoneId).length } : item) });
+  };
+  const reorder = (offset: number) => {
+    if (!placement) return;
+    const peers = composition.placements.filter((item) => item.zoneId === placement.zoneId).sort((a, b) => a.order - b.order);
+    const index = peers.findIndex((item) => item.objectId === placement.objectId);
+    const target = peers[index + offset];
+    if (!target) return;
+    update({ ...composition, placements: composition.placements.map((item) => item.objectId === placement.objectId ? { ...item, order: target.order } : item.objectId === target.objectId ? { ...item, order: placement.order } : item) });
+  };
+  return (
+    <section className="v2-layout-composer" data-testid="presence-studio-v2-layout-composer">
+      <div className="v2-inspector-section-title">Chamber arrangement</div>
+      <label className="v2-field"><span>Layout</span><select data-testid="presence-studio-v2-layout-select" value={layout.id} onChange={(event) => setLayout(event.target.value as PresenceStudioV2LayoutId)}>{STUDIO_V2_LAYOUTS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+      <p className="v2-layout-help">{layout.description}</p>
+      {selectedObject && placement ? (
+        <div className="v2-layout-object-controls" data-testid="presence-studio-v2-placement-controls">
+          <strong>{selectedObject.title}</strong>
+          {!selectedObject.visibility.public && <p>This object is hidden from public visitors, so it will remain editor/private-preview only.</p>}
+          <label className="v2-field"><span>Zone</span><select data-testid="presence-studio-v2-placement-zone" value={placement.zoneId} onChange={(event) => move(event.target.value)}>{layout.zones.map((zone) => <option key={zone.id} value={zone.id} disabled={Boolean(placementMoveError(composition, selectedObject, zone.id))}>{zone.label}</option>)}</select></label>
+          <div className="v2-layout-actions"><button type="button" className="v2-btn" onClick={() => reorder(-1)}>Move up</button><button type="button" className="v2-btn" onClick={() => reorder(1)}>Move down</button></div>
+          <label className="v2-field"><span>Scale in room</span><select data-testid="presence-studio-v2-placement-size" value={placement.size} onChange={(event) => update({ ...composition, placements: composition.placements.map((item) => item.objectId === placement.objectId ? { ...item, size: event.target.value as StudioV2PlacementSize } : item) })}>{(layout.zones.find((zone) => zone.id === placement.zoneId)?.allowedSizes ?? []).map((size) => <option key={size} value={size}>{size}</option>)}</select></label>
+          {(layout.zones.find((zone) => zone.id === placement.zoneId)?.allowedTreatments?.length ?? 0) > 0 && <label className="v2-field"><span>Treatment</span><select data-testid="presence-studio-v2-placement-treatment" value={placement.treatment ?? "quiet"} onChange={(event) => update({ ...composition, placements: composition.placements.map((item) => item.objectId === placement.objectId ? { ...item, treatment: event.target.value as StudioV2ChamberComposition["placements"][number]["treatment"] } : item) })}>{layout.zones.find((zone) => zone.id === placement.zoneId)?.allowedTreatments?.map((treatment) => <option key={treatment} value={treatment}>{treatment}</option>)}</select></label>}
+        </div>
+      ) : <p className="v2-layout-help">Select an object to place it in a valid part of this chamber.</p>}
+    </section>
   );
 }
 
@@ -349,6 +397,15 @@ export default function PresenceStudioV2Editor({
         ...ch,
         objects: ch.objects.map((o) => (o.id === id ? { ...o, ...patch } : o)),
       })),
+    }));
+  }
+
+  function updateChamberComposition(chamberId: string, composition: StudioV2ChamberComposition) {
+    updateState((prev) => ({
+      ...prev,
+      chambers: prev.chambers.map((chamber) => chamber.id === chamberId
+        ? { ...chamber, composition: normalizeStudioV2Composition(composition, chamber.id, chamber.objects) }
+        : chamber),
     }));
   }
 
@@ -1161,6 +1218,7 @@ export default function PresenceStudioV2Editor({
           onSetChamberEntry={setChamberEntry}
           onSetChamberDefault={setChamberDefault}
           activeChamberId={activeChamberId}
+          onUpdateChamberComposition={updateChamberComposition}
         />
       </div>
 
@@ -1605,6 +1663,7 @@ function StudioInspectorPanel({
   onSetChamberEntry,
   onSetChamberDefault,
   activeChamberId,
+  onUpdateChamberComposition,
 }: {
   state: StudioV2State;
   selectedObject: StudioV2Object | null;
@@ -1636,6 +1695,7 @@ function StudioInspectorPanel({
   onSetChamberEntry: (chamberId: string) => void;
   onSetChamberDefault: (chamberId: string) => void;
   activeChamberId: string | null;
+  onUpdateChamberComposition: (chamberId: string, composition: StudioV2ChamberComposition) => void;
 }) {
   const object = selectedObject;
   const world = WORLD_KITS.find((kit) => kit.id === state.worldId);
@@ -1674,6 +1734,14 @@ function StudioInspectorPanel({
         <span>{object ? "Object inspector" : "Room inspector"}</span>
         <strong>{object?.title || state.title}</strong>
       </div>
+
+      {activeChamber && (
+        <LayoutCompositionControls
+          chamber={activeChamber}
+          selectedObject={object}
+          onChange={onUpdateChamberComposition}
+        />
+      )}
 
       {!object ? (
         <div className="v2-inspector-body">

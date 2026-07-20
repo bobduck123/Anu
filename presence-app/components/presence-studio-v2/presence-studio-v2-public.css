@@ -412,6 +412,12 @@
   padding: 0 0 18px;
 }
 
+.presence-studio-v2-public .v2-public-layout { display: grid; gap: clamp(16px, 2vw, 28px); }
+.presence-studio-v2-public .v2-public-layout-zone { display: grid; gap: 16px; }
+.presence-studio-v2-public .v2-public-layout.layout-gallery-wall .zone-opening-work .v2-public-object,
+.presence-studio-v2-public .v2-public-layout.layout-portal-threshold .zone-threshold-image .v2-public-object { grid-column: 1 / -1; }
+.presence-studio-v2-public .v2-public-layout.layout-portal-threshold .zone-threshold-statement { max-width: 64ch; }
+
 .presence-studio-v2-public .v2-public-chamber-head span,
 .presence-studio-v2-public .v2-public-section-kicker {
   color: var(--v2-public-muted);

@@ -122,6 +122,7 @@ export interface StudioV2Chamber {
   label: string;
   objects: StudioV2Object[];
   metadata?: StudioV2ChamberMetadata;
+  composition?: import("./layouts.ts").StudioV2ChamberComposition;
 }
 
 export interface StudioV2MoodboardReference {
@@ -194,6 +195,7 @@ export interface StudioV2PublicChamber {
   label: string;
   objects: StudioV2PublicObject[];
   metadata?: StudioV2ChamberMetadata;
+  composition?: import("./layouts.ts").StudioV2ChamberComposition;
 }
 
 export interface StudioV2PublicRoom {
