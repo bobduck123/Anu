@@ -18,3 +18,19 @@
 - Route/status entries ok: 10
 - Secrets emitted: none by design; matrix records only route paths, status codes, and redacted notes
 
+## BBB hosted draft write/reload/revert run
+
+- Draft write flag: enabled
+- Original editable draft payload: captured and normalized before mutation
+- Field changed: scene_config.studio_v2.objectState[object].chamberId
+- Original chamberId: captured
+- Temporary chamberId: captured
+- Save/reload: passed
+- Private preview loaded from the temporary draft after mutation: passed
+- Exact normalized editable draft restored: passed
+- Publish action: not triggered
+- Public state mutation: not attempted
+- Canonical public route status unchanged: 200 -> 200
+- Legacy public route status unchanged: 200 -> 200
+- Draft write route/status entries recorded: 12
+- Secrets emitted: none by design; matrix records only route paths, status codes, and redacted notes

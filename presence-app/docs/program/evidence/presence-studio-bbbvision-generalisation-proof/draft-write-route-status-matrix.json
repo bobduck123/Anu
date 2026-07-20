@@ -1,0 +1,110 @@
+[
+  {
+    "surface": "owner node detail before draft write",
+    "method": "GET",
+    "path": "/api/presence/owner/nodes/29",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Owner-scoped read; no payload body recorded."
+  },
+  {
+    "surface": "editor overview before draft write",
+    "method": "GET",
+    "path": "/api/presence/owner/rooms/29/editor",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Owner-scoped read; no payload body recorded."
+  },
+  {
+    "surface": "original draft before mutation",
+    "method": "GET",
+    "path": "/api/presence/owner/rooms/29/editor/draft",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Owner-scoped draft read; no payload body recorded."
+  },
+  {
+    "surface": "before mutation canonical public route",
+    "method": "BROWSER",
+    "path": "/p/bbbvision",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Anonymous public route check; no payload body recorded."
+  },
+  {
+    "surface": "before mutation legacy public route",
+    "method": "BROWSER",
+    "path": "/presence/bbbvision",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Anonymous public route check; no payload body recorded."
+  },
+  {
+    "surface": "draft save changed object chamberId",
+    "method": "PATCH",
+    "path": "/api/presence/owner/rooms/29/editor/draft",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Saved one reversible persisted object placement chamberId change."
+  },
+  {
+    "surface": "draft after mutation",
+    "method": "GET",
+    "path": "/api/presence/owner/rooms/29/editor/draft",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Owner-scoped draft read; no payload body recorded."
+  },
+  {
+    "surface": "private preview after draft mutation",
+    "method": "BROWSER",
+    "path": "/studio/29/editor/preview",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Authenticated private preview loaded after the temporary object placement change."
+  },
+  {
+    "surface": "restore original draft payload",
+    "method": "PATCH",
+    "path": "/api/presence/owner/rooms/29/editor/draft",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Restored captured original editable draft payload."
+  },
+  {
+    "surface": "draft after revert",
+    "method": "GET",
+    "path": "/api/presence/owner/rooms/29/editor/draft",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Owner-scoped draft read; no payload body recorded."
+  },
+  {
+    "surface": "after revert canonical public route",
+    "method": "BROWSER",
+    "path": "/p/bbbvision",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Anonymous public route check; no payload body recorded."
+  },
+  {
+    "surface": "after revert legacy public route",
+    "method": "BROWSER",
+    "path": "/presence/bbbvision",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Anonymous public route check; no payload body recorded."
+  }
+]
