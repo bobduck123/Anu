@@ -71,18 +71,37 @@ test("Studio V2 S2 direct manipulation updates and persists transforms", async (
   const rotateHandle = page.getByTestId("presence-studio-v2-rotate-handle");
   await dragBy(page, rotateHandle, 76, 44);
   await expect.poll(async () => Math.abs(await numberValue(rotationInput))).toBeGreaterThan(10);
-
-  const savedX = Math.round(await numberValue(xInput));
-  const savedY = Math.round(await numberValue(yInput));
-  const savedScale = await numberValue(scaleInput);
-  const savedRotation = Math.round(await numberValue(rotationInput));
-
   await expect(page.getByTestId("presence-studio-v2-dirty")).toBeVisible();
+  const writesBeforeManualSave = await (await request.get(`${API_BASE}/__test__/requests`)).json();
+  expect(
+    writesBeforeManualSave.requests.filter(
+      (entry: { method: string; path: string }) =>
+        entry.path === "/api/presence/owner/rooms/101/editor/draft" && ["POST", "PATCH"].includes(entry.method),
+    ),
+  ).toHaveLength(0);
   const saveResponse = page.waitForResponse(
-    (response) => response.url().includes("/api/presence/owner/rooms/101/editor/draft") && response.ok(),
+    (response) =>
+      response.url().includes("/api/presence/owner/rooms/101/editor/draft") &&
+      ["POST", "PATCH"].includes(response.request().method()) &&
+      response.ok(),
   );
   await page.getByTestId("presence-studio-v2-save").click();
-  await saveResponse;
+  const persistedResponse = await saveResponse;
+  const persistedPayload = await persistedResponse.json();
+  const persistedStudio = persistedPayload.data.draft.scene_config.studio_v2;
+  const persistedObject = persistedPayload.data.draft.content_config.studio_v2.objects.find(
+    (object: { id: string; title: string }) => object.title === "Desktop-only proof",
+  );
+  expect(persistedObject).toBeTruthy();
+  const savedTransform = persistedStudio.objectState[persistedObject.id].transform;
+  expect(savedTransform.x).toBeGreaterThan(0);
+  expect(savedTransform.y).toBeGreaterThan(0);
+  expect(savedTransform.scale).not.toBe(1);
+  expect(Math.abs(savedTransform.rotation)).toBeGreaterThan(0);
+  const savedX = Math.round(savedTransform.x);
+  const savedY = Math.round(savedTransform.y);
+  const savedScale = savedTransform.scale;
+  const savedRotation = Math.round(savedTransform.rotation);
   await expect(page.getByTestId("presence-studio-v2-saved")).toBeVisible();
 
   await page.reload({ waitUntil: "networkidle" });

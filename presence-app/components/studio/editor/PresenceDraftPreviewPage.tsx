@@ -13,6 +13,7 @@ import type { PresenceEditableConfig, PresenceEditorOverview, PresenceEditorPrev
 import PublishConfirmDialog from "./PublishConfirmDialog";
 import { buildReadinessReport } from "@/lib/editor/readiness";
 import { studioV2PublicRoomFromPresenceNode, type PresenceStudioV2FeatureEnv } from "@/lib/presence/studio-v2";
+import { isPubliclyContainedPresenceSlug } from "@/lib/presence/publicContainment";
 
 const STUDIO_V2_CLIENT_FEATURE_ENV: PresenceStudioV2FeatureEnv = {
   NEXT_PUBLIC_PRESENCE_STUDIO_V2: process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2,
@@ -97,6 +98,7 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
     () => (previewNode && studioV2Room ? nodeWithoutEditableConfig(previewNode) : previewNode),
     [previewNode, studioV2Room],
   );
+  const isPrivateProof = isPubliclyContainedPresenceSlug(previewNode?.slug ?? node?.slug);
 
   const readiness = useMemo(
     () =>
@@ -113,6 +115,10 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
   );
 
   async function publishFromPreview() {
+    if (isPrivateProof) {
+      setPreviewError("This private working proof cannot be opened to visitors from Studio.");
+      return;
+    }
     if (!token) return;
     setPublishing(true);
     try {
@@ -192,17 +198,23 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
             Mobile
           </button>
         </div>
-        <button
-          type="button"
-          data-testid="preview-open-to-visitors"
-          aria-describedby={readiness?.hasBlockingIssues ? "preview-publish-blocked-reason" : undefined}
-          onClick={() => setConfirmOpen(true)}
-          disabled={publishing || Boolean(readiness?.hasBlockingIssues)}
-          className="inline-flex items-center gap-2 rounded-full bg-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-950 hover:bg-emerald-200 disabled:pointer-events-none disabled:opacity-50"
-        >
-          {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          Open room to visitors
-        </button>
+        {isPrivateProof ? (
+          <span data-testid="preview-private-proof-notice" className="rounded-full border border-amber-200/30 bg-black/70 px-4 py-2 text-sm font-semibold text-amber-100 backdrop-blur">
+            Private working proof - publishing unavailable
+          </span>
+        ) : (
+          <button
+            type="button"
+            data-testid="preview-open-to-visitors"
+            aria-describedby={readiness?.hasBlockingIssues ? "preview-publish-blocked-reason" : undefined}
+            onClick={() => setConfirmOpen(true)}
+            disabled={publishing || Boolean(readiness?.hasBlockingIssues)}
+            className="inline-flex items-center gap-2 rounded-full bg-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-950 hover:bg-emerald-200 disabled:pointer-events-none disabled:opacity-50"
+          >
+            {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Open room to visitors
+          </button>
+        )}
       </div>
       {readiness?.hasBlockingIssues && (
         <p
@@ -217,15 +229,17 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
         <PortfolioRenderer node={rendererNode ?? previewNode} renderMode="draft" studioV2Room={studioV2Room} />
       </div>
 
-      <PublishConfirmDialog
-        open={confirmOpen}
-        publishing={publishing}
-        readiness={readiness}
-        draftVersion={previewConfig?.version}
-        publishedVersion={overview?.published?.version}
-        onCancel={() => setConfirmOpen(false)}
-        onConfirm={() => void publishFromPreview()}
-      />
+      {!isPrivateProof && (
+        <PublishConfirmDialog
+          open={confirmOpen}
+          publishing={publishing}
+          readiness={readiness}
+          draftVersion={previewConfig?.version}
+          publishedVersion={overview?.published?.version}
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={() => void publishFromPreview()}
+        />
+      )}
     </div>
   );
 }

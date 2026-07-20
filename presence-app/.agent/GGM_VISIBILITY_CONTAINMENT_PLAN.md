@@ -48,6 +48,12 @@ The separate external mock-up deployment is also outside this repository task. I
 
 The browser suite proves the canonical public route, legacy alias, direct GGM work-detail route, default/search/filter gallery views, one unrelated demo fallback, one backend-public room, and an authenticated Studio editor read against the isolated local mock environment.
 
+## Local Studio working-state evidence
+
+The Studio working-state branch adds a controlled Room 11-shaped local fixture using the contained GGM slug. It proves V2 draft editing, debounced non-publishing autosave, reload, private preview, and the absence of GGM share/publish affordances. It also confirms the private preview uses the existing sanitized renderer projection.
+
+This is deliberately not owner-bound hosted evidence. It does not authenticate as the real GGM owner, read the real Candidate A draft, validate hosted media access, or change any backend record. Hosted owner access restoration and its separately scoped diagnostic remain required before any system-native migration claim.
+
 Evidence is recorded in `docs/program/evidence/presence-ggm-containment-proof/`.
 
 ## Remaining gates

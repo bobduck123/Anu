@@ -29,6 +29,7 @@ import type {
 import PresenceStudioV2Room from "./PresenceStudioV2Room";
 import { SkinLabSheet, AddObjectSheet, MoodboardSheet, WorldSwitcher } from "./PresenceStudioV2Panels";
 import { PUBLIC_STYLE_PRESET_OPTIONS, WORLD_KITS } from "./worlds";
+import { isPubliclyContainedPresenceSlug } from "@/lib/presence/publicContainment";
 import "./presence-studio-v2.css";
 
 interface PresenceStudioV2EditorProps {
@@ -158,6 +159,9 @@ export default function PresenceStudioV2Editor({
   const [expandedChambers, setExpandedChambers] = useState<Set<string>>(() => new Set());
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [interactionReadout, setInteractionReadout] = useState<TransformReadout | null>(null);
+  const [canvasInteractionActive, setCanvasInteractionActive] = useState(false);
+  const [autosaveNotBefore, setAutosaveNotBefore] = useState(0);
+  const [canvasChangesNeedManualSave, setCanvasChangesNeedManualSave] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [railOpen, setRailOpen] = useState(true);
   const [inspectorOpen, setInspectorOpen] = useState(true);
@@ -166,6 +170,13 @@ export default function PresenceStudioV2Editor({
 
   const roomRef = useRef<HTMLDivElement | null>(null);
   const interactionRef = useRef<CanvasInteraction | null>(null);
+  const autosaveFailureSnapshotRef = useRef<string | null>(null);
+  const autosaveNotBeforeRef = useRef(0);
+  const canvasChangesNeedManualSaveRef = useRef(false);
+  const latestV2StateRef = useRef<StudioV2State | null>(null);
+  // React may preserve a toolbar button's DOM node while canvas state changes.
+  // Keep the latest rendered draft available to its event handler.
+  latestV2StateRef.current = v2State;
 
   const dirty = useMemo(
     () => Boolean(v2State && snapshot(v2State) !== baseSnapshot),
@@ -187,6 +198,8 @@ export default function PresenceStudioV2Editor({
       setV2State(state);
       setBaseSnapshot(snapshot(state));
       setHasDraft(Boolean(overview.draft));
+      canvasChangesNeedManualSaveRef.current = false;
+      setCanvasChangesNeedManualSave(false);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "Failed to load draft");
     } finally {
@@ -214,8 +227,14 @@ export default function PresenceStudioV2Editor({
     setDeleteConfirmId(null);
   }, [selectedId]);
 
-  async function saveDraft(nextState: StudioV2State | null = v2State): Promise<boolean> {
+  async function saveDraft(
+    nextState: StudioV2State | null = latestV2StateRef.current,
+    options: { automatic?: boolean } = {},
+  ): Promise<boolean> {
     if (!nextState) return false;
+    const requestedSnapshot = snapshot(nextState);
+    if (options.automatic && autosaveFailureSnapshotRef.current === requestedSnapshot) return false;
+    if (!options.automatic) autosaveFailureSnapshotRef.current = null;
     setSaving(true);
     setActionError(null);
     setNotice(null);
@@ -228,20 +247,53 @@ export default function PresenceStudioV2Editor({
       const savedConfig = response.draft;
       if (savedConfig) {
         const savedState = studioV2FromPresenceConfig(savedConfig, node);
-        setV2State(savedState);
-        setBaseSnapshot(snapshot(savedState));
+        const savedSnapshot = snapshot(savedState);
+        setV2State((current) => (current && snapshot(current) === requestedSnapshot ? savedState : current));
+        setBaseSnapshot(savedSnapshot);
         setHasDraft(true);
-        setNotice(hasDraft ? "Saved - just now" : "Draft room created - saved just now");
+        if (!options.automatic) {
+          canvasChangesNeedManualSaveRef.current = false;
+          setCanvasChangesNeedManualSave(false);
+        }
+        setNotice(
+          options.automatic
+            ? "Autosaved just now"
+            : hasDraft
+              ? "Saved - just now"
+              : "Draft room created - saved just now",
+        );
       }
       void onNodeReload?.();
       return true;
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Save failed");
+      if (options.automatic) autosaveFailureSnapshotRef.current = requestedSnapshot;
+      setActionError(
+        options.automatic
+          ? `Autosave failed. Your changes are still here; retry Save draft. ${err instanceof Error ? err.message : ""}`.trim()
+          : err instanceof Error
+            ? err.message
+            : "Save failed",
+      );
       return false;
     } finally {
       setSaving(false);
     }
   }
+
+  useEffect(() => {
+    if (!v2State || !dirty || saving || canvasInteractionActive || canvasChangesNeedManualSave) return;
+    const currentSnapshot = snapshot(v2State);
+    if (autosaveFailureSnapshotRef.current === currentSnapshot) return;
+    const timer = window.setTimeout(() => {
+      if (
+        interactionRef.current ||
+        canvasChangesNeedManualSaveRef.current ||
+        Date.now() < autosaveNotBeforeRef.current
+      ) return;
+      void saveDraft(v2State, { automatic: true });
+    }, Math.max(1200, autosaveNotBefore - Date.now()));
+    return () => window.clearTimeout(timer);
+  }, [autosaveNotBefore, canvasChangesNeedManualSave, canvasInteractionActive, dirty, saving, v2State]);
 
   // ── Object helpers ──
   const selectedObject = useMemo(() => {
@@ -279,6 +331,7 @@ export default function PresenceStudioV2Editor({
   }
 
   function setObjectTransform(id: string, transform: StudioV2Object["transform"]) {
+    canvasChangesNeedManualSaveRef.current = true;
     setV2State((prev) => {
       if (!prev) return prev;
       return {
@@ -291,6 +344,9 @@ export default function PresenceStudioV2Editor({
         })),
       };
     });
+    // A canvas gesture may comprise several pointer updates. Keep its persistence
+    // explicit rather than race an in-flight snapshot against the active canvas.
+    setCanvasChangesNeedManualSave(true);
     setNotice(null);
     setActionError(null);
   }
@@ -316,6 +372,13 @@ export default function PresenceStudioV2Editor({
 
   function endCanvasInteraction(onMove: (event: PointerEvent) => void, onUp: (event: PointerEvent) => void) {
     interactionRef.current = null;
+    setCanvasInteractionActive(false);
+    // Canvas transforms can involve several short pointer gestures. Wait for that
+    // sequence to settle before serialising a snapshot, so autosave never replaces
+    // the active selection while it is being manipulated.
+    const nextAutosaveWindow = Date.now() + 2400;
+    autosaveNotBeforeRef.current = nextAutosaveWindow;
+    setAutosaveNotBefore(nextAutosaveWindow);
     document.body.classList.remove("v2-is-manipulating");
     window.removeEventListener("pointermove", onMove);
     window.removeEventListener("pointerup", onUp);
@@ -357,6 +420,9 @@ export default function PresenceStudioV2Editor({
       startDistance: distanceFromCenter(event.clientX, event.clientY, centerX, centerY),
       startAngle: angleFromCenter(event.clientX, event.clientY, centerX, centerY),
     };
+    // The ref closes the small gap before React can rerender the autosave effect.
+    autosaveNotBeforeRef.current = Date.now() + 2400;
+    setCanvasInteractionActive(true);
     document.body.classList.add("v2-is-manipulating");
     transformReadout(kind, objectId, object.transform);
 
@@ -529,6 +595,11 @@ export default function PresenceStudioV2Editor({
 
   async function handleShare() {
     const slug = v2State?.slug || node.slug || String(nodeId);
+    if (isPubliclyContainedPresenceSlug(slug)) {
+      setShareNotice("This private working proof has no shareable public link.");
+      window.setTimeout(() => setShareNotice(null), 3400);
+      return;
+    }
     const path = `/presence/${slug}`;
     const url = typeof window !== "undefined" ? `${window.location.origin}${path}` : path;
     try {
@@ -771,8 +842,16 @@ export default function PresenceStudioV2Editor({
   const sheetOpen = activePanel === "skin" || activePanel === "add" || activePanel === "moodboard";
   const world = WORLD_KITS.find((kit) => kit.id === v2State.worldId);
   const activeChamber = v2State.chambers.find((chamber) => chamber.id === activeChamberId) ?? v2State.chambers[0] ?? null;
-  const saveStatus = saving ? "Saving" : dirty ? "Unsaved changes" : notice ?? "Saved";
+  const saveStatus = saving
+    ? "Saving draft"
+    : dirty
+      ? canvasChangesNeedManualSave
+        ? "Canvas changes pending - save draft to preserve them"
+        : "Changes pending - autosaves shortly"
+      : notice ?? "Saved";
   const publicUrlPath = `/presence/${v2State.slug || node.slug || String(nodeId)}`;
+  const isPrivateProof =
+    isPubliclyContainedPresenceSlug(v2State.slug) || isPubliclyContainedPresenceSlug(node.slug);
   const publicObjects = countPublicObjects(v2State);
   const assetRegistryForRender = assetRegistry ?? deriveStudioV2AssetRegistry(v2State, { brokenObjectIds: brokenAssetObjectIds });
   const selectedAssetForRender = assetRegistryForRender.assets.find((asset) => asset.id === selectedAssetId) ?? null;
@@ -895,9 +974,17 @@ export default function PresenceStudioV2Editor({
         </div>
 
         <div className="v2-toolbar-group">
-          <button data-testid="presence-studio-v2-share-action" className="v2-btn" onClick={() => void handleShare()} title={publicUrlPath}>Share</button>
-          <button data-testid="presence-studio-v2-preview-action" className="v2-btn" onClick={goToPreview}>Preview visitor view</button>
-          <button data-testid="presence-studio-v2-publish-action" className="v2-btn" onClick={goToPreview}>Publish from preview</button>
+          {isPrivateProof ? (
+            <span data-testid="presence-studio-v2-private-proof" className="v2-save-status">
+              Private working proof
+            </span>
+          ) : (
+            <>
+              <button data-testid="presence-studio-v2-share-action" className="v2-btn" onClick={() => void handleShare()} title={publicUrlPath}>Share</button>
+              <button data-testid="presence-studio-v2-publish-action" className="v2-btn" onClick={goToPreview}>Publish from preview</button>
+            </>
+          )}
+          <button data-testid="presence-studio-v2-preview-action" className="v2-btn" onClick={goToPreview}>Preview draft</button>
         </div>
 
         <div className="v2-toolbar-group">

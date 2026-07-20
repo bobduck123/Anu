@@ -31,6 +31,8 @@ A migration can be called system-native only when:
 
 This documentation task neither verifies nor changes runtime fallback behaviour. Production demo-fallback removal or disablement is deferred until a truthful persisted replacement exists and a separate task scopes and reviews it. Do not change fallback behaviour inside a migration task unless that separate work order explicitly approves it.
 
+A local owner-shaped fixture can prove editor UX, payload handling, and renderer hygiene. It cannot satisfy the owner-access or real-record parts of this gate; those require a separately authenticated, read-safe hosted proof against the intended backend room.
+
 ## Migration intake
 
 ```text

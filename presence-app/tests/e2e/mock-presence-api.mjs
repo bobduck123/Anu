@@ -44,6 +44,7 @@ function resetState() {
     failNextEditorReads: 0,
     failNextPreviewReads: 0,
     privateDraftMedia: false,
+    ggmPrivateProof: false,
     // Hall activity event counters used by the analytics endpoint to mirror
     // the real backend's hall_activity_event aggregation.
     hallStallVisits: 0,
@@ -73,6 +74,11 @@ const server = createServer(async (req, res) => {
     if (body.clearEditorPublished === true) state.editorPublished = null;
     if (body.useStudioV2DraftPreview === true) {
       state.editorDraft = buildStudioV2EditorConfig("draft", state.nextEditorVersion++);
+    }
+    if (body.useGgmPrivateProof === true) {
+      state.ggmPrivateProof = true;
+      state.editorDraft = buildStudioV2EditorConfig("draft", state.nextEditorVersion++);
+      state.editorPublished = buildStudioV2EditorConfig("published", state.nextEditorVersion++);
     }
     if (body.useBbbVisionPilot === true) {
       state.bbbVisionPilot = true;
@@ -492,25 +498,28 @@ const server = createServer(async (req, res) => {
     });
   }
 
-  if (url.pathname === "/api/presence/owner/nodes/101" && req.method === "GET") {
+  const ownerNodeMatch = url.pathname.match(/^\/api\/presence\/owner\/nodes\/(101|11)$/);
+  if (ownerNodeMatch && req.method === "GET") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     if (state.failNextOwnerNodeReads > 0) {
       state.failNextOwnerNodeReads -= 1;
       return sendError(res, 503, "cold_start", "Room read is warming up.");
     }
-    return sendData(res, publicRoomFixture());
+    return sendData(res, publicRoomFixture(Number(ownerNodeMatch[1])));
   }
 
-  if (url.pathname === "/api/presence/owner/rooms/101/editor" && req.method === "GET") {
+  const editorOverviewMatch = url.pathname.match(/^\/api\/presence\/owner\/rooms\/(101|11)\/editor$/);
+  if (editorOverviewMatch && req.method === "GET") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     if (state.failNextEditorReads > 0) {
       state.failNextEditorReads -= 1;
       return sendError(res, 503, "cold_start", "Editor read is warming up.");
     }
+    const room = publicRoomFixture(Number(editorOverviewMatch[1]));
     return sendData(res, {
-      room: { id: fixtures.room.id, slug: fixtures.room.slug, display_name: fixtures.room.display_name, owner_user_id: fixtures.room.owner_user_id },
+      room: { id: room.id, slug: room.slug, display_name: room.display_name, owner_user_id: room.owner_user_id },
       draft: state.editorDraft,
       published: state.editorPublished,
       published_public_config: redactEditorConfig(state.editorPublished),
@@ -531,7 +540,8 @@ const server = createServer(async (req, res) => {
       });
   }
 
-  if (url.pathname === "/api/presence/owner/rooms/101/editor/draft") {
+  const editorDraftMatch = url.pathname.match(/^\/api\/presence\/owner\/rooms\/(101|11)\/editor\/draft$/);
+  if (editorDraftMatch) {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     if (req.method === "GET") return sendData(res, { draft: state.editorDraft });
@@ -549,7 +559,8 @@ const server = createServer(async (req, res) => {
     }
   }
 
-  if (url.pathname === "/api/presence/owner/rooms/101/editor/preview" && req.method === "POST") {
+  const editorPreviewMatch = url.pathname.match(/^\/api\/presence\/owner\/rooms\/(101|11)\/editor\/preview$/);
+  if (editorPreviewMatch && req.method === "POST") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     if (state.failNextPreviewReads > 0) {
@@ -562,13 +573,14 @@ const server = createServer(async (req, res) => {
       preview: true,
       expires_at: Math.floor(Date.now() / 1000) + 900,
       preview_token: "mock-preview-token",
-      preview_url: "/studio/101/preview?presencePreviewToken=mock-preview-token",
+      preview_url: `/studio/${editorPreviewMatch[1]}/preview?presencePreviewToken=mock-preview-token`,
       editable_config: { ...redactEditorConfig(previewBase), status: "preview" },
       draft: previewBase,
     });
   }
 
-  if (url.pathname === "/api/presence/owner/rooms/101/editor/publish" && req.method === "POST") {
+  const editorPublishMatch = url.pathname.match(/^\/api\/presence\/owner\/rooms\/(101|11)\/editor\/publish$/);
+  if (editorPublishMatch && req.method === "POST") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     if (!state.editorDraft) return sendError(res, 422, "validation_error", "No draft config exists for this Room.");
@@ -1552,7 +1564,15 @@ function buildEditorAssets() {
   ];
 }
 
-function publicRoomFixture() {
+function publicRoomFixture(roomId = fixtures.room.id) {
+  const ggmPrivateProofOverrides = state.ggmPrivateProof && roomId === 11 ? {
+    id: 11,
+    slug: "ggm-christina-goddard",
+    status: "draft",
+    visibility: "private",
+    public_status: "private",
+    public_url: null,
+  } : {};
   const displayOverrides = state.bbbVisionPilot ? {
     slug: "bbbvision-pilot",
     display_name: "bbb.vision",
@@ -1562,6 +1582,7 @@ function publicRoomFixture() {
   } : {};
   return {
     ...fixtures.room,
+    ...ggmPrivateProofOverrides,
     ...displayOverrides,
     renderer_key: state.editorPublished?.renderer_key || fixtures.room.renderer_key || "ggm-faithful-room-v1",
     editable_config: redactEditorConfig(state.editorPublished),

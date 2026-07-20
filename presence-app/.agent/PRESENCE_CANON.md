@@ -156,6 +156,7 @@ Each existing presence should be evaluated for:
 - GGM is the first working proof example.
 - It must remain private and will not be launched or published.
 - It may support internal migration learning and private proof review only.
+- The Studio working-state pass proves a local Room 11-shaped fixture only: draft edit, safe autosave, reload, private preview, and blocked publish affordances. It does not prove hosted owner authentication, the real backend owner mapping, or a system-native GGM migration.
 
 ### BBB
 
