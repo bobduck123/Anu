@@ -2,13 +2,17 @@
 
 import { useRef, type CSSProperties } from "react";
 import type { StudioV2State, StudioV2Object } from "@/lib/presence/studio-v2";
+import { deriveStudioV2Environment } from "@/lib/presence/studio-v2/environment";
+import PresenceStudioV2EnvironmentLayer from "./PresenceStudioV2EnvironmentLayer";
 
 interface PresenceStudioV2RoomProps {
   state: StudioV2State;
   selectedId: string | null;
+  activeChamberId?: string | null;
   mode: "guided" | "wild";
   viewport: "desktop" | "mobile";
   onSelectObject: (id: string | null) => void;
+  onClearRoomFocus?: () => void;
   onBeginDrag?: (id: string, event: React.PointerEvent<HTMLElement>) => void;
   onBeginResize?: (id: string, corner: "tl" | "tr" | "bl" | "br", event: React.PointerEvent<HTMLElement>) => void;
   onBeginRotate?: (id: string, event: React.PointerEvent<HTMLElement>) => void;
@@ -27,9 +31,11 @@ function roomForeground(background: string): string {
 export default function PresenceStudioV2Room({
   state,
   selectedId,
+  activeChamberId,
   mode,
   viewport,
   onSelectObject,
+  onClearRoomFocus,
   onBeginDrag,
   onBeginResize,
   onBeginRotate,
@@ -37,6 +43,13 @@ export default function PresenceStudioV2Room({
   const isWild = mode === "wild";
   const suspendTransforms = !isWild;
   const suppressRoomDeselectRef = useRef(false);
+  const environment = deriveStudioV2Environment({
+    worldId: state.worldId,
+    skin: state.skin,
+    chambers: state.chambers,
+    focusedChamberId: activeChamberId,
+    focusedObjectId: selectedId,
+  });
   const skinStyle = {
     "--v2-room-background": state.skin.background,
     "--v2-room-accent": state.skin.accentColor,
@@ -48,16 +61,23 @@ export default function PresenceStudioV2Room({
   return (
     <div className="v2-stage">
       <div
-        className={`v2-room world-${state.worldId} texture-${state.skin.texture} motion-${state.skin.motionIntensity} ${viewport === "mobile" ? "mobile-viewport" : ""}`}
+        className={`v2-room world-${state.worldId} texture-${state.skin.texture} motion-${state.skin.motionIntensity} environment-focus-${environment.focus} ${viewport === "mobile" ? "mobile-viewport" : ""}`}
         style={skinStyle}
+        data-environment-focus={environment.focus}
         onClick={() => {
           if (suppressRoomDeselectRef.current) {
             suppressRoomDeselectRef.current = false;
             return;
           }
           onSelectObject(null);
+          onClearRoomFocus?.();
         }}
       >
+        <PresenceStudioV2EnvironmentLayer
+          environment={environment}
+          accent={state.skin.accentColor}
+          background={state.skin.background}
+        />
         <div className="v2-room-header">
           <div className="v2-room-eyebrow">{state.worldId}</div>
           <div className="v2-room-name" style={{ fontWeight: state.skin.headingWeight }}>
@@ -68,10 +88,11 @@ export default function PresenceStudioV2Room({
 
         {state.chambers.map((chamber) => (
           <div
-            className="v2-chamber"
+            className={`v2-chamber${environment.focusedChamberId === chamber.id ? " is-environment-active" : ""}`}
             key={chamber.id}
             id={`presence-v2-chamber-${chamber.id}`}
             data-v2-chamber-id={chamber.id}
+            data-environment-chamber={environment.focusedChamberId === chamber.id ? "active" : "rest"}
           >
             <div className="v2-chamber-label">{chamber.label}</div>
             <div className="v2-objects">

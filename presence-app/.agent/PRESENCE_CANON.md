@@ -278,6 +278,12 @@ Reason: Aura, display type, and border controls were not truthfully projected by
 Evidence: Studio source audit and on-brand local browser proof.
 Impact: Background, texture, motion, heading weight, object shape, shadow, and accent remain active; unsupported controls are absent rather than presented as functional.
 Next action: Add a field only when model, editor, preview, and public renderer all support it.
+
+2026-07-20 â€” Decision: Use a DOM-first environmental layer for the initial Studio V2 spatial pass.
+Reason: Existing Studio state can truthfully drive room/chamber/object focus without a WebGL dependency, new persistence contract, or a second editor.
+Evidence: `docs/program/evidence/presence-studio-environmental-engine/` and the focused Chromium suite.
+Impact: The environmental layer is decorative, deterministic, reduced-motion-safe, and shared by editor and private preview; semantic content and controls remain DOM-first. This is private local fixture evidence only and does not change GGM containment or prove a system-native migration.
+Next action: Require a separately scoped hosted owner-bound proof before connecting this visual slice to a real client record.
 ```
 
 ## Open questions

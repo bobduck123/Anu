@@ -732,6 +732,8 @@
 }
 
 .presence-studio-v2 .v2-room {
+  position: relative;
+  isolation: isolate;
   max-width: 980px;
   border: 1px solid rgba(13, 12, 10, 0.1);
   box-shadow:
@@ -749,6 +751,89 @@
     radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.42), transparent 20rem),
     linear-gradient(90deg, rgba(13, 12, 10, 0.035) 0 1px, transparent 1px 72px);
   opacity: 0.7;
+  z-index: 1;
+}
+
+/* Environmental engine vertical slice: three deterministic DOM depth planes.
+   The canvas is atmosphere, not an interaction surface; semantic room content
+   and editing controls stay above it and remain usable without GPU support. */
+.presence-studio-v2 .v2-environment-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+.presence-studio-v2 .v2-environment-depth {
+  position: absolute;
+  inset: -12%;
+  transition: transform 560ms cubic-bezier(0.22, 0.88, 0.24, 1), opacity 420ms ease, filter 420ms ease;
+}
+
+.presence-studio-v2 .v2-environment-depth-back {
+  background:
+    radial-gradient(ellipse at 18% 22%, color-mix(in srgb, var(--v2-environment-accent) 22%, transparent), transparent 34%),
+    radial-gradient(ellipse at 78% 18%, rgba(255, 255, 255, 0.74), transparent 30%),
+    linear-gradient(125deg, color-mix(in srgb, var(--v2-environment-background) 86%, #16110b), var(--v2-environment-background));
+  opacity: 0.78;
+  transform: scale(1.05);
+}
+
+.presence-studio-v2 .v2-environment-depth-middle {
+  inset: 6% -8% -18%;
+  background:
+    radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--v2-environment-accent) 20%, transparent), transparent 46%),
+    repeating-linear-gradient(90deg, rgba(13, 12, 10, 0.05) 0 1px, transparent 1px 86px);
+  opacity: 0.6;
+  transform: translate3d(0, 2%, 0) scale(1.04);
+}
+
+.presence-studio-v2 .v2-environment-depth-front {
+  inset: auto -10% -20% -10%;
+  height: 54%;
+  background:
+    linear-gradient(180deg, transparent, color-mix(in srgb, var(--v2-environment-background) 76%, #0d0c0a)),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.1) 0 1px, transparent 1px 8px);
+  opacity: 0.34;
+  transform: translate3d(0, 14%, 0) scale(1.06);
+}
+
+.presence-studio-v2 .v2-environment-layer.world-gallery .v2-environment-depth-middle {
+  background:
+    linear-gradient(90deg, transparent 0 9%, rgba(255,255,255,0.38) 9% 10%, transparent 10% 88%, rgba(13,12,10,0.08) 88% 89%, transparent 89%),
+    radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--v2-environment-accent) 16%, transparent), transparent 46%);
+}
+
+.presence-studio-v2 .v2-room.environment-focus-chamber .v2-environment-depth-back {
+  transform: translate3d(-1.5%, -1%, 0) scale(1.11);
+}
+
+.presence-studio-v2 .v2-room.environment-focus-object .v2-environment-depth-back {
+  transform: translate3d(-3%, -2%, 0) scale(1.16);
+  filter: saturate(1.12) contrast(1.04);
+}
+
+.presence-studio-v2 .v2-room.environment-focus-object .v2-environment-depth-middle {
+  transform: translate3d(3%, 4%, 0) scale(1.1);
+  opacity: 0.78;
+}
+
+.presence-studio-v2 .v2-chamber {
+  transition: transform 520ms cubic-bezier(0.22, 0.88, 0.24, 1), opacity 360ms ease, filter 360ms ease;
+}
+
+.presence-studio-v2 .v2-room.environment-focus-chamber .v2-chamber:not(.is-environment-active),
+.presence-studio-v2 .v2-room.environment-focus-object .v2-chamber:not(.is-environment-active) {
+  opacity: 0.52;
+  filter: blur(0.35px);
+  transform: scale(0.985);
+}
+
+.presence-studio-v2 .v2-chamber.is-environment-active {
+  transform: translate3d(0, -3px, 0);
+  box-shadow: 0 28px 68px -44px color-mix(in srgb, var(--v2-room-accent, var(--p-copper)) 56%, #000);
 }
 
 .presence-studio-v2 .v2-room-header,
@@ -756,7 +841,7 @@
 .presence-studio-v2 .v2-influence-layer,
 .presence-studio-v2 .v2-traces {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .presence-studio-v2 .v2-room-name {
@@ -2604,6 +2689,21 @@ body.v2-is-manipulating {
   border-radius: 28px;
 }
 
+/* The editor frame is a room lens, not a browser imitation. */
+.presence-studio-v2 .v2-device-chrome {
+  grid-template-columns: 1fr auto;
+}
+
+.presence-studio-v2 .v2-device-dots,
+.presence-studio-v2 .v2-device-path {
+  display: none;
+}
+
+.presence-studio-v2 .v2-device-label::before {
+  content: "Room lens / ";
+  color: var(--p-copper);
+}
+
 @media (max-width: 1180px) {
   .presence-studio-v2 .v2-drawer-actions {
     display: inline-flex;
@@ -2661,6 +2761,19 @@ body.v2-is-manipulating {
 
   .presence-studio-v2 .v2-save-status {
     white-space: nowrap;
+  }
+
+  .presence-studio-v2.has-object-focus .v2-inspector {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    z-index: 80;
+    max-height: min(52dvh, 520px);
+    overflow: auto;
+    border: 1px solid color-mix(in srgb, var(--p-copper) 42%, rgba(248,244,236,0.18));
+    border-radius: 22px 22px 16px 16px;
+    box-shadow: 0 -24px 80px -36px rgba(0,0,0,0.94);
   }
 
   .presence-studio-v2 .v2-stage-frame-head,

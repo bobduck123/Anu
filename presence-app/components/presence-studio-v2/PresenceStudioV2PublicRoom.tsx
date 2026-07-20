@@ -8,8 +8,10 @@ import {
   getStudioV2PublicChambersByRole,
 } from "@/lib/presence/studio-v2";
 import type { StudioV2PublicChamber, StudioV2PublicObject, StudioV2PublicRoom } from "@/lib/presence/studio-v2";
+import { deriveStudioV2Environment } from "@/lib/presence/studio-v2/environment";
 import { WORLD_KITS } from "./worlds";
 import BbbVisionCanvasGallery from "./BbbVisionCanvasGallery";
+import PresenceStudioV2EnvironmentLayer from "./PresenceStudioV2EnvironmentLayer";
 import "./presence-studio-v2-public.css";
 
 interface PresenceStudioV2PublicRoomProps {
@@ -36,6 +38,11 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
   const entryHref = ctaHref || "#v2-public-room-space";
   const entryLabel = ctaLabel || "Enter room";
   const isGallery = room.worldId === "gallery";
+  const environment = deriveStudioV2Environment({
+    worldId: room.worldId,
+    skin: room.skin,
+    chambers: room.chambers,
+  });
   const publicStylePreset = room.publicStylePreset || "gallery-p2";
   const liquidWorks = room.chambers.flatMap((chamber) =>
     chamber.objects
@@ -119,9 +126,16 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
 
   return (
     <main
-      className={`presence-studio-v2-public world-${room.worldId} texture-${room.skin.texture} motion-${room.skin.motionIntensity}${thresholdImage?.src ? " has-threshold-image" : ""}`}
+      className={`presence-studio-v2-public world-${room.worldId} texture-${room.skin.texture} motion-${room.skin.motionIntensity} environment-focus-${environment.focus}${thresholdImage?.src ? " has-threshold-image" : ""}`}
       style={style}
+      data-environment-runtime="dom"
     >
+      <PresenceStudioV2EnvironmentLayer
+        environment={environment}
+        accent={room.skin.accentColor}
+        background={room.skin.background}
+        preview
+      />
       <section className="v2-public-threshold">
         <div className="v2-public-threshold-atmosphere" aria-hidden="true" />
         {thresholdImage?.src && (
@@ -380,13 +394,27 @@ function ChristinaLiquidGalleryPublicRoom({
     .flatMap((chamber) => chamber.objects.map((object) => ({ object, chamberLabel: chamber.label })))
     .filter(({ object }) => !object.image?.src || object.type === "text" || object.type === "note" || object.type === "proof")
     .slice(0, 4);
+  const environment = deriveStudioV2Environment({
+    worldId: room.worldId,
+    skin: room.skin,
+    chambers: room.chambers,
+    focusedChamberId: activeWork?.chamberId ?? null,
+    focusedObjectId: activeObject?.id ?? null,
+  });
 
   return (
     <main
-      className={`presence-studio-v2-public world-${room.worldId} style-christina-liquid-gallery texture-${room.skin.texture} motion-${room.skin.motionIntensity}${activeObject?.image?.src ? " has-threshold-image" : ""}`}
+      className={`presence-studio-v2-public world-${room.worldId} style-christina-liquid-gallery texture-${room.skin.texture} motion-${room.skin.motionIntensity} environment-focus-${environment.focus}${activeObject?.image?.src ? " has-threshold-image" : ""}`}
       style={style}
       data-testid="presence-public-style-christina-liquid-gallery"
+      data-environment-runtime="dom"
     >
+      <PresenceStudioV2EnvironmentLayer
+        environment={environment}
+        accent={room.skin.accentColor}
+        background={room.skin.background}
+        preview
+      />
       <header className="v2-liquid-nav" aria-label={`${room.title} public navigation`}>
         <a href="#v2-liquid-sequence" className="v2-liquid-brand">{room.title}</a>
         <nav aria-label="Room sections">
@@ -689,6 +717,18 @@ function BbbVisionThresholdGalleryPublicRoom({
     sequenceTotal > 0
       ? `${String(safeActiveIndex + 1).padStart(2, "0")} / ${String(sequenceTotal).padStart(2, "0")}`
       : "00 / 00";
+  const focusedChamberId = view === "practice"
+    ? practiceChamber?.id ?? null
+    : view === "gallery"
+      ? activeWork?.chamberId ?? null
+      : thresholdChamber?.id ?? null;
+  const environment = deriveStudioV2Environment({
+    worldId: room.worldId,
+    skin: room.skin,
+    chambers: room.chambers,
+    focusedChamberId,
+    focusedObjectId: focusedArtwork?.id ?? activeObject?.id ?? null,
+  });
 
   const syncViewFromLocation = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -806,12 +846,19 @@ function BbbVisionThresholdGalleryPublicRoom({
 
   return (
     <main
-      className={`presence-studio-v2-public world-${room.worldId} style-bbbvision-threshold-gallery v2-bbb-shell texture-${room.skin.texture} motion-${room.skin.motionIntensity} is-view-${view}${movement ? ` is-moving-${movement}` : ""}${activeObject?.image?.src ? " has-threshold-image" : ""}`}
+      className={`presence-studio-v2-public world-${room.worldId} style-bbbvision-threshold-gallery v2-bbb-shell texture-${room.skin.texture} motion-${room.skin.motionIntensity} environment-focus-${environment.focus} is-view-${view}${movement ? ` is-moving-${movement}` : ""}${activeObject?.image?.src ? " has-threshold-image" : ""}`}
       style={style}
       data-testid="presence-public-style-bbbvision-threshold-gallery"
       data-bbb-view={view}
       data-active-index={safeActiveIndex}
+      data-environment-runtime="dom"
     >
+      <PresenceStudioV2EnvironmentLayer
+        environment={environment}
+        accent={room.skin.accentColor}
+        background={room.skin.background}
+        preview
+      />
       {view === "threshold" && (
         <section
           className="v2-bbb-view v2-bbb-threshold"

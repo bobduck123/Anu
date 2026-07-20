@@ -98,6 +98,7 @@ What can be shown publicly.
 - GGM public containment is hosted-verified: the contained record is absent from the backend gallery and anonymous GGM frontend routes return truthful not-found responses without fallback content. This does not prove owner-bound Studio migration, persistence, or launch readiness.
 - GGM's local Studio evidence uses a controlled Room 11-shaped mock fixture. It proves private draft edit/autosave/reload/preview behavior and that GGM-specific publish/share affordances are unavailable; it is not evidence about the real hosted owner, credentials, backend record, or media access.
 - The private on-brand Studio screenshot pack and deterministic Studio Guide are local fixture evidence only. They support UX and renderer-projection review; they do not change GGM's private/public boundary or constitute a public case study.
+- The private environmental-engine frame sequence under `docs/program/evidence/presence-studio-environmental-engine/` proves DOM room/chamber/object focus, Style DNA projection, mobile contextual editing, reduced-motion behaviour, and no-WebGL-safe local preview. It is not public GGM material, a hosted owner proof, or system-native migration evidence.
 - BBB approval permits a future publication task; it does not prove migration, readiness, deployment, or publication.
 - A frontend fallback or visual copy does not count as a system-native migration.
 - Public proof must distinguish persisted backend rooms from demo or fallback content.

@@ -890,7 +890,7 @@ export default function PresenceStudioV2Editor({
   return (
     <div
       data-testid="presence-studio-v2-root"
-      className={`presence-studio-v2 v2-cockpit${railOpen ? " rail-open" : " rail-closed"}${inspectorOpen ? " inspector-open" : " inspector-closed"}${activePanel !== "none" ? " overlay-open" : ""}`}
+      className={`presence-studio-v2 v2-cockpit${railOpen ? " rail-open" : " rail-closed"}${inspectorOpen ? " inspector-open" : " inspector-closed"}${selectedObject ? " has-object-focus" : ""}${activePanel !== "none" ? " overlay-open" : ""}`}
       style={{ "--p-copper": v2State.skin.accentColor } as CSSProperties}
     >
       {/* Top chrome */}
@@ -1101,15 +1101,17 @@ export default function PresenceStudioV2Editor({
                   </span>
                   <span className="v2-device-path">{publicUrlPath}</span>
                 </div>
-                <PresenceStudioV2Room
-                  state={v2State}
-                  selectedId={selectedId}
+          <PresenceStudioV2Room
+            state={v2State}
+            selectedId={selectedId}
+            activeChamberId={activeChamberId}
                   mode={mode}
                   viewport={viewport}
                   onSelectObject={(id) => {
-                    if (id) selectObject(id);
-                    else setSelectedId(null);
-                  }}
+                  if (id) selectObject(id);
+                  else setSelectedId(null);
+                }}
+                onClearRoomFocus={() => setActiveChamberId(null)}
                   onBeginDrag={beginObjectDrag}
                   onBeginResize={beginObjectResize}
                   onBeginRotate={beginObjectRotate}

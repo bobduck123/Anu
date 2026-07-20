@@ -66,6 +66,64 @@
     linear-gradient(180deg, color-mix(in srgb, var(--v2-public-bg) 94%, #fff) 0%, var(--v2-public-bg) 54%, color-mix(in srgb, var(--v2-public-bg) 82%, #0e0d0b) 100%);
 }
 
+.presence-studio-v2-public .v2-environment-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.presence-studio-v2-public .v2-environment-depth {
+  position: absolute;
+  inset: -10%;
+  transition: transform 680ms cubic-bezier(0.22, 0.88, 0.24, 1), opacity 460ms ease;
+}
+
+.presence-studio-v2-public .v2-environment-depth-back {
+  background:
+    radial-gradient(ellipse at 16% 16%, color-mix(in srgb, var(--v2-environment-accent) 25%, transparent), transparent 32%),
+    linear-gradient(120deg, color-mix(in srgb, var(--v2-environment-background) 72%, #0d0c0a), var(--v2-environment-background));
+  opacity: 0.32;
+}
+
+.presence-studio-v2-public .v2-environment-depth-middle {
+  background:
+    linear-gradient(90deg, transparent 0 12%, rgba(255,255,255,0.22) 12% 13%, transparent 13% 86%, rgba(13,12,10,0.08) 86% 87%, transparent 87%),
+    radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--v2-environment-accent) 18%, transparent), transparent 48%);
+  opacity: 0.42;
+  transform: translate3d(0, 4%, 0) scale(1.06);
+}
+
+.presence-studio-v2-public .v2-environment-depth-front {
+  inset: auto -10% -16%;
+  height: 58%;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--v2-environment-background) 64%, #0d0c0a));
+  opacity: 0.26;
+}
+
+.presence-studio-v2-public.environment-focus-object .v2-environment-depth-back {
+  transform: translate3d(-3%, -2%, 0) scale(1.14);
+  opacity: 0.46;
+}
+
+.presence-studio-v2-public.environment-focus-object .v2-environment-depth-middle {
+  transform: translate3d(3%, 6%, 0) scale(1.12);
+  opacity: 0.58;
+}
+
+.presence-studio-v2-public > :not(.v2-environment-layer) {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .presence-studio-v2-public .v2-environment-depth {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
 .presence-studio-v2-public.texture-grain,
 .presence-studio-v2-public.texture-scan {
   background-image:

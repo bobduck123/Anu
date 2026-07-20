@@ -37,6 +37,8 @@ A local owner-shaped fixture can prove editor UX, payload handling, and renderer
 
 Private local Studio evidence may be captured for interaction, mobile, renderer-projection, and persistence regressions. Label it as local fixture evidence and keep it private. It does not establish a client owner session, a real node mapping, durable media migration, or a public launch claim.
 
+An environmental/3D-style treatment can prove visual focus, motion policy, and editor/preview projection only when its camera/focus state is derived from existing room data and its semantic content stays usable without WebGL. It does not establish migration or replace the owner-bound proof gate.
+
 Do not present a Style DNA control as complete unless the existing content model saves it and both the editor canvas and renderer projection visibly honour it. Remove or truthfully defer unsupported controls.
 
 ## Migration intake
