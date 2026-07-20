@@ -1,0 +1,56 @@
+[
+  {
+    "surface": "draft save changed layoutId",
+    "method": "PATCH",
+    "path": "/api/presence/owner/rooms/11/editor/draft",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Saved one reversible layout-composition layoutId change."
+  },
+  {
+    "surface": "editor draft after layout change",
+    "method": "GET",
+    "path": "/api/presence/owner/rooms/11/editor/draft",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Owner-scoped draft read verified expected layoutId."
+  },
+  {
+    "surface": "private preview after draft layout change",
+    "method": "BROWSER",
+    "path": "/studio/11/editor/preview",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Authenticated private preview loaded after draft composition layoutId change."
+  },
+  {
+    "surface": "editor draft after revert",
+    "method": "GET",
+    "path": "/api/presence/owner/rooms/11/editor/draft",
+    "status": 200,
+    "ok": true,
+    "source": "hosted-backend",
+    "notes": "Owner-scoped draft read verified expected layoutId."
+  },
+  {
+    "surface": "canonical public route after draft revert",
+    "method": "BROWSER",
+    "path": "/p/ggm-christina-goddard",
+    "status": 404,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Anonymous public route remained unavailable/private after draft write/revert."
+  },
+  {
+    "surface": "legacy public route after draft revert",
+    "method": "BROWSER",
+    "path": "/presence/ggm-christina-goddard",
+    "status": 404,
+    "ok": true,
+    "source": "hosted-frontend",
+    "notes": "Anonymous public route remained unavailable/private after draft write/revert."
+  }
+]
