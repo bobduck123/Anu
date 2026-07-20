@@ -10,6 +10,7 @@ import { isGgmFaithfulRoom } from "@/lib/presence/ggm/activate";
 import { ggmWorkBySlug } from "@/lib/presence/ggm/source";
 import GgmFaithfulRoom from "@/components/presence/ggm/GgmFaithfulRoom";
 import { createPublicRenderPayload } from "@/lib/presence/render/publicPayload";
+import { canUsePublicDemoProfileFallback } from "@/lib/presence/publicContainment";
 
 interface Props {
   params: Promise<{ slug: string; workId: string }>;
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   } catch {
     // GGM fallback metadata when the backend doesn't yet hold the work.
-    const ggm = ggmWorkBySlug(workId);
+    const ggm = canUsePublicDemoProfileFallback(slug) ? ggmWorkBySlug(workId) : null;
     if (ggm) {
       return {
         title: `${ggm.title} — Christina Kerkvliet Goddard`,

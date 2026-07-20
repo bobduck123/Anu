@@ -22,7 +22,6 @@ import { PublicEnquiryDialog } from "@/components/portfolio/PublicEnquiryDialog"
 import {
   GGM_ARTIST,
   GGM_INSPIRE,
-  GGM_LIVE_DEMO_URL,
   GGM_STRANDS,
   type GgmArtist,
   type GgmWork,
@@ -38,6 +37,7 @@ import { resolveRenderModel } from "@/lib/presence/render/resolver";
 import type { PresenceRenderModel, RenderWork, TextStyle } from "@/lib/presence/render/model";
 import { fontLoaderHref } from "@/lib/presence/typography/registry";
 import { textStyleCss } from "@/lib/editor/canvasModel";
+import { canExposePublicDemoReference } from "@/lib/presence/publicContainment";
 import styles from "./ggm.module.css";
 
 interface GgmFaithfulRoomProps {
@@ -290,7 +290,9 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: Omit<GgmFaithf
   const aboutIntro = model.copy.aboutIntro;
   const aboutBody = model.copy.aboutBody;
   const processNotes = model.copy.processNotes;
-  const externalPortfolio = model.contact.externalLink ?? pickExternalPortfolio(node);
+  const externalPortfolio = canExposePublicDemoReference(node.slug)
+    ? model.contact.externalLink ?? pickExternalPortfolio(node)
+    : null;
 
   // Scene 01 cycles through the FULL ordered hero sequence (all 8
   // works, ordered by the shared room model).
@@ -405,9 +407,6 @@ function Room({ node, roomKeySourceLabel, focusWorkSlug, model }: Omit<GgmFaithf
         roomKeySourceLabel={roomKeyLabel}
         roomKeyProvenanceText={model.roomKey.provenanceChipText}
       />
-      <span className={styles.srOnly}>
-        <a href={GGM_LIVE_DEMO_URL}>Source portfolio: christina-goddard.vercel.app</a>
-      </span>
     </div>
   );
 }

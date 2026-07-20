@@ -11,12 +11,13 @@ import type { PresenceNode } from "@/lib/api/types";
 import { canonicalPublicUrl } from "@/lib/presence/url";
 import { demoProfileForSlug } from "./profiles";
 import { isDemoProfileFallbackDisabled } from "@/lib/presence/feature";
+import { canUsePublicDemoProfileFallback } from "@/lib/presence/publicContainment";
 
 export async function fetchDemoOrPublicNode(slug: string): Promise<PresenceNode> {
   try {
     return await fetchPublicNode(slug);
   } catch (err) {
-    if (isDemoProfileFallbackDisabled()) {
+    if (isDemoProfileFallbackDisabled() || !canUsePublicDemoProfileFallback(slug)) {
       throw err;
     }
     const demo = demoProfileForSlug(slug);

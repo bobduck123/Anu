@@ -1,116 +1,70 @@
 # GGM Visibility Containment Plan
 
-## Status
+## Current status - 2026-07-20
 
-- GGM private proof is not ready.
-- Candidate A is the intended GGM backend record.
-- Candidate A is currently listed by the backend public-gallery API.
-- Owner and control credentials available to the prior diagnostic are expired or stale. They must be rotated or reissued outside chat.
-- No migration, Studio proof, preview, save/reload proof, or public claim may proceed until backend containment, owner-access restoration, and frontend fallback handling are complete.
-- This document records a containment plan only. It does not authorise or perform a backend mutation, credential rotation, publication change, or frontend fallback change.
+- GGM remains private working proof. It is not launch material.
+- The intended backend candidate was manually contained in the controlled database.
+- The candidate now has draft/private/private publication state.
+- Anonymous backend-gallery pagination no longer returns the candidate.
+- The frontend containment patch was deployed to the active Presence production alias on 2026-07-20.
+- Hosted no-cache verification passed twice per applicable public route. The production alias serves the containment patch.
+- Owner-bound Studio proof is still outstanding.
 
-## Candidate identification
+## Completed containment layers
 
-| Candidate | Redacted node ref | Match confidence | Evidence | Current visibility | Risk | Safe next check |
-|---|---|---|---|---|---|---|
-| Candidate A | `[GGM_CANDIDATE_A]` | High | Exact configured pilot-reference match, artist-identity match, GGM signature match, compatible room mode, and a published timestamp in the completed backend gallery scan | Published/public inferred from the gallery contract | High: contradicts the private-working-proof rule | After credential reissue, perform an authorised control-plane GET and reconfirm the same redacted identity signals before any mutation |
+### Backend database containment
 
-The completed gallery scan found one candidate only. Candidate A is the confirmed intended target for a later containment operation. No IDs, slugs, account references, URLs, content, media, or draft data belong in this document.
+The approved one-record database operation changed only the candidate visibility state. It did not change ownership, tenant scope, slug, content, media, renderer, publication history, enquiries, or analytics.
 
-## Visibility risk
+The anonymous backend gallery was checked after containment, including its available pagination. The candidate was absent. No public-detail endpoint was used because that route can create analytics state.
 
-The backend gallery API returns only records that meet its published/public visibility criteria. Candidate A appears in that API, so the backend record is publicly gallery-listed.
+### Frontend public containment
 
-This does not establish owner-bound Studio access or a persisted private draft. It does establish a visibility conflict with the current GGM boundary: GGM is private working proof and must not be public launch material.
+The local patch uses `lib/presence/publicContainment.ts` as the single policy for publicly contained slugs.
 
-Backend containment alone will not remove the existing GGM-specific frontend fallback. The fallback can synthesize GGM content when the backend does not return a room. It must not be used as migration evidence, visibility proof, or proof that a backend room exists.
+- The contained GGM slug cannot use an anonymous demo-profile fallback after a backend public read misses.
+- `/p/[slug]` and the `/presence/[slug]` alias therefore resolve through the existing truthful not-found path when the backend does not return a public GGM node.
+- GGM work-detail metadata cannot fall back to fixture content for the contained slug.
+- The gallery no longer synthesizes, decorates, labels, or links a GGM card when the backend gallery excludes it.
+- The GGM faithful renderer suppresses external public-demo references for the contained slug.
+- Other demo profiles retain their existing fallback behaviour.
 
-## Owner-access failure
+This policy does not change backend visibility, authentication, tenant scope, owner access, Studio source data, persistence, or deployment configuration.
 
-The prior owner GET-only diagnostic returned 401 for the available owner credential. Local read-only inspection found that credential expired. Its audience shape was compatible with the backend, so expiry is confirmed while environment mismatch, an old pilot account, an incompatible Supabase project, or different room ownership remain possible contributing causes.
+## Source and asset decision
 
-The locally available control credential is also expired. A later containment task must not use either expired credential or any credential supplied in chat.
+GGM source code and artistic assets remain in the repository for private migration reference. The bundled `/public/ggm/**` files appear to be already-public artistic material used by existing reference and migration surfaces; this patch does not reclassify them as private media or move them.
 
-Owner-access restoration path:
+Anonymous Presence routes and gallery links are contained, but direct asset paths remain publicly served. Media hardening is a separate task after owner-bound Studio access and a truthful persisted media path are available. Do not delete or move these assets merely to force superficial 404 responses.
 
-1. Rotate or reissue owner access outside chat through the approved identity channel.
-2. Confirm the frontend, Supabase, and backend are the intended controlled pilot environment.
-3. Confirm the owner identity already exists without creating a new identity.
-4. Run the owner GET-only diagnostic again.
-5. Require owner list, node detail, editor overview, and draft read to return 200 before claiming Studio proof.
+The separate external mock-up deployment is also outside this repository task. Its URL may remain in non-public migration source, but no anonymous rendered GGM UI from this patch links to it.
 
-## Proposed containment operation
+## Local verification
 
-This operation requires a separate high-blast-radius approval. It is not authorised by this document.
+- Policy unit test: passed.
+- Typecheck: passed.
+- Targeted Chromium Playwright suite: passed.
+- Production build: passed.
 
-### Preconditions
+The browser suite proves the canonical public route, legacy alias, direct GGM work-detail route, default/search/filter gallery views, one unrelated demo fallback, one backend-public room, and an authenticated Studio editor read against the isolated local mock environment.
 
-- Human confirmation of Candidate A remains in force.
-- A new, private control-plane credential has been issued outside chat with active grant, MFA claim, correct control audience and host, `presence.node.read`, and `presence.node.update` scope.
-- The control-plane shared secret is supplied only through the private environment.
-- A control-plane GET confirms Candidate A's redacted identity signals and current public state immediately before mutation. Any mismatch stops the operation.
+Evidence is recorded in `docs/program/evidence/presence-ggm-containment-proof/`.
 
-### One-record operation
+## Remaining gates
 
-Use the audited control-plane update route for Candidate A only:
+1. Human review of this high-blast-radius public-renderer change.
+2. Owner access restoration and GET-only owner diagnostic.
+3. Owner-bound Studio draft/read/save/reload proof before claiming a system-native GGM migration.
+4. A separately scoped media-hardening decision if direct public asset delivery remains unacceptable.
 
-```text
-PATCH /api/control/presence/nodes/[GGM_CANDIDATE_A]
-{
-  "status": "draft",
-  "visibility": "private",
-  "public_status": "private"
-}
-```
+## Hosted containment evidence
 
-This is the smallest validated state transition available in the current backend. It must not alter the owner, tenant, slug, media, content, renderer, persistence model, or historical publication timestamp. The control-plane route provides scope enforcement, tenant access checks, validation, and an audit event.
+Production deployment `presence-92qntt36q-emadhatu-2110s-projects` is Ready and serves the active Presence alias. Two anonymous no-cache requests per route confirmed that the gallery and chooser have no GGM exposure, canonical and legacy GGM routes return stable truthful 404 responses without fallback content, an unrelated demo still works, and a backend-published Presence still works. The anonymous backend gallery remained free of the contained candidate. No backend mutation, control-plane authentication, or intentional analytics-writing public-detail request was used.
 
-### Verification and rollback
+## Non-goals retained
 
-Before the update, retain a private redacted metadata snapshot containing only state fields, candidate-match reasons, timestamp, and response hash. Do not retain screenshots, payload content, private URLs, or credentials.
-
-After the update:
-
-1. Control-plane GET confirms `draft` / `private` / `private` state.
-2. Complete public-gallery pagination confirms Candidate A is absent.
-3. Do not call the production public-detail endpoint: a successful response records analytics. Field state plus gallery absence and the documented backend query contract are the non-mutating backend proof.
-4. After owner credential repair, rerun owner list/detail/editor/draft, anonymous, and cross-owner GET-only checks.
-
-Rollback is manual and separately approved. If the pre-mutation identity check later proves the wrong record was changed, apply the recorded prior `status`, `visibility`, and `public_status` through the same control-plane route. Never automatically republish a room.
-
-## Acceptance criteria for containment
-
-- [ ] Candidate A is reconfirmed immediately before mutation using redacted evidence.
-- [ ] Only Candidate A is changed.
-- [ ] Candidate A is `draft`, `private`, and `private` for status, visibility, and public status.
-- [ ] Candidate A is absent from the backend public gallery.
-- [ ] No direct public-detail call is used where it could create analytics state.
-- [ ] Owner access has been repaired using credentials issued outside chat.
-- [ ] Owner list, detail, editor overview, and draft read return 200.
-- [ ] Anonymous owner access returns 401.
-- [ ] Foreign-owner access returns 403.
-- [ ] No public `/p/[slug]` route or frontend gallery fallback is used as proof.
-- [ ] No owner reassignment, tenant change, content edit, media change, or deletion occurs.
-
-## Frontend fallback follow-up
-
-After backend containment, create a separately approved Builder/Reviewer work order to remove the GGM-specific public fallback. That task must be reviewed independently because it changes public renderer and gallery behaviour.
-
-Its acceptance criteria must prove that a missing or private backend GGM room is not synthesized into the public gallery or public route, while unrelated demo fixtures retain their documented behaviour. This documentation task does not modify fallback behaviour.
-
-## Human decisions required
-
-- Candidate A has been confirmed as the intended target; reconfirm it immediately before mutation.
-- Authorise owner and control credential rotation or reissue outside chat.
-- Authorise the one-record private containment mutation.
-- Confirm whether the redacted metadata snapshot is sufficient audit evidence before containment.
-- Approve the separate GGM frontend-fallback removal work order after backend containment.
-
-## Next work orders
-
-1. Rotate or reissue owner and control credentials outside chat.
-2. Reconfirm Candidate A through an authorised control-plane GET.
-3. Execute the separately approved GGM backend visibility-containment mutation.
-4. Remove the GGM-specific frontend public fallback in a separate Builder/Reviewer task.
-5. Rerun the GET-only owner-bound diagnostic.
-6. Capture private Studio proof only after all containment gates pass.
+- No control-plane repair or use.
+- No backend mutation in this frontend task.
+- No authentication, tenant, persistence, routing architecture, or deployment-config changes.
+- No external mock-up deployment changes.
+- No GGM publication or Studio proof claim.
