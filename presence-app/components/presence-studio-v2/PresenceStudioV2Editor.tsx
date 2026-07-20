@@ -409,6 +409,24 @@ export default function PresenceStudioV2Editor({
     }));
   }
 
+  function moveObjectToZone(objectId: string, chamberId: string, zoneId: string): string | null {
+    const chamber = v2State?.chambers.find((item) => item.id === chamberId);
+    const object = chamber?.objects.find((item) => item.id === objectId);
+    if (!chamber || !object) return "This object is no longer available in this chamber.";
+    const composition = normalizeStudioV2Composition(chamber.composition, chamber.id, chamber.objects);
+    const issue = placementMoveError(composition, object, zoneId);
+    if (issue) return issue;
+    const zone = studioV2Layout(composition.layoutId).zones.find((item) => item.id === zoneId);
+    if (!zone) return "This part of the room is not available in the current layout.";
+    updateChamberComposition(chamberId, {
+      ...composition,
+      placements: composition.placements.map((placement) => placement.objectId === objectId
+        ? { ...placement, zoneId, order: composition.placements.filter((item) => item.zoneId === zoneId && item.objectId !== objectId).length, size: zone.allowedSizes.includes(placement.size) ? placement.size : zone.defaultSize, treatment: zone.allowedTreatments?.includes(placement.treatment as never) ? placement.treatment : zone.allowedTreatments?.[0] }
+        : placement),
+    });
+    return null;
+  }
+
   function findObject(id: string | null): StudioV2Object | null {
     if (!v2State || !id) return null;
     for (const chamber of v2State.chambers) {
@@ -1171,7 +1189,8 @@ export default function PresenceStudioV2Editor({
                 onClearRoomFocus={() => setActiveChamberId(null)}
                   onBeginDrag={beginObjectDrag}
                   onBeginResize={beginObjectResize}
-                  onBeginRotate={beginObjectRotate}
+                onBeginRotate={beginObjectRotate}
+                onMoveToZone={moveObjectToZone}
                 />
               </div>
 

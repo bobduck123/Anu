@@ -26,7 +26,25 @@ test("layout selection changes the room contract without a parallel preview rend
   await openStudio(page, request);
   await page.getByTestId("presence-studio-v2-layout-select").selectOption("portal-threshold");
   await expect(page.getByTestId("presence-studio-v2-layout-label").first()).toContainText("Portal threshold");
+  await page.getByTestId("presence-studio-v2-save").click();
+  await expect(page.getByTestId("presence-studio-v2-saved")).toContainText("Saved");
   await page.goto(`/studio/${roomId}/editor/preview`, { waitUntil: "networkidle" });
   await expect(page.locator(".presence-studio-v2-public .v2-public-layout.layout-portal-threshold")).toBeVisible();
   await expect(page.getByTestId("presence-studio-v2-inspector")).toHaveCount(0);
+});
+
+test("pointer arrangement uses the same guarded placement contract as controls", async ({ page, request }) => {
+  await openStudio(page, request);
+  await page.getByTestId("presence-studio-v2-outline-object").filter({ hasText: "Private install note" }).click();
+  const dragHandle = page.getByTestId("presence-studio-v2-layout-drag-handle");
+  const validZone = page.locator('[data-testid="presence-studio-v2-layout-zone"][data-zone-id="influence-layer"]');
+  await dragHandle.dispatchEvent("pointerdown", { pointerType: "mouse", button: 0 });
+  await expect(validZone).toHaveClass(/is-layout-drop-active/);
+  await validZone.dispatchEvent("pointerup", { pointerType: "mouse", button: 0 });
+  await expect(page.getByTestId("presence-studio-v2-layout-notice")).toContainText("Placed in the selected part of the room.");
+
+  const invalidZone = page.locator('[data-testid="presence-studio-v2-layout-zone"][data-zone-id="opening-work"]');
+  await dragHandle.dispatchEvent("pointerdown", { pointerType: "mouse", button: 0 });
+  await invalidZone.dispatchEvent("pointerup", { pointerType: "mouse", button: 0 });
+  await expect(page.getByTestId("presence-studio-v2-layout-notice")).toContainText("This object belongs in a different part of this chamber.");
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type CSSProperties } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import type { StudioV2State, StudioV2Object } from "@/lib/presence/studio-v2";
 import { deriveStudioV2Environment } from "@/lib/presence/studio-v2/environment";
 import { normalizeStudioV2Composition, studioV2Layout } from "@/lib/presence/studio-v2/layouts";
@@ -17,6 +17,7 @@ interface PresenceStudioV2RoomProps {
   onBeginDrag?: (id: string, event: React.PointerEvent<HTMLElement>) => void;
   onBeginResize?: (id: string, corner: "tl" | "tr" | "bl" | "br", event: React.PointerEvent<HTMLElement>) => void;
   onBeginRotate?: (id: string, event: React.PointerEvent<HTMLElement>) => void;
+  onMoveToZone?: (objectId: string, chamberId: string, zoneId: string) => string | null;
 }
 
 function roomForeground(background: string): string {
@@ -40,10 +41,30 @@ export default function PresenceStudioV2Room({
   onBeginDrag,
   onBeginResize,
   onBeginRotate,
+  onMoveToZone,
 }: PresenceStudioV2RoomProps) {
   const isWild = mode === "wild";
   const suspendTransforms = !isWild;
   const suppressRoomDeselectRef = useRef(false);
+  const [draggingObjectId, setDraggingObjectId] = useState<string | null>(null);
+  const [draggingChamberId, setDraggingChamberId] = useState<string | null>(null);
+  const [layoutNotice, setLayoutNotice] = useState<string | null>(null);
+  function finishLayoutDrag(zoneId?: string, sourceObjectId = draggingObjectId, sourceChamberId = draggingChamberId) {
+    const objectId = sourceObjectId;
+    const chamberId = sourceChamberId;
+    setDraggingObjectId(null); setDraggingChamberId(null);
+    if (!objectId || !chamberId || !zoneId || !onMoveToZone) return;
+    setLayoutNotice(onMoveToZone(objectId, chamberId, zoneId) ?? "Placed in the selected part of the room.");
+  }
+  function beginLayoutDrag(objectId: string, chamberId: string, event: React.PointerEvent<HTMLButtonElement>) {
+    event.preventDefault(); event.stopPropagation(); setDraggingObjectId(objectId); setDraggingChamberId(chamberId); setLayoutNotice(null);
+    const complete = (upEvent: PointerEvent) => {
+      const target = document.elementFromPoint(upEvent.clientX, upEvent.clientY) as HTMLElement | null;
+      const zoneId = target?.closest<HTMLElement>("[data-layout-drop-zone]")?.dataset.layoutDropZone;
+      finishLayoutDrag(zoneId, objectId, chamberId);
+    };
+    window.addEventListener("pointerup", complete, { once: true });
+  }
   const environment = deriveStudioV2Environment({
     worldId: state.worldId,
     skin: state.skin,
@@ -79,6 +100,7 @@ export default function PresenceStudioV2Room({
           accent={state.skin.accentColor}
           background={state.skin.background}
         />
+        {layoutNotice && <div className="v2-layout-notice" role="status" data-testid="presence-studio-v2-layout-notice">{layoutNotice}</div>}
         <div className="v2-room-header">
           <div className="v2-room-eyebrow">{state.worldId}</div>
           <div className="v2-room-name" style={{ fontWeight: state.skin.headingWeight }}>
@@ -102,7 +124,7 @@ export default function PresenceStudioV2Room({
                 const composition = normalizeStudioV2Composition(chamber.composition, chamber.id, chamber.objects);
                 const placements = composition.placements.filter((placement) => placement.zoneId === zone.id).sort((a, b) => a.order - b.order);
                 return (
-                <section key={zone.id} className={`v2-layout-zone zone-${zone.id}`} data-testid="presence-studio-v2-layout-zone" data-zone-id={zone.id}>
+                <section key={zone.id} className={`v2-layout-zone zone-${zone.id}${draggingObjectId ? " is-layout-drop-active" : ""}`} data-testid="presence-studio-v2-layout-zone" data-zone-id={zone.id} data-layout-drop-zone={zone.id} onPointerUp={() => finishLayoutDrag(zone.id)}>
                   <div className="v2-layout-zone-head"><strong>{zone.label}</strong><span>{zone.description}</span></div>
                   <div className="v2-objects">
               {placements.map((placement) => {
@@ -126,6 +148,7 @@ export default function PresenceStudioV2Room({
                   onBeginDrag={onBeginDrag}
                   onBeginResize={onBeginResize}
                   onBeginRotate={onBeginRotate}
+                  onBeginLayoutDrag={(event) => beginLayoutDrag(obj.id, chamber.id, event)}
                 />
                 ) : null;
               })}
@@ -182,6 +205,7 @@ function ObjectCard({
   onBeginDrag,
   onBeginResize,
   onBeginRotate,
+  onBeginLayoutDrag,
 }: {
   obj: StudioV2Object;
   skin: StudioV2State["skin"];
@@ -194,6 +218,7 @@ function ObjectCard({
   onBeginDrag?: (id: string, event: React.PointerEvent<HTMLElement>) => void;
   onBeginResize?: (id: string, corner: "tl" | "tr" | "bl" | "br", event: React.PointerEvent<HTMLElement>) => void;
   onBeginRotate?: (id: string, event: React.PointerEvent<HTMLElement>) => void;
+  onBeginLayoutDrag?: (event: React.PointerEvent<HTMLButtonElement>) => void;
 }) {
   const tf = obj.transform;
   const hasTransform = tf.x !== 0 || tf.y !== 0 || tf.rotation !== 0 || tf.scale !== 1;
@@ -259,6 +284,7 @@ function ObjectCard({
             {obj.pinned && <em>Pinned</em>}
             {mode === "guided" && !obj.locked && <em>Guided</em>}
           </div>
+          {onBeginLayoutDrag && <button type="button" className="v2-layout-drag-handle" data-testid="presence-studio-v2-layout-drag-handle" aria-label={`Arrange ${obj.title}`} onPointerDown={onBeginLayoutDrag}>Arrange</button>}
           {(["tl", "tr", "bl", "br"] as const).map((corner) => (
             <span
               key={corner}

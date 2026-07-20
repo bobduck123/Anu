@@ -27,3 +27,7 @@ This is a private local fixture proof built from environmental checkpoint `d656a
 ## Validation
 
 Record focused layout, existing private/environment regression, typecheck, and build results after implementation.
+
+## Evidence index
+
+Private local frames: layout/zone overview, selected controls, valid drag, invalid guardrail, Portal Threshold, private preview, mobile controls, and reduced-motion DOM fallback. These are local fixture evidence only; they are not GGM public, hosted owner, or launch proof.
