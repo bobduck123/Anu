@@ -7,7 +7,7 @@ import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
 import { useOwnerNode } from "@/components/studio/useOwnerNode";
 import PresenceStudioEditorApp from "@/components/studio/editor/PresenceStudioEditorApp";
 import PresenceStudioV2Editor from "@/components/presence-studio-v2/PresenceStudioV2Editor";
-import { shouldUsePresenceStudioV2 } from "@/lib/presence/studio-v2/feature";
+import { shouldUsePresenceStudioV2Editor } from "@/lib/presence/studio-v2/feature";
 
 export default function StudioPresenceEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -33,7 +33,7 @@ export default function StudioPresenceEditorPage({ params }: { params: Promise<{
     );
   }
 
-  const isV2Enabled = shouldUsePresenceStudioV2({
+  const isV2Enabled = shouldUsePresenceStudioV2Editor({
     roomId: nodeId,
     slug: node.slug,
     rendererKey: node.renderer_key,

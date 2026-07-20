@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   isPresenceStudioV2GloballyEnabled,
+  isPresenceStudioV2EditorPilotEligible,
   isPresenceStudioV2PilotEligible,
   shouldUsePresenceStudioV2,
+  shouldUsePresenceStudioV2Editor,
   type PresenceStudioV2FeatureEnv,
 } from "./feature.ts";
 
@@ -118,4 +120,83 @@ test("isPresenceStudioV2PilotEligible matches roomId and slug", () => {
   assert.strictEqual(isPresenceStudioV2PilotEligible({ roomId: 22 }, V2_ENV), true);
   assert.strictEqual(isPresenceStudioV2PilotEligible({ slug: "11" }, V2_ENV), true);
   assert.strictEqual(isPresenceStudioV2PilotEligible({ roomId: 99 }, V2_ENV), false);
+});
+
+test("shared Studio V2 eligibility does not route BBB without V2 node-level signals", () => {
+  assert.strictEqual(
+    shouldUsePresenceStudioV2(
+      {
+        roomId: 29,
+        slug: "bbbvision",
+        rendererKey: null,
+        config: null,
+        node: {
+          id: 29,
+          slug: "bbbvision",
+          display_name: "bbb.vision",
+          renderer_key: null,
+          editable_config: null,
+          metadata: {},
+        } as unknown as import("../../api/types.ts").PresenceNode,
+      },
+      V2_ENV,
+    ),
+    false,
+  );
+});
+
+test("editor-only Studio V2 eligibility allows BBB by explicit room id and slug", () => {
+  assert.strictEqual(isPresenceStudioV2EditorPilotEligible({ roomId: 29 }), true);
+  assert.strictEqual(isPresenceStudioV2EditorPilotEligible({ slug: "bbbvision" }), true);
+  assert.strictEqual(
+    shouldUsePresenceStudioV2Editor(
+      {
+        roomId: 29,
+        slug: "bbbvision",
+        rendererKey: null,
+        config: null,
+        node: {
+          id: 29,
+          slug: "bbbvision",
+          display_name: "bbb.vision",
+          renderer_key: null,
+          editable_config: null,
+          metadata: {},
+        } as unknown as import("../../api/types.ts").PresenceNode,
+      },
+      V2_ENV,
+    ),
+    true,
+  );
+});
+
+test("editor-only BBB eligibility still respects the global Studio V2 flag", () => {
+  assert.strictEqual(
+    shouldUsePresenceStudioV2Editor(
+      {
+        roomId: 29,
+        slug: "bbbvision",
+        rendererKey: null,
+        config: null,
+      },
+      DISABLED_ENV,
+    ),
+    false,
+  );
+});
+
+test("editor-only Studio V2 eligibility preserves legacy editor fallback for unrelated rooms", () => {
+  assert.strictEqual(isPresenceStudioV2EditorPilotEligible({ roomId: 99, slug: "legacy-room" }), false);
+  assert.strictEqual(
+    shouldUsePresenceStudioV2Editor(
+      {
+        roomId: 99,
+        slug: "legacy-room",
+        rendererKey: null,
+        config: null,
+      },
+      V2_ENV,
+    ),
+    false,
+  );
 });

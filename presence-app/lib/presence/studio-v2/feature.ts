@@ -81,6 +81,31 @@ export function shouldUsePresenceStudioV2(
   return isPresenceStudioV2GloballyEnabled(env) && isV2Room && isPresenceStudioV2PilotEligible(input, env);
 }
 
+const EDITOR_ONLY_STUDIO_V2_PILOT_IDS = new Set(["29", "bbbvision"]);
+
+export function isPresenceStudioV2EditorPilotEligible(
+  input: PresenceStudioV2EligibilityInput,
+): boolean {
+  const candidates = [
+    input.roomId == null ? "" : String(input.roomId),
+    input.slug ?? "",
+    input.node?.id == null ? "" : String(input.node.id),
+    input.node?.slug ?? "",
+  ].filter(Boolean);
+
+  return candidates.some((candidate) => EDITOR_ONLY_STUDIO_V2_PILOT_IDS.has(candidate));
+}
+
+export function shouldUsePresenceStudioV2Editor(
+  input: PresenceStudioV2EligibilityInput,
+  env?: PresenceStudioV2FeatureEnv,
+): boolean {
+  return (
+    shouldUsePresenceStudioV2(input, env) ||
+    (isPresenceStudioV2GloballyEnabled(env) && isPresenceStudioV2EditorPilotEligible(input))
+  );
+}
+
 export function parsePresenceStudioV2PilotIds(
   env?: PresenceStudioV2FeatureEnv,
 ): string[] {
