@@ -4,12 +4,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PresenceStudioV2PublicRoom from "@/components/presence-studio-v2/PresenceStudioV2PublicRoom";
 import { Loading } from "@/components/ui";
 import { getPresenceEditor } from "@/lib/api/editor";
+import {
+  STUDIO_V3_PRIVATE_METADATA_SCHEMA_VERSION,
+  getStudioV3PrivateState,
+  replaceStudioV3PrivateState,
+  type StudioV3PrivateState,
+} from "@/lib/api/studioV3";
 import type { PresenceEditableConfig, PresenceEditorOverview, PresenceNode } from "@/lib/api/types";
 import { studioV2FromPresenceConfig } from "@/lib/presence/studio-v2";
 import { createClient } from "@/lib/supabase/client";
 import {
   STUDIO_V3_BROWSER_PILOT_FLAG,
-  STUDIO_V3_NOCTURNAL_GALLERY_LOOK,
   STUDIO_V3_SOFT_EDITORIAL_LOOK,
   applyStudioV3Look,
   compileStudioV3Document,
@@ -18,7 +23,6 @@ import {
   deriveStudioV3OwnerPartitionKey,
   hydrateStudioV3Document,
   lockStudioV3Layer,
-  makeStudioV3ObjectId,
   placeStudioV3Collection,
   placeStudioV3Piece,
   clearStudioV3LocalStateForOwnerPartition,
@@ -30,15 +34,49 @@ import {
   type PresenceStudioV2EditorBridge,
   type PresenceStudioV2EditorIntent,
   type PresenceStudioV2EditorResult,
+  type StudioV3CollectionSourceRef,
   type StudioV3Document,
-  type StudioV3Placement,
   type StudioV3SourceRef,
 } from "@/lib/presence/studio-v3";
+import {
+  applyStudioV3StructuralStage,
+  cancelStudioV3StructuralStage,
+  hasStudioV3ServerRevision,
+  projectStudioV3Metadata,
+  restoreStudioV3Metadata,
+  restoreStudioV3Savepoint,
+  stageStudioV3RoomStyle,
+} from "@/lib/presence/studio-v3/p1State";
 import StudioV3Home from "./StudioV3Home";
+import StudioV3LookControls, {
+  studioV3RoomStyleName,
+  type StudioV3CompareSide,
+  type StudioV3CompatibilitySummary,
+  type StudioV3P1LookId,
+  type StudioV3P1RoomStyleId,
+} from "./StudioV3LookControls";
 import "./presence-studio-v3.css";
 
 type SheetMode = "closed" | "piece" | "shelf" | "look";
+type StudioV3ReadyStructuralStage = ReturnType<typeof stageStudioV3RoomStyle> & {
+  status: "ready";
+  stagedDocument: StudioV3Document;
+  impact: {
+    accounting: Array<Record<string, unknown>>;
+    preservedByLock?: string[];
+    preservedByOverride?: string[];
+  };
+};
+interface StudioV3StructuralPreviewState {
+  stage: StudioV3ReadyStructuralStage;
+  targetStyleId: StudioV3P1RoomStyleId;
+  targetStyleName: string;
+  compareSide: StudioV3CompareSide;
+  summary: StudioV3CompatibilitySummary;
+}
 const STUDIO_V3_MEMORY_ONLY_SESSION_KEY = "presence-studio-v3:memory-only";
+const STUDIO_V3_DURABLE_BASE_MISMATCH_MESSAGE =
+  "Existing durable state is preserved, but it belongs to a different Studio base. Private-state save is disabled until a reviewed rebase or clear is available.";
 
 export default function PresenceStudioV3Shell({
   node,
@@ -63,6 +101,11 @@ export default function PresenceStudioV3Shell({
   const [lastAction, setLastAction] = useState("Saved locally");
   const [ownerPartitionKey, setOwnerPartitionKey] = useState<string | null>(null);
   const [namedLookName, setNamedLookName] = useState("P0 Soft Editorial");
+  const [structuralPreview, setStructuralPreview] = useState<StudioV3StructuralPreviewState | null>(null);
+  const [privateStateRevision, setPrivateStateRevision] = useState(0);
+  const [privateStateAvailable, setPrivateStateAvailable] = useState(false);
+  const [privateStateSaving, setPrivateStateSaving] = useState(false);
+  const [privateStateBaseMismatch, setPrivateStateBaseMismatch] = useState(false);
   const sheetRef = useRef<HTMLElement | null>(null);
   const sheetCloseRef = useRef<HTMLButtonElement | null>(null);
   const authenticatedSubjectRef = useRef<string | null>(authenticatedSubject);
@@ -171,6 +214,10 @@ export default function PresenceStudioV3Shell({
       setOverview(null);
       setSelectedPieceId(null);
       setTestAsVisitor(false);
+      setStructuralPreview(null);
+      setPrivateStateRevision(0);
+      setPrivateStateAvailable(false);
+      setPrivateStateBaseMismatch(false);
       const cleanupConfirmed = await clearPreviousPartition();
       if (!nextSubject) {
         if (!cleanupConfirmed) disableLocalPersistence();
@@ -198,8 +245,14 @@ export default function PresenceStudioV3Shell({
     async function load() {
       setLoading(true);
       setError(null);
+      setPrivateStateBaseMismatch(false);
       try {
-        const nextOverview = await getPresenceEditor(nodeId, token);
+        const [nextOverview, privateStateRead] = await Promise.all([
+          getPresenceEditor(nodeId, token),
+          getStudioV3PrivateState(nodeId, token)
+            .then((response) => ({ available: true, state: response.state }))
+            .catch(() => ({ available: false, state: null as StudioV3PrivateState | null })),
+        ]);
         if (!isCurrentLoad()) return;
         const selectedConfig = nextOverview.draft ?? nextOverview.published;
         if (!selectedConfig) throw new Error("No draft or published config is available for the V3 local canvas.");
@@ -217,6 +270,21 @@ export default function PresenceStudioV3Shell({
           works: node.works ?? node.gallery_items ?? [],
           collections: node.collections ?? [],
         });
+        let durableDocument = hydrated;
+        let durableMessage: string | null = null;
+        const durableStateMatchesBase = privateStateRead.state
+          ? studioV3PrivateStateMatchesBase(privateStateRead.state, hydrated)
+          : false;
+        const durableBaseMismatch = Boolean(privateStateRead.state && !durableStateMatchesBase);
+        if (privateStateRead.state && durableStateMatchesBase) {
+          const durableRestore = restoreStudioV3Metadata(hydrated, privateStateRead.state.metadata);
+          if (durableRestore.report.status !== "rejected") {
+            durableDocument = durableRestore.document;
+            durableMessage = durableRestore.report.status === "exact"
+              ? "Restored durable private V3 state"
+              : "Restored durable private V3 state with missing references";
+          }
+        }
         const partition = await deriveStudioV3OwnerPartitionKey({
           deploymentScope: window.location.host || "local",
           validatedOwnerSubject: authenticatedSubject,
@@ -226,7 +294,7 @@ export default function PresenceStudioV3Shell({
         const persistenceKey = base.localPersistence === "available" && !localPersistenceDisabledRef.current ? partition?.key ?? null : null;
         let safePersistenceKey = persistenceKey;
         let restored: { document: StudioV3Document; message: string; persistenceAvailable?: boolean } = {
-          document: hydrated,
+          document: durableDocument,
           message: "Memory-only local state",
           persistenceAvailable: false,
         };
@@ -241,10 +309,17 @@ export default function PresenceStudioV3Shell({
                   baseKind: base.identity.sourceKind,
                   configId: base.identity.configId,
                   baseFingerprint: base.fingerprint,
-                  roomIds: hydrated.rooms.map((room) => room.id),
+                  roomIds: durableDocument.rooms.map((room) => room.id),
                 },
               });
-              return restoreStudioV3LocalDocument(hydrated, safePersistenceKey!, nodeId);
+              return restoreStudioV3LocalDocument(
+                durableDocument,
+                safePersistenceKey!,
+                nodeId,
+                privateStateRead.available && !durableBaseMismatch
+                  ? privateStateRead.state?.metadata_revision ?? 0
+                  : null,
+              );
             });
           } catch {
             safePersistenceKey = null;
@@ -270,9 +345,24 @@ export default function PresenceStudioV3Shell({
         setOverview(nextOverview);
         setBaseConfig(selectedConfig);
         setDocument(restored.document);
+        setStructuralPreview(null);
+        setPrivateStateRevision(durableStateMatchesBase ? privateStateRead.state?.metadata_revision ?? 0 : 0);
+        setPrivateStateBaseMismatch(durableBaseMismatch);
+        setPrivateStateAvailable(
+          privateStateRead.available &&
+          !durableBaseMismatch &&
+          hydrated.base.localPersistence === "available" &&
+          hasStudioV3ServerRevision(hydrated.base.identity),
+        );
         setOwnerPartitionKey(safePersistenceKey);
         ownerPartitionKeyRef.current = safePersistenceKey;
-        setLastAction(safePersistenceKey ? restored.message : "Memory-only local state");
+        setLastAction(durableBaseMismatch
+          ? STUDIO_V3_DURABLE_BASE_MISMATCH_MESSAGE
+          : durableMessage && restored.message === "No complete local snapshot"
+            ? durableMessage
+            : safePersistenceKey
+              ? restored.message
+              : durableMessage ?? "Memory-only local state");
       } catch (loadError) {
         if (!isCurrentLoad()) return;
         setError(loadError instanceof Error ? loadError.message : "Studio V3 failed to load.");
@@ -319,6 +409,8 @@ export default function PresenceStudioV3Shell({
         presenceId: nodeId,
         baseIdentity: document.base.identity,
         baseFingerprint: document.base.fingerprint,
+        metadataRevision: privateStateRevision,
+        metadata: projectStudioV3Metadata(document),
         mode: document.mode,
         activeRoomId: document.activeRoomId,
         activeLookId: document.activeLookId,
@@ -363,13 +455,20 @@ export default function PresenceStudioV3Shell({
     return () => {
       cancelled = true;
     };
-  }, [document, nodeId, ownerPartitionKey]);
+  }, [document, nodeId, ownerPartitionKey, privateStateRevision]);
+
+  const canvasDocument = useMemo(() => {
+    if (!document || !structuralPreview) return document;
+    return structuralPreview.compareSide === "before"
+      ? cancelStudioV3StructuralStage(structuralPreview.stage).document
+      : structuralPreview.stage.stagedDocument;
+  }, [document, structuralPreview]);
 
   const compiled = useMemo(() => {
-    if (!document || !baseConfig) return null;
+    if (!canvasDocument || !baseConfig) return null;
     const baseState = studioV2FromPresenceConfig(baseConfig, node);
-    return compileStudioV3Document(document, baseState);
-  }, [baseConfig, document, node]);
+    return compileStudioV3Document(canvasDocument, baseState);
+  }, [baseConfig, canvasDocument, node]);
 
   const selectedPiece = useMemo(() => {
     if (!compiled || !selectedPieceId) return null;
@@ -379,7 +478,20 @@ export default function PresenceStudioV3Shell({
   const bridge = useMemo<PresenceStudioV2EditorBridge>(() => ({
     handleIntent(intent: PresenceStudioV2EditorIntent): PresenceStudioV2EditorResult {
       let result: PresenceStudioV2EditorResult;
-      if (intent.kind === "activate-piece") {
+      if (structuralPreview) {
+        setLastAction("Apply or cancel the structural preview first");
+        if (intent.kind === "activate-piece") {
+          result = { kind: "piece-selected", pieceId: intent.pieceId, suppressVisitor: true };
+        } else if (intent.kind === "navigate-room") {
+          result = { kind: "room-selected", roomId: intent.roomId, suppressVisitor: true };
+        } else if (intent.kind === "clear-selection") {
+          result = { kind: "selection-cleared", suppressVisitor: true };
+        } else if (intent.kind === "suppress-unsupported-chrome") {
+          result = { kind: "chrome-suppressed", controlId: intent.controlId, suppressVisitor: true };
+        } else {
+          result = { kind: "action-suppressed", reason: "missing-piece-id", suppressVisitor: true };
+        }
+      } else if (intent.kind === "activate-piece") {
         const pieceId = intent.pieceId.trim();
         setSelectedPieceId(pieceId);
         setSheetMode("closed");
@@ -410,9 +522,13 @@ export default function PresenceStudioV3Shell({
       }
       return result;
     },
-  }), []);
+  }), [structuralPreview]);
 
   const placeFirstPiece = useCallback(() => {
+    if (structuralPreview) {
+      setLastAction("Apply or cancel the structural preview first");
+      return;
+    }
     setDocument((current) => {
       if (!current) return current;
       const activeRoom = current.rooms.find((room) => room.id === current.activeRoomId);
@@ -425,24 +541,135 @@ export default function PresenceStudioV3Shell({
       setLastAction("Piece placed locally");
       return placeStudioV3Piece(current, current.activeRoomId, workRef);
     });
-  }, []);
+  }, [structuralPreview]);
 
   const placeFirstCollection = useCallback(() => {
+    if (structuralPreview) {
+      setLastAction("Apply or cancel the structural preview first");
+      return;
+    }
     setDocument((current) => {
       if (!current) return current;
       const collectionRef = Object.keys(current.collections)[0];
       if (!collectionRef) return current;
       setLastAction("Collection placed locally");
-      return placeStudioV3Collection(current, current.activeRoomId, collectionRef as `collection:${number}`);
+      return placeStudioV3Collection(
+        current,
+        current.activeRoomId,
+        collectionRef as StudioV3CollectionSourceRef,
+      );
     });
+  }, [structuralPreview]);
+
+  const applyLook = useCallback((lookId: StudioV3P1LookId) => {
+    if (structuralPreview) {
+      setLastAction("Apply or cancel the structural preview first");
+      return;
+    }
+    setDocument((current) => current ? applyStudioV3Look(current, lookId) : current);
+    const label = lookId === "soft-editorial"
+      ? "Soft Editorial"
+      : lookId === "nocturnal-gallery"
+        ? "Nocturnal Gallery"
+        : "Zine Archive";
+    setLastAction(`${label} applied locally`);
+  }, [structuralPreview]);
+
+  const stageRoomStyle = useCallback((roomStyleId: StudioV3P1RoomStyleId) => {
+    if (!document) return;
+    const staged = stageStudioV3RoomStyle(document, {
+      roomId: document.activeRoomId,
+      roomStyleId,
+      now: new Date().toISOString(),
+    });
+    if (staged.status !== "ready") {
+      setLastAction("This Room Style cannot be previewed for the current Room");
+      return;
+    }
+    const readyStage = staged as StudioV3ReadyStructuralStage;
+    const targetStyleName = studioV3RoomStyleName(roomStyleId);
+    setStructuralPreview({
+      stage: readyStage,
+      targetStyleId: roomStyleId,
+      targetStyleName,
+      compareSide: "after",
+      summary: compatibilitySummaryFromStage(readyStage),
+    });
+    setLastAction(`Previewing ${targetStyleName}`);
+  }, [document]);
+
+  const compareStructuralSide = useCallback((compareSide: StudioV3CompareSide) => {
+    setStructuralPreview((current) => current ? { ...current, compareSide } : current);
   }, []);
 
-  const applyLook = useCallback((lookId: "soft-editorial" | "nocturnal-gallery") => {
-    setDocument((current) => current ? applyStudioV3Look(current, lookId) : current);
-    setLastAction(lookId === "soft-editorial" ? "Soft Editorial applied locally" : "Nocturnal Gallery applied locally");
-  }, []);
+  const applyStructuralPreview = useCallback(() => {
+    if (!structuralPreview) return;
+    const applied = applyStudioV3StructuralStage(structuralPreview.stage);
+    setDocument(applied.document);
+    setLastAction(`${structuralPreview.targetStyleName} applied locally`);
+    setStructuralPreview(null);
+  }, [structuralPreview]);
+
+  const cancelStructuralPreview = useCallback(() => {
+    if (!structuralPreview) return;
+    const cancelled = cancelStudioV3StructuralStage(structuralPreview.stage);
+    setDocument(cancelled.document);
+    setStructuralPreview(null);
+    setLastAction(cancelled.report.status === "exact"
+      ? "Preview cancelled - exact prior structure restored"
+      : "Preview cancelled - prior structure restored with warnings");
+  }, [structuralPreview]);
+
+  const savePrivateState = useCallback(async () => {
+    if (
+      !document ||
+      !privateStateAvailable ||
+      privateStateBaseMismatch ||
+      !hasStudioV3ServerRevision(document.base.identity) ||
+      privateStateSaving
+    ) return;
+    if (structuralPreview) {
+      setLastAction("Apply or cancel the structural preview before saving private state");
+      return;
+    }
+    const identity = document.base.identity;
+    if ((identity.sourceKind !== "draft" && identity.sourceKind !== "published") || identity.status !== identity.sourceKind) {
+      setLastAction("Reload the Studio base before saving private state");
+      return;
+    }
+    setPrivateStateSaving(true);
+    setLastAction("Saving private V3 state");
+    try {
+      const response = await replaceStudioV3PrivateState(nodeId, token, {
+        expected: {
+          room_id: identity.roomId,
+          config_id: identity.configId,
+          source_kind: identity.sourceKind,
+          status: identity.sourceKind,
+          version: identity.version,
+          revision: identity.revision,
+          schema_version: identity.schemaVersion,
+          fingerprint: document.base.fingerprint,
+          metadata_revision: privateStateRevision,
+        },
+        metadata_schema_version: STUDIO_V3_PRIVATE_METADATA_SCHEMA_VERSION,
+        metadata: projectStudioV3Metadata(document),
+      });
+      if (!response.state) throw new Error("Private state response was empty.");
+      setPrivateStateRevision(response.state.metadata_revision);
+      setLastAction("Private V3 state saved");
+    } catch (saveError) {
+      setLastAction(saveError instanceof Error ? saveError.message : "Private V3 state save failed safely");
+    } finally {
+      setPrivateStateSaving(false);
+    }
+  }, [document, nodeId, privateStateAvailable, privateStateBaseMismatch, privateStateRevision, privateStateSaving, structuralPreview, token]);
 
   const lockMotion = useCallback(() => {
+    if (structuralPreview) {
+      setLastAction("Apply or cancel the structural preview first");
+      return;
+    }
     setDocument((current) => {
       if (!current) return current;
       const activeLook = current.looks[current.activeLookId] ?? current.namedLooks.find((look) => look.id === current.activeLookId);
@@ -456,25 +683,49 @@ export default function PresenceStudioV3Shell({
     });
     });
     setLastAction("Motion / Atmosphere locked locally");
-  }, [nodeId]);
+  }, [nodeId, structuralPreview]);
 
   const saveNamedLook = useCallback(() => {
+    if (structuralPreview) {
+      setLastAction("Apply or cancel the structural preview first");
+      return;
+    }
     if (containsForbiddenLocalValue(namedLookName)) {
       setLastAction("Named Look name rejected");
       return;
     }
     setDocument((current) => current ? saveStudioV3NamedLook(current, namedLookName) : current);
     setLastAction("Named Look saved locally");
-  }, [namedLookName]);
+  }, [namedLookName, structuralPreview]);
 
   const restoreNamedLook = useCallback(() => {
+    if (structuralPreview) {
+      setLastAction("Apply or cancel the structural preview first");
+      return;
+    }
     setDocument((current) => {
       if (!current || current.namedLooks.length === 0) return current;
       const named = current.namedLooks[current.namedLooks.length - 1];
       setLastAction("Named Look restored locally");
       return applyStudioV3Look(current, named.id);
     });
-  }, []);
+  }, [structuralPreview]);
+
+  const restoreStructuralSavepoint = useCallback(() => {
+    if (structuralPreview) {
+      setLastAction("Apply or cancel the structural preview first");
+      return;
+    }
+    setDocument((current) => {
+      const savepoint = current?.savepoints[current.savepoints.length - 1];
+      if (!current || !savepoint) return current;
+      const restored = restoreStudioV3Savepoint(current, savepoint);
+      setLastAction(restored.report.status === "exact"
+        ? "Last structural savepoint restored"
+        : "Structural savepoint restored with missing references");
+      return restored.document;
+    });
+  }, [structuralPreview]);
 
   if (loading) return <Loading label="Opening Studio V3 local pilot..." />;
   if (error || !compiled || !document || !overview) {
@@ -493,13 +744,16 @@ export default function PresenceStudioV3Shell({
   const duplicateCount = activeRoom?.placements.filter((placement) => placement.status === "duplicate").length ?? 0;
   const incompatibleCount = activeRoom?.placements.filter((placement) => placement.status === "incompatible").length ?? 0;
   const shelvedCount = activeRoom?.placements.filter((placement) => placement.status === "shelved").length ?? 0;
+  const compatibility = compatibilitySummaryFromDocument(document, activeRoom?.id ?? document.activeRoomId);
+  const activeLook = document.looks[document.activeLookId]
+    ?? document.namedLooks.find((look) => look.id === document.activeLookId);
 
   return (
     <main
       className={`studio-v3-shell${testAsVisitor ? " is-testing-visitor" : ""}`}
       data-testid="presence-studio-v3-shell"
       onKeyDownCapture={(event) => {
-        if (testAsVisitor || sheetMode !== "closed" || event.key !== "Escape" || !selectedPieceId) return;
+        if (testAsVisitor || structuralPreview || sheetMode !== "closed" || event.key !== "Escape" || !selectedPieceId) return;
         const target = event.target;
         if (
           target instanceof HTMLElement &&
@@ -513,19 +767,39 @@ export default function PresenceStudioV3Shell({
       }}
     >
       {!testAsVisitor && <header className="studio-v3-topbar">
-        <button type="button" onClick={() => setHomeOpen((open) => !open)} aria-label="Studio Home">
+        <button type="button" onClick={() => setHomeOpen((open) => !open)} disabled={Boolean(structuralPreview)} aria-label="Studio Home">
           Home
         </button>
         <div>
           <strong>{node.display_name}</strong>
-          <span>{lastAction}</span>
+          <span
+            role="status"
+            aria-live={privateStateBaseMismatch ? "assertive" : "polite"}
+            data-testid="presence-studio-v3-status"
+            data-durable-base-state={privateStateBaseMismatch ? "mismatch" : "current"}
+          >
+            {privateStateBaseMismatch ? STUDIO_V3_DURABLE_BASE_MISMATCH_MESSAGE : lastAction}
+          </span>
         </div>
         <nav aria-label="Studio V3 top actions">
-          <button type="button" onClick={() => setSheetMode("shelf")} data-testid="presence-studio-v3-shelf-trigger">
+          <button type="button" onClick={() => setSheetMode("shelf")} disabled={Boolean(structuralPreview)} data-testid="presence-studio-v3-shelf-trigger">
             Pieces
           </button>
           <button type="button" onClick={() => setSheetMode("look")} data-testid="presence-studio-v3-look-trigger">
             Look
+          </button>
+          <button
+            type="button"
+            onClick={() => void savePrivateState()}
+            disabled={!privateStateAvailable || privateStateBaseMismatch || privateStateSaving || Boolean(structuralPreview)}
+            data-testid="presence-studio-v3-save-private-state"
+            title={privateStateBaseMismatch
+              ? "Existing durable state is preserved. Saving requires a future reviewed rebase or clear."
+              : privateStateAvailable
+                ? "Save owner-private Looks, locks, savepoints, and placement references."
+                : "Durable private state requires the reviewed V3 backend contract and a revisioned base."}
+          >
+            {privateStateSaving ? "Saving private state..." : "Save private state"}
           </button>
           <button
             type="button"
@@ -535,6 +809,7 @@ export default function PresenceStudioV3Shell({
               setSelectedPieceId(null);
               setTestAsVisitor(true);
             }}
+            disabled={Boolean(structuralPreview)}
             data-testid="presence-studio-v3-test-visitor"
           >
             Test as visitor
@@ -548,7 +823,9 @@ export default function PresenceStudioV3Shell({
       {!testAsVisitor && homeOpen && (
         <StudioV3Home
           node={node}
-          status={overview.draft ? "Draft base loaded; prototype changes are browser-local." : "Published base loaded; prototype changes are browser-local."}
+          status={overview.draft
+            ? "Draft base loaded; V3 metadata remains owner-private and saves separately."
+            : "Published base loaded; V3 metadata remains owner-private and saves separately."}
           onEdit={() => setHomeOpen(false)}
           onTestVisitor={() => {
             setHomeOpen(false);
@@ -558,7 +835,11 @@ export default function PresenceStudioV3Shell({
       )}
 
       <section className="studio-v3-canvas" data-testid="presence-studio-v3-public-room-canvas">
-        <PresenceStudioV2PublicRoom room={compiled.publicRoom} editorBridge={testAsVisitor ? undefined : bridge} />
+        <PresenceStudioV2PublicRoom
+          room={compiled.publicRoom}
+          editorBridge={testAsVisitor ? undefined : bridge}
+          editorActiveChamberId={canvasDocument?.activeRoomId}
+        />
       </section>
 
       {testAsVisitor && (
@@ -575,11 +856,11 @@ export default function PresenceStudioV3Shell({
       {!testAsVisitor && selectedPiece && (
         <div className="studio-v3-action-bar" data-testid="presence-studio-v3-action-bar">
           <span>{selectedPiece.title}</span>
-          <button type="button" onClick={() => setSheetMode("piece")}>Edit</button>
-          <button type="button" onClick={() => setSheetMode("shelf")}>Pieces</button>
+          <button type="button" onClick={() => setSheetMode("piece")} disabled={Boolean(structuralPreview)}>Edit</button>
+          <button type="button" onClick={() => setSheetMode("shelf")} disabled={Boolean(structuralPreview)}>Pieces</button>
           <button type="button" onClick={() => setSheetMode("look")}>Look</button>
-          <button type="button" onClick={() => setSheetMode("piece")} data-testid="presence-studio-v3-more-action">More</button>
-          <button type="button" onClick={() => window.open(selectedPiece.link || "#", "_blank", "noopener,noreferrer")} disabled={!selectedPiece.link}>
+          <button type="button" onClick={() => setSheetMode("piece")} disabled={Boolean(structuralPreview)} data-testid="presence-studio-v3-more-action">More</button>
+          <button type="button" onClick={() => window.open(selectedPiece.link || "#", "_blank", "noopener,noreferrer")} disabled={!selectedPiece.link || Boolean(structuralPreview)}>
             Open link
           </button>
         </div>
@@ -644,38 +925,34 @@ export default function PresenceStudioV3Shell({
             </div>
           )}
           {sheetMode === "look" && (
-            <div data-testid="presence-studio-v3-look-controls">
-              <p className="studio-v3-kicker">Look</p>
-              <h2>{document.looks[document.activeLookId]?.name ?? "Current Look"}</h2>
-              <div className="studio-v3-look-grid">
-                <label className="studio-v3-look-name">
-                  <span>Look name</span>
-                  <input
-                    value={namedLookName}
-                    onChange={(event) => setNamedLookName(event.target.value)}
-                    data-testid="presence-studio-v3-named-look-name"
-                  />
-                </label>
-                <button type="button" onClick={() => applyLook("soft-editorial")} data-testid="presence-studio-v3-apply-soft-editorial">
-                  {STUDIO_V3_SOFT_EDITORIAL_LOOK.name}
-                </button>
-                <button type="button" onClick={() => applyLook("nocturnal-gallery")} data-testid="presence-studio-v3-apply-nocturnal-gallery">
-                  {STUDIO_V3_NOCTURNAL_GALLERY_LOOK.name}
-                </button>
-                <button type="button" onClick={lockMotion} data-testid="presence-studio-v3-lock-layer">
-                  Lock motion
-                </button>
-                <button type="button" onClick={saveNamedLook} data-testid="presence-studio-v3-save-named-look">
-                  Save as Look
-                </button>
-                <button type="button" onClick={() => applyLook("nocturnal-gallery")}>
-                  Alter
-                </button>
-                <button type="button" onClick={restoreNamedLook} disabled={document.namedLooks.length === 0} data-testid="presence-studio-v3-restore-named-look">
-                  Restore
-                </button>
-              </div>
-            </div>
+            <StudioV3LookControls
+              activeLookId={document.activeLookId}
+              activeLookName={activeLook?.name ?? "Current Look"}
+              activeRoomStyleId={activeRoom?.styleId ?? "gallery-wall"}
+              compatibility={compatibility}
+              lockedLayerCount={document.locks.length}
+              structuralPreview={structuralPreview ? {
+                targetStyleId: structuralPreview.targetStyleId,
+                targetStyleName: structuralPreview.targetStyleName,
+                compareSide: structuralPreview.compareSide,
+                summary: structuralPreview.summary,
+              } : null}
+              namedLookName={namedLookName}
+              hasNamedLooks={document.namedLooks.length > 0}
+              latestNamedLookName={document.namedLooks[document.namedLooks.length - 1]?.name}
+              hasStructuralSavepoint={document.savepoints.length > 0}
+              onNamedLookNameChange={setNamedLookName}
+              onApplyLook={applyLook}
+              onStageRoomStyle={stageRoomStyle}
+              onCompareSide={compareStructuralSide}
+              onApplyStructural={applyStructuralPreview}
+              onCancelStructural={cancelStructuralPreview}
+              onLockMotion={lockMotion}
+              onSaveNamedLook={saveNamedLook}
+              onAlterNamedLook={() => applyLook("nocturnal-gallery")}
+              onRestoreNamedLook={restoreNamedLook}
+              onRestoreStructural={restoreStructuralSavepoint}
+            />
           )}
         </section>
       )}
@@ -694,10 +971,123 @@ export default function PresenceStudioV3Shell({
   );
 }
 
+function compatibilitySummaryFromDocument(document: StudioV3Document, roomId: string): StudioV3CompatibilitySummary {
+  const room = document.rooms.find((candidate) => candidate.id === roomId);
+  if (!room) return emptyCompatibilitySummary();
+  const duplicate = room.placements.filter((placement) => placement.status === "duplicate").length;
+  const incompatible = room.placements.filter((placement) => placement.status === "incompatible").length;
+  const retained = room.placements.filter((placement) => placement.status === "shelved" || placement.status === "incompatible").length;
+  const placed = room.baseObjectIds.length + room.placements.filter((placement) => placement.status === "placed").length;
+  const reasons = Array.from(new Set(room.placements
+    .map((placement) => placement.reason?.trim())
+    .filter((reason): reason is string => Boolean(reason))));
+  return {
+    changed: 0,
+    locksPreserved: 0,
+    overridesPreserved: 0,
+    moved: 0,
+    placed,
+    unplaced: retained,
+    incompatible,
+    overflow: reasons.filter((reason) => /overflow|capacity|bounded|limit/i.test(reason)).length,
+    duplicate,
+    retained,
+    total: room.baseObjectIds.length + room.placements.length,
+    reasons,
+  };
+}
+
+function compatibilitySummaryFromStage(stage: StudioV3ReadyStructuralStage): StudioV3CompatibilitySummary {
+  const accounting: Array<Record<string, unknown>> = stage.impact.accounting ?? [];
+  const outcome = (item: Record<string, unknown>) => typeof item.outcome === "string" ? item.outcome : "";
+  const reasons = Array.from(new Set(accounting
+    .map((item): string => typeof item.reason === "string" ? item.reason.trim() : "")
+    .filter((reason): reason is string => Boolean(reason))));
+  const moved = accounting.filter((item) => {
+    if (item.moved === true) return true;
+    const before = firstString(item, ["beforeZoneId", "fromZoneId", "previousZoneId", "sourceZoneId"]);
+    const after = firstString(item, ["afterZoneId", "toZoneId", "nextZoneId", "targetZoneId"]);
+    return Boolean(before && after && before !== after);
+  }).length;
+  const placed = accounting.filter((item) => outcome(item) === "placed").length;
+  const duplicate = accounting.filter((item) => outcome(item) === "duplicate").length;
+  const explicitlyUnplaced = accounting.filter((item) => outcome(item) === "unplaced").length;
+  const retained = accounting.filter((item) => outcome(item) === "shelved" || outcome(item) === "unplaced").length;
+  const incompatible = accounting.filter((item) => {
+    const reason = typeof item.reason === "string" ? item.reason : "";
+    return item.compatible === false || /incompatible|cannot place|unsupported/i.test(reason);
+  }).length;
+  const overflow = accounting.filter((item) => {
+    const reason = typeof item.reason === "string" ? item.reason : "";
+    return item.overflow === true || /overflow|capacity|bounded|limit/i.test(reason);
+  }).length;
+  const changed = accounting.filter((item) => {
+    if (item.changed === true || item.moved === true) return true;
+    const beforeStatus = firstString(item, ["beforeStatus", "fromStatus", "previousStatus"]);
+    const afterStatus = firstString(item, ["afterStatus", "toStatus", "nextStatus", "outcome"]);
+    const beforeZone = firstString(item, ["beforeZoneId", "fromZoneId", "previousZoneId", "sourceZoneId"]);
+    const afterZone = firstString(item, ["afterZoneId", "toZoneId", "nextZoneId", "targetZoneId"]);
+    return Boolean((beforeStatus && afterStatus && beforeStatus !== afterStatus) || (beforeZone && afterZone && beforeZone !== afterZone));
+  }).length;
+  return {
+    changed,
+    locksPreserved: stage.impact.preservedByLock?.length ?? 0,
+    overridesPreserved: stage.impact.preservedByOverride?.length ?? 0,
+    moved,
+    placed,
+    unplaced: explicitlyUnplaced,
+    incompatible,
+    overflow,
+    duplicate,
+    retained,
+    total: accounting.length,
+    reasons,
+  };
+}
+
+function firstString(item: Record<string, unknown>, keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = item[key];
+    if (typeof value === "string" && value) return value;
+  }
+  return undefined;
+}
+
+function emptyCompatibilitySummary(): StudioV3CompatibilitySummary {
+  return {
+    changed: 0,
+    locksPreserved: 0,
+    overridesPreserved: 0,
+    moved: 0,
+    placed: 0,
+    unplaced: 0,
+    incompatible: 0,
+    overflow: 0,
+    duplicate: 0,
+    retained: 0,
+    total: 0,
+    reasons: [],
+  };
+}
+
+function studioV3PrivateStateMatchesBase(state: StudioV3PrivateState, document: StudioV3Document): boolean {
+  const identity = document.base.identity;
+  return state.room_id === identity.roomId
+    && state.metadata_schema_version === STUDIO_V3_PRIVATE_METADATA_SCHEMA_VERSION
+    && state.base.config_id === identity.configId
+    && state.base.source_kind === identity.sourceKind
+    && state.base.status === identity.status
+    && state.base.version === identity.version
+    && state.base.revision === identity.revision
+    && state.base.schema_version === identity.schemaVersion
+    && state.base.fingerprint === document.base.fingerprint;
+}
+
 function restoreStudioV3LocalDocument(
   baseDocument: StudioV3Document,
   ownerPartitionKey: string,
   presenceId: number,
+  serverMetadataRevision: number | null,
 ): { document: StudioV3Document; message: string; persistenceAvailable?: boolean } {
   if (typeof window === "undefined") return { document: baseDocument, message: "Saved locally" };
   try {
@@ -716,56 +1106,21 @@ function restoreStudioV3LocalDocument(
       return { document: baseDocument, message: "No complete local snapshot" };
     }
     const presenceEnvelope = recovered.snapshot.presence;
-    const restoredActiveRoomId = presenceEnvelope.activeRoomId && baseDocument.rooms.some((room) => room.id === presenceEnvelope.activeRoomId)
-      ? presenceEnvelope.activeRoomId
-      : baseDocument.activeRoomId;
-    let next = baseDocument;
-    const namedLooks = presenceEnvelope.namedLooks;
-    const namedLookMap = Object.fromEntries(namedLooks.map((look) => [look.id, look]));
-    const restoredLookId = presenceEnvelope.activeLookId;
-    const activeLookId: StudioV3Document["activeLookId"] = restoredLookId && (next.looks[restoredLookId] || namedLookMap[restoredLookId])
-      ? restoredLookId as StudioV3Document["activeLookId"]
-      : next.activeLookId;
-    next = {
-      ...next,
-      mode: presenceEnvelope.mode,
-      activeRoomId: restoredActiveRoomId,
-      activeLookId: activeLookId ?? next.activeLookId,
-      namedLooks,
-      looks: { ...next.looks, ...namedLookMap },
-      locks: [
-        ...next.locks.filter((lock) => lock.scopeKind !== "presence"),
-        ...presenceEnvelope.locks,
-      ],
-    };
-    next = applyStudioV3Look(next, activeLookId ?? next.activeLookId);
-
-    for (const roomEnvelope of recovered.snapshot.rooms) {
-      const room = next.rooms.find((candidate) => candidate.id === roomEnvelope.roomId);
-      if (!room || !roomEnvelope.placements) return { document: baseDocument, message: "Memory-only local state" };
-      const safePlacements = roomEnvelope.placements
-        .map((placement) => normalizeRestoredPlacement(next, room.id, placement))
-        .filter((placement): placement is StudioV3Placement => Boolean(placement))
-        .sort((a, b) => a.order - b.order);
-      next = {
-        ...next,
-        rooms: next.rooms.map((candidate) => (
-          candidate.id === room.id
-            ? { ...candidate, placements: safePlacements }
-            : candidate
-        )),
-        locks: [
-          ...next.locks.filter((lock) => !(lock.scopeKind === "room" && lock.scopeId === room.id)),
-          ...roomEnvelope.locks,
-        ],
-      };
+    if (serverMetadataRevision !== null && presenceEnvelope.metadataRevision !== serverMetadataRevision) {
+      return { document: baseDocument, message: "Ignored stale browser-local snapshot" };
+    }
+    const restored = restoreStudioV3Metadata(baseDocument, presenceEnvelope.metadata);
+    if (restored.report.status === "rejected") {
+      return { document: baseDocument, message: "Rejected invalid browser-local snapshot" };
     }
 
     return {
-      document: next,
+      document: restored.document,
       message: recovered.source === "previous"
         ? "Recovered previous complete browser-local snapshot"
-        : "Restored browser-local changes",
+        : restored.report.status === "exact"
+          ? "Restored browser-local changes"
+          : "Restored browser-local changes with missing references",
     };
   } catch {
     return { document: baseDocument, message: "Memory-only local state" };
@@ -774,33 +1129,4 @@ function restoreStudioV3LocalDocument(
 
 function studioV3OwnerLockName(ownerPartitionKey: string): string {
   return `presence-studio-v3:${ownerPartitionKey}:owner`;
-}
-
-function normalizeRestoredPlacement(
-  document: StudioV3Document,
-  roomId: string,
-  placement: StudioV3Placement,
-): StudioV3Placement | null {
-  if (placement.roomId !== roomId) return null;
-  const room = document.rooms.find((item) => item.id === roomId);
-  const piece = document.pieces[placement.sourceRef];
-  if (!room || !piece) return null;
-  const id = makeStudioV3ObjectId(roomId, placement.sourceRef);
-  const basePlacement = { ...placement, id, roomId };
-  if (piece.sourceStatus !== "current") {
-    return {
-      ...basePlacement,
-      status: "shelved",
-      reason: "This Piece is hidden or unavailable in the owner Library.",
-    };
-  }
-  if (!piece.compatibleRoomStyles.includes(room.styleId)) {
-    return {
-      ...basePlacement,
-      status: "incompatible",
-      reason: "This room style cannot place this media yet.",
-    };
-  }
-  if (placement.status !== "placed") return basePlacement;
-  return { ...basePlacement, status: "placed", reason: undefined };
 }

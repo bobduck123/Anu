@@ -105,6 +105,7 @@ export interface PresenceEditableConfig {
   room_id?: number;
   schema_version?: string;
   version?: number;
+  revision?: number;
   status?: PresenceEditableConfigStatus;
   renderer_key?: string | null;
   scene_config?: Record<string, unknown>;

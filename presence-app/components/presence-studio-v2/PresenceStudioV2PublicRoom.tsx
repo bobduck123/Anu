@@ -7,7 +7,7 @@ import {
   getStudioV2EntryChamber,
   getStudioV2PublicChambersByRole,
 } from "@/lib/presence/studio-v2";
-import type { StudioV2PublicChamber, StudioV2PublicObject, StudioV2PublicRoom } from "@/lib/presence/studio-v2";
+import type { StudioV2PublicChamber, StudioV2PublicObject, StudioV2PublicRoom, StudioV2Skin } from "@/lib/presence/studio-v2";
 import type { PresenceStudioV2EditorBridge, PresenceStudioV2EditorActivationInput } from "@/lib/presence/studio-v3/editorBridge";
 import { validateStudioV2EditorBridgeResult } from "@/lib/presence/studio-v3/editorBridge";
 import { deriveStudioV2Environment } from "@/lib/presence/studio-v2/environment";
@@ -20,9 +20,10 @@ import "./presence-studio-v2-public.css";
 interface PresenceStudioV2PublicRoomProps {
   room: StudioV2PublicRoom;
   editorBridge?: PresenceStudioV2EditorBridge;
+  editorActiveChamberId?: string;
 }
 
-export default function PresenceStudioV2PublicRoom({ room, editorBridge }: PresenceStudioV2PublicRoomProps) {
+export default function PresenceStudioV2PublicRoom({ room, editorBridge, editorActiveChamberId }: PresenceStudioV2PublicRoomProps) {
   const [focusedArtwork, setFocusedArtwork] = useState<StudioV2PublicObject | null>(null);
   const [activeLiquidIndex, setActiveLiquidIndex] = useState(0);
   const world = WORLD_KITS.find((kit) => kit.id === room.worldId);
@@ -151,7 +152,7 @@ export default function PresenceStudioV2PublicRoom({ room, editorBridge }: Prese
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [editorBridge, focusedArtwork]);
+  }, [editorBridge, focusedArtwork, isGallery, publicStylePreset]);
 
   useEffect(() => {
     if (liquidWorks.length === 0 && activeLiquidIndex !== 0) {
@@ -194,15 +195,20 @@ export default function PresenceStudioV2PublicRoom({ room, editorBridge }: Prese
         ctaHref={ctaHref}
         ctaLabel={ctaLabel}
         editorBridge={editorBridge}
+        editorActiveChamberId={editorActiveChamberId}
       />
     );
   }
 
   return (
     <main
-      className={`presence-studio-v2-public world-${room.worldId} texture-${room.skin.texture} motion-${room.skin.motionIntensity} environment-focus-${environment.focus}${thresholdImage?.src ? " has-threshold-image" : ""}`}
+      className={`presence-studio-v2-public world-${room.worldId} texture-${room.skin.texture} motion-${room.skin.motionIntensity} environment-focus-${environment.focus}${editorBridge ? studioV2ExperienceClassName(room.skin) : ""}${thresholdImage?.src ? " has-threshold-image" : ""}`}
       style={style}
       data-environment-runtime="dom"
+      data-experience-density={editorBridge ? room.skin.experienceDensity : undefined}
+      data-experience-atmosphere={editorBridge ? room.skin.experienceAtmosphere : undefined}
+      data-experience-piece-treatment={editorBridge ? room.skin.experiencePieceTreatment : undefined}
+      data-experience-journey={editorBridge ? room.skin.experienceJourney : undefined}
     >
       <PresenceStudioV2EnvironmentLayer
         environment={environment}
@@ -288,9 +294,18 @@ export default function PresenceStudioV2PublicRoom({ room, editorBridge }: Prese
               <span>{isGallery ? "Gallery room" : world?.verb ?? "The room opens"}</span>
               <h2 id={`v2-public-chamber-${chamber.id}`}>{chamber.label}</h2>
             </div>
-            <div className={`v2-public-layout layout-${studioV2Layout(chamber.composition?.layoutId).id}`}>
-              {studioV2Layout(chamber.composition?.layoutId).zones.map((zone) => {
-                const composition = normalizeStudioV2Composition(chamber.composition, chamber.id, chamber.objects.map((object) => ({ ...object, visibility: { public: true, mobile: object.mobileVisible }, locked: false, pinned: false })));
+            {editorBridge && (chamber.composition?.layoutId as string | undefined) === "film-strip-selected-works" ? (
+              <FilmStripSelectedWorksChamber
+                chamber={chamber}
+                radius={room.skin.objectRadius}
+                isGallery={isGallery}
+                onFocusArtwork={isGallery ? setFocusedArtwork : undefined}
+                editorBridge={editorBridge}
+              />
+            ) : (
+            <div className={`v2-public-layout layout-${studioV2Layout(studioV2SharedPublicComposition(chamber, editorBridge)?.layoutId).id}`}>
+              {studioV2Layout(studioV2SharedPublicComposition(chamber, editorBridge)?.layoutId).zones.map((zone) => {
+                const composition = normalizeStudioV2Composition(studioV2SharedPublicComposition(chamber, editorBridge), chamber.id, chamber.objects.map((object) => ({ ...object, visibility: { public: true, mobile: object.mobileVisible }, locked: false, pinned: false })));
                 const placements = composition.placements.filter((placement) => placement.zoneId === zone.id).sort((a, b) => a.order - b.order);
                 return placements.length > 0 ? <section className={`v2-public-layout-zone zone-${zone.id}`} key={zone.id} data-zone-id={zone.id}>
                   {placements.map((placement, objectIndex) => {
@@ -300,6 +315,7 @@ export default function PresenceStudioV2PublicRoom({ room, editorBridge }: Prese
                 </section> : null;
               })}
             </div>
+            )}
           </section>
         ))}
 
@@ -393,6 +409,228 @@ export default function PresenceStudioV2PublicRoom({ room, editorBridge }: Prese
       )}
     </main>
   );
+}
+
+function FilmStripSelectedWorksChamber({
+  chamber,
+  radius,
+  isGallery,
+  onFocusArtwork,
+  editorBridge,
+}: {
+  chamber: StudioV2PublicChamber;
+  radius: number;
+  isGallery: boolean;
+  onFocusArtwork?: (object: StudioV2PublicObject) => void;
+  editorBridge?: PresenceStudioV2EditorBridge;
+}) {
+  const orderedObjects = filmStripOrderedObjects(chamber);
+  const exitObjects = orderedObjects.filter((object) => isFilmStripExitObject(object));
+  const selectedWorks = orderedObjects.filter((object) => !isFilmStripExitObject(object) && (
+    Boolean(object.image?.src) || object.type === "image" || object.type === "media"
+  ));
+  const works = selectedWorks;
+  const workIds = new Set(works.map((object) => object.id));
+  const contextObjects = orderedObjects.filter((object) => !isFilmStripExitObject(object) && !workIds.has(object.id));
+  const [activeIndex, setActiveIndex] = useState(0);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const total = works.length;
+  const activeObject = works[activeIndex] ?? works[0] ?? null;
+
+  useEffect(() => {
+    if (total === 0 && activeIndex !== 0) {
+      setActiveIndex(0);
+      return;
+    }
+    if (activeIndex >= total) setActiveIndex(Math.max(0, total - 1));
+  }, [activeIndex, total]);
+
+  const moveTo = useCallback((nextIndex: number) => {
+    if (total === 0) return;
+    setActiveIndex(Math.min(total - 1, Math.max(0, nextIndex)));
+  }, [total]);
+
+  const onKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    const target = event.target;
+    if (
+      target instanceof HTMLElement &&
+      (target.isContentEditable || target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")
+    ) {
+      return;
+    }
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      moveTo(activeIndex - 1);
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      moveTo(activeIndex + 1);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      moveTo(0);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      moveTo(total - 1);
+    }
+  };
+
+  return (
+    <section
+      className="v2-film-strip"
+      data-testid="presence-public-film-strip"
+      aria-label={`${chamber.label} selected works film strip`}
+      tabIndex={0}
+      onKeyDown={onKeyDown}
+      onTouchStart={(event) => {
+        const touch = event.changedTouches[0];
+        if (touch) touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+      }}
+      onTouchEnd={(event) => {
+        const start = touchStartRef.current;
+        const touch = event.changedTouches[0];
+        touchStartRef.current = null;
+        if (!start || !touch) return;
+        const deltaX = touch.clientX - start.x;
+        const deltaY = touch.clientY - start.y;
+        if (Math.abs(deltaX) < 44 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+        moveTo(deltaX < 0 ? activeIndex + 1 : activeIndex - 1);
+      }}
+    >
+      <div className="v2-film-strip-toolbar">
+        <p className="v2-film-strip-progress" data-testid="presence-public-film-strip-progress" aria-live="polite" aria-atomic="true">
+          {total > 0 ? `Work ${activeIndex + 1} of ${total}` : "No selected works"}
+        </p>
+        <div className="v2-film-strip-controls" aria-label="Film strip controls">
+          <button
+            type="button"
+            onClick={() => moveTo(activeIndex - 1)}
+            disabled={activeIndex <= 0 || total === 0}
+            aria-label="Previous work"
+            data-testid="presence-public-film-strip-prev"
+          >
+            <span aria-hidden="true">&#8592;</span>
+            <span>Previous</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => moveTo(activeIndex + 1)}
+            disabled={activeIndex >= total - 1 || total === 0}
+            aria-label="Next work"
+            data-testid="presence-public-film-strip-next"
+          >
+            <span>Next</span>
+            <span aria-hidden="true">&#8594;</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="v2-film-strip-stage-window">
+        <div className="v2-film-strip-stage-track">
+          {activeObject ? (
+            <div className="v2-film-strip-slide" key={activeObject.id}>
+              <PublicObjectCard
+                object={activeObject}
+                radius={radius}
+                isGallery={isGallery}
+                isFeatured
+                onFocusArtwork={onFocusArtwork}
+                editorBridge={editorBridge}
+              />
+            </div>
+          ) : (
+            <p className="v2-film-strip-empty">This Room has no selected Works yet.</p>
+          )}
+        </div>
+      </div>
+
+      {works.length > 0 && (
+        <ol className="v2-film-strip-index" aria-label="Selected works index">
+          {works.map((object, index) => (
+            <li key={object.id}>
+              <button
+                type="button"
+                onClick={() => moveTo(index)}
+                aria-label={`Show work ${index + 1}: ${object.title}`}
+                aria-current={index === activeIndex ? "true" : undefined}
+              >
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <strong>{object.title}</strong>
+              </button>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      {contextObjects.length > 0 && (
+        <section className="v2-film-strip-context" aria-labelledby={`v2-film-strip-context-${chamber.id}`}>
+          <div className="v2-film-strip-context-heading">
+            <span>Selected work context</span>
+            <h3 id={`v2-film-strip-context-${chamber.id}`}>Notes from this Room</h3>
+          </div>
+          <div className="v2-film-strip-context-grid">
+            {contextObjects.map((object) => (
+              <PublicObjectCard key={object.id} object={object} radius={radius} editorBridge={editorBridge} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {exitObjects.length > 0 && (
+        <div className="v2-film-strip-exit" aria-label="Room exit">
+          {exitObjects.map((object) => (
+            <PublicObjectCard key={object.id} object={object} radius={radius} editorBridge={editorBridge} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function filmStripOrderedObjects(chamber: StudioV2PublicChamber): StudioV2PublicObject[] {
+  const objectsById = new Map(chamber.objects.map((object) => [object.id, object]));
+  const composition = chamber.composition as ({ placements?: Array<{ objectId: string; zoneId: string; order: number }> } | undefined);
+  const zoneOrder: Record<string, number> = {
+    "active-work-stage": 0,
+    "sequence-index": 1,
+    "selected-work-context": 2,
+    "selected-works-exit": 3,
+  };
+  const placementOrder = [...(composition?.placements ?? [])]
+    .sort((left, right) => {
+      return (zoneOrder[left.zoneId] ?? 4) - (zoneOrder[right.zoneId] ?? 4) || left.order - right.order;
+    });
+  const ordered: StudioV2PublicObject[] = [];
+  const seen = new Set<string>();
+  for (const placement of placementOrder) {
+    const object = objectsById.get(placement.objectId);
+    if (!object || seen.has(object.id)) continue;
+    seen.add(object.id);
+    ordered.push(object);
+  }
+  return ordered;
+}
+
+function studioV2ExperienceClassName(skin: StudioV2Skin): string {
+  return [
+    skin.experienceDensity ? ` experience-density-${skin.experienceDensity}` : "",
+    skin.experienceAtmosphere ? ` experience-atmosphere-${skin.experienceAtmosphere}` : "",
+    skin.experiencePieceTreatment ? ` experience-piece-${skin.experiencePieceTreatment}` : "",
+    skin.experienceJourney ? ` experience-journey-${skin.experienceJourney}` : "",
+  ].join("");
+}
+
+function studioV2SharedPublicComposition(
+  chamber: StudioV2PublicChamber,
+  editorBridge?: PresenceStudioV2EditorBridge,
+): StudioV2PublicChamber["composition"] {
+  // Without the editor bridge, treat the P1-only token exactly as the pre-P1 renderer did: unknown => Gallery wall.
+  if (editorBridge || chamber.composition?.layoutId !== "film-strip-selected-works") {
+    return chamber.composition;
+  }
+  return { ...chamber.composition, layoutId: "gallery-wall" };
+}
+
+function isFilmStripExitObject(object: StudioV2PublicObject): boolean {
+  return object.type === "cta" || object.type === "link" || object.type === "portal" || object.role === "cta";
 }
 
 interface LiquidGalleryWork {
@@ -747,6 +985,7 @@ function BbbVisionThresholdGalleryPublicRoom({
   ctaHref,
   ctaLabel,
   editorBridge,
+  editorActiveChamberId,
 }: {
   room: StudioV2PublicRoom;
   worldName: string;
@@ -759,6 +998,7 @@ function BbbVisionThresholdGalleryPublicRoom({
   ctaHref?: string;
   ctaLabel?: string;
   editorBridge?: PresenceStudioV2EditorBridge;
+  editorActiveChamberId?: string;
 }) {
   const [view, setView] = useState<BbbVisionPublicView>("threshold");
   const [movement, setMovement] = useState<BbbVisionMovement | null>(null);
@@ -768,6 +1008,7 @@ function BbbVisionThresholdGalleryPublicRoom({
   const explicitEntryChamber = entryChamber?.metadata?.isEntry === true ? entryChamber : undefined;
   const thresholdRoleChamber = bbbVisionFirstRoleChamber(room.chambers, "threshold");
   const thresholdChamber = explicitEntryChamber ?? thresholdRoleChamber;
+  const editorThresholdChamberId = thresholdChamber?.id ?? entryChamber?.id ?? room.chambers[0]?.id;
   const galleryRoleChambers = getStudioV2PublicChambersByRole(room.chambers, "gallery");
   const explicitDefaultChamber = defaultChamber?.metadata?.isDefault === true ? defaultChamber : undefined;
   const galleryDefaultChamber =
@@ -785,6 +1026,16 @@ function BbbVisionThresholdGalleryPublicRoom({
       : galleryFallbackChamber
         ? [galleryFallbackChamber]
       : [];
+  const editorActiveChamber = editorBridge && editorActiveChamberId
+    ? room.chambers.find((chamber) => chamber.id === editorActiveChamberId)
+    : undefined;
+  const filmStripGalleryChamber = editorBridge
+    ? (editorActiveChamber?.composition?.layoutId === "film-strip-selected-works"
+      ? editorActiveChamber
+      : undefined) ?? galleryChambers.find(
+      (chamber) => chamber.composition?.layoutId === "film-strip-selected-works",
+    )
+    : undefined;
   const practiceChamber =
     bbbVisionFirstRoleChamber(room.chambers, "practice") ?? bbbVisionFirstRoleChamber(room.chambers, "about");
   const metadataThresholdWorks = thresholdChamber ? bbbVisionWorksFromChambers([thresholdChamber]) : [];
@@ -961,6 +1212,17 @@ function BbbVisionThresholdGalleryPublicRoom({
   }, [syncViewFromLocation]);
 
   useEffect(() => {
+    if (!editorBridge || !editorActiveChamberId) return;
+    if (editorActiveChamberId === editorThresholdChamberId) {
+      setView("threshold");
+    } else if (editorActiveChamberId === practiceChamber?.id) {
+      setView("practice");
+    } else {
+      setView("gallery");
+    }
+  }, [editorActiveChamberId, editorBridge, editorThresholdChamberId, practiceChamber?.id]);
+
+  useEffect(() => {
     return () => {
       if (movementTimeoutRef.current !== null) {
         window.clearTimeout(movementTimeoutRef.current);
@@ -972,6 +1234,7 @@ function BbbVisionThresholdGalleryPublicRoom({
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (editorBridge && event.target instanceof Element && event.target.closest('[data-testid="presence-public-film-strip"]')) return;
       if (editorBridge) {
         if (event.key === "Escape") {
           if (isEditableEventTarget(event.target)) return;
@@ -1052,12 +1315,16 @@ function BbbVisionThresholdGalleryPublicRoom({
 
   return (
     <main
-      className={`presence-studio-v2-public world-${room.worldId} style-bbbvision-threshold-gallery v2-bbb-shell texture-${room.skin.texture} motion-${room.skin.motionIntensity} environment-focus-${environment.focus} is-view-${view}${movement ? ` is-moving-${movement}` : ""}${activeObject?.image?.src ? " has-threshold-image" : ""}`}
+      className={`presence-studio-v2-public world-${room.worldId} style-bbbvision-threshold-gallery v2-bbb-shell texture-${room.skin.texture} motion-${room.skin.motionIntensity} environment-focus-${environment.focus}${editorBridge ? studioV2ExperienceClassName(room.skin) : ""} is-view-${view}${movement ? ` is-moving-${movement}` : ""}${activeObject?.image?.src ? " has-threshold-image" : ""}`}
       style={style}
       data-testid="presence-public-style-bbbvision-threshold-gallery"
       data-bbb-view={view}
       data-active-index={safeActiveIndex}
       data-environment-runtime="dom"
+      data-experience-density={editorBridge ? room.skin.experienceDensity : undefined}
+      data-experience-atmosphere={editorBridge ? room.skin.experienceAtmosphere : undefined}
+      data-experience-piece-treatment={editorBridge ? room.skin.experiencePieceTreatment : undefined}
+      data-experience-journey={editorBridge ? room.skin.experienceJourney : undefined}
     >
       <PresenceStudioV2EnvironmentLayer
         environment={environment}
@@ -1160,7 +1427,17 @@ function BbbVisionThresholdGalleryPublicRoom({
           </header>
 
           <div className="v2-bbb-constellation">
-            {galleryWorks.length > 0 ? (
+            {filmStripGalleryChamber ? (
+              <div className="v2-bbb-film-strip-room" data-v2-public-chamber-id={filmStripGalleryChamber.id}>
+                <FilmStripSelectedWorksChamber
+                  chamber={filmStripGalleryChamber}
+                  radius={room.skin.objectRadius}
+                  isGallery
+                  onFocusArtwork={onFocusArtwork}
+                  editorBridge={editorBridge}
+                />
+              </div>
+            ) : galleryWorks.length > 0 ? (
               <BbbVisionCanvasGallery
                 works={galleryWorks}
                 activeIndex={safeActiveIndex}

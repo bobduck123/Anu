@@ -33,6 +33,10 @@ export type StudioV2ObjectType =
 export type StudioV2Texture = "none" | "paper" | "grain" | "scan" | "linen" | "timber" | "ledger";
 export type StudioV2BorderStyle = "none" | "hairline" | "framed" | "taped" | "ledger";
 export type StudioV2MotionIntensity = "still" | "gentle" | "living";
+export type StudioV2ExperienceDensity = "spacious" | "focused" | "dense";
+export type StudioV2ExperienceAtmosphere = "paper-light" | "nocturnal-depth" | "ledger-scan";
+export type StudioV2ExperiencePieceTreatment = "quiet-framed" | "luminous-depth" | "captioned-ledger";
+export type StudioV2ExperienceJourney = "editorial-browse" | "threshold-reveal" | "archive-index";
 export type StudioV2PublicStylePreset =
   | "gallery-p2"
   | "christina-liquid-gallery"
@@ -49,6 +53,11 @@ export interface StudioV2Skin {
   borderStyle: StudioV2BorderStyle;
   shadowDepth: number;
   accentColor: string;
+  /** Optional V3-authored facets. Their absence preserves all existing V2 output. */
+  experienceDensity?: StudioV2ExperienceDensity;
+  experienceAtmosphere?: StudioV2ExperienceAtmosphere;
+  experiencePieceTreatment?: StudioV2ExperiencePieceTreatment;
+  experienceJourney?: StudioV2ExperienceJourney;
 }
 
 export interface StudioV2Transform {

@@ -2,16 +2,26 @@ import type { PresenceCollection, PresenceEditableConfig, PresenceWork } from ".
 import type {
   StudioV2ChamberComposition,
   StudioV2MotionIntensity,
+  StudioV2BorderStyle,
   StudioV2ObjectType,
+  StudioV2PublicStylePreset,
   StudioV2PublicRoom,
   StudioV2State,
+  StudioV2Texture,
+  StudioV2WorldId,
 } from "../studio-v2/index.ts";
-import type { StudioV3SourceRef } from "./sourceRefs.ts";
+import type { StudioV3CollectionSourceRef, StudioV3SourceRef } from "./sourceRefs.ts";
 
-export const STUDIO_V3_LOCAL_SCHEMA_VERSION = "presence-studio-v3-p0-local-v1" as const;
+export const STUDIO_V3_LOCAL_SCHEMA_VERSION = "presence-studio-v3-p1-local-v1" as const;
+export const STUDIO_V3_HIDDEN_OR_UNAVAILABLE_REASON = "This Piece is hidden or unavailable in the owner Library." as const;
 
-export type StudioV3RoomStyleId = "threshold-portal" | "gallery-wall";
-export type StudioV3LookId = "soft-editorial" | "nocturnal-gallery";
+export type StudioV3RoomStyleId = "threshold-portal" | "gallery-wall" | "film-strip-selected-works";
+export type StudioV3LookId = "soft-editorial" | "nocturnal-gallery" | "zine-archive";
+export type StudioV3CollectionPresentationId = "wall" | "selected-sequence" | "threshold-feature";
+export type StudioV3Density = "spacious" | "focused" | "dense";
+export type StudioV3Atmosphere = "paper-light" | "nocturnal-depth" | "ledger-scan";
+export type StudioV3PieceTreatment = "quiet-framed" | "luminous-depth" | "captioned-ledger";
+export type StudioV3Journey = "editorial-browse" | "threshold-reveal" | "archive-index";
 export type StudioV3ModePreference = "simple" | "advanced-creative";
 export type StudioV3Layer =
   | "presence-look"
@@ -27,6 +37,7 @@ export interface StudioV3BaseIdentity {
   configId: number;
   roomId: number;
   version: number;
+  revision: number | null;
   status: string;
   schemaVersion: string;
   updatedAt?: string | null;
@@ -71,7 +82,7 @@ export interface StudioV3Piece {
 
 export interface StudioV3Collection {
   id: string;
-  sourceRef: `collection:${number}`;
+  sourceRef: StudioV3CollectionSourceRef;
   title: string;
   description?: string;
   memberSourceRefs: StudioV3SourceRef[];
@@ -82,9 +93,13 @@ export interface StudioV3Placement {
   id: string;
   roomId: string;
   sourceRef: StudioV3SourceRef;
-  collectionSourceRef?: `collection:${number}`;
+  collectionSourceRef?: StudioV3CollectionSourceRef;
   order: number;
   status: "placed" | "duplicate" | "incompatible" | "shelved";
+  featured?: boolean;
+  depth?: number;
+  visibility?: "visible" | "hidden";
+  collectionPresentationId?: StudioV3CollectionPresentationId;
   reason?: string;
 }
 
@@ -93,6 +108,7 @@ export interface StudioV3Room {
   label: string;
   styleId: StudioV3RoomStyleId;
   composition?: StudioV2ChamberComposition;
+  collectionPresentationId?: StudioV3CollectionPresentationId;
   placements: StudioV3Placement[];
   baseObjectIds: string[];
 }
@@ -100,20 +116,27 @@ export interface StudioV3Room {
 export interface StudioV3LookValues {
   background: string;
   accentColor: string;
-  texture: "paper" | "grain" | "linen" | "none";
-  borderStyle: "hairline" | "framed" | "none";
+  texture: StudioV2Texture;
+  borderStyle: StudioV2BorderStyle;
   objectRadius: number;
   shadowDepth: number;
   headingWeight: number;
   motionIntensity: StudioV2MotionIntensity;
-  publicStylePreset: "gallery-p2" | "bbbvision-threshold-gallery";
+  publicStylePreset: StudioV2PublicStylePreset;
   roomStyleId: StudioV3RoomStyleId;
+  worldId: StudioV2WorldId;
+  collectionPresentationId: StudioV3CollectionPresentationId;
+  atmosphere: StudioV3Atmosphere;
+  density: StudioV3Density;
+  pieceTreatment: StudioV3PieceTreatment;
+  journey: StudioV3Journey;
 }
 
 export interface StudioV3Look {
   id: StudioV3LookId | `named:${string}`;
   name: string;
   origin: "system" | "owner";
+  baseLookId?: StudioV3LookId;
   values: StudioV3LookValues;
   provenance: string;
   createdAt?: string;
@@ -127,6 +150,68 @@ export interface StudioV3LayerLock {
   layer: StudioV3Layer;
   value: unknown;
   reason: string;
+}
+
+export interface StudioV3LayerOverrideValue {
+  background?: string;
+  accentColor?: string;
+  texture?: StudioV2Texture;
+  borderStyle?: StudioV2BorderStyle;
+  objectRadius?: number;
+  shadowDepth?: number;
+  headingWeight?: number;
+  motionIntensity?: StudioV2MotionIntensity;
+  publicStylePreset?: StudioV2PublicStylePreset;
+  roomStyleId?: StudioV3RoomStyleId;
+  worldId?: StudioV2WorldId;
+  collectionPresentationId?: StudioV3CollectionPresentationId;
+  density?: StudioV3Density;
+  pieceTreatment?: StudioV3PieceTreatment;
+  atmosphere?: StudioV3Atmosphere;
+  journey?: StudioV3Journey;
+}
+
+export interface StudioV3LayerOverride {
+  id: string;
+  scopeKind: StudioV3ScopeKind;
+  scopeId: string;
+  layer: StudioV3Layer;
+  value: StudioV3LayerOverrideValue;
+  provenance: string;
+}
+
+export interface StudioV3NavigationState {
+  entryRoomId: string;
+  roomOrder: string[];
+  requiredCta: {
+    sourceRef?: StudioV3SourceRef;
+    visible: boolean;
+    destinationToken?: "existing-base" | `room:${string}`;
+  };
+}
+
+export interface StudioV3StructuralRoomState {
+  roomId: string;
+  order: number;
+  styleId: StudioV3RoomStyleId;
+  collectionPresentationId?: StudioV3CollectionPresentationId;
+  composition?: StudioV2ChamberComposition;
+  baseObjectIds: string[];
+  placements: StudioV3Placement[];
+}
+
+export interface StudioV3StructuralSavepoint {
+  id: string;
+  createdAt: string;
+  activeRoomId: string;
+  activeLookId: StudioV3Look["id"];
+  navigation: StudioV3NavigationState;
+  rooms: StudioV3StructuralRoomState[];
+  locks: StudioV3LayerLock[];
+  layerOverrides: StudioV3LayerOverride[];
+  lookProvenance: string;
+  baseRevision: number | null;
+  fingerprint: string;
 }
 
 export interface StudioV3Document {
@@ -143,6 +228,9 @@ export interface StudioV3Document {
   collections: Record<string, StudioV3Collection>;
   looks: Record<string, StudioV3Look>;
   locks: StudioV3LayerLock[];
+  layerOverrides: StudioV3LayerOverride[];
+  navigation: StudioV3NavigationState;
+  savepoints: StudioV3StructuralSavepoint[];
   namedLooks: StudioV3Look[];
   selection?: { kind: "piece"; pieceId: string } | { kind: "room"; roomId: string };
   diagnostics: StudioV3CompileIssue[];
@@ -154,7 +242,7 @@ export interface StudioV3CompileIssue {
   message: string;
   sourceRef?: StudioV3SourceRef;
   roomId?: string;
-  resolution?: "placed" | "shelved" | "blocked";
+  resolution?: "placed" | "shelved" | "unplaced" | "blocked";
 }
 
 export interface StudioV3CompileResult {

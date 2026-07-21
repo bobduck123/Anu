@@ -34,6 +34,8 @@ function resetState() {
     nextKeyId: 202,
     editorDraft: null,
     editorPublished: buildEditorConfig("published", 1),
+    bbbVisionEditorDraft: null,
+    studioV3PrivateState: null,
     bbbVisionPilot: false,
     nextEditorVersion: 2,
     editorAssets: buildEditorAssets(),
@@ -85,6 +87,19 @@ const server = createServer(async (req, res) => {
       state.editorDraft = buildBbbVisionEditorConfig("draft", state.nextEditorVersion++);
       state.editorPublished = buildBbbVisionEditorConfig("published", state.nextEditorVersion++);
       state.editorAssets = buildBbbVisionEditorAssets();
+    }
+    if (body.useBbbVisionPublishedThreshold === true) {
+      state.bbbVisionPilot = true;
+      state.editorDraft = null;
+      state.editorPublished = buildBbbVisionEditorConfig("published", state.nextEditorVersion++);
+      state.editorPublished.style_dna.studio_v2.publicStylePreset = "bbbvision-threshold-gallery";
+      state.editorAssets = buildBbbVisionEditorAssets();
+    }
+    if (body.useBbbVisionDraftBase === true) {
+      state.bbbVisionEditorDraft = buildBbbVisionEditorConfig("draft", state.nextEditorVersion + 1, {
+        roomId: 29,
+        slug: "bbbvision",
+      });
     }
     if (Number.isInteger(body.failNextOwnerNodeReads)) state.failNextOwnerNodeReads = body.failNextOwnerNodeReads;
     if (Number.isInteger(body.failNextEditorReads)) state.failNextEditorReads = body.failNextEditorReads;
@@ -524,14 +539,15 @@ const server = createServer(async (req, res) => {
     }
     if (Number(editorOverviewMatch[1]) === 29) {
       const room = bbbVisionCandidateOwnerNodeFixture();
+      const draft = state.bbbVisionEditorDraft;
       const published = buildBbbVisionEditorConfig("published", state.nextEditorVersion, { roomId: 29, slug: "bbbvision" });
       return sendData(res, {
         room: { id: room.id, slug: room.slug, display_name: room.display_name, owner_user_id: room.owner_user_id },
-        draft: null,
+        draft,
         published,
         published_public_config: redactEditorConfig(published),
         suggested_config: null,
-        history: [published],
+        history: [draft, published].filter(Boolean),
         assets: buildBbbVisionEditorAssets(),
         media_capability: {
           private_draft_media_active: false,
@@ -571,7 +587,9 @@ const server = createServer(async (req, res) => {
   if (editorDraftMatch) {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
-    if (Number(editorDraftMatch[1]) === 29 && req.method === "GET") return sendData(res, { draft: null });
+    if (Number(editorDraftMatch[1]) === 29 && req.method === "GET") {
+      return sendData(res, { draft: state.bbbVisionEditorDraft });
+    }
     if (req.method === "GET") return sendData(res, { draft: state.editorDraft });
     if (req.method === "POST" || req.method === "PATCH") {
       const base = state.editorDraft || state.editorPublished || buildEditorConfig("draft", state.nextEditorVersion++);
@@ -584,6 +602,56 @@ const server = createServer(async (req, res) => {
         updated_at: new Date().toISOString(),
       };
       return sendData(res, { draft: state.editorDraft, created: req.method === "POST" }, req.method === "POST" ? 201 : 200);
+    }
+  }
+
+  const studioV3StateMatch = url.pathname.match(/^\/api\/presence\/owner\/rooms\/(101|11|29)\/editor\/v3\/state$/);
+  if (studioV3StateMatch) {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
+    const roomId = Number(studioV3StateMatch[1]);
+    if (req.method === "GET") {
+      const stored = state.studioV3PrivateState?.room_id === roomId ? state.studioV3PrivateState : null;
+      return sendData(res, { state: stored });
+    }
+    if (req.method === "PUT") {
+      const expected = body?.expected;
+      if (!expected || expected.room_id !== roomId || body.metadata_schema_version !== "presence-studio-v3-private-v1") {
+        return sendError(res, 422, "validation_error", "Studio V3 private-state request is invalid.");
+      }
+      const currentRevision = state.studioV3PrivateState?.room_id === roomId
+        ? state.studioV3PrivateState.metadata_revision
+        : 0;
+      if (expected.metadata_revision !== currentRevision) {
+        return sendError(res, 409, "studio_v3_state_conflict", "Studio V3 private state changed; reload before replacing metadata.");
+      }
+      if (state.studioV3PrivateState?.room_id === roomId) {
+        const currentBase = state.studioV3PrivateState.base;
+        const baseKeys = ["config_id", "source_kind", "status", "version", "revision", "schema_version", "fingerprint"];
+        if (baseKeys.some((key) => expected[key] !== currentBase[key])) {
+          return sendError(res, 409, "studio_v3_state_conflict", "Studio V3 base identity changed; reload before replacing metadata.");
+        }
+      }
+      const now = new Date().toISOString();
+      state.studioV3PrivateState = {
+        id: 9800 + roomId,
+        room_id: roomId,
+        metadata_schema_version: body.metadata_schema_version,
+        metadata_revision: currentRevision + 1,
+        base: {
+          config_id: expected.config_id,
+          source_kind: expected.source_kind,
+          status: expected.status,
+          version: expected.version,
+          revision: expected.revision,
+          schema_version: expected.schema_version,
+          fingerprint: expected.fingerprint,
+        },
+        metadata: body.metadata,
+        created_at: state.studioV3PrivateState?.created_at ?? now,
+        updated_at: now,
+      };
+      return sendData(res, { state: state.studioV3PrivateState });
     }
   }
 
@@ -1357,6 +1425,7 @@ function buildStudioRoomDraftEditorConfig(roomId, kitId, kitName, storedDraft, s
     room_id: roomId,
     schema_version: "presence-editable-config-v1",
     version,
+    revision: 1,
     status: "draft",
     renderer_key: "studio-room-template-kit-v1",
     scene_config: {
@@ -1494,6 +1563,7 @@ function buildEditorConfig(status = "published", version = 1) {
     room_id: fixtures.room.id,
     schema_version: "presence-editable-config-v1",
     version,
+    revision: 1,
     status,
     renderer_key: "ggm-faithful-room-v1",
     scene_config: {
@@ -1846,6 +1916,7 @@ function buildBbbVisionEditorConfig(status = "draft", version = 1, options = {})
     room_id: roomId,
     schema_version: "presence-editable-config-v1",
     version,
+    revision: 1,
     status,
     renderer_key: "presence-studio-v2-room",
     scene_config: {
@@ -1954,7 +2025,7 @@ function buildBbbVisionEditorConfig(status = "draft", version = 1, options = {})
             title: "Opening image",
             meta: "Threshold sequence",
             detail: "A public image object used by the threshold ritual.",
-            image: { src: "/ggm/works/willow-of-port-arthur-2019.webp", alt: "Opening image" },
+            image: { src: "/bbb-pilot/threshold-signal.png", alt: "Abstract threshold signal" },
           },
           {
             id: "bbb-portrait",
@@ -1963,7 +2034,7 @@ function buildBbbVisionEditorConfig(status = "draft", version = 1, options = {})
             title: "Portrait field",
             meta: "Gallery image",
             detail: "A second public image for the black-and-gold gallery field.",
-            image: { src: "/ggm/works/bridle-road-2005.webp", alt: "Portrait field" },
+            image: { src: "/bbb-pilot/archive-rhythm.png", alt: "Abstract archive rhythm" },
           },
           {
             id: "bbb-portal",
@@ -1979,7 +2050,7 @@ function buildBbbVisionEditorConfig(status = "draft", version = 1, options = {})
             title: "Stage image",
             meta: "Gallery image",
             detail: "Another image object available for the gallery field.",
-            image: { src: "/ggm/works/willow-of-port-arthur-2019.webp", alt: "Stage image" },
+            image: { src: "/bbb-pilot/threshold-signal.png", alt: "Abstract threshold signal" },
           },
           {
             id: "bbb-shadow",
@@ -1987,7 +2058,7 @@ function buildBbbVisionEditorConfig(status = "draft", version = 1, options = {})
             role: "work",
             title: "Shadow image",
             meta: "Gallery image",
-            image: { src: "/ggm/works/bridle-road-2005.webp", alt: "Shadow image" },
+            image: { src: "/bbb-pilot/archive-rhythm.png", alt: "Abstract archive rhythm" },
           },
           {
             id: "bbb-note",
@@ -2028,10 +2099,10 @@ function buildBbbVisionEditorConfig(status = "draft", version = 1, options = {})
 
 function buildBbbVisionEditorAssets() {
   return [
-    { object_id: "bbb-sparkle", url: "/ggm/works/willow-of-port-arthur-2019.webp", alt_text: "Opening image", source: "studio_v2_object", slot: "threshold", asset_type: "image" },
-    { object_id: "bbb-portrait", url: "/ggm/works/bridle-road-2005.webp", alt_text: "Portrait field", source: "studio_v2_object", slot: "gallery", asset_type: "image" },
-    { object_id: "bbb-stage", url: "/ggm/works/willow-of-port-arthur-2019.webp", alt_text: "Stage image", source: "studio_v2_object", slot: "gallery", asset_type: "image" },
-    { object_id: "bbb-shadow", url: "/ggm/works/bridle-road-2005.webp", alt_text: "Shadow image", source: "studio_v2_object", slot: "gallery", asset_type: "image" },
+    { object_id: "bbb-sparkle", url: "/bbb-pilot/threshold-signal.png", alt_text: "Abstract threshold signal", source: "studio_v2_object", slot: "threshold", asset_type: "image" },
+    { object_id: "bbb-portrait", url: "/bbb-pilot/archive-rhythm.png", alt_text: "Abstract archive rhythm", source: "studio_v2_object", slot: "gallery", asset_type: "image" },
+    { object_id: "bbb-stage", url: "/bbb-pilot/threshold-signal.png", alt_text: "Abstract threshold signal", source: "studio_v2_object", slot: "gallery", asset_type: "image" },
+    { object_id: "bbb-shadow", url: "/bbb-pilot/archive-rhythm.png", alt_text: "Abstract archive rhythm", source: "studio_v2_object", slot: "gallery", asset_type: "image" },
   ];
 }
 
@@ -2103,7 +2174,7 @@ function sendError(res, status, code, message) {
 function send(res, status, payload) {
   res.writeHead(status, {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type,Authorization,Accept",
     "Content-Type": "application/json",
   });

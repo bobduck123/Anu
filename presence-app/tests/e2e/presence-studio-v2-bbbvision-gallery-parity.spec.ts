@@ -52,6 +52,26 @@ async function selectBbbVisionStyle(page: Page) {
   await expect(page.getByTestId("presence-studio-v2-public-style-current")).toContainText("bbb.vision / Threshold Gallery");
 }
 
+async function hoverVisibleCanvasShape(page: Page) {
+  const canvas = page.getByTestId("presence-public-bbbvision-constellation");
+  await expect(page.getByTestId("presence-public-bbbvision-canvas-shell")).toHaveAttribute("data-loader-state", "ready");
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error("BBB canvas did not expose a bounding box.");
+
+  for (const yRatio of [0.2, 0.35, 0.5, 0.65, 0.8]) {
+    for (const xRatio of [0.2, 0.35, 0.5, 0.65, 0.8]) {
+      const point = { x: box.x + box.width * xRatio, y: box.y + box.height * yRatio };
+      await page.mouse.move(point.x, point.y);
+      await page.waitForTimeout(34);
+      if (await canvas.evaluate((element) => getComputedStyle(element).cursor === "zoom-in")) {
+        return point;
+      }
+    }
+  }
+
+  throw new Error("No visible BBB canvas shape could be hovered.");
+}
+
 test("direct #gallery entry opens gallery state not threshold", async ({ page, request }) => {
   await openBbbVisionStudio(page, request);
   await selectBbbVisionStyle(page);
@@ -160,10 +180,11 @@ test("keyboard movement works in gallery and focus", async ({ page, request }) =
   await canvas.focus();
   await page.keyboard.press("Enter");
   await expect(page.getByTestId("presence-public-bbbvision-focus")).toBeVisible();
+  const focusedProgress = await page.getByTestId("presence-public-bbbvision-progress").innerText();
 
   // Arrow in focus changes image
   await page.keyboard.press("ArrowRight");
-  await expect.poll(async () => page.getByTestId("presence-public-bbbvision-progress").innerText()).not.toBe(initialProgress);
+  await expect.poll(async () => page.getByTestId("presence-public-bbbvision-progress").innerText()).not.toBe(focusedProgress);
 
   // Escape closes focus
   await page.keyboard.press("Escape");
@@ -173,6 +194,33 @@ test("keyboard movement works in gallery and focus", async ({ page, request }) =
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("presence-public-bbbvision-threshold")).toBeVisible();
   await expect(page.getByTestId("presence-public-bbbvision-gallery")).toHaveCount(0);
+});
+
+test("public Enter prioritizes the hovered visible canvas shape", async ({ page, request }) => {
+  await request.post(`${API_BASE}/__test__/reset`);
+  await request.post(`${API_BASE}/__test__/state`, {
+    data: { useBbbVisionPublishedThreshold: true },
+  });
+
+  await page.goto("/p/test-presence-room#gallery", { waitUntil: "networkidle" });
+  const canvas = page.getByTestId("presence-public-bbbvision-constellation");
+  await hoverVisibleCanvasShape(page);
+  await page.mouse.down();
+  await page.mouse.up();
+  await expect(page.getByTestId("presence-public-bbbvision-focus")).toBeVisible();
+  const hoveredProgress = await page.getByTestId("presence-public-bbbvision-progress").innerText();
+  const hoveredImage = await page.getByTestId("presence-public-bbbvision-focus-image").getAttribute("src");
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("presence-public-bbbvision-focus")).toHaveCount(0);
+  await canvas.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(async () => page.getByTestId("presence-public-bbbvision-progress").innerText()).not.toBe(hoveredProgress);
+
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("presence-public-bbbvision-focus")).toBeVisible();
+  await expect(page.getByTestId("presence-public-bbbvision-progress")).toHaveText(hoveredProgress);
+  await expect(page.getByTestId("presence-public-bbbvision-focus-image")).toHaveAttribute("src", hoveredImage ?? "");
 });
 
 test("mobile gallery is not a flat card stack", async ({ page, request, context }) => {

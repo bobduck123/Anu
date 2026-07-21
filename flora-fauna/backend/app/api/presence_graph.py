@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from flask import Blueprint, current_app, jsonify, request, send_file
 from flask_jwt_extended import verify_jwt_in_request
 
@@ -23,6 +25,7 @@ from ..security.policy import get_current_user
 from ..services.presence_owner_identity import resolve_or_provision_presence_owner
 from ..services.presence_editor_config import (
     PresenceEditorConfigError,
+    PresenceEditorDraftConflictError,
     attach_asset_to_draft,
     attach_uploaded_asset_to_draft,
     build_default_editable_config,
@@ -38,11 +41,20 @@ from ..services.presence_editor_config import (
     published_config_for_room,
     publish_draft_config,
     rollback_published_config,
+    replace_existing_studio_v3_draft,
     serialize_editor_config,
     serialize_media_asset_for_owner,
     serialize_public_editable_config,
     update_draft_config,
     validate_uploaded_asset_fields,
+)
+from ..services.presence_studio_v3_state import (
+    StudioV3PrivateStateConflictError,
+    StudioV3PrivateStateError,
+    StudioV3PrivateStateUnavailableError,
+    load_studio_v3_private_state,
+    replace_studio_v3_private_state,
+    serialize_studio_v3_private_state,
 )
 from ..services.presence_media_storage import (
     PresenceMediaStorageError,
@@ -143,6 +155,48 @@ def _validation_error(exc: PresenceValidationError):
 
 def _editor_validation_error(exc: PresenceEditorConfigError):
     return error("validation_error", str(exc), 422, details=getattr(exc, "details", None) or None)
+
+
+def _studio_v3_state_validation_error(exc: StudioV3PrivateStateError):
+    return error("validation_error", str(exc), 422, details=getattr(exc, "details", None) or None)
+
+
+def _studio_v3_backend_eligible(room: PresenceNode) -> bool:
+    """Keep P1 backend contracts test/local, explicit, and production hard-false."""
+
+    environment_signals = {
+        str(value).strip().lower()
+        for value in (
+            current_app.config.get("FLASK_ENV"),
+            current_app.config.get("ENV"),
+            current_app.config.get("APP_ENV"),
+            current_app.config.get("ENVIRONMENT"),
+            current_app.config.get("VERCEL_ENV"),
+            os.environ.get("FLASK_ENV"),
+            os.environ.get("APP_ENV"),
+            os.environ.get("ENVIRONMENT"),
+            os.environ.get("VERCEL_ENV"),
+        )
+        if value is not None
+    }
+    if current_app.config.get("TESTING") is True:
+        environment_signals.add("testing")
+    if environment_signals.intersection({"production", "prod", "preview", "staging", "stage"}):
+        return False
+    if not environment_signals.intersection({"local", "development", "dev", "test", "testing"}):
+        return False
+    enabled = current_app.config.get("PRESENCE_STUDIO_V3_BACKEND_ENABLED")
+    if str(enabled).strip().lower() not in {"1", "true", "yes", "on"}:
+        return False
+    configured_ids = current_app.config.get("PRESENCE_STUDIO_V3_BACKEND_PILOT_IDS") or "29"
+    configured_slugs = current_app.config.get("PRESENCE_STUDIO_V3_BACKEND_PILOT_SLUGS") or "bbbvision"
+    allowed_ids = {int(value.strip()) for value in str(configured_ids).split(",") if value.strip().isdigit()}
+    allowed_slugs = {value.strip().lower() for value in str(configured_slugs).split(",") if value.strip()}
+    return room.id in allowed_ids and str(room.slug or "").strip().lower() in allowed_slugs
+
+
+def _studio_v3_backend_unavailable():
+    return error("studio_v3_unavailable", "Studio V3 backend contracts are unavailable for this Room.", 404)
 
 
 def _audit_platform_admin_editor_access(action: str, actor, room: PresenceNode, payload: dict | None = None) -> None:
@@ -700,6 +754,87 @@ def owner_room_editor_draft(room_id):
     except PresenceEditorConfigError as exc:
         db.session.rollback()
         return _editor_validation_error(exc)
+
+
+@presence_graph_bp.route("/owner/rooms/<int:room_id>/editor/v3/draft", methods=["PUT"])
+@alpha_jwt_required()
+def owner_room_editor_v3_draft(room_id):
+    room, err = _load_owned_room(room_id)
+    if err:
+        return err
+    if not _studio_v3_backend_eligible(room):
+        return _studio_v3_backend_unavailable()
+    actor = _resolve_owner_user()
+    try:
+        draft, committed = replace_existing_studio_v3_draft(room, actor, _json_payload())
+        response = ok({"draft": serialize_editor_config(draft), "committed": committed})
+        db.session.commit()
+        _audit_platform_admin_editor_access(
+            "presence.editor.v3.draft.replace",
+            actor,
+            room,
+            {"config_id": draft.id, "version": draft.version, "revision": draft.revision},
+        )
+        return response
+    except PresenceEditorDraftConflictError as exc:
+        db.session.rollback()
+        return error(
+            "studio_v3_draft_conflict",
+            str(exc),
+            409,
+            details=getattr(exc, "details", None) or None,
+        )
+    except PresenceEditorConfigError as exc:
+        db.session.rollback()
+        return _editor_validation_error(exc)
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Studio V3 atomic draft replacement failed", extra={"room_id": room.id})
+        return error("studio_v3_draft_replace_failed", "Studio V3 draft replacement failed safely.", 500)
+
+
+@presence_graph_bp.route("/owner/rooms/<int:room_id>/editor/v3/state", methods=["GET", "PUT"])
+@alpha_jwt_required()
+def owner_room_editor_v3_state(room_id):
+    room, err = _load_owned_room(room_id)
+    if err:
+        return err
+    if not _studio_v3_backend_eligible(room):
+        return _studio_v3_backend_unavailable()
+    actor = _resolve_owner_user()
+    try:
+        if request.method == "GET":
+            state = load_studio_v3_private_state(room)
+            _audit_platform_admin_editor_access("presence.editor.v3.state.read", actor, room)
+            return ok({"state": serialize_studio_v3_private_state(state)})
+        state = replace_studio_v3_private_state(room, actor, _json_payload())
+        response = ok({"state": serialize_studio_v3_private_state(state)})
+        db.session.commit()
+        _audit_platform_admin_editor_access(
+            "presence.editor.v3.state.replace",
+            actor,
+            room,
+            {"state_id": state.id, "metadata_revision": state.metadata_revision},
+        )
+        return response
+    except StudioV3PrivateStateConflictError as exc:
+        db.session.rollback()
+        return error(
+            "studio_v3_state_conflict",
+            str(exc),
+            409,
+            details=getattr(exc, "details", None) or None,
+        )
+    except StudioV3PrivateStateUnavailableError as exc:
+        db.session.rollback()
+        return error("studio_v3_state_unavailable", str(exc), 503)
+    except StudioV3PrivateStateError as exc:
+        db.session.rollback()
+        return _studio_v3_state_validation_error(exc)
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Studio V3 private-state replacement failed", extra={"room_id": room.id})
+        return error("studio_v3_state_replace_failed", "Studio V3 private state failed safely.", 500)
 
 
 @presence_graph_bp.route("/owner/rooms/<int:room_id>/editor/preview", methods=["POST"])

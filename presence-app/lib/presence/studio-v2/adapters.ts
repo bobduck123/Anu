@@ -456,6 +456,10 @@ function fallbackChambers(title: string): StudioV2Chamber[] {
 
 function normalizeSkin(value: unknown): StudioV2Skin {
   const skin = record(value);
+  const experienceDensity = normalizeOptionalToken(skin.experienceDensity, ["spacious", "focused", "dense"] as const);
+  const experienceAtmosphere = normalizeOptionalToken(skin.experienceAtmosphere, ["paper-light", "nocturnal-depth", "ledger-scan"] as const);
+  const experiencePieceTreatment = normalizeOptionalToken(skin.experiencePieceTreatment, ["quiet-framed", "luminous-depth", "captioned-ledger"] as const);
+  const experienceJourney = normalizeOptionalToken(skin.experienceJourney, ["editorial-browse", "threshold-reveal", "archive-index"] as const);
   return {
     background: color(skin.background) || DEFAULT_STUDIO_V2_SKIN.background,
     texture: normalizeTexture(skin.texture),
@@ -467,7 +471,16 @@ function normalizeSkin(value: unknown): StudioV2Skin {
     borderStyle: normalizeBorderStyle(skin.borderStyle),
     shadowDepth: clamp(number(skin.shadowDepth, DEFAULT_STUDIO_V2_SKIN.shadowDepth), 0, 1),
     accentColor: color(skin.accentColor) || DEFAULT_STUDIO_V2_SKIN.accentColor,
+    ...(experienceDensity ? { experienceDensity } : {}),
+    ...(experienceAtmosphere ? { experienceAtmosphere } : {}),
+    ...(experiencePieceTreatment ? { experiencePieceTreatment } : {}),
+    ...(experienceJourney ? { experienceJourney } : {}),
   };
+}
+
+function normalizeOptionalToken<const T extends string>(value: unknown, allowed: readonly T[]): T | undefined {
+  const candidate = text(value) as T;
+  return allowed.includes(candidate) ? candidate : undefined;
 }
 
 function normalizeMobileRecovery(value: Record<string, unknown>): StudioV2MobileRecovery {

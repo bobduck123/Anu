@@ -3082,6 +3082,251 @@
   }
 }
 
+/* Studio V3 P1: exact-layout Film Strip / Selected Works. */
+.presence-studio-v2-public .v2-film-strip {
+  display: grid;
+  gap: clamp(18px, 3vw, 32px);
+  min-width: 0;
+  padding: clamp(16px, 3vw, 28px);
+  border: 1px solid color-mix(in srgb, var(--v2-public-accent) 28%, var(--v2-public-rule));
+  border-radius: clamp(16px, 2.5vw, 28px);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--v2-public-panel-strong) 82%, transparent), color-mix(in srgb, var(--v2-public-bg) 86%, #111)),
+    radial-gradient(circle at 88% 4%, color-mix(in srgb, var(--v2-public-accent) 16%, transparent), transparent 24rem);
+  box-shadow: var(--p-cinema-shadow);
+  touch-action: pan-y;
+}
+
+.presence-studio-v2-public .v2-film-strip:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--v2-public-accent) 76%, #fff);
+  outline-offset: 5px;
+}
+
+.presence-studio-v2-public .v2-film-strip-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.presence-studio-v2-public .v2-film-strip-progress {
+  margin: 0;
+  color: var(--v2-public-ink);
+  font-size: 0.78rem;
+  font-weight: 760;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2-public .v2-film-strip-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.presence-studio-v2-public .v2-film-strip-controls button,
+.presence-studio-v2-public .v2-film-strip-index button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--v2-public-accent) 42%, var(--v2-public-rule));
+  background: color-mix(in srgb, var(--v2-public-panel-strong) 88%, transparent);
+  color: var(--v2-public-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.presence-studio-v2-public .v2-film-strip-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 720;
+}
+
+.presence-studio-v2-public .v2-film-strip-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.presence-studio-v2-public .v2-film-strip-controls button:focus-visible,
+.presence-studio-v2-public .v2-film-strip-index button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--v2-public-accent) 78%, #fff);
+  outline-offset: 2px;
+}
+
+.presence-studio-v2-public .v2-film-strip-stage-window {
+  min-width: 0;
+  overflow: hidden;
+  border-radius: clamp(14px, 2vw, 22px);
+}
+
+.presence-studio-v2-public .v2-film-strip-stage-track {
+  min-width: 0;
+  transition: opacity 240ms var(--p-ease-out), transform 240ms var(--p-ease-out);
+}
+
+.presence-studio-v2-public .v2-film-strip-slide {
+  min-width: 0;
+  animation: v2FilmStripStageIn 240ms var(--p-ease-out) both;
+}
+
+@keyframes v2FilmStripStageIn {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.presence-studio-v2-public .v2-film-strip-slide .v2-public-object {
+  width: 100%;
+  transform: none !important;
+}
+
+.presence-studio-v2-public .v2-film-strip-slide .v2-public-object-media-img {
+  aspect-ratio: 16 / 9;
+  max-height: min(68svh, 760px);
+  object-fit: contain;
+  background: color-mix(in srgb, var(--v2-public-bg) 78%, #090909);
+}
+
+.presence-studio-v2-public .v2-film-strip-empty {
+  display: grid;
+  min-height: 240px;
+  margin: 0;
+  place-items: center;
+  border: 1px dashed var(--v2-public-rule);
+  color: var(--v2-public-muted);
+}
+
+.presence-studio-v2-public .v2-film-strip-index {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.presence-studio-v2-public .v2-film-strip-index button {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 2.2rem minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.presence-studio-v2-public .v2-film-strip-index button span {
+  color: var(--v2-public-muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+}
+
+.presence-studio-v2-public .v2-film-strip-index button strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.presence-studio-v2-public .v2-film-strip-index button[aria-current="true"] {
+  border-color: color-mix(in srgb, var(--v2-public-accent) 84%, var(--v2-public-rule));
+  background: color-mix(in srgb, var(--v2-public-accent) 16%, var(--v2-public-panel-strong));
+  box-shadow: inset 3px 0 0 var(--v2-public-accent);
+}
+
+.presence-studio-v2-public .v2-film-strip-context {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.32fr) minmax(0, 1fr);
+  gap: clamp(16px, 3vw, 30px);
+  padding-top: 18px;
+  border-top: 1px solid var(--v2-public-rule);
+}
+
+.presence-studio-v2-public .v2-film-strip-context-heading span {
+  color: var(--v2-public-muted);
+  font-size: 0.68rem;
+  font-weight: 760;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2-public .v2-film-strip-context-heading h3 {
+  margin: 7px 0 0;
+  color: var(--v2-public-ink);
+  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+  font-size: clamp(1.35rem, 2.2vw, 2rem);
+  font-weight: var(--v2-public-heading-weight);
+  line-height: 1.05;
+}
+
+.presence-studio-v2-public .v2-film-strip-context-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+}
+
+.presence-studio-v2-public .v2-film-strip-exit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--v2-public-rule);
+}
+
+@media (max-width: 640px) {
+  .presence-studio-v2-public .v2-film-strip {
+    gap: 16px;
+    margin-inline: -8px;
+    padding: 14px;
+  }
+
+  .presence-studio-v2-public .v2-film-strip-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .presence-studio-v2-public .v2-film-strip-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .presence-studio-v2-public .v2-film-strip-controls button {
+    width: 100%;
+  }
+
+  .presence-studio-v2-public .v2-film-strip-slide .v2-public-object-media-img {
+    aspect-ratio: 4 / 3;
+    max-height: 52svh;
+  }
+
+  .presence-studio-v2-public .v2-film-strip-index {
+    grid-template-columns: 1fr;
+  }
+
+  .presence-studio-v2-public .v2-film-strip-context {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .presence-studio-v2-public .v2-film-strip-stage-track,
+  .presence-studio-v2-public .v2-film-strip-slide,
+  .presence-studio-v2-public .v2-film-strip-slide .v2-public-object {
+    animation: none;
+    transition-duration: 0s;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .presence-studio-v2-public *,
   .presence-studio-v2-public *::before,
@@ -3901,5 +4146,151 @@
   .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-focus-image {
     max-width: 96vw;
     max-height: 78dvh;
+  }
+}
+
+/* Studio V3 Look facets are additive: legacy V2 rooms have none of these classes. */
+.presence-studio-v2-public.experience-density-spacious .v2-public-room-space {
+  width: min(1080px, calc(100% - 40px));
+}
+
+.presence-studio-v2-public.experience-density-spacious .v2-public-chamber {
+  padding-block: clamp(56px, 9vw, 118px);
+}
+
+.presence-studio-v2-public.experience-density-spacious .v2-public-layout,
+.presence-studio-v2-public.experience-density-spacious .v2-public-layout-zone {
+  gap: clamp(26px, 4vw, 54px);
+}
+
+.presence-studio-v2-public.experience-piece-quiet-framed .v2-public-object {
+  border: 1px solid color-mix(in srgb, var(--v2-public-accent) 18%, var(--v2-public-rule));
+  background: color-mix(in srgb, var(--v2-public-panel-strong) 88%, transparent);
+  box-shadow: 0 18px 52px -34px rgba(20, 16, 10, 0.38);
+}
+
+.presence-studio-v2-public.experience-piece-quiet-framed .v2-public-object-copy {
+  padding: clamp(18px, 2.4vw, 30px);
+}
+
+.presence-studio-v2-public.experience-journey-editorial-browse .v2-public-chamber h2 {
+  max-width: 13ch;
+  font-family: "Instrument Serif", "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  line-height: 0.94;
+}
+
+.presence-studio-v2-public.experience-atmosphere-nocturnal-depth {
+  --v2-public-panel: rgba(4, 4, 5, 0.76);
+  --v2-public-panel-strong: rgba(8, 8, 10, 0.92);
+}
+
+.presence-studio-v2-public.experience-atmosphere-nocturnal-depth .v2-bbb-threshold-wash {
+  background:
+    radial-gradient(circle at 52% 46%, color-mix(in srgb, var(--v2-public-accent) 22%, transparent), transparent 25rem),
+    linear-gradient(115deg, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.82));
+}
+
+.presence-studio-v2-public.experience-piece-luminous-depth .v2-bbb-constellation {
+  filter: drop-shadow(0 28px 68px color-mix(in srgb, var(--v2-public-accent) 24%, transparent));
+}
+
+.presence-studio-v2-public.experience-journey-threshold-reveal .v2-bbb-enter {
+  min-width: 148px;
+  letter-spacing: 0.24em;
+}
+
+.presence-studio-v2-public.experience-density-dense .v2-public-threshold {
+  min-height: min(620px, calc(82svh - 20px));
+  border-radius: 0;
+  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 0.75fr);
+}
+
+.presence-studio-v2-public.experience-density-dense .v2-public-room-space {
+  width: min(1380px, calc(100% - 20px));
+}
+
+.presence-studio-v2-public.experience-density-dense .v2-public-chamber {
+  padding-block: clamp(24px, 4vw, 52px);
+}
+
+.presence-studio-v2-public.experience-density-dense .v2-public-layout {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.presence-studio-v2-public.experience-density-dense .v2-public-layout-zone {
+  gap: 10px;
+}
+
+.presence-studio-v2-public.experience-density-dense .v2-public-layout .zone-opening-work,
+.presence-studio-v2-public.experience-density-dense .v2-public-layout .zone-cta-exit {
+  grid-column: 1 / -1;
+}
+
+.presence-studio-v2-public.experience-atmosphere-ledger-scan {
+  font-family: "IBM Plex Mono", "Courier New", ui-monospace, monospace;
+}
+
+.presence-studio-v2-public.experience-atmosphere-ledger-scan::before {
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 22px);
+  background-size: auto;
+  opacity: 0.34;
+}
+
+.presence-studio-v2-public.experience-piece-captioned-ledger .v2-public-object {
+  border-radius: 0 !important;
+  border: 1px solid color-mix(in srgb, var(--v2-public-accent) 48%, var(--v2-public-rule));
+  box-shadow: 6px 6px 0 color-mix(in srgb, var(--v2-public-accent) 18%, transparent);
+}
+
+.presence-studio-v2-public.experience-piece-captioned-ledger .v2-public-object-copy {
+  border-top: 1px dashed color-mix(in srgb, var(--v2-public-accent) 56%, var(--v2-public-rule));
+  padding: 12px 14px 14px;
+}
+
+.presence-studio-v2-public.experience-piece-captioned-ledger .v2-public-object h3 {
+  font-family: "IBM Plex Mono", "Courier New", ui-monospace, monospace;
+  font-size: clamp(1rem, 1.7vw, 1.32rem);
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2-public.experience-journey-archive-index .v2-public-primary-cta,
+.presence-studio-v2-public.experience-journey-archive-index .v2-public-object-action {
+  border-radius: 0;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-film-strip-room {
+  position: absolute;
+  inset: clamp(68px, 9vh, 104px) clamp(18px, 4vw, 72px) clamp(18px, 4vh, 48px);
+  overflow: auto;
+  color: #f7f1e4;
+  scrollbar-color: var(--v2-public-accent) rgba(255, 255, 255, 0.08);
+}
+
+.presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-film-strip-room .v2-film-strip {
+  min-height: 100%;
+  border-color: rgba(255, 255, 255, 0.16);
+  background: linear-gradient(145deg, rgba(7, 7, 9, 0.94), rgba(15, 13, 10, 0.86));
+}
+
+@media (max-width: 760px) {
+  .presence-studio-v2-public.experience-density-dense .v2-public-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .presence-studio-v2-public.style-bbbvision-threshold-gallery .v2-bbb-film-strip-room {
+    inset: 62px 10px 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .presence-studio-v2-public.experience-piece-luminous-depth .v2-bbb-constellation {
+    filter: none;
   }
 }

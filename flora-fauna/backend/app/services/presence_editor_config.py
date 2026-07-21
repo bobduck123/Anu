@@ -3,9 +3,11 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import math
 import re
 import time
 from copy import deepcopy
+from decimal import Decimal
 from typing import Any
 from urllib.parse import urlparse
 
@@ -57,6 +59,43 @@ ATTACHABLE_ASSET_SLOTS = {
 ATTACHABLE_ASSET_TYPES = {"image", "thumbnail", "texture"}
 UPLOAD_ASSET_ROLES = {"cover", "work", "portrait", "background", "invitation", "unused"}
 MEDIA_REFERENCE_SECTION_ATTRS = ("scene_config_json", "asset_config_json", "content_config_json")
+STUDIO_V3_RENDERER_KEY = "presence-studio-v2-room"
+STUDIO_V3_POST_KEYS = (
+    "renderer_key",
+    "scene_config",
+    "style_dna",
+    "motion_config",
+    "asset_config",
+    "content_config",
+    "roomkey_config",
+    "enquiry_config",
+    "locked_fields",
+)
+STUDIO_V3_EXPECTED_DRAFT_KEYS = {
+    "room_id",
+    "config_id",
+    "version",
+    "revision",
+    "schema_version",
+    "fingerprint",
+}
+STUDIO_V3_OWNED_SECTION_ATTRS = (
+    "scene_config_json",
+    "style_dna_json",
+    "motion_config_json",
+    "asset_config_json",
+    "content_config_json",
+    "roomkey_config_json",
+    "enquiry_config_json",
+)
+_STUDIO_V3_FINGERPRINT_RE = re.compile(r"^[0-9a-f]{64}$")
+_STUDIO_V3_PRIVATE_KEY_RE = re.compile(
+    r"^(?:namedlooks|layerlocks|savepoints|ownermode|restore|compatibility|"
+    r"sourceref|collectionsourceref|sourceprovenance|placementprovenance|"
+    r"metadatarevision|activesavepointid|lastrestoredsavepointid)$",
+    re.IGNORECASE,
+)
+_STUDIO_V3_SOURCE_REF_VALUE_RE = re.compile(r"^(?:work|collection|legacy-object):", re.IGNORECASE)
 
 _RENDERER_KEY_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,119}$")
 _LOCAL_PATH_RE = re.compile(
@@ -77,6 +116,157 @@ class PresenceEditorConfigError(ValueError):
     def __init__(self, message: str, details: dict[str, Any] | None = None):
         super().__init__(message)
         self.details = details or {}
+
+
+class PresenceEditorDraftConflictError(PresenceEditorConfigError):
+    """An expected Studio V3 base no longer identifies the locked config."""
+
+
+def _studio_v3_stable_media_projection(value: Any) -> Any:
+    if isinstance(value, list):
+        return [_studio_v3_stable_media_projection(item) for item in value]
+    if not isinstance(value, dict):
+        return deepcopy(value)
+    qualifies = (
+        isinstance(value.get("media_id"), str)
+        and bool(value.get("media_id", "").strip())
+        and value.get("visibility") == "private_draft"
+    )
+    projected: dict[str, Any] = {}
+    for key, item in value.items():
+        if qualifies and key in {"url", "preview_expires_at"}:
+            continue
+        projected[str(key)] = _studio_v3_stable_media_projection(item)
+    return projected
+
+
+def studio_v3_comparable_config(config: PresenceEditableConfig) -> dict[str, Any]:
+    """Return the exact ten-field stable-semantic fingerprint input."""
+
+    return {
+        "schema_version": EDITABLE_CONFIG_SCHEMA_VERSION,
+        "renderer_key": config.renderer_key,
+        "scene_config": _studio_v3_stable_media_projection(config.scene_config_json or {}),
+        "style_dna": deepcopy(config.style_dna_json or {}),
+        "motion_config": deepcopy(config.motion_config_json or {}),
+        "asset_config": _studio_v3_stable_media_projection(config.asset_config_json or {}),
+        "content_config": _studio_v3_stable_media_projection(config.content_config_json or {}),
+        "roomkey_config": deepcopy(config.roomkey_config_json or {}),
+        "enquiry_config": deepcopy(config.enquiry_config_json or {}),
+        "locked_fields": deepcopy(config.locked_fields_json or {}),
+    }
+
+
+def canonicalize_studio_v3_comparable_config(config: dict[str, Any]) -> str:
+    try:
+        return _canonicalize_studio_v3_json(config)
+    except (TypeError, ValueError) as exc:
+        raise PresenceEditorConfigError("Studio V3 base config is not canonical JSON.") from exc
+
+
+def _canonicalize_studio_v3_json(value: Any) -> str:
+    """Match JSON.stringify after Unicode code-point key sorting."""
+
+    if value is None:
+        return "null"
+    if value is True:
+        return "true"
+    if value is False:
+        return "false"
+    if isinstance(value, int):
+        if abs(value) > 9007199254740991:
+            raise ValueError("integer is outside the JavaScript safe range")
+        return str(value)
+    if isinstance(value, float):
+        return _canonicalize_studio_v3_number(value)
+    if isinstance(value, str):
+        return _studio_v3_json_string(value)
+    if isinstance(value, list):
+        return "[" + ",".join(_canonicalize_studio_v3_json(item) for item in value) + "]"
+    if isinstance(value, dict):
+        if not all(isinstance(key, str) for key in value):
+            raise TypeError("Studio V3 JSON object keys must be strings")
+        return "{" + ",".join(
+            f"{_studio_v3_json_string(key)}:{_canonicalize_studio_v3_json(value[key])}"
+            for key in sorted(value)
+        ) + "}"
+    raise TypeError("Studio V3 base config contains a non-JSON value")
+
+
+def _studio_v3_json_string(value: str) -> str:
+    normalized: list[str] = []
+    index = 0
+    while index < len(value):
+        code = ord(value[index])
+        if 0xD800 <= code <= 0xDBFF and index + 1 < len(value):
+            low = ord(value[index + 1])
+            if 0xDC00 <= low <= 0xDFFF:
+                normalized.append(chr(0x10000 + ((code - 0xD800) << 10) + (low - 0xDC00)))
+                index += 2
+                continue
+        normalized.append(value[index])
+        index += 1
+    encoded = json.dumps("".join(normalized), ensure_ascii=False, separators=(",", ":"))
+    return "".join(
+        f"\\u{ord(character):04x}" if 0xD800 <= ord(character) <= 0xDFFF else character
+        for character in encoded
+    )
+
+
+def _canonicalize_studio_v3_number(value: float) -> str:
+    if not math.isfinite(value):
+        raise ValueError("Studio V3 numbers must be finite")
+    if value.is_integer() and abs(value) > 9007199254740991:
+        raise ValueError("integer is outside the JavaScript safe range")
+    if value == 0:
+        return "0"
+    absolute = abs(value)
+    shortest = repr(value).lower()
+    if 1e-6 <= absolute < 1e21:
+        expanded = format(Decimal(shortest), "f")
+        if "." in expanded:
+            expanded = expanded.rstrip("0").rstrip(".")
+        return expanded
+    if "e" not in shortest:
+        shortest = format(value, ".15e")
+    mantissa, exponent = shortest.split("e", 1)
+    mantissa = mantissa.rstrip("0").rstrip(".")
+    exponent_number = int(exponent)
+    sign = "+" if exponent_number >= 0 else ""
+    return f"{mantissa}e{sign}{exponent_number}"
+
+
+def fingerprint_studio_v3_comparable_config(config: dict[str, Any]) -> str:
+    projected = {
+        "schema_version": config.get("schema_version"),
+        "renderer_key": config.get("renderer_key"),
+        "scene_config": _studio_v3_stable_media_projection(config.get("scene_config") or {}),
+        "style_dna": deepcopy(config.get("style_dna") or {}),
+        "motion_config": deepcopy(config.get("motion_config") or {}),
+        "asset_config": _studio_v3_stable_media_projection(config.get("asset_config") or {}),
+        "content_config": _studio_v3_stable_media_projection(config.get("content_config") or {}),
+        "roomkey_config": deepcopy(config.get("roomkey_config") or {}),
+        "enquiry_config": deepcopy(config.get("enquiry_config") or {}),
+        "locked_fields": deepcopy(config.get("locked_fields") or {}),
+    }
+    canonical = canonicalize_studio_v3_comparable_config(projected)
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def fingerprint_studio_v3_editable_config(config: PresenceEditableConfig) -> str:
+    return fingerprint_studio_v3_comparable_config(studio_v3_comparable_config(config))
+
+
+def studio_v3_config_identity(config: PresenceEditableConfig) -> dict[str, Any]:
+    return {
+        "room_id": int(config.room_id),
+        "config_id": int(config.id),
+        "version": int(config.version),
+        "revision": int(config.revision or 1),
+        "status": str(config.status),
+        "schema_version": EDITABLE_CONFIG_SCHEMA_VERSION,
+        "fingerprint": fingerprint_studio_v3_editable_config(config),
+    }
 
 
 def media_asset_records_available() -> bool:
@@ -419,12 +609,26 @@ def _active_config_query(room: PresenceNode, status: str):
     return PresenceEditableConfig.query.filter_by(room_id=room.id, status=status)
 
 
-def draft_config_for_room(room: PresenceNode) -> PresenceEditableConfig | None:
-    return _active_config_query(room, "draft").order_by(PresenceEditableConfig.version.desc()).first()
+def draft_config_for_room(
+    room: PresenceNode,
+    *,
+    for_update: bool = False,
+) -> PresenceEditableConfig | None:
+    query = _active_config_query(room, "draft").order_by(PresenceEditableConfig.version.desc())
+    if for_update:
+        query = query.with_for_update()
+    return query.first()
 
 
-def published_config_for_room(room: PresenceNode) -> PresenceEditableConfig | None:
-    return _active_config_query(room, "published").order_by(PresenceEditableConfig.version.desc()).first()
+def published_config_for_room(
+    room: PresenceNode,
+    *,
+    for_update: bool = False,
+) -> PresenceEditableConfig | None:
+    query = _active_config_query(room, "published").order_by(PresenceEditableConfig.version.desc())
+    if for_update:
+        query = query.with_for_update()
+    return query.first()
 
 
 def _max_version(room: PresenceNode) -> int:
@@ -452,7 +656,11 @@ def ensure_draft_config(room: PresenceNode, actor=None) -> tuple[PresenceEditabl
     # Resolve optional V1C capability before this method starts a mutation.
     # Inspecting a table mid-transaction can disturb in-memory SQLite tests.
     media_asset_records_available()
-    draft = draft_config_for_room(room)
+    # Every legacy draft writer shares the exact row-lock discipline used by
+    # the Studio V3 compare-and-replace contract. Without this lock a legacy
+    # POST/PATCH can read a stale draft, wait behind V3's UPDATE, and then
+    # overwrite the committed V3 values with the same next revision.
+    draft = draft_config_for_room(room, for_update=True)
     if draft:
         return draft, False
 
@@ -462,6 +670,7 @@ def ensure_draft_config(room: PresenceNode, actor=None) -> tuple[PresenceEditabl
     draft = PresenceEditableConfig(
         room_id=room.id,
         version=_max_version(room) + 1,
+        revision=1,
         status="draft",
         created_by_user_id=getattr(actor, "id", None),
         updated_by_user_id=getattr(actor, "id", None),
@@ -510,13 +719,285 @@ def update_draft_config(
         {attr: getattr(draft, attr) or {} for attr in MEDIA_REFERENCE_SECTION_ATTRS},
         room.id,
     )
+    if not created:
+        draft.revision = int(draft.revision or 1) + 1
     draft.updated_by_user_id = getattr(actor, "id", None)
     draft.updated_at = now_utc()
     return draft, created
 
 
+def _normalise_studio_v3_expected(
+    expected: Any,
+    *,
+    required_keys: set[str] | None = None,
+) -> dict[str, Any]:
+    keys = required_keys or STUDIO_V3_EXPECTED_DRAFT_KEYS
+    if not isinstance(expected, dict) or set(expected) != keys:
+        raise PresenceEditorConfigError(
+            "Studio V3 expected identity must contain exactly the registered fields.",
+            details={"required_fields": sorted(keys)},
+        )
+    normalized: dict[str, Any] = {}
+    for key in ("room_id", "config_id", "version", "revision"):
+        value = expected.get(key)
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise PresenceEditorConfigError(f"expected.{key} must be a positive integer.")
+        normalized[key] = value
+    schema_version = expected.get("schema_version")
+    if not isinstance(schema_version, str) or not schema_version.strip() or len(schema_version) > 120:
+        raise PresenceEditorConfigError("expected.schema_version must be a non-empty schema token.")
+    fingerprint = str(expected.get("fingerprint") or "").strip().lower()
+    if not _STUDIO_V3_FINGERPRINT_RE.fullmatch(fingerprint):
+        raise PresenceEditorConfigError("expected.fingerprint must be a lowercase SHA-256 digest.")
+    normalized["schema_version"] = schema_version.strip()
+    normalized["fingerprint"] = fingerprint
+    return normalized
+
+
+def lock_studio_v3_expected_config(
+    room: PresenceNode,
+    expected: dict[str, Any],
+    *,
+    allowed_statuses: set[str],
+) -> PresenceEditableConfig:
+    """Lock and compare one exact existing config without creating anything."""
+
+    normalized = _normalise_studio_v3_expected(expected)
+    if normalized["room_id"] != room.id:
+        raise PresenceEditorDraftConflictError("Studio V3 base Room no longer matches.")
+    config = (
+        PresenceEditableConfig.query.filter(
+            PresenceEditableConfig.id == normalized["config_id"],
+            PresenceEditableConfig.room_id == room.id,
+            PresenceEditableConfig.status.in_(allowed_statuses),
+        )
+        .with_for_update()
+        .first()
+    )
+    if config is None:
+        raise PresenceEditorDraftConflictError("Studio V3 base config is missing or no longer eligible.")
+    current = studio_v3_config_identity(config)
+    for field in ("room_id", "config_id", "version", "revision", "schema_version", "fingerprint"):
+        if current[field] != normalized[field]:
+            raise PresenceEditorDraftConflictError(
+                "Studio V3 base config changed; reload before saving.",
+                details={"mismatch": field},
+            )
+    return config
+
+
+def _normalise_studio_v3_replacement_request(data: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+    if not isinstance(data, dict) or set(data) != {"expected", "config"}:
+        raise PresenceEditorConfigError("Studio V3 replacement requires exactly expected and config.")
+    expected = _normalise_studio_v3_expected(data.get("expected"))
+    config = data.get("config")
+    if not isinstance(config, dict) or set(config) != set(STUDIO_V3_POST_KEYS):
+        raise PresenceEditorConfigError(
+            "Studio V3 replacement config must contain exactly the nine transport fields.",
+            details={"required_fields": list(STUDIO_V3_POST_KEYS)},
+        )
+    normalized = normalise_editor_payload(config, partial=False)
+    if normalized.get("renderer_key") != STUDIO_V3_RENDERER_KEY:
+        raise PresenceEditorConfigError("Studio V3 replacement requires the Studio V2 renderer key.")
+    return expected, normalized
+
+
+def _without_studio_v2(value: Any) -> dict[str, Any]:
+    result = deepcopy(value or {}) if isinstance(value, dict) else {}
+    result.pop("studio_v2", None)
+    return result
+
+
+def _validate_studio_v3_owned_replacement(
+    draft: PresenceEditableConfig,
+    normalized: dict[str, Any],
+) -> None:
+    for attr in STUDIO_V3_OWNED_SECTION_ATTRS:
+        if _without_studio_v2(getattr(draft, attr) or {}) != _without_studio_v2(normalized.get(attr) or {}):
+            public_key = next(key for key, field_attr in EDITABLE_CONFIG_JSON_FIELDS.items() if field_attr == attr)
+            raise PresenceEditorConfigError(
+                f"Studio V3 replacement cannot change unowned {public_key} fields."
+            )
+    if deepcopy(draft.locked_fields_json or {}) != deepcopy(normalized.get("locked_fields_json") or {}):
+        raise PresenceEditorConfigError("Studio V3 replacement cannot change locked_fields.")
+    for attr in STUDIO_V3_OWNED_SECTION_ATTRS:
+        section = normalized.get(attr) or {}
+        _reject_studio_v3_private_state_in_public_config(section.get("studio_v2") if isinstance(section, dict) else None)
+        if attr not in MEDIA_REFERENCE_SECTION_ATTRS:
+            _reject_unregistered_studio_v3_media_references(
+                section.get("studio_v2") if isinstance(section, dict) else None,
+                path=f"{attr}.studio_v2",
+            )
+
+
+def _reject_studio_v3_private_state_in_public_config(value: Any, path: str = "studio_v2") -> None:
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            _reject_studio_v3_private_state_in_public_config(item, f"{path}[{index}]")
+        return
+    if not isinstance(value, dict):
+        if isinstance(value, str) and _STUDIO_V3_SOURCE_REF_VALUE_RE.match(value.strip()):
+            raise PresenceEditorConfigError("Studio V3 private source references cannot enter editable_config.")
+        return
+    for key, item in value.items():
+        normalized_key = re.sub(r"[^a-z0-9]", "", str(key).lower())
+        if normalized_key == "placements" and not re.fullmatch(
+            r"studio_v2\.chambers\[\d+\]\.composition",
+            path,
+        ):
+            raise PresenceEditorConfigError(
+                f"Studio V3 private placements cannot enter editable_config at {path}.{key}."
+            )
+        if _STUDIO_V3_PRIVATE_KEY_RE.fullmatch(normalized_key):
+            raise PresenceEditorConfigError(
+                f"Studio V3 private metadata cannot enter editable_config at {path}.{key}."
+            )
+        _reject_studio_v3_private_state_in_public_config(item, f"{path}.{key}")
+
+
+def _require_stable_private_draft_media_ids(value: Any, path: str) -> None:
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            _require_stable_private_draft_media_ids(item, f"{path}[{index}]")
+        return
+    if not isinstance(value, dict):
+        return
+    if value.get("visibility") == "private_draft":
+        media_id = value.get("media_id")
+        if not isinstance(media_id, str) or not media_id.strip():
+            raise PresenceEditorConfigError(
+                f"Studio V3 private-draft media at {path} requires a stable media_id."
+            )
+    for key, item in value.items():
+        _require_stable_private_draft_media_ids(item, f"{path}.{key}")
+
+
+def _reject_unregistered_studio_v3_media_references(value: Any, *, path: str) -> None:
+    """Keep private media in scene/asset/content where lifecycle handling exists."""
+
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            _reject_unregistered_studio_v3_media_references(item, path=f"{path}[{index}]")
+        return
+    if not isinstance(value, dict):
+        return
+    normalized_keys = {
+        re.sub(r"[^a-z0-9]", "", str(key).lower())
+        for key in value
+    }
+    if value.get("visibility") == "private_draft" or normalized_keys.intersection(
+        {"mediaid", "previewexpiresat", "signedurl", "privatereviewurl", "draftstoragekey"}
+    ):
+        raise PresenceEditorConfigError(
+            f"Studio V3 media references are not registered for {path}."
+        )
+    for key, item in value.items():
+        _reject_unregistered_studio_v3_media_references(item, path=f"{path}.{key}")
+
+
+def _claimed_private_draft_media_ids(value: Any) -> set[str]:
+    ids: set[str] = set()
+    if isinstance(value, list):
+        for item in value:
+            ids.update(_claimed_private_draft_media_ids(item))
+    elif isinstance(value, dict):
+        media_id = value.get("media_id")
+        if value.get("visibility") == "private_draft" and isinstance(media_id, str) and media_id.strip():
+            ids.add(media_id)
+        for item in value.values():
+            ids.update(_claimed_private_draft_media_ids(item))
+    return ids
+
+
+def _lock_and_validate_studio_v3_media(
+    room: PresenceNode,
+    normalized: dict[str, Any],
+) -> tuple[list[PresenceMediaAsset], set[str]]:
+    if not media_asset_records_available():
+        raise PresenceEditorConfigError("Studio V3 atomic replacement requires the media lifecycle table.")
+    sections = {attr: normalized.get(attr) or {} for attr in MEDIA_REFERENCE_SECTION_ATTRS}
+    for attr, section in sections.items():
+        _require_stable_private_draft_media_ids(section, attr)
+    all_ids = _media_reference_ids(sections, include_inventory=True)
+    selected_ids = _media_reference_ids(sections, include_inventory=False)
+    claimed_private_ids = _claimed_private_draft_media_ids(sections)
+    referenced_rows = (
+        PresenceMediaAsset.query.filter(PresenceMediaAsset.id.in_(all_ids)).with_for_update().all()
+        if all_ids
+        else []
+    )
+    referenced_by_id = {row.id: row for row in referenced_rows}
+    owner_user_id = getattr(room, "owner_user_id", None)
+    for media_id in all_ids:
+        row = referenced_by_id.get(media_id)
+        if (
+            row is None
+            or row.room_id != room.id
+            or row.owner_user_id != owner_user_id
+            or row.status == "deleted"
+        ):
+            raise PresenceEditorConfigError("Studio V3 media reference is not owned by this Room.")
+        if media_id in claimed_private_ids and row.visibility != "private_draft":
+            raise PresenceEditorConfigError("Studio V3 private-draft media claim does not match the media record.")
+        if (
+            media_id in selected_ids
+            and row.visibility == "private_draft"
+            and row.status not in {"draft_uploaded", "draft_attached", "orphaned", "ready"}
+        ):
+            raise PresenceEditorConfigError("Studio V3 selected private media is not attachable.")
+    private_rows = (
+        PresenceMediaAsset.query.filter_by(
+            room_id=room.id,
+            owner_user_id=owner_user_id,
+            visibility="private_draft",
+        )
+        .with_for_update()
+        .all()
+    )
+    return private_rows, selected_ids
+
+
+def replace_existing_studio_v3_draft(
+    room: PresenceNode,
+    actor,
+    data: dict[str, Any],
+) -> tuple[PresenceEditableConfig, dict[str, Any]]:
+    """Conditionally replace one existing draft; caller owns commit/rollback."""
+
+    expected, normalized = _normalise_studio_v3_replacement_request(data)
+    draft = lock_studio_v3_expected_config(room, expected, allowed_statuses={"draft"})
+    _validate_studio_v3_owned_replacement(draft, normalized)
+    private_rows, selected_ids = _lock_and_validate_studio_v3_media(room, normalized)
+
+    secured_sections: dict[str, dict[str, Any]] = {}
+    for attr in MEDIA_REFERENCE_SECTION_ATTRS:
+        section = deepcopy(normalized.get(attr) or {})
+        if isinstance(section.get("studio_v2"), dict):
+            section["studio_v2"] = _secure_private_draft_references(section["studio_v2"], room.id)
+        secured_sections[attr] = section
+    draft.renderer_key = normalized["renderer_key"]
+    for _public_key, attr in EDITABLE_CONFIG_JSON_FIELDS.items():
+        value = secured_sections.get(attr, normalized.get(attr) or {})
+        setattr(draft, attr, value)
+
+    now = now_utc()
+    for media_asset in private_rows:
+        if media_asset.id in selected_ids:
+            if media_asset.status in {"draft_uploaded", "orphaned", "ready"}:
+                media_asset.status = "draft_attached"
+                media_asset.updated_at = now
+        elif media_asset.status == "draft_attached":
+            media_asset.status = "orphaned"
+            media_asset.updated_at = now
+
+    draft.revision = int(draft.revision or 1) + 1
+    draft.updated_by_user_id = getattr(actor, "id", None)
+    draft.updated_at = now
+    return draft, studio_v3_config_identity(draft)
+
+
 def publish_draft_config(room: PresenceNode, actor) -> PresenceEditableConfig:
-    draft = draft_config_for_room(room)
+    draft = draft_config_for_room(room, for_update=True)
     if not draft:
         raise PresenceEditorConfigError("No draft config exists for this Room.")
     try:
@@ -567,6 +1048,7 @@ def rollback_published_config(room: PresenceNode, actor, *, version: int | None 
     restored = PresenceEditableConfig(
         room_id=room.id,
         version=_max_version(room) + 1,
+        revision=1,
         status="published",
         created_by_user_id=getattr(actor, "id", None),
         updated_by_user_id=getattr(actor, "id", None),
@@ -631,6 +1113,7 @@ def serialize_editor_config(config: PresenceEditableConfig | None) -> dict[str, 
         "room_id": config.room_id,
         "schema_version": EDITABLE_CONFIG_SCHEMA_VERSION,
         "version": config.version,
+        "revision": int(config.revision or 1),
         "status": config.status,
         "renderer_key": config.renderer_key,
         "scene_config": _owner_media_section(config, "scene_config_json"),
@@ -787,7 +1270,7 @@ def attach_asset_to_draft(room: PresenceNode, actor, data: dict[str, Any]) -> Pr
         raise PresenceEditorConfigError("Unsupported asset_type.", details={"asset_type": sorted(ATTACHABLE_ASSET_TYPES)})
     url = _validate_public_or_relative_url(str(data.get("url") or "").strip(), path="asset.url")
     alt_text = _clean_string(str(data.get("alt_text") or data.get("alt") or "").strip(), key="alt_text", path="asset.alt_text") if (data.get("alt_text") or data.get("alt")) else None
-    draft, _created = ensure_draft_config(room, actor)
+    draft, created = ensure_draft_config(room, actor)
     asset_config = deepcopy(draft.asset_config_json or {})
     asset = {
         "url": url,
@@ -804,6 +1287,8 @@ def attach_asset_to_draft(room: PresenceNode, actor, data: dict[str, Any]) -> Pr
     else:
         asset_config[slot] = [asset]
     draft.asset_config_json = normalise_editor_section(asset_config, section="asset_config")
+    if not created:
+        draft.revision = int(draft.revision or 1) + 1
     draft.updated_by_user_id = getattr(actor, "id", None)
     draft.updated_at = now_utc()
     return draft
@@ -857,13 +1342,15 @@ def attach_uploaded_asset_to_draft(
     if isinstance(height, int) and height > 0:
         asset["height"] = height
 
-    draft, _created = ensure_draft_config(room, actor)
+    draft, created = ensure_draft_config(room, actor)
     asset_config = deepcopy(draft.asset_config_json or {})
     existing = asset_config.get("attached_assets")
     items = list(existing) if isinstance(existing, list) else ([existing] if existing else [])
     items.append(asset)
     asset_config["attached_assets"] = items
     draft.asset_config_json = normalise_editor_section(asset_config, section="asset_config")
+    if not created:
+        draft.revision = int(draft.revision or 1) + 1
     draft.updated_by_user_id = getattr(actor, "id", None)
     draft.updated_at = now_utc()
     response_asset = deepcopy(asset)
@@ -906,12 +1393,14 @@ def _owner_media_section(config: PresenceEditableConfig, attr: str) -> dict[str,
 def delete_unused_media_asset(room: PresenceNode, media_id: str) -> bool:
     if not media_asset_records_available():
         raise PresenceEditorConfigError("Private draft media is not enabled on this environment.")
-    media_asset = PresenceMediaAsset.query.filter_by(id=media_id, room_id=room.id).first()
+    # Preserve the global writer lock order: draft first, then referenced media.
+    # This matches V3 replacement and avoids a delete-vs-save lock inversion.
+    draft = draft_config_for_room(room, for_update=True)
+    media_asset = PresenceMediaAsset.query.filter_by(id=media_id, room_id=room.id).with_for_update().first()
     if not media_asset:
         raise PresenceEditorConfigError("That image was not found.")
     if media_asset.status == "published" or media_asset.visibility == "public_published":
         raise PresenceEditorConfigError("This image is live. Replace it in your draft before deleting it.")
-    draft = draft_config_for_room(room)
     selected = _media_reference_ids((draft.asset_config_json if draft else {}) or {}, include_inventory=False)
     if media_asset.id in selected:
         raise PresenceEditorConfigError("Remove this image from your draft before deleting it.")
@@ -925,9 +1414,21 @@ def delete_unused_media_asset(room: PresenceNode, media_id: str) -> bool:
 def cleanup_orphaned_private_media(room: PresenceNode, *, minimum_age_seconds: int = 86400) -> int:
     if not media_asset_records_available():
         return 0
+    # Match every draft/media writer: lock the draft before selecting media.
+    # The media query must also lock so its orphaned predicate is rechecked
+    # after a concurrent V3 replacement finishes reattaching an asset.
+    draft_config_for_room(room, for_update=True)
     cutoff = now_utc().timestamp() - max(0, int(minimum_age_seconds))
     deleted = 0
-    rows = PresenceMediaAsset.query.filter_by(room_id=room.id, status="orphaned", visibility="private_draft").all()
+    rows = (
+        PresenceMediaAsset.query.filter_by(
+            room_id=room.id,
+            status="orphaned",
+            visibility="private_draft",
+        )
+        .with_for_update()
+        .all()
+    )
     for media_asset in rows:
         if media_asset.created_at and media_asset.created_at.timestamp() > cutoff:
             continue

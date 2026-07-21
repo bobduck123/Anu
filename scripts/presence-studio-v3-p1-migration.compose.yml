@@ -1,0 +1,12 @@
+services:
+  presence-contract-postgres:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+    volumes: !override
+      - type: tmpfs
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: ${PRESENCE_V3_P1_MIGRATIONS}
+        target: /migrations
+        read_only: true
