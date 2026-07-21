@@ -33,6 +33,11 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
   const [publishing, setPublishing] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  useEffect(() => {
+    const requestedMode = new URLSearchParams(window.location.search).get("mode");
+    if (requestedMode === "mobile" || requestedMode === "desktop") setMode(requestedMode);
+  }, []);
+
   const loadPreview = useCallback(async () => {
     setLoadingPreview(true);
     setPreviewError(null);
@@ -180,20 +185,22 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
 
   return (
     <div className="min-h-dvh bg-black text-stone-100">
-      <div className="fixed left-4 top-4 z-[1000] rounded-full border border-amber-200/40 bg-black/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-100 backdrop-blur">
-        Draft preview - only you can see this
+      <div data-testid="visitor-preview-boundary" className="fixed left-4 right-4 top-4 z-[1000] max-w-sm rounded-2xl border border-amber-200/40 bg-black/80 px-4 py-3 text-amber-50 backdrop-blur sm:right-auto">
+        <strong className="block text-xs uppercase tracking-[0.18em]">Visitor Preview · not live yet</strong>
+        <span className="mt-1 block text-xs font-semibold text-amber-100">Draft preview - only you can see this</span>
+        <span className="mt-1 block text-xs leading-5 text-stone-300">This is what people will see if you publish these changes.</span>
       </div>
-      <div className="fixed right-4 top-4 z-[1000] flex flex-wrap items-center justify-end gap-2">
-        <Link href={`/studio/${roomId}/editor`} className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/70 px-4 py-2 text-sm font-semibold text-stone-100 backdrop-blur hover:bg-white/10">
+      <div data-testid="visitor-preview-controls" className="fixed left-4 right-4 top-36 z-[1000] flex flex-wrap items-center justify-start gap-2 sm:left-auto sm:top-4 sm:justify-end">
+        <Link href={`/studio/${roomId}/editor?step=preview`} className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/70 px-4 py-2 text-sm font-semibold text-stone-100 backdrop-blur hover:bg-white/10">
           <ArrowLeft className="h-4 w-4" />
-          Back to editor
+          Back to Studio
         </Link>
         <div className="inline-flex rounded-full border border-white/15 bg-black/70 p-1 backdrop-blur">
-          <button type="button" onClick={() => setMode("desktop")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold ${mode === "desktop" ? "bg-amber-200 text-stone-950" : "text-stone-200"}`}>
+          <button type="button" aria-pressed={mode === "desktop"} onClick={() => setMode("desktop")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold ${mode === "desktop" ? "bg-amber-200 text-stone-950" : "text-stone-200"}`}>
             <Monitor className="h-3.5 w-3.5" />
             Desktop
           </button>
-          <button type="button" onClick={() => setMode("mobile")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold ${mode === "mobile" ? "bg-amber-200 text-stone-950" : "text-stone-200"}`}>
+          <button type="button" aria-pressed={mode === "mobile"} onClick={() => setMode("mobile")} className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold ${mode === "mobile" ? "bg-amber-200 text-stone-950" : "text-stone-200"}`}>
             <Smartphone className="h-3.5 w-3.5" />
             Mobile
           </button>
@@ -219,7 +226,7 @@ export default function PresenceDraftPreviewPage({ roomId }: { roomId: number })
       {readiness?.hasBlockingIssues && (
         <p
           id="preview-publish-blocked-reason"
-          className="fixed right-4 top-16 z-[1000] max-w-sm rounded-2xl border border-red-300/25 bg-red-950/90 px-4 py-3 text-sm text-red-100 backdrop-blur"
+          className="fixed left-4 right-4 top-[17rem] z-[1000] max-w-sm rounded-2xl border border-red-300/25 bg-red-950/90 px-4 py-3 text-sm text-red-100 backdrop-blur sm:left-auto sm:top-16"
         >
           Open your room after you fix: {readiness.critical.map((issue) => issue.label).join(" ")}
         </p>

@@ -41,7 +41,7 @@ export function SkinLabSheet({ skin, open, onClose, onChange }: SkinLabSheetProp
   return (
     <div className="v2-side-panel" data-testid="studio-v2-skin-sheet">
       <div className="v2-panel-head">
-        <span className="v2-panel-title">Room Skin Lab</span>
+        <span className="v2-panel-title">Look &amp; Feel</span>
         <button className="v2-btn" data-testid="studio-v2-sheet-close" onClick={onClose}>✕</button>
       </div>
       <div className="v2-panel-body">
@@ -135,7 +135,7 @@ export function ObjectEditorSheet({ object, open, onClose, onChange }: ObjectEdi
   return (
     <div className="v2-side-panel" data-testid="studio-v2-object-sheet">
       <div className="v2-panel-head">
-        <span className="v2-panel-title">Object Tuning</span>
+        <span className="v2-panel-title">Edit Piece</span>
         <button className="v2-btn" data-testid="studio-v2-sheet-close" onClick={onClose}>✕</button>
       </div>
       <div className="v2-panel-body">
@@ -214,7 +214,7 @@ export function ObjectEditorSheet({ object, open, onClose, onChange }: ObjectEdi
   );
 }
 
-/* ─── Add Object ─── */
+/* ─── Add Piece ─── */
 
 interface AddObjectSheetProps {
   open: boolean;
@@ -236,7 +236,7 @@ export function AddObjectSheet({ open, onClose, onAdd }: AddObjectSheetProps) {
   return (
     <div className="v2-side-panel" data-testid="studio-v2-add-sheet">
       <div className="v2-panel-head">
-        <span className="v2-panel-title">Add Object</span>
+        <span className="v2-panel-title">Add Piece</span>
         <button className="v2-btn" data-testid="studio-v2-sheet-close" onClick={onClose}>✕</button>
       </div>
       <div className="v2-panel-body">
