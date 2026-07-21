@@ -811,8 +811,7 @@ export default function BbbVisionCanvasGallery({
       if (e.key !== "Enter" && (e.key !== " " || !activeBridge)) return;
       const input = e.key === "Enter" ? "keyboard-enter" : "keyboard-space";
       const currentWorks = propsRef.current.works;
-      if (s.hoveredShape && s.hoveredShape.workIndex >= 0 && s.hoveredShape.workIndex < currentWorks.length) {
-        if (activeBridge) e.preventDefault();
+      if (!activeBridge && s.hoveredShape && s.hoveredShape.workIndex >= 0 && s.hoveredShape.workIndex < currentWorks.length) {
         openWorkFromShape(s.hoveredShape, input);
       } else if (currentWorks.length > 0) {
         if (activeBridge) e.preventDefault();

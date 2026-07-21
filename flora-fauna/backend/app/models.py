@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import event
+from sqlalchemy.dialects.postgresql import JSONB
 from itsdangerous.serializer import Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import current_app
@@ -728,6 +729,7 @@ class PresenceEditableConfig(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id"), nullable=False)
     version = db.Column(db.Integer, nullable=False, default=1)
+    revision = db.Column(db.Integer, nullable=False, default=1, server_default="1")
     status = db.Column(db.String(40), nullable=False, default="draft")
     renderer_key = db.Column(db.String(120), nullable=True)
     scene_config_json = db.Column("scene_config", db.JSON, nullable=True)
@@ -749,6 +751,67 @@ class PresenceEditableConfig(db.Model):
     created_by = db.relationship("User", foreign_keys=[created_by_user_id])
     updated_by = db.relationship("User", foreign_keys=[updated_by_user_id])
     published_by = db.relationship("User", foreign_keys=[published_by_user_id])
+
+
+class PresenceStudioV3State(db.Model):
+    """Owner-private Studio V3 metadata, deliberately outside public config."""
+
+    __tablename__ = "presence_studio_v3_state"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "owner_user_id",
+            "room_id",
+            name="uq_presence_studio_v3_state_owner_room",
+        ),
+        db.CheckConstraint(
+            "base_status IN ('draft', 'published')",
+            name="ck_presence_studio_v3_state_base_status",
+        ),
+        db.CheckConstraint(
+            "base_source_kind IN ('draft', 'published')",
+            name="ck_presence_studio_v3_state_source_kind",
+        ),
+        db.CheckConstraint(
+            "base_revision > 0 AND metadata_revision > 0",
+            name="ck_presence_studio_v3_state_revisions",
+        ),
+        db.CheckConstraint(
+            "length(base_fingerprint) = 64 AND base_fingerprint = lower(base_fingerprint)",
+            name="ck_presence_studio_v3_state_fingerprint",
+        ),
+        db.Index("ix_presence_studio_v3_state_room_base", "room_id", "base_config_id"),
+        db.Index("ix_presence_studio_v3_state_fingerprint", "base_fingerprint"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    owner_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey("presence_node.id", ondelete="CASCADE"), nullable=False)
+    base_config_id = db.Column(db.Integer, db.ForeignKey("presence_editable_config.id", ondelete="CASCADE"), nullable=False)
+    base_source_kind = db.Column(db.String(40), nullable=False)
+    base_status = db.Column(db.String(40), nullable=False)
+    base_version = db.Column(db.Integer, nullable=False)
+    base_revision = db.Column(db.Integer, nullable=False)
+    base_schema_version = db.Column(db.String(120), nullable=False)
+    base_fingerprint = db.Column(db.String(64), nullable=False)
+    metadata_schema_version = db.Column(db.String(120), nullable=False)
+    metadata_revision = db.Column(db.Integer, nullable=False, default=1, server_default="1")
+    metadata_json = db.Column(
+        "metadata",
+        db.JSON().with_variant(JSONB(), "postgresql"),
+        nullable=False,
+        default=dict,
+        server_default=db.text("'{}'"),
+    )
+    created_by_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    updated_by_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow, server_default=db.func.now(), nullable=False)
+    updated_at = db.Column(
+        db.DateTime,
+        default=utcnow,
+        onupdate=utcnow,
+        server_default=db.func.now(),
+        nullable=False,
+    )
 
 
 class PresenceMediaAsset(db.Model):
@@ -6876,4 +6939,3 @@ def _world_snapshot_no_update(mapper, connection, target):
 @event.listens_for(WorldSnapshot, "before_delete")
 def _world_snapshot_no_delete(mapper, connection, target):
     raise ValueError("WorldSnapshot is immutable; deletes are not allowed.")
-

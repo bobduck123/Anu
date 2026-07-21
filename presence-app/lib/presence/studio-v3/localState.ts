@@ -7,7 +7,8 @@ import {
   type StudioV3ModePreference,
   type StudioV3Placement,
 } from "./model.ts";
-import { makeStudioV3ObjectId } from "./sourceRefs.ts";
+import { isStudioV3CollectionSourceRef, isStudioV3PlacementId } from "./sourceRefs.ts";
+import { isSafeStudioV3MetadataEnvelope, type StudioV3PrivateMetadata } from "./p1State.ts";
 
 export interface StudioV3OwnerPartitionResult {
   key: string | null;
@@ -21,6 +22,8 @@ export interface StudioV3PresenceLocalEnvelope {
   presenceId: number;
   baseIdentity: StudioV3BaseIdentity;
   baseFingerprint: string;
+  metadataRevision: number;
+  metadata: StudioV3PrivateMetadata;
   mode: StudioV3ModePreference;
   activeRoomId?: string;
   activeLookId?: string;
@@ -432,7 +435,9 @@ export function validateStudioV3PresenceEnvelope(
   if (envelope.baseFingerprint !== expected.baseFingerprint) return null;
   if (!sameIdentity(envelope.baseIdentity, expected.baseIdentity)) return null;
   if (containsForbiddenLocalValue(envelope)) return null;
-  if (!hasOnlyKeys(envelope, ["schemaVersion", "ownerPartitionKey", "scope", "presenceId", "baseIdentity", "baseFingerprint", "mode", "activeRoomId", "activeLookId", "namedLooks", "locks", "updatedAt"])) return null;
+  if (!hasOnlyKeys(envelope, ["schemaVersion", "ownerPartitionKey", "scope", "presenceId", "baseIdentity", "baseFingerprint", "metadataRevision", "metadata", "mode", "activeRoomId", "activeLookId", "namedLooks", "locks", "updatedAt"])) return null;
+  if (!Number.isInteger(envelope.metadataRevision) || Number(envelope.metadataRevision) < 0) return null;
+  if (!isSafeStudioV3MetadataEnvelope(envelope.metadata)) return null;
   if (envelope.mode !== "simple" && envelope.mode !== "advanced-creative") return null;
   if (envelope.activeRoomId !== undefined && typeof envelope.activeRoomId !== "string") return null;
   if (envelope.activeLookId !== undefined && typeof envelope.activeLookId !== "string") return null;
@@ -443,6 +448,8 @@ export function validateStudioV3PresenceEnvelope(
   return {
     ...envelope,
     mode: envelope.mode,
+    metadataRevision: Number(envelope.metadataRevision),
+    metadata: envelope.metadata,
     activeRoomId: typeof envelope.activeRoomId === "string" ? envelope.activeRoomId : undefined,
     namedLooks: envelope.namedLooks,
     locks: envelope.locks,
@@ -472,6 +479,9 @@ export function validateStudioV3RoomEnvelope(
   if (!isPlainStringRecord(envelope.placementSourceRefs)) return null;
   if (!Array.isArray(envelope.placements) || !envelope.placements.every(isSafeStoredPlacement)) return null;
   if (!envelope.placements.every((placement) => placement.roomId === expected.roomId)) return null;
+  if (new Set(envelope.placements.map((placement) => placement.id)).size !== envelope.placements.length) return null;
+  if (Object.keys(envelope.placementSourceRefs).length !== envelope.placements.length) return null;
+  if (!envelope.placements.every((placement) => envelope.placementSourceRefs?.[placement.id] === placement.sourceRef)) return null;
   if (!Array.isArray(envelope.locks) || !envelope.locks.every(isSafeLock)) return null;
   if (!envelope.locks.every((lock) => lock.scopeKind === "room" && lock.scopeId === expected.roomId)) return null;
   if (typeof envelope.updatedAt !== "string") return null;
@@ -509,16 +519,19 @@ function isSafeStoredPlacement(value: unknown): value is StudioV3StoredPlacement
   ) {
     return false;
   }
-  if (placement.collectionSourceRef !== undefined && !/^collection:\d+$/.test(String(placement.collectionSourceRef))) return false;
+  if (placement.collectionSourceRef !== undefined && (
+    typeof placement.collectionSourceRef !== "string" ||
+    !isStudioV3CollectionSourceRef(placement.collectionSourceRef)
+  )) return false;
   if (placement.reason !== undefined && typeof placement.reason !== "string") return false;
-  if (placement.id !== makeStudioV3ObjectId(placement.roomId, placement.sourceRef)) return false;
+  if (!isStudioV3PlacementId(placement.id, placement.roomId, placement.sourceRef)) return false;
   return true;
 }
 
 function isSafeLook(value: unknown): value is StudioV3Look {
   const look = value && typeof value === "object" ? value as Partial<StudioV3Look> : null;
   if (!look) return false;
-  if (!hasOnlyKeys(look, ["id", "name", "origin", "provenance", "values", "createdAt", "updatedAt"])) return false;
+  if (!hasOnlyKeys(look, ["id", "name", "origin", "baseLookId", "provenance", "values", "createdAt", "updatedAt"])) return false;
   if (
     typeof look.id !== "string" ||
     typeof look.name !== "string" ||
@@ -529,6 +542,7 @@ function isSafeLook(value: unknown): value is StudioV3Look {
     return false;
   }
   if (!/^saved-from:[a-z0-9-]+$/i.test(look.provenance)) return false;
+  if (look.baseLookId !== undefined && !["soft-editorial", "nocturnal-gallery", "zine-archive"].includes(String(look.baseLookId))) return false;
   if (look.createdAt !== undefined && typeof look.createdAt !== "string") return false;
   if (look.updatedAt !== undefined && typeof look.updatedAt !== "string") return false;
   return /^named:[a-z0-9-]+$/i.test(look.id);
@@ -537,18 +551,24 @@ function isSafeLook(value: unknown): value is StudioV3Look {
 function isSafeLookValues(value: unknown): value is StudioV3LookValues {
   const values = value && typeof value === "object" ? value as Partial<StudioV3LookValues> : null;
   if (!values) return false;
-  if (!hasOnlyKeys(values, ["background", "accentColor", "texture", "borderStyle", "objectRadius", "shadowDepth", "headingWeight", "motionIntensity", "publicStylePreset", "roomStyleId"])) return false;
+  if (!hasOnlyKeys(values, ["background", "accentColor", "texture", "borderStyle", "objectRadius", "shadowDepth", "headingWeight", "motionIntensity", "publicStylePreset", "roomStyleId", "worldId", "collectionPresentationId", "density", "pieceTreatment", "atmosphere", "journey"])) return false;
   return (
     typeof values.background === "string" &&
     typeof values.accentColor === "string" &&
-    ["paper", "grain", "linen", "none"].includes(String(values.texture)) &&
-    ["hairline", "framed", "none"].includes(String(values.borderStyle)) &&
+    ["paper", "grain", "linen", "none", "scan", "timber", "ledger"].includes(String(values.texture)) &&
+    ["hairline", "framed", "none", "taped", "ledger"].includes(String(values.borderStyle)) &&
     typeof values.objectRadius === "number" &&
     typeof values.shadowDepth === "number" &&
     typeof values.headingWeight === "number" &&
     ["still", "gentle", "living"].includes(String(values.motionIntensity)) &&
-    ["gallery-p2", "bbbvision-threshold-gallery"].includes(String(values.publicStylePreset)) &&
-    ["threshold-portal", "gallery-wall"].includes(String(values.roomStyleId))
+    typeof values.publicStylePreset === "string" && values.publicStylePreset.length > 0 &&
+    ["threshold-portal", "gallery-wall", "film-strip-selected-works"].includes(String(values.roomStyleId)) &&
+    ["gallery", "zine", "dj", "healing", "market", "archive", "carpenter", "consultant"].includes(String(values.worldId)) &&
+    ["wall", "selected-sequence", "threshold-feature"].includes(String(values.collectionPresentationId)) &&
+    ["spacious", "focused", "dense"].includes(String(values.density)) &&
+    ["quiet-framed", "luminous-depth", "captioned-ledger"].includes(String(values.pieceTreatment)) &&
+    ["paper-light", "nocturnal-depth", "ledger-scan"].includes(String(values.atmosphere)) &&
+    ["editorial-browse", "threshold-reveal", "archive-index"].includes(String(values.journey))
   );
 }
 
@@ -588,18 +608,19 @@ export function containsForbiddenLocalValue(value: unknown): boolean {
   if (!value || typeof value !== "object") return false;
   if (Array.isArray(value)) return value.some(containsForbiddenLocalValue);
   return Object.entries(value as Record<string, unknown>).some(([key, child]) => (
-    /token|secret|url|blob|base64|preview_expires_at/i.test(key) || containsForbiddenLocalValue(child)
+    /(?:^|_)(?:access|refresh|auth|session|preview|api)?_?token$|secret|url|blob|base64|preview_expires_at/i.test(key) || containsForbiddenLocalValue(child)
   ));
 }
 
 function sameIdentity(a: StudioV3BaseIdentity | undefined, b: StudioV3BaseIdentity): boolean {
   if (!a) return false;
-  if (!hasOnlyKeys(a, ["sourceKind", "configId", "roomId", "version", "status", "schemaVersion", "updatedAt"])) return false;
+  if (!hasOnlyKeys(a, ["sourceKind", "configId", "roomId", "version", "revision", "status", "schemaVersion", "updatedAt"])) return false;
   return (
     a.sourceKind === b.sourceKind &&
     a.configId === b.configId &&
     a.roomId === b.roomId &&
     a.version === b.version &&
+    a.revision === b.revision &&
     a.status === b.status &&
     a.schemaVersion === b.schemaVersion
   );

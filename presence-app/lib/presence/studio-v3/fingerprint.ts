@@ -18,6 +18,9 @@ export const STUDIO_V3_COMPILER_OWNED_PATHS = [
   "$.enquiry_config.studio_v2",
 ] as const;
 
+export const STUDIO_V3_FINGERPRINT_UNAVAILABLE = "unavailable" as const;
+export const STUDIO_V3_FINGERPRINT_UNAVAILABLE_REASON = "WebCrypto SHA-256 is unavailable" as const;
+
 export function validateStudioV3BaseIdentity(
   config: PresenceEditableConfig | null | undefined,
   sourceKind: "draft" | "published",
@@ -26,6 +29,7 @@ export function validateStudioV3BaseIdentity(
   const configId = config.id;
   const roomId = config.room_id;
   const version = config.version;
+  const revision = config.revision;
   if (
     typeof configId !== "number" ||
     typeof roomId !== "number" ||
@@ -40,6 +44,7 @@ export function validateStudioV3BaseIdentity(
     configId,
     roomId,
     version,
+    revision: typeof revision === "number" && Number.isInteger(revision) && revision >= 1 ? revision : null,
     status: String(config.status || sourceKind),
     schemaVersion: config.schema_version,
     updatedAt: config.updated_at,
@@ -108,11 +113,9 @@ export async function fingerprintStudioV3BaseConfig(input: StudioV3ComparableCon
   const canonical = canonicalizeStudioV3BaseConfig(projectStudioV3StoredSemanticConfig(input));
   const bytes = new TextEncoder().encode(canonical);
   const subtle = globalThis.crypto?.subtle;
-  if (subtle) {
-    const digest = await subtle.digest("SHA-256", bytes);
-    return hex(new Uint8Array(digest));
-  }
-  return stableBrowserSafeDigest(canonical);
+  if (!subtle) throw new Error(STUDIO_V3_FINGERPRINT_UNAVAILABLE_REASON);
+  const digest = await subtle.digest("SHA-256", bytes);
+  return hex(new Uint8Array(digest));
 }
 
 export function diffStudioV3OwnedConfig(
@@ -154,9 +157,19 @@ function canonicalValue(value: unknown): unknown {
   if (!value || typeof value !== "object") return value;
   return Object.fromEntries(
     Object.entries(value as Record<string, unknown>)
-      .sort(([a], [b]) => a.localeCompare(b))
+      .sort(([a], [b]) => compareUnicodeCodePoints(a, b))
       .map(([key, child]) => [key, canonicalValue(child)]),
   );
+}
+
+function compareUnicodeCodePoints(a: string, b: string): number {
+  const aPoints = Array.from(a, (character) => character.codePointAt(0) ?? 0);
+  const bPoints = Array.from(b, (character) => character.codePointAt(0) ?? 0);
+  const length = Math.min(aPoints.length, bPoints.length);
+  for (let index = 0; index < length; index += 1) {
+    if (aPoints[index] !== bPoints[index]) return aPoints[index]! < bPoints[index]! ? -1 : 1;
+  }
+  return aPoints.length === bPoints.length ? 0 : aPoints.length < bPoints.length ? -1 : 1;
 }
 
 function diffPaths(a: unknown, b: unknown, path: string): string[] {
@@ -184,6 +197,9 @@ function assertJsonSafe(value: unknown, path: string, seen: Set<object>) {
   if (value === null || typeof value === "string" || typeof value === "boolean") return;
   if (typeof value === "number") {
     if (!Number.isFinite(value)) throw new Error(`Studio V3 JSON projection rejects non-finite number at ${path}.`);
+    if (Number.isInteger(value) && !Number.isSafeInteger(value)) {
+      throw new Error(`Studio V3 JSON projection rejects unsafe integer at ${path}.`);
+    }
     return;
   }
   if (typeof value === "bigint" || typeof value === "function" || typeof value === "symbol") {
@@ -217,17 +233,4 @@ function plainRecord(value: unknown): Record<string, unknown> {
 
 function hex(bytes: Uint8Array): string {
   return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
-function stableBrowserSafeDigest(value: string): string {
-  let a = 0x811c9dc5;
-  let b = 0x9e3779b9;
-  for (let index = 0; index < value.length; index += 1) {
-    const code = value.charCodeAt(index);
-    a ^= code;
-    a = Math.imul(a, 0x01000193) >>> 0;
-    b ^= code + index;
-    b = Math.imul(b, 0x85ebca6b) >>> 0;
-  }
-  return `${a.toString(16).padStart(8, "0")}${b.toString(16).padStart(8, "0")}`.repeat(4).slice(0, 64);
 }

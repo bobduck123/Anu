@@ -1,6 +1,6 @@
 import type { StudioV2Object, StudioV2ObjectType } from "./model.ts";
 
-export type PresenceStudioV2LayoutId = "gallery-wall" | "portal-threshold";
+export type PresenceStudioV2LayoutId = "gallery-wall" | "portal-threshold" | "film-strip-selected-works";
 export type StudioV2PlacementSize = "small" | "medium" | "large" | "feature";
 export type StudioV2PlacementTreatment = "quiet" | "framed" | "captioned" | "signal";
 
@@ -20,6 +20,7 @@ export interface StudioV2LayoutDefinition {
   id: PresenceStudioV2LayoutId;
   label: string;
   description: string;
+  ownerEditorVisible: boolean;
   zones: readonly StudioV2LayoutZone[];
 }
 
@@ -43,7 +44,7 @@ const TEXTUAL = ["text", "note", "proof", "credential", "testimonial", "event", 
 
 export const STUDIO_V2_LAYOUTS: readonly StudioV2LayoutDefinition[] = [
   {
-    id: "gallery-wall", label: "Gallery wall", description: "A paced exhibition wall for current work, notes, and a clear exit.",
+    id: "gallery-wall", label: "Gallery wall", description: "A paced exhibition wall for current work, notes, and a clear exit.", ownerEditorVisible: true,
     zones: [
       { id: "opening-work", label: "Opening work", description: "One work that sets the room’s first impression.", accepts: VISUAL, maxObjects: 1, allowedSizes: ["feature", "large"], defaultSize: "feature", allowedTreatments: ["framed", "quiet"], mobileBehaviour: "feature" },
       { id: "main-wall", label: "Main wall", description: "The primary works in this chamber.", accepts: VISUAL, allowedSizes: ["small", "medium", "large"], defaultSize: "medium", allowedTreatments: ["framed", "captioned", "quiet"], mobileBehaviour: "stack" },
@@ -53,7 +54,7 @@ export const STUDIO_V2_LAYOUTS: readonly StudioV2LayoutDefinition[] = [
     ],
   },
   {
-    id: "portal-threshold", label: "Portal threshold", description: "A threshold, statement, signal, and onward path.",
+    id: "portal-threshold", label: "Portal threshold", description: "A threshold, statement, signal, and onward path.", ownerEditorVisible: true,
     zones: [
       { id: "threshold-image", label: "Threshold image", description: "One visual entry point.", accepts: VISUAL, maxObjects: 1, allowedSizes: ["feature", "large"], defaultSize: "feature", allowedTreatments: ["framed", "quiet"], mobileBehaviour: "feature" },
       { id: "threshold-statement", label: "Threshold statement", description: "Words that frame the entry.", accepts: ["text", "note", "testimonial"], maxObjects: 2, allowedSizes: ["medium", "large"], defaultSize: "large", allowedTreatments: ["quiet", "captioned"], mobileBehaviour: "stack" },
@@ -63,8 +64,27 @@ export const STUDIO_V2_LAYOUTS: readonly StudioV2LayoutDefinition[] = [
   },
 ];
 
+export const STUDIO_V2_FILM_STRIP_SELECTED_WORKS_LAYOUT: StudioV2LayoutDefinition = {
+  id: "film-strip-selected-works",
+  label: "Film strip / selected works",
+  description: "A bounded selected-work stage with an ordered index, context, and protected onward path.",
+  ownerEditorVisible: false,
+  zones: [
+    { id: "active-work-stage", label: "Active work stage", description: "The first selected visual receives the active stage.", accepts: VISUAL, maxObjects: 1, allowedSizes: ["feature", "large"], defaultSize: "feature", allowedTreatments: ["framed", "captioned"], mobileBehaviour: "feature" },
+    { id: "sequence-index", label: "Sequence index", description: "Ordered previous, next, and direct-index works.", accepts: VISUAL, allowedSizes: ["small", "medium"], defaultSize: "small", allowedTreatments: ["captioned", "quiet"], mobileBehaviour: "carousel" },
+    { id: "selected-work-context", label: "Selected work context", description: "Caption and contextual material for the selected sequence.", accepts: TEXTUAL, allowedSizes: ["small", "medium"], defaultSize: "small", allowedTreatments: ["captioned", "quiet"], mobileBehaviour: "stack" },
+    { id: "selected-works-exit", label: "Exit", description: "One protected onward action after the sequence.", accepts: ["cta", "link", "portal"], maxObjects: 1, allowedSizes: ["medium", "large"], defaultSize: "medium", allowedTreatments: ["signal", "quiet"], mobileBehaviour: "feature" },
+  ],
+};
+
+/** All compiler/public projection layouts. STUDIO_V2_LAYOUTS intentionally remains the legacy owner-editor subset. */
+export const STUDIO_V2_REGISTERED_LAYOUTS: readonly StudioV2LayoutDefinition[] = [
+  ...STUDIO_V2_LAYOUTS,
+  STUDIO_V2_FILM_STRIP_SELECTED_WORKS_LAYOUT,
+];
+
 export function studioV2Layout(id: unknown): StudioV2LayoutDefinition {
-  return STUDIO_V2_LAYOUTS.find((layout) => layout.id === id) ?? STUDIO_V2_LAYOUTS[0];
+  return STUDIO_V2_REGISTERED_LAYOUTS.find((layout) => layout.id === id) ?? STUDIO_V2_LAYOUTS[0];
 }
 
 export function defaultStudioV2Composition(chamberId: string, objects: readonly StudioV2Object[], layoutId: PresenceStudioV2LayoutId = "gallery-wall"): StudioV2ChamberComposition {
