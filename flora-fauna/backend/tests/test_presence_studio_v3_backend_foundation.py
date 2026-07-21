@@ -1354,7 +1354,7 @@ def test_atomic_preserves_unowned_private_media_canary_when_securing_owned_subtr
         assert PresenceMediaAsset.query.get("media-owned-old").status == "draft_attached"
 
 
-def test_v3_routes_serialize_before_commit_and_are_production_hard_false(setup_app, monkeypatch):
+def test_v3_routes_serialize_before_commit_and_require_explicit_hosted_gate(setup_app, monkeypatch):
     from manara_backend_app.models import PresenceEditableConfig, PresenceMediaAsset, PresenceStudioV3State
     import manara_backend_app.api.presence_graph as route_module
 
@@ -1438,11 +1438,36 @@ def test_v3_routes_serialize_before_commit_and_are_production_hard_false(setup_a
     assert response.status_code == 404
 
     app.config.update(
+        PRESENCE_STUDIO_V3_BACKEND_HOSTED_HUMAN_TEST=True,
+        PRESENCE_STUDIO_V3_BACKEND_PILOT_IDS=None,
+        PRESENCE_STUDIO_V3_BACKEND_PILOT_SLUGS=None,
+    )
+    response = client.get(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor/v3/state",
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert response.status_code == 404
+
+    app.config.update(
+        PRESENCE_STUDIO_V3_BACKEND_HOSTED_HUMAN_TEST=True,
+        PRESENCE_STUDIO_V3_BACKEND_PILOT_IDS=str(ids["room_id"]),
+        PRESENCE_STUDIO_V3_BACKEND_PILOT_SLUGS="bbbvision",
+    )
+    response = client.get(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor/v3/state",
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert response.status_code == 200
+
+    app.config.update(
         FLASK_ENV="development",
         VERCEL_ENV="production",
         PRESENCE_STUDIO_V3_BACKEND_ENABLED=True,
         PRESENCE_STUDIO_V3_BACKEND_PILOT_IDS=str(ids["room_id"]),
         PRESENCE_STUDIO_V3_BACKEND_PILOT_SLUGS="bbbvision",
+        PRESENCE_STUDIO_V3_BACKEND_HOSTED_HUMAN_TEST=False,
     )
     monkeypatch.setenv("FLASK_ENV", "development")
     response = client.get(
@@ -1451,6 +1476,53 @@ def test_v3_routes_serialize_before_commit_and_are_production_hard_false(setup_a
         base_url="http://public.test",
     )
     assert response.status_code == 404
+
+    app.config.update(PRESENCE_STUDIO_V3_BACKEND_HOSTED_HUMAN_TEST=True)
+    response = client.get(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor/v3/state",
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert response.status_code == 200
+
+    app.config.update(
+        PRESENCE_STUDIO_V3_BACKEND_PILOT_IDS=str(ids["room_id"]),
+        PRESENCE_STUDIO_V3_BACKEND_PILOT_SLUGS="other-room",
+    )
+    response = client.get(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor/v3/state",
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert response.status_code == 404
+
+    app.config.update(
+        PRESENCE_STUDIO_V3_BACKEND_PILOT_IDS=str(ids["other_room_id"]),
+        PRESENCE_STUDIO_V3_BACKEND_PILOT_SLUGS="bbbvision",
+    )
+    response = client.get(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor/v3/state",
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert response.status_code == 404
+
+    app.config.update(
+        PRESENCE_STUDIO_V3_BACKEND_ENABLED=None,
+        PRESENCE_STUDIO_V3_BACKEND_HOSTED_HUMAN_TEST=None,
+        PRESENCE_STUDIO_V3_BACKEND_PILOT_IDS=None,
+        PRESENCE_STUDIO_V3_BACKEND_PILOT_SLUGS=None,
+    )
+    monkeypatch.setenv("PRESENCE_STUDIO_V3_BACKEND_ENABLED", "true")
+    monkeypatch.setenv("PRESENCE_STUDIO_V3_BACKEND_HOSTED_HUMAN_TEST", "true")
+    monkeypatch.setenv("PRESENCE_STUDIO_V3_BACKEND_PILOT_IDS", str(ids["room_id"]))
+    monkeypatch.setenv("PRESENCE_STUDIO_V3_BACKEND_PILOT_SLUGS", "bbbvision")
+    response = client.get(
+        f"/api/presence/owner/rooms/{ids['room_id']}/editor/v3/state",
+        headers=headers,
+        base_url="http://public.test",
+    )
+    assert response.status_code == 200
 
     app.config.update(VERCEL_ENV="development", PRESENCE_STUDIO_V3_BACKEND_ENABLED=False)
     response = client.get(
