@@ -8,6 +8,8 @@ import {
   getStudioV2PublicChambersByRole,
 } from "@/lib/presence/studio-v2";
 import type { StudioV2PublicChamber, StudioV2PublicObject, StudioV2PublicRoom } from "@/lib/presence/studio-v2";
+import type { PresenceStudioV2EditorBridge, PresenceStudioV2EditorActivationInput } from "@/lib/presence/studio-v3/editorBridge";
+import { validateStudioV2EditorBridgeResult } from "@/lib/presence/studio-v3/editorBridge";
 import { deriveStudioV2Environment } from "@/lib/presence/studio-v2/environment";
 import { normalizeStudioV2Composition, studioV2Layout } from "@/lib/presence/studio-v2/layouts";
 import { WORLD_KITS } from "./worlds";
@@ -17,9 +19,10 @@ import "./presence-studio-v2-public.css";
 
 interface PresenceStudioV2PublicRoomProps {
   room: StudioV2PublicRoom;
+  editorBridge?: PresenceStudioV2EditorBridge;
 }
 
-export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2PublicRoomProps) {
+export default function PresenceStudioV2PublicRoom({ room, editorBridge }: PresenceStudioV2PublicRoomProps) {
   const [focusedArtwork, setFocusedArtwork] = useState<StudioV2PublicObject | null>(null);
   const [activeLiquidIndex, setActiveLiquidIndex] = useState(0);
   const world = WORLD_KITS.find((kit) => kit.id === room.worldId);
@@ -58,28 +61,97 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
     ? room.chambers
         .filter((chamber) => chamber.objects.length > 0)
         .slice(0, 4)
-        .map((chamber) => ({ href: `#v2-public-room-${chamber.id}`, label: chamber.label, marker: "" }))
+        .map((chamber) => ({ href: `#v2-public-room-${chamber.id}`, label: chamber.label, marker: "", roomId: chamber.id }))
     : visibleObjects
         .slice(0, 4)
         .map((object, index) => ({
           href: `#v2-public-object-${object.id}`,
           label: object.title,
           marker: String(index + 1).padStart(2, "0"),
+          roomId: undefined,
         }));
+  const emitEditorRoomNavigation = useCallback(
+    (roomId: string, source: "direct" | "arrow-previous" | "arrow-next" = "direct") => {
+      if (!editorBridge) return false;
+      const intent = { kind: "navigate-room" as const, roomId, source };
+      const result = editorBridge.handleIntent(intent);
+      if (!validateStudioV2EditorBridgeResult(intent, result)) {
+        throw new Error("Studio V3 bridge rejected public room navigation result.");
+      }
+      return true;
+    },
+    [editorBridge],
+  );
+  const suppressEditorAction = useCallback(
+    (action: "cta" | "link", input: PresenceStudioV2EditorActivationInput) => {
+      if (!editorBridge) return false;
+      const intent = { kind: "suppress-action-without-piece" as const, action, input };
+      const result = editorBridge.handleIntent(intent);
+      if (!validateStudioV2EditorBridgeResult(intent, result)) {
+        throw new Error("Studio V3 bridge rejected public chrome suppression result.");
+      }
+      return true;
+    },
+    [editorBridge],
+  );
+  const onEditorCtaClick = (event: React.MouseEvent) => {
+    if (!suppressEditorAction("cta", "pointer")) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  const onEditorCtaKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (!suppressEditorAction("cta", event.key === "Enter" ? "keyboard-enter" : "keyboard-space")) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  const onEditorLinkClick = (event: React.MouseEvent) => {
+    if (!suppressEditorAction("link", "pointer")) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  const onEditorLinkKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (!suppressEditorAction("link", event.key === "Enter" ? "keyboard-enter" : "keyboard-space")) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  const onEditorRoomLinkClick = (roomId: string) => (event: React.MouseEvent) => {
+    if (!emitEditorRoomNavigation(roomId)) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  const onEditorRoomLinkKeyDown = (roomId: string) => (event: React.KeyboardEvent) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (!emitEditorRoomNavigation(roomId)) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
 
   useEffect(() => {
-    if (!focusedArtwork) return;
+    if (editorBridge && isGallery && publicStylePreset === "bbbvision-threshold-gallery") return;
+    if (!focusedArtwork && !editorBridge) return;
     const previousOverflow = document.body.style.overflow;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setFocusedArtwork(null);
+      if (event.key !== "Escape") return;
+      if (editorBridge) {
+        event.preventDefault();
+        const intent = { kind: "clear-selection" as const, source: "escape" as const };
+        const result = editorBridge.handleIntent(intent);
+        if (!validateStudioV2EditorBridgeResult(intent, result)) {
+          throw new Error("Studio V3 bridge rejected public Escape result.");
+        }
+        return;
+      }
+      setFocusedArtwork(null);
     };
-    document.body.style.overflow = "hidden";
+    if (focusedArtwork) document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [focusedArtwork]);
+  }, [editorBridge, focusedArtwork]);
 
   useEffect(() => {
     if (liquidWorks.length === 0 && activeLiquidIndex !== 0) {
@@ -121,6 +193,7 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
         onFocusArtwork={setFocusedArtwork}
         ctaHref={ctaHref}
         ctaLabel={ctaLabel}
+        editorBridge={editorBridge}
       />
     );
   }
@@ -152,7 +225,12 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
           <h1>{room.title}</h1>
           {room.tagline && <p>{room.tagline}</p>}
         </div>
-        <PublicLink href={entryHref} className="v2-public-primary-cta">
+        <PublicLink
+          href={entryHref}
+          className="v2-public-primary-cta"
+          onClickCapture={editorBridge ? onEditorCtaClick : undefined}
+          onKeyDownCapture={editorBridge ? onEditorCtaKeyDown : undefined}
+        >
           {entryLabel}
         </PublicLink>
         {thresholdObject && (
@@ -181,7 +259,12 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
         {thresholdIndex.length > 0 && (
           <nav className="v2-public-threshold-index" aria-label={isGallery ? "Threshold room wayfinding" : "Room objects"}>
             {thresholdIndex.map((item) => (
-              <a key={item.href} href={item.href}>
+              <a
+                key={item.href}
+                href={item.href}
+                onClickCapture={editorBridge ? item.roomId ? onEditorRoomLinkClick(item.roomId) : onEditorLinkClick : undefined}
+                onKeyDownCapture={editorBridge ? item.roomId ? onEditorRoomLinkKeyDown(item.roomId) : onEditorLinkKeyDown : undefined}
+              >
                 <span aria-hidden={isGallery ? "true" : undefined}>{item.marker}</span>
                 <strong>{item.label}</strong>
               </a>
@@ -212,7 +295,7 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
                 return placements.length > 0 ? <section className={`v2-public-layout-zone zone-${zone.id}`} key={zone.id} data-zone-id={zone.id}>
                   {placements.map((placement, objectIndex) => {
                     const object = chamber.objects.find((item) => item.id === placement.objectId);
-                    return object ? <PublicObjectCard key={object.id} object={object} radius={room.skin.objectRadius} isGallery={isGallery} isFeatured={placement.size === "feature" || (chamberIndex === 0 && objectIndex === 0 && Boolean(object.image?.src))} onFocusArtwork={isGallery ? setFocusedArtwork : undefined} /> : null;
+                    return object ? <PublicObjectCard key={object.id} object={object} radius={room.skin.objectRadius} isGallery={isGallery} isFeatured={placement.size === "feature" || (chamberIndex === 0 && objectIndex === 0 && Boolean(object.image?.src))} onFocusArtwork={isGallery ? setFocusedArtwork : undefined} editorBridge={editorBridge} /> : null;
                   })}
                 </section> : null;
               })}
@@ -237,7 +320,12 @@ export default function PresenceStudioV2PublicRoom({ room }: PresenceStudioV2Pub
                     <h3>{reference.label}</h3>
                     {reference.detail && <p>{reference.detail}</p>}
                     {reference.url && (
-                      <PublicLink href={reference.url} className="v2-public-subtle-link">
+                      <PublicLink
+                        href={reference.url}
+                        className="v2-public-subtle-link"
+                        onClickCapture={editorBridge ? onEditorLinkClick : undefined}
+                        onKeyDownCapture={editorBridge ? onEditorLinkKeyDown : undefined}
+                      >
                         Open reference
                       </PublicLink>
                     )}
@@ -658,6 +746,7 @@ function BbbVisionThresholdGalleryPublicRoom({
   onFocusArtwork,
   ctaHref,
   ctaLabel,
+  editorBridge,
 }: {
   room: StudioV2PublicRoom;
   worldName: string;
@@ -669,6 +758,7 @@ function BbbVisionThresholdGalleryPublicRoom({
   onFocusArtwork: (object: StudioV2PublicObject | null) => void;
   ctaHref?: string;
   ctaLabel?: string;
+  editorBridge?: PresenceStudioV2EditorBridge;
 }) {
   const [view, setView] = useState<BbbVisionPublicView>("threshold");
   const [movement, setMovement] = useState<BbbVisionMovement | null>(null);
@@ -682,10 +772,18 @@ function BbbVisionThresholdGalleryPublicRoom({
   const explicitDefaultChamber = defaultChamber?.metadata?.isDefault === true ? defaultChamber : undefined;
   const galleryDefaultChamber =
     explicitDefaultChamber && explicitDefaultChamber.id !== thresholdChamber?.id ? explicitDefaultChamber : undefined;
+  const galleryFallbackChamber = editorBridge
+    ? room.chambers.find((chamber) => (
+      chamber.id !== thresholdChamber?.id &&
+      /gallery|field|work/i.test(`${chamber.id} ${chamber.label}`)
+    )) ?? room.chambers.find((chamber) => chamber.id !== thresholdChamber?.id)
+    : undefined;
   const galleryChambers = galleryRoleChambers.length > 0
     ? galleryRoleChambers
     : galleryDefaultChamber
       ? [galleryDefaultChamber]
+      : galleryFallbackChamber
+        ? [galleryFallbackChamber]
       : [];
   const practiceChamber =
     bbbVisionFirstRoleChamber(room.chambers, "practice") ?? bbbVisionFirstRoleChamber(room.chambers, "about");
@@ -732,6 +830,7 @@ function BbbVisionThresholdGalleryPublicRoom({
   });
 
   const syncViewFromLocation = useCallback(() => {
+    if (editorBridge) return;
     if (typeof window === "undefined") return;
     const hash = window.location.hash.replace("#", "").toLowerCase();
     if (hash === "gallery" || hash === "practice") {
@@ -739,10 +838,84 @@ function BbbVisionThresholdGalleryPublicRoom({
       return;
     }
     setView("threshold");
-  }, []);
+  }, [editorBridge]);
+
+  const roomIdForView = useCallback(
+    (nextView: BbbVisionPublicView): string | null => {
+      if (nextView === "threshold") {
+        return thresholdChamber?.id ?? entryChamber?.id ?? room.chambers[0]?.id ?? null;
+      }
+      if (nextView === "gallery") {
+        return galleryChambers[0]?.id ?? activeWork?.chamberId ?? null;
+      }
+      return practiceChamber?.id ?? null;
+    },
+    [activeWork?.chamberId, entryChamber?.id, galleryChambers, practiceChamber?.id, room.chambers, thresholdChamber?.id],
+  );
+
+  const suppressUnsupportedChrome = useCallback(
+    (controlId: string) => {
+      if (!editorBridge) return false;
+      const intent = { kind: "suppress-unsupported-chrome" as const, controlId };
+      const result = editorBridge.handleIntent(intent);
+      if (!validateStudioV2EditorBridgeResult(intent, result)) {
+        throw new Error("Studio V3 bridge rejected BBB chrome suppression result.");
+      }
+      return true;
+    },
+    [editorBridge],
+  );
+
+  const suppressBbbAction = useCallback(
+    (action: "cta" | "link", input: PresenceStudioV2EditorActivationInput) => {
+      if (!editorBridge) return false;
+      const intent = { kind: "suppress-action-without-piece" as const, action, input };
+      const result = editorBridge.handleIntent(intent);
+      if (!validateStudioV2EditorBridgeResult(intent, result)) {
+        throw new Error("Studio V3 bridge rejected BBB public action suppression result.");
+      }
+      return true;
+    },
+    [editorBridge],
+  );
+  const onBbbCtaClick = (event: React.MouseEvent) => {
+    if (!suppressBbbAction("cta", "pointer")) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  const onBbbCtaKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (!suppressBbbAction("cta", event.key === "Enter" ? "keyboard-enter" : "keyboard-space")) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  const onBbbLinkClick = (event: React.MouseEvent) => {
+    if (!suppressBbbAction("link", "pointer")) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  const onBbbLinkKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (!suppressBbbAction("link", event.key === "Enter" ? "keyboard-enter" : "keyboard-space")) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
 
   const moveToView = useCallback(
     (nextView: BbbVisionPublicView, mode: "push" | "replace" = "push") => {
+      if (editorBridge) {
+        const roomId = roomIdForView(nextView);
+        if (!roomId) {
+          suppressUnsupportedChrome(`bbb-navigate-${nextView}`);
+          return;
+        }
+        const intent = { kind: "navigate-room" as const, roomId, source: "direct" as const };
+        const result = editorBridge.handleIntent(intent);
+        if (!validateStudioV2EditorBridgeResult(intent, result)) {
+          throw new Error("Studio V3 bridge rejected BBB direct navigation result.");
+        }
+        return;
+      }
       setView(nextView);
       onFocusArtwork(null);
       if (typeof window === "undefined") return;
@@ -752,7 +925,7 @@ function BbbVisionThresholdGalleryPublicRoom({
       if (currentUrl === targetUrl) return;
       window.history[mode === "replace" ? "replaceState" : "pushState"]({ bbbvisionView: nextView }, "", targetUrl);
     },
-    [onFocusArtwork],
+    [editorBridge, onFocusArtwork, roomIdForView, suppressUnsupportedChrome],
   );
 
   const markMovement = useCallback((nextMovement: BbbVisionMovement) => {
@@ -799,6 +972,38 @@ function BbbVisionThresholdGalleryPublicRoom({
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (editorBridge) {
+        if (event.key === "Escape") {
+          if (isEditableEventTarget(event.target)) return;
+          event.preventDefault();
+          const intent = { kind: "clear-selection" as const, source: "escape" as const };
+          const result = editorBridge.handleIntent(intent);
+          if (!validateStudioV2EditorBridgeResult(intent, result)) {
+            throw new Error("Studio V3 bridge rejected BBB Escape result.");
+          }
+          return;
+        }
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          if (isEditableEventTarget(event.target)) return;
+          event.preventDefault();
+          const idx = event.key === "ArrowLeft" ? previousIndex : nextIndex;
+          const destinationRoomId = galleryWorks[idx]?.chamberId;
+          if (!destinationRoomId) {
+            suppressUnsupportedChrome(event.key === "ArrowLeft" ? "bbb-arrow-previous" : "bbb-arrow-next");
+            return;
+          }
+          const intent = {
+            kind: "navigate-room" as const,
+            roomId: destinationRoomId,
+            source: event.key === "ArrowLeft" ? "arrow-previous" as const : "arrow-next" as const,
+          };
+          const result = editorBridge.handleIntent(intent);
+          if (!validateStudioV2EditorBridgeResult(intent, result)) {
+            throw new Error("Studio V3 bridge rejected BBB Arrow navigation result.");
+          }
+          return;
+        }
+      }
       if (focusedArtwork && view === "gallery") {
         if (event.key === "ArrowLeft") {
           event.preventDefault();
@@ -843,7 +1048,7 @@ function BbbVisionThresholdGalleryPublicRoom({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [focusedArtwork, galleryWorks, moveToView, nextIndex, onFocusArtwork, previousIndex, safeActiveIndex, sequenceTotal, setActiveImage, view]);
+  }, [editorBridge, focusedArtwork, galleryWorks, moveToView, nextIndex, onFocusArtwork, previousIndex, safeActiveIndex, sequenceTotal, setActiveImage, suppressUnsupportedChrome, view]);
 
   return (
     <main
@@ -892,7 +1097,13 @@ function BbbVisionThresholdGalleryPublicRoom({
                 aria-label={`Set opening image to ${work.object.title}`}
                 aria-current={index === thresholdActiveIndex ? "true" : undefined}
                 className={index === thresholdActiveIndex ? "is-active" : ""}
-                onClick={() => setActiveImage(index, "index")}
+                onClick={() => {
+                  if (editorBridge) {
+                    suppressUnsupportedChrome(`bbb-threshold-image-${index}`);
+                    return;
+                  }
+                  setActiveImage(index, "index");
+                }}
               />
             ))}
           </nav>
@@ -901,7 +1112,7 @@ function BbbVisionThresholdGalleryPublicRoom({
             data-testid="presence-public-bbbvision-enter"
             type="button"
             onClick={() => {
-              markMovement("enter");
+              if (!editorBridge) markMovement("enter");
               moveToView("gallery");
             }}
           >
@@ -956,6 +1167,7 @@ function BbbVisionThresholdGalleryPublicRoom({
                 onSelectWork={(index) => setActiveImage(index, "index")}
                 onFocusWork={(object) => onFocusArtwork(object)}
                 focusOpen={Boolean(focusedArtwork)}
+                editorBridge={editorBridge}
               />
             ) : (
               <div className="v2-bbb-empty-note">No public gallery images are available yet.</div>
@@ -1018,7 +1230,12 @@ function BbbVisionThresholdGalleryPublicRoom({
               <h2 id="v2-bbb-practice-title">Practice</h2>
               {room.tagline && <p>{room.tagline}</p>}
               {ctaHref && (
-                <PublicLink href={ctaHref} className="v2-bbb-cta">
+                <PublicLink
+                  href={ctaHref}
+                  className="v2-bbb-cta"
+                  onClickCapture={editorBridge ? onBbbCtaClick : undefined}
+                  onKeyDownCapture={editorBridge ? onBbbCtaKeyDown : undefined}
+                >
                   {ctaLabel || "Begin"}
                 </PublicLink>
               )}
@@ -1031,7 +1248,12 @@ function BbbVisionThresholdGalleryPublicRoom({
                     <strong>{object.title}</strong>
                     {object.detail && <p>{object.detail}</p>}
                     {object.link && (
-                      <PublicLink href={object.link} className="v2-bbb-story-link">
+                      <PublicLink
+                        href={object.link}
+                        className="v2-bbb-story-link"
+                        onClickCapture={editorBridge ? onBbbLinkClick : undefined}
+                        onKeyDownCapture={editorBridge ? onBbbLinkKeyDown : undefined}
+                      >
                         Open
                       </PublicLink>
                     )}
@@ -1089,16 +1311,41 @@ function PublicObjectCard({
   isGallery = false,
   isFeatured = false,
   onFocusArtwork,
+  editorBridge,
 }: {
   object: StudioV2PublicObject;
   radius: number;
   isGallery?: boolean;
   isFeatured?: boolean;
   onFocusArtwork?: (object: StudioV2PublicObject) => void;
+  editorBridge?: PresenceStudioV2EditorBridge;
 }) {
   const hasLink = Boolean(object.link);
   const roleLabel = publicObjectRoleLabel(object);
   const canFocusArtwork = isGallery && Boolean(object.image?.src) && !hasLink && Boolean(onFocusArtwork);
+  function activateForEditor(input: PresenceStudioV2EditorActivationInput) {
+    if (!editorBridge) return false;
+    const pieceId = object.id.trim();
+    const intent = pieceId
+      ? { kind: "activate-piece" as const, pieceId, input }
+      : { kind: "suppress-action-without-piece" as const, action: hasLink ? "link" as const : "cta" as const, input };
+    const result = editorBridge.handleIntent(intent);
+    if (!validateStudioV2EditorBridgeResult(intent, result)) {
+      throw new Error("Studio V3 bridge rejected public object activation result.");
+    }
+    return true;
+  }
+  const onEditorClick = (event: React.MouseEvent) => {
+    if (!activateForEditor("pointer")) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  const onEditorKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (!activateForEditor(event.key === "Enter" ? "keyboard-enter" : "keyboard-space")) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
   const content = (
     <>
       {object.image?.src && (
@@ -1116,6 +1363,8 @@ function PublicObjectCard({
               type="button"
               aria-haspopup="dialog"
               aria-label={`View ${object.title}`}
+              onClickCapture={editorBridge ? onEditorClick : undefined}
+              onKeyDownCapture={editorBridge ? onEditorKeyDown : undefined}
               onClick={() => onFocusArtwork?.(object)}
             >
               View work
@@ -1146,6 +1395,8 @@ function PublicObjectCard({
         id={`v2-public-object-${object.id}`}
         className={`v2-public-object v2-public-object-${object.type}${object.mobileVisible ? "" : " is-mobile-muted"}${isGallery && object.image?.src ? " is-artwork" : ""}${isFeatured ? " is-featured" : ""}`}
         style={style}
+        onClickCapture={editorBridge ? onEditorClick : undefined}
+        onKeyDownCapture={editorBridge ? onEditorKeyDown : undefined}
       >
         {content}
       </PublicLink>
@@ -1157,7 +1408,9 @@ function PublicObjectCard({
       id={`v2-public-object-${object.id}`}
       className={`v2-public-object v2-public-object-${object.type}${object.mobileVisible ? "" : " is-mobile-muted"}${isGallery && object.image?.src ? " is-artwork" : ""}${isFeatured ? " is-featured" : ""}`}
       style={style}
-      tabIndex={object.detail ? 0 : undefined}
+      tabIndex={editorBridge || object.detail ? 0 : undefined}
+      onClickCapture={editorBridge ? onEditorClick : undefined}
+      onKeyDownCapture={editorBridge ? onEditorKeyDown : undefined}
     >
       {content}
     </article>
@@ -1170,12 +1423,20 @@ function PublicLink({
   className,
   style,
   children,
+  onClick,
+  onKeyDown,
+  onClickCapture,
+  onKeyDownCapture,
 }: {
   href?: string;
   id?: string;
   className: string;
   style?: CSSProperties;
   children: ReactNode;
+  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
+  onKeyDown?: React.KeyboardEventHandler<HTMLAnchorElement>;
+  onClickCapture?: React.MouseEventHandler<HTMLAnchorElement>;
+  onKeyDownCapture?: React.KeyboardEventHandler<HTMLAnchorElement>;
 }) {
   if (!href) {
     return (
@@ -1191,6 +1452,10 @@ function PublicLink({
       href={href}
       className={className}
       style={style}
+      onClick={onClick}
+      onKeyDown={onKeyDown}
+      onClickCapture={onClickCapture}
+      onKeyDownCapture={onKeyDownCapture}
       {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
     >
       {children}
@@ -1211,4 +1476,10 @@ function publicObjectRoleLabel(object: StudioV2PublicObject): string | undefined
   if (["image", "text", "note", "link", "moodboard"].includes(normalized)) return undefined;
   if (normalized === object.type.toLowerCase()) return undefined;
   return label;
+}
+
+function isEditableEventTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  const tagName = target.tagName.toLowerCase();
+  return tagName === "input" || tagName === "textarea" || tagName === "select" || target.isContentEditable;
 }

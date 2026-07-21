@@ -1623,6 +1623,7 @@ function bbbVisionCandidateOwnerNodeFixture() {
   return {
     ...fixtures.room,
     id: 29,
+    owner_user_id: 1,
     slug: "bbbvision",
     display_name: "bbb.vision",
     headline: "Image-first threshold gallery converted into an editable Presence room.",
@@ -1638,8 +1639,10 @@ function bbbVisionCandidateOwnerNodeFixture() {
 
 function bbbVisionCandidatePublicRoomFixture() {
   const config = buildBbbVisionEditorConfig("published", 29, { roomId: 29, slug: "bbbvision" });
+  const publicNode = bbbVisionCandidateOwnerNodeFixture();
+  delete publicNode.owner_user_id;
   return {
-    ...bbbVisionCandidateOwnerNodeFixture(),
+    ...publicNode,
     renderer_key: null,
     editable_config: redactEditorConfig(config),
   };

@@ -7,12 +7,14 @@ import { StudioNodeGate } from "@/components/studio/StudioFallbacks";
 import { useOwnerNode } from "@/components/studio/useOwnerNode";
 import PresenceStudioEditorApp from "@/components/studio/editor/PresenceStudioEditorApp";
 import PresenceStudioV2Editor from "@/components/presence-studio-v2/PresenceStudioV2Editor";
+import PresenceStudioV3Shell from "@/components/presence-studio-v3/PresenceStudioV3Shell";
 import { shouldUsePresenceStudioV2Editor } from "@/lib/presence/studio-v2/feature";
+import { shouldUsePresenceStudioV3Editor } from "@/lib/presence/studio-v3/feature";
 
 export default function StudioPresenceEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const nodeId = Number(id);
-  const { node, token, loading, error, authRequired, accessState, reload } = useOwnerNode(nodeId);
+  const { node, token, subject, loading, error, authRequired, accessState, reload } = useOwnerNode(nodeId);
 
   if (loading && !node) {
     return (
@@ -21,7 +23,7 @@ export default function StudioPresenceEditorPage({ params }: { params: Promise<{
       />
     );
   }
-  if (!node || !token) {
+  if (!node || !token || !subject) {
     return (
       <StudioNodeGate
         authRequired={authRequired}
@@ -40,6 +42,17 @@ export default function StudioPresenceEditorPage({ params }: { params: Promise<{
     config: node.editable_config,
     node,
   });
+  const isV3Enabled = shouldUsePresenceStudioV3Editor({
+    roomId: nodeId,
+    slug: node.slug,
+    rendererKey: node.renderer_key,
+    config: node.editable_config,
+    node,
+  });
+
+  if (isV3Enabled) {
+    return <PresenceStudioV3Shell node={node} nodeId={nodeId} token={token} authenticatedSubject={subject} />;
+  }
 
   return (
     <StudioShell node={node}>

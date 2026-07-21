@@ -53,7 +53,7 @@ export default defineConfig({
       },
     },
     {
-      command: `cmd /c npm run dev -- --hostname 127.0.0.1 --port ${appPort}`,
+      command: `cmd /c npm run dev -- --hostname 127.0.0.1 --port ${appPort} --webpack`,
       url: `http://127.0.0.1:${appPort}`,
       reuseExistingServer: false,
       timeout: 120_000,

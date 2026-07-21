@@ -1,0 +1,231 @@
+.studio-v3-shell {
+  min-height: 100vh;
+  background: #10100f;
+  color: #f7f3ea;
+  overflow: hidden;
+  position: relative;
+}
+
+.studio-v3-topbar {
+  align-items: center;
+  background: rgba(16, 16, 15, 0.86);
+  border-bottom: 1px solid rgba(247, 243, 234, 0.18);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  left: 0;
+  min-height: 64px;
+  padding: 10px 16px;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 30;
+}
+
+.studio-v3-topbar div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.studio-v3-topbar span,
+.studio-v3-kicker,
+.studio-v3-sheet small {
+  color: rgba(247, 243, 234, 0.72);
+  font-size: 0.78rem;
+}
+
+.studio-v3-topbar nav,
+.studio-v3-home-actions,
+.studio-v3-look-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.studio-v3-shell button {
+  background: rgba(247, 243, 234, 0.1);
+  border: 1px solid rgba(247, 243, 234, 0.22);
+  border-radius: 8px;
+  color: inherit;
+  cursor: pointer;
+  min-height: 44px;
+  padding: 0 14px;
+}
+
+.studio-v3-shell button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.studio-v3-primary,
+.studio-v3-shell button:hover:not(:disabled) {
+  background: #f7f3ea;
+  color: #11100f;
+}
+
+.studio-v3-home {
+  background: rgba(16, 16, 15, 0.92);
+  border: 1px solid rgba(247, 243, 234, 0.18);
+  border-radius: 8px;
+  display: grid;
+  gap: 18px;
+  left: 24px;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 22px;
+  position: fixed;
+  top: 86px;
+  z-index: 24;
+}
+
+.studio-v3-home h1,
+.studio-v3-sheet h2 {
+  font-size: clamp(1.3rem, 3vw, 2rem);
+  letter-spacing: 0;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.studio-v3-home-status,
+.studio-v3-home-next,
+.studio-v3-sheet p {
+  line-height: 1.45;
+  margin: 0;
+}
+
+.studio-v3-canvas {
+  min-height: 100vh;
+  padding-top: 0;
+}
+
+.studio-v3-action-bar {
+  align-items: center;
+  background: rgba(16, 16, 15, 0.92);
+  border: 1px solid rgba(247, 243, 234, 0.24);
+  border-radius: 8px;
+  bottom: 24px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.36);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  left: 50%;
+  max-width: calc(100vw - 32px);
+  padding: 10px;
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 28;
+}
+
+.studio-v3-action-bar span {
+  font-weight: 700;
+  max-width: 36ch;
+  overflow: hidden;
+  padding: 0 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.studio-v3-sheet {
+  background: #f7f3ea;
+  border-radius: 8px 8px 0 0;
+  bottom: 0;
+  color: #15120f;
+  display: grid;
+  gap: 14px;
+  left: 50%;
+  max-height: min(62vh, 560px);
+  max-width: 920px;
+  overflow: auto;
+  padding: 18px;
+  position: fixed;
+  transform: translateX(-50%);
+  width: min(100vw, 920px);
+  z-index: 32;
+}
+
+.studio-v3-sheet-close {
+  justify-self: end;
+}
+
+.studio-v3-shelf-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.studio-v3-shelf-grid article {
+  background: #fffaf0;
+  border: 1px solid rgba(21, 18, 15, 0.15);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  min-height: 132px;
+  padding: 14px;
+}
+
+.studio-v3-look-grid {
+  margin-top: 12px;
+}
+
+.studio-v3-local-flag {
+  bottom: 12px;
+  left: 12px;
+  position: fixed;
+  z-index: 34;
+}
+
+.studio-v3-visitor-exit {
+  background: rgba(16, 16, 15, 0.72);
+  border: 1px solid rgba(247, 243, 234, 0.28);
+  border-radius: 999px;
+  bottom: 12px;
+  color: #f7f3ea;
+  position: fixed;
+  right: 12px;
+  z-index: 34;
+}
+
+.studio-v3-look-name {
+  display: grid;
+  gap: 4px;
+}
+
+.studio-v3-look-name input {
+  background: #fffaf0;
+  border: 1px solid rgba(21, 18, 15, 0.28);
+  border-radius: 999px;
+  color: #15120f;
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+@media (max-width: 720px) {
+  .studio-v3-topbar {
+    align-items: stretch;
+    display: grid;
+    min-height: 108px;
+    position: static;
+  }
+
+  .studio-v3-topbar nav {
+    overflow-x: auto;
+  }
+
+  .studio-v3-home {
+    left: 12px;
+    margin: 12px;
+    max-height: calc(100vh - 184px);
+    overflow: auto;
+    position: static;
+    top: auto;
+  }
+
+  .studio-v3-action-bar {
+    bottom: 14px;
+    width: calc(100vw - 24px);
+  }
+
+  .studio-v3-shelf-grid {
+    grid-template-columns: 1fr;
+  }
+}
