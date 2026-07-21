@@ -149,7 +149,7 @@ Each existing presence should be evaluated for:
 - public/private sensitivity.
 ```
 
-## Current proof and publication status — 2026-07-17
+## Current proof and publication status — 2026-07-21
 
 ### GGM
 
@@ -160,10 +160,18 @@ Each existing presence should be evaluated for:
 
 ### BBB
 
-- BBB is the eventual publication candidate.
-- The client has confirmed approval to publish.
-- Approval does not mean it is already system-native, launch-ready, deployed, or published.
-- Publication remains a separate, explicitly approved launch task with evidence and review.
+- BBB is the approved, system-native published proof.
+- Controlled BBB publish execution completed and is recorded in `docs/program/evidence/presence-studio-bbbvision-publish-execution/` at commit `e0ce05c`.
+- The canonical and legacy public BBB routes remained live after that action; the later owner-experience overhaul recorded local containment evidence without republishing.
+- Any future publish, unpublish, rollback, deployment, or hosted mutation remains a separate, explicitly approved task with fresh evidence and review.
+
+### Studio V3 direction
+
+- Studio V2 remains the proven renderer, composition, private/public projection, draft, preview, and publication engine.
+- Studio V3 is the planned replacement client-facing presentation/controller shell over that engine; it is not a second public renderer or backend rewrite.
+- The first implementation must be a default-off local/test BBB pilot on the existing editor route, compile safely into the V2 draft model, and make no publish request.
+- Prototype-only locks, named Looks, savepoints, comparison state, and local source provenance remain browser-local in separate Presence/Room envelopes under an opaque authenticated-owner partition, scoped to a complete immutable server base identity plus a stable stored-semantic fingerprint until a separate persistence contract is approved. That fingerprint removes only owner-GET-added URL/expiry fields on validated private-draft media references; all other values remain authoritative. Current recursive-merge PATCH is not a safe V3 save path. P0/P1 remain zero-write, and a disposable local/test POST replacement/deletion characterisation cannot enable product saving. Save Draft and server Visitor Preview stay disabled until a separately approved server-side atomic expected-existing-draft precondition checks identity/revision/fingerprint and replaces in one transaction; this specification does not authorize that backend change.
+- The planning contract and evidence live in `docs/program/presence-studio-v3/` and `docs/program/evidence/presence-studio-v3-specification/`. Documentation is not proof that Studio V3 is implemented.
 
 ### Studio access requirement
 
@@ -267,23 +275,35 @@ Evidence: Founder direction.
 Impact: Do not use fallback rendering as migration evidence or public-launch readiness; public proof must distinguish persisted backend rooms from demo or fallback content.
 Next action: Create a separate fallback-removal work order only after the persisted replacement is ready.
 
-2026-07-20 â€” Decision: Keep Studio V2 as the single canonical eligible-room editor and refine it in place.
+2026-07-20 — Decision: Keep Studio V2 as the single canonical eligible-room editor and refine it in place.
 Reason: The private persistence baseline and local Room 11-shaped proof already establish its owner workflow; another editor path would fragment evidence and behaviour.
 Evidence: `docs/program/evidence/presence-studio-working-state/` and the V2 Playwright suite.
 Impact: Improve the existing canvas, inspector, Guide, Style DNA, and mobile model rather than creating a parallel Studio.
 Next action: Use a separately authorised hosted owner proof before claiming real client self-service.
 
-2026-07-20 â€” Decision: Limit active Style DNA to renderer-visible fields.
+2026-07-20 — Decision: Limit active Style DNA to renderer-visible fields.
 Reason: Aura, display type, and border controls were not truthfully projected by the current V2 renderer contract.
 Evidence: Studio source audit and on-brand local browser proof.
 Impact: Background, texture, motion, heading weight, object shape, shadow, and accent remain active; unsupported controls are absent rather than presented as functional.
 Next action: Add a field only when model, editor, preview, and public renderer all support it.
 
-2026-07-20 â€” Decision: Use a DOM-first environmental layer for the initial Studio V2 spatial pass.
+2026-07-20 — Decision: Use a DOM-first environmental layer for the initial Studio V2 spatial pass.
 Reason: Existing Studio state can truthfully drive room/chamber/object focus without a WebGL dependency, new persistence contract, or a second editor.
 Evidence: `docs/program/evidence/presence-studio-environmental-engine/` and the focused Chromium suite.
 Impact: The environmental layer is decorative, deterministic, reduced-motion-safe, and shared by editor and private preview; semantic content and controls remain DOM-first. This is private local fixture evidence only and does not change GGM containment or prove a system-native migration.
 Next action: Require a separately scoped hosted owner-bound proof before connecting this visual slice to a real client record.
+
+2026-07-21 — Decision: Treat BBB publish execution as completed proof while preserving publication as a protected human gate.
+Reason: The controlled action and post-change route evidence are committed under `docs/program/evidence/presence-studio-bbbvision-publish-execution/`.
+Evidence: Commit `e0ce05c` and the later owner-experience containment evidence.
+Impact: Canon must not describe BBB as merely an eventual unpublished candidate; future hosted actions still require separate approval and verification.
+Next action: Use BBB as the private Studio V3 pilot target without republishing during prototype work.
+
+2026-07-21 — Decision: Specify Studio V3 as a new client shell over the canonical Studio V2 engine.
+Reason: BBB proved the renderer and draft/public lifecycle, while owner review showed the V2 cockpit is not a marketable client editor.
+Evidence: `docs/program/presence-studio-v3/` and `docs/program/evidence/presence-studio-v3-specification/`.
+Impact: The 2026-07-20 single-editor decision continues to prohibit a parallel engine or permanent route, but does not lock clients to the existing cockpit presentation. V3 enters through the existing editor gate and compiles to V2.
+Next action: Implement only the reviewed, default-off prototype slice in a separate branch and work order.
 ```
 
 ## Open questions
@@ -291,9 +311,9 @@ Next action: Require a separately scoped hosted owner-bound proof before connect
 Update this section.
 
 ```text
-- What exact BBB content and assets are approved for the first system-native migration?
-- What Studio owner-access path currently exists and what evidence proves client-scoped access?
-- What minimum renderer/content-model slice can migrate BBB without introducing new architecture?
+- Which real-owner usability session will validate five-second comprehension before expanding beyond the BBB pilot?
+- Which backend cleanup slice should land first before market launch: multimedia Works, Collection membership/order, Room placements, or durable V3 state?
+- What normalized responsive placement contract should replace prototype pixel transforms before general availability?
 - Which offer should be sold first: audit, Lite, or Pro?
 - What production/deploy access is available now?
 ```
