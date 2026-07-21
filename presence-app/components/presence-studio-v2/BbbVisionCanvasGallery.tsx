@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { StudioV2PublicObject } from "@/lib/presence/studio-v2";
+import type { PresenceStudioV2EditorActivationInput, PresenceStudioV2EditorBridge } from "@/lib/presence/studio-v3/editorBridge";
+import { validateStudioV2EditorBridgeResult } from "@/lib/presence/studio-v3/editorBridge";
 
 export interface CanvasGalleryWork {
   object: StudioV2PublicObject;
@@ -15,6 +17,7 @@ interface BbbVisionCanvasGalleryProps {
   onSelectWork: (index: number) => void;
   onFocusWork: (object: StudioV2PublicObject) => void;
   focusOpen?: boolean;
+  editorBridge?: PresenceStudioV2EditorBridge;
 }
 
 interface PreloadedImage {
@@ -222,6 +225,7 @@ export default function BbbVisionCanvasGallery({
   onSelectWork,
   onFocusWork,
   focusOpen = false,
+  editorBridge,
 }: BbbVisionCanvasGalleryProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loaderState, setLoaderState] = useState<FieldLoaderState>({
@@ -255,10 +259,17 @@ export default function BbbVisionCanvasGallery({
   } | null>(null);
 
   const reducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const propsRef = useRef({ works, activeIndex, reducedMotion, onSelectWork, onFocusWork, focusOpen });
-  propsRef.current = { works, activeIndex, reducedMotion, onSelectWork, onFocusWork, focusOpen };
+  const propsRef = useRef({ works, activeIndex, reducedMotion, onSelectWork, onFocusWork, focusOpen, editorBridge });
+  propsRef.current = { works, activeIndex, reducedMotion, onSelectWork, onFocusWork, focusOpen, editorBridge };
 
   const worksKey = works.map(stableWorkSeed).join("|");
+
+  useEffect(() => {
+    if (!editorBridge) return;
+    if (stateRef.current) {
+      stateRef.current.focusTransition = null;
+    }
+  }, [editorBridge]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -587,6 +598,19 @@ export default function BbbVisionCanvasGallery({
       ctx.restore();
 
       if (!transition.completed && rawProgress >= 1) {
+        const activeBridge = propsRef.current.editorBridge;
+        if (activeBridge) {
+          const pieceId = transition.work.object.id.trim();
+          const intent = pieceId
+            ? { kind: "activate-piece" as const, pieceId, input: "pointer" as const }
+            : { kind: "suppress-action-without-piece" as const, action: "cta" as const, input: "pointer" as const };
+          const result = activeBridge.handleIntent(intent);
+          if (!validateStudioV2EditorBridgeResult(intent, result)) {
+            throw new Error("Studio V3 bridge rejected BBB canvas transition result.");
+          }
+          s.focusTransition = null;
+          return;
+        }
         transition.completed = true;
         propsRef.current.onFocusWork(transition.work.object);
       }
@@ -671,8 +695,9 @@ export default function BbbVisionCanvasGallery({
     }
 
     function onMouseMove(e: MouseEvent) {
-      s.touchInfos.mouse.x = e.clientX - s.width / 2;
-      s.touchInfos.mouse.y = e.clientY - s.height / 2;
+      const point = canvasPoint(e.clientX, e.clientY);
+      s.touchInfos.mouse.x = point.x;
+      s.touchInfos.mouse.y = point.y;
     }
 
     function onWheel(e: WheelEvent) {
@@ -686,13 +711,24 @@ export default function BbbVisionCanvasGallery({
       const t = e.targetTouches[0];
       s.touchInfos.fing.start.x = t.pageX;
       s.touchInfos.fing.start.y = t.pageY;
+      s.touchInfos.fing.end.x = 0;
+      s.touchInfos.fing.end.y = 0;
     }
 
     function onTouchMove(e: TouchEvent) {
-      if (reducedMotionActive) return;
       const t = e.targetTouches[0];
-      s.touchInfos.mouse.x = t.pageX - s.width / 2;
-      s.touchInfos.mouse.y = t.pageY - s.height / 2;
+      if (reducedMotionActive) {
+        if (propsRef.current.editorBridge) {
+          s.touchInfos.fing.move.x = t.pageX;
+          s.touchInfos.fing.move.y = t.pageY;
+          s.touchInfos.fing.end.x = s.touchInfos.fing.start.x - s.touchInfos.fing.move.x;
+          s.touchInfos.fing.end.y = s.touchInfos.fing.start.y - s.touchInfos.fing.move.y;
+        }
+        return;
+      }
+      const point = canvasPoint(t.clientX, t.clientY);
+      s.touchInfos.mouse.x = point.x;
+      s.touchInfos.mouse.y = point.y;
       s.touchInfos.fing.move.x = t.pageX;
       s.touchInfos.fing.move.y = t.pageY;
       s.touchInfos.fing.end.x = s.touchInfos.fing.start.x - s.touchInfos.fing.move.x;
@@ -708,12 +744,29 @@ export default function BbbVisionCanvasGallery({
       return candidates[0] ?? s.shapes.find((shape) => shape.workIndex === workIndex) ?? null;
     }
 
-    function openWorkFromShape(shape: ShapeState) {
+    function openWorkForEditor(work: CanvasGalleryWork, input: PresenceStudioV2EditorActivationInput) {
+      const activeBridge = propsRef.current.editorBridge;
+      if (!activeBridge) return false;
+      const pieceId = work.object.id.trim();
+      const intent = pieceId
+        ? { kind: "activate-piece" as const, pieceId, input }
+        : { kind: "suppress-action-without-piece" as const, action: "cta" as const, input };
+      const result = activeBridge.handleIntent(intent);
+      if (!validateStudioV2EditorBridgeResult(intent, result)) {
+        throw new Error("Studio V3 bridge rejected BBB canvas activation result.");
+      }
+      s.focusTransition = null;
+      return true;
+    }
+
+    function openWorkFromShape(shape: ShapeState, input: PresenceStudioV2EditorActivationInput = "pointer") {
       if (propsRef.current.focusOpen) return;
       if (s.focusTransition && !s.focusTransition.completed) return;
       const currentWorks = propsRef.current.works;
       if (shape.workIndex < 0 || shape.workIndex >= currentWorks.length) return;
       const work = currentWorks[shape.workIndex];
+
+      if (openWorkForEditor(work, input)) return;
 
       propsRef.current.onSelectWork(shape.workIndex);
       if (reducedMotionActive) {
@@ -734,8 +787,7 @@ export default function BbbVisionCanvasGallery({
     }
 
     function onClick(e: MouseEvent) {
-      const mx = e.clientX - s.width / 2;
-      const my = e.clientY - s.height / 2;
+      const { x: mx, y: my } = canvasPoint(e.clientX, e.clientY);
       s.touchInfos.mouse.x = mx;
       s.touchInfos.mouse.y = my;
 
@@ -748,27 +800,65 @@ export default function BbbVisionCanvasGallery({
 
       for (const shape of sortedShapes) {
         if (isHovered(shape, mx, my)) {
-          openWorkFromShape(shape);
+          openWorkFromShape(shape, "pointer");
           return;
         }
       }
     }
 
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== "Enter") return;
+      const activeBridge = propsRef.current.editorBridge;
+      if (e.key !== "Enter" && (e.key !== " " || !activeBridge)) return;
+      const input = e.key === "Enter" ? "keyboard-enter" : "keyboard-space";
       const currentWorks = propsRef.current.works;
       if (s.hoveredShape && s.hoveredShape.workIndex >= 0 && s.hoveredShape.workIndex < currentWorks.length) {
-        openWorkFromShape(s.hoveredShape);
+        if (activeBridge) e.preventDefault();
+        openWorkFromShape(s.hoveredShape, input);
       } else if (currentWorks.length > 0) {
+        if (activeBridge) e.preventDefault();
         const idx = propsRef.current.activeIndex % currentWorks.length;
         const shape = findVisibleShapeForWork(idx);
         if (shape) {
-          openWorkFromShape(shape);
+          openWorkFromShape(shape, input);
         } else {
+          if (openWorkForEditor(currentWorks[idx], input)) return;
           propsRef.current.onSelectWork(idx);
           propsRef.current.onFocusWork(currentWorks[idx].object);
         }
       }
+    }
+
+    function onTouchEnd(e: TouchEvent) {
+      if (!propsRef.current.editorBridge) return;
+      const touch = e.changedTouches[0];
+      if (!touch) return;
+      const tapDistance = Math.hypot(s.touchInfos.fing.end.x, s.touchInfos.fing.end.y);
+      if (tapDistance > 12) return;
+      e.preventDefault();
+      const { x: mx, y: my } = canvasPoint(touch.clientX, touch.clientY);
+      s.touchInfos.mouse.x = mx;
+      s.touchInfos.mouse.y = my;
+      const sortedShapes = s.shapes.slice().sort((a, b) => {
+        const da = Math.sqrt(a.x * a.x + a.y * a.y);
+        const db = Math.sqrt(b.x * b.x + b.y * b.y);
+        return da - db;
+      });
+      for (const shape of sortedShapes) {
+        if (isHovered(shape, mx, my)) {
+          openWorkFromShape(shape, "touch");
+          return;
+        }
+      }
+    }
+
+    function canvasPoint(clientX: number, clientY: number) {
+      const rect = canvas!.getBoundingClientRect();
+      const scaleX = rect.width > 0 ? s.width / rect.width : 1;
+      const scaleY = rect.height > 0 ? s.height / rect.height : 1;
+      return {
+        x: (clientX - rect.left) * scaleX - s.width / 2,
+        y: (clientY - rect.top) * scaleY - s.height / 2,
+      };
     }
 
     function onResize() {
@@ -805,6 +895,9 @@ export default function BbbVisionCanvasGallery({
     canvas.addEventListener("click", onClick);
     canvas.addEventListener("touchstart", onTouchStart, { passive: true });
     canvas.addEventListener("touchmove", onTouchMove, { passive: true });
+    if (editorBridge) {
+      canvas.addEventListener("touchend", onTouchEnd, { passive: false });
+    }
     canvas.addEventListener("keydown", onKeyDown);
 
     return () => {
@@ -817,9 +910,12 @@ export default function BbbVisionCanvasGallery({
       canvas.removeEventListener("click", onClick);
       canvas.removeEventListener("touchstart", onTouchStart);
       canvas.removeEventListener("touchmove", onTouchMove);
+      if (editorBridge) {
+        canvas.removeEventListener("touchend", onTouchEnd);
+      }
       canvas.removeEventListener("keydown", onKeyDown);
     };
-  }, [worksKey, reducedMotion]);
+  }, [worksKey, reducedMotion, editorBridge]);
 
   return (
     <div

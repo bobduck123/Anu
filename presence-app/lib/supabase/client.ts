@@ -102,11 +102,20 @@ function createMockBrowserClient() {
           error: null,
         };
       },
-      onAuthStateChange() {
+      onAuthStateChange(callback: (event: string, session: { user?: typeof mockUser } | null) => void) {
+        const listener = (event: Event) => {
+          const detail = event instanceof CustomEvent
+            ? event.detail as { event?: string; session?: { user?: typeof mockUser } | null }
+            : null;
+          callback(detail?.event ?? "SIGNED_OUT", detail?.session ?? null);
+        };
+        window.addEventListener("presence:e2e:auth-state", listener);
         return {
           data: {
             subscription: {
-              unsubscribe() {},
+              unsubscribe() {
+                window.removeEventListener("presence:e2e:auth-state", listener);
+              },
             },
           },
         };
@@ -114,6 +123,7 @@ function createMockBrowserClient() {
       async signOut() {
         window.localStorage.removeItem("presence:e2e:access_token");
         document.cookie = "presence_e2e_session=; Path=/; Max-Age=0; SameSite=Lax";
+        window.dispatchEvent(new CustomEvent("presence:e2e:auth-state", { detail: { event: "SIGNED_OUT", session: null } }));
         return { error: null };
       },
       async signInWithPassword(_credentials?: unknown) {

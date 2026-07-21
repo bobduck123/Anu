@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { getNode } from "@/lib/api/owner";
 import { PresenceApiError } from "@/lib/api/client";
 import type { PresenceNode } from "@/lib/api/types";
-import { AUTH_REQUIRED_MESSAGE, resolveOwnerSessionToken } from "./ownerSession";
+import { AUTH_REQUIRED_MESSAGE, resolveOwnerSession } from "./ownerSession";
 
 export type OwnerAccessState =
   | "checking-session"
@@ -17,6 +17,7 @@ export type OwnerAccessState =
 export function useOwnerNode(nodeId: number) {
   const [node, setNode] = useState<PresenceNode | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [subject, setSubject] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [accessState, setAccessState] = useState<OwnerAccessState>("checking-session");
@@ -26,23 +27,26 @@ export function useOwnerNode(nodeId: number) {
     setError(null);
     setAccessState("checking-session");
     try {
-      const accessToken = await resolveOwnerSessionToken({ waitForHydration: true });
-      if (!accessToken) {
+      const session = await resolveOwnerSession({ waitForHydration: true });
+      if (!session) {
         setNode(null);
         setToken(null);
+        setSubject(null);
         setError(AUTH_REQUIRED_MESSAGE);
         setAccessState("sign-in");
         return;
       }
-      setToken(accessToken);
+      setToken(session.token);
+      setSubject(session.subject);
       setAccessState("confirming-room");
-      const data = await getNode(nodeId, accessToken);
+      const data = await getNode(nodeId, session.token);
       setNode(data);
       setAccessState("ready");
     } catch (e) {
       if (e instanceof PresenceApiError && e.status === 401) {
         setNode(null);
         setToken(null);
+        setSubject(null);
         setError(AUTH_REQUIRED_MESSAGE);
         setAccessState("sign-in");
       } else if (e instanceof PresenceApiError && e.status === 403) {
@@ -63,6 +67,7 @@ export function useOwnerNode(nodeId: number) {
   return {
     node,
     token,
+    subject,
     loading,
     error,
     authRequired: error === AUTH_REQUIRED_MESSAGE,
