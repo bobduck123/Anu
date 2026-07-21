@@ -2894,3 +2894,642 @@ body.v2-is-manipulating {
     margin: 0 12px 10px;
   }
 }
+
+/* ── Owner experience shell ── */
+.presence-studio-v2 .v2-owner-journey {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1px;
+  padding: 1px;
+  border-bottom: 1px solid rgba(248, 244, 236, 0.1);
+  background: rgba(248, 244, 236, 0.08);
+}
+
+.presence-studio-v2 .v2-owner-step {
+  min-width: 0;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 0;
+  background: #12110f;
+  color: rgba(248, 244, 236, 0.62);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.presence-studio-v2 .v2-owner-step:hover,
+.presence-studio-v2 .v2-owner-step:focus-visible {
+  background: #1b1915;
+  color: var(--v2-bone);
+  outline: none;
+}
+
+.presence-studio-v2 .v2-owner-step.active {
+  background: color-mix(in srgb, var(--p-copper, var(--v2-copper)) 18%, #12110f);
+  box-shadow: inset 0 -3px 0 var(--p-copper, var(--v2-copper));
+  color: var(--v2-bone);
+}
+
+.presence-studio-v2 .v2-owner-step > span,
+.presence-studio-v2 .v2-owner-step > strong,
+.presence-studio-v2 .v2-owner-step > em {
+  display: block;
+}
+
+.presence-studio-v2 .v2-owner-step > span {
+  color: var(--p-copper, var(--v2-copper));
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.12em;
+}
+
+.presence-studio-v2 .v2-owner-step > strong {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.presence-studio-v2 .v2-owner-step > em {
+  margin-top: 3px;
+  overflow: hidden;
+  font-size: 10px;
+  font-style: normal;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+}
+
+.presence-studio-v2 .v2-owner-step-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(248, 244, 236, 0.08);
+  background: #0f0e0c;
+  color: var(--v2-bone);
+}
+
+.presence-studio-v2 .v2-owner-step-intro span,
+.presence-studio-v2 .v2-owner-workspace-head span,
+.presence-studio-v2 .v2-owner-look-controls header > span,
+.presence-studio-v2 .v2-owner-safety-card > span,
+.presence-studio-v2 .v2-owner-safety-aside > span,
+.presence-studio-v2 .v2-owner-publish-actions > span {
+  color: var(--p-copper, var(--v2-copper));
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2 .v2-owner-step-intro h1 {
+  margin: 3px 0 0;
+  font-family: Georgia, serif;
+  font-size: clamp(24px, 3vw, 38px);
+  font-weight: 500;
+}
+
+.presence-studio-v2 .v2-owner-step-intro p {
+  margin: 4px 0 0;
+  color: rgba(248, 244, 236, 0.62);
+  font-size: 12px;
+}
+
+.presence-studio-v2 .v2-owner-step-intro .v2-btn {
+  flex: 0 0 auto;
+  border-color: rgba(248, 244, 236, 0.16);
+  color: var(--v2-bone);
+}
+
+.presence-studio-v2 .v2-owner-workspace {
+  min-height: min(760px, 72dvh);
+  padding: clamp(20px, 4vw, 44px);
+  background:
+    radial-gradient(circle at 82% 12%, color-mix(in srgb, var(--p-copper, var(--v2-copper)) 12%, transparent), transparent 30%),
+    #141310;
+  color: var(--v2-bone);
+}
+
+.presence-studio-v2 .v2-owner-workspace-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 auto 28px;
+  max-width: 1180px;
+}
+
+.presence-studio-v2 .v2-owner-workspace h2 {
+  margin: 6px 0 0;
+  font-family: Georgia, serif;
+  font-size: clamp(26px, 4vw, 44px);
+  font-weight: 500;
+}
+
+.presence-studio-v2 .v2-owner-workspace-head p,
+.presence-studio-v2 .v2-owner-look-controls header p,
+.presence-studio-v2 .v2-owner-safety-card > p,
+.presence-studio-v2 .v2-owner-publish-actions > p {
+  max-width: 640px;
+  margin: 8px 0 0;
+  color: rgba(248, 244, 236, 0.6);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.presence-studio-v2 .v2-owner-workspace .v2-btn {
+  border-color: rgba(248, 244, 236, 0.16);
+  color: var(--v2-bone);
+}
+
+.presence-studio-v2 .v2-owner-workspace .v2-btn.primary {
+  background: var(--p-copper, var(--v2-copper));
+  color: #11100e;
+}
+
+.presence-studio-v2 .v2-owner-room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.presence-studio-v2 .v2-owner-room-card {
+  display: flex;
+  min-height: 310px;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(248, 244, 236, 0.12);
+  border-radius: 24px;
+  background: rgba(248, 244, 236, 0.045);
+}
+
+.presence-studio-v2 .v2-owner-room-card.active {
+  border-color: color-mix(in srgb, var(--p-copper, var(--v2-copper)) 72%, transparent);
+  box-shadow: 0 24px 70px -46px var(--p-copper, var(--v2-copper));
+}
+
+.presence-studio-v2 .v2-owner-room-select {
+  flex: 1;
+  padding: 24px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.presence-studio-v2 .v2-owner-room-select > span {
+  color: var(--p-copper, var(--v2-copper));
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2 .v2-owner-room-select h3 {
+  margin: 12px 0 0;
+  font-family: Georgia, serif;
+  font-size: 26px;
+  font-weight: 500;
+}
+
+.presence-studio-v2 .v2-owner-room-select p {
+  margin: 10px 0 0;
+  color: rgba(248, 244, 236, 0.56);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.presence-studio-v2 .v2-owner-room-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 24px 18px;
+}
+
+.presence-studio-v2 .v2-owner-room-facts span,
+.presence-studio-v2 .v2-owner-room-facts strong {
+  padding: 5px 8px;
+  border: 1px solid rgba(248, 244, 236, 0.1);
+  border-radius: 999px;
+  color: rgba(248, 244, 236, 0.68);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.presence-studio-v2 .v2-owner-room-facts strong {
+  border-color: color-mix(in srgb, var(--p-copper, var(--v2-copper)) 45%, transparent);
+  color: #ffe6ae;
+}
+
+.presence-studio-v2 .v2-owner-room-arrange {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border: 0;
+  border-top: 1px solid rgba(248, 244, 236, 0.1);
+  background: rgba(248, 244, 236, 0.025);
+  color: var(--v2-bone);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.presence-studio-v2 .v2-owner-style-workspace {
+  display: grid;
+  grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+  gap: 20px;
+  padding: 20px;
+}
+
+.presence-studio-v2 .v2-owner-look-controls {
+  max-height: 74dvh;
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid rgba(248, 244, 236, 0.12);
+  border-radius: 24px;
+  background: #191713;
+}
+
+.presence-studio-v2 .v2-owner-look-controls h2 {
+  font-size: 30px;
+}
+
+.presence-studio-v2 .v2-owner-look-controls fieldset {
+  margin: 22px 0 0;
+  padding: 18px 0 0;
+  border: 0;
+  border-top: 1px solid rgba(248, 244, 236, 0.1);
+}
+
+.presence-studio-v2 .v2-owner-look-controls legend {
+  padding: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.presence-studio-v2 .v2-owner-look-controls fieldset > p {
+  margin: 5px 0 12px;
+  color: rgba(248, 244, 236, 0.52);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.presence-studio-v2 .v2-owner-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.presence-studio-v2 .v2-owner-choice-grid.compact {
+  grid-template-columns: 1fr;
+}
+
+.presence-studio-v2 .v2-owner-choice-grid button,
+.presence-studio-v2 .v2-owner-segmented button {
+  padding: 10px;
+  border: 1px solid rgba(248, 244, 236, 0.12);
+  border-radius: 12px;
+  background: rgba(248, 244, 236, 0.035);
+  color: rgba(248, 244, 236, 0.7);
+  text-align: left;
+  cursor: pointer;
+}
+
+.presence-studio-v2 .v2-owner-choice-grid button.active,
+.presence-studio-v2 .v2-owner-segmented button.active {
+  border-color: var(--p-copper, var(--v2-copper));
+  background: color-mix(in srgb, var(--p-copper, var(--v2-copper)) 16%, transparent);
+  color: var(--v2-bone);
+}
+
+.presence-studio-v2 .v2-owner-choice-grid strong,
+.presence-studio-v2 .v2-owner-choice-grid span {
+  display: block;
+}
+
+.presence-studio-v2 .v2-owner-choice-grid strong {
+  font-size: 11px;
+}
+
+.presence-studio-v2 .v2-owner-choice-grid span {
+  margin-top: 3px;
+  font-size: 9px;
+  line-height: 1.4;
+  opacity: 0.65;
+}
+
+.presence-studio-v2 .v2-owner-swatches,
+.presence-studio-v2 .v2-owner-segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.presence-studio-v2 .v2-owner-swatches button {
+  width: 34px;
+  height: 34px;
+  border: 2px solid rgba(248, 244, 236, 0.2);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.presence-studio-v2 .v2-owner-swatches button.active {
+  outline: 2px solid var(--p-copper, var(--v2-copper));
+  outline-offset: 3px;
+}
+
+.presence-studio-v2 .v2-owner-segmented button {
+  padding: 7px 10px;
+  font-size: 10px;
+  text-transform: capitalize;
+}
+
+.presence-studio-v2 .v2-owner-segmented.compact {
+  flex-wrap: nowrap;
+}
+
+.presence-studio-v2 .v2-owner-range {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 9px;
+}
+
+.presence-studio-v2 .v2-owner-look-preview {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(248, 244, 236, 0.12);
+  border-radius: 24px;
+  background: #0d0c0a;
+}
+
+.presence-studio-v2 .v2-owner-preview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(248, 244, 236, 0.1);
+}
+
+.presence-studio-v2 .v2-owner-preview-toolbar span,
+.presence-studio-v2 .v2-owner-preview-toolbar strong {
+  display: block;
+}
+
+.presence-studio-v2 .v2-owner-preview-toolbar span {
+  color: var(--p-copper, var(--v2-copper));
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.presence-studio-v2 .v2-owner-preview-toolbar strong {
+  margin-top: 2px;
+  font-size: 12px;
+}
+
+.presence-studio-v2 .v2-owner-look-stage {
+  max-height: 70dvh;
+  overflow: auto;
+  padding: 22px;
+}
+
+.presence-studio-v2 .v2-owner-look-stage.v2-device-mobile .v2-room {
+  max-width: 390px;
+}
+
+.presence-studio-v2 .v2-owner-safety-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.presence-studio-v2 .v2-owner-safety-card,
+.presence-studio-v2 .v2-owner-safety-aside,
+.presence-studio-v2 .v2-owner-publish-actions {
+  padding: clamp(24px, 4vw, 48px);
+  border: 1px solid rgba(248, 244, 236, 0.12);
+  border-radius: 28px;
+  background: rgba(248, 244, 236, 0.04);
+}
+
+.presence-studio-v2 .v2-owner-boundary-note,
+.presence-studio-v2 .v2-owner-change-status {
+  display: grid;
+  gap: 4px;
+  margin-top: 22px;
+  padding: 16px;
+  border: 1px solid rgba(86, 125, 85, 0.5);
+  border-radius: 16px;
+  background: rgba(86, 125, 85, 0.12);
+  font-size: 11px;
+}
+
+.presence-studio-v2 .v2-owner-boundary-note span,
+.presence-studio-v2 .v2-owner-change-status span {
+  color: rgba(248, 244, 236, 0.6);
+}
+
+.presence-studio-v2 .preview-modes {
+  margin-top: 18px;
+}
+
+.presence-studio-v2 .v2-owner-primary-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 22px;
+  padding: 14px 18px;
+  border-radius: 999px;
+  background: var(--p-copper, var(--v2-copper));
+  color: #11100e;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.presence-studio-v2 .v2-owner-primary-link.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.presence-studio-v2 .v2-owner-safety-aside ul {
+  margin: 22px 0;
+  padding-left: 18px;
+  color: rgba(248, 244, 236, 0.68);
+  font-size: 12px;
+  line-height: 2;
+}
+
+.presence-studio-v2 .v2-owner-safety-aside code {
+  display: block;
+  overflow: hidden;
+  color: var(--p-copper, var(--v2-copper));
+  font-size: 10px;
+  text-overflow: ellipsis;
+}
+
+.presence-studio-v2 .v2-owner-publish-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+  gap: 18px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.presence-studio-v2 .v2-owner-review-list {
+  display: grid;
+  gap: 8px;
+}
+
+.presence-studio-v2 .v2-owner-review-list article {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(248, 244, 236, 0.1);
+  border-radius: 16px;
+  background: rgba(248, 244, 236, 0.035);
+}
+
+.presence-studio-v2 .v2-owner-review-list article > span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(86, 125, 85, 0.2);
+  color: #cce9bd;
+  font-weight: 800;
+}
+
+.presence-studio-v2 .v2-owner-review-list article.warn > span {
+  background: rgba(196, 98, 42, 0.2);
+  color: #ffd1b6;
+}
+
+.presence-studio-v2 .v2-owner-review-list strong {
+  font-size: 12px;
+}
+
+.presence-studio-v2 .v2-owner-review-list p {
+  margin: 4px 0 0;
+  color: rgba(248, 244, 236, 0.55);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.presence-studio-v2 .v2-owner-change-status {
+  min-width: 250px;
+  margin: 0;
+}
+
+.presence-studio-v2 .v2-owner-change-status.warn {
+  border-color: rgba(196, 98, 42, 0.55);
+  background: rgba(196, 98, 42, 0.12);
+}
+
+.presence-studio-v2 .v2-owner-publish-actions h3 {
+  margin: 10px 0 0;
+  font-family: Georgia, serif;
+  font-size: 26px;
+  font-weight: 500;
+}
+
+.presence-studio-v2 .v2-owner-fine-print {
+  color: rgba(248, 244, 236, 0.48);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.presence-studio-v2 .v2-layout-zone-empty {
+  margin: 4px 0 10px;
+  padding: 10px 12px;
+  border: 1px dashed color-mix(in srgb, var(--v2-room-accent) 34%, transparent);
+  border-radius: 12px;
+  color: color-mix(in srgb, var(--v2-room-ink) 66%, transparent);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (max-width: 980px) {
+  .presence-studio-v2 .v2-owner-journey {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .presence-studio-v2 .v2-owner-step {
+    min-width: 118px;
+    flex: 1 0 118px;
+  }
+
+  .presence-studio-v2 .v2-owner-step > em {
+    display: none;
+  }
+
+  .presence-studio-v2 .v2-owner-style-workspace,
+  .presence-studio-v2 .v2-owner-safety-workspace,
+  .presence-studio-v2 .v2-owner-publish-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .presence-studio-v2 .v2-owner-look-controls {
+    max-height: none;
+  }
+
+  .presence-studio-v2 .v2-owner-look-stage {
+    max-height: 65dvh;
+  }
+}
+
+@media (max-width: 640px) {
+  .presence-studio-v2 .v2-owner-step-intro,
+  .presence-studio-v2 .v2-owner-workspace-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .presence-studio-v2 .v2-owner-step-intro {
+    gap: 12px;
+    padding: 15px;
+  }
+
+  .presence-studio-v2 .v2-owner-step-intro .v2-btn {
+    min-height: 42px;
+  }
+
+  .presence-studio-v2 .v2-owner-workspace,
+  .presence-studio-v2 .v2-owner-style-workspace {
+    min-height: auto;
+    padding: 12px;
+  }
+
+  .presence-studio-v2 .v2-owner-look-controls,
+  .presence-studio-v2 .v2-owner-safety-card,
+  .presence-studio-v2 .v2-owner-safety-aside,
+  .presence-studio-v2 .v2-owner-publish-actions {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .presence-studio-v2 .v2-owner-choice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .presence-studio-v2 .v2-owner-look-stage {
+    padding: 8px;
+  }
+
+  .presence-studio-v2 .v2-owner-look-stage .v2-room {
+    padding: 16px;
+  }
+
+  .presence-studio-v2 .v2-owner-primary-link {
+    width: 100%;
+  }
+}

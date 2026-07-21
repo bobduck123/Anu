@@ -7,6 +7,7 @@ export default function PublishConfirmDialog({
   open,
   publishing,
   readiness,
+  draftVersion,
   publishedVersion,
   onCancel,
   onConfirm,
@@ -21,17 +22,25 @@ export default function PublishConfirmDialog({
 }) {
   if (!open) return null;
   const criticalCount = readiness?.critical.length ?? 0;
+  const reviewItems = [
+    { label: "Public page loads", detail: "The saved visitor view is available for final review." },
+    { label: "Mobile view checked", detail: "Switch to Mobile in Visitor Preview before confirming." },
+    { label: "Images and assets loading", detail: "Resolve any readiness warnings shown above." },
+    { label: "No private pieces visible", detail: "Editor-only and hidden pieces stay outside the visitor view." },
+    { label: "CTA / Enter path works", detail: "Check the visitor's next step in this preview." },
+    { label: "Rollback available", detail: publishedVersion ? "The current live version remains available in history." : "This will be the first live version." },
+  ];
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="publish-confirm-title"
-        className="w-full max-w-lg overflow-hidden rounded-[2rem] border border-white/10 bg-[#111214] text-stone-100 shadow-2xl"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-[2rem] border border-white/10 bg-[#111214] text-stone-100 shadow-2xl"
       >
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-200/70">Open room to visitors</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-200/70">Publish Review</p>
             <h2 id="publish-confirm-title" className="mt-1 text-xl font-semibold">
               {criticalCount > 0 ? "A few things need attention" : "Open your room to visitors?"}
             </h2>
@@ -55,6 +64,17 @@ export default function PublishConfirmDialog({
                 <span className="mt-2 block">{readiness?.critical.map((issue) => issue.label).join(" ")}</span>
               </span>
             </div>
+          )}
+          <div data-testid="publish-review-checklist" className="grid gap-2" aria-label="Publish review checklist">
+            {reviewItems.map((item) => (
+              <div key={item.label} className="flex gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3">
+                <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center rounded-md border border-white/20 text-xs text-stone-400">□</span>
+                <div><strong className="block text-sm text-stone-100">{item.label}</strong><span className="mt-0.5 block text-xs leading-5 text-stone-400">{item.detail}</span></div>
+              </div>
+            ))}
+          </div>
+          {(draftVersion || publishedVersion) && (
+            <p className="text-xs text-stone-500">Unpublished version {draftVersion ?? "new"} · Live version {publishedVersion ?? "none"}</p>
           )}
           <div className="flex flex-wrap justify-end gap-2">
             <button type="button" disabled={publishing} onClick={onCancel} className="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-stone-300 hover:bg-white/5 disabled:opacity-50">

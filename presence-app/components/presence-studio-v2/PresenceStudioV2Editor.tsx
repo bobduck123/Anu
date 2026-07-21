@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useRef, type CSSProperties } from "react";
+import Link from "next/link";
 import type { PresenceNode } from "@/lib/api/types";
 import {
   getPresenceEditor,
@@ -22,7 +23,9 @@ import type {
   StudioV2MoodboardReference,
   StudioV2Object,
   StudioV2PublicStylePreset,
+  StudioV2Skin,
   StudioV2State,
+  StudioV2WorldId,
   StudioV2ChamberRole,
   StudioV2ChamberMetadata,
 } from "@/lib/presence/studio-v2";
@@ -38,6 +41,20 @@ interface PresenceStudioV2EditorProps {
   nodeId: number;
   token: string;
   onNodeReload?: () => Promise<void> | void;
+}
+
+type OwnerStudioStep = "rooms" | "arrange" | "style" | "preview" | "publish";
+
+const OWNER_STUDIO_STEPS: Array<{ id: OwnerStudioStep; label: string; description: string }> = [
+  { id: "rooms", label: "Rooms", description: "Choose the spaces inside your Presence." },
+  { id: "arrange", label: "Arrange", description: "Move your pieces into the room." },
+  { id: "style", label: "Style", description: "Set the mood, background, movement, and texture." },
+  { id: "preview", label: "Preview", description: "See what visitors will experience." },
+  { id: "publish", label: "Publish", description: "Review and safely update your live Presence." },
+];
+
+function ownerStudioStep(value: string | null): OwnerStudioStep | null {
+  return OWNER_STUDIO_STEPS.some((step) => step.id === value) ? value as OwnerStudioStep : null;
 }
 
 function snapshot(state: StudioV2State): string {
@@ -146,20 +163,20 @@ function StudioGuide({
   publicObjects: number;
 }) {
   const message = saving
-    ? "Saving your draft. Keep working here; this does not publish the room."
+    ? "Saving your changes. Keep working here; this does not update the live site."
     : dirty
-      ? "Your room has a new draft change. Ordinary edits save automatically; transformed objects need Save draft."
+      ? "Your room has unpublished changes. Ordinary edits save automatically; freeform moves need Save changes."
       : selectedObject
         ? selectedObject.visibility.public
-          ? `You are shaping ${selectedObject.title}. Use Content for its words and Style for its treatment.`
-          : `${selectedObject.title} is private to this room. Refine it here before deciding whether it belongs in the public composition.`
+          ? `You are shaping ${selectedObject.title}. Use Content for its words and Style for its presentation.`
+          : `${selectedObject.title} is private to this room. Refine it here before deciding whether visitors should see it.`
         : publicObjects === 0
-          ? "Start with one public object in the current chamber, then use Preview to check the room's public projection."
-          : "Choose a chamber or an object in the room. The inspector will only show controls that change that selection.";
+          ? "Start with one public piece in the current room, then use Visitor Preview to check the experience."
+          : "Choose a room or a piece. The controls will only show what changes that selection.";
 
   return (
     <aside data-testid="presence-studio-v2-guide" className="v2-studio-guide" aria-live="polite">
-      <span className="v2-studio-guide-eyebrow">Studio guide</span>
+      <span className="v2-studio-guide-eyebrow">Arrange guide</span>
       <p>{message}</p>
     </aside>
   );
@@ -195,19 +212,19 @@ function LayoutCompositionControls({
   };
   return (
     <section className="v2-layout-composer" data-testid="presence-studio-v2-layout-composer">
-      <div className="v2-inspector-section-title">Chamber arrangement</div>
-      <label className="v2-field"><span>Layout</span><select data-testid="presence-studio-v2-layout-select" value={layout.id} onChange={(event) => setLayout(event.target.value as PresenceStudioV2LayoutId)}>{STUDIO_V2_LAYOUTS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+      <div className="v2-inspector-section-title">Arrangement</div>
+      <label className="v2-field"><span>Room layout</span><select data-testid="presence-studio-v2-layout-select" value={layout.id} onChange={(event) => setLayout(event.target.value as PresenceStudioV2LayoutId)}>{STUDIO_V2_LAYOUTS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
       <p className="v2-layout-help">{layout.description}</p>
       {selectedObject && placement ? (
         <div className="v2-layout-object-controls" data-testid="presence-studio-v2-placement-controls">
           <strong>{selectedObject.title}</strong>
-          {!selectedObject.visibility.public && <p>This object is hidden from public visitors, so it will remain editor/private-preview only.</p>}
-          <label className="v2-field"><span>Zone</span><select data-testid="presence-studio-v2-placement-zone" value={placement.zoneId} onChange={(event) => move(event.target.value)}>{layout.zones.map((zone) => <option key={zone.id} value={zone.id} disabled={Boolean(placementMoveError(composition, selectedObject, zone.id))}>{zone.label}</option>)}</select></label>
+          {!selectedObject.visibility.public && <p>This piece is hidden from visitors. It remains visible only while you edit and preview.</p>}
+          <label className="v2-field"><span>Area</span><select data-testid="presence-studio-v2-placement-zone" value={placement.zoneId} onChange={(event) => move(event.target.value)}>{layout.zones.map((zone) => <option key={zone.id} value={zone.id} disabled={Boolean(placementMoveError(composition, selectedObject, zone.id))}>{zone.label}</option>)}</select></label>
           <div className="v2-layout-actions"><button type="button" className="v2-btn" onClick={() => reorder(-1)}>Move up</button><button type="button" className="v2-btn" onClick={() => reorder(1)}>Move down</button></div>
-          <label className="v2-field"><span>Scale in room</span><select data-testid="presence-studio-v2-placement-size" value={placement.size} onChange={(event) => update({ ...composition, placements: composition.placements.map((item) => item.objectId === placement.objectId ? { ...item, size: event.target.value as StudioV2PlacementSize } : item) })}>{(layout.zones.find((zone) => zone.id === placement.zoneId)?.allowedSizes ?? []).map((size) => <option key={size} value={size}>{size}</option>)}</select></label>
-          {(layout.zones.find((zone) => zone.id === placement.zoneId)?.allowedTreatments?.length ?? 0) > 0 && <label className="v2-field"><span>Treatment</span><select data-testid="presence-studio-v2-placement-treatment" value={placement.treatment ?? "quiet"} onChange={(event) => update({ ...composition, placements: composition.placements.map((item) => item.objectId === placement.objectId ? { ...item, treatment: event.target.value as StudioV2ChamberComposition["placements"][number]["treatment"] } : item) })}>{layout.zones.find((zone) => zone.id === placement.zoneId)?.allowedTreatments?.map((treatment) => <option key={treatment} value={treatment}>{treatment}</option>)}</select></label>}
+          <label className="v2-field"><span>Size in room</span><select data-testid="presence-studio-v2-placement-size" value={placement.size} onChange={(event) => update({ ...composition, placements: composition.placements.map((item) => item.objectId === placement.objectId ? { ...item, size: event.target.value as StudioV2PlacementSize } : item) })}>{(layout.zones.find((zone) => zone.id === placement.zoneId)?.allowedSizes ?? []).map((size) => <option key={size} value={size}>{size}</option>)}</select></label>
+          {(layout.zones.find((zone) => zone.id === placement.zoneId)?.allowedTreatments?.length ?? 0) > 0 && <label className="v2-field"><span>Presentation</span><select data-testid="presence-studio-v2-placement-treatment" value={placement.treatment ?? "quiet"} onChange={(event) => update({ ...composition, placements: composition.placements.map((item) => item.objectId === placement.objectId ? { ...item, treatment: event.target.value as StudioV2ChamberComposition["placements"][number]["treatment"] } : item) })}>{layout.zones.find((zone) => zone.id === placement.zoneId)?.allowedTreatments?.map((treatment) => <option key={treatment} value={treatment}>{treatment}</option>)}</select></label>}
         </div>
-      ) : <p className="v2-layout-help">Select an object to place it in a valid part of this chamber.</p>}
+      ) : <p className="v2-layout-help">Select a piece to choose its area, size, and presentation.</p>}
     </section>
   );
 }
@@ -246,6 +263,9 @@ export default function PresenceStudioV2Editor({
   const [inspectorOpen, setInspectorOpen] = useState(true);
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [brokenAssetObjectIds, setBrokenAssetObjectIds] = useState<Set<string>>(() => new Set());
+  const [ownerStep, setOwnerStep] = useState<OwnerStudioStep>("arrange");
+  const [advancedOpen, setAdvancedOpen] = useState(true);
+  const [hasPublished, setHasPublished] = useState(false);
 
   const roomRef = useRef<HTMLDivElement | null>(null);
   const interactionRef = useRef<CanvasInteraction | null>(null);
@@ -277,6 +297,7 @@ export default function PresenceStudioV2Editor({
       setV2State(state);
       setBaseSnapshot(snapshot(state));
       setHasDraft(Boolean(overview.draft));
+      setHasPublished(Boolean(overview.published));
       canvasChangesNeedManualSaveRef.current = false;
       setCanvasChangesNeedManualSave(false);
     } catch (err) {
@@ -289,6 +310,13 @@ export default function PresenceStudioV2Editor({
   useEffect(() => {
     void loadEditor();
   }, [loadEditor]);
+
+  useEffect(() => {
+    const requestedStep = ownerStudioStep(new URLSearchParams(window.location.search).get("step"));
+    if (!requestedStep) return;
+    setOwnerStep(requestedStep);
+    setAdvancedOpen(false);
+  }, []);
 
   useEffect(() => {
     if (!v2State) return;
@@ -719,8 +747,9 @@ export default function PresenceStudioV2Editor({
 
   function goToPreview() {
     if (dirty) {
-      setShareNotice("Unsaved changes are local until Save draft. Preview opens the last saved draft.");
+      setShareNotice("Save changes before opening Visitor Preview so it cannot show an older draft.");
       window.setTimeout(() => setShareNotice(null), 3400);
+      return;
     }
     window.location.href = `/studio/${nodeId}/editor/preview`;
   }
@@ -794,7 +823,7 @@ export default function PresenceStudioV2Editor({
     const nextIndex = (v2State?.chambers.length ?? 0) + 1;
     const newChamber = {
       id: makeId("chamber"),
-      label: `Chamber ${nextIndex}`,
+      label: `Room ${nextIndex}`,
       objects: [] as StudioV2Object[],
       metadata: { role: "custom" as StudioV2ChamberRole },
     };
@@ -961,6 +990,16 @@ export default function PresenceStudioV2Editor({
   const publicObjects = countPublicObjects(v2State);
   const assetRegistryForRender = assetRegistry ?? deriveStudioV2AssetRegistry(v2State, { brokenObjectIds: brokenAssetObjectIds });
   const selectedAssetForRender = assetRegistryForRender.assets.find((asset) => asset.id === selectedAssetId) ?? null;
+  const currentStep = OWNER_STUDIO_STEPS.find((step) => step.id === ownerStep) ?? OWNER_STUDIO_STEPS[1];
+
+  function chooseOwnerStep(step: OwnerStudioStep) {
+    setOwnerStep(step);
+    setActivePanel("none");
+    if (step === "arrange") {
+      setRailOpen(true);
+      setInspectorOpen(true);
+    }
+  }
 
   return (
     <div
@@ -968,18 +1007,51 @@ export default function PresenceStudioV2Editor({
       className={`presence-studio-v2 v2-cockpit${railOpen ? " rail-open" : " rail-closed"}${inspectorOpen ? " inspector-open" : " inspector-closed"}${selectedObject ? " has-object-focus" : ""}${activePanel !== "none" ? " overlay-open" : ""}`}
       style={{ "--p-copper": v2State.skin.accentColor } as CSSProperties}
     >
+      <nav data-testid="presence-studio-owner-journey" className="v2-owner-journey" aria-label="Build your Presence">
+        <Link href={`/studio/${nodeId}`} className="v2-owner-step v2-owner-step-home">
+          <span>01</span>
+          <strong>Home</strong>
+          <em>Your Presence at a glance.</em>
+        </Link>
+        {OWNER_STUDIO_STEPS.map((step, index) => (
+          <button
+            key={step.id}
+            type="button"
+            data-testid={`presence-studio-owner-step-${step.id}`}
+            className={`v2-owner-step${ownerStep === step.id ? " active" : ""}`}
+            aria-current={ownerStep === step.id ? "step" : undefined}
+            onClick={() => chooseOwnerStep(step.id)}
+          >
+            <span>0{index + 2}</span>
+            <strong>{step.label}</strong>
+            <em>{step.description}</em>
+          </button>
+        ))}
+      </nav>
+
+      <section data-testid="presence-studio-owner-step-intro" className="v2-owner-step-intro">
+        <div>
+          <span>Now shaping</span>
+          <h1>{currentStep.label}</h1>
+          <p>{currentStep.description}</p>
+        </div>
+        <button type="button" className={`v2-btn${advancedOpen ? " active" : ""}`} aria-expanded={advancedOpen} onClick={() => setAdvancedOpen((open) => !open)}>
+          {advancedOpen ? "Hide advanced controls" : "Advanced controls"}
+        </button>
+      </section>
+
       {/* Top chrome */}
       <header data-testid="presence-studio-v2-top-chrome" className="v2-toolbar v2-top-chrome">
         <div className="v2-toolbar-group">
           <span className="v2-brand-glyph" aria-hidden="true">P</span>
           <span className="font-semibold text-sm">Presence Studio</span>
           <span data-testid="presence-studio-v2-breadcrumb" className="v2-breadcrumb">
-            My rooms &gt; {v2State.title || `Room ${nodeId}`} &gt; Editor
+            My Presence &gt; {v2State.title || `Room ${nodeId}`} &gt; {currentStep.label}
           </span>
           <span data-testid="presence-studio-v2-save-status" className={`v2-save-status${dirty ? " dirty" : ""}`}>
             {saveStatus}
           </span>
-          {dirty && <span data-testid="presence-studio-v2-dirty" className="v2-badge">Unsaved</span>}
+          {dirty && <span data-testid="presence-studio-v2-dirty" className="v2-badge">Unpublished changes</span>}
           {saving && <span className="text-xs opacity-60">Saving…</span>}
           {notice && <span data-testid="presence-studio-v2-saved" className="v2-badge saved">{notice}</span>}
           {actionError && <span data-testid="presence-studio-v2-error" className="v2-badge error">{actionError}</span>}
@@ -988,7 +1060,7 @@ export default function PresenceStudioV2Editor({
 
         <div className="v2-toolbar-spacer" />
 
-        <div className="v2-toolbar-group v2-drawer-actions">
+        {advancedOpen && <div className="v2-toolbar-group v2-drawer-actions">
           <button
             type="button"
             data-testid="presence-studio-v2-outline-toggle"
@@ -997,7 +1069,7 @@ export default function PresenceStudioV2Editor({
             aria-controls="presence-studio-v2-outline-panel"
             onClick={() => setRailOpen((current) => !current)}
           >
-            Outline
+            Rooms &amp; pieces
           </button>
           <button
             type="button"
@@ -1007,35 +1079,35 @@ export default function PresenceStudioV2Editor({
             aria-controls="presence-studio-v2-inspector-panel"
             onClick={() => setInspectorOpen((current) => !current)}
           >
-            Inspector
+            Piece controls
           </button>
-        </div>
+        </div>}
 
-        <nav className="v2-surface-tabs" aria-label="Studio surface">
+        {advancedOpen && <nav className="v2-surface-tabs" aria-label="Studio surface">
           <button
             data-testid="presence-studio-v2-tab-threshold"
             className={`v2-tab${surfaceTab === "threshold" ? " active" : ""}`}
             onClick={() => setSurfaceTab("threshold")}
           >
-            Threshold
+            Welcome
           </button>
           <button
             data-testid="presence-studio-v2-tab-chamber"
             className={`v2-tab${surfaceTab === "chamber" ? " active" : ""}`}
             onClick={() => setSurfaceTab("chamber")}
           >
-            Chamber
+            Room
           </button>
           <button
             data-testid="presence-studio-v2-tab-archive"
             className={`v2-tab${surfaceTab === "archive" ? " active" : ""}`}
             onClick={() => setSurfaceTab("archive")}
           >
-            Studio Archive
+            Change history
           </button>
-        </nav>
+        </nav>}
 
-        <div className="v2-toolbar-group">
+        {advancedOpen && <div className="v2-toolbar-group">
           <button
             className={`v2-btn${mode === "guided" ? " active" : ""}`}
             onClick={() => setMode("guided")}
@@ -1050,7 +1122,7 @@ export default function PresenceStudioV2Editor({
           >
             Wild
           </button>
-        </div>
+        </div>}
 
         <div className="v2-toolbar-group">
           <button
@@ -1073,12 +1145,12 @@ export default function PresenceStudioV2Editor({
           </button>
         </div>
 
-        <div className="v2-toolbar-group">
-          <button data-testid="studio-v2-open-worlds" className="v2-btn" onClick={() => setActivePanel(activePanel === "worlds" ? "none" : "worlds")}>World</button>
-          <button data-testid="studio-v2-open-skin" className="v2-btn" onClick={() => setActivePanel(activePanel === "skin" ? "none" : "skin")}>Skin</button>
-          <button data-testid="studio-v2-open-moodboard" className="v2-btn" onClick={() => setActivePanel(activePanel === "moodboard" ? "none" : "moodboard")}>Mood</button>
-          <button data-testid="studio-v2-open-add" className="v2-btn" onClick={() => { setSelectedId(null); setActivePanel(activePanel === "add" ? "none" : "add"); }}>+ Add</button>
-        </div>
+        {advancedOpen && <div className="v2-toolbar-group">
+          <button data-testid="studio-v2-open-worlds" className="v2-btn" onClick={() => setActivePanel(activePanel === "worlds" ? "none" : "worlds")}>Room type</button>
+          <button data-testid="studio-v2-open-skin" className="v2-btn" onClick={() => setActivePanel(activePanel === "skin" ? "none" : "skin")}>Look &amp; Feel</button>
+          <button data-testid="studio-v2-open-moodboard" className="v2-btn" onClick={() => setActivePanel(activePanel === "moodboard" ? "none" : "moodboard")}>Moodboard</button>
+          <button data-testid="studio-v2-open-add" className="v2-btn" onClick={() => { setSelectedId(null); setActivePanel(activePanel === "add" ? "none" : "add"); }}>+ Add piece</button>
+        </div>}
 
         <div className="v2-toolbar-group">
           {isPrivateProof ? (
@@ -1087,11 +1159,11 @@ export default function PresenceStudioV2Editor({
             </span>
           ) : (
             <>
-              <button data-testid="presence-studio-v2-share-action" className="v2-btn" onClick={() => void handleShare()} title={publicUrlPath}>Share</button>
-              <button data-testid="presence-studio-v2-publish-action" className="v2-btn" onClick={goToPreview}>Publish from preview</button>
+              <button data-testid="presence-studio-v2-share-action" className="v2-btn" onClick={() => void handleShare()} title={publicUrlPath}>Copy live link</button>
+              <button data-testid="presence-studio-v2-publish-action" className="v2-btn" onClick={() => chooseOwnerStep("publish")}>Review &amp; publish</button>
             </>
           )}
-          <button data-testid="presence-studio-v2-preview-action" className="v2-btn" onClick={goToPreview}>Preview draft</button>
+          <button data-testid="presence-studio-v2-preview-action" className="v2-btn" onClick={goToPreview} disabled={dirty} title={dirty ? "Save changes before previewing" : "Open Visitor Preview"}>Visitor preview</button>
         </div>
 
         <div className="v2-toolbar-group">
@@ -1101,11 +1173,33 @@ export default function PresenceStudioV2Editor({
             onClick={() => void saveDraft()}
             disabled={saving || !dirty}
           >
-            {saving ? "Saving…" : "Save draft"}
+            {saving ? "Saving…" : "Save changes"}
           </button>
         </div>
       </header>
 
+      {ownerStep === "rooms" ? (
+        <OwnerRoomsWorkspace
+          state={v2State}
+          activeRoomId={activeChamber?.id ?? null}
+          onSelectRoom={(id) => { setActiveChamberId(id); setExpandedChambers((rooms) => new Set(rooms).add(id)); }}
+          onArrange={(id) => { setActiveChamberId(id); chooseOwnerStep("arrange"); }}
+          onAddRoom={handleAddChamber}
+        />
+      ) : ownerStep === "style" ? (
+        <OwnerLookFeelWorkspace
+          state={v2State}
+          activeRoomId={activeChamber?.id ?? null}
+          viewport={viewport}
+          onViewportChange={setViewport}
+          onSkinChange={(skin) => updateState((current) => ({ ...current, skin }))}
+          onWorldChange={(worldId) => updateState((current) => ({ ...current, worldId }))}
+        />
+      ) : ownerStep === "preview" ? (
+        <OwnerPreviewWorkspace nodeId={nodeId} state={v2State} dirty={dirty} viewport={viewport} onViewportChange={setViewport} />
+      ) : ownerStep === "publish" ? (
+        <OwnerPublishWorkspace nodeId={nodeId} state={v2State} dirty={dirty} hasDraft={hasDraft} hasPublished={hasPublished} assetRegistry={assetRegistryForRender} />
+      ) : (
       <div className="v2-studio-layout">
         <StudioOutlinePanel
           state={v2State}
@@ -1240,6 +1334,7 @@ export default function PresenceStudioV2Editor({
           onUpdateChamberComposition={updateChamberComposition}
         />
       </div>
+      )}
 
       {/* Panels */}
       {sheetOpen && (
@@ -1275,6 +1370,229 @@ export default function PresenceStudioV2Editor({
         onClose={() => setActivePanel("none")}
       />
     </div>
+  );
+}
+
+function roomRoleLabel(role?: StudioV2ChamberRole): string {
+  const labels: Partial<Record<StudioV2ChamberRole, string>> = {
+    threshold: "Welcome room",
+    gallery: "Gallery room",
+    practice: "Practice room",
+    about: "Story room",
+    archive: "Archive room",
+    contact: "Next steps room",
+    index: "Room index",
+    custom: "Custom room",
+  };
+  return labels[role ?? "custom"] ?? "Custom room";
+}
+
+function OwnerRoomsWorkspace({
+  state,
+  activeRoomId,
+  onSelectRoom,
+  onArrange,
+  onAddRoom,
+}: {
+  state: StudioV2State;
+  activeRoomId: string | null;
+  onSelectRoom: (id: string) => void;
+  onArrange: (id: string) => void;
+  onAddRoom: () => void;
+}) {
+  return (
+    <main data-testid="presence-studio-owner-rooms" className="v2-owner-workspace v2-owner-rooms-workspace">
+      <header className="v2-owner-workspace-head">
+        <div>
+          <span>Your spaces</span>
+          <h2>Rooms inside {state.title}</h2>
+          <p>Each room gives visitors a different part of your story. Choose one to arrange its pieces.</p>
+        </div>
+        <button type="button" className="v2-btn primary" onClick={onAddRoom}>+ Add room</button>
+      </header>
+      <div className="v2-owner-room-grid">
+        {state.chambers.map((room, index) => {
+          const publicPieces = room.objects.filter((piece) => piece.visibility.public).length;
+          const active = room.id === activeRoomId;
+          return (
+            <article key={room.id} className={`v2-owner-room-card${active ? " active" : ""}`}>
+              <button type="button" className="v2-owner-room-select" aria-pressed={active} onClick={() => onSelectRoom(room.id)}>
+                <span>Room {String(index + 1).padStart(2, "0")}</span>
+                <h3>{room.label}</h3>
+                <p>{room.metadata?.description || "A space waiting for its own purpose, rhythm, and first impression."}</p>
+              </button>
+              <div className="v2-owner-room-facts">
+                <span>{roomRoleLabel(room.metadata?.role)}</span>
+                <span>{room.objects.length} pieces</span>
+                <span>{publicPieces} shown to visitors</span>
+                {room.metadata?.isEntry && <strong>Visitors enter here</strong>}
+              </div>
+              <button type="button" className="v2-owner-room-arrange" onClick={() => onArrange(room.id)}>
+                Arrange this room <span aria-hidden="true">→</span>
+              </button>
+            </article>
+          );
+        })}
+      </div>
+    </main>
+  );
+}
+
+const LOOK_BACKGROUND_OPTIONS = ["#f7f3ea", "#0a0a0a", "#e8efe2", "#f2e6d4", "#efe8dc", "#ffffff"];
+const LOOK_ACCENT_OPTIONS = ["#8f6f3f", "#ff6b9d", "#a855f7", "#567d55", "#c4622a", "#2f6df0"];
+
+function OwnerLookFeelWorkspace({
+  state,
+  activeRoomId,
+  viewport,
+  onViewportChange,
+  onSkinChange,
+  onWorldChange,
+}: {
+  state: StudioV2State;
+  activeRoomId: string | null;
+  viewport: "desktop" | "mobile";
+  onViewportChange: (viewport: "desktop" | "mobile") => void;
+  onSkinChange: (skin: StudioV2Skin) => void;
+  onWorldChange: (worldId: StudioV2WorldId) => void;
+}) {
+  const patchSkin = (patch: Partial<StudioV2Skin>) => onSkinChange({ ...state.skin, ...patch });
+  return (
+    <main data-testid="presence-studio-owner-style" className="v2-owner-workspace v2-owner-style-workspace">
+      <section className="v2-owner-look-controls" aria-label="Look and Feel controls">
+        <header>
+          <span>Look &amp; Feel</span>
+          <h2>Make the room feel like you</h2>
+          <p>These controls use the existing Presence atmosphere. They do not add new effects or change your content.</p>
+        </header>
+
+        <fieldset data-testid="presence-studio-look-mood">
+          <legend>Mood</legend>
+          <p>Choose the closest starting feeling.</p>
+          <div className="v2-owner-choice-grid">
+            {WORLD_KITS.slice(0, 6).map((world) => (
+              <button key={world.id} type="button" className={state.worldId === world.id ? "active" : ""} aria-pressed={state.worldId === world.id} onClick={() => onWorldChange(world.id)}>
+                <strong>{world.name}</strong><span>{world.feel}</span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset data-testid="presence-studio-look-background">
+          <legend>Background</legend>
+          <p>Move between lighter editorial and darker cinematic ground.</p>
+          <div className="v2-owner-swatches">
+            {LOOK_BACKGROUND_OPTIONS.map((color) => <button key={color} type="button" aria-label={`Background ${color}`} aria-pressed={state.skin.background === color} className={state.skin.background === color ? "active" : ""} style={{ background: color }} onClick={() => patchSkin({ background: color })} />)}
+          </div>
+        </fieldset>
+
+        <fieldset data-testid="presence-studio-look-texture">
+          <legend>Texture</legend>
+          <p>Keep it clean or give the room a more tactile surface.</p>
+          <div className="v2-owner-segmented">
+            {(["none", "paper", "grain", "scan", "linen", "timber", "ledger"] as const).map((texture) => <button key={texture} type="button" className={state.skin.texture === texture ? "active" : ""} aria-pressed={state.skin.texture === texture} onClick={() => patchSkin({ texture })}>{texture === "none" ? "Cleaner" : texture}</button>)}
+          </div>
+        </fieldset>
+
+        <fieldset data-testid="presence-studio-look-motion">
+          <legend>Motion</legend>
+          <p>Choose how still or alive the atmosphere feels.</p>
+          <div className="v2-owner-choice-grid compact">
+            {([
+              { id: "still", label: "Less movement", copy: "Still and focused" },
+              { id: "gentle", label: "Calm and editorial", copy: "A quiet living pace" },
+              { id: "living", label: "More movement", copy: "Active and expressive" },
+            ] as const).map((motion) => <button key={motion.id} type="button" className={state.skin.motionIntensity === motion.id ? "active" : ""} aria-pressed={state.skin.motionIntensity === motion.id} onClick={() => patchSkin({ motionIntensity: motion.id })}><strong>{motion.label}</strong><span>{motion.copy}</span></button>)}
+          </div>
+        </fieldset>
+
+        <fieldset data-testid="presence-studio-look-density">
+          <legend>Density</legend>
+          <p>Change how spacious or layered pieces feel without changing the arrangement.</p>
+          <label className="v2-owner-range"><span>Cleaner</span><input type="range" min="0" max="1" step="0.05" value={state.skin.shadowDepth} onChange={(event) => patchSkin({ shadowDepth: Number(event.target.value) })} /><span>More layered</span></label>
+        </fieldset>
+
+        <fieldset data-testid="presence-studio-look-accent">
+          <legend>Accent</legend>
+          <p>Choose the signal colour for actions and details.</p>
+          <div className="v2-owner-swatches">
+            {LOOK_ACCENT_OPTIONS.map((color) => <button key={color} type="button" aria-label={`Accent ${color}`} aria-pressed={state.skin.accentColor === color} className={state.skin.accentColor === color ? "active" : ""} style={{ background: color }} onClick={() => patchSkin({ accentColor: color })} />)}
+          </div>
+        </fieldset>
+      </section>
+
+      <section className="v2-owner-look-preview">
+        <div className="v2-owner-preview-toolbar">
+          <div><span>Live feel</span><strong>{viewport === "mobile" ? "Mobile" : "Desktop"} room preview</strong></div>
+          <div className="v2-owner-segmented compact"><button type="button" className={viewport === "desktop" ? "active" : ""} onClick={() => onViewportChange("desktop")}>Desktop</button><button type="button" className={viewport === "mobile" ? "active" : ""} onClick={() => onViewportChange("mobile")}>Mobile</button></div>
+        </div>
+        <div className={`v2-owner-look-stage v2-device-${viewport}`}>
+          <PresenceStudioV2Room state={state} selectedId={null} activeChamberId={activeRoomId} mode="guided" viewport={viewport} onSelectObject={() => undefined} />
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function OwnerPreviewWorkspace({ nodeId, state, dirty, viewport, onViewportChange }: { nodeId: number; state: StudioV2State; dirty: boolean; viewport: "desktop" | "mobile"; onViewportChange: (viewport: "desktop" | "mobile") => void }) {
+  return (
+    <main data-testid="presence-studio-owner-preview" className="v2-owner-workspace v2-owner-safety-workspace">
+      <section className="v2-owner-safety-card">
+        <span>Visitor Preview</span>
+        <h2>See what people will experience</h2>
+        <p>This is what people will see if you publish your saved changes. Editor controls, private pieces, and owner notes are not included.</p>
+        <div className="v2-owner-boundary-note"><strong>{dirty ? "Save your latest changes first" : "Your saved changes are ready to preview"}</strong><span>Preview is private to you until you explicitly publish.</span></div>
+        <div className="v2-owner-segmented preview-modes" aria-label="Preferred preview size">
+          <button type="button" className={viewport === "desktop" ? "active" : ""} aria-pressed={viewport === "desktop"} onClick={() => onViewportChange("desktop")}>Desktop</button>
+          <button type="button" className={viewport === "mobile" ? "active" : ""} aria-pressed={viewport === "mobile"} onClick={() => onViewportChange("mobile")}>Mobile</button>
+        </div>
+        {dirty ? (
+          <span data-testid="presence-studio-owner-preview-blocked" className="v2-owner-primary-link is-disabled" aria-disabled="true">Save changes to preview</span>
+        ) : (
+          <Link data-testid="presence-studio-owner-open-preview" href={`/studio/${nodeId}/editor/preview?mode=${viewport}`} className="v2-owner-primary-link">Open Visitor Preview <span aria-hidden="true">→</span></Link>
+        )}
+      </section>
+      <aside className="v2-owner-safety-aside">
+        <span>What stays private</span>
+        <ul><li>Editor controls and guides</li><li>Pieces marked hidden from public</li><li>Unpublished changes until you confirm</li></ul>
+        <code>/presence/{state.slug}</code>
+      </aside>
+    </main>
+  );
+}
+
+function OwnerPublishWorkspace({ nodeId, state, dirty, hasDraft, hasPublished, assetRegistry }: { nodeId: number; state: StudioV2State; dirty: boolean; hasDraft: boolean; hasPublished: boolean; assetRegistry: StudioV2AssetRegistry }) {
+  const publicPieces = countPublicObjects(state);
+  const privatePieces = state.chambers.reduce((total, room) => total + room.objects.filter((piece) => !piece.visibility.public).length, 0);
+  const checks = [
+    { label: "Public page has content", detail: publicPieces > 0 ? `${publicPieces} pieces are ready for visitors.` : "Add at least one public piece.", ok: publicPieces > 0 },
+    { label: "Mobile view checked", detail: "Open Visitor Preview and switch to Mobile before publishing.", ok: false },
+    { label: "Images and assets loading", detail: assetRegistry.health.brokenOrUnloaded === 0 && assetRegistry.health.missingUrls === 0 ? "No missing or unloaded media found in this editor session." : "Review missing or unloaded media before publishing.", ok: assetRegistry.health.brokenOrUnloaded === 0 && assetRegistry.health.missingUrls === 0 },
+    { label: "No private pieces visible", detail: `${privatePieces} private pieces will not be shown to visitors.`, ok: true },
+    { label: "CTA / Enter path works", detail: state.cta.label && state.cta.href ? "A labelled visitor next step is configured." : "Add a clear visitor next step with a destination.", ok: Boolean(state.cta.label && state.cta.href) },
+    { label: "Rollback available", detail: hasPublished ? "The existing publish flow keeps the current live version in history." : "This will be the first live version, so there is no earlier live version to restore.", ok: hasPublished },
+  ];
+  return (
+    <main data-testid="presence-studio-owner-publish" className="v2-owner-workspace v2-owner-publish-workspace">
+      <header className="v2-owner-workspace-head">
+        <div><span>Publish Review</span><h2>Safely update your live Presence</h2><p>Nothing publishes from this screen. Review the checks, preview as a visitor, then confirm in the existing publish flow.</p></div>
+        <div className={`v2-owner-change-status${dirty || !hasPublished ? " warn" : ""}`}><strong>{dirty ? "Unsaved changes" : hasDraft ? "Unpublished changes saved" : hasPublished ? "Live version is current" : "Not published yet"}</strong><span>{dirty ? "Save changes before continuing." : hasPublished ? "You remain in control of the final publish action." : "Your first publish still requires preview and explicit confirmation."}</span></div>
+      </header>
+      <div className="v2-owner-publish-grid">
+        <section className="v2-owner-review-list" aria-label="Publish readiness checklist">
+          {checks.map((check) => <article key={check.label} className={check.ok ? "ok" : "warn"}><span aria-hidden="true">{check.ok ? "✓" : "!"}</span><div><strong>{check.label}</strong><p>{check.detail}</p></div></article>)}
+        </section>
+        <aside className="v2-owner-publish-actions">
+          <span>Final gate</span><h3>Preview before you publish</h3><p>The next screen is still private. Publishing requires a separate, explicit confirmation.</p>
+          {dirty ? (
+            <span data-testid="presence-studio-owner-publish-blocked" className="v2-owner-primary-link is-disabled" aria-disabled="true">Save changes before review</span>
+          ) : (
+            <Link data-testid="presence-studio-owner-review-publish" href={`/studio/${nodeId}/editor/preview`} className="v2-owner-primary-link">Review in Visitor Preview <span aria-hidden="true">→</span></Link>
+          )}
+          <p className="v2-owner-fine-print">No publish action occurs by opening the preview.</p>
+        </aside>
+      </div>
+    </main>
   );
 }
 
@@ -1356,7 +1674,7 @@ function StudioOutlinePanel({
     >
       <section className="v2-rail-section">
         <div className="v2-rail-title">
-          <span>Room outline</span>
+          <span>Rooms &amp; pieces</span>
           <div className="v2-rail-title-actions">
             <strong>{state.chambers.length}</strong>
             <button
@@ -1364,9 +1682,9 @@ function StudioOutlinePanel({
               data-testid="presence-studio-v2-add-chamber"
               className="v2-btn v2-add-chamber-btn"
               onClick={onAddChamber}
-              title="Add chamber"
+              title="Add room"
             >
-              + Chamber
+              + Room
             </button>
           </div>
         </div>
@@ -1440,7 +1758,7 @@ function StudioOutlinePanel({
                       >
                         <span className="v2-object-glyph">{objectGlyph(object.type)}</span>
                         <span className="v2-outline-object-copy">
-                          <strong>{object.title || "Untitled object"}</strong>
+                          <strong>{object.title || "Untitled piece"}</strong>
                           {(object.meta || object.type) && <em>{object.meta || object.type}</em>}
                         </span>
                       </button>
@@ -1455,7 +1773,7 @@ function StudioOutlinePanel({
 
       <section data-testid="presence-studio-v2-assets-panel" className="v2-rail-section v2-assets-panel">
         <div className="v2-rail-title">
-          <span>Room Assets</span>
+          <span>Room media</span>
           <strong>{assets.length}</strong>
         </div>
         <p className="v2-quiet-copy">Derived from objects in this room. Upload library later.</p>
@@ -1750,7 +2068,7 @@ function StudioInspectorPanel({
       className={`v2-inspector${open ? " is-open" : " is-collapsed"}`}
     >
       <div className="v2-inspector-head">
-        <span>{object ? "Object inspector" : "Room inspector"}</span>
+        <span>{object ? "Edit piece" : "Room settings"}</span>
         <strong>{object?.title || state.title}</strong>
       </div>
 
@@ -1770,7 +2088,7 @@ function StudioInspectorPanel({
               <strong>{dirty ? "Save before sharing" : "Ready to preview"}</strong>
             </div>
             <p>
-              Preview opens the owner-only visitor view. Publishing still happens through the real preview and publish flow.
+              Publishing still happens through the real preview and publish flow. Visitor Preview is private and editor-free; your live site changes only after explicit confirmation.
             </p>
             <div className="v2-confidence-list">
               {checklist.map((item) => (
@@ -1812,7 +2130,7 @@ function StudioInspectorPanel({
           </div>
 
           <div className="v2-inspector-section">
-            <div className="v2-inspector-section-title">Public output style</div>
+            <div className="v2-inspector-section-title">Visitor experience style</div>
             <div
               className="v2-public-style-selector"
               data-testid="presence-studio-v2-public-style-selector"
@@ -1848,7 +2166,7 @@ function StudioInspectorPanel({
           </div>
 
           <div className="v2-inspector-section">
-            <div className="v2-inspector-section-title">Chamber dynamics</div>
+            <div className="v2-inspector-section-title">Advanced room behaviour</div>
             {activeChamber ? (
               <div data-testid="presence-studio-v2-chamber-dynamics">
                 <div className="v2-inspector-row">
@@ -1934,7 +2252,7 @@ function StudioInspectorPanel({
           </div>
 
           <div className="v2-inspector-section">
-            <div className="v2-inspector-section-title">Draft state</div>
+            <div className="v2-inspector-section-title">Unpublished changes</div>
             <div className="v2-inspector-row">
               <span>Status</span>
               <strong>{saving ? "Saving" : dirty ? "Unsaved changes" : "Saved"}</strong>
@@ -1944,7 +2262,7 @@ function StudioInspectorPanel({
                 Unsaved Studio changes are not in the backend draft until Save draft completes.
               </div>
             )}
-            <button type="button" className="v2-btn" onClick={onOpenSkin}>Open Skin Lab</button>
+            <button type="button" className="v2-btn" onClick={onOpenSkin}>Open Look &amp; Feel</button>
           </div>
         </div>
       ) : (
@@ -1993,7 +2311,7 @@ function StudioInspectorPanel({
             {inspectorTab === "content" && (
               <div className="v2-inspector-section v2-object-content-panel">
                 <div className="v2-inspector-section-title">
-                  <span>Object content</span>
+                  <span>Piece content</span>
                   <strong className="v2-type-badge">{object.type}</strong>
                 </div>
                 <div data-testid="presence-studio-v2-object-state-summary" className="v2-object-state-summary">
@@ -2010,7 +2328,7 @@ function StudioInspectorPanel({
                     />
                   ) : (
                     <div data-testid="presence-studio-v2-inspector-image-empty" className="v2-object-preview-empty">
-                      No image URL assigned. This object will render as text/proof/CTA content.
+                      No image assigned. This piece will appear as text, proof, or action content.
                     </div>
                   )}
                   <div className="v2-object-preview-copy">

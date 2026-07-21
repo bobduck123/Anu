@@ -30,6 +30,14 @@ function roomForeground(background: string): string {
   return luminance < 132 ? "#f8f4ec" : "#17130f";
 }
 
+function ownerAreaPrompt(zoneId: string): string {
+  if (zoneId === "opening-work" || zoneId === "threshold-image") return "Drag a piece here to make it the first thing visitors notice.";
+  if (zoneId === "supporting-notes" || zoneId === "threshold-statement" || zoneId === "threshold-signal") return "Put supporting notes, proof, or context here.";
+  if (zoneId === "cta-exit" || zoneId === "threshold-exit") return "Use this exit area for booking, contact, or next steps.";
+  if (zoneId === "main-wall") return "Build the main part of the room here.";
+  return "Drag a compatible piece into this area, or use the piece controls.";
+}
+
 export default function PresenceStudioV2Room({
   state,
   selectedId,
@@ -128,6 +136,7 @@ export default function PresenceStudioV2Room({
                 return (
                 <section key={zone.id} className={`v2-layout-zone zone-${zone.id}${canDropDraggedObject ? " is-layout-drop-active" : ""}`} data-testid="presence-studio-v2-layout-zone" data-zone-id={zone.id} data-layout-drop-zone={zone.id} onPointerUp={() => finishLayoutDrag(zone.id)}>
                   <div className="v2-layout-zone-head"><strong>{zone.label}</strong><span>{zone.description}</span></div>
+                  {placements.length === 0 && <p className="v2-layout-zone-empty">{ownerAreaPrompt(zone.id)}</p>}
                   <div className="v2-objects">
               {placements.map((placement) => {
                 const obj = chamber.objects.find((item) => item.id === placement.objectId);

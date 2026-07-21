@@ -68,6 +68,21 @@ test("owner draft preview renders V2 drafts through the sanitized public V2 rend
   for (const term of restrictedPreviewWords) {
     expect(html, `draft preview exposed ${term}`).not.toMatch(new RegExp(`\\b${term}\\b`));
   }
+
+  await page.setViewportSize({ width: 390, height: 640 });
+  const boundaryBox = await page.getByTestId("visitor-preview-boundary").boundingBox();
+  const controlsBox = await page.getByTestId("visitor-preview-controls").boundingBox();
+  expect(boundaryBox).not.toBeNull();
+  expect(controlsBox).not.toBeNull();
+  expect(controlsBox!.y).toBeGreaterThanOrEqual(boundaryBox!.y + boundaryBox!.height);
+
+  await page.getByTestId("preview-open-to-visitors").click();
+  const dialog = page.getByRole("dialog", { name: /Open your room to visitors/i });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByTestId("publish-review-checklist")).toBeVisible();
+  const confirmButton = dialog.getByRole("button", { name: "Open room to visitors" });
+  await confirmButton.scrollIntoViewIfNeeded();
+  await expect(confirmButton).toBeInViewport();
   expect(runtimeErrors).toEqual([]);
 });
 
