@@ -162,7 +162,7 @@ def _studio_v3_state_validation_error(exc: StudioV3PrivateStateError):
 
 
 def _studio_v3_backend_eligible(room: PresenceNode) -> bool:
-    """Keep P1 backend contracts test/local, explicit, and production hard-false."""
+    """Keep P1 backend contracts explicit, owner-only, and allowlisted."""
 
     environment_signals = {
         str(value).strip().lower()
@@ -181,18 +181,42 @@ def _studio_v3_backend_eligible(room: PresenceNode) -> bool:
     }
     if current_app.config.get("TESTING") is True:
         environment_signals.add("testing")
-    if environment_signals.intersection({"production", "prod", "preview", "staging", "stage"}):
-        return False
+    hosted_environment = bool(environment_signals.intersection({"production", "prod", "preview", "staging", "stage"}))
     if not environment_signals.intersection({"local", "development", "dev", "test", "testing"}):
-        return False
-    enabled = current_app.config.get("PRESENCE_STUDIO_V3_BACKEND_ENABLED")
+        hosted_human_test = _studio_v3_config_flag("PRESENCE_STUDIO_V3_BACKEND_HOSTED_HUMAN_TEST")
+        if not hosted_human_test or not hosted_environment:
+            return False
+    elif hosted_environment:
+        hosted_human_test = _studio_v3_config_flag("PRESENCE_STUDIO_V3_BACKEND_HOSTED_HUMAN_TEST")
+        if not hosted_human_test:
+            return False
+    enabled = _studio_v3_config_value("PRESENCE_STUDIO_V3_BACKEND_ENABLED")
     if str(enabled).strip().lower() not in {"1", "true", "yes", "on"}:
         return False
-    configured_ids = current_app.config.get("PRESENCE_STUDIO_V3_BACKEND_PILOT_IDS") or "29"
-    configured_slugs = current_app.config.get("PRESENCE_STUDIO_V3_BACKEND_PILOT_SLUGS") or "bbbvision"
+    configured_ids = _studio_v3_config_value("PRESENCE_STUDIO_V3_BACKEND_PILOT_IDS")
+    configured_slugs = _studio_v3_config_value("PRESENCE_STUDIO_V3_BACKEND_PILOT_SLUGS")
+    if hosted_environment and (not configured_ids or not configured_slugs):
+        return False
+    configured_ids = configured_ids or "29"
+    configured_slugs = configured_slugs or "bbbvision"
     allowed_ids = {int(value.strip()) for value in str(configured_ids).split(",") if value.strip().isdigit()}
-    allowed_slugs = {value.strip().lower() for value in str(configured_slugs).split(",") if value.strip()}
+    allowed_slugs = {
+        value.strip().lower()
+        for value in str(configured_slugs).split(",")
+        if value.strip() and value.strip().lower() not in {"*", "all"}
+    }
     return room.id in allowed_ids and str(room.slug or "").strip().lower() in allowed_slugs
+
+
+def _studio_v3_config_value(key: str):
+    value = current_app.config.get(key)
+    if value is not None:
+        return value
+    return os.environ.get(key)
+
+
+def _studio_v3_config_flag(key: str) -> bool:
+    return str(_studio_v3_config_value(key)).strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _studio_v3_backend_unavailable():

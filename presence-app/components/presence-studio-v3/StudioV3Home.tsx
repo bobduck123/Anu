@@ -16,7 +16,7 @@ export default function StudioV3Home({
   return (
     <section className="studio-v3-home" data-testid="presence-studio-v3-home" aria-labelledby="studio-v3-home-title">
       <div>
-        <p className="studio-v3-kicker">Local BBB pilot</p>
+        <p className="studio-v3-kicker">BBB pilot</p>
         <h1 id="studio-v3-home-title">{node.display_name}</h1>
         <p className="studio-v3-home-status">{status}</p>
       </div>
