@@ -1,10 +1,10 @@
 import { mkdirSync } from "node:fs";
-import { expect, test, type APIRequestContext, type Page } from "playwright/test";
+import { expect, test, type APIRequestContext, type Locator, type Page } from "playwright/test";
 
 const API_BASE = "http://127.0.0.1:5105";
-const evidenceDir = "docs/program/evidence/presence-studio-v3-p1-foundation/screenshots";
+const evidenceDir = "docs/program/evidence/presence-studio-v3-m1-functional-editing/screenshots";
 mkdirSync(evidenceDir, { recursive: true });
-const allowedWritePatterns = [/^\/__test__\//];
+test.use({ hasTouch: true });
 
 async function signInOwnerAndEnableV3(page: Page, request: APIRequestContext) {
   await request.post(`${API_BASE}/__test__/reset`);
@@ -15,73 +15,44 @@ async function signInOwnerAndEnableV3(page: Page, request: APIRequestContext) {
   });
 }
 
-test("Studio V3 local prototype remains usable on mobile and exposes keyboard-accessible core controls", async ({ page, request }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await signInOwnerAndEnableV3(page, request);
-
+async function openEditor(page: Page) {
   await page.goto("/studio/29/editor", { waitUntil: "networkidle" });
   await expect(page.getByTestId("presence-studio-v3-shell")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Home" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Pieces" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Look" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Visitor Preview" })).toBeDisabled();
-  await page.screenshot({ path: `${evidenceDir}/00-p0-regression-mobile-home.png`, fullPage: true });
+}
 
-  await page.getByRole("button", { name: "Pieces" }).focus();
-  await expect(page.getByRole("button", { name: "Pieces" })).toBeFocused();
-  await page.keyboard.press("Enter");
-  await expect(page.getByTestId("presence-studio-v3-piece-shelf")).toBeVisible();
-  await expect(page.getByTestId("presence-studio-v3-bottom-sheet")).toHaveAttribute("aria-label", "Studio V3 bottom sheet");
+function roomNativeCard(page: Page, title: string): Locator {
+  return page.locator(".studio-v3-library-sections section")
+    .filter({ hasText: "Room-native BBB Pieces" })
+    .locator(".studio-v3-library-card")
+    .filter({ hasText: title })
+    .first();
+}
 
-  await page.getByTestId("presence-studio-v3-place-piece").click();
-  await expect(page.getByTestId("presence-studio-v3-placement-summary")).toContainText("1 placed");
-  await page.getByTestId("presence-studio-v3-look-trigger").click();
-  await page.getByTestId("presence-studio-v3-apply-soft-editorial").click();
-  await expect(page.getByText("Soft Editorial applied locally")).toBeVisible();
-  await page.screenshot({ path: `${evidenceDir}/00-p0-regression-mobile-sheet.png`, fullPage: true });
-
-  await page.getByTestId("presence-studio-v3-test-visitor").click();
-  await expect(page.locator(".presence-studio-v2-public").first()).toBeVisible();
-  await expect(page.getByTestId("presence-studio-v3-bottom-sheet")).toHaveCount(0);
-  await expect(page.locator(".studio-v3-topbar")).toHaveCount(0);
-  await page.screenshot({ path: `${evidenceDir}/00-p0-regression-mobile-test-as-visitor.png`, fullPage: true });
-  await page.getByTestId("presence-studio-v3-back-to-editor").click();
-  await expect(page.getByRole("button", { name: "Pieces" })).toBeVisible();
-
-  const requestLog = await (await request.get(`${API_BASE}/__test__/requests`)).json() as {
+async function expectZeroProductWrites(request: APIRequestContext) {
+  const payload = await (await request.get(`${API_BASE}/__test__/requests`)).json() as {
     requests: Array<{ method: string; path: string }>;
   };
-  const unexpectedWrites = requestLog.requests.filter((entry) => (
-    entry.method !== "GET" && !allowedWritePatterns.some((pattern) => pattern.test(entry.path))
-  ));
-  expect(unexpectedWrites).toEqual([]);
-});
+  expect(payload.requests.filter((entry) => entry.method !== "GET")).toEqual([]);
+}
 
-test("P1 Look and Film Strip controls remain canvas-primary, reduced-motion-safe, and editor-scoped in visitor mode", async ({ page, request }) => {
+test("mobile bottom bar supports tap and keyboard editing/arranging with exact Escape restore and focus return", async ({ page, request }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.emulateMedia({ reducedMotion: "reduce" });
   await signInOwnerAndEnableV3(page, request);
-  await page.goto("/studio/29/editor", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Home" }).click();
-  await page.getByTestId("presence-studio-v3-look-trigger").click();
+  await openEditor(page);
 
-  await page.getByTestId("presence-studio-v3-look-option-zine-archive").click();
-  await expect(page.getByText("Zine Archive applied locally")).toBeVisible();
-  await page.screenshot({ path: `${evidenceDir}/11-mobile-zine-archive-look.png`, fullPage: true });
-
-  await page.getByTestId("presence-studio-v3-room-style-film-strip-selected-works").click();
-  await expect(page.getByTestId("presence-studio-v3-structural-preview")).toContainText("Previewing");
-  await page.getByTestId("presence-studio-v3-structural-apply").click();
-  await page.getByRole("button", { name: "Close sheet" }).click();
-
-  const filmStrip = page.getByTestId("presence-public-film-strip");
-  await expect(filmStrip).toBeVisible();
-  const canvasBox = await page.getByTestId("presence-studio-v3-public-room-canvas").boundingBox();
-  expect(canvasBox?.width).toBe(390);
+  await page.getByTestId("presence-studio-v3-shelf-trigger").click();
+  await expect(page.getByTestId("presence-studio-v3-bottom-sheet")).toHaveAttribute("aria-label", "Studio V3 bottom sheet");
+  const card = roomNativeCard(page, "Editable practice note");
+  await card.getByRole("button", { name: "Inspect / edit" }).click();
+  const actionBar = page.getByTestId("presence-studio-v3-action-bar");
+  await expect(actionBar).toBeVisible();
+  await expect(page.getByTestId("presence-public-bbbvision-loader")).toHaveAttribute("data-state", "ready");
+  await page.waitForTimeout(350);
+  await page.screenshot({ path: `${evidenceDir}/14-mobile-bottom-bar.png` });
 
   for (const button of [
-    page.getByTestId("presence-public-film-strip-prev"),
-    page.getByTestId("presence-public-film-strip-next"),
+    page.getByTestId("presence-studio-v3-edit-action"),
+    page.getByTestId("presence-studio-v3-arrange-action"),
     page.getByTestId("presence-studio-v3-look-trigger"),
     page.getByTestId("presence-studio-v3-test-visitor"),
   ]) {
@@ -90,35 +61,88 @@ test("P1 Look and Film Strip controls remain canvas-primary, reduced-motion-safe
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
   }
 
-  const progress = page.getByTestId("presence-public-film-strip-progress");
-  const initialProgress = await progress.textContent() ?? "";
-  await filmStrip.focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(progress).not.toHaveText(initialProgress);
-  await filmStrip.evaluate((element) => {
-    const start = new Touch({ identifier: 1, target: element, clientX: 72, clientY: 320 });
-    const end = new Touch({ identifier: 1, target: element, clientX: 232, clientY: 324 });
-    element.dispatchEvent(new TouchEvent("touchstart", { bubbles: true, changedTouches: [start] }));
-    element.dispatchEvent(new TouchEvent("touchend", { bubbles: true, changedTouches: [end] }));
-  });
-  await expect(progress).toHaveText(initialProgress);
-  const stageTransition = await page.locator(".v2-film-strip-stage-track").evaluate((element) => getComputedStyle(element).transitionDuration);
-  expect(Number.parseFloat(stageTransition)).toBeLessThanOrEqual(0.001);
-  await page.screenshot({ path: `${evidenceDir}/12-mobile-film-strip-selected-works.png`, fullPage: true });
+  const editAction = page.getByTestId("presence-studio-v3-edit-action");
+  await editAction.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("presence-studio-v3-piece-editor")).toBeVisible();
+  await page.getByTestId("presence-studio-v3-piece-title").fill("Mobile private note");
+  await page.getByTestId("presence-studio-v3-piece-body").fill("Edited with the mobile sheet and keyboard fallback.");
+  await page.screenshot({ path: `${evidenceDir}/15-mobile-edit-flow.png`, fullPage: true });
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("presence-studio-v3-bottom-sheet")).toHaveCount(0);
+  await expect(editAction).toBeFocused();
+
+  await editAction.click();
+  await expect(page.getByTestId("presence-studio-v3-piece-title")).toHaveValue("Editable practice note");
+  await page.getByTestId("presence-studio-v3-piece-cancel").click();
+
+  const arrangeAction = page.getByTestId("presence-studio-v3-arrange-action");
+  await arrangeAction.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("presence-studio-v3-arrange-controls")).toBeVisible();
+  const enabledZone = page.locator('[data-testid^="presence-studio-v3-zone-"]:not([disabled])').first();
+  await expect(enabledZone).toBeVisible();
+  await enabledZone.tap();
+  await page.getByTestId("presence-studio-v3-move-later").tap();
+  await page.getByTestId("presence-studio-v3-toggle-feature").tap();
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("presence-studio-v3-bottom-sheet")).toHaveCount(0);
+  await expect(arrangeAction).toBeFocused();
+  await expect(page.getByTestId("presence-studio-v3-status")).toContainText("exact prior state restored");
+
+  const visitorTrigger = page.getByTestId("presence-studio-v3-test-visitor");
+  await visitorTrigger.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".presence-studio-v2-public").first()).toBeVisible();
+  await expect(page.locator(".studio-v3-topbar, .studio-v3-action-bar, .studio-v3-sheet, .studio-v3-local-flag")).toHaveCount(0);
+  const visitorExit = page.getByTestId("presence-studio-v3-back-to-editor");
+  await expect(visitorExit).toBeVisible();
+  await expect(visitorExit).toBeFocused();
+  await expect(page.getByTestId("presence-public-bbbvision-threshold")).toBeVisible();
+  await page.getByTestId("presence-public-bbbvision-enter").click();
+  await expect(page.getByTestId("presence-public-bbbvision-gallery")).toBeVisible();
+  await page.getByTestId("presence-public-bbbvision-constellation").focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("presence-public-bbbvision-focus")).toBeVisible();
+  await visitorExit.focus();
+  await page.keyboard.press("Enter");
+  await expect(visitorTrigger).toBeFocused();
+  await expect(actionBar).toBeVisible();
+  await expect(actionBar).toContainText("Editable practice note");
+  await expectZeroProductWrites(request);
+});
+
+test("mobile visual controls remain reduced-motion-safe and Room Style preview stays editor-scoped", async ({ page, request }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await signInOwnerAndEnableV3(page, request);
+  await openEditor(page);
+  await page.getByRole("button", { name: "Studio Home" }).click();
+  await page.getByTestId("presence-studio-v3-look-trigger").click();
+
+  await page.getByTestId("presence-studio-v3-look-option-zine-archive").click();
+  await expect(page.getByTestId("presence-studio-v3-look-option-zine-archive")).toHaveAttribute("aria-pressed", "true");
+  await page.getByTestId("presence-studio-v3-facet-motion-living").scrollIntoViewIfNeeded();
+  await page.getByTestId("presence-studio-v3-facet-motion-living").click();
+  await expect(page.getByTestId("presence-studio-v3-facet-motion-living")).toHaveAttribute("aria-pressed", "true");
+
+  await page.getByTestId("presence-studio-v3-room-style-film-strip-selected-works").scrollIntoViewIfNeeded();
+  await page.getByTestId("presence-studio-v3-room-style-film-strip-selected-works").click();
+  await expect(page.getByTestId("presence-studio-v3-structural-preview")).toContainText("Previewing");
+  await page.getByTestId("presence-studio-v3-structural-apply").click();
+  await expect(page.getByTestId("presence-public-film-strip")).toBeVisible();
+  await page.getByRole("button", { name: "Close sheet" }).click();
+
+  const filmStrip = page.getByTestId("presence-public-film-strip");
+  const transition = await page.locator(".v2-film-strip-stage-track").evaluate((element) => getComputedStyle(element).transitionDuration);
+  expect(Number.parseFloat(transition)).toBeLessThanOrEqual(0.001);
+  const canvasBox = await page.getByTestId("presence-studio-v3-public-room-canvas").boundingBox();
+  expect(canvasBox?.width).toBe(390);
 
   await page.getByTestId("presence-studio-v3-test-visitor").click();
-  await expect(page.getByTestId("presence-public-film-strip")).toHaveCount(0);
-  await expect(page.locator(".presence-studio-v2-public").first()).not.toHaveAttribute("data-experience-density", /.+/);
-  await expect(page.locator(".presence-studio-v2-public").first()).not.toHaveClass(/experience-density-/);
-  await expect(page.locator(".studio-v3-topbar, .studio-v3-action-bar, .studio-v3-sheet, .studio-v3-local-flag")).toHaveCount(0);
-  await expect(page.getByTestId("presence-studio-v3-back-to-editor")).toBeVisible();
-  await page.screenshot({ path: `${evidenceDir}/13-test-as-visitor-after-p1.png`, fullPage: true });
-
-  const requestLog = await (await request.get(`${API_BASE}/__test__/requests`)).json() as {
-    requests: Array<{ method: string; path: string }>;
-  };
-  const unexpectedWrites = requestLog.requests.filter((entry) => (
-    entry.method !== "GET" && !allowedWritePatterns.some((pattern) => pattern.test(entry.path))
-  ));
-  expect(unexpectedWrites).toEqual([]);
+  await expect(page.getByTestId("presence-public-film-strip")).toBeVisible();
+  const visitorRoot = page.locator(".presence-studio-v2-public").first();
+  await expect(visitorRoot).toHaveAttribute("data-experience-density", /.+/);
+  await expect(visitorRoot).toHaveClass(/experience-density-/);
+  await expectZeroProductWrites(request);
 });

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import json
 import math
 import re
 from copy import deepcopy
 from datetime import datetime
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import unquote
 
 from sqlalchemy import inspect as sqlalchemy_inspect
@@ -21,15 +22,24 @@ from ..models import (
 from ..time_utils import now_utc
 from .presence_editor_config import (
     EDITABLE_CONFIG_SCHEMA_VERSION,
+    draft_config_for_room,
     fingerprint_studio_v3_editable_config,
 )
+from .presence_media_storage import ALLOWED_IMAGE_MIME_TYPES
 
 
 STUDIO_V3_PRIVATE_SCHEMA_VERSION = "presence-studio-v3-private-v1"
+STUDIO_V3_METADATA_MAX_BYTES = 256 * 1024
+STUDIO_V3_METADATA_SECTION_MAX_BYTES = 96 * 1024
+STUDIO_V3_METADATA_MAX_DEPTH = 9
+STUDIO_V3_METADATA_MAX_ITEMS = 160
+STUDIO_V3_METADATA_MAX_OBJECT_KEYS = 160
 STUDIO_V3_METADATA_CATEGORIES = {
     "owner_mode",
     "named_looks",
     "layer_locks",
+    "layer_values",
+    "object_edits",
     "savepoints",
     "placements",
     "restore",
@@ -106,6 +116,35 @@ STUDIO_V3_COMPOSITION_ZONE_IDS = {
         "selected-works-exit",
     },
 }
+STUDIO_V3_COMPOSITION_ZONE_RULES = {
+    "opening-work": ({"feature", "large"}, {"framed", "quiet"}),
+    "main-wall": ({"small", "medium", "large"}, {"framed", "captioned", "quiet"}),
+    "supporting-notes": ({"small", "medium"}, {"quiet", "captioned"}),
+    "cta-exit": ({"medium", "large"}, {"signal", "quiet"}),
+    "influence-layer": ({"small"}, {"quiet"}),
+    "threshold-image": ({"feature", "large"}, {"framed", "quiet"}),
+    "threshold-statement": ({"medium", "large"}, {"quiet", "captioned"}),
+    "threshold-signal": ({"small", "medium"}, {"signal", "quiet"}),
+    "threshold-exit": ({"medium", "large"}, {"signal"}),
+    "active-work-stage": ({"feature", "large"}, {"framed", "captioned"}),
+    "sequence-index": ({"small", "medium"}, {"captioned", "quiet"}),
+    "selected-work-context": ({"small", "medium"}, {"captioned", "quiet"}),
+    "selected-works-exit": ({"medium", "large"}, {"signal", "quiet"}),
+}
+STUDIO_V3_COMPOSITION_ZONE_MAX_OBJECTS = {
+    "opening-work": 1,
+    "cta-exit": 1,
+    "threshold-image": 1,
+    "threshold-statement": 2,
+    "threshold-exit": 1,
+    "active-work-stage": 1,
+    "selected-works-exit": 1,
+}
+STUDIO_V3_OBJECT_EDIT_ZONE_IDS = {
+    zone_id
+    for layout_zone_ids in STUDIO_V3_COMPOSITION_ZONE_IDS.values()
+    for zone_id in layout_zone_ids
+}
 STUDIO_V3_JOURNEY_IDS = {
     "editorial-browse",
     "threshold-reveal",
@@ -129,6 +168,11 @@ STUDIO_V3_LOOK_VALUE_KEYS = {
     "atmosphere",
     "journey",
 }
+STUDIO_V3_MEDIA_STATUSES_BY_VISIBILITY = {
+    "private_draft": {"draft_uploaded", "draft_attached", "ready"},
+    "public_unlisted": {"draft_uploaded", "draft_attached", "ready"},
+    "public_published": {"ready", "published"},
+}
 
 _FINGERPRINT_RE = re.compile(r"^[0-9a-f]{64}$")
 _SAVEPOINT_FINGERPRINT_RE = re.compile(r"^(?:[0-9a-f]{16}(?::[0-9a-f]{16})?|[0-9a-f]{64})$")
@@ -139,7 +183,8 @@ _SOURCE_REF_RE = re.compile(
 )
 _NUMERIC_SOURCE_REF_RE = re.compile(r"^(work|collection):([1-9][0-9]*)$")
 _MAX_DATABASE_INTEGER_ID = 2147483647
-_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{3,8}$")
+_BASE36_DIGITS = "0123456789abcdefghijklmnopqrstuvwxyz"
+_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 _URL_RE = re.compile(
     r"(?:[a-zA-Z][a-zA-Z0-9+.-]*://)|(?://)|(?:\bwww\.)|(?:\burl\s*\()|"
     r"(?:\b(?:data|blob|file|mailto|javascript)\s*:)",
@@ -158,14 +203,23 @@ _SECRET_VALUE_RE = re.compile(
     re.IGNORECASE,
 )
 _EXECUTABLE_RE = re.compile(r"<\s*(?:script|style|iframe|object|embed)\b|javascript\s*:|expression\s*\(", re.IGNORECASE)
-_GGM_MARKER_RE = re.compile(r"(?:\bggm\b|ggm-|christina|goddard|kerkvliet)", re.IGNORECASE)
+_CREATOR_CODE_RE = re.compile(
+    r"<\s*/?\s*[a-z][^>]*>|\b(?:eval|setTimeout|setInterval)\s*\(|"
+    r"\b(?:document\.cookie|window\.location)|\bon[a-z]+\s*=",
+    re.IGNORECASE,
+)
+_CREDENTIAL_ASSIGNMENT_RE = re.compile(
+    r"\b(?:api[_ -]?key|client[_ -]?secret|password|private[_ -]?key|"
+    r"access[_ -]?token|refresh[_ -]?token|auth[_ -]?token)\s*[:=]\s*\S+",
+    re.IGNORECASE,
+)
 _BASE64_RE = re.compile(r"(?<![A-Za-z0-9+/_-])[A-Za-z0-9+/_-]{64,}={0,2}(?![A-Za-z0-9+/_-])")
 _BLOB_MARKER_RE = re.compile(r"\b(?:base64|data64|blob)\s*[:=]", re.IGNORECASE)
 _EMAIL_RE = re.compile(r"[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+")
 _DOMAIN_LIKE_RE = re.compile(
     r"(?<![a-z0-9.-])(?:(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}|"
-    r"(?:[0-9]{1,3}\.){3}[0-9]{1,3}|localhost)(?:[/:?#]|$)|"
-    r"\[[0-9a-f:]{2,}\](?:[/:?#]|$)",
+    r"(?:[0-9]{1,3}\.){3}[0-9]{1,3}|localhost)(?:[/:?#]|\.(?![a-z0-9-])|(?![a-z0-9.-]))|"
+    r"\[[0-9a-f:]{2,}\](?:[/:?#]|\.(?![a-z0-9-])|(?![a-z0-9.-]))",
     re.IGNORECASE,
 )
 
@@ -216,6 +270,69 @@ def _require_exact_keys(value: Any, *, allowed: set[str], required: set[str], pa
     return value
 
 
+def _metadata_json_size(value: Any) -> int:
+    try:
+        encoded = json.dumps(
+            value,
+            allow_nan=False,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+    except (RecursionError, TypeError, ValueError, UnicodeEncodeError) as exc:
+        raise StudioV3PrivateStateError("Studio V3 private metadata must be valid JSON.") from exc
+    return len(encoded)
+
+
+def _validate_metadata_bounds(value: Any) -> None:
+    if _metadata_json_size(value) > STUDIO_V3_METADATA_MAX_BYTES:
+        raise StudioV3PrivateStateError(
+            f"Studio V3 private metadata exceeds {STUDIO_V3_METADATA_MAX_BYTES} bytes."
+        )
+    if isinstance(value, dict):
+        for section_name, section_value in value.items():
+            if _metadata_json_size(section_value) > STUDIO_V3_METADATA_SECTION_MAX_BYTES:
+                raise StudioV3PrivateStateError(
+                    f"metadata.{section_name} exceeds {STUDIO_V3_METADATA_SECTION_MAX_BYTES} bytes."
+                )
+
+    def walk(item: Any, *, path: str, depth: int) -> None:
+        if depth > STUDIO_V3_METADATA_MAX_DEPTH:
+            raise StudioV3PrivateStateError(f"{path} exceeds maximum nesting depth.")
+        if isinstance(item, list):
+            if len(item) > STUDIO_V3_METADATA_MAX_ITEMS:
+                raise StudioV3PrivateStateError(f"{path} contains too many items.")
+            for index, child in enumerate(item):
+                walk(child, path=f"{path}[{index}]", depth=depth + 1)
+            return
+        if isinstance(item, dict):
+            if len(item) > STUDIO_V3_METADATA_MAX_OBJECT_KEYS:
+                raise StudioV3PrivateStateError(f"{path} contains too many fields.")
+            for key, child in item.items():
+                walk(child, path=f"{path}.{key}", depth=depth + 1)
+
+    walk(value, path="metadata", depth=0)
+
+
+def _reject_duplicate_identities(
+    rows: list[dict[str, Any]],
+    *,
+    identity: Callable[[dict[str, Any]], Any],
+    path: str,
+    label: str,
+) -> None:
+    seen: set[Any] = set()
+    for row in rows:
+        row_identity = identity(row)
+        if row_identity in seen:
+            raise StudioV3PrivateStateError(f"{path} contains duplicate {label}.")
+        seen.add(row_identity)
+
+
+def _layer_value_identity(row: dict[str, Any]) -> tuple[str, str, str]:
+    return row["scopeKind"], row["scopeId"], row["layer"]
+
+
 def _safe_text(value: Any, *, path: str, maximum: int = 240) -> str:
     if not isinstance(value, str):
         raise StudioV3PrivateStateError(f"{path} must be text.")
@@ -236,7 +353,6 @@ def _safe_text(value: Any, *, path: str, maximum: int = 240) -> str:
             or _LOCAL_PATH_RE.search(candidate)
             or _SECRET_VALUE_RE.search(candidate)
             or _EXECUTABLE_RE.search(candidate)
-            or _GGM_MARKER_RE.search(candidate)
             or _BASE64_RE.search(candidate)
             or _BLOB_MARKER_RE.search(candidate)
             or _EMAIL_RE.search(candidate)
@@ -247,11 +363,69 @@ def _safe_text(value: Any, *, path: str, maximum: int = 240) -> str:
     return text
 
 
+def _creator_copy(value: Any, *, path: str, maximum: int) -> str:
+    if not isinstance(value, str):
+        raise StudioV3PrivateStateError(f"{path} must be text.")
+    text = value.strip()
+    if len(text) > maximum:
+        raise StudioV3PrivateStateError(f"{path} is too long.")
+    if not text:
+        return ""
+    cleaned = _safe_text(text, path=path, maximum=maximum)
+    candidates = [cleaned]
+    decoded = cleaned
+    for _ in range(2):
+        next_decoded = unquote(decoded)
+        if next_decoded == decoded:
+            break
+        candidates.append(next_decoded)
+        decoded = next_decoded
+    if any(
+        _CREATOR_CODE_RE.search(candidate) or _CREDENTIAL_ASSIGNMENT_RE.search(candidate)
+        for candidate in candidates
+    ):
+        raise StudioV3PrivateStateError(f"{path} contains forbidden private or executable content.")
+    return cleaned
+
+
 def _stable_id(value: Any, *, path: str) -> str:
     text = _safe_text(value, path=path, maximum=160)
     if not _STABLE_ID_RE.fullmatch(text):
         raise StudioV3PrivateStateError(f"{path} must be a stable token.")
     return text
+
+
+def _studio_v3_stable_digest(value: str) -> str:
+    hash_value = 0x811C9DC5
+    for character in value:
+        hash_value ^= ord(character)
+        hash_value = (hash_value * 0x01000193) & 0xFFFFFFFF
+    encoded = ""
+    while hash_value:
+        hash_value, remainder = divmod(hash_value, 36)
+        encoded = _BASE36_DIGITS[remainder] + encoded
+    return (encoded or "0").rjust(7, "0")
+
+
+def _studio_v3_object_edit_id(room_id: str, object_id: str) -> str:
+    material = f"{room_id}\x1f{object_id}"
+    return (
+        f"object-edit:{_studio_v3_stable_digest(material)}:"
+        f"{_studio_v3_stable_digest(material[::-1])}"
+    )
+
+
+def _studio_v3_object_id(room_id: str, source_ref: str) -> str:
+    escaped_room = re.sub(r"[^A-Za-z0-9_-]+", "-", room_id).strip("-") or "room"
+    material = f"{room_id}\x1f{source_ref}"
+    return f"studio-v3:{escaped_room}:{_studio_v3_stable_digest(material)}"
+
+
+def _is_studio_v3_placement_id(value: str, room_id: str, source_ref: str) -> bool:
+    object_id = _studio_v3_object_id(room_id, source_ref)
+    return value == object_id or bool(
+        re.fullmatch(rf"{re.escape(object_id)}:attempt-[1-9][0-9]*", value)
+    )
 
 
 def _source_ref(value: Any, *, path: str) -> str:
@@ -264,8 +438,17 @@ def _source_ref(value: Any, *, path: str) -> str:
     return text
 
 
+def _piece_source_ref(value: Any, *, path: str) -> str:
+    text = _source_ref(value, path=path)
+    if not text.startswith(("work:", "legacy-object:")):
+        raise StudioV3PrivateStateError(f"{path} must reference a Piece.")
+    return text
+
+
 def _iso_timestamp(value: Any, *, path: str) -> str:
     text = _safe_text(value, path=path, maximum=64)
+    if not re.match(r"^\d{4}-\d{2}-\d{2}T", text):
+        raise StudioV3PrivateStateError(f"{path} must be an ISO timestamp.")
     try:
         datetime.fromisoformat(text.replace("Z", "+00:00"))
     except ValueError as exc:
@@ -340,13 +523,17 @@ def _look_values(value: Any, *, path: str, require_complete: bool) -> dict[str, 
         elif key == "journey":
             cleaned[key] = _enum(item, allowed=STUDIO_V3_JOURNEY_IDS, path=item_path)
         elif key == "publicStylePreset":
-            cleaned[key] = _stable_id(item, path=item_path)
+            cleaned[key] = _enum(
+                item,
+                allowed={"gallery-p2", "christina-liquid-gallery", "bbbvision-threshold-gallery"},
+                path=item_path,
+            )
         elif key == "objectRadius":
-            cleaned[key] = _number(item, path=item_path, minimum=0, maximum=100)
+            cleaned[key] = _number(item, path=item_path, minimum=0, maximum=40)
         elif key == "shadowDepth":
             cleaned[key] = _number(item, path=item_path, minimum=0, maximum=1)
         elif key == "headingWeight":
-            cleaned[key] = _number(item, path=item_path, minimum=100, maximum=900, integer=True)
+            cleaned[key] = _number(item, path=item_path, minimum=300, maximum=900, integer=True)
     return cleaned
 
 
@@ -361,14 +548,21 @@ def _named_look(value: Any, *, path: str) -> dict[str, Any]:
     look_id = _safe_text(item["id"], path=f"{path}.id", maximum=128)
     if not _NAMED_LOOK_ID_RE.fullmatch(look_id):
         raise StudioV3PrivateStateError(f"{path}.id must be an owner-named Look ID.")
+    name = _creator_copy(item["name"], path=f"{path}.name", maximum=80)
+    if not name:
+        raise StudioV3PrivateStateError(f"{path}.name must not be empty.")
     cleaned: dict[str, Any] = {
         "id": look_id,
-        "name": _safe_text(item["name"], path=f"{path}.name", maximum=80),
+        "name": name,
         "values": _look_values(item["values"], path=f"{path}.values", require_complete=True),
         "provenance": _stable_id(item["provenance"], path=f"{path}.provenance"),
     }
     if "baseLookId" in item:
-        cleaned["baseLookId"] = _stable_id(item["baseLookId"], path=f"{path}.baseLookId")
+        cleaned["baseLookId"] = _enum(
+            item["baseLookId"],
+            allowed={"soft-editorial", "nocturnal-gallery", "zine-archive"},
+            path=f"{path}.baseLookId",
+        )
     if "mediaIds" in item:
         media_ids = item["mediaIds"]
         if not isinstance(media_ids, list) or len(media_ids) > 16:
@@ -411,10 +605,17 @@ def _placement(value: Any, *, path: str) -> dict[str, Any]:
         required={"id", "roomId", "sourceRef", "order", "status"},
         path=path,
     )
+    placement_id = _stable_id(item["id"], path=f"{path}.id")
+    room_id = _stable_id(item["roomId"], path=f"{path}.roomId")
+    source_ref = _piece_source_ref(item["sourceRef"], path=f"{path}.sourceRef")
+    if not _is_studio_v3_placement_id(placement_id, room_id, source_ref):
+        raise StudioV3PrivateStateError(
+            f"{path}.id must match the canonical opaque Room and source identity."
+        )
     cleaned: dict[str, Any] = {
-        "id": _stable_id(item["id"], path=f"{path}.id"),
-        "roomId": _stable_id(item["roomId"], path=f"{path}.roomId"),
-        "sourceRef": _source_ref(item["sourceRef"], path=f"{path}.sourceRef"),
+        "id": placement_id,
+        "roomId": room_id,
+        "sourceRef": source_ref,
         "order": _number(item["order"], path=f"{path}.order", minimum=0, maximum=10000, integer=True),
         "status": _enum(item["status"], allowed={"placed", "duplicate", "incompatible", "shelved"}, path=f"{path}.status"),
     }
@@ -445,10 +646,21 @@ def _room_style(value: Any, *, path: str) -> dict[str, Any]:
         required={"roomId", "styleId", "compositionToken"},
         path=path,
     )
+    room_id = _stable_id(item["roomId"], path=f"{path}.roomId")
+    style_id = _enum(item["styleId"], allowed=STUDIO_V3_ROOM_STYLE_IDS, path=f"{path}.styleId")
+    composition_token = _enum(
+        item["compositionToken"],
+        allowed=STUDIO_V3_COMPOSITION_LAYOUT_IDS,
+        path=f"{path}.compositionToken",
+    )
+    if composition_token != STUDIO_V3_ROOM_STYLE_LAYOUT_IDS[style_id]:
+        raise StudioV3PrivateStateError(
+            f"{path}.compositionToken must match {path}.styleId."
+        )
     return {
-        "roomId": _stable_id(item["roomId"], path=f"{path}.roomId"),
-        "styleId": _enum(item["styleId"], allowed=STUDIO_V3_ROOM_STYLE_IDS, path=f"{path}.styleId"),
-        "compositionToken": _stable_id(item["compositionToken"], path=f"{path}.compositionToken"),
+        "roomId": room_id,
+        "styleId": style_id,
+        "compositionToken": composition_token,
     }
 
 
@@ -467,6 +679,106 @@ def _layer_value(value: Any, *, path: str) -> dict[str, Any]:
     }
 
 
+def _object_edit(value: Any, *, path: str) -> dict[str, Any]:
+    item = _require_exact_keys(
+        value,
+        allowed={
+            "id",
+            "roomId",
+            "objectId",
+            "sourceRef",
+            "title",
+            "body",
+            "caption",
+            "mediaSourceRef",
+            "mediaId",
+            "mediaAlt",
+            "zoneId",
+            "order",
+            "size",
+            "treatment",
+            "featured",
+            "visibility",
+        },
+        required={"id", "roomId", "objectId", "sourceRef"},
+        path=path,
+    )
+    if "mediaSourceRef" in item and "mediaId" in item:
+        raise StudioV3PrivateStateError(
+            f"{path} must use either mediaSourceRef or mediaId, not both."
+        )
+    has_media_reference = "mediaSourceRef" in item or "mediaId" in item
+    if "mediaAlt" in item and not has_media_reference:
+        raise StudioV3PrivateStateError(f"{path}.mediaAlt requires a media reference.")
+
+    edit_id = _stable_id(item["id"], path=f"{path}.id")
+    room_id = _stable_id(item["roomId"], path=f"{path}.roomId")
+    object_id = _stable_id(item["objectId"], path=f"{path}.objectId")
+    if edit_id != _studio_v3_object_edit_id(room_id, object_id):
+        raise StudioV3PrivateStateError(
+            f"{path}.id must match the canonical opaque Room and object identity."
+        )
+    cleaned: dict[str, Any] = {
+        "id": edit_id,
+        "roomId": room_id,
+        "objectId": object_id,
+        "sourceRef": _piece_source_ref(item["sourceRef"], path=f"{path}.sourceRef"),
+    }
+    for key, maximum in (("title", 180), ("body", 4000), ("caption", 500)):
+        if key in item:
+            cleaned[key] = _creator_copy(item[key], path=f"{path}.{key}", maximum=maximum)
+    if "mediaSourceRef" in item:
+        cleaned["mediaSourceRef"] = _piece_source_ref(
+            item["mediaSourceRef"],
+            path=f"{path}.mediaSourceRef",
+        )
+    if "mediaId" in item:
+        cleaned["mediaId"] = _stable_id(item["mediaId"], path=f"{path}.mediaId")
+    if "mediaAlt" in item:
+        cleaned["mediaAlt"] = _creator_copy(
+            item["mediaAlt"],
+            path=f"{path}.mediaAlt",
+            maximum=240,
+        )
+    if "zoneId" in item:
+        cleaned["zoneId"] = _enum(
+            item["zoneId"],
+            allowed=STUDIO_V3_OBJECT_EDIT_ZONE_IDS,
+            path=f"{path}.zoneId",
+        )
+    if "order" in item:
+        cleaned["order"] = _number(
+            item["order"],
+            path=f"{path}.order",
+            minimum=0,
+            maximum=10000,
+            integer=True,
+        )
+    if "size" in item:
+        cleaned["size"] = _enum(
+            item["size"],
+            allowed={"small", "medium", "large", "feature"},
+            path=f"{path}.size",
+        )
+    if "treatment" in item:
+        cleaned["treatment"] = _enum(
+            item["treatment"],
+            allowed={"quiet", "framed", "captioned", "signal"},
+            path=f"{path}.treatment",
+        )
+    if "featured" in item:
+        if not isinstance(item["featured"], bool):
+            raise StudioV3PrivateStateError(f"{path}.featured must be boolean.")
+        cleaned["featured"] = item["featured"]
+    if "visibility" in item:
+        cleaned["visibility"] = _enum(
+            item["visibility"],
+            allowed={"visible", "hidden"},
+            path=f"{path}.visibility",
+        )
+    return cleaned
+
+
 def _savepoint_composition_placement(value: Any, *, path: str) -> dict[str, Any]:
     item = _require_exact_keys(
         value,
@@ -475,18 +787,20 @@ def _savepoint_composition_placement(value: Any, *, path: str) -> dict[str, Any]
         path=path,
     )
     layout_id = _enum(item["layoutId"], allowed=STUDIO_V3_COMPOSITION_LAYOUT_IDS, path=f"{path}.layoutId")
+    zone_id = _enum(item["zoneId"], allowed=STUDIO_V3_COMPOSITION_ZONE_IDS[layout_id], path=f"{path}.zoneId")
+    allowed_sizes, allowed_treatments = STUDIO_V3_COMPOSITION_ZONE_RULES[zone_id]
     cleaned: dict[str, Any] = {
         "objectId": _stable_id(item["objectId"], path=f"{path}.objectId"),
         "chamberId": _stable_id(item["chamberId"], path=f"{path}.chamberId"),
         "layoutId": layout_id,
-        "zoneId": _enum(item["zoneId"], allowed=STUDIO_V3_COMPOSITION_ZONE_IDS[layout_id], path=f"{path}.zoneId"),
+        "zoneId": zone_id,
         "order": _number(item["order"], path=f"{path}.order", minimum=0, maximum=10000, integer=True),
-        "size": _enum(item["size"], allowed={"small", "medium", "large", "feature"}, path=f"{path}.size"),
+        "size": _enum(item["size"], allowed=allowed_sizes, path=f"{path}.size"),
     }
     if "treatment" in item:
         cleaned["treatment"] = _enum(
             item["treatment"],
-            allowed={"quiet", "framed", "captioned", "signal"},
+            allowed=allowed_treatments,
             path=f"{path}.treatment",
         )
     return cleaned
@@ -515,6 +829,13 @@ def _savepoint_composition(value: Any, *, path: str, room_id: str) -> dict[str, 
             raise StudioV3PrivateStateError(f"{path}.placements[{index}].layoutId must match {path}.layoutId.")
         if placement["chamberId"] != room_id:
             raise StudioV3PrivateStateError(f"{path}.placements[{index}].chamberId must match its Room.")
+    for zone_id, maximum in STUDIO_V3_COMPOSITION_ZONE_MAX_OBJECTS.items():
+        if zone_id not in STUDIO_V3_COMPOSITION_ZONE_IDS[layout_id]:
+            continue
+        if sum(placement["zoneId"] == zone_id for placement in placements) > maximum:
+            raise StudioV3PrivateStateError(
+                f"{path}.placements exceeds the registered capacity for zone {zone_id}."
+            )
     return {"layoutId": layout_id, "placements": placements}
 
 
@@ -602,7 +923,7 @@ def _savepoint_required_cta(value: Any, *, path: str) -> dict[str, Any]:
         raise StudioV3PrivateStateError(f"{path}.visible must be boolean.")
     cleaned: dict[str, Any] = {"visible": item["visible"]}
     if "sourceRef" in item:
-        cleaned["sourceRef"] = _source_ref(item["sourceRef"], path=f"{path}.sourceRef")
+        cleaned["sourceRef"] = _piece_source_ref(item["sourceRef"], path=f"{path}.sourceRef")
     if "destinationToken" in item:
         destination = _safe_text(item["destinationToken"], path=f"{path}.destinationToken", maximum=160)
         if destination == "existing-base":
@@ -667,10 +988,39 @@ def _savepoint(value: Any, *, path: str) -> dict[str, Any]:
         _layer_value(row, path=f"{path}.layerValues[{index}]")
         for index, row in enumerate(item["layerValues"])
     ]
+    _reject_duplicate_identities(
+        layer_values,
+        identity=_layer_value_identity,
+        path=f"{path}.layerValues",
+        label="layer values",
+    )
     locks = [_layer_lock(row, path=f"{path}.locks[{index}]") for index, row in enumerate(item["locks"])]
-    lock_ids = [lock["id"] for lock in locks]
-    if len(set(lock_ids)) != len(lock_ids):
-        raise StudioV3PrivateStateError(f"{path}.locks contains duplicate lock IDs.")
+    _reject_duplicate_identities(
+        locks,
+        identity=lambda row: row["id"],
+        path=f"{path}.locks",
+        label="lock IDs",
+    )
+    _reject_duplicate_identities(
+        locks,
+        identity=lambda row: (row["scopeKind"], row["scopeId"], row["layer"]),
+        path=f"{path}.locks",
+        label="lock scope and layer identities",
+    )
+    room_ids = {room["roomId"] for room in rooms}
+    piece_scope_ids = _known_savepoint_piece_scope_ids(rooms)
+    _validate_scoped_references(
+        layer_values,
+        path=f"{path}.layerValues",
+        room_ids=room_ids,
+        piece_scope_ids=piece_scope_ids,
+    )
+    _validate_scoped_references(
+        locks,
+        path=f"{path}.locks",
+        room_ids=room_ids,
+        piece_scope_ids=piece_scope_ids,
+    )
     fingerprint = _safe_text(item["fingerprint"], path=f"{path}.fingerprint", maximum=160)
     if not _SAVEPOINT_FINGERPRINT_RE.fullmatch(fingerprint):
         raise StudioV3PrivateStateError(f"{path}.fingerprint must be a structural digest token.")
@@ -718,6 +1068,12 @@ def _restore(value: Any, *, path: str) -> dict[str, Any]:
             _room_style(row, path=f"{path}.roomStyles[{index}]")
             for index, row in enumerate(room_styles)
         ]
+        _reject_duplicate_identities(
+            cleaned["roomStyles"],
+            identity=lambda row: row["roomId"],
+            path=f"{path}.roomStyles",
+            label="Room IDs",
+        )
     if "comparison" in item:
         comparison = _require_exact_keys(
             item["comparison"],
@@ -734,6 +1090,8 @@ def _restore(value: Any, *, path: str) -> dict[str, Any]:
         if not isinstance(refs, list) or len(refs) > 160:
             raise StudioV3PrivateStateError(f"{path}.unresolvedRefs must be a bounded list.")
         cleaned["unresolvedRefs"] = [_stable_id(ref, path=f"{path}.unresolvedRefs[{index}]") for index, ref in enumerate(refs)]
+        if len(set(cleaned["unresolvedRefs"])) != len(cleaned["unresolvedRefs"]):
+            raise StudioV3PrivateStateError(f"{path}.unresolvedRefs contains duplicates.")
     return cleaned
 
 
@@ -745,12 +1103,158 @@ def _compatibility(value: Any, *, path: str) -> dict[str, Any]:
         path=path,
     )
     return {
-        "sourceRef": _source_ref(item["sourceRef"], path=f"{path}.sourceRef"),
+        "sourceRef": _piece_source_ref(item["sourceRef"], path=f"{path}.sourceRef"),
         "roomId": _stable_id(item["roomId"], path=f"{path}.roomId"),
         "roomStyleId": _enum(item["roomStyleId"], allowed=STUDIO_V3_ROOM_STYLE_IDS, path=f"{path}.roomStyleId"),
         "status": _enum(item["status"], allowed={"compatible", "incompatible", "unresolved", "shelved"}, path=f"{path}.status"),
         "reasonCode": _stable_id(item["reasonCode"], path=f"{path}.reasonCode"),
     }
+
+
+def _current_room_layouts(metadata: dict[str, Any]) -> dict[str, str]:
+    restore = metadata.get("restore")
+    if not isinstance(restore, dict):
+        return {}
+    room_styles = restore.get("roomStyles")
+    if not isinstance(room_styles, list):
+        return {}
+    return {
+        row["roomId"]: row["compositionToken"]
+        for row in room_styles
+    }
+
+
+def _known_current_piece_scope_ids(metadata: dict[str, Any]) -> set[str]:
+    scope_ids: set[str] = set()
+    for placement in metadata.get("placements", []):
+        scope_ids.update({placement["id"], placement["sourceRef"]})
+        if "objectId" in placement:
+            scope_ids.add(placement["objectId"])
+    for compatibility in metadata.get("compatibility", []):
+        source_ref = compatibility["sourceRef"]
+        scope_ids.add(source_ref)
+        if source_ref.startswith("legacy-object:"):
+            scope_ids.add(source_ref[len("legacy-object:"):])
+    for edit in metadata.get("object_edits", []):
+        scope_ids.update({edit["objectId"], edit["sourceRef"]})
+    return scope_ids
+
+
+def _known_savepoint_piece_scope_ids(rooms: list[dict[str, Any]]) -> set[str]:
+    scope_ids: set[str] = set()
+    for room in rooms:
+        for object_id in room.get("baseObjectIds", []):
+            scope_ids.update({object_id, f"legacy-object:{object_id}"})
+        for placement in room.get("placements", []):
+            scope_ids.update({placement["id"], placement["sourceRef"]})
+            if "objectId" in placement:
+                scope_ids.add(placement["objectId"])
+    return scope_ids
+
+
+def _validate_scoped_references(
+    entries: list[dict[str, Any]],
+    *,
+    path: str,
+    room_ids: set[str],
+    piece_scope_ids: set[str],
+) -> None:
+    for index, entry in enumerate(entries):
+        scope_kind = entry["scopeKind"]
+        scope_id = entry["scopeId"]
+        scope_path = f"{path}[{index}].scopeId"
+        if scope_kind == "presence":
+            continue
+        if scope_kind == "room":
+            if scope_id not in room_ids:
+                raise StudioV3PrivateStateError(
+                    f"{scope_path} must reference a Room in the same current or saved structure."
+                )
+            continue
+        numeric_match = _NUMERIC_SOURCE_REF_RE.fullmatch(scope_id)
+        if numeric_match and int(numeric_match.group(2)) > _MAX_DATABASE_INTEGER_ID:
+            raise StudioV3PrivateStateError(f"{scope_path} contains an out-of-range source ID.")
+        if scope_kind == "collection":
+            if not numeric_match or numeric_match.group(1) != "collection":
+                raise StudioV3PrivateStateError(
+                    f"{scope_path} must reference a canonical Collection."
+                )
+            continue
+        if numeric_match and numeric_match.group(1) == "work":
+            continue
+        if scope_id not in piece_scope_ids:
+            raise StudioV3PrivateStateError(
+                f"{scope_path} must reference a Piece or placement in the same current or saved structure."
+            )
+
+
+def _validate_top_level_layer_references(metadata: dict[str, Any]) -> None:
+    room_ids = set(_current_room_layouts(metadata))
+    piece_scope_ids = _known_current_piece_scope_ids(metadata)
+    for key in ("layer_locks", "layer_values"):
+        _validate_scoped_references(
+            metadata.get(key, []),
+            path=f"metadata.{key}",
+            room_ids=room_ids,
+            piece_scope_ids=piece_scope_ids,
+        )
+
+
+def _validate_object_edit_composition_context(metadata: dict[str, Any]) -> None:
+    room_layouts = _current_room_layouts(metadata)
+    edited_zone_occupants: dict[tuple[str, str], set[str]] = {}
+    for index, edit in enumerate(metadata.get("object_edits", [])):
+        if not any(key in edit for key in ("zoneId", "size", "treatment", "featured")):
+            continue
+        path = f"metadata.object_edits[{index}]"
+        layout_id = room_layouts.get(edit["roomId"])
+        if layout_id is None:
+            raise StudioV3PrivateStateError(
+                f"{path}.roomId requires current Room layout context in metadata.restore.roomStyles."
+            )
+        if "zoneId" not in edit:
+            raise StudioV3PrivateStateError(
+                f"{path}.zoneId is required when size, treatment, or featured state changes."
+            )
+        zone_id = edit["zoneId"]
+        if zone_id not in STUDIO_V3_COMPOSITION_ZONE_IDS[layout_id]:
+            raise StudioV3PrivateStateError(
+                f"{path}.zoneId is not registered for the target Room layout."
+            )
+        allowed_sizes, allowed_treatments = STUDIO_V3_COMPOSITION_ZONE_RULES[zone_id]
+        if "size" in edit and edit["size"] not in allowed_sizes:
+            raise StudioV3PrivateStateError(
+                f"{path}.size is not registered for the target zone."
+            )
+        if "treatment" in edit and edit["treatment"] not in allowed_treatments:
+            raise StudioV3PrivateStateError(
+                f"{path}.treatment is not registered for the target zone."
+            )
+        if edit.get("featured") is True:
+            if "feature" not in allowed_sizes or (
+                "size" in edit and edit["size"] != "feature"
+            ):
+                raise StudioV3PrivateStateError(
+                    f"{path}.featured is incompatible with the target zone or size."
+                )
+        if edit.get("featured") is False:
+            non_feature_sizes = allowed_sizes - {"feature"}
+            if not non_feature_sizes or edit.get("size") == "feature":
+                raise StudioV3PrivateStateError(
+                    f"{path}.featured is incompatible with the target zone or size."
+                )
+        if edit.get("visibility") != "hidden":
+            edited_zone_occupants.setdefault((edit["roomId"], zone_id), set()).add(
+                edit["objectId"]
+            )
+
+    for (room_id, zone_id), object_ids in edited_zone_occupants.items():
+        maximum = STUDIO_V3_COMPOSITION_ZONE_MAX_OBJECTS.get(zone_id)
+        if maximum is not None and len(object_ids) > maximum:
+            raise StudioV3PrivateStateError(
+                "metadata.object_edits contains more final edit targets than the registered "
+                f"capacity for Room {room_id} zone {zone_id}."
+            )
 
 
 def normalise_studio_v3_private_metadata(value: Any) -> dict[str, Any]:
@@ -760,6 +1264,7 @@ def normalise_studio_v3_private_metadata(value: Any) -> dict[str, Any]:
         required=set(),
         path="metadata",
     )
+    _validate_metadata_bounds(metadata)
     cleaned: dict[str, Any] = {}
     if "owner_mode" in metadata:
         cleaned["owner_mode"] = _enum(
@@ -770,6 +1275,8 @@ def normalise_studio_v3_private_metadata(value: Any) -> dict[str, Any]:
     list_validators = {
         "named_looks": _named_look,
         "layer_locks": _layer_lock,
+        "layer_values": _layer_value,
+        "object_edits": _object_edit,
         "savepoints": _savepoint,
         "placements": _placement,
         "compatibility": _compatibility,
@@ -778,11 +1285,47 @@ def normalise_studio_v3_private_metadata(value: Any) -> dict[str, Any]:
         if key not in metadata:
             continue
         rows = metadata[key]
-        if not isinstance(rows, list) or len(rows) > 160:
+        if not isinstance(rows, list) or len(rows) > STUDIO_V3_METADATA_MAX_ITEMS:
             raise StudioV3PrivateStateError(f"metadata.{key} must be a bounded list.")
         cleaned[key] = [validator(row, path=f"metadata.{key}[{index}]") for index, row in enumerate(rows)]
+    duplicate_specs = {
+        "named_looks": (lambda row: row["id"], "Look IDs"),
+        "layer_locks": (lambda row: row["id"], "lock IDs"),
+        "layer_values": (_layer_value_identity, "layer values"),
+        "object_edits": (lambda row: row["id"], "object edit IDs"),
+        "savepoints": (lambda row: row["id"], "savepoint IDs"),
+        "placements": (lambda row: row["id"], "placement IDs"),
+        "compatibility": (
+            lambda row: (row["sourceRef"], row["roomId"], row["roomStyleId"]),
+            "compatibility identities",
+        ),
+    }
+    for key, (identity, label) in duplicate_specs.items():
+        if key in cleaned:
+            _reject_duplicate_identities(
+                cleaned[key],
+                identity=identity,
+                path=f"metadata.{key}",
+                label=label,
+            )
+    if "layer_locks" in cleaned:
+        _reject_duplicate_identities(
+            cleaned["layer_locks"],
+            identity=lambda row: (row["scopeKind"], row["scopeId"], row["layer"]),
+            path="metadata.layer_locks",
+            label="lock scope and layer identities",
+        )
+    if "object_edits" in cleaned:
+        _reject_duplicate_identities(
+            cleaned["object_edits"],
+            identity=lambda row: (row["roomId"], row["objectId"], row["sourceRef"]),
+            path="metadata.object_edits",
+            label="Room, object, and source identities",
+        )
     if "restore" in metadata:
         cleaned["restore"] = _restore(metadata["restore"], path="metadata.restore")
+    _validate_top_level_layer_references(cleaned)
+    _validate_object_edit_composition_context(cleaned)
     return cleaned
 
 
@@ -795,16 +1338,42 @@ def _metadata_media_ids(metadata: Any) -> set[str]:
         for key, item in metadata.items():
             if key == "mediaIds" and isinstance(item, list):
                 ids.update(str(media_id) for media_id in item)
+            elif key == "mediaId" and isinstance(item, str):
+                ids.add(item)
             else:
                 ids.update(_metadata_media_ids(item))
     return ids
+
+
+def _validate_presence_scope_ids(room: PresenceNode, metadata: dict[str, Any]) -> None:
+    expected_scope_id = str(room.id)
+
+    def walk(value: Any, *, path: str) -> None:
+        if isinstance(value, list):
+            for index, item in enumerate(value):
+                walk(item, path=f"{path}[{index}]")
+            return
+        if not isinstance(value, dict):
+            return
+        if value.get("scopeKind") == "presence" and value.get("scopeId") != expected_scope_id:
+            raise StudioV3PrivateStateError(
+                f"{path}.scopeId must match the current Presence Room."
+            )
+        for key, item in value.items():
+            walk(item, path=f"{path}.{key}")
+
+    walk(metadata, path="metadata")
 
 
 def _validate_metadata_media_ownership(room: PresenceNode, metadata: dict[str, Any]) -> None:
     media_ids = _metadata_media_ids(metadata)
     if not media_ids:
         return
-    rows = PresenceMediaAsset.query.filter(PresenceMediaAsset.id.in_(media_ids)).all()
+    rows = (
+        PresenceMediaAsset.query.filter(PresenceMediaAsset.id.in_(media_ids))
+        .with_for_update()
+        .all()
+    )
     by_id = {row.id: row for row in rows}
     owner_user_id = _room_owner_id(room)
     for media_id in media_ids:
@@ -813,9 +1382,12 @@ def _validate_metadata_media_ownership(room: PresenceNode, metadata: dict[str, A
             row is None
             or row.room_id != room.id
             or row.owner_user_id != owner_user_id
-            or row.status == "deleted"
+            or row.mime_type not in ALLOWED_IMAGE_MIME_TYPES
+            or row.status not in STUDIO_V3_MEDIA_STATUSES_BY_VISIBILITY.get(row.visibility, set())
         ):
-            raise StudioV3PrivateStateError("Studio V3 private metadata contains an unowned media ID.")
+            raise StudioV3PrivateStateError(
+                "Studio V3 private metadata contains an unowned or unsupported image media ID."
+            )
 
 
 def _metadata_numeric_source_ids(metadata: Any) -> tuple[set[int], set[int]]:
@@ -829,8 +1401,22 @@ def _metadata_numeric_source_ids(metadata: Any) -> tuple[set[int], set[int]]:
             return
         if not isinstance(value, dict):
             return
+        scope_kind = value.get("scopeKind")
+        scope_id = value.get("scopeId")
+        if scope_kind in {"piece", "collection"} and isinstance(scope_id, str):
+            numeric_match = _NUMERIC_SOURCE_REF_RE.fullmatch(scope_id)
+            if numeric_match:
+                source_id = int(numeric_match.group(2))
+                if source_id > _MAX_DATABASE_INTEGER_ID:
+                    raise StudioV3PrivateStateError(
+                        "Studio V3 private metadata contains an out-of-range layer scope ID."
+                    )
+                if scope_kind == "piece" and numeric_match.group(1) == "work":
+                    work_ids.add(source_id)
+                elif scope_kind == "collection" and numeric_match.group(1) == "collection":
+                    collection_ids.add(source_id)
         for key, item in value.items():
-            if key in {"sourceRef", "collectionSourceRef"} and isinstance(item, str):
+            if key in {"sourceRef", "collectionSourceRef", "mediaSourceRef"} and isinstance(item, str):
                 numeric_match = _NUMERIC_SOURCE_REF_RE.fullmatch(item)
                 if numeric_match:
                     source_id = int(numeric_match.group(2))
@@ -916,15 +1502,20 @@ def _normalise_state_expected(value: Any) -> dict[str, Any]:
 def _lock_expected_state_base(room: PresenceNode, expected: dict[str, Any]) -> PresenceEditableConfig:
     if expected["room_id"] != room.id:
         raise StudioV3PrivateStateConflictError("Studio V3 private-state base Room changed.")
-    config = (
-        PresenceEditableConfig.query.filter_by(
-            id=expected["config_id"],
-            room_id=room.id,
-            status=expected["status"],
+    if expected["source_kind"] == "published" and draft_config_for_room(room) is not None:
+        raise StudioV3PrivateStateConflictError(
+            "Studio V3 private-state published fallback is stale because a draft base is now active; reload before replacing metadata.",
+            details={"mismatch": "selected_base.source_kind"},
         )
-        .with_for_update()
-        .first()
+    query = PresenceEditableConfig.query.filter_by(
+        id=expected["config_id"],
+        room_id=room.id,
+        status=expected["status"],
     )
+    # The narrow synchronization exception is draft-only: serialize private
+    # state replacement with atomic draft replacement/publish promotion, but do
+    # not introduce a published-row lock or change published-base semantics.
+    config = query.with_for_update().first() if expected["source_kind"] == "draft" else query.first()
     if config is None:
         raise StudioV3PrivateStateConflictError("Studio V3 private-state base is missing or changed.")
     actual = {
@@ -964,9 +1555,9 @@ def replace_studio_v3_private_state(
         raise StudioV3PrivateStateError("metadata_schema_version is unsupported.")
     expected = _normalise_state_expected(request_data["expected"])
     metadata = normalise_studio_v3_private_metadata(request_data["metadata"])
+    _validate_presence_scope_ids(room, metadata)
     _validate_metadata_source_ownership(room, metadata)
     base = _lock_expected_state_base(room, expected)
-    _validate_metadata_media_ownership(room, metadata)
 
     owner_user_id = _room_owner_id(room)
     state = (
@@ -974,6 +1565,7 @@ def replace_studio_v3_private_state(
         .with_for_update()
         .first()
     )
+    _validate_metadata_media_ownership(room, metadata)
     if state is None:
         if expected["metadata_revision"] != 0:
             raise StudioV3PrivateStateConflictError("Studio V3 private state does not exist at the expected revision.")

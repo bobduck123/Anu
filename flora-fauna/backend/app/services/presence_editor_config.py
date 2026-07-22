@@ -15,7 +15,14 @@ from flask import current_app
 from sqlalchemy import inspect as sqlalchemy_inspect
 
 from ..extensions import db
-from ..models import PresenceCollection, PresenceEditableConfig, PresenceMediaAsset, PresenceNode, PresenceWork
+from ..models import (
+    PresenceCollection,
+    PresenceEditableConfig,
+    PresenceMediaAsset,
+    PresenceNode,
+    PresenceStudioV3State,
+    PresenceWork,
+)
 from .presence_media_storage import (
     PresenceMediaStorageError,
     delete_private_media_object,
@@ -90,8 +97,8 @@ STUDIO_V3_OWNED_SECTION_ATTRS = (
 )
 _STUDIO_V3_FINGERPRINT_RE = re.compile(r"^[0-9a-f]{64}$")
 _STUDIO_V3_PRIVATE_KEY_RE = re.compile(
-    r"^(?:namedlooks|layerlocks|savepoints|ownermode|restore|compatibility|"
-    r"sourceref|collectionsourceref|sourceprovenance|placementprovenance|"
+    r"^(?:namedlooks|layerlocks|layervalues|objectedits|savepoints|ownermode|restore|compatibility|"
+    r"sourceref|collectionsourceref|mediasourceref|sourceprovenance|placementprovenance|"
     r"metadatarevision|activesavepointid|lastrestoredsavepointid)$",
     re.IGNORECASE,
 )
@@ -1390,20 +1397,63 @@ def _owner_media_section(config: PresenceEditableConfig, attr: str) -> dict[str,
     return _hydrate_private_media_references(section, config.room_id)
 
 
+def _studio_v3_state_table_available() -> bool:
+    try:
+        return bool(sqlalchemy_inspect(db.engine).has_table(PresenceStudioV3State.__tablename__))
+    except Exception as exc:
+        raise PresenceEditorConfigError(
+            "Could not verify Studio V3 private-state media references."
+        ) from exc
+
+
+def _studio_v3_state_query(room: PresenceNode):
+    return PresenceStudioV3State.query.filter_by(
+        room_id=room.id,
+        owner_user_id=getattr(room, "owner_user_id", None),
+    )
+
+
+def _lock_studio_v3_state_for_room(room: PresenceNode) -> PresenceStudioV3State | None:
+    if not _studio_v3_state_table_available():
+        return None
+    return _studio_v3_state_query(room).with_for_update().first()
+
+
+def _refresh_absent_studio_v3_state_after_media_lock(
+    room: PresenceNode,
+    state: PresenceStudioV3State | None,
+) -> PresenceStudioV3State | None:
+    if state is not None or not _studio_v3_state_table_available():
+        return state
+    # A first V3 state row can be inserted while an absent-row lock sees
+    # nothing. Re-read after media serialization so that committed references
+    # cannot be deleted from under that insert.
+    return _studio_v3_state_query(room).first()
+
+
 def delete_unused_media_asset(room: PresenceNode, media_id: str) -> bool:
     if not media_asset_records_available():
         raise PresenceEditorConfigError("Private draft media is not enabled on this environment.")
-    # Preserve the global writer lock order: draft first, then referenced media.
+    # Preserve the global writer lock order: draft, private state, then media.
     # This matches V3 replacement and avoids a delete-vs-save lock inversion.
     draft = draft_config_for_room(room, for_update=True)
+    studio_v3_state = _lock_studio_v3_state_for_room(room)
     media_asset = PresenceMediaAsset.query.filter_by(id=media_id, room_id=room.id).with_for_update().first()
     if not media_asset:
         raise PresenceEditorConfigError("That image was not found.")
     if media_asset.status == "published" or media_asset.visibility == "public_published":
         raise PresenceEditorConfigError("This image is live. Replace it in your draft before deleting it.")
+    studio_v3_state = _refresh_absent_studio_v3_state_after_media_lock(room, studio_v3_state)
     selected = _media_reference_ids((draft.asset_config_json if draft else {}) or {}, include_inventory=False)
     if media_asset.id in selected:
         raise PresenceEditorConfigError("Remove this image from your draft before deleting it.")
+    private_state_media_ids = _studio_v3_metadata_media_ids(
+        (studio_v3_state.metadata_json if studio_v3_state else {}) or {}
+    )
+    if media_asset.id in private_state_media_ids:
+        raise PresenceEditorConfigError(
+            "Remove this image from Studio V3 private state before deleting it."
+        )
     delete_private_media_object(media_asset)
     media_asset.status = "deleted"
     media_asset.deleted_at = now_utc()
@@ -1414,10 +1464,12 @@ def delete_unused_media_asset(room: PresenceNode, media_id: str) -> bool:
 def cleanup_orphaned_private_media(room: PresenceNode, *, minimum_age_seconds: int = 86400) -> int:
     if not media_asset_records_available():
         return 0
-    # Match every draft/media writer: lock the draft before selecting media.
+    # Match every draft/state/media writer: lock the draft and private state
+    # before selecting media.
     # The media query must also lock so its orphaned predicate is rechecked
     # after a concurrent V3 replacement finishes reattaching an asset.
     draft_config_for_room(room, for_update=True)
+    studio_v3_state = _lock_studio_v3_state_for_room(room)
     cutoff = now_utc().timestamp() - max(0, int(minimum_age_seconds))
     deleted = 0
     rows = (
@@ -1429,7 +1481,13 @@ def cleanup_orphaned_private_media(room: PresenceNode, *, minimum_age_seconds: i
         .with_for_update()
         .all()
     )
+    studio_v3_state = _refresh_absent_studio_v3_state_after_media_lock(room, studio_v3_state)
+    private_state_media_ids = _studio_v3_metadata_media_ids(
+        (studio_v3_state.metadata_json if studio_v3_state else {}) or {}
+    )
     for media_asset in rows:
+        if media_asset.id in private_state_media_ids:
+            continue
         if media_asset.created_at and media_asset.created_at.timestamp() > cutoff:
             continue
         delete_private_media_object(media_asset)
@@ -1459,6 +1517,22 @@ def _media_reference_ids(value: Any, *, include_inventory: bool = False) -> set[
             if not include_inventory and key == "attached_assets":
                 continue
             ids.update(_media_reference_ids(item, include_inventory=include_inventory))
+    return ids
+
+
+def _studio_v3_metadata_media_ids(value: Any) -> set[str]:
+    ids: set[str] = set()
+    if isinstance(value, list):
+        for item in value:
+            ids.update(_studio_v3_metadata_media_ids(item))
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            if key == "mediaIds" and isinstance(item, list):
+                ids.update(media_id for media_id in item if isinstance(media_id, str) and media_id)
+            elif key == "mediaId" and isinstance(item, str) and item:
+                ids.add(item)
+            else:
+                ids.update(_studio_v3_metadata_media_ids(item))
     return ids
 
 

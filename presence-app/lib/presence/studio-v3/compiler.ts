@@ -1,4 +1,4 @@
-import type { PresenceCollection, PresenceEditableConfig, PresenceNode, PresenceWork } from "../../api/types.ts";
+import type { PresenceCollection, PresenceEditableConfig, PresenceEditorAsset, PresenceNode, PresenceWork } from "../../api/types.ts";
 import { presenceConfigFromStudioV2State, publicRoomFromStudioV2State, studioV2FromPresenceConfig } from "../studio-v2/adapters.ts";
 import {
   DEFAULT_STUDIO_V2_TRANSFORM,
@@ -7,7 +7,12 @@ import {
   type StudioV2Object,
   type StudioV2State,
 } from "../studio-v2/model.ts";
-import { defaultStudioV2Composition, normalizeStudioV2Composition } from "../studio-v2/layouts.ts";
+import {
+  defaultStudioV2Composition,
+  normalizeStudioV2Composition,
+  studioV2Layout,
+  type StudioV2ObjectPlacement,
+} from "../studio-v2/layouts.ts";
 import {
   STUDIO_V3_FINGERPRINT_UNAVAILABLE,
   STUDIO_V3_FINGERPRINT_UNAVAILABLE_REASON,
@@ -31,6 +36,8 @@ import {
   type StudioV3Look,
   type StudioV3LookId,
   type StudioV3LookValues,
+  type StudioV3MediaAsset,
+  type StudioV3ObjectEdit,
   type StudioV3Piece,
   type StudioV3Placement,
   type StudioV3Room,
@@ -47,8 +54,11 @@ import {
 } from "./p1Catalog.ts";
 import {
   collectionSourceRef,
+  findStudioV3LegacyPiece,
+  findStudioV3Piece,
   legacyObjectSourceRef,
-  loadedOwnerLibraryCollectionSourceRef,
+  makeStudioV3LegacyPieceMapKey,
+  makeStudioV3ObjectEditId,
   makeStudioV3PlacementId,
   type StudioV3CollectionSourceRef,
   type StudioV3SourceRef,
@@ -118,9 +128,10 @@ export function hydrateStudioV3Document(input: StudioV3HydrateInput): StudioV3Do
     input.studioV2State.chambers.flatMap((chamber) =>
       chamber.objects.map((object): [string, StudioV3Piece] => {
         const sourceRef = legacyObjectSourceRef(object.id);
-        return [sourceRef, {
+        return [makeStudioV3LegacyPieceMapKey(chamber.id, object.id), {
           id: object.id,
           sourceRef,
+          roomId: chamber.id,
           title: object.title,
           description: object.detail,
           media: object.image,
@@ -141,6 +152,7 @@ export function hydrateStudioV3Document(input: StudioV3HydrateInput): StudioV3Do
       }),
   );
   const collections = buildCollections(input.collections, input.works);
+  const mediaAssets = buildMediaAssets(input.assets ?? []);
   const activeRoomId = rooms[0]?.id ?? input.studioV2State.chambers[0]?.id ?? "main";
   const entryRoomId = input.studioV2State.chambers.find((chamber) => chamber.metadata?.isEntry)?.id ?? activeRoomId;
   const requiredCtaSourceRef = Object.values(legacyPieces).find((piece) => piece.snapshotType === "cta")?.sourceRef;
@@ -165,6 +177,8 @@ export function hydrateStudioV3Document(input: StudioV3HydrateInput): StudioV3Do
     rooms,
     pieces: { ...legacyPieces, ...workPieces },
     collections,
+    objectEdits: {},
+    mediaAssets,
     looks: Object.fromEntries(STUDIO_V3_P1_LOOKS.map((look) => [look.id, look])),
     locks: [],
     layerOverrides: [],
@@ -207,7 +221,7 @@ export function placeStudioV3Piece(
   roomId: string,
   sourceRef: StudioV3SourceRef,
 ): StudioV3Document {
-  const piece = document.pieces[sourceRef];
+  const piece = findStudioV3Piece(document.pieces, sourceRef, roomId);
   const room = document.rooms.find((item) => item.id === roomId);
   if (!room || !piece) return withIssue(document, {
     severity: "warning",
@@ -217,8 +231,19 @@ export function placeStudioV3Piece(
     roomId,
     resolution: "shelved",
   });
+  if (piece.roomId === roomId && room.baseObjectIds.includes(piece.id)) return document;
+  const compatibilityIdentity = `${sourceRef}\u001f${roomId}\u001f${room.styleId}`;
+  const compatibilityIdentities = new Set(projectCompatibilityIdentityRows(document));
+  const placementCount = document.rooms.reduce((count, candidate) => count + candidate.placements.length, 0);
+  if (placementCount >= 160
+    || (!compatibilityIdentities.has(compatibilityIdentity) && compatibilityIdentities.size >= 160)) {
+    return document;
+  }
   const placementId = nextStudioV3PlacementId(room, sourceRef);
   if (piece.sourceStatus !== "current") {
+    if (room.placements.some((placement) => placement.sourceRef === sourceRef && placement.status === "shelved" && !placement.collectionSourceRef)) {
+      return document;
+    }
     return addPlacement(document, roomId, {
       id: placementId,
       roomId,
@@ -231,6 +256,9 @@ export function placeStudioV3Piece(
   }
   const existingPlacement = room.placements.find((placement) => placement.sourceRef === sourceRef && placement.status === "placed");
   if (existingPlacement) {
+    if (room.placements.some((placement) => placement.sourceRef === sourceRef && placement.status === "duplicate" && !placement.collectionSourceRef)) {
+      return document;
+    }
     return addPlacement(document, roomId, {
       id: placementId,
       roomId,
@@ -241,6 +269,9 @@ export function placeStudioV3Piece(
     });
   }
   if (!piece.compatibleRoomStyles.includes(room.styleId)) {
+    if (room.placements.some((placement) => placement.sourceRef === sourceRef && placement.status === "incompatible" && !placement.collectionSourceRef)) {
+      return document;
+    }
     return addPlacement(document, roomId, {
       id: placementId,
       roomId,
@@ -265,7 +296,7 @@ export function placeStudioV3Collection(
   collectionRef: StudioV3CollectionSourceRef,
 ): StudioV3Document {
   const collection = document.collections[collectionRef];
-  if (!collection) return withIssue(document, {
+  if (!collection || collection.sourceStatus !== "current") return withIssue(document, {
     severity: "warning",
     code: "collection-unavailable",
     message: "This Collection is unavailable.",
@@ -273,9 +304,35 @@ export function placeStudioV3Collection(
     roomId,
     resolution: "shelved",
   });
+  const targetRoom = document.rooms.find((room) => room.id === roomId);
+  if (!targetRoom) return document;
+  const newMemberRefs = collection.memberSourceRefs.filter((sourceRef) => !targetRoom.placements.some((placement) => (
+    placement.sourceRef === sourceRef && placement.collectionSourceRef === collectionRef
+  )));
+  const placementCount = document.rooms.reduce((count, room) => count + room.placements.length, 0);
+  const compatibilityIdentities = new Set(projectCompatibilityIdentityRows(document));
+  for (const sourceRef of newMemberRefs) {
+    compatibilityIdentities.add(`${sourceRef}\u001f${roomId}\u001f${targetRoom.styleId}`);
+  }
+  if (placementCount + newMemberRefs.length > 160 || compatibilityIdentities.size > 160) {
+    return withIssue(document, {
+      severity: "warning",
+      code: "collection-capacity",
+      message: "This Collection would exceed the bounded private placement registry.",
+      sourceRef: collectionRef,
+      roomId,
+      resolution: "blocked",
+    });
+  }
   let next = document;
-  const seen = new Set(next.rooms.find((room) => room.id === roomId)?.placements.map((placement) => placement.sourceRef));
+  const seen = new Set(next.rooms.find((room) => room.id === roomId)?.placements
+    .filter((placement) => placement.status === "placed" && placement.visibility !== "hidden")
+    .map((placement) => placement.sourceRef));
   for (const sourceRef of collection.memberSourceRefs) {
+    const existingRoom = next.rooms.find((candidate) => candidate.id === roomId);
+    if (existingRoom?.placements.some((placement) => (
+      placement.sourceRef === sourceRef && placement.collectionSourceRef === collectionRef
+    ))) continue;
     if (seen.has(sourceRef)) {
       const room = next.rooms.find((candidate) => candidate.id === roomId);
       if (!room) continue;
@@ -291,8 +348,9 @@ export function placeStudioV3Collection(
       continue;
     }
     seen.add(sourceRef);
+    const beforePlacement = next;
     next = placeStudioV3Piece(next, roomId, sourceRef);
-    next = markLatestCollectionPlacement(next, roomId, collectionRef);
+    if (next !== beforePlacement) next = markLatestCollectionPlacement(next, roomId, collectionRef);
   }
   return next;
 }
@@ -318,10 +376,14 @@ export function lockStudioV3Layer(
   document: StudioV3Document,
   input: { scopeKind: StudioV3LayerLock["scopeKind"]; scopeId: string; layer: StudioV3Layer; value: unknown; reason?: string },
 ): StudioV3Document {
-  if (input.layer !== "motion-atmosphere" || containsForbiddenLocalValue(input.value) || !isSafeMotionAtmosphereLockInput(input.value)) {
+  if (!studioV3ScopeExists(document, input.scopeKind, input.scopeId)
+    || input.layer !== "motion-atmosphere"
+    || containsForbiddenLocalValue(input.value)
+    || !isSafeMotionAtmosphereLockInput(input.value)) {
     return document;
   }
   const id = `${input.scopeKind}:${input.scopeId}:${input.layer}`;
+  if (!document.locks.some((item) => item.id === id) && document.locks.length >= 160) return document;
   const lock: StudioV3LayerLock = {
     id,
     scopeKind: input.scopeKind,
@@ -336,13 +398,30 @@ export function lockStudioV3Layer(
   };
 }
 
+function studioV3ScopeExists(
+  document: StudioV3Document,
+  scopeKind: StudioV3LayerLock["scopeKind"],
+  scopeId: string,
+): boolean {
+  if (scopeKind === "presence") return scopeId === String(document.nodeId);
+  if (scopeKind === "room") return document.rooms.some((room) => room.id === scopeId);
+  if (scopeKind === "collection") return Boolean(document.collections[scopeId]);
+  return Boolean(document.pieces[scopeId])
+    || Object.values(document.pieces).some((piece) => piece.id === scopeId)
+    || document.rooms.some((room) => room.placements.some((placement) => placement.id === scopeId));
+}
+
 export function saveStudioV3NamedLook(
   document: StudioV3Document,
   name: string,
   now = new Date().toISOString(),
 ): StudioV3Document {
+  if (document.namedLooks.length >= 160) return document;
   const active = document.looks[document.activeLookId] ?? document.namedLooks.find((look) => look.id === document.activeLookId);
-  const safeName = name.trim() && !containsForbiddenLocalValue(name) ? name.trim() : "Named Look";
+  const requestedName = name.trim();
+  const safeName = requestedName && requestedName.length <= 80 && !containsForbiddenLocalValue(requestedName)
+    ? requestedName
+    : "Named Look";
   const id = `named:${slugify(safeName)}-${stableSmall(`${safeName}:${now}`)}` as const;
   const named: StudioV3Look = {
     id,
@@ -350,7 +429,7 @@ export function saveStudioV3NamedLook(
     origin: "owner",
     baseLookId: active?.baseLookId ?? (active?.origin === "system" ? active.id as StudioV3LookId : "soft-editorial"),
     provenance: `saved-from:${active?.id ?? "unknown"}`,
-    values: { ...(active?.values ?? STUDIO_V3_SOFT_EDITORIAL_LOOK.values) },
+    values: applyLockedLookValues(document, active?.values ?? STUDIO_V3_SOFT_EDITORIAL_LOOK.values),
     createdAt: now,
     updatedAt: now,
   };
@@ -361,14 +440,13 @@ export function saveStudioV3NamedLook(
   };
 }
 
-function isSafeMotionAtmosphereLockInput(value: unknown): value is Pick<StudioV3LookValues, "motionIntensity" | "background"> {
+function isSafeMotionAtmosphereLockInput(value: unknown): value is Pick<StudioV3LookValues, "motionIntensity"> & Partial<Pick<StudioV3LookValues, "background">> {
   const payload = value && typeof value === "object" ? value as Partial<Pick<StudioV3LookValues, "motionIntensity" | "background">> : null;
   if (!payload) return false;
   const keys = Object.keys(payload);
-  return keys.length === 2 &&
-    keys.includes("motionIntensity") &&
-    keys.includes("background") &&
-    typeof payload.background === "string" &&
+  return keys.length >= 1 && keys.length <= 2 &&
+    keys.includes("motionIntensity") && keys.every((key) => key === "motionIntensity" || key === "background") &&
+    (payload.background === undefined || typeof payload.background === "string") &&
     ["still", "gentle", "living"].includes(String(payload.motionIntensity));
 }
 
@@ -400,7 +478,10 @@ export function compileStudioV3ToStudioV2(document: StudioV3Document, baseState:
   nextState.chambers = nextState.chambers.map((chamber) => {
     const room = document.rooms.find((item) => item.id === chamber.id);
     const baseObjects = room
-      ? chamber.objects.filter((object) => room.baseObjectIds.includes(object.id))
+      ? chamber.objects
+        .filter((object) => room.baseObjectIds.includes(object.id))
+        .map((object) => applyStudioV3ObjectEdit(document, chamber.id, object))
+        .filter((object): object is StudioV2Object => Boolean(object))
       : chamber.objects;
     const placedObjects = (room?.placements ?? [])
       .filter((placement) => isPublicStudioV3Placement(document, placement))
@@ -414,9 +495,10 @@ export function compileStudioV3ToStudioV2(document: StudioV3Document, baseState:
       ...acceptedComposition,
       placements: acceptedComposition.placements.filter((placement) => publicObjectIds.has(placement.objectId)),
     } : undefined;
-    const composition = publicComposition?.layoutId === layoutId
+    const normalizedComposition = publicComposition?.layoutId === layoutId
       ? normalizeStudioV2Composition(publicComposition, chamber.id, objects)
       : defaultStudioV2Composition(chamber.id, objects, layoutId);
+    const composition = applyStudioV3CompositionEdits(document, chamber.id, objects, normalizedComposition);
     return {
       ...chamber,
       objects,
@@ -482,6 +564,24 @@ function adaptPresenceWorkToStudioV3Piece(work: PresenceWork, sourceRef: StudioV
   };
 }
 
+function buildMediaAssets(assets: PresenceEditorAsset[]): Record<string, StudioV3MediaAsset> {
+  const result: Record<string, StudioV3MediaAsset> = {};
+  for (const asset of assets) {
+    const mediaId = asset.media_id;
+    if (!mediaId || !isStableRuntimeReference(mediaId) || !isSafeRuntimeMediaUrl(asset.url)) continue;
+    const mediaType = asset.asset_type === "image" || asset.mime_type?.startsWith("image/") ? "image" : "unknown";
+    result[mediaId] = {
+      mediaId,
+      src: asset.url,
+      alt: typeof asset.alt_text === "string" ? asset.alt_text.slice(0, 240) : "",
+      mediaType,
+      sourceStatus: mediaType === "image" && isAvailableRuntimeAsset(asset) ? "current" : "unavailable",
+      fromAsset: structuredClone(asset),
+    };
+  }
+  return result;
+}
+
 function buildCollections(collections: PresenceCollection[], works: PresenceWork[]): Record<string, StudioV3Collection> {
   const byId = new Map(collections.filter((collection) => isPositiveIntegerId(collection.id)).map((collection) => [collection.id as number, collection]));
   const result: Record<string, StudioV3Collection> = {};
@@ -496,29 +596,18 @@ function buildCollections(collections: PresenceCollection[], works: PresenceWork
         .filter((work) => work.collection_id === id && isPositiveIntegerId(work.id))
         .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0))
         .map((work) => workSourceRef(work.id as number)),
+      sourceStatus: collection.is_visible === false ? "unavailable" : "current",
       fromCollection: collection,
-    };
-  }
-  if (Object.keys(result).length === 0 && works.some((work) => isPositiveIntegerId(work.id))) {
-    const sourceRef = loadedOwnerLibraryCollectionSourceRef();
-    result[sourceRef] = {
-      id: sourceRef,
-      sourceRef,
-      title: "Current Works",
-      description: "Local prototype grouping from the loaded owner Library.",
-      memberSourceRefs: works
-        .filter((work) => isPositiveIntegerId(work.id))
-        .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0))
-        .map((work) => workSourceRef(work.id as number)),
     };
   }
   return result;
 }
 
 function objectFromPlacement(document: StudioV3Document, placement: StudioV3Placement, zIndex: number): StudioV2Object | null {
-  const piece = document.pieces[placement.sourceRef];
-  if (!piece || piece.sourceStatus !== "current" || placement.visibility === "hidden") return null;
-  return {
+  const piece = findStudioV3Piece(document.pieces, placement.sourceRef, placement.roomId);
+  const requiredCta = isRequiredStudioV3CtaSource(document, placement.sourceRef, placement.roomId, placement.id);
+  if (!piece || piece.sourceStatus !== "current" || (placement.visibility === "hidden" && !requiredCta)) return null;
+  const object: StudioV2Object = {
     id: placement.id,
     type: piece.snapshotType,
     role: placement.collectionSourceRef ? "collection-piece" : "piece",
@@ -536,11 +625,161 @@ function objectFromPlacement(document: StudioV3Document, placement: StudioV3Plac
     locked: false,
     pinned: false,
   };
+  return applyStudioV3ObjectEdit(document, placement.roomId, object);
+}
+
+function applyStudioV3ObjectEdit(
+  document: StudioV3Document,
+  roomId: string,
+  object: StudioV2Object,
+): StudioV2Object | null {
+  const edit = document.objectEdits[makeStudioV3ObjectEditId(roomId, object.id)];
+  if (!edit || edit.roomId !== roomId || edit.objectId !== object.id || !objectEditMatchesSource(document, roomId, object.id, edit)) return object;
+  const requiredCta = isRequiredStudioV3CtaSource(document, edit.sourceRef, roomId, object.id);
+  if (edit.visibility === "hidden" && !requiredCta) return null;
+  let image = object.image;
+  if (edit.mediaSourceRef) {
+    const source = findStudioV3Piece(document.pieces, edit.mediaSourceRef, roomId);
+    if (source?.sourceStatus === "current" && source.media?.src) {
+      image = { src: source.media.src, alt: edit.mediaAlt ?? source.media.alt };
+    }
+  } else if (edit.mediaId) {
+    const source = document.mediaAssets[edit.mediaId];
+    if (source?.sourceStatus === "current" && source.mediaType === "image" && source.src) {
+      image = { src: source.src, alt: edit.mediaAlt ?? source.alt };
+    }
+  } else if (image && edit.mediaAlt !== undefined) {
+    image = { ...image, alt: edit.mediaAlt };
+  }
+  return {
+    ...object,
+    ...(edit.title !== undefined && (!requiredCta || edit.title.trim()) ? { title: edit.title } : {}),
+    ...(edit.body !== undefined ? { detail: edit.body } : {}),
+    ...(edit.caption !== undefined ? { meta: edit.caption } : {}),
+    ...(image ? { image } : {}),
+  };
+}
+
+function applyStudioV3CompositionEdits(
+  document: StudioV3Document,
+  roomId: string,
+  objects: StudioV2Object[],
+  composition: NonNullable<StudioV3Room["composition"]>,
+): NonNullable<StudioV3Room["composition"]> {
+  const room = document.rooms.find((candidate) => candidate.id === roomId);
+  if (!room) return composition;
+  const layout = studioV2Layout(composition.layoutId);
+  const byObjectId = new Map(objects.map((object) => [object.id, object]));
+  const edits = Object.values(document.objectEdits)
+    .filter((edit) => edit.roomId === roomId && byObjectId.has(edit.objectId) && objectEditMatchesSource(document, roomId, edit.objectId, edit))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const candidates = new Map<string, { edit: StudioV3ObjectEdit; placement: StudioV2ObjectPlacement }>();
+  for (const edit of edits) {
+    if (edit.zoneId === undefined && edit.order === undefined && edit.size === undefined && edit.treatment === undefined && edit.featured === undefined) continue;
+    const object = byObjectId.get(edit.objectId)!;
+    const current = composition.placements.find((placement) => placement.objectId === edit.objectId);
+    if (!current) continue;
+    const zone = layout.zones.find((candidate) => candidate.id === (edit.zoneId ?? current.zoneId));
+    if (!zone || !zone.accepts.includes(object.type)) continue;
+    let size = edit.size && zone.allowedSizes.includes(edit.size) ? edit.size : current.size;
+    if (edit.featured === true && zone.allowedSizes.includes("feature")) size = "feature";
+    if (edit.featured === false && size === "feature") size = zone.allowedSizes.find((candidate) => candidate !== "feature") ?? zone.defaultSize;
+    if (!zone.allowedSizes.includes(size)) size = zone.defaultSize;
+    let treatment = edit.treatment && zone.allowedTreatments?.includes(edit.treatment) ? edit.treatment : current.treatment;
+    if (treatment && !zone.allowedTreatments?.includes(treatment)) treatment = zone.allowedTreatments?.[0];
+    const order = edit.order === undefined ? current.order : Math.max(0, Math.min(10000, edit.order));
+    candidates.set(edit.objectId, {
+      edit,
+      placement: {
+        objectId: edit.objectId,
+        chamberId: roomId,
+        layoutId: layout.id,
+        zoneId: zone.id,
+        order,
+        size,
+        ...(treatment ? { treatment } : {}),
+      },
+    });
+  }
+
+  const rejected = new Set<string>();
+  while (true) {
+    const desired = composition.placements.map((current) => ({
+      current,
+      candidate: candidates.get(current.objectId),
+      placement: rejected.has(current.objectId)
+        ? current
+        : candidates.get(current.objectId)?.placement ?? current,
+    }));
+    let changed = false;
+    for (const zone of layout.zones) {
+      if (zone.maxObjects === undefined) continue;
+      const occupants = desired.filter(({ placement }) => placement.zoneId === zone.id);
+      if (occupants.length <= zone.maxObjects) continue;
+      const residents = occupants.filter(({ current }) => current.zoneId === zone.id);
+      const availableForMoves = Math.max(0, zone.maxObjects - residents.length);
+      const incoming = occupants
+        .filter(({ current, candidate }) => current.zoneId !== zone.id && Boolean(candidate))
+        .sort((left, right) => left.candidate!.edit.id.localeCompare(right.candidate!.edit.id));
+      for (const entry of incoming.slice(availableForMoves)) {
+        if (!rejected.has(entry.current.objectId)) {
+          rejected.add(entry.current.objectId);
+          changed = true;
+        }
+      }
+    }
+    if (!changed) break;
+  }
+
+  const placements = composition.placements.map((current) => (
+    rejected.has(current.objectId) ? current : candidates.get(current.objectId)?.placement ?? current
+  ));
+  return normalizeStudioV2Composition({ layoutId: layout.id, placements }, roomId, objects);
+}
+
+function objectEditMatchesSource(
+  document: StudioV3Document,
+  roomId: string,
+  objectId: string,
+  edit: StudioV3ObjectEdit,
+): boolean {
+  const room = document.rooms.find((candidate) => candidate.id === roomId);
+  const placement = room?.placements.find((candidate) => candidate.id === objectId);
+  const sourceRef = placement?.sourceRef
+    ?? findStudioV3LegacyPiece(document.pieces, roomId, objectId)?.sourceRef;
+  return sourceRef === edit.sourceRef
+    && findStudioV3Piece(document.pieces, edit.sourceRef, roomId)?.sourceStatus === "current";
 }
 
 function isPublicStudioV3Placement(document: StudioV3Document, placement: StudioV3Placement): boolean {
-  const piece = document.pieces[placement.sourceRef];
-  return placement.status === "placed" && placement.visibility !== "hidden" && piece?.sourceStatus === "current";
+  const piece = findStudioV3Piece(document.pieces, placement.sourceRef, placement.roomId);
+  const requiredCta = isRequiredStudioV3CtaSource(document, placement.sourceRef, placement.roomId, placement.id);
+  return piece?.sourceStatus === "current" && (
+    requiredCta || (placement.status === "placed" && placement.visibility !== "hidden")
+  );
+}
+
+function isRequiredStudioV3CtaSource(
+  document: StudioV3Document,
+  sourceRef: StudioV3SourceRef,
+  roomId: string,
+  objectId: string,
+): boolean {
+  const requiredPiece = Object.values(document.pieces).find((piece) => (
+    piece.snapshotType === "cta" && piece.sourceRef === document.navigation.requiredCta.sourceRef
+  ));
+  const requiredPlacement = requiredPiece ? undefined : document.rooms.flatMap((room) => (
+    room.placements.map((placement) => ({ roomId: room.id, placement }))
+  )).find(({ placement }) => placement.sourceRef === document.navigation.requiredCta.sourceRef);
+  return Boolean(
+    document.navigation.requiredCta.visible
+    && document.navigation.requiredCta.sourceRef === sourceRef
+    && (requiredPiece
+      ? requiredPiece.roomId === roomId && requiredPiece.id === objectId
+      : requiredPlacement
+        ? requiredPlacement.roomId === roomId && requiredPlacement.placement.id === objectId
+        : true)
+  );
 }
 
 function isPositiveIntegerId(value: unknown): value is number {
@@ -563,6 +802,7 @@ function roomStyleFromV2(layoutId: unknown): StudioV3RoomStyleId {
 }
 
 function addPlacement(document: StudioV3Document, roomId: string, placement: StudioV3Placement): StudioV3Document {
+  if (document.rooms.reduce((count, room) => count + room.placements.length, 0) >= 160) return document;
   return {
     ...document,
     rooms: document.rooms.map((room) => (
@@ -571,6 +811,16 @@ function addPlacement(document: StudioV3Document, roomId: string, placement: Stu
         : room
     )),
   };
+}
+
+function projectCompatibilityIdentityRows(document: StudioV3Document): string[] {
+  return document.rooms.flatMap((room) => [
+    ...room.baseObjectIds.flatMap((objectId) => {
+      const piece = findStudioV3LegacyPiece(document.pieces, room.id, objectId);
+      return piece ? [`${piece.sourceRef}\u001f${room.id}\u001f${room.styleId}`] : [];
+    }),
+    ...room.placements.map((placement) => `${placement.sourceRef}\u001f${room.id}\u001f${room.styleId}`),
+  ]);
 }
 
 function nextStudioV3PlacementId(room: StudioV3Room, sourceRef: StudioV3SourceRef): string {
@@ -601,14 +851,37 @@ function markLatestCollectionPlacement(
 }
 
 function applyLockedLookValues(document: StudioV3Document, values: StudioV3LookValues): StudioV3LookValues {
-  const presenceMotionLock = document.locks.find((lock) => lock.layer === "motion-atmosphere" && lock.scopeKind === "presence");
-  if (!presenceMotionLock) return values;
+  const presenceOverrides = document.layerOverrides
+    .filter((override) => override.scopeKind === "presence" && override.scopeId === String(document.nodeId))
+    .reduce((current, override) => ({ ...current, ...override.value }), {} as Partial<StudioV3LookValues>);
+  const overridden = { ...values, ...presenceOverrides } as StudioV3LookValues;
+  const presenceMotionLock = document.locks.find((lock) => (
+    lock.layer === "motion-atmosphere" && lock.scopeKind === "presence" && lock.scopeId === String(document.nodeId)
+  ));
+  if (!presenceMotionLock) return overridden;
   const locked = presenceMotionLock.value as Partial<StudioV3LookValues>;
   return {
-    ...values,
+    ...overridden,
     ...(typeof locked.motionIntensity === "string" ? { motionIntensity: locked.motionIntensity } : {}),
     ...(typeof locked.background === "string" ? { background: locked.background } : {}),
   };
+}
+
+function isStableRuntimeReference(value: string): boolean {
+  return value.length > 0 && value.length <= 160 && /^[A-Za-z0-9_.:-]+$/.test(value);
+}
+
+function isSafeRuntimeMediaUrl(value: unknown): value is string {
+  if (typeof value !== "string" || value.length < 1 || value.length > 2048) return false;
+  if (/^(?:data|blob|javascript|file):/i.test(value) || value.startsWith("//")) return false;
+  return value.startsWith("/") || /^https:\/\//i.test(value)
+    || /^http:\/\/(?:127\.0\.0\.1|localhost|\[::1\])(?::\d+)?\//i.test(value);
+}
+
+function isAvailableRuntimeAsset(asset: PresenceEditorAsset): boolean {
+  const validStatus = asset.status === undefined || ["draft_uploaded", "draft_attached", "ready", "published"].includes(asset.status);
+  const validVisibility = asset.visibility === undefined || ["private_draft", "public_unlisted", "public_published"].includes(asset.visibility);
+  return validStatus && validVisibility;
 }
 
 function normalizeStudioV3Revision(value: unknown): number | null {

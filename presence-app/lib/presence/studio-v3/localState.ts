@@ -9,6 +9,7 @@ import {
 } from "./model.ts";
 import { isStudioV3CollectionSourceRef, isStudioV3PlacementId } from "./sourceRefs.ts";
 import { isSafeStudioV3MetadataEnvelope, type StudioV3PrivateMetadata } from "./p1State.ts";
+import { containsForbiddenStudioV3Text } from "./safety.ts";
 
 export interface StudioV3OwnerPartitionResult {
   key: string | null;
@@ -41,7 +42,10 @@ export interface StudioV3RoomLocalEnvelope {
   baseIdentity: StudioV3BaseIdentity;
   baseFingerprint: string;
   placementSourceRefs: Record<string, string>;
-  placements?: Array<Pick<StudioV3Placement, "id" | "roomId" | "sourceRef" | "collectionSourceRef" | "order" | "status" | "reason">>;
+  placements?: Array<Pick<StudioV3Placement,
+    "id" | "roomId" | "sourceRef" | "collectionSourceRef" | "order" | "status" | "reason"
+    | "featured" | "depth" | "visibility"
+  >>;
   locks: StudioV3LayerLock[];
   updatedAt: string;
 }
@@ -265,6 +269,44 @@ export function clearStudioV3LocalStateForOwnerPartition(input: {
   const prefix = `presence-studio-v3:prototype:${input.ownerPartitionKey}:`;
   const keys = Array.from({ length: input.storage.length }, (_, index) => input.storage.key(index))
     .filter((key): key is string => Boolean(key && key.startsWith(prefix)));
+  for (const key of keys) input.storage.removeItem(key);
+  return keys.length;
+}
+
+/**
+ * Clear only the browser-local generations for one Presence/base pair. Durable
+ * owner-private state is deliberately outside this browser-storage operation.
+ */
+export function clearStudioV3LocalStateForPresence(input: {
+  storage: Storage;
+  expected: StudioV3SnapshotExpectation;
+}): number {
+  const { ownerPartitionKey, presenceId, baseIdentity, baseFingerprint } = input.expected;
+  const baseParts = [
+    "presence-studio-v3:prototype",
+    ownerPartitionKey,
+  ];
+  const manifestKey = [...baseParts, "manifest", String(presenceId), baseIdentity.sourceKind, String(baseIdentity.configId), baseFingerprint].join(":");
+  const snapshotPrefix = [...baseParts, "snapshot", String(presenceId), baseIdentity.sourceKind, String(baseIdentity.configId), baseFingerprint, ""].join(":");
+  const legacyPresenceKey = presenceEnvelopeKey({
+    ownerPartitionKey,
+    presenceId,
+    baseKind: baseIdentity.sourceKind,
+    configId: baseIdentity.configId,
+    baseFingerprint,
+  });
+  const legacyRoomPrefix = [...baseParts, "room", String(presenceId), ""].join(":");
+  const legacyRoomSuffix = [baseIdentity.sourceKind, String(baseIdentity.configId), baseFingerprint].join(":");
+  const keys = Array.from({ length: input.storage.length }, (_, index) => input.storage.key(index))
+    .filter((key): key is string => Boolean(key))
+    .filter((key) => (
+      key === manifestKey ||
+      key === `${manifestKey}:quarantine` ||
+      key.startsWith(snapshotPrefix) ||
+      key === legacyPresenceKey ||
+      key === `${legacyPresenceKey}:quarantine` ||
+      (key.startsWith(legacyRoomPrefix) && (key.endsWith(legacyRoomSuffix) || key.endsWith(`${legacyRoomSuffix}:quarantine`)))
+    ));
   for (const key of keys) input.storage.removeItem(key);
   return keys.length;
 }
@@ -509,7 +551,10 @@ function hasOnlyKeys(value: object, allowed: string[]): boolean {
 function isSafeStoredPlacement(value: unknown): value is StudioV3StoredPlacement {
   const placement = value && typeof value === "object" ? value as Partial<StudioV3Placement> : null;
   if (!placement) return false;
-  if (!hasOnlyKeys(placement, ["id", "roomId", "sourceRef", "collectionSourceRef", "order", "status", "reason"])) return false;
+  if (!hasOnlyKeys(placement, [
+    "id", "roomId", "sourceRef", "collectionSourceRef", "order", "status", "reason",
+    "featured", "depth", "visibility",
+  ])) return false;
   if (
     typeof placement.id !== "string" ||
     typeof placement.roomId !== "string" ||
@@ -524,6 +569,9 @@ function isSafeStoredPlacement(value: unknown): value is StudioV3StoredPlacement
     !isStudioV3CollectionSourceRef(placement.collectionSourceRef)
   )) return false;
   if (placement.reason !== undefined && typeof placement.reason !== "string") return false;
+  if (placement.featured !== undefined && typeof placement.featured !== "boolean") return false;
+  if (placement.depth !== undefined && (typeof placement.depth !== "number" || !Number.isFinite(placement.depth) || placement.depth < -100 || placement.depth > 100)) return false;
+  if (placement.visibility !== undefined && placement.visibility !== "visible" && placement.visibility !== "hidden") return false;
   if (!isStudioV3PlacementId(placement.id, placement.roomId, placement.sourceRef)) return false;
   return true;
 }
@@ -589,26 +637,24 @@ function isSafeLock(value: unknown): value is StudioV3LayerLock {
   );
 }
 
-function isSafeMotionAtmosphereLockValue(value: unknown): value is Pick<StudioV3LookValues, "motionIntensity" | "background"> {
+function isSafeMotionAtmosphereLockValue(value: unknown): value is Pick<StudioV3LookValues, "motionIntensity"> & Partial<Pick<StudioV3LookValues, "background">> {
   const payload = value && typeof value === "object" ? value as Partial<Pick<StudioV3LookValues, "motionIntensity" | "background">> : null;
   if (!payload || !hasOnlyKeys(payload, ["motionIntensity", "background"])) return false;
-  return typeof payload.background === "string" && ["still", "gentle", "living"].includes(String(payload.motionIntensity));
+  return (payload.background === undefined || typeof payload.background === "string")
+    && ["still", "gentle", "living"].includes(String(payload.motionIntensity));
 }
 
-export function containsForbiddenLocalValue(value: unknown): boolean {
+export function containsForbiddenLocalValue(value: unknown, key = ""): boolean {
   if (typeof value === "string") {
-    return /(?:https?|ftp|sftp|file|ws|wss|mailto|javascript):\/?/i.test(value) ||
-      /(?:^|["'\s])\/\/[^\s"']+/i.test(value) ||
-      /blob:/i.test(value) ||
-      /data:/i.test(value) ||
-      /(?:url|image-set|cross-fade|element|paint|cursor|src)\s*\(/i.test(value) ||
+    return containsForbiddenStudioV3Text(value, /fingerprint|ownerPartitionKey/i.test(key)) ||
+      /(?:image-set|cross-fade|element|paint|cursor|src)\s*\(/i.test(value) ||
       /^\/(?!$)/i.test(value) ||
-      /preview_expires_at|private_draft|bearer|service_role|access_token/i.test(value);
+      /preview_expires_at|private_draft|service_role/i.test(value);
   }
   if (!value || typeof value !== "object") return false;
-  if (Array.isArray(value)) return value.some(containsForbiddenLocalValue);
+  if (Array.isArray(value)) return value.some((child) => containsForbiddenLocalValue(child, key));
   return Object.entries(value as Record<string, unknown>).some(([key, child]) => (
-    /(?:^|_)(?:access|refresh|auth|session|preview|api)?_?token$|secret|url|blob|base64|preview_expires_at/i.test(key) || containsForbiddenLocalValue(child)
+    /(?:^|_)(?:access|refresh|auth|session|preview|api)?_?token$|secret|url|blob|base64|preview_expires_at/i.test(key) || containsForbiddenLocalValue(child, key)
   ));
 }
 

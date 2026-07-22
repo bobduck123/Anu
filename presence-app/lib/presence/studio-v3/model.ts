@@ -1,6 +1,8 @@
-import type { PresenceCollection, PresenceEditableConfig, PresenceWork } from "../../api/types.ts";
+import type { PresenceCollection, PresenceEditableConfig, PresenceEditorAsset, PresenceWork } from "../../api/types.ts";
 import type {
   StudioV2ChamberComposition,
+  StudioV2PlacementSize,
+  StudioV2PlacementTreatment,
   StudioV2MotionIntensity,
   StudioV2BorderStyle,
   StudioV2ObjectType,
@@ -69,6 +71,7 @@ export type StudioV3PostPayload = Omit<StudioV3ComparableConfig, "schema_version
 export interface StudioV3Piece {
   id: string;
   sourceRef: StudioV3SourceRef;
+  roomId?: string;
   title: string;
   date?: string;
   description?: string;
@@ -86,7 +89,42 @@ export interface StudioV3Collection {
   title: string;
   description?: string;
   memberSourceRefs: StudioV3SourceRef[];
+  sourceStatus: "current" | "missing" | "unavailable";
   fromCollection?: PresenceCollection;
+}
+
+/**
+ * A private, reference-only edit for one concrete object in one Room. Canonical
+ * Works and media rows stay outside this document; only their stable references
+ * may cross the persistence boundary.
+ */
+export interface StudioV3ObjectEdit {
+  id: string;
+  roomId: string;
+  objectId: string;
+  sourceRef: StudioV3SourceRef;
+  title?: string;
+  body?: string;
+  caption?: string;
+  mediaSourceRef?: StudioV3SourceRef;
+  mediaId?: string;
+  mediaAlt?: string;
+  zoneId?: string;
+  order?: number;
+  size?: StudioV2PlacementSize;
+  treatment?: StudioV2PlacementTreatment;
+  featured?: boolean;
+  visibility?: "visible" | "hidden";
+}
+
+/** Runtime-only media lookup. URLs and expiring previews are never projected. */
+export interface StudioV3MediaAsset {
+  mediaId: string;
+  src: string;
+  alt: string;
+  mediaType: "image" | "unknown";
+  sourceStatus: "current" | "unavailable";
+  fromAsset: PresenceEditorAsset;
 }
 
 export interface StudioV3Placement {
@@ -139,6 +177,7 @@ export interface StudioV3Look {
   baseLookId?: StudioV3LookId;
   values: StudioV3LookValues;
   provenance: string;
+  mediaIds?: string[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -226,6 +265,8 @@ export interface StudioV3Document {
   rooms: StudioV3Room[];
   pieces: Record<string, StudioV3Piece>;
   collections: Record<string, StudioV3Collection>;
+  objectEdits: Record<string, StudioV3ObjectEdit>;
+  mediaAssets: Record<string, StudioV3MediaAsset>;
   looks: Record<string, StudioV3Look>;
   locks: StudioV3LayerLock[];
   layerOverrides: StudioV3LayerOverride[];
@@ -263,6 +304,7 @@ export interface StudioV3HydrateInput {
   studioV2State: StudioV2State;
   works: PresenceWork[];
   collections: PresenceCollection[];
+  assets?: PresenceEditorAsset[];
   now?: string;
 }
 
