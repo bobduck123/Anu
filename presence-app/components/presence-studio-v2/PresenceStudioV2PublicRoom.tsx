@@ -21,9 +21,15 @@ interface PresenceStudioV2PublicRoomProps {
   room: StudioV2PublicRoom;
   editorBridge?: PresenceStudioV2EditorBridge;
   editorActiveChamberId?: string;
+  inMemoryVisualPreview?: boolean;
 }
 
-export default function PresenceStudioV2PublicRoom({ room, editorBridge, editorActiveChamberId }: PresenceStudioV2PublicRoomProps) {
+export default function PresenceStudioV2PublicRoom({
+  room,
+  editorBridge,
+  editorActiveChamberId,
+  inMemoryVisualPreview = false,
+}: PresenceStudioV2PublicRoomProps) {
   const [focusedArtwork, setFocusedArtwork] = useState<StudioV2PublicObject | null>(null);
   const [activeLiquidIndex, setActiveLiquidIndex] = useState(0);
   const world = WORLD_KITS.find((kit) => kit.id === room.worldId);
@@ -34,6 +40,7 @@ export default function PresenceStudioV2PublicRoom({ room, editorBridge, editorA
     "--v2-public-shadow": `${Math.max(0.05, room.skin.shadowDepth)}`,
     "--v2-public-heading-weight": room.skin.headingWeight,
   } as CSSProperties;
+  const visualOverrideActive = Boolean(editorBridge || inMemoryVisualPreview);
   const visibleObjects = room.chambers.flatMap((chamber) => chamber.objects);
   const ctaObject = visibleObjects.find((object) => object.type === "cta" || object.role === "cta");
   const ctaLabel = ctaObject?.title || room.cta.label;
@@ -196,19 +203,20 @@ export default function PresenceStudioV2PublicRoom({ room, editorBridge, editorA
         ctaLabel={ctaLabel}
         editorBridge={editorBridge}
         editorActiveChamberId={editorActiveChamberId}
+        inMemoryVisualPreview={inMemoryVisualPreview}
       />
     );
   }
 
   return (
     <main
-      className={`presence-studio-v2-public world-${room.worldId} texture-${room.skin.texture} motion-${room.skin.motionIntensity} environment-focus-${environment.focus}${editorBridge ? studioV2ExperienceClassName(room.skin) : ""}${thresholdImage?.src ? " has-threshold-image" : ""}`}
+      className={`presence-studio-v2-public world-${room.worldId} texture-${room.skin.texture} motion-${room.skin.motionIntensity} environment-focus-${environment.focus}${visualOverrideActive ? studioV2ExperienceClassName(room.skin) : ""}${thresholdImage?.src ? " has-threshold-image" : ""}`}
       style={style}
       data-environment-runtime="dom"
-      data-experience-density={editorBridge ? room.skin.experienceDensity : undefined}
-      data-experience-atmosphere={editorBridge ? room.skin.experienceAtmosphere : undefined}
-      data-experience-piece-treatment={editorBridge ? room.skin.experiencePieceTreatment : undefined}
-      data-experience-journey={editorBridge ? room.skin.experienceJourney : undefined}
+      data-experience-density={visualOverrideActive ? room.skin.experienceDensity : undefined}
+      data-experience-atmosphere={visualOverrideActive ? room.skin.experienceAtmosphere : undefined}
+      data-experience-piece-treatment={visualOverrideActive ? room.skin.experiencePieceTreatment : undefined}
+      data-experience-journey={visualOverrideActive ? room.skin.experienceJourney : undefined}
     >
       <PresenceStudioV2EnvironmentLayer
         environment={environment}
@@ -294,7 +302,7 @@ export default function PresenceStudioV2PublicRoom({ room, editorBridge, editorA
               <span>{isGallery ? "Gallery room" : world?.verb ?? "The room opens"}</span>
               <h2 id={`v2-public-chamber-${chamber.id}`}>{chamber.label}</h2>
             </div>
-            {editorBridge && (chamber.composition?.layoutId as string | undefined) === "film-strip-selected-works" ? (
+            {visualOverrideActive && (chamber.composition?.layoutId as string | undefined) === "film-strip-selected-works" ? (
               <FilmStripSelectedWorksChamber
                 chamber={chamber}
                 radius={room.skin.objectRadius}
@@ -303,9 +311,9 @@ export default function PresenceStudioV2PublicRoom({ room, editorBridge, editorA
                 editorBridge={editorBridge}
               />
             ) : (
-            <div className={`v2-public-layout layout-${studioV2Layout(studioV2SharedPublicComposition(chamber, editorBridge)?.layoutId).id}`}>
-              {studioV2Layout(studioV2SharedPublicComposition(chamber, editorBridge)?.layoutId).zones.map((zone) => {
-                const composition = normalizeStudioV2Composition(studioV2SharedPublicComposition(chamber, editorBridge), chamber.id, chamber.objects.map((object) => ({ ...object, visibility: { public: true, mobile: object.mobileVisible }, locked: false, pinned: false })));
+            <div className={`v2-public-layout layout-${studioV2Layout(studioV2SharedPublicComposition(chamber, visualOverrideActive)?.layoutId).id}`}>
+              {studioV2Layout(studioV2SharedPublicComposition(chamber, visualOverrideActive)?.layoutId).zones.map((zone) => {
+                const composition = normalizeStudioV2Composition(studioV2SharedPublicComposition(chamber, visualOverrideActive), chamber.id, chamber.objects.map((object) => ({ ...object, visibility: { public: true, mobile: object.mobileVisible }, locked: false, pinned: false })));
                 const placements = composition.placements.filter((placement) => placement.zoneId === zone.id).sort((a, b) => a.order - b.order);
                 return placements.length > 0 ? <section className={`v2-public-layout-zone zone-${zone.id}`} key={zone.id} data-zone-id={zone.id}>
                   {placements.map((placement, objectIndex) => {
@@ -620,10 +628,10 @@ function studioV2ExperienceClassName(skin: StudioV2Skin): string {
 
 function studioV2SharedPublicComposition(
   chamber: StudioV2PublicChamber,
-  editorBridge?: PresenceStudioV2EditorBridge,
+  visualOverrideActive: boolean,
 ): StudioV2PublicChamber["composition"] {
   // Without the editor bridge, treat the P1-only token exactly as the pre-P1 renderer did: unknown => Gallery wall.
-  if (editorBridge || chamber.composition?.layoutId !== "film-strip-selected-works") {
+  if (visualOverrideActive || chamber.composition?.layoutId !== "film-strip-selected-works") {
     return chamber.composition;
   }
   return { ...chamber.composition, layoutId: "gallery-wall" };
@@ -986,6 +994,7 @@ function BbbVisionThresholdGalleryPublicRoom({
   ctaLabel,
   editorBridge,
   editorActiveChamberId,
+  inMemoryVisualPreview,
 }: {
   room: StudioV2PublicRoom;
   worldName: string;
@@ -999,6 +1008,7 @@ function BbbVisionThresholdGalleryPublicRoom({
   ctaLabel?: string;
   editorBridge?: PresenceStudioV2EditorBridge;
   editorActiveChamberId?: string;
+  inMemoryVisualPreview?: boolean;
 }) {
   const [view, setView] = useState<BbbVisionPublicView>("threshold");
   const [movement, setMovement] = useState<BbbVisionMovement | null>(null);
@@ -1013,7 +1023,8 @@ function BbbVisionThresholdGalleryPublicRoom({
   const explicitDefaultChamber = defaultChamber?.metadata?.isDefault === true ? defaultChamber : undefined;
   const galleryDefaultChamber =
     explicitDefaultChamber && explicitDefaultChamber.id !== thresholdChamber?.id ? explicitDefaultChamber : undefined;
-  const galleryFallbackChamber = editorBridge
+  const visualOverrideActive = Boolean(editorBridge || inMemoryVisualPreview);
+  const galleryFallbackChamber = visualOverrideActive
     ? room.chambers.find((chamber) => (
       chamber.id !== thresholdChamber?.id &&
       /gallery|field|work/i.test(`${chamber.id} ${chamber.label}`)
@@ -1026,10 +1037,10 @@ function BbbVisionThresholdGalleryPublicRoom({
       : galleryFallbackChamber
         ? [galleryFallbackChamber]
       : [];
-  const editorActiveChamber = editorBridge && editorActiveChamberId
+  const editorActiveChamber = visualOverrideActive && editorActiveChamberId
     ? room.chambers.find((chamber) => chamber.id === editorActiveChamberId)
     : undefined;
-  const filmStripGalleryChamber = editorBridge
+  const filmStripGalleryChamber = visualOverrideActive
     ? (editorActiveChamber?.composition?.layoutId === "film-strip-selected-works"
       ? editorActiveChamber
       : undefined) ?? galleryChambers.find(
@@ -1212,7 +1223,7 @@ function BbbVisionThresholdGalleryPublicRoom({
   }, [syncViewFromLocation]);
 
   useEffect(() => {
-    if (!editorBridge || !editorActiveChamberId) return;
+    if (!visualOverrideActive || !editorActiveChamberId) return;
     if (editorActiveChamberId === editorThresholdChamberId) {
       setView("threshold");
     } else if (editorActiveChamberId === practiceChamber?.id) {
@@ -1220,7 +1231,7 @@ function BbbVisionThresholdGalleryPublicRoom({
     } else {
       setView("gallery");
     }
-  }, [editorActiveChamberId, editorBridge, editorThresholdChamberId, practiceChamber?.id]);
+  }, [editorActiveChamberId, editorThresholdChamberId, practiceChamber?.id, visualOverrideActive]);
 
   useEffect(() => {
     return () => {
@@ -1315,16 +1326,16 @@ function BbbVisionThresholdGalleryPublicRoom({
 
   return (
     <main
-      className={`presence-studio-v2-public world-${room.worldId} style-bbbvision-threshold-gallery v2-bbb-shell texture-${room.skin.texture} motion-${room.skin.motionIntensity} environment-focus-${environment.focus}${editorBridge ? studioV2ExperienceClassName(room.skin) : ""} is-view-${view}${movement ? ` is-moving-${movement}` : ""}${activeObject?.image?.src ? " has-threshold-image" : ""}`}
+      className={`presence-studio-v2-public world-${room.worldId} style-bbbvision-threshold-gallery v2-bbb-shell texture-${room.skin.texture} motion-${room.skin.motionIntensity} environment-focus-${environment.focus}${visualOverrideActive ? studioV2ExperienceClassName(room.skin) : ""} is-view-${view}${movement ? ` is-moving-${movement}` : ""}${activeObject?.image?.src ? " has-threshold-image" : ""}`}
       style={style}
       data-testid="presence-public-style-bbbvision-threshold-gallery"
       data-bbb-view={view}
       data-active-index={safeActiveIndex}
       data-environment-runtime="dom"
-      data-experience-density={editorBridge ? room.skin.experienceDensity : undefined}
-      data-experience-atmosphere={editorBridge ? room.skin.experienceAtmosphere : undefined}
-      data-experience-piece-treatment={editorBridge ? room.skin.experiencePieceTreatment : undefined}
-      data-experience-journey={editorBridge ? room.skin.experienceJourney : undefined}
+      data-experience-density={visualOverrideActive ? room.skin.experienceDensity : undefined}
+      data-experience-atmosphere={visualOverrideActive ? room.skin.experienceAtmosphere : undefined}
+      data-experience-piece-treatment={visualOverrideActive ? room.skin.experiencePieceTreatment : undefined}
+      data-experience-journey={visualOverrideActive ? room.skin.experienceJourney : undefined}
     >
       <PresenceStudioV2EnvironmentLayer
         environment={environment}

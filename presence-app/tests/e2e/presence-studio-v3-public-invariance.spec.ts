@@ -2,16 +2,13 @@ import { mkdirSync } from "node:fs";
 import { expect, test, type APIRequestContext, type Page } from "playwright/test";
 
 const API_BASE = "http://127.0.0.1:5105";
-const evidenceDir = "docs/program/evidence/presence-studio-v3-p1-foundation/screenshots";
+const evidenceDir = "docs/program/evidence/presence-studio-v3-m1-functional-editing/screenshots";
 mkdirSync(evidenceDir, { recursive: true });
-const forbiddenWritePatterns = [
-  /\/api\/presence\/owner\/rooms\/29\/editor\/draft/,
-  /\/api\/presence\/owner\/rooms\/29\/editor\/preview/,
-  /\/api\/presence\/owner\/rooms\/29\/editor\/publish/,
-  /\/api\/presence\/owner\/rooms\/29\/editor\/rollback/,
-];
 
-const allowedWritePatterns = [/^\/__test__\//];
+const forbiddenWritePatterns = [
+  /\/api\/presence\/owner\/rooms\/29\/editor\/(?:draft|preview|publish|rollback)/,
+  /\/api\/presence\/owner\/nodes\/29\/(?:works|collections|media)/,
+];
 
 async function signInOwnerAndEnableV3(page: Page, request: APIRequestContext) {
   await request.post(`${API_BASE}/__test__/reset`);
@@ -27,134 +24,125 @@ async function enableOwnerAccess(page: Page) {
 }
 
 async function publicSignature(page: Page) {
+  await page.evaluate(() => {
+    window.localStorage.setItem("presence-onboarded:gallery-bbbvision", "1");
+  });
   await page.goto("/p/bbbvision", { waitUntil: "networkidle" });
   await expect(page.getByText("bbb.vision").first()).toBeVisible();
   await expect(page.getByTestId("presence-studio-v3-shell")).toHaveCount(0);
-  await expect(page.locator("main").first()).toContainText("bbb.vision");
+  await expect(page.getByRole("dialog", { name: "Room navigation hints" })).toHaveCount(0);
+  const root = page.locator("main").first();
   return {
     title: await page.getByText("bbb.vision").first().innerText(),
-    bodyText: await page.locator("main").first().innerText(),
+    bodyText: await root.innerText(),
+    html: await root.innerHTML(),
     studioV3Visible: await page.getByTestId("presence-studio-v3-shell").count(),
   };
 }
 
-async function expectUndefinedBridgeSpaceDoesNotActivateCanvas(page: Page) {
-  await page.goto("/p/bbbvision", { waitUntil: "networkidle" });
-  if (await page.getByTestId("presence-public-bbbvision-enter").count() === 0) return;
-  await page.getByTestId("presence-public-bbbvision-enter").click();
-  await expect(page.getByTestId("presence-public-bbbvision-gallery")).toBeVisible();
-  await page.getByTestId("presence-public-bbbvision-constellation").focus();
-  await page.keyboard.press("Space");
-  await expect(page.getByTestId("presence-public-bbbvision-focus")).toHaveCount(0);
-  await expect(page.getByTestId("presence-public-artwork-focus")).toHaveCount(0);
-}
-
-async function expectNoForbiddenWrites(request: APIRequestContext) {
-  const requestLog = await (await request.get(`${API_BASE}/__test__/requests`)).json() as {
-    requests: Array<{ method: string; path: string }>;
+async function expectOnlyPrivateV3Writes(request: APIRequestContext, expectedCount: number) {
+  const payload = await (await request.get(`${API_BASE}/__test__/requests`)).json() as {
+    requests: Array<{ method: string; path: string; body?: unknown }>;
   };
-  const forbidden = requestLog.requests.filter((entry) => {
-    if (entry.method === "GET") return false;
-    if (allowedWritePatterns.some((pattern) => pattern.test(entry.path))) return false;
-    return true;
-  });
-  expect(forbidden.filter((entry) => forbiddenWritePatterns.some((pattern) => pattern.test(entry.path)))).toEqual([]);
-  expect(forbidden).toEqual([]);
+  const writes = payload.requests.filter((entry) => entry.method !== "GET");
+  expect(writes.filter((entry) => forbiddenWritePatterns.some((pattern) => pattern.test(entry.path)))).toEqual([]);
+  expect(writes).toHaveLength(expectedCount);
+  for (const write of writes) {
+    expect({ method: write.method, path: write.path }).toEqual({
+      method: "PUT",
+      path: "/api/presence/owner/rooms/29/editor/v3/state",
+    });
+  }
 }
 
-test("Studio V3 local changes do not alter BBB public output or public routes", async ({ page, request }) => {
+test("M1 private edits and Test as visitor leave both BBB public routes and payload unchanged", async ({ page, request }) => {
   await signInOwnerAndEnableV3(page, request);
-
-  await expectUndefinedBridgeSpaceDoesNotActivateCanvas(page);
   const before = await publicSignature(page);
-  await page.screenshot({ path: `${evidenceDir}/00-public-before-p1-local-flow.png`, fullPage: true });
 
   await page.goto("/");
   await enableOwnerAccess(page);
-  await page.goto("/studio/29/editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("presence-studio-v3-shell")).toBeVisible({ timeout: 20_000 });
-  await page.getByRole("button", { name: "Home" }).click();
+  await page.goto("/studio/29/editor", { waitUntil: "networkidle" });
+  await expect(page.getByTestId("presence-studio-v3-shell")).toBeVisible();
+  await page.getByRole("button", { name: "Studio Home" }).click();
+
   await page.getByTestId("presence-studio-v3-shelf-trigger").click();
-  await page.getByTestId("presence-studio-v3-place-piece").click();
+  const noteCard = page.locator(".studio-v3-library-sections section")
+    .filter({ hasText: "Room-native BBB Pieces" })
+    .locator(".studio-v3-library-card")
+    .filter({ hasText: "Editable practice note" })
+    .first();
+  await noteCard.getByRole("button", { name: "Inspect / edit" }).click();
+  await page.getByTestId("presence-studio-v3-edit-action").click();
+  await page.getByTestId("presence-studio-v3-piece-title").fill("Private M1 visitor rehearsal");
+  await page.getByTestId("presence-studio-v3-piece-body").fill("This copy is visible only in the owner rehearsal until publish is separately approved.");
+  await page.getByTestId("presence-studio-v3-piece-done").click();
+
   await page.getByTestId("presence-studio-v3-look-trigger").click();
-  await page.getByTestId("presence-studio-v3-apply-soft-editorial").click();
+  await page.getByTestId("presence-studio-v3-facet-background-night").click();
+  await page.getByTestId("presence-studio-v3-facet-treatment-luminous").click();
+  await page.getByRole("button", { name: "Close sheet" }).click();
+  await page.getByTestId("presence-studio-v3-save-private-state").click();
+  await expect(page.getByTestId("presence-studio-v3-save-status")).toHaveAttribute("data-save-phase", "saved");
+
   await page.getByTestId("presence-studio-v3-test-visitor").click();
-  await expect(page.locator(".presence-studio-v2-public").first()).toBeVisible();
-  await expect(page.locator(".studio-v3-topbar")).toHaveCount(0);
-  await expect(page.locator(".studio-v3-action-bar")).toHaveCount(0);
-  await expect(page.locator(".studio-v3-sheet")).toHaveCount(0);
-  await expect(page.locator(".studio-v3-local-flag")).toHaveCount(0);
+  await page.getByTestId("presence-public-bbbvision-enter").click();
+  await expect(page.getByTestId("presence-public-bbbvision-gallery")).toBeVisible();
+  await page.getByTestId("presence-public-bbbvision-practice-link").click();
+  const practice = page.getByTestId("presence-public-bbbvision-practice");
+  await expect(practice).toBeVisible();
+  await expect(practice).toHaveCSS("opacity", "1");
+  const rehearsal = practice.getByText("Private M1 visitor rehearsal", { exact: false });
+  await expect(rehearsal).toBeVisible();
+  await rehearsal.scrollIntoViewIfNeeded();
+  await expect(page.locator(".studio-v3-topbar, .studio-v3-action-bar, .studio-v3-sheet, .studio-v3-local-flag")).toHaveCount(0);
   await expect(page.getByTestId("presence-studio-v3-back-to-editor")).toBeVisible();
-  await page.getByTestId("presence-studio-v3-back-to-editor").click();
-  await expect(page.getByTestId("presence-studio-v3-shelf-trigger")).toBeVisible();
-  await page.getByTestId("presence-studio-v3-test-visitor").click();
-  await page.screenshot({ path: `${evidenceDir}/00-p0-regression-test-as-visitor.png`, fullPage: true });
+  await page.screenshot({ path: `${evidenceDir}/16-test-as-visitor-after-edits.png`, fullPage: true });
 
   const after = await publicSignature(page);
   expect(after).toEqual(before);
-  await page.screenshot({ path: `${evidenceDir}/14-public-p-bbbvision-unchanged.png`, fullPage: true });
+  await page.screenshot({ path: `${evidenceDir}/17-public-p-bbbvision-unchanged.png`, fullPage: true });
   const publicApiText = await (await request.get(`${API_BASE}/api/presence/public/bbbvision`)).text();
   expect(publicApiText).not.toContain("owner_user_id");
-  expect(publicApiText).not.toContain("work:");
-  expect(publicApiText).not.toContain("collection:");
-  expect(publicApiText).not.toContain("preview_expires_at");
+  expect(publicApiText).not.toContain("object_edits");
+  expect(publicApiText).not.toContain("layer_values");
+  expect(publicApiText).not.toContain("mediaId");
+  expect(publicApiText).not.toContain("Private M1 visitor rehearsal");
 
   const legacyResponse = await page.goto("/presence/bbbvision", { waitUntil: "networkidle" });
   expect(legacyResponse?.status()).toBe(200);
   await expect(page.getByText("bbb.vision").first()).toBeVisible();
   await expect(page.getByTestId("presence-studio-v3-shell")).toHaveCount(0);
-  await page.screenshot({ path: `${evidenceDir}/15-public-presence-bbbvision-unchanged.png`, fullPage: true });
-  await expectNoForbiddenWrites(request);
+  await expect(page.locator("main").first()).not.toContainText("Private M1 visitor rehearsal");
+  await page.screenshot({ path: `${evidenceDir}/18-public-presence-bbbvision-unchanged.png`, fullPage: true });
+  await expectOnlyPrivateV3Writes(request, 1);
 });
 
-test("no-bridge V2 rendering ignores P1 Film Strip layouts and experience facets", async ({ page, request }) => {
+test("bridge-free Test as visitor preserves current M1 visuals without editor state", async ({ page, request }) => {
   await signInOwnerAndEnableV3(page, request);
   await page.goto("/studio/29/editor", { waitUntil: "networkidle" });
   await expect(page.getByTestId("presence-studio-v3-shell")).toBeVisible();
-  await page.getByRole("button", { name: "Home" }).click();
+  await page.getByRole("button", { name: "Studio Home" }).click();
 
   await page.getByTestId("presence-studio-v3-look-trigger").click();
   await page.getByTestId("presence-studio-v3-look-option-zine-archive").click();
+  await page.getByTestId("presence-studio-v3-facet-background-ledger").click();
+  await page.getByTestId("presence-studio-v3-facet-treatment-captioned").click();
   await page.getByTestId("presence-studio-v3-room-style-film-strip-selected-works").click();
   await page.getByTestId("presence-studio-v3-structural-apply").click();
   await page.getByRole("button", { name: "Close sheet" }).click();
 
   const editorRoot = page.locator(".presence-studio-v2-public").first();
-  await expect(editorRoot).toHaveAttribute("data-experience-density", "dense");
-  await expect(editorRoot).toHaveClass(/experience-density-dense/);
+  await expect(editorRoot).toHaveAttribute("data-experience-atmosphere", "ledger-scan");
+  await expect(editorRoot).toHaveAttribute("data-experience-piece-treatment", "captioned-ledger");
   await expect(page.getByTestId("presence-public-film-strip")).toBeVisible();
 
   await page.getByTestId("presence-studio-v3-test-visitor").click();
   const visitorRoot = page.locator(".presence-studio-v2-public").first();
-  await expect(visitorRoot).not.toHaveAttribute("data-experience-density", /.+/);
-  await expect(visitorRoot).not.toHaveAttribute("data-experience-atmosphere", /.+/);
-  await expect(visitorRoot).not.toHaveAttribute("data-experience-piece-treatment", /.+/);
-  await expect(visitorRoot).not.toHaveAttribute("data-experience-journey", /.+/);
-  await expect(visitorRoot).not.toHaveClass(/experience-(density|atmosphere|piece|journey)-/);
-  await expect(page.getByTestId("presence-public-film-strip")).toHaveCount(0);
-  await expect(visitorRoot.locator(".v2-public-layout.layout-gallery-wall").first()).toBeVisible();
-  await expect(visitorRoot.locator(".v2-public-layout.layout-film-strip-selected-works")).toHaveCount(0);
-
-  await page.getByTestId("presence-studio-v3-back-to-editor").click();
-  await page.getByTestId("presence-studio-v3-look-trigger").click();
-  await page.getByTestId("presence-studio-v3-look-option-nocturnal-gallery").click();
-  await page.getByRole("button", { name: "Close sheet" }).click();
-  await page.getByTestId("presence-public-bbbvision-enter").click();
-  await expect(page.getByTestId("presence-public-bbbvision-gallery")).toBeVisible();
-  await page.getByTestId("presence-studio-v3-look-trigger").click();
-  await page.getByTestId("presence-studio-v3-room-style-film-strip-selected-works").click();
-  await page.getByTestId("presence-studio-v3-structural-apply").click();
-  await page.getByRole("button", { name: "Close sheet" }).click();
-  await expect(page.getByTestId("presence-public-style-bbbvision-threshold-gallery")).toHaveAttribute(
-    "data-experience-density",
-    "focused",
-  );
+  await expect(visitorRoot).toHaveAttribute("data-experience-atmosphere", "ledger-scan");
+  await expect(visitorRoot).toHaveAttribute("data-experience-piece-treatment", "captioned-ledger");
+  await expect(visitorRoot).toHaveClass(/experience-atmosphere-ledger-scan/);
+  await expect(visitorRoot).toHaveClass(/experience-piece-captioned-ledger/);
   await expect(page.getByTestId("presence-public-film-strip")).toBeVisible();
-
-  await page.getByTestId("presence-studio-v3-test-visitor").click();
-  const bbbVisitorRoot = page.getByTestId("presence-public-style-bbbvision-threshold-gallery");
-  await expect(bbbVisitorRoot).not.toHaveAttribute("data-experience-density", /.+/);
-  await expect(bbbVisitorRoot).not.toHaveClass(/experience-density-/);
-  await expect(page.getByTestId("presence-public-film-strip")).toHaveCount(0);
-  await expectNoForbiddenWrites(request);
+  await expect(page.locator(".studio-v3-topbar, .studio-v3-action-bar, .studio-v3-sheet, .studio-v3-local-flag")).toHaveCount(0);
+  await expectOnlyPrivateV3Writes(request, 0);
 });

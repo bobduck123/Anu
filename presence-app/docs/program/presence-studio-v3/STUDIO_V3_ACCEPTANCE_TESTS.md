@@ -257,9 +257,9 @@ For V3-BRIDGE-001 through V3-BRIDGE-004, rerun the full pointer/touch/keyboard/C
 
 **First required gate:** M1
 
-**Given** a clean loaded draft and browser-local V3 working state
-**When** the owner stages/completes a local change, inspects disabled Save, or—only after separate atomic-contract approval—saves or conflicts
-**Then** the shell distinguishes local clean/dirty/recovery, disabled-with-reason, and future saving/saved-draft/conflict states without implying publication or presenting characterization as persistence authority.
+**Given** a clean loaded base and browser-local V3 working state
+**When** the owner stages/completes a local change, saves bounded metadata privately, or meets a metadata/base conflict
+**Then** the shell distinguishes local clean/dirty/recovery, saving/saved-private/conflict, memory-only, and disabled-with-reason states without implying draft replacement, Visitor Preview, or publication. The reviewed owner-private `PUT /editor/v3/state` is the only M1 durable Save authority; draft Save remains blocked on PS-047.
 
 ## Direct manipulation and modes
 

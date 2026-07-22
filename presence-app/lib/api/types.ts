@@ -221,7 +221,16 @@ export interface PresenceEditorAttachAssetResponse {
 
 export interface PresenceEditorUploadAssetResponse extends PresenceEditorAttachAssetResponse {
   uploaded_asset: PresenceEditorAsset;
-  storage_policy: "private_draft_promoted_on_publish" | "public_unlisted_until_used" | string;
+  media_capability?: PresenceEditorMediaCapability | null;
+  storage_policy: "private_draft_promoted_on_publish" | "public_unlisted_until_used";
+}
+
+export interface PresenceEditorInventoryUploadAssetResponse {
+  draft: PresenceEditableConfig | null;
+  assets: PresenceEditorAsset[];
+  uploaded_asset: PresenceEditorAsset;
+  media_capability: PresenceEditorMediaCapability;
+  storage_policy: "private_draft_inventory_only";
 }
 
 export interface PresenceAvailabilityChip {

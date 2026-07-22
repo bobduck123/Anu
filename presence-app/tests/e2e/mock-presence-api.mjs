@@ -36,6 +36,11 @@ function resetState() {
     editorPublished: buildEditorConfig("published", 1),
     bbbVisionEditorDraft: null,
     studioV3PrivateState: null,
+    studioV3PrivateAssets: [],
+    failNextStudioV3StateWrites: 0,
+    forceNextStudioV3StateConflict: 0,
+    delayNextStudioV3StateWriteMs: 0,
+    failStudioV3StateReads: false,
     bbbVisionPilot: false,
     nextEditorVersion: 2,
     editorAssets: buildEditorAssets(),
@@ -43,6 +48,8 @@ function resetState() {
     nextStudioRoomId: 901,
     nextStudioRoomDraftVersion: 1,
     failNextOwnerNodeReads: 0,
+    failNextOwnerWorksReads: 0,
+    failNextOwnerCollectionsReads: 0,
     failNextEditorReads: 0,
     failNextPreviewReads: 0,
     privateDraftMedia: false,
@@ -102,8 +109,14 @@ const server = createServer(async (req, res) => {
       });
     }
     if (Number.isInteger(body.failNextOwnerNodeReads)) state.failNextOwnerNodeReads = body.failNextOwnerNodeReads;
+    if (Number.isInteger(body.failNextOwnerWorksReads)) state.failNextOwnerWorksReads = body.failNextOwnerWorksReads;
+    if (Number.isInteger(body.failNextOwnerCollectionsReads)) state.failNextOwnerCollectionsReads = body.failNextOwnerCollectionsReads;
     if (Number.isInteger(body.failNextEditorReads)) state.failNextEditorReads = body.failNextEditorReads;
     if (Number.isInteger(body.failNextPreviewReads)) state.failNextPreviewReads = body.failNextPreviewReads;
+    if (Number.isInteger(body.failNextStudioV3StateWrites)) state.failNextStudioV3StateWrites = body.failNextStudioV3StateWrites;
+    if (Number.isInteger(body.forceNextStudioV3StateConflict)) state.forceNextStudioV3StateConflict = body.forceNextStudioV3StateConflict;
+    if (Number.isInteger(body.delayNextStudioV3StateWriteMs)) state.delayNextStudioV3StateWriteMs = body.delayNextStudioV3StateWriteMs;
+    if (typeof body.failStudioV3StateReads === "boolean") state.failStudioV3StateReads = body.failStudioV3StateReads;
     if (typeof body.privateDraftMedia === "boolean") state.privateDraftMedia = body.privateDraftMedia;
     if (body.stripEditorImages === true && state.editorPublished) {
       state.editorPublished = {
@@ -529,6 +542,28 @@ const server = createServer(async (req, res) => {
     return sendData(res, publicRoomFixture(Number(ownerNodeMatch[1])));
   }
 
+  const ownerWorksMatch = url.pathname.match(/^\/api\/presence\/owner\/nodes\/(101|11|29)\/works$/);
+  if (ownerWorksMatch && req.method === "GET") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
+    if (state.failNextOwnerWorksReads > 0) {
+      state.failNextOwnerWorksReads -= 1;
+      return sendError(res, 503, "owner_works_unavailable", "Canonical Works are temporarily unavailable.");
+    }
+    return sendData(res, Number(ownerWorksMatch[1]) === 29 ? bbbVisionOwnerWorksFixture() : fixtures.room.works ?? []);
+  }
+
+  const ownerCollectionsMatch = url.pathname.match(/^\/api\/presence\/owner\/nodes\/(101|11|29)\/collections$/);
+  if (ownerCollectionsMatch && req.method === "GET") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
+    if (state.failNextOwnerCollectionsReads > 0) {
+      state.failNextOwnerCollectionsReads -= 1;
+      return sendError(res, 503, "owner_collections_unavailable", "Canonical Collections are temporarily unavailable.");
+    }
+    return sendData(res, Number(ownerCollectionsMatch[1]) === 29 ? bbbVisionOwnerCollectionsFixture() : fixtures.room.collections ?? []);
+  }
+
   const editorOverviewMatch = url.pathname.match(/^\/api\/presence\/owner\/rooms\/(101|11|29)\/editor$/);
   if (editorOverviewMatch && req.method === "GET") {
     if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
@@ -548,15 +583,17 @@ const server = createServer(async (req, res) => {
         published_public_config: redactEditorConfig(published),
         suggested_config: null,
         history: [draft, published].filter(Boolean),
-        assets: buildBbbVisionEditorAssets(),
+        assets: [...buildBbbVisionEditorAssets(), ...state.studioV3PrivateAssets],
         media_capability: {
-          private_draft_media_active: false,
+          private_draft_media_active: state.privateDraftMedia,
           v1b_fallback_available: true,
           migration_ready: true,
-          protected_storage_configured: false,
-          protected_storage_verified: false,
-          reason: "private_storage_not_configured",
-          owner_message: "Private draft media is not enabled on this environment. Use only public-safe images.",
+          protected_storage_configured: state.privateDraftMedia,
+          protected_storage_verified: state.privateDraftMedia,
+          reason: state.privateDraftMedia ? null : "private_storage_not_configured",
+          owner_message: state.privateDraftMedia
+            ? "Uploaded images stay in the protected owner-private inventory until a separately reviewed publish flow."
+            : "Private draft media is not enabled on this environment. Use only public-safe images.",
         },
       });
     }
@@ -611,12 +648,33 @@ const server = createServer(async (req, res) => {
     if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
     const roomId = Number(studioV3StateMatch[1]);
     if (req.method === "GET") {
+      if (state.failStudioV3StateReads) {
+        return sendError(res, 503, "studio_v3_state_unavailable", "Durable private state is unavailable in this environment.");
+      }
       const stored = state.studioV3PrivateState?.room_id === roomId ? state.studioV3PrivateState : null;
       return sendData(res, { state: stored });
     }
     if (req.method === "PUT") {
+      if (state.delayNextStudioV3StateWriteMs > 0) {
+        const delayMs = Math.min(state.delayNextStudioV3StateWriteMs, 2_000);
+        state.delayNextStudioV3StateWriteMs = 0;
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+      if (state.failNextStudioV3StateWrites > 0) {
+        state.failNextStudioV3StateWrites -= 1;
+        return sendError(res, 503, "studio_v3_state_unavailable", "Private editor state could not be saved.");
+      }
+      if (state.forceNextStudioV3StateConflict > 0) {
+        state.forceNextStudioV3StateConflict -= 1;
+        return sendError(res, 409, "studio_v3_state_conflict", "Studio V3 private state changed; reload before replacing metadata.");
+      }
       const expected = body?.expected;
-      if (!expected || expected.room_id !== roomId || body.metadata_schema_version !== "presence-studio-v3-private-v1") {
+      if (
+        !expected ||
+        expected.room_id !== roomId ||
+        body.metadata_schema_version !== "presence-studio-v3-private-v1" ||
+        !isSafeStudioV3PrivateMetadata(body.metadata)
+      ) {
         return sendError(res, 422, "validation_error", "Studio V3 private-state request is invalid.");
       }
       const currentRevision = state.studioV3PrivateState?.room_id === roomId
@@ -653,6 +711,35 @@ const server = createServer(async (req, res) => {
       };
       return sendData(res, { state: state.studioV3PrivateState });
     }
+  }
+
+  const studioV3PrivateUploadMatch = url.pathname.match(/^\/api\/presence\/owner\/rooms\/29\/assets\/upload$/);
+  if (studioV3PrivateUploadMatch && req.method === "POST") {
+    if (!hasAuth(req)) return sendError(res, 401, "auth_required", "Missing Authorization Header");
+    if (isForbiddenAuth(req)) return sendError(res, 403, "forbidden", "You do not own this Presence Room.");
+    if (!state.privateDraftMedia || body.inventory_only !== true) {
+      return sendError(res, 422, "private_inventory_required", "Studio V3 upload must target protected owner-private inventory only.");
+    }
+    const mediaId = `bbb-v3-private-media-${state.studioV3PrivateAssets.length + 1}`;
+    const asset = {
+      media_id: mediaId,
+      url: `/bbb-pilot/archive-rhythm.png?private-media=${mediaId}`,
+      alt_text: "Owner-private Studio V3 upload",
+      source: "studio_v3_private_inventory",
+      slot: "unused",
+      asset_type: "image",
+      role: "work",
+      mime_type: "image/png",
+      size_bytes: 68,
+      visibility: "private_draft",
+    };
+    state.studioV3PrivateAssets.push(asset);
+    return sendData(res, {
+      draft: state.bbbVisionEditorDraft,
+      assets: [...buildBbbVisionEditorAssets(), ...state.studioV3PrivateAssets],
+      uploaded_asset: asset,
+      storage_policy: "private_draft_inventory_only",
+    }, 201);
   }
 
   const editorPreviewMatch = url.pathname.match(/^\/api\/presence\/owner\/rooms\/(101|11|29)\/editor\/preview$/);
@@ -1707,6 +1794,86 @@ function bbbVisionCandidateOwnerNodeFixture() {
   };
 }
 
+function bbbVisionOwnerWorksFixture() {
+  return [
+    {
+      id: 2901,
+      collection_id: 291,
+      slug: "bbb-opening-image",
+      title: "Opening image",
+      year: "2026",
+      medium: "Digital image",
+      description: "Canonical Library source for the BBB threshold sequence.",
+      image_url: "/bbb-pilot/threshold-signal.png",
+      thumbnail_url: "/bbb-pilot/threshold-signal.png",
+      sort_order: 0,
+      is_visible: true,
+    },
+    {
+      id: 2902,
+      collection_id: 291,
+      slug: "bbb-portrait-field",
+      title: "Portrait field",
+      year: "2026",
+      medium: "Digital image",
+      description: "Canonical Library source for the portrait field.",
+      image_url: "/bbb-pilot/archive-rhythm.png",
+      thumbnail_url: "/bbb-pilot/archive-rhythm.png",
+      sort_order: 1,
+      is_visible: true,
+    },
+    {
+      id: 2903,
+      collection_id: 292,
+      slug: "bbb-stage-image",
+      title: "Stage image",
+      year: "2026",
+      medium: "Digital image",
+      description: "Canonical Library source for the gallery field.",
+      image_url: "/bbb-pilot/threshold-signal.png",
+      thumbnail_url: "/bbb-pilot/threshold-signal.png",
+      sort_order: 2,
+      is_visible: true,
+    },
+    {
+      id: 2904,
+      collection_id: 292,
+      slug: "bbb-shadow-image",
+      title: "Shadow image",
+      year: "2026",
+      medium: "Digital image",
+      description: "Canonical Library source for the shadow image.",
+      image_url: "/bbb-pilot/archive-rhythm.png",
+      thumbnail_url: "/bbb-pilot/archive-rhythm.png",
+      sort_order: 3,
+      is_visible: true,
+    },
+  ];
+}
+
+function bbbVisionOwnerCollectionsFixture() {
+  return [
+    {
+      id: 291,
+      node_id: 29,
+      title: "Threshold Sequence",
+      description: "Canonical BBB opening-image sequence.",
+      cover_image_url: "/bbb-pilot/threshold-signal.png",
+      sort_order: 0,
+      is_visible: true,
+    },
+    {
+      id: 292,
+      node_id: 29,
+      title: "Gallery Field",
+      description: "Canonical BBB gallery-image grouping.",
+      cover_image_url: "/bbb-pilot/archive-rhythm.png",
+      sort_order: 1,
+      is_visible: true,
+    },
+  ];
+}
+
 function bbbVisionCandidatePublicRoomFixture() {
   const config = buildBbbVisionEditorConfig("published", 29, { roomId: 29, slug: "bbbvision" });
   const publicNode = bbbVisionCandidateOwnerNodeFixture();
@@ -2163,6 +2330,47 @@ function isForbiddenAuth(req) {
   return String(req.headers.authorization || "").includes("non-owner-token");
 }
 
+function isSafeStudioV3PrivateMetadata(metadata) {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return false;
+  const allowedKeys = new Set([
+    "owner_mode",
+    "named_looks",
+    "layer_locks",
+    "savepoints",
+    "placements",
+    "object_edits",
+    "layer_values",
+    "restore",
+    "compatibility",
+  ]);
+  if (Object.keys(metadata).some((key) => !allowedKeys.has(key))) return false;
+  for (const key of ["named_looks", "layer_locks", "savepoints", "placements", "compatibility"]) {
+    if (!Array.isArray(metadata[key])) return false;
+  }
+  if (metadata.object_edits !== undefined && !Array.isArray(metadata.object_edits)) return false;
+  if (metadata.layer_values !== undefined && !Array.isArray(metadata.layer_values)) return false;
+  if (!metadata.restore || typeof metadata.restore !== "object" || Array.isArray(metadata.restore)) return false;
+  if (metadata.owner_mode !== "simple" && metadata.owner_mode !== "advanced-creative") return false;
+  const zonesByLayout = {
+    "gallery-wall": new Set(["opening-work", "main-wall", "supporting-notes", "cta-exit", "influence-layer"]),
+    "portal-threshold": new Set(["threshold-image", "threshold-statement", "threshold-signal", "threshold-exit"]),
+    "film-strip-selected-works": new Set(["active-work-stage", "sequence-index", "selected-work-context", "selected-works-exit"]),
+  };
+  const roomLayouts = new Map(
+    Array.isArray(metadata.restore.roomStyles)
+      ? metadata.restore.roomStyles.map((row) => [row.roomId, row.compositionToken])
+      : [],
+  );
+  for (const edit of metadata.object_edits ?? []) {
+    const hasArrangement = ["zoneId", "size", "treatment", "featured"].some((key) => key in edit);
+    if (!hasArrangement) continue;
+    const zones = zonesByLayout[roomLayouts.get(edit.roomId)];
+    if (!zones || typeof edit.zoneId !== "string" || !zones.has(edit.zoneId)) return false;
+  }
+  const serialized = JSON.stringify(metadata);
+  return !/(?:https?:\/\/|blob:|data:|file:|localhost|127\.0\.0\.1|[A-Za-z]:[\\/])/i.test(serialized);
+}
+
 function sendData(res, data, status = 200) {
   return send(res, status, { data });
 }
@@ -2187,6 +2395,12 @@ async function readJson(req) {
   for await (const chunk of req) chunks.push(chunk);
   const raw = Buffer.concat(chunks).toString("utf8");
   if (!raw) return {};
+  if (String(req.headers["content-type"] || "").includes("multipart/form-data")) {
+    return {
+      multipart: true,
+      inventory_only: /name="inventory_only"\r?\n\r?\n1\r?\n/.test(raw),
+    };
+  }
   try {
     return JSON.parse(raw);
   } catch {

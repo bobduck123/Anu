@@ -240,7 +240,7 @@ The layer definitions and resolution rules are normative in [Customisation model
 ### 8.5 Safety
 
 - **PS-040:** The prototype gate is default-off and available only in local/test contexts for the BBB pilot unless separately approved.
-- **PS-041:** V3-only locks, named Looks, save points, staging, and compare metadata remain browser-local in separate Presence/Room envelopes under an opaque authenticated-owner partition and are never POSTed wholesale into the current `editable_config` or `locked_fields`. Runtime Save and server Visitor Preview remain disabled unless the separately approved atomic persistence contract in PS-047 exists and passes; local M1 editing can proceed without that persistence subgate.
+- **PS-041:** V3-only locks, named Looks, save points, placements, object edits, staging, and compare metadata remain isolated from `editable_config` and `locked_fields`. The browser keeps atomic Presence/Room snapshots under an opaque authenticated-owner partition. M1 may also replace the same bounded, reference-only metadata through the separately reviewed owner/Room-scoped `PUT /editor/v3/state` contract with exact base identity/fingerprint and metadata-revision preconditions. That owner-private metadata save is not draft replacement, Visitor Preview, publish, or authority to relax PS-047.
 - **PS-042:** No prototype action publishes or mutates the public BBB route.
 - **PS-043:** In-memory **Test as visitor** remains editor-free and zero-write. Server-backed Visitor Preview remains private, editor-free, and blocked while atomic draft persistence is unavailable.
 - **PS-044:** The entry Room and final remaining Room cannot be deleted.
@@ -332,7 +332,7 @@ The following are known V2-era seams, not already-solved capabilities:
 6. Crop/focus, filters, text/CTA spatial sizing, snapping, and durable upload flows are not complete V2 capabilities.
 7. Placement treatment and most size values do not yet produce sufficient visual differentiation.
 8. Current owner navigation and mobile layout remain legacy presentation surfaces and must be bypassed or replaced for the gate.
-9. Named Look and structural save-point metadata are browser-local only in the prototype and never written wholesale into current `editable_config` or `locked_fields`; durable multi-device persistence requires an explicitly reviewed private schema decision.
+9. Named Look, structural save-point, placement, and Piece-override metadata remain outside current `editable_config` and `locked_fields`. M1 persists their bounded reference-only projection in the reviewed owner-private V3 state row while retaining browser-local recovery snapshots; no draft/public projection follows from that save.
 10. Durable server-side Piece placement identity and source provenance do not yet exist. They are a pre-market gate for cross-reload/cross-device “edit once, see it everywhere”, reliable impact accounting, and any permanent deletion workflow.
 11. Existing-draft full-config POST replacement, omission, empty-value, deletion, and private-media side effects may be characterized only in a disposable local/test single-writer fixture. The current refetch-plus-POST sequence is non-atomic and the POST may create a draft, so that fixture cannot enable product Save. A separately approved atomic expected-existing-draft identity/revision/stable-fingerprint precondition-and-replacement server contract is required before runtime M1 Save or server Visitor Preview; recursive-merge PATCH remains forbidden.
 
@@ -349,10 +349,10 @@ The local-editing portion of gated Milestone 1 passes when an owner can:
 - switch to a visibly different Look;
 - lock an override and observe it surviving the next preset;
 - save and restore a named Look's normalised layer values and recommendations exactly, without moving or reordering Pieces;
-- use in-memory **Test as visitor** and understand that server Visitor Preview, Save, and Review & Publish are separate and unavailable until their own gates pass;
+- save bounded V3 metadata privately, use in-memory **Test as visitor**, and understand that draft Save, server Visitor Preview, and executable Review & Publish remain separate and unavailable until their own gates pass;
 - complete the journey without public mutation, private-data leakage, or editor instrumentation in public output.
 
-M1 persistence is a distinct blocked acceptance subgate: the milestone cannot claim a persisted/saved-draft or server Visitor Preview journey until the atomic server contract in PS-047 is separately approved, implemented, and verified. A single-writer characterization fixture and a successful post-refetch are evidence only, never authority to expose Save.
+M1 may claim only a persisted owner-private V3 metadata journey through PS-041. It cannot claim a persisted/saved draft or server Visitor Preview journey until the atomic draft contract in PS-047 is separately approved, implemented, and verified. A single-writer draft characterization fixture and a successful post-refetch are evidence only, never authority to expose draft Save.
 
 Milestone 2 additionally requires transforming the same content between radically different identities and restoring BBB exactly from inside the editor. That exact return is performed by the pre-transformation structural save point—not by named Look restore alone—and includes resolved customisation, Room/style references, Collection Presentations, placements/order, visibility, CTA state, navigation, and locks. Uploaded media is referenced, not copied.
 
@@ -375,5 +375,5 @@ Detailed automated and human acceptance belongs in [Acceptance tests](./STUDIO_V
 - Entry/last Room and required CTA protections are mandatory.
 - Named Looks contain normalised editable layer values/recommendations and provenance; any media choice is an opaque stable owner-authorised asset identifier. They contain no URL/blob/copied-media/private-draft reference, lock state, or Piece placements/order, and omit media when no safe stable identifier exists.
 - Structural save points contain the Room/style references, Collection Presentation, placement/order, visibility, CTA, navigation, and lock metadata required for exact transformation restore; they are not media snapshots.
-- Prototype V3 metadata stays browser-local and is never POSTed wholesale into current `editable_config` or `locked_fields`. Current refetch plus current POST is a non-atomic characterization surface only; runtime persistence requires a separately approved atomic expected-existing-draft identity/revision/stable-fingerprint precondition-and-replacement contract with transactional media effects.
+- Prototype V3 metadata stays outside current `editable_config` and `locked_fields`. It uses atomic browser snapshots plus the reviewed owner-private V3 state replacement contract; neither path changes the draft/public renderer configuration. Current editable-config refetch plus POST remains a non-atomic characterization surface only, and draft persistence still requires the separate PS-047 contract with transactional media effects.
 - The prototype does not publish and cannot change public BBB output.

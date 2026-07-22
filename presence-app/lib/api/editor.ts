@@ -6,6 +6,7 @@ import type {
   PresenceEditorAttachAssetResponse,
   PresenceEditorDraftResponse,
   PresenceEditorHistoryResponse,
+  PresenceEditorInventoryUploadAssetResponse,
   PresenceEditorOverview,
   PresenceEditorPreviewResponse,
   PresenceEditorPublishResponse,
@@ -126,4 +127,22 @@ export function uploadPresenceEditorAsset(
   form.append("role", input.role ?? "unused");
   if (input.altText?.trim()) form.append("alt_text", input.altText.trim());
   return ownerMultipartFetch<PresenceEditorUploadAssetResponse>(`${BASE}/${roomId}/assets/upload`, token, form);
+}
+
+/**
+ * Uploads into the protected owner-private media inventory without attaching
+ * the asset to (or incrementing) the editable draft. The backend rejects this
+ * mode unless private draft storage and the media record migration are active.
+ */
+export function uploadStudioV3PrivateAsset(
+  roomId: number,
+  token: string,
+  input: { file: File; altText?: string; role?: string },
+) {
+  const form = new FormData();
+  form.append("file", input.file);
+  form.append("role", input.role ?? "unused");
+  form.append("inventory_only", "1");
+  if (input.altText?.trim()) form.append("alt_text", input.altText.trim());
+  return ownerMultipartFetch<PresenceEditorInventoryUploadAssetResponse>(`${BASE}/${roomId}/assets/upload`, token, form);
 }

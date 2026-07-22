@@ -1002,10 +1002,31 @@ def owner_room_upload_asset(room_id):
             role=request.form.get("role") or "unused",
             alt_text=request.form.get("alt_text"),
         )
+        inventory_only = request.form.get("inventory_only") == "1"
         capability = media_capability_for_owner()
         is_private = bool(capability["private_draft_media_active"])
+        if inventory_only and (
+            not is_private
+            or not capability["migration_ready"]
+            or not media_asset_records_available()
+        ):
+            raise PresenceEditorConfigError(
+                "Inventory-only upload requires private draft media and its media-record migration."
+            )
+        media_owner_user_id = room.owner_user_id if inventory_only else actor.id
+        if (
+            inventory_only
+            and (
+                isinstance(media_owner_user_id, bool)
+                or not isinstance(media_owner_user_id, int)
+                or media_owner_user_id <= 0
+            )
+        ):
+            raise PresenceEditorConfigError(
+                "Inventory-only upload requires an owner-bound Presence Room."
+            )
         storage_path = build_presence_media_path(
-            owner_user_id=actor.id,
+            owner_user_id=media_owner_user_id,
             node_id=room.id,
             target_type="editor_private_draft" if is_private else "editor_draft",
             filename=getattr(file, "filename", "") or "image",
@@ -1022,7 +1043,7 @@ def owner_room_upload_asset(room_id):
                 id=media_id,
                 room_id=room.id,
                 tenant_id=getattr(room, "tenant_id", None),
-                owner_user_id=getattr(actor, "id", None),
+                owner_user_id=media_owner_user_id,
                 status="draft_uploaded",
                 visibility=stored.visibility,
                 role=role,
@@ -1039,6 +1060,35 @@ def owner_room_upload_asset(room_id):
             )
             db.session.add(media_asset)
             db.session.flush()
+        if inventory_only:
+            if media_asset is None or stored.visibility != "private_draft":
+                raise PresenceEditorConfigError(
+                    "Inventory-only upload requires owner-private draft media storage."
+                )
+            uploaded_asset = serialize_media_asset_for_owner(media_asset)
+            current_draft = draft_config_for_room(room)
+            db.session.commit()
+            _audit_platform_admin_editor_access(
+                "presence.editor.assets.upload",
+                actor,
+                room,
+                {
+                    "inventory_only": True,
+                    "media_id": media_id,
+                    "config_id": current_draft.id if current_draft else None,
+                    "version": current_draft.version if current_draft else None,
+                },
+            )
+            return ok(
+                {
+                    "draft": serialize_editor_config(current_draft),
+                    "assets": collect_room_assets(room),
+                    "uploaded_asset": uploaded_asset,
+                    "media_capability": capability,
+                    "storage_policy": "private_draft_inventory_only",
+                },
+                201,
+            )
         uploaded_url = serialize_media_asset_for_owner(media_asset)["url"] if media_asset else stored.url
         draft, _uploaded_asset = attach_uploaded_asset_to_draft(
             room,

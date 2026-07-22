@@ -1,5 +1,8 @@
 "use client";
 
+import type { CSSProperties } from "react";
+import type { StudioV3Layer, StudioV3LayerOverrideValue, StudioV3LookValues } from "@/lib/presence/studio-v3";
+
 export type StudioV3P1LookId = "soft-editorial" | "nocturnal-gallery" | "zine-archive";
 export type StudioV3P1RoomStyleId = "threshold-portal" | "gallery-wall" | "film-strip-selected-works";
 export type StudioV3CompareSide = "before" | "after";
@@ -93,6 +96,8 @@ export default function StudioV3LookControls({
   hasNamedLooks,
   latestNamedLookName,
   hasStructuralSavepoint,
+  activeLookValues,
+  motionLocked,
   onNamedLookNameChange,
   onApplyLook,
   onStageRoomStyle,
@@ -101,7 +106,7 @@ export default function StudioV3LookControls({
   onCancelStructural,
   onLockMotion,
   onSaveNamedLook,
-  onAlterNamedLook,
+  onApplyFacet,
   onRestoreNamedLook,
   onRestoreStructural,
 }: {
@@ -115,6 +120,8 @@ export default function StudioV3LookControls({
   hasNamedLooks: boolean;
   latestNamedLookName?: string;
   hasStructuralSavepoint: boolean;
+  activeLookValues: StudioV3LookValues;
+  motionLocked: boolean;
   onNamedLookNameChange: (value: string) => void;
   onApplyLook: (lookId: StudioV3P1LookId) => void;
   onStageRoomStyle: (styleId: StudioV3P1RoomStyleId) => void;
@@ -123,7 +130,7 @@ export default function StudioV3LookControls({
   onCancelStructural: () => void;
   onLockMotion: () => void;
   onSaveNamedLook: () => void;
-  onAlterNamedLook: () => void;
+  onApplyFacet: (input: { layer: StudioV3Layer; value: StudioV3LayerOverrideValue; label: string }) => void;
   onRestoreNamedLook: () => void;
   onRestoreStructural: () => void;
 }) {
@@ -156,7 +163,7 @@ export default function StudioV3LookControls({
                 onClick={() => onApplyLook(option.id)}
                 data-testid={`presence-studio-v3-look-option-${option.id}`}
               >
-                <span className="studio-v3-option-swatch" aria-hidden="true" />
+                <span className="studio-v3-look-miniature" aria-hidden="true"><i /><i /><i /></span>
                 <strong
                   data-testid={option.id === "soft-editorial"
                     ? "presence-studio-v3-apply-soft-editorial"
@@ -192,6 +199,7 @@ export default function StudioV3LookControls({
                 onClick={() => onStageRoomStyle(option.id)}
                 data-testid={`presence-studio-v3-room-style-${option.id}`}
               >
+                <span className="studio-v3-room-style-miniature" aria-hidden="true"><i /><i /><i /><i /></span>
                 <span className="studio-v3-room-style-number" aria-hidden="true">0{index + 1}</span>
                 <strong>{option.name}</strong>
                 <span>{option.description}</span>
@@ -201,6 +209,13 @@ export default function StudioV3LookControls({
           })}
         </div>
       </fieldset>
+
+      <StudioV3FacetControls
+        activeLookValues={activeLookValues}
+        disabled={interactionsFrozen}
+        motionLocked={motionLocked}
+        onApply={onApplyFacet}
+      />
 
       <CompatibilitySummary summary={structuralPreview?.summary ?? compatibility} />
 
@@ -272,6 +287,7 @@ export default function StudioV3LookControls({
           <span>Look name</span>
           <input
             value={namedLookName}
+            maxLength={80}
             onChange={(event) => onNamedLookNameChange(event.target.value)}
             disabled={interactionsFrozen}
             data-testid="presence-studio-v3-named-look-name"
@@ -285,10 +301,113 @@ export default function StudioV3LookControls({
         <div className="studio-v3-named-look-actions">
           <button type="button" onClick={onLockMotion} disabled={interactionsFrozen} data-testid="presence-studio-v3-lock-layer">Lock motion</button>
           <button type="button" onClick={onSaveNamedLook} disabled={interactionsFrozen} data-testid="presence-studio-v3-save-named-look">Save as Look</button>
-          <button type="button" onClick={onAlterNamedLook} disabled={interactionsFrozen}>Alter</button>
           <button type="button" onClick={onRestoreNamedLook} disabled={!hasNamedLooks || interactionsFrozen} data-testid="presence-studio-v3-restore-named-look">Restore</button>
         </div>
       </section>
+    </div>
+  );
+}
+
+function StudioV3FacetControls({
+  activeLookValues,
+  disabled,
+  motionLocked,
+  onApply,
+}: {
+  activeLookValues: StudioV3LookValues;
+  disabled: boolean;
+  motionLocked: boolean;
+  onApply: (input: { layer: StudioV3Layer; value: StudioV3LayerOverrideValue; label: string }) => void;
+}) {
+  const groups: Array<{
+    id: string;
+    label: string;
+    help: string;
+    options: Array<{
+      id: string;
+      label: string;
+      detail: string;
+      layer: StudioV3Layer;
+      value: StudioV3LayerOverrideValue;
+      active: boolean;
+      background: string;
+      color: string;
+      locked?: boolean;
+    }>;
+  }> = [
+    {
+      id: "background",
+      label: "Background / surface atmosphere",
+      help: "Changes the material field without moving the Room structure.",
+      options: [
+        { id: "paper", label: "Paper Light", detail: "Warm paper, soft grain", layer: "presence-look", value: { background: "#f7f3ea", texture: "paper", atmosphere: "paper-light" }, active: activeLookValues.background === "#f7f3ea", background: "#f7f3ea", color: "#17120a" },
+        { id: "night", label: "Nocturnal Depth", detail: "Black field, concentrated signal", layer: "presence-look", value: { background: "#050505", texture: "grain", atmosphere: "nocturnal-depth" }, active: activeLookValues.background === "#050505", background: "#050505", color: "#ffd84d" },
+        { id: "ledger", label: "Ledger Scan", detail: "Burgundy archive surface", layer: "presence-look", value: { background: "#2b1118", texture: "ledger", atmosphere: "ledger-scan" }, active: activeLookValues.background === "#2b1118", background: "#2b1118", color: "#f1c96a" },
+      ],
+    },
+    {
+      id: "treatment",
+      label: "Image treatment",
+      help: "A registered visual treatment token for Pieces on the canvas.",
+      options: [
+        { id: "quiet", label: "Quiet Framed", detail: "Fine edge, low shadow", layer: "piece-treatment", value: { pieceTreatment: "quiet-framed" }, active: activeLookValues.pieceTreatment === "quiet-framed", background: "#eee6d6", color: "#594628" },
+        { id: "luminous", label: "Luminous Depth", detail: "Deep field, radiant edge", layer: "piece-treatment", value: { pieceTreatment: "luminous-depth" }, active: activeLookValues.pieceTreatment === "luminous-depth", background: "#090909", color: "#ffd84d" },
+        { id: "captioned", label: "Captioned Ledger", detail: "Indexed, tactile label", layer: "piece-treatment", value: { pieceTreatment: "captioned-ledger" }, active: activeLookValues.pieceTreatment === "captioned-ledger", background: "#d3b887", color: "#2b1118" },
+      ],
+    },
+    {
+      id: "typography",
+      label: "Typography / CTA style",
+      help: "Adjusts existing heading and border tokens; link destinations stay unchanged.",
+      options: [
+        { id: "editorial", label: "Editorial", detail: "Quiet weight, hairline action", layer: "presence-look", value: { headingWeight: 600, borderStyle: "hairline" }, active: activeLookValues.headingWeight === 600 && activeLookValues.borderStyle === "hairline", background: "#fffaf0", color: "#15120f" },
+        { id: "signal", label: "Signal", detail: "Strong heading, framed action", layer: "presence-look", value: { headingWeight: 800, borderStyle: "framed" }, active: activeLookValues.headingWeight === 800 && activeLookValues.borderStyle === "framed", background: "#17120a", color: "#f3c85d" },
+        { id: "archive", label: "Archive", detail: "Ledger edge, indexed weight", layer: "presence-look", value: { headingWeight: 700, borderStyle: "ledger" }, active: activeLookValues.headingWeight === 700 && activeLookValues.borderStyle === "ledger", background: "#ead7a6", color: "#2b1118" },
+      ],
+    },
+    {
+      id: "motion",
+      label: "Motion intensity",
+      help: motionLocked ? "Motion / Atmosphere is locked. Unlocking is a later explicit action." : "Reduced-motion preferences continue to override decorative movement.",
+      options: [
+        { id: "still", label: "Still", detail: "No decorative movement", layer: "motion-atmosphere", value: { motionIntensity: "still" }, active: activeLookValues.motionIntensity === "still", background: "#e5e0d7", color: "#15120f", locked: motionLocked },
+        { id: "gentle", label: "Gentle", detail: "Measured ambient movement", layer: "motion-atmosphere", value: { motionIntensity: "gentle" }, active: activeLookValues.motionIntensity === "gentle", background: "#ccb882", color: "#15120f", locked: motionLocked },
+        { id: "living", label: "Living", detail: "Most expressive registered motion", layer: "motion-atmosphere", value: { motionIntensity: "living" }, active: activeLookValues.motionIntensity === "living", background: "#2b1118", color: "#f1c96a", locked: motionLocked },
+      ],
+    },
+  ];
+  return (
+    <div className="studio-v3-facet-groups" data-testid="presence-studio-v3-visual-facets">
+      {groups.map((group) => (
+        <fieldset key={group.id} className="studio-v3-option-group">
+          <legend>{group.label}</legend>
+          <p className="studio-v3-option-help">{group.help}</p>
+          <div className="studio-v3-facet-cards">
+            {group.options.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className="studio-v3-facet-card"
+                aria-pressed={option.active}
+                disabled={disabled || option.locked}
+                title={option.locked ? "This layer is locked." : option.detail}
+                onClick={() => onApply({ layer: option.layer, value: option.value, label: option.label })}
+                data-testid={`presence-studio-v3-facet-${group.id}-${option.id}`}
+              >
+                <span
+                  className="studio-v3-facet-preview"
+                  aria-hidden="true"
+                  style={{ "--facet-background": option.background, "--facet-color": option.color } as CSSProperties}
+                >
+                  {group.id === "motion" ? (option.id === "still" ? "—" : option.id === "gentle" ? "↝" : "≈") : "Aa"}
+                </span>
+                <strong>{option.label}</strong>
+                <small>{option.locked ? "Locked" : option.detail}</small>
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      ))}
     </div>
   );
 }
