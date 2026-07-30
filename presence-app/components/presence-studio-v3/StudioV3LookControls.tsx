@@ -2,10 +2,10 @@
 
 import type { CSSProperties } from "react";
 import {
-  PRESENCE_ATMOSPHERE_DEFINITIONS,
   PRESENCE_LOOK_DEFINITIONS,
   PRESENCE_MOTION_BEHAVIOUR_DEFINITIONS,
-  PRESENCE_PIECE_TREATMENT_DEFINITIONS,
+  PRESENCE_OWNER_ACTIVE_ATMOSPHERE_DEFINITIONS,
+  PRESENCE_OWNER_ACTIVE_PIECE_TREATMENT_DEFINITIONS,
   PRESENCE_ROOM_STYLE_DEFINITIONS,
   PRESENCE_TYPOGRAPHY_FACET_DEFINITIONS,
   getPresenceLookDefinition,
@@ -465,7 +465,7 @@ function StudioV3FacetControls({
       id: "background",
       label: "Background / surface atmosphere",
       help: "Changes the material field without moving the Room structure.",
-      options: PRESENCE_ATMOSPHERE_DEFINITIONS.map((definition) => ({
+      options: PRESENCE_OWNER_ACTIVE_ATMOSPHERE_DEFINITIONS.map((definition) => ({
         id: definition.preview.optionId,
         label: definition.label,
         detail: definition.description,
@@ -480,7 +480,7 @@ function StudioV3FacetControls({
       id: "treatment",
       label: "Image treatment",
       help: "A registered visual treatment token for Pieces on the canvas.",
-      options: PRESENCE_PIECE_TREATMENT_DEFINITIONS.map((definition) => ({
+      options: PRESENCE_OWNER_ACTIVE_PIECE_TREATMENT_DEFINITIONS.map((definition) => ({
         id: definition.preview.optionId,
         label: definition.label,
         detail: definition.description,

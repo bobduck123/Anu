@@ -292,6 +292,25 @@ const zineArchiveValues: StudioV3LookValues = {
   journey: "archive-index",
 };
 
+const brassInlayValues: StudioV3LookValues = {
+  background: "#f2ead8",
+  accentColor: "#b08a3a",
+  texture: "paper",
+  borderStyle: "hairline",
+  objectRadius: 4,
+  shadowDepth: 0.18,
+  headingWeight: 650,
+  motionIntensity: "living",
+  publicStylePreset: "gallery-p2",
+  roomStyleId: "refractive-threshold",
+  worldId: "gallery",
+  collectionPresentationId: "threshold-feature",
+  atmosphere: "drawing-sheet",
+  density: "focused",
+  pieceTreatment: "measured-plate",
+  journey: "threshold-reveal",
+};
+
 export const PRESENCE_LOOK_DEFINITIONS = [
   {
     id: "soft-editorial",
@@ -374,6 +393,39 @@ export const PRESENCE_LOOK_DEFINITIONS = [
     values: zineArchiveValues,
     systemLook: systemLook("zine-archive", "Zine Archive", zineArchiveValues),
   },
+  {
+    id: "brass-inlay",
+    name: "Brass Inlay",
+    description: "Atelier reference Look: warm drawing-office paper, deep ink, and one brass accent.",
+    dimensionSummary: "Focused threshold - measured treatment - living motion fallback",
+    bestFitOwnerTypes: ["maker", "fabricator", "atelier", "architect", "small practice with bounded capacity"],
+    badFitOwnerTypes: ["high-volume commerce", "photography-led owners", "performers", "dense information systems"],
+    typographyDirection: "One display serif against one UI sans, with monospace labels for measured information.",
+    paletteLight: "Warm paper, deep ink, and a single brass accent.",
+    materialLanguage: "Drawing office surface with dithered paper, rule grids, construction arcs, refractive glass, and brass inlay.",
+    imageTreatment: "Measured elevations and generated drawings rather than photographic content.",
+    density: "focused",
+    motionTone: "Atelier names Seventy-Five, Glass Drift, and Approach; M3A collapses them to the existing living V2 bridge value.",
+    atmosphereDefaults: ["drawing-sheet", "material-sampler"],
+    compatibleRoomStyles: ["refractive-threshold"],
+    recommendedRoomStyleId: "refractive-threshold",
+    lockedElements: ["presence-look", "piece-treatment", "motion-atmosphere"],
+    safeOwnerControls: [
+      "material sample metadata only",
+      "single brass accent",
+      "dither coarseness evidence",
+      "rule pitch evidence",
+      "refraction parameters evidence",
+    ],
+    mobileBehaviour: "Portrait becomes a separate six-body descent with visible labels, not a squeezed wide scene.",
+    reducedMotionBehaviour: "Drift amplitude settles to zero; the open gesture shortens and all destinations remain reachable.",
+    performanceExpectation: "Reference expects one WebGL context, shared cube camera, and 2D fallback; M3A does not import that adapter.",
+    intendedWowMoment: "The drawing-sheet rule grid bends under drifting glass.",
+    publicProjection: { publicStylePreset: "gallery-p2", worldId: "gallery", rendererSupport: "private-preview-only" },
+    evidenceStatus: "scaffolded",
+    values: brassInlayValues,
+    systemLook: systemLook("brass-inlay", "Brass Inlay", brassInlayValues),
+  },
 ] as const satisfies readonly PresenceLookDefinition[];
 
 export const PRESENCE_ROOM_STYLE_DEFINITIONS = [
@@ -449,6 +501,30 @@ export const PRESENCE_ROOM_STYLE_DEFINITIONS = [
     rendererSupport: "private-preview-only",
     evidenceStatus: "scaffolded",
   },
+  {
+    id: "refractive-threshold",
+    label: "Refractive Threshold",
+    name: "Refractive Threshold",
+    description: "Atelier reference Room Style: six navigable refractive bodies over a drawing sheet.",
+    spatialModel: "A single 3D scene with glass bodies, drawing-sheet ground, line-work, and shallow depth.",
+    navigationModel: "Bodies act as the interface with a screen-reader-only destination mirror.",
+    contentEncounterPattern: "A selected body advances, expands, and becomes the room while content resolves during the gesture.",
+    supportedContentTypes: ["short manifesto text", "layered capability", "generated drawings", "ordered sequence", "structured sheet", "one action"],
+    requiredZones: ["six navigable destinations", "identity mark", "one visitor action"],
+    optionalZones: ["material sampler", "fixture notice"],
+    defaultPieceTreatments: ["onion-inspection", "scribe-reveal", "measured-plate"],
+    compatibleLooks: ["brass-inlay"],
+    v2LayoutId: "portal-threshold",
+    collectionPresentationId: "threshold-feature",
+    hierarchy: "dominant-entry",
+    interaction: "onward-portal",
+    mobileBehaviour: "Same six bodies in portrait composition with larger tap targets and visible labels.",
+    reducedMotionBehaviour: "Bodies settle to rest pose, drift stops, and every room remains legible.",
+    performanceExpectation: "Reference declares full, lean, and flat tiers; M3A does not import the WebGL adapter.",
+    intendedWowMoment: "The body the visitor touches becomes the room they enter.",
+    rendererSupport: "private-preview-only",
+    evidenceStatus: "scaffolded",
+  },
 ] as const satisfies readonly PresenceRoomStyleDefinition[];
 
 export const PRESENCE_PIECE_TREATMENT_DEFINITIONS = [
@@ -494,6 +570,48 @@ export const PRESENCE_PIECE_TREATMENT_DEFINITIONS = [
     intendedWowMoment: "The archive becomes tactile and navigable.",
     preview: { optionId: "captioned", background: "#d3b887", color: "#2b1118" },
   },
+  {
+    id: "onion-inspection",
+    label: "Onion Inspection",
+    description: "Atelier treatment metadata for layered capability inspection.",
+    allowedSourceTypes: ["image", "writing", "generated", "module"],
+    visualRules: "Evidence-only in M3A: layered planes, focus bias, and aria-live readout need a later adapter.",
+    captionRules: "Fallback captions must remain readable as a flat list.",
+    fallbackTreatmentId: "quiet-framed",
+    mobileBehaviour: "Reference uses drag-to-scrub and rests at the middle layer.",
+    reducedMotionBehaviour: "Flatten to a fully legible vertical list.",
+    performanceExpectation: "No runtime layer adapter is imported in M3A.",
+    intendedWowMoment: "A capability separates into the operations it is made of.",
+    preview: { optionId: "onion", background: "#efe1c4", color: "#21170d" },
+  },
+  {
+    id: "scribe-reveal",
+    label: "Scribe Reveal",
+    description: "Atelier treatment metadata for directional text reveal.",
+    allowedSourceTypes: ["writing", "module"],
+    visualRules: "Evidence-only in M3A: clip-path, scribe line, and directional offset need a later adapter.",
+    captionRules: "Text must resolve fully and never remain clipped under reduced motion.",
+    fallbackTreatmentId: "quiet-framed",
+    mobileBehaviour: "Reference keeps the same reveal but shortens stagger.",
+    reducedMotionBehaviour: "Resolve instantly with no clip or offset.",
+    performanceExpectation: "CSS-only if implemented later; not active in M3A.",
+    intendedWowMoment: "Text resolves as if drawn from the selected body.",
+    preview: { optionId: "scribe", background: "#f2ead8", color: "#8a6a24" },
+  },
+  {
+    id: "measured-plate",
+    label: "Measured Plate",
+    description: "Atelier treatment metadata for generated orthographic elevation plates.",
+    allowedSourceTypes: ["image", "generated"],
+    visualRules: "Evidence-only in M3A: generated form kind and seed are not part of the V3 Piece model yet.",
+    captionRules: "Mono title-block language should remain readable.",
+    fallbackTreatmentId: "quiet-framed",
+    mobileBehaviour: "Screen coarsens and remains drawing-like at small sizes.",
+    reducedMotionBehaviour: "Unaffected because the plate is still.",
+    performanceExpectation: "Plate rasterisation is deferred to a later private-preview adapter.",
+    intendedWowMoment: "A work reads as a measured elevation instead of an uploaded image.",
+    preview: { optionId: "plate", background: "#e7d2a8", color: "#17120a" },
+  },
 ] as const satisfies readonly PresencePieceTreatmentDefinition[];
 
 export const PRESENCE_ATMOSPHERE_DEFINITIONS = [
@@ -538,6 +656,34 @@ export const PRESENCE_ATMOSPHERE_DEFINITIONS = [
     intendedWowMoment: "The archive has texture and memory.",
     surfaceValue: { background: "#2b1118", texture: "ledger", atmosphere: "ledger-scan" },
     preview: { optionId: "ledger", background: "#2b1118", color: "#f1c96a" },
+  },
+  {
+    id: "drawing-sheet",
+    label: "Drawing Sheet",
+    description: "Atelier atmosphere metadata for warm paper, rule grid, construction arcs, and dithered light.",
+    environmentalTokens: ["warm paper", "rule grid", "construction arcs", "dither screen", "light fold"],
+    contrastNote: "Deep ink and brass accents must remain readable on warm paper.",
+    fallbackAtmosphereId: "paper-light",
+    mobileBehaviour: "Reference makes the screen coarser relative to viewport.",
+    reducedMotionBehaviour: "Static composition with no drifting wash.",
+    performanceExpectation: "Fragment shader and cube-target sampling are deferred in M3A.",
+    intendedWowMoment: "The ground plane gives refraction something visible to bend.",
+    surfaceValue: { background: "#f2ead8", texture: "paper", atmosphere: "drawing-sheet" },
+    preview: { optionId: "drawing", background: "#f2ead8", color: "#17120a" },
+  },
+  {
+    id: "material-sampler",
+    label: "Material Sampler",
+    description: "Atelier atmosphere metadata for authored material samples that carry palette and structural tokens.",
+    environmentalTokens: ["material sample", "rule pitch", "screen coarseness", "grain", "drift"],
+    contrastNote: "Sampler changes must not make content unreadable.",
+    fallbackAtmosphereId: "paper-light",
+    mobileBehaviour: "Reference uses a fixed sheet below the control.",
+    reducedMotionBehaviour: "Tokens apply immediately with no cross-fade.",
+    performanceExpectation: "Canvas samples and re-rasterisation are deferred in M3A.",
+    intendedWowMoment: "A material sample changes structure rather than just recolouring the room.",
+    surfaceValue: { background: "#ead8b8", texture: "paper", atmosphere: "material-sampler" },
+    preview: { optionId: "material", background: "#d7bd80", color: "#17120a" },
   },
 ] as const satisfies readonly PresenceAtmosphereDefinition[];
 
@@ -726,6 +872,7 @@ const compatibilitySeeds = [
   ["zine-archive", "film-strip-selected-works", "experimental", "Zine Archive scaffold is strongest with selected works, but lacks public preset proof.", undefined, "scaffolded"],
   ["zine-archive", "gallery-wall", "supported", "Zine values can compile through Gallery P2 while public proof remains generic.", "film-strip-selected-works", "scaffolded"],
   ["zine-archive", "threshold-portal", "experimental", "Archive texture can enter a threshold, but it is not a recommended proof pair.", "film-strip-selected-works", "scaffolded"],
+  ["brass-inlay", "refractive-threshold", "blocked", "Atelier reference flagship is staged as frontend/private metadata only; public renderer adapter and backend persistence are deferred.", "gallery-wall", "scaffolded"],
 ] as const satisfies readonly (readonly [
   StudioV3LookId,
   StudioV3RoomStyleId,
@@ -770,6 +917,17 @@ export const ALL_STUDIO_V3_COLLECTION_PRESENTATION_IDS = ["wall", "selected-sequ
 export const ALL_STUDIO_V3_DENSITY_IDS = ["spacious", "focused", "dense"] as const;
 export const ALL_STUDIO_V3_JOURNEY_IDS = ["editorial-browse", "threshold-reveal", "archive-index"] as const;
 export const ALL_STUDIO_V3_WORLD_IDS = ["gallery", "zine", "dj", "healing", "market", "archive", "carpenter", "consultant"] as const;
+export const PERSISTABLE_STUDIO_V3_ROOM_STYLE_IDS = ["threshold-portal", "gallery-wall", "film-strip-selected-works"] as const satisfies readonly StudioV3RoomStyleId[];
+export const PERSISTABLE_STUDIO_V3_PIECE_TREATMENT_IDS = ["quiet-framed", "luminous-depth", "captioned-ledger"] as const satisfies readonly StudioV3PieceTreatment[];
+export const PERSISTABLE_STUDIO_V3_ATMOSPHERE_IDS = ["paper-light", "nocturnal-depth", "ledger-scan"] as const satisfies readonly StudioV3Atmosphere[];
+
+export const PRESENCE_OWNER_ACTIVE_PIECE_TREATMENT_DEFINITIONS = PRESENCE_PIECE_TREATMENT_DEFINITIONS.filter((definition) => (
+  PERSISTABLE_STUDIO_V3_PIECE_TREATMENT_IDS.includes(definition.id as typeof PERSISTABLE_STUDIO_V3_PIECE_TREATMENT_IDS[number])
+));
+
+export const PRESENCE_OWNER_ACTIVE_ATMOSPHERE_DEFINITIONS = PRESENCE_ATMOSPHERE_DEFINITIONS.filter((definition) => (
+  PERSISTABLE_STUDIO_V3_ATMOSPHERE_IDS.includes(definition.id as typeof PERSISTABLE_STUDIO_V3_ATMOSPHERE_IDS[number])
+));
 
 export function getPresenceLookDefinition(lookId: StudioV3LookId): PresenceLookDefinition {
   return PRESENCE_LOOK_DEFINITIONS.find((item) => item.id === lookId) ?? PRESENCE_LOOK_DEFINITIONS[0];
@@ -876,8 +1034,26 @@ export function resolvePresenceLookRoomStyleCompatibility(
   lookId: StudioV3LookId,
   roomStyleId: StudioV3RoomStyleId,
 ): PresenceLookRoomStyleCompatibilityDefinition {
-  return PRESENCE_LOOK_ROOM_STYLE_COMPATIBILITY.find((item) => item.lookId === lookId && item.roomStyleId === roomStyleId)
-    ?? PRESENCE_LOOK_ROOM_STYLE_COMPATIBILITY.find((item) => item.lookId === "soft-editorial" && item.roomStyleId === roomStyleId)
+  const exact = PRESENCE_LOOK_ROOM_STYLE_COMPATIBILITY.find((item) => item.lookId === lookId && item.roomStyleId === roomStyleId);
+  if (exact) return exact;
+  if (!isPresencePersistableRoomStyleId(roomStyleId) || lookId === "brass-inlay") {
+    const look = getPresenceLookDefinition(lookId);
+    const roomStyle = getPresenceRoomStyleDefinition(roomStyleId);
+    return {
+      lookId,
+      roomStyleId,
+      tier: "blocked",
+      reason: "No approved Gate 4 M3A compatibility row exists for this private catalog pairing.",
+      fallbackRoomStyleId: "gallery-wall",
+      ownerWarning: "Private catalog metadata is not owner-selectable until adapter and backend persistence proof are approved.",
+      evidenceStatus: "needs-audit",
+      v2LayoutId: roomStyle.v2LayoutId,
+      publicStylePreset: look.values.publicStylePreset,
+      worldId: look.values.worldId,
+      collectionPresentationId: roomStyle.collectionPresentationId,
+    };
+  }
+  return PRESENCE_LOOK_ROOM_STYLE_COMPATIBILITY.find((item) => item.lookId === "soft-editorial" && item.roomStyleId === roomStyleId)
     ?? PRESENCE_LOOK_ROOM_STYLE_COMPATIBILITY[0];
 }
 
@@ -1092,6 +1268,18 @@ export function isStudioV3PieceTreatmentId(value: unknown): value is StudioV3Pie
 
 export function isStudioV3AtmosphereId(value: unknown): value is StudioV3Atmosphere {
   return typeof value === "string" && ALL_STUDIO_V3_ATMOSPHERE_IDS.includes(value as StudioV3Atmosphere);
+}
+
+export function isPresencePersistableRoomStyleId(value: unknown): value is StudioV3RoomStyleId {
+  return typeof value === "string" && PERSISTABLE_STUDIO_V3_ROOM_STYLE_IDS.includes(value as typeof PERSISTABLE_STUDIO_V3_ROOM_STYLE_IDS[number]);
+}
+
+export function isPresencePersistablePieceTreatmentId(value: unknown): value is StudioV3PieceTreatment {
+  return typeof value === "string" && PERSISTABLE_STUDIO_V3_PIECE_TREATMENT_IDS.includes(value as typeof PERSISTABLE_STUDIO_V3_PIECE_TREATMENT_IDS[number]);
+}
+
+export function isPresencePersistableAtmosphereId(value: unknown): value is StudioV3Atmosphere {
+  return typeof value === "string" && PERSISTABLE_STUDIO_V3_ATMOSPHERE_IDS.includes(value as typeof PERSISTABLE_STUDIO_V3_ATMOSPHERE_IDS[number]);
 }
 
 export function isStudioV3MotionBehaviourId(value: unknown): value is StudioV2MotionIntensity {

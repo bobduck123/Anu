@@ -68,6 +68,8 @@ import {
   PRESENCE_LOOK_DEFINITIONS,
   PRESENCE_LOOK_ROOM_STYLE_COMPATIBILITY,
   PRESENCE_MOTION_BEHAVIOUR_DEFINITIONS,
+  PRESENCE_OWNER_ACTIVE_ATMOSPHERE_DEFINITIONS,
+  PRESENCE_OWNER_ACTIVE_PIECE_TREATMENT_DEFINITIONS,
   PRESENCE_PIECE_TREATMENT_DEFINITIONS,
   PRESENCE_PUBLIC_PRESET_CANDIDATES,
   PRESENCE_ROOM_STYLE_DEFINITIONS,
@@ -2347,26 +2349,33 @@ test("P1 exposes three materially distinct Looks and a complete 3x3 compatibilit
   assert.equal(filmMappings.some((item) => item.publicStylePreset === "christina-liquid-gallery"), false);
 });
 
-test("M2 shared style catalog covers existing ids, tiers, fallbacks, and candidate presets only", () => {
+test("M3A shared style catalog stages Atelier metadata while preserving Gate 3 active coverage", () => {
   assert.deepEqual(PRESENCE_LOOK_DEFINITIONS.map((look) => look.id), [
     "soft-editorial",
     "nocturnal-gallery",
     "zine-archive",
+    "brass-inlay",
   ]);
   assert.deepEqual(PRESENCE_ROOM_STYLE_DEFINITIONS.map((roomStyle) => roomStyle.id), [
     "threshold-portal",
     "gallery-wall",
     "film-strip-selected-works",
+    "refractive-threshold",
   ]);
   assert.deepEqual(PRESENCE_PIECE_TREATMENT_DEFINITIONS.map((treatment) => treatment.id), [
     "quiet-framed",
     "luminous-depth",
     "captioned-ledger",
+    "onion-inspection",
+    "scribe-reveal",
+    "measured-plate",
   ]);
   assert.deepEqual(PRESENCE_ATMOSPHERE_DEFINITIONS.map((atmosphere) => atmosphere.id), [
     "paper-light",
     "nocturnal-depth",
     "ledger-scan",
+    "drawing-sheet",
+    "material-sampler",
   ]);
   assert.deepEqual(PRESENCE_MOTION_BEHAVIOUR_DEFINITIONS.map((motion) => motion.id), [
     "still",
@@ -2374,7 +2383,8 @@ test("M2 shared style catalog covers existing ids, tiers, fallbacks, and candida
     "living",
   ]);
 
-  assert.equal(PRESENCE_LOOK_ROOM_STYLE_COMPATIBILITY.length, 9);
+  assert.equal(PRESENCE_LOOK_ROOM_STYLE_COMPATIBILITY.length, 10);
+  assert.equal(STUDIO_V3_LOOK_ROOM_STYLE_COMPATIBILITY.length, 9);
   assert.equal(resolvePresenceLookRoomStyleCompatibility("nocturnal-gallery", "threshold-portal").tier, "flagship");
   assert.equal(resolvePresenceLookRoomStyleCompatibility("soft-editorial", "gallery-wall").tier, "flagship");
   assert.equal(resolvePresenceLookRoomStyleCompatibility("zine-archive", "film-strip-selected-works").tier, "experimental");
@@ -2404,6 +2414,122 @@ test("M2 shared style catalog covers existing ids, tiers, fallbacks, and candida
     false,
     "Christina stays metadata-only in M2 and is not exposed as a new V3 Look",
   );
+});
+
+test("M3A Atelier catalog staging remains private metadata and outside active persistence", async () => {
+  const brass = PRESENCE_LOOK_DEFINITIONS.find((look) => look.id === "brass-inlay");
+  const refractive = PRESENCE_ROOM_STYLE_DEFINITIONS.find((roomStyle) => roomStyle.id === "refractive-threshold");
+  assert.ok(brass);
+  assert.ok(refractive);
+  assert.equal(brass.publicProjection.rendererSupport, "private-preview-only");
+  assert.equal(brass.publicProjection.publicStylePreset, "gallery-p2");
+  assert.equal(brass.values.roomStyleId, "refractive-threshold");
+  assert.equal(brass.values.atmosphere, "drawing-sheet");
+  assert.equal(brass.values.pieceTreatment, "measured-plate");
+  assert.equal(brass.values.motionIntensity, "living");
+  assert.equal(refractive.rendererSupport, "private-preview-only");
+  assert.deepEqual(refractive.defaultPieceTreatments, ["onion-inspection", "scribe-reveal", "measured-plate"]);
+
+  const pairing = resolvePresenceLookRoomStyleCompatibility("brass-inlay", "refractive-threshold");
+  assert.equal(pairing.tier, "blocked");
+  assert.equal(pairing.fallbackRoomStyleId, "gallery-wall");
+  assert.match(pairing.reason, /backend persistence are deferred/);
+  assert.equal(isPresenceStylePairingAllowed("brass-inlay", "refractive-threshold", { allowExperimental: true }), false);
+  assert.equal(isPresenceLookSelectable("brass-inlay", { allowExperimental: true }), false);
+  assert.equal(isPresenceRoomStyleSelectable("refractive-threshold", { allowExperimental: true }), false);
+  for (const lookId of ["soft-editorial", "nocturnal-gallery", "zine-archive"] as const) {
+    const crossPairing = resolvePresenceLookRoomStyleCompatibility(lookId, "refractive-threshold");
+    assert.equal(crossPairing.tier, "blocked");
+    assert.equal(isPresenceStylePairingAllowed(lookId, "refractive-threshold", { allowExperimental: true }), false);
+  }
+  for (const roomStyleId of ["threshold-portal", "gallery-wall", "film-strip-selected-works"] as const) {
+    const crossPairing = resolvePresenceLookRoomStyleCompatibility("brass-inlay", roomStyleId);
+    assert.equal(crossPairing.tier, "blocked");
+    assert.equal(isPresenceStylePairingAllowed("brass-inlay", roomStyleId, { allowExperimental: true }), false);
+  }
+
+  assert.equal(PRESENCE_PUBLIC_PRESET_CANDIDATES.some((preset) => (
+    String((preset as Record<string, unknown>).representedByLookId) === "brass-inlay"
+      || String((preset as Record<string, unknown>).representedByRoomStyleId) === "refractive-threshold"
+  )), false);
+  assert.equal(PRESENCE_MOTION_BEHAVIOUR_DEFINITIONS.some((motion) => (
+    ["seventy-five", "glass-drift", "approach"].includes(motion.id)
+  )), false);
+  assert.deepEqual(PRESENCE_OWNER_ACTIVE_ATMOSPHERE_DEFINITIONS.map((atmosphere) => atmosphere.id), [
+    "paper-light",
+    "nocturnal-depth",
+    "ledger-scan",
+  ]);
+  assert.deepEqual(PRESENCE_OWNER_ACTIVE_PIECE_TREATMENT_DEFINITIONS.map((treatment) => treatment.id), [
+    "quiet-framed",
+    "luminous-depth",
+    "captioned-ledger",
+  ]);
+  assert.equal(STUDIO_V3_P1_LOOKS.some((look) => look.id === "brass-inlay"), false);
+  assert.equal(STUDIO_V3_LOOK_ROOM_STYLE_COMPATIBILITY.some((row) => row.lookId === "brass-inlay"), false);
+
+  const fixture = await hydratedP1Fixture();
+  assert.equal(Object.hasOwn(fixture.document.looks, "brass-inlay"), false);
+  const attempted = applyStudioV3Look(fixture.document, "brass-inlay");
+  assert.equal(attempted.activeLookId, fixture.document.activeLookId);
+  assert.equal(attempted.diagnostics.some((issue) => issue.code === "look-unavailable"), true);
+
+  const compiled = compileStudioV3Document(fixture.document, fixture.baseState);
+  assert.notEqual(compiled.studioV2State.skin.experienceAtmosphere, "drawing-sheet");
+  assert.notEqual(compiled.studioV2State.skin.experiencePieceTreatment, "measured-plate");
+  assert.equal(compiled.issues.some((issue) => issue.code === "style-candidate-unavailable"), false);
+
+  const injected = compileStudioV3Document({
+    ...fixture.document,
+    activeLookId: "brass-inlay",
+    looks: { ...fixture.document.looks, "brass-inlay": brass.systemLook },
+  }, fixture.baseState);
+  assert.equal(injected.studioV2State.publicStylePreset, "gallery-p2");
+  assert.equal(injected.studioV2State.skin.experienceAtmosphere, "paper-light");
+  assert.equal(injected.studioV2State.skin.experiencePieceTreatment, "quiet-framed");
+
+  const refractiveStage = stageStudioV3RoomStyle(fixture.document, {
+    roomId: "gallery",
+    roomStyleId: "refractive-threshold",
+    now: "2026-07-30T00:00:00.000Z",
+  });
+  assert.equal(refractiveStage.status, "blocked");
+  assert.equal(refractiveStage.reason, "style-pairing-blocked");
+
+  const atmosphereOverride = applyStudioV3LayerOverride(fixture.document, {
+    scopeKind: "presence",
+    scopeId: String(fixture.document.nodeId),
+    layer: "presence-look",
+    value: { atmosphere: "drawing-sheet" },
+    provenance: "m3a-guardrail-test",
+  });
+  const treatmentOverride = applyStudioV3LayerOverride(fixture.document, {
+    scopeKind: "presence",
+    scopeId: String(fixture.document.nodeId),
+    layer: "piece-treatment",
+    value: { pieceTreatment: "measured-plate" },
+    provenance: "m3a-guardrail-test",
+  });
+  assert.equal(atmosphereOverride, fixture.document);
+  assert.equal(treatmentOverride, fixture.document);
+
+  const metadata = projectStudioV3Metadata(fixture.document);
+  const badAtmosphereMetadata = structuredClone(metadata);
+  badAtmosphereMetadata.layer_values.push({
+    scopeKind: "presence",
+    scopeId: String(fixture.document.nodeId),
+    layer: "presence-look",
+    value: { atmosphere: "drawing-sheet" },
+  });
+  const badTreatmentMetadata = structuredClone(metadata);
+  badTreatmentMetadata.layer_values.push({
+    scopeKind: "presence",
+    scopeId: String(fixture.document.nodeId),
+    layer: "piece-treatment",
+    value: { pieceTreatment: "measured-plate" },
+  });
+  assert.equal(isSafeStudioV3MetadataEnvelope(badAtmosphereMetadata), false);
+  assert.equal(isSafeStudioV3MetadataEnvelope(badTreatmentMetadata), false);
 });
 
 test("M4 public preset candidate readiness keeps Christina below supported V3 status", () => {
@@ -2559,6 +2685,10 @@ test("M5 owner controls consume guardrail helpers and avoid direct Christina sel
   assert.match(source, /getPresenceLookSelectionStatus/);
   assert.match(source, /getPresenceRoomStyleSelectionStatus/);
   assert.match(source, /isPresenceStylePairingAllowed/);
+  assert.match(source, /PRESENCE_OWNER_ACTIVE_ATMOSPHERE_DEFINITIONS/);
+  assert.match(source, /PRESENCE_OWNER_ACTIVE_PIECE_TREATMENT_DEFINITIONS/);
+  assert.doesNotMatch(source, /PRESENCE_ATMOSPHERE_DEFINITIONS\.map/);
+  assert.doesNotMatch(source, /PRESENCE_PIECE_TREATMENT_DEFINITIONS\.map/);
   assert.match(source, /OWNER_REVIEW_STYLE_GUARDRAILS/);
   assert.doesNotMatch(source, /christina-liquid-gallery/);
 });
@@ -2589,7 +2719,12 @@ test("M3 compatibility owner copy surfaces flagship, experimental, fallback, and
   );
   assert.equal(fallback.fallbackRoomStyleName, "Film Strip / Selected Works");
 
-  assert.equal(PRESENCE_LOOK_ROOM_STYLE_COMPATIBILITY.some((item) => item.tier === "blocked"), false);
+  assert.deepEqual(
+    PRESENCE_LOOK_ROOM_STYLE_COMPATIBILITY
+      .filter((item) => item.tier === "blocked")
+      .map((item) => `${item.lookId}:${item.roomStyleId}`),
+    ["brass-inlay:refractive-threshold"],
+  );
   const blockedFixture: PresenceLookRoomStyleCompatibilityDefinition = {
     lookId: "soft-editorial",
     roomStyleId: "threshold-portal",

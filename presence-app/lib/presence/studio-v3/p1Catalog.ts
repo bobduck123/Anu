@@ -13,6 +13,12 @@ import {
   type PresenceRoomStyleDefinition,
 } from "./styleCatalog.ts";
 
+const P1_ROOM_STYLE_IDS: readonly StudioV3RoomStyleId[] = [
+  "threshold-portal",
+  "gallery-wall",
+  "film-strip-selected-works",
+];
+
 export const STUDIO_V3_SOFT_EDITORIAL_LOOK = PRESENCE_LOOK_DEFINITIONS[0].systemLook;
 export const STUDIO_V3_NOCTURNAL_GALLERY_LOOK = PRESENCE_LOOK_DEFINITIONS[1].systemLook;
 export const STUDIO_V3_ZINE_ARCHIVE_LOOK = PRESENCE_LOOK_DEFINITIONS[2].systemLook;
@@ -29,12 +35,16 @@ export const STUDIO_V3_P1_LOOKS: readonly StudioV3Look[] = [
 
 export type StudioV3RoomStyleDefinition = PresenceRoomStyleDefinition;
 
-export const STUDIO_V3_ROOM_STYLE_DEFINITIONS: readonly StudioV3RoomStyleDefinition[] = PRESENCE_ROOM_STYLE_DEFINITIONS;
+export const STUDIO_V3_ROOM_STYLE_DEFINITIONS: readonly StudioV3RoomStyleDefinition[] =
+  PRESENCE_ROOM_STYLE_DEFINITIONS.filter((definition) => P1_ROOM_STYLE_IDS.includes(definition.id));
 
 export type StudioV3LookRoomStyleCompatibility = PresenceLookRoomStyleCompatibilityDefinition;
 
 export const STUDIO_V3_LOOK_ROOM_STYLE_COMPATIBILITY: readonly StudioV3LookRoomStyleCompatibility[] =
-  PRESENCE_LOOK_ROOM_STYLE_COMPATIBILITY;
+  PRESENCE_LOOK_ROOM_STYLE_COMPATIBILITY.filter((definition) => (
+    STUDIO_V3_P1_LOOKS.some((look) => look.id === definition.lookId)
+      && P1_ROOM_STYLE_IDS.includes(definition.roomStyleId)
+  ));
 
 export function studioV3RoomStyleDefinition(roomStyleId: StudioV3RoomStyleId): StudioV3RoomStyleDefinition {
   return getPresenceRoomStyleDefinition(roomStyleId);

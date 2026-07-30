@@ -8,18 +8,18 @@ import {
 } from "../studio-v2/layouts.ts";
 import { studioV3RoomStyleDefinition, STUDIO_V3_P1_LOOKS } from "./p1Catalog.ts";
 import {
-  isStudioV3AtmosphereId,
   isStudioV3CollectionPresentationId as isCatalogStudioV3CollectionPresentationId,
   isStudioV3DensityId,
   isStudioV3JourneyId,
   isStudioV3MotionBehaviourId,
-  isStudioV3PieceTreatmentId,
+  isPresencePersistableAtmosphereId,
+  isPresencePersistablePieceTreatmentId,
+  isPresencePersistableRoomStyleId,
   isPresenceLookSelectable,
   isPresencePublicPresetCandidateSelectableInV3,
   isPresenceStylePairingAllowed,
   isStudioV3LookId,
   isStudioV3PublicStylePresetId,
-  isStudioV3RoomStyleId as isCatalogStudioV3RoomStyleId,
   isStudioV3WorldId,
 } from "./styleCatalog.ts";
 import {
@@ -1004,7 +1004,7 @@ function roomStyleValue(value: unknown): StudioV3RoomStyleId | null {
 }
 
 function isRoomStyleId(value: unknown): value is StudioV3RoomStyleId {
-  return isCatalogStudioV3RoomStyleId(value);
+  return isPresencePersistableRoomStyleId(value);
 }
 
 function projectLookValues(values: Partial<StudioV3LookValues>): Record<string, unknown> {
@@ -1660,8 +1660,8 @@ function isSafeLookValueRecord(value: Record<string, unknown>, requireComplete: 
     if (key === "worldId" && !isStudioV3WorldId(child)) return false;
     if (key === "collectionPresentationId" && !isCatalogStudioV3CollectionPresentationId(child)) return false;
     if (key === "density" && !isStudioV3DensityId(child)) return false;
-    if (key === "pieceTreatment" && !isStudioV3PieceTreatmentId(child)) return false;
-    if (key === "atmosphere" && !isStudioV3AtmosphereId(child)) return false;
+    if (key === "pieceTreatment" && !isPresencePersistablePieceTreatmentId(child)) return false;
+    if (key === "atmosphere" && !isPresencePersistableAtmosphereId(child)) return false;
     if (key === "journey" && !isStudioV3JourneyId(child)) return false;
   }
   return true;

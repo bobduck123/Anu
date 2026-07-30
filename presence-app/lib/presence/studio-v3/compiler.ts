@@ -4,6 +4,8 @@ import {
   DEFAULT_STUDIO_V2_TRANSFORM,
   PRESENCE_STUDIO_V2_RENDERER_KEY,
   PRESENCE_STUDIO_V2_SCHEMA_VERSION,
+  type StudioV2ExperienceAtmosphere,
+  type StudioV2ExperiencePieceTreatment,
   type StudioV2Object,
   type StudioV2State,
 } from "../studio-v2/model.ts";
@@ -475,8 +477,8 @@ export function compileStudioV3ToStudioV2(document: StudioV3Document, baseState:
     headingWeight: unlockedLookValues.headingWeight,
     motionIntensity: unlockedLookValues.motionIntensity,
     experienceDensity: unlockedLookValues.density,
-    experienceAtmosphere: unlockedLookValues.atmosphere,
-    experiencePieceTreatment: unlockedLookValues.pieceTreatment,
+    experienceAtmosphere: studioV2ExperienceAtmosphereForV3(unlockedLookValues.atmosphere),
+    experiencePieceTreatment: studioV2ExperiencePieceTreatmentForV3(unlockedLookValues.pieceTreatment),
     experienceJourney: unlockedLookValues.journey,
   };
   nextState.chambers = nextState.chambers.map((chamber) => {
@@ -510,6 +512,16 @@ export function compileStudioV3ToStudioV2(document: StudioV3Document, baseState:
     };
   });
   return nextState;
+}
+
+function studioV2ExperienceAtmosphereForV3(value: StudioV3LookValues["atmosphere"]): StudioV2ExperienceAtmosphere {
+  if (value === "nocturnal-depth" || value === "ledger-scan") return value;
+  return "paper-light";
+}
+
+function studioV2ExperiencePieceTreatmentForV3(value: StudioV3LookValues["pieceTreatment"]): StudioV2ExperiencePieceTreatment {
+  if (value === "luminous-depth" || value === "captioned-ledger") return value;
+  return "quiet-framed";
 }
 
 export function compileStudioV3Document(document: StudioV3Document, baseState: StudioV2State): StudioV3CompileResult {
