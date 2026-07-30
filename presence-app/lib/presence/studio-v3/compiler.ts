@@ -53,6 +53,12 @@ import {
   studioV3RoomStyleDefinition,
 } from "./p1Catalog.ts";
 import {
+  ALL_STUDIO_V3_ROOM_STYLE_IDS,
+  initialStudioV3LookIdForBridge,
+  isPresencePublicPresetCandidateSelectableInV3,
+  studioV3RoomStyleIdForV2Layout,
+} from "./styleCatalog.ts";
+import {
   collectionSourceRef,
   findStudioV3LegacyPiece,
   findStudioV3Piece,
@@ -136,7 +142,7 @@ export function hydrateStudioV3Document(input: StudioV3HydrateInput): StudioV3Do
           description: object.detail,
           media: object.image,
           mediaType: object.image?.src ? "image" : "writing",
-          compatibleRoomStyles: ["threshold-portal", "gallery-wall", "film-strip-selected-works"],
+          compatibleRoomStyles: [...ALL_STUDIO_V3_ROOM_STYLE_IDS],
           sourceStatus: "current",
           snapshotType: object.type,
         }];
@@ -156,15 +162,13 @@ export function hydrateStudioV3Document(input: StudioV3HydrateInput): StudioV3Do
   const activeRoomId = rooms[0]?.id ?? input.studioV2State.chambers[0]?.id ?? "main";
   const entryRoomId = input.studioV2State.chambers.find((chamber) => chamber.metadata?.isEntry)?.id ?? activeRoomId;
   const requiredCtaSourceRef = Object.values(legacyPieces).find((piece) => piece.snapshotType === "cta")?.sourceRef;
-  // The gated V3 seam is currently limited to the BBB pilot. Its published
-  // baseline intentionally remains Gallery P2 for public-route invariance,
-  // while the editor must retain the proven P0 Nocturnal starting experience.
-  const isBbbPilot = input.slug.trim().toLowerCase() === "bbbvision";
-  const initialLookId: StudioV3LookId = isBbbPilot || input.studioV2State.publicStylePreset === "bbbvision-threshold-gallery"
-    ? "nocturnal-gallery"
-    : input.studioV2State.worldId === "zine"
-      ? "zine-archive"
-      : "soft-editorial";
+  // The catalog owns the private V3 starting Look bridge. Public projection
+  // and public renderer dispatch remain unchanged in Gate 3 M2.
+  const initialLookId: StudioV3LookId = initialStudioV3LookIdForBridge({
+    slug: input.slug,
+    publicStylePreset: input.studioV2State.publicStylePreset,
+    worldId: input.studioV2State.worldId,
+  });
   return {
     schemaVersion: STUDIO_V3_LOCAL_SCHEMA_VERSION,
     nodeId: input.nodeId,
@@ -451,7 +455,7 @@ function isSafeMotionAtmosphereLockInput(value: unknown): value is Pick<StudioV3
 }
 
 export function compileStudioV3ToStudioV2(document: StudioV3Document, baseState: StudioV2State): StudioV2State {
-  const activeLook = document.looks[document.activeLookId] ?? STUDIO_V3_SOFT_EDITORIAL_LOOK;
+  const activeLook = compileSafeActiveLook(document);
   const unlockedLookValues = applyLockedLookValues(document, activeLook.values);
   const nextState: StudioV2State = structuredClone(baseState);
   nextState.rendererKey = PRESENCE_STUDIO_V2_RENDERER_KEY;
@@ -524,8 +528,18 @@ export function compileStudioV3Document(document: StudioV3Document, baseState: S
     locked_fields: nineField.locked_fields ?? {},
   };
   const illegalDiffs = diffStudioV3OwnedConfig(document.base.comparableConfig, comparableConfig);
+  const activeLook = document.looks[document.activeLookId] ?? document.namedLooks.find((look) => look.id === document.activeLookId);
+  const unsupportedStyleIssue = activeLook && !isPresencePublicPresetCandidateSelectableInV3(activeLook.values.publicStylePreset, { allowExperimental: true })
+    ? [{
+      severity: "warning" as const,
+      code: "style-candidate-unavailable",
+      message: "The active Look references a style candidate that cannot become active V3 style state.",
+      resolution: "blocked" as const,
+    }]
+    : [];
   const issues: StudioV3CompileIssue[] = [
     ...document.diagnostics,
+    ...unsupportedStyleIssue,
     ...illegalDiffs.map((path) => ({
       severity: "error" as const,
       code: "unowned-diff",
@@ -557,7 +571,7 @@ function adaptPresenceWorkToStudioV3Piece(work: PresenceWork, sourceRef: StudioV
     description: work.description ?? undefined,
     media: image ? { src: image, alt: work.title } : undefined,
     mediaType: image ? "image" : "writing",
-    compatibleRoomStyles: ["gallery-wall", "threshold-portal", "film-strip-selected-works"],
+    compatibleRoomStyles: [...ALL_STUDIO_V3_ROOM_STYLE_IDS],
     sourceStatus: work.is_visible === false ? "unavailable" : "current",
     snapshotType: image ? "image" : "text",
     fromWork: work,
@@ -796,9 +810,7 @@ function dedupeObjects(objects: StudioV2Object[]): StudioV2Object[] {
 }
 
 function roomStyleFromV2(layoutId: unknown): StudioV3RoomStyleId {
-  if (layoutId === "portal-threshold") return "threshold-portal";
-  if (layoutId === "film-strip-selected-works") return "film-strip-selected-works";
-  return "gallery-wall";
+  return studioV3RoomStyleIdForV2Layout(layoutId);
 }
 
 function addPlacement(document: StudioV3Document, roomId: string, placement: StudioV3Placement): StudioV3Document {
@@ -865,6 +877,14 @@ function applyLockedLookValues(document: StudioV3Document, values: StudioV3LookV
     ...(typeof locked.motionIntensity === "string" ? { motionIntensity: locked.motionIntensity } : {}),
     ...(typeof locked.background === "string" ? { background: locked.background } : {}),
   };
+}
+
+function compileSafeActiveLook(document: StudioV3Document): StudioV3Look {
+  const activeLook = document.looks[document.activeLookId] ?? document.namedLooks.find((look) => look.id === document.activeLookId);
+  if (!activeLook) return STUDIO_V3_SOFT_EDITORIAL_LOOK;
+  return isPresencePublicPresetCandidateSelectableInV3(activeLook.values.publicStylePreset, { allowExperimental: true })
+    ? activeLook
+    : STUDIO_V3_SOFT_EDITORIAL_LOOK;
 }
 
 function isStableRuntimeReference(value: string): boolean {

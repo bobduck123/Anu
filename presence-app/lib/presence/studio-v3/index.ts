@@ -7,3 +7,5 @@ export * from "./editing.ts";
 export * from "./safety.ts";
 export * from "./editorBridge.ts";
 export * from "./feature.ts";
+export * from "./sourceTruth.ts";
+export * from "./styleCatalog.ts";
