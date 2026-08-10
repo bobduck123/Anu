@@ -6,6 +6,28 @@ Presence launch must be supported by revenue. This file converts proof into paid
 
 ## Offer stack
 
+## Founder Programme Posture - 2026-08-09
+
+The founder programme should sell product-backed concierge Presences, not uneditable bespoke websites and not self-serve SaaS.
+
+Allowed claims:
+
+- concierge-built Presence using the emerging Presence product system;
+- premium owned cultural world, stronger than a link-in-bio or generic site;
+- partial owner editing where the app has proven safe controls;
+- operator-supported setup, QA and launch support;
+- clear founder cohort boundaries, acceptance criteria and manual support.
+
+Do not claim:
+
+- full public self-serve readiness;
+- AI-generated profile/site automation;
+- booking, payment, notification or donor/member automation before Gate 7 proof;
+- unlimited bespoke design outside reusable Presence primitives;
+- public launch readiness before Gate 7, Gate 8 and Gate 9 evidence.
+
+Founder builds should feed the product system. Each paid build should produce at least one reusable registry primitive, adaptation rule, owner-editable field pattern, action-flow requirement, case-study asset or onboarding checklist improvement.
+
 ### Entry offers
 
 | Offer | Price guide | Purpose |

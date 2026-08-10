@@ -62,6 +62,14 @@ const PROXY_RULES: readonly ProxyRule[] = [
     requiresPrivilegedAuth: true,
   },
   {
+    id: 'core-api-control-peach',
+    target: 'core',
+    methods: ['GET', 'PATCH'],
+    pathPattern: /^\/api\/control\/peach\/[a-z0-9/_-]+$/,
+    routeFamily: 'core-peach-control',
+    requiresPrivilegedAuth: true,
+  },
+  {
     id: 'core-runtime-health',
     target: 'core',
     methods: ['GET'],
