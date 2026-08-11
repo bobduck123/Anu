@@ -2,6 +2,10 @@ import type { PresenceNode } from "../../api/types.ts";
 import type { PresenceRenderModel } from "./model.ts";
 import { resolveRenderModel } from "./resolver.ts";
 import { studioV2PublicRoomFromPresenceNode, type StudioV2PublicRoom } from "../studio-v2/index.ts";
+import {
+  RCR_RESTRICTED_PUBLIC_PAYLOAD_KEYS,
+  RCR_RESTRICTED_PUBLIC_PAYLOAD_VALUE_FRAGMENTS,
+} from "../rcrContract.ts";
 
 export const RESTRICTED_PUBLIC_PAYLOAD_KEYS = [
   "editable_config",
@@ -34,9 +38,10 @@ export const RESTRICTED_PUBLIC_PAYLOAD_KEYS = [
   "signed_url",
   "preview_expires_at",
   "localstorage",
+  ...RCR_RESTRICTED_PUBLIC_PAYLOAD_KEYS,
 ] as const;
 
-const restrictedKeys = new Set<string>(RESTRICTED_PUBLIC_PAYLOAD_KEYS);
+const restrictedKeys = new Set<string>(RESTRICTED_PUBLIC_PAYLOAD_KEYS.map((key) => key.toLowerCase()));
 
 export const RESTRICTED_PUBLIC_PAYLOAD_VALUE_FRAGMENTS = [
   "WILD TRANSFORM SUSPENDED",
@@ -51,6 +56,7 @@ export const RESTRICTED_PUBLIC_PAYLOAD_VALUE_FRAGMENTS = [
   "signed_url",
   "storage_key",
   "TemplateKit",
+  ...RCR_RESTRICTED_PUBLIC_PAYLOAD_VALUE_FRAGMENTS,
 ] as const;
 
 const PUBLIC_DISPLAY_NODE_KEYS = [
@@ -150,8 +156,9 @@ export function findRestrictedPublicPayloadFragments(value: unknown): string[] {
   const found = new Set<string>();
   visitValues(value, (entry) => {
     if (typeof entry !== "string") return;
+    const lowerEntry = entry.toLowerCase();
     for (const fragment of RESTRICTED_PUBLIC_PAYLOAD_VALUE_FRAGMENTS) {
-      if (entry.includes(fragment)) found.add(fragment);
+      if (lowerEntry.includes(fragment.toLowerCase())) found.add(fragment);
     }
   });
   return [...found].sort();
