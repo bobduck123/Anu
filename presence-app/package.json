@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "rcr:pre-adapter": "npm run rcr:tripwire",
+    "rcr:tripwire": "node scripts/check-rcr-container-keys.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test"
