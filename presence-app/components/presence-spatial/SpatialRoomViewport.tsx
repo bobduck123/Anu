@@ -146,6 +146,10 @@ export function SpatialRoomViewport({
           });
           setActionStatus(intent.direction === 1 ? "Showing the next projection." : "Showing the previous projection.");
           break;
+        case "open-link":
+          window.open(intent.href, "_blank", "noopener,noreferrer");
+          setActionStatus("Opened the assigned link in a new tab.");
+          break;
         case "disabled":
           setActionStatus(intent.reason);
           break;

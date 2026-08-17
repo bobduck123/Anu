@@ -31,7 +31,7 @@ const MAX_PLACEMENTS = 512;
 const MAX_ASSETS = 256;
 const MAX_STATES = 64;
 const MAX_STRING = 500;
-const COMPONENT_CATEGORIES = new Set(["shell", "floor", "wall", "surface", "rack", "projection", "piece", "action"]);
+const COMPONENT_CATEGORIES = new Set(["shell", "floor", "wall", "surface", "rack", "projection", "piece", "light", "action"]);
 const ANCHOR_KINDS = new Set(["floor", "wall", "surface", "rack", "projection", "free"]);
 const MATERIAL_SLOTS = new Set<string>(SPATIAL_MATERIAL_SLOTS);
 const MATERIAL_PRESETS = new Set<string>(Object.keys(SPATIAL_MATERIAL_PRESETS));
@@ -291,7 +291,7 @@ function mediaRef(value: unknown, path: string, issues: SpatialValidationIssue[]
 function actionRef(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
   const item = record(value, path, issues); if (!item) return;
   identifier(item.id, `${path}.id`, issues);
-  oneOf(item.kind, ["inspect", "navigate-state", "sequence-previous", "sequence-next", "disabled-placeholder"], `${path}.kind`, issues);
+  oneOf(item.kind, ["inspect", "navigate-state", "sequence-previous", "sequence-next", "open-link", "disabled-placeholder"], `${path}.kind`, issues);
   text(item.label, `${path}.label`, issues, 160);
   if (item.kind === "inspect") {
     exactKeys(item, ["id", "kind", "label", "targetPlacementId"], path, issues);
@@ -302,6 +302,9 @@ function actionRef(value: unknown, path: string, issues: SpatialValidationIssue[
   } else if (item.kind === "disabled-placeholder") {
     exactKeys(item, ["id", "kind", "label", "disabledReason"], path, issues);
     if (!text(item.disabledReason, `${path}.disabledReason`, issues)) add(issues, path, "disabled-reason", "Disabled actions require an honest reason.");
+  } else if (item.kind === "open-link") {
+    exactKeys(item, ["id", "kind", "label", "href"], path, issues);
+    safeExternalHref(item.href, `${path}.href`, issues);
   } else if (item.kind === "sequence-previous" || item.kind === "sequence-next") {
     exactKeys(item, ["id", "kind", "label"], path, issues);
   } else {
@@ -361,6 +364,7 @@ function geometry(value: unknown, path: string, issues: SpatialValidationIssue[]
     exactKeys(item, ["kind", "primitive"], path, issues); oneOf(item.primitive, [
       "box", "plane", "cylinder", "rack", "projection-field", "open-shell", "ribbed-wall",
       "display-bay", "rounded-island", "suspended-rack", "garment-hanger", "framed-media", "projection-grid",
+      "display-shelf", "sign-card", "product-block", "light-fixture", "drape-divider",
     ], `${path}.primitive`, issues);
   } else if (item.kind === "asset") {
     exactKeys(item, ["kind", "assetId"], path, issues); identifier(item.assetId, `${path}.assetId`, issues);
@@ -536,6 +540,20 @@ function identifier(value: unknown, path: string, issues: SpatialValidationIssue
 function optionalIdentifier(value: unknown, path: string, issues: SpatialValidationIssue[]): void { if (value !== undefined) identifier(value, path, issues); }
 function text(value: unknown, path: string, issues: SpatialValidationIssue[], max = MAX_STRING): value is string { if (typeof value !== "string" || value.trim().length === 0 || value.length > max) { add(issues, path, "text", `Expected non-empty text up to ${max} characters.`); return false; } return true; }
 function optionalText(value: unknown, path: string, issues: SpatialValidationIssue[]): void { if (value !== undefined) text(value, path, issues); }
+function safeExternalHref(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
+  if (typeof value !== "string" || value.length > 2_048) {
+    add(issues, path, "href", "Expected an HTTPS link up to 2048 characters.");
+    return;
+  }
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "https:" || parsed.username || parsed.password) {
+      add(issues, path, "href", "Only credential-free HTTPS links are supported.");
+    }
+  } catch {
+    add(issues, path, "href", "Expected an absolute HTTPS link.");
+  }
+}
 function literal(value: unknown, expected: string, path: string, issues: SpatialValidationIssue[]): void { if (value !== expected) add(issues, path, "literal", `Expected ${expected}.`); }
 function oneOf(value: unknown, allowed: readonly string[], path: string, issues: SpatialValidationIssue[]): void { if (typeof value !== "string" || !allowed.includes(value)) add(issues, path, "enum", "Unsupported value."); }
 function boolean(value: unknown, path: string, issues: SpatialValidationIssue[]): void { if (typeof value !== "boolean") add(issues, path, "boolean", "Expected a boolean."); }

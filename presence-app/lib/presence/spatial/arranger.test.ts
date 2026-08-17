@@ -1,10 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  AUTHORING_CONTRAST_SKIN_ID,
   ARRANGER_COMPONENT_OPTIONS,
   addArrangerComponent,
+  assignArrangerMaterialPreset,
   assignArrangerMedia,
+  assignArrangerOpenLink,
+  assignArrangerPlacementMedia,
+  assignArrangerSkin,
   createBlankMobstarSpatialRoom,
+  deleteArrangerPlacement,
+  duplicateArrangerPlacement,
   isArrangerMovablePlacement,
   listArrangerChildPieces,
   listArrangerCompatibleMedia,
@@ -15,7 +22,9 @@ import {
 } from "./arranger.ts";
 import { compileSpatialRoom } from "./compile.ts";
 import { MOBSTAR_SPATIAL_ROOM_FIXTURE } from "./fixtures/mobstar.ts";
+import { MOBSTAR_GATE4_SPATIAL_ROOM_FIXTURE } from "./fixtures/mobstarGate4.ts";
 import { resolveSpatialPlacementTransform } from "./placement.ts";
+import { spatialComponent, spatialComponentCatalogMetadata } from "./registry.ts";
 
 test("blank Mobstar arranger room is a strict, compilable shell with assignable media", () => {
   const room = createBlankMobstarSpatialRoom();
@@ -30,9 +39,12 @@ test("blank Mobstar arranger room is a strict, compilable shell with assignable 
   assert.equal(room.media.length, MOBSTAR_SPATIAL_ROOM_FIXTURE.media.length);
 });
 
-test("all six arranger components use deterministic valid 0.25 m grid positions", () => {
+test("all thirteen reusable arranger components use registered candidate refs and deterministic valid grid positions", () => {
+  assert.equal(ARRANGER_COMPONENT_OPTIONS.length, 13);
   let room = createBlankMobstarSpatialRoom();
   for (const option of ARRANGER_COMPONENT_OPTIONS) {
+    assert.ok(spatialComponent(option), `${option.componentId}@${option.version} must be registered`);
+    assert.notEqual(spatialComponentCatalogMetadata(option)?.admissionStatus, "admitted");
     const result = addArrangerComponent(room, option.componentId);
     assert.equal(result.ok, true, `${option.label} should find a valid position`);
     if (!result.ok) continue;
@@ -82,7 +94,22 @@ test("floor movement snaps to 0.25 m and rotation advances exactly 15 degrees", 
   assert.ok(rotatedTable);
   assert.ok(Math.abs(rotatedTable.transform.rotation[1] - 30 * Math.PI / 180) < 1e-9);
   assert.equal(isArrangerMovablePlacement(rotatedTable), true);
-  assert.equal(isArrangerMovablePlacement(MOBSTAR_SPATIAL_ROOM_FIXTURE.placements[2]), false);
+  assert.equal(isArrangerMovablePlacement(MOBSTAR_SPATIAL_ROOM_FIXTURE.placements[2]), true);
+  assert.equal(isArrangerMovablePlacement(MOBSTAR_SPATIAL_ROOM_FIXTURE.placements[0]), false);
+});
+
+test("wall fixtures can be moved and rotated while room foundations remain locked", () => {
+  const added = addArrangerComponent(createBlankMobstarSpatialRoom(), "presence.wall-panel");
+  assert.equal(added.ok, true);
+  if (!added.ok) return;
+  const wall = added.room.placements.find((placement) => placement.componentId === "presence.wall-panel");
+  assert.ok(wall);
+  const moved = moveArrangerPlacement(added.room, wall.id, 0.25, 1);
+  assert.equal(moved.ok, true);
+  if (!moved.ok) return;
+  const rotated = rotateArrangerPlacement(moved.room, wall.id, 1);
+  assert.equal(rotated.ok, true);
+  assert.equal(moveArrangerPlacement(moved.room, "room-shell", 0.25, 0).ok, false);
 });
 
 test("a newly added floor fixture starts at a rotation-safe interior position", () => {
@@ -279,4 +306,143 @@ test("a nonzero-offset Piece follows a rotated parent using composed local trans
   assert.ok(Math.abs(resolved.position[2] - (rotatedTable.transform.position[2] - Math.sin(yaw) * localX)) < 1e-9);
   assert.ok(Math.abs(resolved.scale[0] - child.transform.scale[0] * rotatedTable.transform.scale[0]) < 1e-9);
   assert.equal(compileSpatialRoom(rotated.room).ok, true);
+});
+
+test("duplicate and delete preserve a complete Piece/action/semantic subtree", () => {
+  const added = addArrangerComponent(createBlankMobstarSpatialRoom(), "presence.display-table");
+  assert.equal(added.ok, true);
+  if (!added.ok) return;
+  const table = added.room.placements.find((placement) => placement.componentId === "presence.display-table");
+  assert.ok(table);
+  const first = assignArrangerMedia(added.room, table.id, "mobstar-media-a");
+  assert.equal(first.ok, true);
+  if (!first.ok) return;
+  const second = assignArrangerMedia(first.room, table.id, "mobstar-media-b");
+  assert.equal(second.ok, true);
+  if (!second.ok) return;
+
+  const duplicated = duplicateArrangerPlacement(second.room, table.id);
+  assert.equal(duplicated.ok, true);
+  if (!duplicated.ok) return;
+  const tables = duplicated.room.placements.filter((placement) => placement.componentId === "presence.display-table");
+  assert.equal(tables.length, 2);
+  const copy = tables.find((placement) => placement.id !== table.id);
+  assert.ok(copy);
+  const copyChildren = listArrangerChildPieces(duplicated.room, copy.id);
+  assert.equal(copyChildren.length, 2);
+  assert.ok(copyChildren.every((piece) => piece.actionRefs.length === 1));
+  assert.ok(copyChildren.every((piece) => duplicated.room.semanticFallback.some((item) => item.placementId === piece.id)));
+  assert.equal(compileSpatialRoom(duplicated.room).ok, true);
+
+  const deleted = deleteArrangerPlacement(duplicated.room, copy.id);
+  assert.equal(deleted.ok, true);
+  if (!deleted.ok) return;
+  assert.equal(deleted.room.placements.some((placement) => placement.id === copy.id), false);
+  assert.equal(copyChildren.some((piece) => deleted.room.placements.some((placement) => placement.id === piece.id)), false);
+  assert.equal(copyChildren.some((piece) => deleted.room.actions.some((action) => piece.actionRefs.includes(action.id))), false);
+  assert.equal(copyChildren.some((piece) => deleted.room.semanticFallback.some((item) => item.placementId === piece.id)), false);
+  assert.equal(compileSpatialRoom(deleted.room).ok, true);
+  assert.equal(deleteArrangerPlacement(deleted.room, "room-shell").ok, false);
+});
+
+test("delete retains an Action that is still referenced by a surviving placement", () => {
+  const first = addArrangerComponent(createBlankMobstarSpatialRoom(), "presence.framed-media");
+  assert.equal(first.ok, true);
+  if (!first.ok) return;
+  const second = addArrangerComponent(first.room, "presence.framed-media");
+  assert.equal(second.ok, true);
+  if (!second.ok) return;
+  const frames = second.room.placements.filter((placement) => placement.componentId === "presence.framed-media");
+  assert.equal(frames.length, 2);
+  const linked = assignArrangerOpenLink(second.room, frames[0].id, "Shared campaign", "https://example.com/shared");
+  assert.equal(linked.ok, true);
+  if (!linked.ok) return;
+  const actionId = linked.room.placements.find((placement) => placement.id === frames[0].id)!.actionRefs[0];
+  const sharedRoom = {
+    ...linked.room,
+    placements: linked.room.placements.map((placement) => placement.id === frames[1].id
+      ? { ...placement, actionRefs: [actionId] }
+      : placement),
+    semanticFallback: [
+      ...linked.room.semanticFallback,
+      { placementId: frames[1].id, label: frames[1].semanticLabel, actionRefs: [actionId] },
+    ],
+  };
+  assert.equal(compileSpatialRoom(sharedRoom).ok, true);
+  const deleted = deleteArrangerPlacement(sharedRoom, frames[0].id);
+  assert.equal(deleted.ok, true);
+  if (!deleted.ok) return;
+  assert.ok(deleted.room.actions.some((action) => action.id === actionId));
+  assert.ok(deleted.room.placements.find((placement) => placement.id === frames[1].id)?.actionRefs.includes(actionId));
+});
+
+test("authored shelf and projection anchors accept Pieces without a second generated offset", () => {
+  const shelfAdded = addArrangerComponent(createBlankMobstarSpatialRoom(), "presence.display-shelf");
+  assert.equal(shelfAdded.ok, true);
+  if (!shelfAdded.ok) return;
+  const shelf = shelfAdded.room.placements.find((placement) => placement.componentId === "presence.display-shelf");
+  assert.ok(shelf);
+  const shelfAssigned = assignArrangerMedia(shelfAdded.room, shelf.id, shelfAdded.room.media[0].id);
+  assert.equal(shelfAssigned.ok, true);
+
+  const projection = MOBSTAR_GATE4_SPATIAL_ROOM_FIXTURE.placements.find((placement) => placement.componentId === "presence.projection-wall" && placement.version === "2.0.0");
+  assert.ok(projection);
+  const projectionAssigned = assignArrangerMedia(
+    structuredClone(MOBSTAR_GATE4_SPATIAL_ROOM_FIXTURE),
+    projection.id,
+    MOBSTAR_GATE4_SPATIAL_ROOM_FIXTURE.media[0].id,
+  );
+  assert.equal(projectionAssigned.ok, true);
+});
+
+test("material, skin, direct media and HTTPS link assignments compile and fail closed", () => {
+  const added = addArrangerComponent(createBlankMobstarSpatialRoom(), "presence.framed-media");
+  assert.equal(added.ok, true);
+  if (!added.ok) return;
+  const frame = added.room.placements.find((placement) => placement.componentId === "presence.framed-media");
+  assert.ok(frame);
+
+  const material = assignArrangerMaterialPreset(added.room, frame.id, "poster-decal", "poster-archive");
+  assert.equal(material.ok, true);
+  if (!material.ok) return;
+  assert.equal(assignArrangerMaterialPreset(material.room, frame.id, "poster-decal", "floor-dark-stone").ok, false);
+  assert.equal(assignArrangerMaterialPreset(material.room, frame.id, "floor", "floor-dark-stone").ok, false);
+
+  const skin = assignArrangerSkin(material.room, frame.id, AUTHORING_CONTRAST_SKIN_ID);
+  assert.equal(skin.ok, true);
+  if (!skin.ok) return;
+  assert.equal(assignArrangerSkin(skin.room, frame.id, "missing-skin").ok, false);
+
+  const media = assignArrangerPlacementMedia(skin.room, frame.id, "mobstar-media-campaign");
+  assert.equal(media.ok, true);
+  if (!media.ok) return;
+  const linked = assignArrangerOpenLink(media.room, frame.id, "View campaign", "https://example.com/campaign");
+  assert.equal(linked.ok, true);
+  if (!linked.ok) return;
+  const compiled = compileSpatialRoom(linked.room);
+  assert.equal(compiled.ok, true);
+  if (!compiled.ok) return;
+  const frameItem = compiled.plan.items.find((item) => item.placementId === frame.id);
+  assert.equal(frameItem?.media?.id, "mobstar-media-campaign");
+  assert.equal(frameItem?.actions[0]?.kind, "open-link");
+  assert.equal(frameItem?.materials.find((item) => item.slot === "poster-decal")?.color, "#30d5c8");
+  assert.equal(frameItem?.materials.find((item) => item.slot === "rack-metal")?.color, "#f4b942");
+  assert.ok(compiled.plan.semanticFallback.some((item) => item.placementId === frame.id && item.actionRefs.length === 1));
+  assert.equal(assignArrangerOpenLink(linked.room, frame.id, "Unsafe", "http://example.com").ok, false);
+  assert.equal(assignArrangerOpenLink(linked.room, frame.id, "Unsafe", "javascript:alert(1)").ok, false);
+  assert.equal(assignArrangerPlacementMedia(linked.room, "floor", "mobstar-media-a").ok, false);
+});
+
+test("the same authored room compiles deterministically beneath layout and eager budgets", () => {
+  const added = addArrangerComponent(createBlankMobstarSpatialRoom(), "presence.product-display-block");
+  assert.equal(added.ok, true);
+  if (!added.ok) return;
+  const first = compileSpatialRoom(added.room);
+  const second = compileSpatialRoom(JSON.parse(JSON.stringify(added.room)));
+  assert.equal(first.ok, true);
+  assert.equal(second.ok, true);
+  if (!first.ok || !second.ok) return;
+  assert.equal(first.plan.fingerprint, second.plan.fingerprint);
+  assert.ok(first.plan.budgets.layoutJsonBytes < 100 * 1024);
+  assert.ok(first.plan.budgets.eagerCompressedAssetBytes < 3 * 1024 * 1024);
 });

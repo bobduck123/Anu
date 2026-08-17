@@ -85,7 +85,22 @@ export function SemanticSpatialFallback({
             </div>
             {row.actions.length > 0 ? (
               <div className={styles.semanticActions} aria-label={`Actions for ${row.label}`}>
-                {row.actions.map((action) => (
+                {row.actions.map((action) => action.kind === "open-link" ? (
+                  <a
+                    data-testid={`presence-spatial-semantic-action-${row.placementId}-${action.id}`}
+                    href={action.href}
+                    key={action.id}
+                    onClick={(event) => {
+                      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                      event.preventDefault();
+                      onAction(action, row.placementId);
+                    }}
+                    rel="noreferrer noopener"
+                    target="_blank"
+                  >
+                    {action.label}
+                  </a>
+                ) : (
                   <button
                     data-testid={`presence-spatial-semantic-action-${row.placementId}-${action.id}`}
                     disabled={action.kind === "disabled-placeholder"}

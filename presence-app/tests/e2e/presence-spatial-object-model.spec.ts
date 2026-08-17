@@ -15,8 +15,13 @@ interface SavedSpatialEnvelope {
       id: string;
       componentId: string;
       mediaRef?: string;
+      skinRef?: string;
+      actionRefs: string[];
+      materialSlotOverrides: Record<string, string>;
       transform: { position: [number, number, number]; rotation: [number, number, number] };
     }>;
+    actions: Array<{ id: string; kind: string; label: string; href?: string }>;
+    semanticFallback: Array<{ placementId: string; actionRefs: string[] }>;
   };
 }
 
@@ -109,7 +114,7 @@ test("desktop Three preview round-trips a fully arranged Mobstar room", async ({
 
   await page.getByRole("button", { name: "+ Table" }).click();
   await expect(page.getByText("Display table", { exact: true }).last()).toBeVisible();
-  await page.getByRole("combobox").selectOption("mobstar-media-a");
+  await page.getByLabel("Piece media").selectOption("mobstar-media-a");
   await page.getByRole("button", { name: "Assign to Display table" }).click();
   await expect(page.getByText("Assigned Abstract generated garment placeholder A to Display table.")).toBeVisible();
 
@@ -197,6 +202,107 @@ test("desktop Three preview round-trips a fully arranged Mobstar room", async ({
 
   const restoredTable = exportedEnvelope.room.placements.find((placement) => placement.componentId === "presence.display-table");
   expect(restoredTable?.transform).toEqual(firstTable?.transform);
+});
+
+test("spatial authoring baseline customises, duplicates, deletes and deterministically reloads component references", async ({ page }, testInfo) => {
+  await openArranger(page);
+  await expectThreeRenderer(page);
+  await page.getByRole("button", { name: "Create Mobstar" }).click();
+
+  await expect(page.getByText("Room shell", { exact: true })).toBeVisible();
+  await expect(page.getByText("Floor slab", { exact: true })).toBeVisible();
+  for (const paletteLabel of [
+    "Wall",
+    "Divider",
+    "Table",
+    "Display island",
+    "Plinth",
+    "Display shelf",
+    "Rack",
+    "Frame / poster surface",
+    "Projection wall",
+    "Text / sign card",
+    "Product display block",
+    "Light fixture",
+    "Drape / soft divider",
+  ]) {
+    await expect(page.getByRole("button", { name: `+ ${paletteLabel}`, exact: true })).toBeVisible();
+  }
+  await expect(page.getByTestId("presence-spatial-layout-bytes")).toContainText(/B|KB/);
+  await expect(page.getByTestId("presence-spatial-eager-bytes")).toContainText(/B|KB/);
+  await expect(page.getByTestId("presence-spatial-total-bytes")).toContainText(/B|KB/);
+  await page.screenshot({ path: screenshotPath(testInfo, "04-authoring-baseline-before.png"), fullPage: true });
+
+  for (const component of [
+    "Display island",
+    "Display shelf",
+    "Rack",
+    "Projection wall",
+    "Light fixture",
+    "Drape / soft divider",
+  ]) {
+    await page.getByRole("button", { name: `+ ${component}`, exact: true }).click();
+  }
+  await page.getByRole("button", { name: "+ Frame / poster surface", exact: true }).click();
+  const originalFrameId = await page.getByTestId("presence-spatial-selected-id").innerText();
+  await page.getByLabel("Material slot").selectOption("poster-decal");
+  await page.getByLabel("Material preset").selectOption("poster-archive");
+  await page.getByRole("button", { name: "Apply material preset" }).click();
+  await expect(page.getByText(/Applied Archive poster/)).toBeVisible();
+
+  await page.getByLabel("Skin preset").selectOption("presence-authoring-contrast-skin");
+  await page.getByRole("button", { name: "Apply skin preset" }).click();
+  await page.getByLabel("Direct surface media").selectOption("mobstar-media-a");
+  await page.getByRole("button", { name: "Apply media layer" }).click();
+  await page.getByLabel("Action label").fill("Visit Mobstar");
+  await page.getByLabel("HTTPS link").fill("https://example.com/mobstar");
+  await page.getByRole("button", { name: "Assign link action" }).click();
+
+  await page.getByRole("button", { name: "Duplicate object" }).click();
+  const duplicateFrameId = await page.getByTestId("presence-spatial-selected-id").innerText();
+  expect(duplicateFrameId).not.toBe(originalFrameId);
+  await expect(page.getByTestId("presence-spatial-object-count")).toHaveText("8 core objects");
+  await page.getByRole("button", { name: "Move right" }).click();
+  await page.getByRole("button", { name: "Delete object" }).click();
+  await expect(page.getByTestId("presence-spatial-object-count")).toHaveText("7 core objects");
+
+  await page.getByRole("button", { name: "Save local" }).click();
+  const saved = await page.evaluate((key) => window.localStorage.getItem(key), MOBSTAR_DRAFT_KEY);
+  expect(saved).toBeTruthy();
+  const envelope = JSON.parse(saved ?? "null") as SavedSpatialEnvelope;
+  const frame = envelope.room.placements.find((placement) => placement.id === originalFrameId);
+  expect(frame?.componentId).toBe("presence.framed-media");
+  expect(frame?.materialSlotOverrides["poster-decal"]).toBe("poster-archive");
+  expect(frame?.skinRef).toBe("presence-authoring-contrast-skin");
+  expect(frame?.mediaRef).toBe("mobstar-media-a");
+  const linkAction = envelope.room.actions.find((action) => action.kind === "open-link" && action.label === "Visit Mobstar");
+  expect(linkAction?.href).toBe("https://example.com/mobstar");
+  expect(frame?.actionRefs).toContain(linkAction?.id);
+  expect(envelope.room.semanticFallback.find((item) => item.placementId === originalFrameId)?.actionRefs).toContain(linkAction?.id);
+  for (const componentId of [
+    "presence.rounded-island",
+    "presence.display-shelf",
+    "presence.retail-rack",
+    "presence.projection-wall",
+    "presence.light-fixture",
+    "presence.drape-divider",
+  ]) {
+    expect(envelope.room.placements.some((placement) => placement.componentId === componentId)).toBe(true);
+  }
+
+  await page.getByRole("button", { name: "Reload saved" }).click();
+  await expect(page.getByText(/Reloaded the local generation saved/)).toBeVisible();
+  await page.getByRole("radio", { name: "Saved" }).check();
+  const savedCanvas = page.getByTestId("presence-spatial-three-renderer").locator("canvas");
+  await expect(savedCanvas).toHaveAttribute("data-room-fingerprint", envelope.roomFingerprint);
+  await expect(savedCanvas).toHaveAttribute("data-component-keys", /presence\.framed-media@1\.0\.0/);
+  await page.screenshot({ path: screenshotPath(testInfo, "05-authoring-baseline-after.png"), fullPage: true });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const fallback = page.getByTestId("presence-spatial-semantic-fallback");
+  await expect(fallback).toHaveAttribute("data-fallback-reason", "mobile");
+  await expect(fallback.getByRole("link", { name: "Visit Mobstar" })).toHaveAttribute("href", "https://example.com/mobstar");
+  await page.screenshot({ path: screenshotPath(testInfo, "06-authoring-baseline-mobile.png"), fullPage: true });
 });
 
 test("BBB gallery media is lazy, reusable and operable in the Three lane", async ({ page }, testInfo) => {

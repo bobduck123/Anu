@@ -10,9 +10,16 @@ import {
   type PointerEvent,
 } from "react";
 import {
+  ARRANGER_COMPONENT_OPTIONS,
   addArrangerComponent,
+  assignArrangerMaterialPreset,
   assignArrangerMedia,
+  assignArrangerOpenLink,
+  assignArrangerPlacementMedia,
+  assignArrangerSkin,
   createBlankMobstarSpatialRoom,
+  deleteArrangerPlacement,
+  duplicateArrangerPlacement,
   isArrangerMediaParent,
   isArrangerMovablePlacement,
   listArrangerCompatibleMedia,
@@ -27,12 +34,15 @@ import { MOBSTAR_SPATIAL_ROOM_FIXTURE } from "@/lib/presence/spatial/fixtures/mo
 import { MOBSTAR_GATE4_SPATIAL_ROOM_FIXTURE } from "@/lib/presence/spatial/fixtures/mobstarGate4";
 import type {
   SpatialDraftEnvelope,
+  SpatialMaterialPresetId,
+  SpatialMaterialSlotId,
   SpatialPlacement,
   SpatialRoomDefinition,
   SpatialValidationIssue,
 } from "@/lib/presence/spatial/model";
+import { SPATIAL_MATERIAL_PRESETS } from "@/lib/presence/spatial/materials";
 import { resolveSpatialPlacementTransform } from "@/lib/presence/spatial/placement";
-import { spatialComponent } from "@/lib/presence/spatial/registry";
+import { spatialAuthoringMaterialSlots, spatialComponent } from "@/lib/presence/spatial/registry";
 import {
   SpatialDraftStorage,
   createSpatialDraftEnvelope,
@@ -42,17 +52,17 @@ import {
 import { SpatialRoomViewport } from "./SpatialRoomViewport";
 import styles from "./SpatialObjectArranger.module.css";
 
-const ADDABLE_COMPONENTS = [
-  { componentId: "presence.wall-panel", label: "Wall" },
-  { componentId: "presence.divider-wall", label: "Divider" },
-  { componentId: "presence.display-table", label: "Table" },
-  { componentId: "presence.retail-rack", label: "Rack" },
-  { componentId: "presence.display-plinth", label: "Plinth" },
-  { componentId: "presence.projection-wall", label: "Projection wall" },
-] as const;
-
+const ADDABLE_COMPONENTS = ARRANGER_COMPONENT_OPTIONS;
 const EDITOR_COMPONENT_IDS: ReadonlySet<string> = new Set(ADDABLE_COMPONENTS.map((entry) => entry.componentId));
 const MAX_IMPORT_BYTES = 256 * 1024;
+const PALETTE_LABELS: Readonly<Record<string, string>> = {
+  "presence.wall-panel": "Wall",
+  "presence.divider-wall": "Divider",
+  "presence.display-table": "Table",
+  "presence.retail-rack": "Rack",
+  "presence.display-plinth": "Plinth",
+  "presence.projection-wall": "Projection wall",
+};
 
 type PreviewSource = "current" | "saved";
 
@@ -67,6 +77,11 @@ export function SpatialObjectArranger() {
   const [workspaceLabel, setWorkspaceLabel] = useState("Mobstar fixture");
   const [selectedPlacementId, setSelectedPlacementId] = useState<string>();
   const [selectedMediaId, setSelectedMediaId] = useState(initialRoom.media[0]?.id ?? "");
+  const [selectedMaterialSlot, setSelectedMaterialSlot] = useState<SpatialMaterialSlotId | "">("");
+  const [selectedMaterialPresetId, setSelectedMaterialPresetId] = useState<SpatialMaterialPresetId | "">("");
+  const [selectedSkinId, setSelectedSkinId] = useState(initialRoom.skins[0]?.id ?? "");
+  const [linkLabel, setLinkLabel] = useState("Open link");
+  const [linkHref, setLinkHref] = useState("https://example.com");
   const [draggingPlacementId, setDraggingPlacementId] = useState<string>();
   const [diagnostics, setDiagnostics] = useState<readonly SpatialValidationIssue[]>([]);
   const [status, setStatus] = useState("Loaded the bundled Mobstar proof fixture.");
@@ -100,8 +115,27 @@ export function SpatialObjectArranger() {
     [room.placements, selectedPlacementId],
   );
   const editablePlacements = useMemo(
-    () => room.placements.filter((placement) => EDITOR_COMPONENT_IDS.has(placement.componentId)),
+    () => room.placements.filter((placement) => (
+      !placement.anchor.parentPlacementId && placement.componentId !== "presence.piece-plane"
+    )),
     [room.placements],
+  );
+  const reusableObjectCount = useMemo(
+    () => editablePlacements.filter((placement) => EDITOR_COMPONENT_IDS.has(placement.componentId)).length,
+    [editablePlacements],
+  );
+  const selectedPaletteObject = Boolean(selectedPlacement && EDITOR_COMPONENT_IDS.has(selectedPlacement.componentId));
+  const selectedMaterialSlots = selectedDefinition && selectedPlacement
+    ? spatialAuthoringMaterialSlots(selectedPlacement)
+    : [];
+  const selectedMaterialOptions = useMemo(
+    () => Object.values(SPATIAL_MATERIAL_PRESETS).filter((preset) => preset.slot === selectedMaterialSlot),
+    [selectedMaterialSlot],
+  );
+  const canAssignDirectMedia = Boolean(
+    selectedPlacement
+    && (selectedDefinition?.category === "piece" || selectedDefinition?.category === "projection")
+    && room.media.length > 0,
   );
   const compatibleMedia = useMemo(
     () => selectedPlacementId ? listArrangerCompatibleMedia(room, selectedPlacementId) : [],
@@ -127,6 +161,26 @@ export function SpatialObjectArranger() {
       setSelectedMediaId(compatibleMedia[0].id);
     }
   }, [compatibleMedia, selectedMediaId]);
+
+  useEffect(() => {
+    const firstSlot = selectedMaterialSlots[0] ?? "";
+    if (!selectedMaterialSlot || !selectedMaterialSlots.includes(selectedMaterialSlot)) {
+      setSelectedMaterialSlot(firstSlot);
+    }
+  }, [selectedMaterialSlot, selectedMaterialSlots]);
+
+  useEffect(() => {
+    const firstPreset = selectedMaterialOptions[0]?.id ?? "";
+    if (!selectedMaterialPresetId || !selectedMaterialOptions.some((preset) => preset.id === selectedMaterialPresetId)) {
+      setSelectedMaterialPresetId(firstPreset);
+    }
+  }, [selectedMaterialOptions, selectedMaterialPresetId]);
+
+  useEffect(() => {
+    if (!room.skins.some((skin) => skin.id === selectedSkinId)) {
+      setSelectedSkinId(room.skins[0]?.id ?? "");
+    }
+  }, [room.skins, selectedSkinId]);
 
   useEffect(() => {
     if (!workingDirty) return undefined;
@@ -203,12 +257,32 @@ export function SpatialObjectArranger() {
     return true;
   }
 
-  function handleAdd(componentId: typeof ADDABLE_COMPONENTS[number]["componentId"]) {
+  function handleAdd(componentId: string) {
     const before = new Set(room.placements.map((placement) => placement.id));
     const result = addArrangerComponent(room, componentId);
-    if (applyMutation(result, `Added ${ADDABLE_COMPONENTS.find((item) => item.componentId === componentId)?.label ?? "object"} on the snapped grid.`)) {
+    if (applyMutation(result, `Added ${paletteLabel(componentId)} on the snapped grid.`)) {
       const added = result.room.placements.find((placement) => !before.has(placement.id));
       if (added) setSelectedPlacementId(added.id);
+    }
+  }
+
+  function handleDuplicate() {
+    if (!selectedPlacement) return;
+    const before = new Set(room.placements.map((placement) => placement.id));
+    const result = duplicateArrangerPlacement(room, selectedPlacement.id);
+    if (applyMutation(result, `Duplicated ${selectedPlacement.semanticLabel} with its component references and overrides.`)) {
+      const duplicate = result.room.placements.find((placement) => !before.has(placement.id));
+      if (duplicate) setSelectedPlacementId(duplicate.id);
+    }
+  }
+
+  function handleDelete() {
+    if (!selectedPlacement) return;
+    if (applyMutation(
+      deleteArrangerPlacement(room, selectedPlacement.id),
+      `Deleted ${selectedPlacement.semanticLabel} and its attached Pieces from the working layout.`,
+    )) {
+      setSelectedPlacementId(undefined);
     }
   }
 
@@ -236,6 +310,45 @@ export function SpatialObjectArranger() {
       const added = result.room.placements.find((placement) => !before.has(placement.id));
       if (added) setStatus(`Assigned ${added.semanticLabel} to ${selectedPlacement.semanticLabel}.`);
     }
+  }
+
+  function handleAssignMaterial() {
+    if (!selectedPlacement || !selectedMaterialSlot || !selectedMaterialPresetId) return;
+    applyMutation(
+      assignArrangerMaterialPreset(
+        room,
+        selectedPlacement.id,
+        selectedMaterialSlot,
+        selectedMaterialPresetId,
+      ),
+      `Applied ${SPATIAL_MATERIAL_PRESETS[selectedMaterialPresetId].label} to ${selectedPlacement.semanticLabel}.`,
+    );
+  }
+
+  function handleAssignSkin() {
+    if (!selectedPlacement || !selectedSkinId) return;
+    const skin = room.skins.find((candidate) => candidate.id === selectedSkinId);
+    applyMutation(
+      assignArrangerSkin(room, selectedPlacement.id, selectedSkinId),
+      `Applied ${skin?.label ?? "skin"} to ${selectedPlacement.semanticLabel}.`,
+    );
+  }
+
+  function handleAssignDirectMedia() {
+    if (!selectedPlacement || !selectedMediaId) return;
+    const media = room.media.find((candidate) => candidate.id === selectedMediaId);
+    applyMutation(
+      assignArrangerPlacementMedia(room, selectedPlacement.id, selectedMediaId),
+      `Applied ${media?.alt ?? "media"} directly to ${selectedPlacement.semanticLabel}.`,
+    );
+  }
+
+  function handleAssignLink() {
+    if (!selectedPlacement) return;
+    applyMutation(
+      assignArrangerOpenLink(room, selectedPlacement.id, linkLabel, linkHref),
+      `Assigned the ${linkLabel.trim()} action to ${selectedPlacement.semanticLabel}.`,
+    );
   }
 
   function handleReorder(pieceId: string, direction: -1 | 1) {
@@ -444,9 +557,9 @@ export function SpatialObjectArranger() {
     <main className={styles.shell} onKeyDown={handleOperatorKeyDown}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Presence Gate 3 · internal operator proof</p>
+          <p className={styles.eyebrow}>Presence Spatial Authoring Baseline - internal operator proof</p>
           <h1>Spatial object arranger</h1>
-          <p className={styles.intro}>Compose fixture-backed room data, validate every placement, then inspect the same compiled plan through the visitor renderer.</p>
+          <p className={styles.intro}>Arrange reusable component references, customise their material and media layers, then inspect the same validated data through the generic visitor renderer.</p>
         </div>
         <div className={styles.headerMeta}>
           <span>{room.fixtureKind}</span>
@@ -499,11 +612,11 @@ export function SpatialObjectArranger() {
           <section className={styles.panel}>
             <div className={styles.panelHeading}>
               <div><span>01</span><h2>Add objects</h2></div>
-              <small>First valid 0.25m position</small>
+              <small>Reusable procedural candidates</small>
             </div>
             <div className={styles.addGrid}>
               {ADDABLE_COMPONENTS.map((entry) => (
-                <button key={entry.componentId} onClick={() => handleAdd(entry.componentId)} type="button">+ {entry.label}</button>
+                <button key={entry.componentId} onClick={() => handleAdd(entry.componentId)} type="button">+ {paletteLabel(entry.componentId)}</button>
               ))}
             </div>
           </section>
@@ -511,7 +624,7 @@ export function SpatialObjectArranger() {
           <section className={styles.panel}>
             <div className={styles.panelHeading}>
               <div><span>02</span><h2>Objects</h2></div>
-              <small>{editablePlacements.length} core objects</small>
+              <small><span data-testid="presence-spatial-object-count">{reusableObjectCount} core objects</span> - {editablePlacements.length - reusableObjectCount} foundation</small>
             </div>
             <div className={styles.objectList}>
               {editablePlacements.map((placement) => (
@@ -537,9 +650,14 @@ export function SpatialObjectArranger() {
               <div className={styles.selectionControls}>
                 <div className={styles.selectionReadout}>
                   <strong>{selectedPlacement.semanticLabel}</strong>
+                  <small data-testid="presence-spatial-selected-id">{selectedPlacement.id}</small>
                   <code>
-                    x {selectedTransform?.position[0].toFixed(2)} · z {selectedTransform?.position[2].toFixed(2)} · {Math.round((selectedTransform?.rotation[1] ?? 0) * 180 / Math.PI)}°
+                    x {selectedTransform?.position[0].toFixed(2)} - z {selectedTransform?.position[2].toFixed(2)} - {Math.round((selectedTransform?.rotation[1] ?? 0) * 180 / Math.PI)} degrees
                   </code>
+                </div>
+                <div className={styles.selectionActions}>
+                  <button disabled={!selectedPaletteObject} onClick={handleDuplicate} type="button">Duplicate object</button>
+                  <button disabled={!selectedPaletteObject} onClick={handleDelete} type="button">Delete object</button>
                 </div>
                 {isArrangerMovablePlacement(selectedPlacement) ? (
                   <>
@@ -550,13 +668,13 @@ export function SpatialObjectArranger() {
                       <button aria-label="Move right" onClick={() => handleMove(0.25, 0)} type="button">→</button>
                     </div>
                     <div className={styles.rotateControls}>
-                      <button onClick={() => handleRotate(-1)} type="button">Q · −15°</button>
-                      <button onClick={() => handleRotate(1)} type="button">E · +15°</button>
+                      <button onClick={() => handleRotate(-1)} type="button">Q - -15 degrees</button>
+                      <button onClick={() => handleRotate(1)} type="button">E - +15 degrees</button>
                     </div>
                     <p className={styles.hint}>Drag in the plan, use arrow keys, or press Q/E. Rejected moves leave this object where it was.</p>
                   </>
                 ) : (
-                  <p className={styles.hint}>This object is not floor-movable. Select a floor-anchored divider, table, rack, or plinth.</p>
+                  <p className={styles.hint}>This foundation or anchored Piece is locked. Select a reusable floor or wall object to move and rotate it.</p>
                 )}
               </div>
             ) : <p className={styles.empty}>Select a room object in the plan or list.</p>}
@@ -564,7 +682,65 @@ export function SpatialObjectArranger() {
 
           <section className={styles.panel}>
             <div className={styles.panelHeading}>
-              <div><span>04</span><h2>Assign Pieces</h2></div>
+              <div><span>04</span><h2>Customise</h2></div>
+              <small>Reference overrides</small>
+            </div>
+            {selectedPlacement ? (
+              <div className={styles.customisationControls}>
+                <label>
+                  <span>Material slot</span>
+                  <select
+                    disabled={selectedMaterialSlots.length === 0}
+                    onChange={(event) => setSelectedMaterialSlot(event.target.value as SpatialMaterialSlotId)}
+                    value={selectedMaterialSlot}
+                  >
+                    {selectedMaterialSlots.map((slot) => <option key={slot} value={slot}>{slot}</option>)}
+                  </select>
+                </label>
+                <label>
+                  <span>Material preset</span>
+                  <select
+                    disabled={selectedMaterialOptions.length === 0}
+                    onChange={(event) => setSelectedMaterialPresetId(event.target.value as SpatialMaterialPresetId)}
+                    value={selectedMaterialPresetId}
+                  >
+                    {selectedMaterialOptions.map((preset) => <option key={preset.id} value={preset.id}>{preset.label}</option>)}
+                  </select>
+                </label>
+                <button disabled={!selectedMaterialPresetId} onClick={handleAssignMaterial} type="button">Apply material preset</button>
+                <label>
+                  <span>Skin preset</span>
+                  <select disabled={room.skins.length === 0} onChange={(event) => setSelectedSkinId(event.target.value)} value={selectedSkinId}>
+                    {room.skins.map((skin) => <option key={skin.id} value={skin.id}>{skin.label}</option>)}
+                  </select>
+                </label>
+                <button disabled={!selectedSkinId} onClick={handleAssignSkin} type="button">Apply skin preset</button>
+                <label>
+                  <span>Direct surface media</span>
+                  <select disabled={!canAssignDirectMedia} onChange={(event) => setSelectedMediaId(event.target.value)} value={selectedMediaId}>
+                    {room.media.map((media) => <option key={media.id} value={media.id}>{media.alt}</option>)}
+                  </select>
+                </label>
+                <button disabled={!canAssignDirectMedia || !selectedMediaId} onClick={handleAssignDirectMedia} type="button">Apply media layer</button>
+                <div className={styles.inlineFields}>
+                  <label>
+                    <span>Action label</span>
+                    <input maxLength={160} onChange={(event) => setLinkLabel(event.target.value)} value={linkLabel} />
+                  </label>
+                  <label>
+                    <span>HTTPS link</span>
+                    <input inputMode="url" onChange={(event) => setLinkHref(event.target.value)} value={linkHref} />
+                  </label>
+                </div>
+                <button disabled={!linkLabel.trim() || !linkHref.trim()} onClick={handleAssignLink} type="button">Assign link action</button>
+                <p className={styles.hint}>Overrides stay as lightweight IDs in layout JSON. Media remains a separate asset reference.</p>
+              </div>
+            ) : <p className={styles.empty}>Select a foundation or reusable object to customise its supported slots.</p>}
+          </section>
+
+          <section className={styles.panel}>
+            <div className={styles.panelHeading}>
+              <div><span>05</span><h2>Assign Pieces</h2></div>
               <small>{assignedPieces.length} assigned</small>
             </div>
             {selectedPlacement && isMediaParent ? (
@@ -598,10 +774,10 @@ export function SpatialObjectArranger() {
         <section className={styles.planPanel}>
           <div className={styles.planHeading}>
             <div>
-              <p className={styles.eyebrow}>Operator plan · top down</p>
+              <p className={styles.eyebrow}>Operator plan - top down</p>
               <h2>{room.label}</h2>
             </div>
-            <span>Grid 0.25m · Rotation 15°</span>
+            <span>Grid 0.25m - Rotation 15 degrees</span>
           </div>
           <TopDownRoomPlan
             draggingPlacementId={draggingPlacementId}
@@ -622,10 +798,34 @@ export function SpatialObjectArranger() {
             selectedPlacementId={selectedPlacementId}
           />
           <div className={styles.legend}>
-            {ADDABLE_COMPONENTS.map((entry) => <span key={entry.componentId}><i data-component={entry.componentId} />{entry.label}</span>)}
+            {ADDABLE_COMPONENTS.map((entry) => <span key={entry.componentId}><i data-component={entry.componentId} />{paletteLabel(entry.componentId)}</span>)}
           </div>
         </section>
       </div>
+
+      <section className={styles.budgetPanel} aria-label="Spatial payload budgets">
+        <div>
+          <p className={styles.eyebrow}>Payload discipline</p>
+          <h2>References stay light</h2>
+        </div>
+        <div className={styles.budgetGrid}>
+          <div>
+            <span>Layout JSON / 100 KB</span>
+            <strong data-testid="presence-spatial-layout-bytes">{currentCompile.ok ? formatBytes(currentCompile.plan.budgets.layoutJsonBytes) : "Invalid"}</strong>
+            <progress max={100 * 1024} value={currentCompile.ok ? currentCompile.plan.budgets.layoutJsonBytes : 100 * 1024} />
+          </div>
+          <div>
+            <span>Eager runtime / 3 MB</span>
+            <strong data-testid="presence-spatial-eager-bytes">{currentCompile.ok ? formatBytes(currentCompile.plan.budgets.eagerCompressedAssetBytes) : "Invalid"}</strong>
+            <progress max={3 * 1024 * 1024} value={currentCompile.ok ? currentCompile.plan.budgets.eagerCompressedAssetBytes : 3 * 1024 * 1024} />
+          </div>
+          <div>
+            <span>Total runtime / 12 MB</span>
+            <strong data-testid="presence-spatial-total-bytes">{currentCompile.ok ? formatBytes(currentCompile.plan.budgets.totalCompressedAssetBytes) : "Invalid"}</strong>
+            <progress max={12 * 1024 * 1024} value={currentCompile.ok ? currentCompile.plan.budgets.totalCompressedAssetBytes : 12 * 1024 * 1024} />
+          </div>
+        </div>
+      </section>
 
       <section className={styles.diagnosticsPanel} data-has-errors={diagnostics.length > 0}>
         <div>
@@ -765,6 +965,16 @@ function formatSavedAt(value: string): string {
   } catch {
     return value;
   }
+}
+
+function formatBytes(value: number): string {
+  return value < 1024 ? `${value} B` : `${(value / 1024).toFixed(1)} KB`;
+}
+
+function paletteLabel(componentId: string): string {
+  return PALETTE_LABELS[componentId]
+    ?? ADDABLE_COMPONENTS.find((entry) => entry.componentId === componentId)?.label
+    ?? componentId;
 }
 
 function localStorageIssue(error: unknown): SpatialValidationIssue {

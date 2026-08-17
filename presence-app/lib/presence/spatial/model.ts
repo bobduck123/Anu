@@ -326,6 +326,7 @@ export type SpatialComponentCategory =
   | "rack"
   | "projection"
   | "piece"
+  | "light"
   | "action";
 
 export type SpatialPrimitiveKind =
@@ -341,7 +342,12 @@ export type SpatialPrimitiveKind =
   | "suspended-rack"
   | "garment-hanger"
   | "framed-media"
-  | "projection-grid";
+  | "projection-grid"
+  | "display-shelf"
+  | "sign-card"
+  | "product-block"
+  | "light-fixture"
+  | "drape-divider";
 export type SpatialPerformanceTier = "core" | "enhanced" | "hero";
 export type SpatialAnchorKind = "floor" | "wall" | "surface" | "rack" | "projection" | "free";
 export type SpatialMaterialSlotId =
@@ -567,6 +573,13 @@ export type SpatialActionRef =
     })
   | (SpatialActionRefBase & {
       kind: "sequence-previous" | "sequence-next";
+      targetPlacementId?: never;
+      targetStateId?: never;
+      disabledReason?: never;
+    })
+  | (SpatialActionRefBase & {
+      kind: "open-link";
+      href: string;
       targetPlacementId?: never;
       targetStateId?: never;
       disabledReason?: never;

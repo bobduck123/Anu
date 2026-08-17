@@ -128,6 +128,21 @@ function createPrimitiveTemplate(item: SpatialRenderItem): Pick<SpatialGeometryT
     case "projection-grid":
       parts = projectionGridParts(width, height, depth);
       break;
+    case "display-shelf":
+      parts = displayShelfParts(width, height, depth);
+      break;
+    case "sign-card":
+      parts = signCardParts(width, height, depth);
+      break;
+    case "product-block":
+      parts = productBlockParts(width, height, depth);
+      break;
+    case "light-fixture":
+      parts = lightFixtureParts(width, height, depth);
+      break;
+    case "drape-divider":
+      parts = drapeDividerParts(width, height, depth);
+      break;
     default:
       return neverPrimitive(primitive);
   }
@@ -236,6 +251,71 @@ function projectionGridParts(width: number, height: number, depth: number): Spat
       "double",
       true,
     ),
+  ];
+}
+
+function displayShelfParts(width: number, height: number, depth: number): SpatialGeometryTemplatePart[] {
+  const frame = Math.max(0.045, Math.min(width, height) * 0.025);
+  const shelfHeight = Math.max(0.045, height * 0.025);
+  return [
+    part(new THREE.BoxGeometry(frame, height, depth), [-width / 2 + frame / 2, 0, 0], "rack-metal"),
+    part(new THREE.BoxGeometry(frame, height, depth), [width / 2 - frame / 2, 0, 0], "rack-metal"),
+    part(new THREE.BoxGeometry(width, frame, depth), [0, height / 2 - frame / 2, 0], "rack-metal"),
+    part(new THREE.BoxGeometry(width, frame, depth), [0, -height / 2 + frame / 2, 0], "rack-metal"),
+    part(new THREE.BoxGeometry(width - frame * 2, shelfHeight, depth), [0, -height * 0.22, 0], "tabletop"),
+    part(new THREE.BoxGeometry(width - frame * 2, shelfHeight, depth), [0, height * 0.28, 0], "tabletop"),
+  ];
+}
+
+function signCardParts(width: number, height: number, depth: number): SpatialGeometryTemplatePart[] {
+  const inset = Math.max(0.03, Math.min(width, height) * 0.05);
+  return [
+    part(new THREE.BoxGeometry(width, height, depth), [0, 0, 0], "paper"),
+    part(
+      new THREE.PlaneGeometry(width - inset * 2, height - inset * 2),
+      [0, 0, depth / 2 + 0.004],
+      "poster-decal",
+      "double",
+      true,
+    ),
+  ];
+}
+
+function productBlockParts(width: number, height: number, depth: number): SpatialGeometryTemplatePart[] {
+  const accentHeight = Math.max(0.035, height * 0.06);
+  return [
+    part(new THREE.BoxGeometry(width, height - accentHeight, depth), [0, -accentHeight / 2, 0], "tabletop"),
+    part(new THREE.BoxGeometry(width * 0.86, accentHeight, depth * 0.86), [0, height / 2 - accentHeight / 2, 0], "logo-accent"),
+  ];
+}
+
+function lightFixtureParts(width: number, height: number, depth: number): SpatialGeometryTemplatePart[] {
+  const poleRadius = Math.max(0.025, Math.min(width, depth) * 0.075);
+  const baseHeight = Math.max(0.04, height * 0.035);
+  const shadeHeight = Math.max(0.12, height * 0.16);
+  return [
+    part(new THREE.CylinderGeometry(width * 0.42, width * 0.42, baseHeight, 20), [0, -height / 2 + baseHeight / 2, 0], "rack-metal"),
+    part(new THREE.CylinderGeometry(poleRadius, poleRadius, height - shadeHeight, 12), [0, -shadeHeight / 2, 0], "rack-metal"),
+    part(new THREE.SphereGeometry(Math.min(width, depth) * 0.46, 20, 12), [0, height / 2 - shadeHeight / 2, 0], "logo-accent"),
+  ];
+}
+
+function drapeDividerParts(width: number, height: number, depth: number): SpatialGeometryTemplatePart[] {
+  const foldCount = Math.max(8, Math.round(width / 0.28));
+  const foldWidth = width / foldCount;
+  const railHeight = Math.max(0.035, height * 0.018);
+  const folds = Array.from({ length: foldCount }, (_, index) => {
+    const phase = index % 2 === 0 ? -1 : 1;
+    return part(
+      new THREE.BoxGeometry(foldWidth * 1.05, height - railHeight, depth * 0.62),
+      [-width / 2 + foldWidth * (index + 0.5), -railHeight / 2, phase * depth * 0.18],
+      "fabric",
+      "double",
+    );
+  });
+  return [
+    part(new THREE.BoxGeometry(width, railHeight, depth), [0, height / 2 - railHeight / 2, 0], "rack-metal"),
+    ...folds,
   ];
 }
 

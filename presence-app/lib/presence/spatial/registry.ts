@@ -1,4 +1,4 @@
-import type { SpatialComponentDefinition, SpatialComponentRef } from "./model.ts";
+import type { SpatialComponentDefinition, SpatialComponentRef, SpatialMaterialSlotId } from "./model.ts";
 import { spatialComponentKey } from "./model.ts";
 
 export type SpatialComponentAssetCategory =
@@ -6,6 +6,8 @@ export type SpatialComponentAssetCategory =
   | "wall-system"
   | "display-surface"
   | "retail-fixture"
+  | "lighting-fixture"
+  | "soft-architecture"
   | "projection-surface"
   | "piece-carrier";
 
@@ -245,7 +247,7 @@ export const SPATIAL_COMPONENTS = [
     placement: { allowedAnchorKinds: ["floor"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
     anchors: Array.from({ length: 6 }, (_, index) => ({
       id: `display-cell-${String(index + 1).padStart(2, "0")}`,
-      kind: "surface" as const,
+      kind: "wall" as const,
       transform: { position: [-2 + (index % 3) * 2, -0.9 + Math.floor(index / 3) * 1.5, 0.82], rotation: [0, 0, 0], scale: [1, 1, 1] },
       accepts: ["piece"] as const,
       capacity: 1,
@@ -343,7 +345,110 @@ export const SPATIAL_COMPONENTS = [
     runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "hero" },
     mobileFallback: { strategy: "semantic-only", note: "Present campaign media as a bounded branded static group." },
   },
+  {
+    componentId: "presence.display-shelf",
+    version: "1.0.0",
+    label: "Display shelf candidate",
+    category: "surface",
+    dimensions: { width: 3.6, height: 2.4, depth: 0.56 },
+    geometry: { kind: "primitive", primitive: "display-shelf" },
+    placement: { allowedAnchorKinds: ["floor", "wall"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: Array.from({ length: 6 }, (_, index) => ({
+      id: `shelf-slot-${String(index + 1).padStart(2, "0")}`,
+      kind: "wall" as const,
+      transform: { position: [-1.1 + (index % 3) * 1.1, -0.68 + Math.floor(index / 3) * 1.25, 0.31], rotation: [0, 0, 0], scale: [1, 1, 1] },
+      accepts: ["piece"] as const,
+      capacity: 1,
+    })),
+    materialSlots: ["tabletop", "rack-metal"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "core" },
+    mobileFallback: { strategy: "semantic-only", note: "Preserve shelf Pieces in their authored order." },
+  },
+  {
+    componentId: "presence.text-sign-card",
+    version: "1.0.0",
+    label: "Text and sign card candidate",
+    category: "piece",
+    dimensions: { width: 1.6, height: 0.9, depth: 0.08 },
+    geometry: { kind: "primitive", primitive: "sign-card" },
+    placement: { allowedAnchorKinds: ["floor", "wall", "free"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: [],
+    materialSlots: ["paper", "poster-decal"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: false, performanceTier: "core" },
+    mobileFallback: { strategy: "semantic-only", note: "Retain the card label, media and actions semantically." },
+  },
+  {
+    componentId: "presence.product-display-block",
+    version: "1.0.0",
+    label: "Product display block candidate",
+    category: "surface",
+    dimensions: { width: 1.05, height: 0.9, depth: 1.05 },
+    geometry: { kind: "primitive", primitive: "product-block" },
+    placement: { allowedAnchorKinds: ["floor"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: [
+      { id: "product-top", kind: "surface", transform: { position: [0, 0.48, 0], rotation: [0, 0, 0], scale: [1, 1, 1] }, accepts: ["piece"], capacity: 1 },
+    ],
+    materialSlots: ["tabletop", "logo-accent"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "core" },
+    mobileFallback: { strategy: "semantic-only", note: "Expose the assigned product Piece and action semantically." },
+  },
+  {
+    componentId: "presence.light-fixture",
+    version: "1.0.0",
+    label: "Light fixture candidate",
+    category: "light",
+    dimensions: { width: 0.5, height: 2.2, depth: 0.5 },
+    geometry: { kind: "primitive", primitive: "light-fixture" },
+    placement: { allowedAnchorKinds: ["floor", "free"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: [],
+    materialSlots: ["rack-metal", "logo-accent"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "core" },
+    mobileFallback: { strategy: "semantic-only", note: "Lighting identity falls back to the room lighting profile." },
+  },
+  {
+    componentId: "presence.drape-divider",
+    version: "1.0.0",
+    label: "Soft drape divider candidate",
+    category: "wall",
+    dimensions: { width: 3.8, height: 3.2, depth: 0.18 },
+    geometry: { kind: "primitive", primitive: "drape-divider" },
+    placement: { allowedAnchorKinds: ["floor", "free"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: [
+      { id: "drape-face", kind: "wall", transform: { position: [0, 0, 0.1], rotation: [0, 0, 0], scale: [1, 1, 1] }, accepts: ["piece"], capacity: 4 },
+    ],
+    materialSlots: ["fabric", "rack-metal"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "enhanced" },
+    mobileFallback: { strategy: "semantic-only", note: "Preserve the secondary zone label without simulating cloth." },
+  },
 ] as const satisfies readonly SpatialComponentDefinition[];
+
+const AUTHORABLE_RENDERED_MATERIAL_SLOTS: Readonly<Record<string, readonly SpatialMaterialSlotId[]>> = {
+  "presence.room-shell@1.0.0": ["wall"],
+  "presence.floor-slab@1.0.0": ["floor"],
+  "presence.wall-panel@1.0.0": ["wall"],
+  "presence.divider-wall@1.0.0": ["wall"],
+  "presence.display-table@1.0.0": ["tabletop"],
+  "presence.display-plinth@1.0.0": ["tabletop"],
+  "presence.retail-rack@1.0.0": ["rack-metal"],
+  "presence.projection-wall@1.0.0": ["projection", "wall"],
+  "presence.rounded-island@1.0.0": ["tabletop", "rack-metal"],
+  "presence.display-shelf@1.0.0": ["tabletop", "rack-metal"],
+  "presence.framed-media@1.0.0": ["poster-decal", "rack-metal"],
+  "presence.text-sign-card@1.0.0": ["paper", "poster-decal"],
+  "presence.product-display-block@1.0.0": ["tabletop", "logo-accent"],
+  "presence.light-fixture@1.0.0": ["rack-metal", "logo-accent"],
+  "presence.drape-divider@1.0.0": ["fabric", "rack-metal"],
+};
+
+/** Slots whose materials are represented by actual geometry in the bounded operator palette. */
+export function spatialAuthoringMaterialSlots(ref: SpatialComponentRef): readonly SpatialMaterialSlotId[] {
+  return AUTHORABLE_RENDERED_MATERIAL_SLOTS[spatialComponentKey(ref)] ?? [];
+}
 
 const placeholderMetadata = (
   componentId: string,
@@ -400,6 +505,11 @@ export const SPATIAL_COMPONENT_CATALOG = [
   candidateMetadata("presence.garment-hanger", "1.0.0", "piece-carrier", "center", "component-origin"),
   candidateMetadata("presence.framed-media", "1.0.0", "piece-carrier", "center", "component-origin"),
   candidateMetadata("presence.projection-wall", "2.0.0", "projection-surface", "back-center", "wall-contact"),
+  candidateMetadata("presence.display-shelf", "1.0.0", "display-surface", "floor-center", "floor-contact"),
+  candidateMetadata("presence.text-sign-card", "1.0.0", "piece-carrier", "center", "component-origin"),
+  candidateMetadata("presence.product-display-block", "1.0.0", "display-surface", "floor-center", "floor-contact"),
+  candidateMetadata("presence.light-fixture", "1.0.0", "lighting-fixture", "floor-center", "floor-contact"),
+  candidateMetadata("presence.drape-divider", "1.0.0", "soft-architecture", "floor-center", "floor-contact"),
 ] as const satisfies readonly SpatialComponentCatalogMetadata[];
 
 const COMPONENT_METADATA_MAP = new Map(SPATIAL_COMPONENT_CATALOG.map((metadata) => [spatialComponentKey(metadata), metadata]));

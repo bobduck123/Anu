@@ -293,6 +293,65 @@
   gap: 10px;
 }
 
+.selectionActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.selectionActions button,
+.customisationControls button {
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid var(--arranger-line);
+  border-radius: 2px;
+  background: #fffdf7;
+  color: var(--arranger-ink);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.selectionActions button:last-child {
+  border-color: #c88978;
+  color: #8d321f;
+}
+
+.customisationControls {
+  display: grid;
+  gap: 10px;
+}
+
+.customisationControls label {
+  display: grid;
+  gap: 5px;
+}
+
+.customisationControls label > span {
+  color: var(--arranger-muted);
+  font: 9px var(--font-presence-mono, ui-monospace, monospace);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.customisationControls select,
+.customisationControls input {
+  width: 100%;
+  min-height: 36px;
+  padding: 7px;
+  border: 1px solid var(--arranger-line);
+  border-radius: 2px;
+  background: #fffdf7;
+  color: var(--arranger-ink);
+  font-size: 11px;
+}
+
+.inlineFields {
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+  gap: 6px;
+}
+
 .selectionReadout {
   display: grid;
   gap: 4px;
@@ -445,6 +504,56 @@
   margin: 12px auto 0;
 }
 
+.budgetPanel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.35fr) 1fr;
+  gap: 24px;
+  align-items: center;
+  max-width: 1680px;
+  margin: 12px auto 0;
+  padding: 16px;
+  border: 1px solid var(--arranger-line);
+  background: rgba(250, 248, 241, 0.94);
+}
+
+.budgetPanel h2 {
+  margin: 3px 0 0;
+  font-family: var(--font-presence-display, Georgia, serif);
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.budgetGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.budgetGrid > div {
+  display: grid;
+  gap: 4px;
+  padding: 9px 11px;
+  border: 1px solid var(--arranger-line);
+  background: #fffdf7;
+}
+
+.budgetGrid span {
+  color: var(--arranger-muted);
+  font: 9px var(--font-presence-mono, ui-monospace, monospace);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.budgetGrid strong {
+  font: 600 12px var(--font-presence-mono, ui-monospace, monospace);
+}
+
+.budgetGrid progress {
+  width: 100%;
+  height: 4px;
+  accent-color: var(--arranger-positive);
+}
+
 .diagnosticsPanel {
   display: grid;
   grid-template-columns: minmax(220px, 0.35fr) 1fr;
@@ -498,6 +607,8 @@
   .statusRegion,
   .previewHeading { display: grid; }
   .toolbar { display: grid; }
+  .budgetPanel { grid-template-columns: 1fr; }
+  .budgetGrid { grid-template-columns: 1fr; }
   .toolbarGroup { min-width: 0; flex-wrap: wrap; }
   .controlRail { grid-template-columns: 1fr; }
   .plan { min-height: 0; }

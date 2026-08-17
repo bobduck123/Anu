@@ -63,6 +63,7 @@ export type SpatialActionIntent =
   | { kind: "inspect"; placementId: string; actionId: string }
   | { kind: "navigate-state"; stateId: string; actionId: string }
   | { kind: "sequence"; direction: -1 | 1; actionId: string }
+  | { kind: "open-link"; href: string; actionId: string }
   | { kind: "disabled"; reason: string; actionId: string };
 
 export function selectSpatialRendererLane(
@@ -180,6 +181,8 @@ export function resolveSpatialActionIntent(
       return { kind: "sequence", direction: -1, actionId: action.id };
     case "sequence-next":
       return { kind: "sequence", direction: 1, actionId: action.id };
+    case "open-link":
+      return { kind: "open-link", href: action.href, actionId: action.id };
     case "disabled-placeholder":
       return {
         kind: "disabled",

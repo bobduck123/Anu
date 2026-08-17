@@ -54,7 +54,8 @@
 .stateControls button,
 .inspectionCard button,
 .actionTray button,
-.semanticActions button {
+.semanticActions button,
+.semanticActions a {
   min-height: 2.5rem;
   padding: 0.56rem 0.82rem;
   color: inherit;
@@ -65,6 +66,7 @@
   border: 1px solid var(--spatial-line);
   border-radius: 999px;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .stateControls button:hover,
@@ -74,7 +76,9 @@
 .actionTray button:hover,
 .actionTray button:focus-visible,
 .semanticActions button:hover,
-.semanticActions button:focus-visible {
+.semanticActions button:focus-visible,
+.semanticActions a:hover,
+.semanticActions a:focus-visible {
   color: #111318;
   background: var(--spatial-signal);
   border-color: var(--spatial-signal);
@@ -309,7 +313,8 @@
   gap: 0.4rem;
 }
 
-.semanticActions button {
+.semanticActions button,
+.semanticActions a {
   color: #242528;
   background: transparent;
   border-color: rgba(36, 37, 40, 0.28);

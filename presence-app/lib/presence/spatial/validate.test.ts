@@ -197,6 +197,20 @@ test("Actions use exact discriminated fields and semantic rows can expose only o
   const semanticResult = validateSpatialRoomDefinition(unownedSemanticAction);
   assert.equal(semanticResult.ok, false);
   if (!semanticResult.ok) assert.ok(semanticResult.issues.some((issue) => issue.code === "semantic-action-owner"));
+
+  const openLink = structuredClone(MOBSTAR_SPATIAL_ROOM_FIXTURE) as unknown as {
+    actions: Array<Record<string, unknown>>;
+    placements: Array<{ id: string; actionRefs: string[] }>;
+    semanticFallback: Array<{ placementId: string; actionRefs: string[] }>;
+  };
+  openLink.actions.push({ id: "open-campaign", kind: "open-link", label: "Open campaign", href: "https://example.com/campaign" });
+  openLink.placements.find((placement) => placement.id === "retail-rack")!.actionRefs.push("open-campaign");
+  openLink.semanticFallback.find((item) => item.placementId === "retail-rack")!.actionRefs.push("open-campaign");
+  assert.equal(validateSpatialRoomDefinition(openLink).ok, true);
+  openLink.actions.at(-1)!.href = "http://example.com/campaign";
+  const unsafeLinkResult = validateSpatialRoomDefinition(openLink);
+  assert.equal(unsafeLinkResult.ok, false);
+  if (!unsafeLinkResult.ok) assert.ok(unsafeLinkResult.issues.some((issue) => issue.code === "href"));
 });
 
 test("reduced-motion state references reject self references and longer cycles", () => {

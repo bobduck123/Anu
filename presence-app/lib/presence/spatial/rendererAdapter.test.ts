@@ -76,6 +76,10 @@ test("actions resolve generically without component or fixture knowledge", () =>
     resolveSpatialActionIntent({ id: "next", kind: "sequence-next", label: "Next" }, "projection-1"),
     { kind: "sequence", direction: 1, actionId: "next" },
   );
+  assert.deepEqual(
+    resolveSpatialActionIntent({ id: "visit", kind: "open-link", label: "Visit", href: "https://example.com/drop" }, "sign-1"),
+    { kind: "open-link", href: "https://example.com/drop", actionId: "visit" },
+  );
 });
 
 test("projection sequence is inferred from render materials and cycles deterministically", () => {
