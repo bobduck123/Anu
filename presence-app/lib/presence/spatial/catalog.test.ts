@@ -58,11 +58,12 @@ test("arranger minimum components have admission-neutral origin and pivot metada
   ];
   for (const componentId of required) assert.ok(SPATIAL_COMPONENTS.some((component) => component.componentId === componentId));
   assert.equal(SPATIAL_COMPONENT_CATALOG.length, SPATIAL_COMPONENTS.length);
-  assert.ok(SPATIAL_COMPONENT_CATALOG.every((entry) => entry.assetStrategy === "procedural-placeholder" && entry.rawAssetIncluded === false));
+  assert.ok(SPATIAL_COMPONENT_CATALOG.every((entry) => entry.rawAssetIncluded === false));
+  assert.ok(SPATIAL_COMPONENT_CATALOG.every((entry) => entry.creativeStatus === "prototype" && entry.admissionStatus === "not-evaluated"));
   assert.ok(SPATIAL_COMPONENT_CATALOG.every((entry) => entry.origin.unit === "metre" && entry.origin.upAxis === "y"));
 });
 
-test("all nine composite material styles resolve every required slot correctly", () => {
+test("all composite material styles resolve every required slot correctly", () => {
   assert.deepEqual(Object.keys(SPATIAL_MATERIAL_STYLE_PRESETS).sort(), [
     "archive-paper",
     "boutique-chrome",
@@ -71,6 +72,7 @@ test("all nine composite material styles resolve every required slot correctly",
     "polished-charcoal-tile",
     "projection-blackout",
     "soft-paper-room",
+    "warm-nocturnal-boutique",
     "warm-timber-studio",
     "white-gallery",
   ]);

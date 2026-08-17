@@ -232,6 +232,7 @@ export function SpatialRoomViewport({
           onAction={handleAction}
           plan={plan}
           reason={lane?.reason ?? "capability-check"}
+          mediaLocators={resolvedMediaLocators}
           selectedPlacementId={selectedPlacementId}
           status={actionStatus}
         />
@@ -258,6 +259,7 @@ export function SpatialRoomViewport({
               onAction={handleAction}
               plan={plan}
               reason="capability-check"
+              mediaLocators={resolvedMediaLocators}
               selectedPlacementId={selectedPlacementId}
               status={actionStatus}
               variant="details"

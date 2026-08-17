@@ -232,6 +232,35 @@ test("missing BBB media keeps the Three room and generated fallback operable", a
   await expect(page.getByTestId("presence-spatial-three-renderer")).toBeVisible();
 });
 
+test("Gate 4 candidate loads through generic geometry, lighting and rack inspection", async ({ page }) => {
+  await openArranger(page);
+  await page.getByTestId("presence-spatial-load-mobstar-gate4").click();
+  await expect(page.getByRole("heading", { name: "Mobstar Gate 4 art-direction candidate" })).toBeVisible();
+  const viewport = page.getByTestId("presence-spatial-room-viewport");
+  await expect(viewport).toHaveAttribute("data-renderer-lane", "three");
+  const canvas = page.getByTestId("presence-spatial-three-renderer").locator("canvas");
+  await expect(canvas).toHaveAttribute("data-lighting-profile", "boutique-product-warm");
+  await expect(canvas).toHaveAttribute("data-component-keys", /presence\.suspended-rack@1\.0\.0/);
+  await page.getByTestId("presence-spatial-state-rack").click();
+  await page.getByTestId("presence-spatial-action-inspect-signal-garment").click();
+  await expect(page.getByTestId("presence-spatial-inspection-card")).toContainText("Signal garment candidate on the rack");
+  await expect(page.getByTestId("presence-spatial-three-renderer")).toBeVisible();
+});
+
+test("390px Gate 4 candidate exposes branded static and complete semantic fallback", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openArranger(page);
+  await page.getByTestId("presence-spatial-load-mobstar-gate4").click();
+  const fallback = page.getByTestId("presence-spatial-semantic-fallback");
+  await expect(fallback).toHaveAttribute("data-fallback-reason", "mobile");
+  await expect(page.getByTestId("presence-spatial-branded-fallback")).toContainText("A deep product-first boutique");
+  await expect(page.getByAltText("Generated internal campaign wall study")).toBeVisible();
+  await expect(page.getByAltText("Candidate yellow and red compact Mobstar identity mark")).toBeVisible();
+  await expect(fallback.getByText("Signal garment candidate", { exact: true })).toBeVisible();
+  await fallback.getByRole("button", { name: "Turn the signal garment outward" }).click();
+  await expect(page.getByTestId("presence-spatial-semantic-item-garment-signal")).toHaveAttribute("data-selected", "true");
+});
+
 test("390px mobile keeps Mobstar Pieces and Actions available through the semantic fallback", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await openArranger(page);

@@ -1,4 +1,6 @@
 import { materialPresetMatchesSlot, SPATIAL_MATERIAL_PRESETS, SPATIAL_MATERIAL_SLOTS } from "./materials.ts";
+import { SPATIAL_LIGHTING_PROFILES } from "./lighting.ts";
+import { SPATIAL_INTERACTION_PROFILES } from "./interactionProfiles.ts";
 import {
   ID_PATTERN,
   SPATIAL_SCHEMA_VERSION,
@@ -40,7 +42,7 @@ export function validateSpatialRoomDefinition(value: unknown): SpatialValidation
   if (!room) return failure(issues);
   exactKeys(room, [
     "schemaVersion", "id", "label", "fixtureKind", "revision", "seed", "bounds", "entryStateId",
-    "cameraPath", "assets", "skins", "media", "actions", "placements", "states", "semanticFallback",
+    "cameraPath", "lightingProfileId", "fallbackPresentation", "assets", "skins", "media", "actions", "placements", "states", "semanticFallback",
   ], "$", issues);
   literal(room.schemaVersion, SPATIAL_SCHEMA_VERSION, "schemaVersion", issues);
   identifier(room.id, "id", issues);
@@ -51,6 +53,12 @@ export function validateSpatialRoomDefinition(value: unknown): SpatialValidation
   dimensions(room.bounds, "bounds", issues);
   identifier(room.entryStateId, "entryStateId", issues);
   cameraPath(room.cameraPath, "cameraPath", issues);
+  if (room.lightingProfileId !== undefined) {
+    oneOf(room.lightingProfileId, Object.keys(SPATIAL_LIGHTING_PROFILES), "lightingProfileId", issues);
+  }
+  if (room.fallbackPresentation !== undefined) {
+    fallbackPresentation(room.fallbackPresentation, "fallbackPresentation", issues);
+  }
 
   array(room.assets, "assets", issues, MAX_ASSETS, assetRef);
   array(room.skins, "skins", issues, 64, skinRef);
@@ -140,6 +148,25 @@ function validateRoomReferences(room: SpatialRoomDefinition, issues: SpatialVali
   const placements = new Map(room.placements.map((item) => [item.id, item]));
   const states = new Map(room.states.map((item) => [item.id, item]));
 
+  if (room.fallbackPresentation) {
+    const brandMedia = room.fallbackPresentation.brandMediaRef
+      ? media.get(room.fallbackPresentation.brandMediaRef)
+      : undefined;
+    const heroMedia = room.fallbackPresentation.heroMediaRef
+      ? media.get(room.fallbackPresentation.heroMediaRef)
+      : undefined;
+    if (room.fallbackPresentation.brandMediaRef && !brandMedia) {
+      add(issues, "fallbackPresentation.brandMediaRef", "missing-media", "Fallback brand media does not exist.");
+    } else if (brandMedia && brandMedia.kind !== "logo" && brandMedia.kind !== "image") {
+      add(issues, "fallbackPresentation.brandMediaRef", "fallback-media-kind", "Fallback brand media must be a logo or image.");
+    }
+    if (room.fallbackPresentation.heroMediaRef && !heroMedia) {
+      add(issues, "fallbackPresentation.heroMediaRef", "missing-media", "Fallback hero media does not exist.");
+    } else if (heroMedia && heroMedia.kind !== "image" && heroMedia.kind !== "poster") {
+      add(issues, "fallbackPresentation.heroMediaRef", "fallback-media-kind", "Fallback hero media must be an image or poster.");
+    }
+  }
+
   if (!states.has(room.entryStateId)) add(issues, "entryStateId", "missing-state", "Entry state does not exist.");
   for (const item of room.media) {
     const asset = assets.get(item.assetId);
@@ -177,6 +204,11 @@ function validateRoomReferences(room: SpatialRoomDefinition, issues: SpatialVali
     }
     if (item.skinRef && !skins.has(item.skinRef)) add(issues, `placements.${item.id}.skinRef`, "missing-skin", "Placement skin does not exist.");
     if (item.mediaRef && !media.has(item.mediaRef)) add(issues, `placements.${item.id}.mediaRef`, "missing-media", "Placement media does not exist.");
+    if (item.interactionProfileId) {
+      const profile = SPATIAL_INTERACTION_PROFILES[item.interactionProfileId];
+      if (!profile) add(issues, `placements.${item.id}.interactionProfileId`, "missing-interaction-profile", "Interaction profile is not registered.");
+      else if (profile.targetCategory !== definition.category) add(issues, `placements.${item.id}.interactionProfileId`, "interaction-category", "Interaction profile does not support this component category.");
+    }
     for (const actionId of item.actionRefs) if (!actions.has(actionId)) add(issues, `placements.${item.id}.actionRefs`, "missing-action", `Action ${actionId} does not exist.`);
     for (const [slot, presetId] of Object.entries(item.materialSlotOverrides)) {
       if (!definition.materialSlots.includes(slot as never)) add(issues, `placements.${item.id}.materialSlotOverrides.${slot}`, "unsupported-slot", "Component does not expose this material slot.");
@@ -279,7 +311,7 @@ function actionRef(value: unknown, path: string, issues: SpatialValidationIssue[
 
 function placement(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
   const item = record(value, path, issues); if (!item) return;
-  exactKeys(item, ["id", "order", "componentId", "version", "transform", "anchor", "materialSlotOverrides", "skinRef", "mediaRef", "actionRefs", "visible", "semanticLabel"], path, issues);
+  exactKeys(item, ["id", "order", "componentId", "version", "transform", "anchor", "materialSlotOverrides", "skinRef", "mediaRef", "interactionProfileId", "actionRefs", "visible", "semanticLabel"], path, issues);
   identifier(item.id, `${path}.id`, issues); integer(item.order, `${path}.order`, issues, 0, MAX_PLACEMENTS * 4);
   identifier(item.componentId, `${path}.componentId`, issues);
   if (typeof item.version !== "string" || !VERSION_PATTERN.test(item.version)) add(issues, `${path}.version`, "version", "Invalid component version.");
@@ -293,6 +325,7 @@ function placement(value: unknown, path: string, issues: SpatialValidationIssue[
   }
   materialMap(item.materialSlotOverrides, `${path}.materialSlotOverrides`, issues);
   optionalIdentifier(item.skinRef, `${path}.skinRef`, issues); optionalIdentifier(item.mediaRef, `${path}.mediaRef`, issues);
+  if (item.interactionProfileId !== undefined) oneOf(item.interactionProfileId, Object.keys(SPATIAL_INTERACTION_PROFILES), `${path}.interactionProfileId`, issues);
   stringArray(item.actionRefs, `${path}.actionRefs`, issues, null, 32); boolean(item.visible, `${path}.visible`, issues); text(item.semanticLabel, `${path}.semanticLabel`, issues, 200);
 }
 
@@ -325,7 +358,10 @@ function cameraPath(value: unknown, path: string, issues: SpatialValidationIssue
 function geometry(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
   const item = record(value, path, issues); if (!item) return;
   if (item.kind === "primitive") {
-    exactKeys(item, ["kind", "primitive"], path, issues); oneOf(item.primitive, ["box", "plane", "cylinder", "rack", "projection-field"], `${path}.primitive`, issues);
+    exactKeys(item, ["kind", "primitive"], path, issues); oneOf(item.primitive, [
+      "box", "plane", "cylinder", "rack", "projection-field", "open-shell", "ribbed-wall",
+      "display-bay", "rounded-island", "suspended-rack", "garment-hanger", "framed-media", "projection-grid",
+    ], `${path}.primitive`, issues);
   } else if (item.kind === "asset") {
     exactKeys(item, ["kind", "assetId"], path, issues); identifier(item.assetId, `${path}.assetId`, issues);
   } else add(issues, `${path}.kind`, "geometry-kind", "Geometry must be primitive or asset reference.");
@@ -415,6 +451,18 @@ function colorMap(value: unknown, path: string, issues: SpatialValidationIssue[]
   }
 }
 
+function fallbackPresentation(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
+  const item = record(value, path, issues); if (!item) return;
+  exactKeys(item, ["eyebrow", "title", "summary", "brandMediaRef", "heroMediaRef", "accentColor", "backgroundColor"], path, issues);
+  text(item.eyebrow, `${path}.eyebrow`, issues, 100);
+  text(item.title, `${path}.title`, issues, 160);
+  text(item.summary, `${path}.summary`, issues, 500);
+  optionalIdentifier(item.brandMediaRef, `${path}.brandMediaRef`, issues);
+  optionalIdentifier(item.heroMediaRef, `${path}.heroMediaRef`, issues);
+  color(item.accentColor, `${path}.accentColor`, issues);
+  color(item.backgroundColor, `${path}.backgroundColor`, issues);
+}
+
 function validateLogicalAssetLocator(
   value: unknown,
   safety: unknown,
@@ -482,7 +530,7 @@ function exactKeys(value: Record<string, unknown>, allowed: readonly string[], p
   for (const key of allowed) if (!(key in value) && !OPTIONAL_KEYS.has(key)) add(issues, `${path}.${key}`, "missing-key", "Required field is missing.");
 }
 
-const OPTIONAL_KEYS = new Set(["componentRef", "skinRef", "mediaRef", "targetPlacementId", "targetStateId", "disabledReason", "parentPlacementId", "anchorId", "focusPlacementId", "visiblePlacementIds", "reducedMotionStateId", "description"]);
+const OPTIONAL_KEYS = new Set(["componentRef", "skinRef", "mediaRef", "interactionProfileId", "lightingProfileId", "fallbackPresentation", "brandMediaRef", "heroMediaRef", "targetPlacementId", "targetStateId", "disabledReason", "parentPlacementId", "anchorId", "focusPlacementId", "visiblePlacementIds", "reducedMotionStateId", "description"]);
 
 function identifier(value: unknown, path: string, issues: SpatialValidationIssue[]): value is string { if (typeof value !== "string" || !ID_PATTERN.test(value)) { add(issues, path, "id", "Invalid stable identifier."); return false; } return true; }
 function optionalIdentifier(value: unknown, path: string, issues: SpatialValidationIssue[]): void { if (value !== undefined) identifier(value, path, issues); }
@@ -493,6 +541,7 @@ function oneOf(value: unknown, allowed: readonly string[], path: string, issues:
 function boolean(value: unknown, path: string, issues: SpatialValidationIssue[]): void { if (typeof value !== "boolean") add(issues, path, "boolean", "Expected a boolean."); }
 function integer(value: unknown, path: string, issues: SpatialValidationIssue[], min: number, max: number): void { if (typeof value !== "number" || !Number.isInteger(value) || value < min || value > max) add(issues, path, "integer", `Expected integer ${min}-${max}.`); }
 function finite(value: unknown, path: string, issues: SpatialValidationIssue[], min: number, max: number): void { if (typeof value !== "number" || !Number.isFinite(value) || value < min || value > max) add(issues, path, "number", `Expected finite number ${min}-${max}.`); }
+function color(value: unknown, path: string, issues: SpatialValidationIssue[]): void { if (typeof value !== "string" || !/^#[0-9a-f]{6}$/i.test(value)) add(issues, path, "color", "Expected a six-digit hex colour."); }
 function add(issues: SpatialValidationIssue[], path: string, code: string, message: string): void { issues.push({ path, code, message }); }
 function failure(issues: SpatialValidationIssue[]): SpatialValidationResult<never> { return { ok: false, issues }; }
 

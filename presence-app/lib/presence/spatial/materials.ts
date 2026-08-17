@@ -62,6 +62,13 @@ export const SPATIAL_MATERIAL_PRESETS: Readonly<Record<SpatialMaterialPresetId, 
   "poster-satin": { id: "poster-satin", slot: "poster-decal", label: "Satin poster", baseColor: "#d8d3c8", roughness: 0.48, metalness: 0 },
   "poster-archive": { id: "poster-archive", slot: "poster-decal", label: "Archive poster stock", baseColor: "#b9a984", roughness: 0.9, metalness: 0 },
   "accent-signal": { id: "accent-signal", slot: "logo-accent", label: "Signal accent", baseColor: "#f2c52e", roughness: 0.4, metalness: 0.08, emissive: "#8c260f", emissiveIntensity: 0.2 },
+  "wall-warm-sculptural": { id: "wall-warm-sculptural", slot: "wall", label: "Warm sculptural plaster", baseColor: "#d6cdbf", roughness: 0.72, metalness: 0.01 },
+  "wall-boutique-charcoal": { id: "wall-boutique-charcoal", slot: "wall", label: "Readable boutique charcoal", baseColor: "#202226", roughness: 0.62, metalness: 0.08 },
+  "tabletop-pale-sculptural": { id: "tabletop-pale-sculptural", slot: "tabletop", label: "Pale sculptural display", baseColor: "#cfc6b8", roughness: 0.48, metalness: 0.02 },
+  "rack-boutique-blackened": { id: "rack-boutique-blackened", slot: "rack-metal", label: "Blackened boutique steel", baseColor: "#2c2e33", roughness: 0.24, metalness: 0.72 },
+  "fabric-garment-dark": { id: "fabric-garment-dark", slot: "fabric", label: "Dark garment textile", baseColor: "#18191d", roughness: 0.86, metalness: 0 },
+  "fabric-garment-signal": { id: "fabric-garment-signal", slot: "fabric", label: "Signal garment textile", baseColor: "#a92b2f", roughness: 0.84, metalness: 0 },
+  "projection-campaign-warm": { id: "projection-campaign-warm", slot: "projection", label: "Warm campaign light", baseColor: "#d8c7b4", roughness: 0.4, metalness: 0, emissive: "#fff3df", emissiveIntensity: 0.3 },
 };
 
 export const DEFAULT_PRESET_BY_SLOT: Readonly<Record<SpatialMaterialSlotId, SpatialMaterialPresetId>> = {
@@ -137,6 +144,19 @@ export const SPATIAL_MATERIAL_STYLE_PRESETS: Readonly<Record<SpatialMaterialStyl
     label: "Projection blackout",
     description: "Blackout architecture with a bounded emissive projection field.",
     slotPresets: styleSlots({ wall: "wall-projection-blackout", floor: "floor-dark-stone", projection: "projection-blackout", fabric: "fabric-nocturnal" }),
+  },
+  "warm-nocturnal-boutique": {
+    id: "warm-nocturnal-boutique",
+    label: "Warm nocturnal boutique",
+    description: "Polished charcoal, pale sculptural displays, black fixtures and product-first warm media light.",
+    slotPresets: styleSlots({
+      wall: "wall-charcoal",
+      floor: "floor-polished-charcoal",
+      tabletop: "tabletop-pale-sculptural",
+      "rack-metal": "rack-matte-black",
+      fabric: "fabric-garment-dark",
+      projection: "projection-campaign-warm",
+    }),
   },
 };
 

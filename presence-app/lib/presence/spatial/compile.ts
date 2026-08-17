@@ -1,4 +1,6 @@
 import { resolveSpatialMaterials } from "./materials.ts";
+import { requireSpatialLightingProfile } from "./lighting.ts";
+import { spatialInteractionProfile } from "./interactionProfiles.ts";
 import type {
   SpatialRenderItem,
   SpatialRenderPlan,
@@ -39,6 +41,7 @@ export function compileSpatialRoom(value: unknown): SpatialCompileResult {
       }
       return {
         placementId: placement.id,
+        parentPlacementId: placement.anchor.parentPlacementId,
         componentId: placement.componentId,
         version: placement.version,
         componentKey: spatialComponentKey(placement),
@@ -53,6 +56,7 @@ export function compileSpatialRoom(value: unknown): SpatialCompileResult {
         }),
         primaryMaterialSlot,
         media: placement.mediaRef ? media.get(placement.mediaRef) : undefined,
+        interaction: spatialInteractionProfile(placement.interactionProfileId),
         actions: placement.actionRefs.map((actionId) => actions.get(actionId)).filter((item) => item !== undefined),
         visible: placement.visible,
         semanticLabel: placement.semanticLabel,
@@ -89,6 +93,18 @@ export function compileSpatialRoom(value: unknown): SpatialCompileResult {
       roomRevision: room.revision,
       fingerprint: stableFingerprint(canonical),
       entryStateId: room.entryStateId,
+      lighting: requireSpatialLightingProfile(room.lightingProfileId),
+      fallbackPresentation: room.fallbackPresentation
+        ? {
+            ...room.fallbackPresentation,
+            brandMedia: room.fallbackPresentation.brandMediaRef
+              ? media.get(room.fallbackPresentation.brandMediaRef)
+              : undefined,
+            heroMedia: room.fallbackPresentation.heroMediaRef
+              ? media.get(room.fallbackPresentation.heroMediaRef)
+              : undefined,
+          }
+        : undefined,
       componentKeys,
       assets: room.assets.map((asset) => ({ ...asset })),
       eagerAssetIds,

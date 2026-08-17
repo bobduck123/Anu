@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import type { SpatialActionRef, SpatialRenderPlan } from "@/lib/presence/spatial/model";
 import {
   buildSemanticSpatialRows,
+  resolveSpatialMediaSource,
+  type SafeSpatialMediaLocatorMap,
   type SpatialRendererFallbackReason,
 } from "@/lib/presence/spatial/rendererAdapter";
 import styles from "./SpatialRoomViewport.module.css";
@@ -17,6 +19,7 @@ export interface SemanticSpatialFallbackProps {
   status?: string;
   variant?: "fallback" | "details";
   onAction: (action: SpatialActionRef, ownerPlacementId: string) => void;
+  mediaLocators?: SafeSpatialMediaLocatorMap;
 }
 
 const reasonCopy: Record<SemanticSpatialFallbackProps["reason"], string> = {
@@ -35,6 +38,7 @@ export function SemanticSpatialFallback({
   status,
   variant = "fallback",
   onAction,
+  mediaLocators = {},
 }: SemanticSpatialFallbackProps) {
   const rows = buildSemanticSpatialRows(plan);
   const focusedRowRef = useRef<HTMLLIElement>(null);
@@ -52,6 +56,12 @@ export function SemanticSpatialFallback({
       data-testid="presence-spatial-semantic-fallback"
       aria-label="Spatial room accessible view"
     >
+      {variant === "fallback" && plan.fallbackPresentation ? (
+        <BrandedStaticFallback
+          mediaLocators={mediaLocators}
+          plan={plan}
+        />
+      ) : null}
       <div className={styles.semanticIntro}>
         <p className={styles.eyebrow}>Accessible room view</p>
         <p>{variant === "details" ? "Keyboard-accessible details remain available alongside the interactive room." : reasonCopy[reason]}</p>
@@ -92,5 +102,60 @@ export function SemanticSpatialFallback({
         ))}
       </ol>
     </section>
+  );
+}
+
+function BrandedStaticFallback({
+  plan,
+  mediaLocators,
+}: {
+  plan: SpatialRenderPlan;
+  mediaLocators: SafeSpatialMediaLocatorMap;
+}) {
+  const presentation = plan.fallbackPresentation;
+  const [failedMedia, setFailedMedia] = useState<ReadonlySet<string>>(new Set());
+  useEffect(() => {
+    setFailedMedia(new Set());
+  }, [plan.fingerprint, mediaLocators]);
+  if (!presentation) return null;
+  const brandSource = resolveSpatialMediaSource(presentation.brandMedia, mediaLocators);
+  const heroSource = resolveSpatialMediaSource(presentation.heroMedia, mediaLocators);
+  const canShowBrand = Boolean(brandSource && presentation.brandMedia && !failedMedia.has(presentation.brandMedia.id));
+  const canShowHero = Boolean(heroSource && presentation.heroMedia && !failedMedia.has(presentation.heroMedia.id));
+  const markFailed = (mediaId: string) => setFailedMedia((current) => new Set([...current, mediaId]));
+
+  return (
+    <header
+      className={styles.staticFallback}
+      data-testid="presence-spatial-branded-fallback"
+      style={{
+        "--spatial-fallback-accent": presentation.accentColor,
+        "--spatial-fallback-background": presentation.backgroundColor,
+      } as CSSProperties}
+    >
+      <div className={styles.staticFallbackCopy}>
+        <p>{presentation.eyebrow}</p>
+        {canShowBrand ? (
+          <img
+            alt={presentation.brandMedia!.alt}
+            className={styles.staticFallbackBrand}
+            onError={() => markFailed(presentation.brandMedia!.id)}
+            src={brandSource!}
+          />
+        ) : null}
+        <h2>{presentation.title}</h2>
+        <p>{presentation.summary}</p>
+      </div>
+      {canShowHero ? (
+        <img
+          alt={presentation.heroMedia!.alt}
+          className={styles.staticFallbackHero}
+          onError={() => markFailed(presentation.heroMedia!.id)}
+          src={heroSource!}
+        />
+      ) : (
+        <div aria-label="Room media unavailable; semantic room remains complete." className={styles.staticFallbackHonest} role="img" />
+      )}
+    </header>
   );
 }

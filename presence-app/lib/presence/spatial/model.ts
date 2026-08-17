@@ -328,7 +328,20 @@ export type SpatialComponentCategory =
   | "piece"
   | "action";
 
-export type SpatialPrimitiveKind = "box" | "plane" | "cylinder" | "rack" | "projection-field";
+export type SpatialPrimitiveKind =
+  | "box"
+  | "plane"
+  | "cylinder"
+  | "rack"
+  | "projection-field"
+  | "open-shell"
+  | "ribbed-wall"
+  | "display-bay"
+  | "rounded-island"
+  | "suspended-rack"
+  | "garment-hanger"
+  | "framed-media"
+  | "projection-grid";
 export type SpatialPerformanceTier = "core" | "enhanced" | "hero";
 export type SpatialAnchorKind = "floor" | "wall" | "surface" | "rack" | "projection" | "free";
 export type SpatialMaterialSlotId =
@@ -367,7 +380,14 @@ export type SpatialMaterialPresetId =
   | "projection-blackout"
   | "poster-satin"
   | "poster-archive"
-  | "accent-signal";
+  | "accent-signal"
+  | "wall-warm-sculptural"
+  | "wall-boutique-charcoal"
+  | "tabletop-pale-sculptural"
+  | "rack-boutique-blackened"
+  | "fabric-garment-dark"
+  | "fabric-garment-signal"
+  | "projection-campaign-warm";
 
 export type SpatialMaterialStylePresetId =
   | "white-gallery"
@@ -378,7 +398,57 @@ export type SpatialMaterialStylePresetId =
   | "warm-timber-studio"
   | "archive-paper"
   | "boutique-chrome"
-  | "projection-blackout";
+  | "projection-blackout"
+  | "warm-nocturnal-boutique";
+
+export type SpatialLightingProfileId =
+  | "spatial-core-neutral"
+  | "gallery-soft"
+  | "boutique-product-warm";
+
+export type SpatialInteractionProfileId =
+  | "piece-inspect-near"
+  | "rack-turn-outward";
+
+export type SpatialLightKind = "hemisphere" | "ambient" | "directional" | "point" | "spot";
+
+export interface SpatialLightDefinition {
+  id: string;
+  kind: SpatialLightKind;
+  color: string;
+  intensity: number;
+  position?: SpatialVec3;
+  target?: SpatialVec3;
+  distance?: number;
+  angle?: number;
+  penumbra?: number;
+  groundColor?: string;
+}
+
+export interface SpatialLightingProfile {
+  id: SpatialLightingProfileId;
+  label: string;
+  background: string;
+  toneMappingExposure: number;
+  lights: readonly SpatialLightDefinition[];
+}
+
+export interface SpatialInteractionProfile {
+  id: SpatialInteractionProfileId;
+  label: string;
+  kind: "inspect";
+  targetCategory: "piece";
+  translation: {
+    mode: "toward-camera";
+    distance: number;
+  };
+  rotation: {
+    mode: "preserve" | "face-camera-y";
+    yawOffset: number;
+  };
+  preserveParentContext: true;
+  deterministicReturn: true;
+}
 
 export type SpatialVec3 = readonly [number, number, number];
 
@@ -522,6 +592,7 @@ export interface SpatialPlacement extends SpatialComponentRef {
   materialSlotOverrides: Partial<Record<SpatialMaterialSlotId, SpatialMaterialPresetId>>;
   skinRef?: string;
   mediaRef?: string;
+  interactionProfileId?: SpatialInteractionProfileId;
   actionRefs: readonly string[];
   visible: boolean;
   semanticLabel: string;
@@ -550,6 +621,16 @@ export interface SpatialSemanticItem {
   actionRefs: readonly string[];
 }
 
+export interface SpatialFallbackPresentation {
+  eyebrow: string;
+  title: string;
+  summary: string;
+  brandMediaRef?: string;
+  heroMediaRef?: string;
+  accentColor: string;
+  backgroundColor: string;
+}
+
 export interface SpatialRoomDefinition {
   schemaVersion: SpatialSchemaVersion;
   id: string;
@@ -560,6 +641,8 @@ export interface SpatialRoomDefinition {
   bounds: SpatialDimensions;
   entryStateId: string;
   cameraPath: SpatialCameraPath;
+  lightingProfileId?: SpatialLightingProfileId;
+  fallbackPresentation?: SpatialFallbackPresentation;
   assets: readonly SpatialAssetRef[];
   skins: readonly SpatialSkinRef[];
   media: readonly SpatialMediaRef[];
@@ -587,6 +670,7 @@ export interface SpatialResolvedMaterial {
 
 export interface SpatialRenderItem extends SpatialComponentRef {
   placementId: string;
+  parentPlacementId?: string;
   componentKey: string;
   category: SpatialComponentCategory;
   geometry: SpatialComponentDefinition["geometry"];
@@ -595,6 +679,7 @@ export interface SpatialRenderItem extends SpatialComponentRef {
   materials: readonly SpatialResolvedMaterial[];
   primaryMaterialSlot: SpatialMaterialSlotId;
   media?: SpatialMediaRef;
+  interaction?: SpatialInteractionProfile;
   actions: readonly SpatialActionRef[];
   visible: boolean;
   semanticLabel: string;
@@ -606,6 +691,11 @@ export interface SpatialRenderPlan {
   roomRevision: number;
   fingerprint: string;
   entryStateId: string;
+  lighting: SpatialLightingProfile;
+  fallbackPresentation?: SpatialFallbackPresentation & {
+    brandMedia?: SpatialMediaRef;
+    heroMedia?: SpatialMediaRef;
+  };
   componentKeys: readonly string[];
   assets: readonly SpatialAssetRef[];
   eagerAssetIds: readonly string[];

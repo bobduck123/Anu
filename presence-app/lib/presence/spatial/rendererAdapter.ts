@@ -5,6 +5,7 @@ import type {
   SpatialRenderItem,
   SpatialRenderPlan,
   SpatialSceneState,
+  SpatialTransform,
   SpatialVec3,
 } from "./model.ts";
 
@@ -358,15 +359,28 @@ export function spatialInspectionPosition(
   cameraPosition: SpatialVec3,
   distance = 0.9,
 ): SpatialVec3 {
-  if (item.category !== "piece") return item.transform.position;
+  return spatialInspectionTransform(item, cameraPosition, distance).position;
+}
+
+export function spatialInspectionTransform(
+  item: SpatialRenderItem,
+  cameraPosition: SpatialVec3,
+  fallbackDistance = 0.9,
+): SpatialTransform {
+  if (item.category !== "piece") return item.transform;
   const [x, y, z] = item.transform.position;
   const deltaX = cameraPosition[0] - x;
   const deltaY = cameraPosition[1] - y;
   const deltaZ = cameraPosition[2] - z;
   const length = Math.hypot(deltaX, deltaY, deltaZ) || 1;
-  return [
+  const distance = item.interaction?.translation.distance ?? fallbackDistance;
+  const position: SpatialVec3 = [
     x + (deltaX / length) * distance,
     y + (deltaY / length) * distance,
     z + (deltaZ / length) * distance,
   ];
+  const rotation = item.interaction?.rotation.mode === "face-camera-y"
+    ? [0, Math.atan2(deltaX, deltaZ) + item.interaction.rotation.yawOffset, 0] as SpatialVec3
+    : item.transform.rotation;
+  return { ...item.transform, position, rotation };
 }

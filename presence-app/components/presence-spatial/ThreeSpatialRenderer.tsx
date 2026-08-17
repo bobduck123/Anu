@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { SPATIAL_MATERIAL_PRESETS } from "@/lib/presence/spatial/materials";
 import type {
   SpatialMaterialSlotId,
+  SpatialLightDefinition,
   SpatialRenderItem,
   SpatialRenderPlan,
   SpatialSceneState,
@@ -15,7 +16,7 @@ import {
   resolveSpatialSceneState,
   spatialContainMapping,
   spatialItemsForState,
-  spatialInspectionPosition,
+  spatialInspectionTransform,
   spatialMediaLocatorSignature,
   spatialMediaPlacementIdsToLoad,
   type SafeSpatialMediaLocatorMap,
@@ -40,6 +41,8 @@ interface RuntimeItemHandle {
   root: THREE.Group;
   basePosition: THREE.Vector3;
   targetPosition: THREE.Vector3;
+  baseQuaternion: THREE.Quaternion;
+  targetQuaternion: THREE.Quaternion;
 }
 
 interface SpatialThreeRuntime {
@@ -159,7 +162,7 @@ function createSpatialThreeRuntime(input: {
     textures: new Set(),
   };
   const scene = new THREE.Scene();
-  scene.background = sceneBackground(plan);
+  scene.background = new THREE.Color(plan.lighting.background);
   const camera = new THREE.PerspectiveCamera(55, 1, 0.08, 120);
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
@@ -233,6 +236,7 @@ function createSpatialThreeRuntime(input: {
     delete host.dataset.renderedItemCount;
     delete host.dataset.componentKeys;
     delete host.dataset.roomFingerprint;
+    delete host.dataset.lightingProfile;
   };
 
   const failRuntime = () => {
@@ -262,10 +266,16 @@ function createSpatialThreeRuntime(input: {
       for (const handle of itemHandles.values()) {
         if (handle.root.position.distanceToSquared(handle.targetPosition) < 0.00001) {
           handle.root.position.copy(handle.targetPosition);
-          continue;
+        } else {
+          handle.root.position.lerp(handle.targetPosition, 0.2);
+          needsAnotherFrame = true;
         }
-        handle.root.position.lerp(handle.targetPosition, 0.2);
-        needsAnotherFrame = true;
+        if (handle.root.quaternion.angleTo(handle.targetQuaternion) >= 0.0001) {
+          handle.root.quaternion.slerp(handle.targetQuaternion, 0.2);
+          needsAnotherFrame = true;
+        } else {
+          handle.root.quaternion.copy(handle.targetQuaternion);
+        }
       }
 
       camera.lookAt(cameraTarget);
@@ -315,23 +325,37 @@ function createSpatialThreeRuntime(input: {
   const setSelectedPlacement = (placementId?: string) => {
     if (disposed) return;
     selectedPlacementId = placementId;
-    updateInspectionTargets(camera.position);
+    updateInspectionTargets(cameraAnimation?.toPosition ?? camera.position);
     requestMediaForState();
     requestRender();
   };
 
   const updateInspectionTargets = (inspectionCameraPosition: THREE.Vector3) => {
-    for (const handle of itemHandles.values()) handle.targetPosition.copy(handle.basePosition);
+    for (const handle of itemHandles.values()) {
+      handle.targetPosition.copy(handle.basePosition);
+      handle.targetQuaternion.copy(handle.baseQuaternion);
+    }
     const selected = selectedPlacementId ? itemHandles.get(selectedPlacementId) : undefined;
     if (selected?.item.category === "piece") {
       selected.root.visible = true;
-      selected.targetPosition.fromArray(
-        spatialInspectionPosition(selected.item, [
+      if (selected.item.interaction?.preserveParentContext) {
+        let parentPlacementId = selected.item.parentPlacementId;
+        const visited = new Set<string>();
+        while (parentPlacementId && !visited.has(parentPlacementId)) {
+          visited.add(parentPlacementId);
+          const parent = itemHandles.get(parentPlacementId);
+          if (!parent) break;
+          parent.root.visible = true;
+          parentPlacementId = parent.item.parentPlacementId;
+        }
+      }
+      const target = spatialInspectionTransform(selected.item, [
           inspectionCameraPosition.x,
           inspectionCameraPosition.y,
           inspectionCameraPosition.z,
-        ]),
-      );
+        ]);
+      selected.targetPosition.fromArray(target.position);
+      selected.targetQuaternion.setFromEuler(new THREE.Euler(...target.rotation));
     }
   };
 
@@ -366,6 +390,7 @@ function createSpatialThreeRuntime(input: {
         }
         resources.textures.add(containedTexture);
         binding.material.map = containedTexture;
+        if (binding.material.emissiveIntensity > 0) binding.material.emissiveMap = containedTexture;
         binding.material.needsUpdate = true;
         if (resources.textures.delete(binding.fallback)) binding.fallback.dispose();
         requestRender();
@@ -435,19 +460,13 @@ function createSpatialThreeRuntime(input: {
   try {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.95;
+    renderer.toneMappingExposure = plan.lighting.toneMappingExposure;
     renderer.shadowMap.enabled = false;
     renderer.domElement.dataset.testid = "presence-spatial-three-canvas";
     renderer.domElement.setAttribute("aria-hidden", "true");
     host.replaceChildren(renderer.domElement);
 
-    scene.add(new THREE.HemisphereLight(0xf7f2e5, 0x17191d, 1.55));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
-    keyLight.position.set(5, 9, 8);
-    scene.add(keyLight);
-    const fillLight = new THREE.DirectionalLight(0xf2cbb9, 0.55);
-    fillLight.position.set(-7, 4, 1);
-    scene.add(fillLight);
+    addSpatialLighting(scene, plan.lighting.lights);
 
     for (const item of plan.items) {
       if (!item.visible) continue;
@@ -462,9 +481,11 @@ function createSpatialThreeRuntime(input: {
         root,
         basePosition: root.position.clone(),
         targetPosition: root.position.clone(),
+        baseQuaternion: root.quaternion.clone(),
+        targetQuaternion: root.quaternion.clone(),
       };
       itemHandles.set(item.placementId, handle);
-      if (item.actions.length > 0 || item.category === "piece") interactiveRoots.push(root);
+      if (item.actions.length > 0 || item.interaction) interactiveRoots.push(root);
     }
 
     renderer.domElement.addEventListener("pointerdown", onPointerDown);
@@ -500,8 +521,8 @@ function createSpatialObject(
   group.userData.componentKey = item.componentKey;
   group.userData.geometryTemplateSource = template.source;
 
-  for (const templatePart of template.parts) {
-    const materialKey = `${templatePart.materialSlot ?? "default"}:${templatePart.materialSide ?? "front"}:${templatePart.mediaSurface ? "media" : "solid"}`;
+  for (const [partIndex, templatePart] of template.parts.entries()) {
+    const materialKey = `${templatePart.materialSlot ?? "default"}:${templatePart.materialSide ?? "front"}:${templatePart.mediaSurface ? `media-${partIndex}` : "solid"}`;
     let material = materialByPartKey.get(materialKey);
     if (!material) {
       material = spatialMaterial(item, resources, templatePart.materialSlot);
@@ -513,6 +534,8 @@ function createSpatialObject(
     }
     const mesh = new THREE.Mesh(templatePart.geometry, material);
     mesh.position.fromArray(templatePart.position);
+    if (templatePart.rotation) mesh.rotation.set(...templatePart.rotation);
+    if (templatePart.scale) mesh.scale.fromArray(templatePart.scale);
     group.add(mesh);
   }
   return group;
@@ -529,6 +552,7 @@ function applyGeneratedMediaToMaterial(
   const generatedTexture = createGeneratedMediaTexture(item, surfaceWidth, surfaceHeight);
   resources.textures.add(generatedTexture);
   material.map = generatedTexture;
+  if (material.emissiveIntensity > 0) material.emissiveMap = generatedTexture;
   material.color.set(0xffffff);
   material.needsUpdate = true;
   mediaRuntime.register({
@@ -735,20 +759,57 @@ function markSuccessfulRender(
     .join(",");
   const count = String(renderedItems.length);
   host.dataset.roomFingerprint = plan.fingerprint;
+  host.dataset.lightingProfile = plan.lighting.id;
   host.dataset.renderedItemCount = count;
   host.dataset.componentKeys = componentKeys;
   canvas.dataset.roomFingerprint = plan.fingerprint;
+  canvas.dataset.lightingProfile = plan.lighting.id;
   canvas.dataset.renderedItemCount = count;
   canvas.dataset.componentKeys = componentKeys;
 }
 
-function sceneBackground(plan: SpatialRenderPlan): THREE.Color {
-  const shellMaterial = plan.items.find((item) => item.category === "shell")?.materials[0];
-  const color = shellMaterial
-    ? new THREE.Color(shellMaterial.color ?? SPATIAL_MATERIAL_PRESETS[shellMaterial.presetId].baseColor)
-    : new THREE.Color("#111318");
-  const luminance = color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722;
-  return luminance > 0.55 ? color.lerp(new THREE.Color("#ffffff"), 0.08) : color.multiplyScalar(0.72);
+function addSpatialLighting(scene: THREE.Scene, definitions: readonly SpatialLightDefinition[]) {
+  for (const definition of definitions) {
+    let light: THREE.Light;
+    switch (definition.kind) {
+      case "ambient":
+        light = new THREE.AmbientLight(definition.color, definition.intensity);
+        break;
+      case "hemisphere":
+        light = new THREE.HemisphereLight(
+          definition.color,
+          definition.groundColor ?? "#111111",
+          definition.intensity,
+        );
+        break;
+      case "directional":
+        light = new THREE.DirectionalLight(definition.color, definition.intensity);
+        break;
+      case "point":
+        light = new THREE.PointLight(
+          definition.color,
+          definition.intensity,
+          definition.distance ?? 0,
+        );
+        break;
+      case "spot":
+        light = new THREE.SpotLight(
+          definition.color,
+          definition.intensity,
+          definition.distance ?? 0,
+          definition.angle ?? Math.PI / 3,
+          definition.penumbra ?? 0,
+        );
+        break;
+    }
+    light.name = definition.id;
+    if (definition.position) light.position.fromArray(definition.position);
+    if ((light instanceof THREE.DirectionalLight || light instanceof THREE.SpotLight) && definition.target) {
+      light.target.position.fromArray(definition.target);
+      scene.add(light.target);
+    }
+    scene.add(light);
+  }
 }
 
 function hashText(value: string): number {

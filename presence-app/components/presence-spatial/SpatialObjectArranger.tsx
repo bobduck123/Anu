@@ -24,6 +24,7 @@ import {
 import { compileSpatialRoom } from "@/lib/presence/spatial/compile";
 import { BBB_PROJECTION_WALL_FIXTURE } from "@/lib/presence/spatial/fixtures/bbbProjectionWall";
 import { MOBSTAR_SPATIAL_ROOM_FIXTURE } from "@/lib/presence/spatial/fixtures/mobstar";
+import { MOBSTAR_GATE4_SPATIAL_ROOM_FIXTURE } from "@/lib/presence/spatial/fixtures/mobstarGate4";
 import type {
   SpatialDraftEnvelope,
   SpatialPlacement,
@@ -464,6 +465,7 @@ export function SpatialObjectArranger() {
           <span className={styles.groupLabel}>Start</span>
           <button onClick={() => loadWorkspace(createBlankMobstarSpatialRoom(), "a new Mobstar layout")} type="button">Create Mobstar</button>
           <button onClick={() => loadWorkspace(MOBSTAR_SPATIAL_ROOM_FIXTURE, "Mobstar fixture")} type="button">Load Mobstar</button>
+          <button data-testid="presence-spatial-load-mobstar-gate4" onClick={() => loadWorkspace(MOBSTAR_GATE4_SPATIAL_ROOM_FIXTURE, "Mobstar Gate 4 candidate")} type="button">Load Gate 4 candidate</button>
           <button onClick={() => loadWorkspace(BBB_PROJECTION_WALL_FIXTURE, "BBB projection fixture")} type="button">Load BBB</button>
         </div>
         <div className={styles.toolbarGroup}>
