@@ -29,6 +29,7 @@ const ROUTES_TO_WARM = [
   "/gallery",
   "/paths/from-room/101",
   "/paths/from-hall/1",
+  "/internal/spatial-object-model",
 ];
 
 export default async function globalSetup() {

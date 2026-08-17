@@ -1,0 +1,761 @@
+"use client";
+
+import { useEffect, useMemo, useRef } from "react";
+import * as THREE from "three";
+import { SPATIAL_MATERIAL_PRESETS } from "@/lib/presence/spatial/materials";
+import type {
+  SpatialMaterialSlotId,
+  SpatialRenderItem,
+  SpatialRenderPlan,
+  SpatialSceneState,
+} from "@/lib/presence/spatial/model";
+import {
+  isSpatialTextureDimensionSafe,
+  resolveSpatialMediaSource,
+  resolveSpatialSceneState,
+  spatialContainMapping,
+  spatialItemsForState,
+  spatialInspectionPosition,
+  spatialMediaLocatorSignature,
+  spatialMediaPlacementIdsToLoad,
+  type SafeSpatialMediaLocatorMap,
+} from "@/lib/presence/spatial/rendererAdapter";
+import styles from "./SpatialRoomViewport.module.css";
+import {
+  getSpatialGeometryTemplate,
+  type SpatialGeometryTemplatePart,
+} from "./threeGeometryCache";
+
+export interface ThreeSpatialRendererProps {
+  plan: SpatialRenderPlan;
+  activeStateId: string;
+  selectedPlacementId?: string;
+  mediaLocators: SafeSpatialMediaLocatorMap;
+  onItemActivate: (placementId: string) => void;
+  onRuntimeFailure: () => void;
+}
+
+interface RuntimeItemHandle {
+  item: SpatialRenderItem;
+  root: THREE.Group;
+  basePosition: THREE.Vector3;
+  targetPosition: THREE.Vector3;
+}
+
+interface SpatialThreeRuntime {
+  setSceneState: (state: SpatialSceneState, animate?: boolean) => void;
+  setSelectedPlacement: (placementId?: string) => void;
+  dispose: () => void;
+}
+
+interface PlacementOwnedResources {
+  materials: Set<THREE.Material>;
+  textures: Set<THREE.Texture>;
+}
+
+interface SpatialMediaBinding {
+  item: SpatialRenderItem;
+  material: THREE.MeshStandardMaterial;
+  fallback: THREE.Texture;
+  surfaceWidth: number;
+  surfaceHeight: number;
+  requested: boolean;
+}
+
+interface SpatialMediaRuntime {
+  register: (binding: SpatialMediaBinding) => void;
+}
+
+export function ThreeSpatialRenderer({
+  plan,
+  activeStateId,
+  selectedPlacementId,
+  mediaLocators,
+  onItemActivate,
+  onRuntimeFailure,
+}: ThreeSpatialRendererProps) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const runtimeRef = useRef<SpatialThreeRuntime | null>(null);
+  const activateRef = useRef(onItemActivate);
+  const failureRef = useRef(onRuntimeFailure);
+  const locatorSignature = useMemo(
+    () => spatialMediaLocatorSignature(mediaLocators),
+    [mediaLocators],
+  );
+  const runtimeKey = `${plan.fingerprint}\u0000${locatorSignature}`;
+
+  useEffect(() => {
+    activateRef.current = onItemActivate;
+    failureRef.current = onRuntimeFailure;
+  }, [onItemActivate, onRuntimeFailure]);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+
+    try {
+      const initialState = resolveSpatialSceneState(plan, activeStateId);
+      const runtime = createSpatialThreeRuntime({
+        host,
+        plan,
+        initialState,
+        initialSelectedPlacementId: selectedPlacementId,
+        mediaLocators,
+        onItemActivate: (placementId) => activateRef.current(placementId),
+        onRuntimeFailure: () => failureRef.current(),
+      });
+      runtimeRef.current = runtime;
+      return () => {
+        runtimeRef.current = null;
+        runtime.dispose();
+      };
+    } catch {
+      failureRef.current();
+      return undefined;
+    }
+    // The complete plan fingerprint and locator signature are the runtime identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runtimeKey]);
+
+  useEffect(() => {
+    runtimeRef.current?.setSceneState(resolveSpatialSceneState(plan, activeStateId));
+  }, [activeStateId, plan]);
+
+  useEffect(() => {
+    runtimeRef.current?.setSelectedPlacement(selectedPlacementId);
+  }, [selectedPlacementId]);
+
+  return (
+    <div
+      aria-label="Interactive spatial room"
+      className={styles.threeHost}
+      data-testid="presence-spatial-three-renderer"
+      ref={hostRef}
+      role="img"
+    />
+  );
+}
+
+function createSpatialThreeRuntime(input: {
+  host: HTMLDivElement;
+  plan: SpatialRenderPlan;
+  initialState: SpatialSceneState;
+  initialSelectedPlacementId?: string;
+  mediaLocators: SafeSpatialMediaLocatorMap;
+  onItemActivate: (placementId: string) => void;
+  onRuntimeFailure: () => void;
+}): SpatialThreeRuntime {
+  const {
+    host,
+    plan,
+    initialState,
+    initialSelectedPlacementId,
+    mediaLocators,
+    onItemActivate,
+    onRuntimeFailure,
+  } = input;
+  const resources: PlacementOwnedResources = {
+    materials: new Set(),
+    textures: new Set(),
+  };
+  const scene = new THREE.Scene();
+  scene.background = sceneBackground(plan);
+  const camera = new THREE.PerspectiveCamera(55, 1, 0.08, 120);
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: false,
+    powerPreference: "high-performance",
+  });
+  const itemHandles = new Map<string, RuntimeItemHandle>();
+  const interactiveRoots: THREE.Object3D[] = [];
+  const mediaBindings = new Map<string, SpatialMediaBinding[]>();
+  const externalTextureLoads = new Map<string, Promise<THREE.Texture | null>>();
+  const cameraTarget = new THREE.Vector3(0, 1.5, 0);
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  let disposed = false;
+  let failureSignalled = false;
+  let animationFrame = 0;
+  let selectedPlacementId = initialSelectedPlacementId;
+  let currentState: SpatialSceneState | undefined;
+  let activePointerId: number | undefined;
+  let pointerStart: { x: number; y: number } | undefined;
+  let resizeObserver: ResizeObserver | undefined;
+  let cameraAnimation:
+    | {
+        startedAt: number;
+        fromPosition: THREE.Vector3;
+        fromTarget: THREE.Vector3;
+        fromFov: number;
+        toPosition: THREE.Vector3;
+        toTarget: THREE.Vector3;
+        toFov: number;
+      }
+    | undefined;
+
+  const requestRender = () => {
+    if (!disposed && animationFrame === 0) {
+      animationFrame = window.requestAnimationFrame(renderFrame);
+    }
+  };
+
+  const mediaRuntime: SpatialMediaRuntime = {
+    register: (binding) => {
+      const existing = mediaBindings.get(binding.item.placementId) ?? [];
+      existing.push(binding);
+      mediaBindings.set(binding.item.placementId, existing);
+    },
+  };
+
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
+    if (animationFrame !== 0) window.cancelAnimationFrame(animationFrame);
+    resizeObserver?.disconnect();
+    window.removeEventListener("resize", safeResize);
+    renderer.domElement.removeEventListener("pointerdown", onPointerDown);
+    renderer.domElement.removeEventListener("pointerup", onPointerUp);
+    renderer.domElement.removeEventListener("pointercancel", clearPointer);
+    renderer.domElement.removeEventListener("pointerleave", clearPointer);
+    renderer.domElement.removeEventListener("lostpointercapture", clearPointer);
+    renderer.domElement.removeEventListener("webglcontextlost", onContextLost);
+    for (const texture of resources.textures) {
+      try { texture.dispose(); } catch { /* continue disposing the remaining runtime */ }
+    }
+    for (const material of resources.materials) {
+      try { material.dispose(); } catch { /* continue disposing the remaining runtime */ }
+    }
+    scene.clear();
+    try { renderer.renderLists.dispose(); } catch { /* best-effort teardown */ }
+    try { renderer.dispose(); } catch { /* best-effort teardown */ }
+    try { renderer.forceContextLoss(); } catch { /* best-effort teardown */ }
+    renderer.domElement.remove();
+    delete host.dataset.renderedItemCount;
+    delete host.dataset.componentKeys;
+    delete host.dataset.roomFingerprint;
+  };
+
+  const failRuntime = () => {
+    if (failureSignalled || disposed) return;
+    failureSignalled = true;
+    onRuntimeFailure();
+    dispose();
+  };
+
+  function renderFrame(now: number) {
+    animationFrame = 0;
+    if (disposed) return;
+    try {
+      let needsAnotherFrame = false;
+
+      if (cameraAnimation) {
+        const progress = Math.min(1, (now - cameraAnimation.startedAt) / 460);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        camera.position.lerpVectors(cameraAnimation.fromPosition, cameraAnimation.toPosition, eased);
+        cameraTarget.lerpVectors(cameraAnimation.fromTarget, cameraAnimation.toTarget, eased);
+        camera.fov = THREE.MathUtils.lerp(cameraAnimation.fromFov, cameraAnimation.toFov, eased);
+        camera.updateProjectionMatrix();
+        if (progress < 1) needsAnotherFrame = true;
+        else cameraAnimation = undefined;
+      }
+
+      for (const handle of itemHandles.values()) {
+        if (handle.root.position.distanceToSquared(handle.targetPosition) < 0.00001) {
+          handle.root.position.copy(handle.targetPosition);
+          continue;
+        }
+        handle.root.position.lerp(handle.targetPosition, 0.2);
+        needsAnotherFrame = true;
+      }
+
+      camera.lookAt(cameraTarget);
+      renderer.render(scene, camera);
+      markSuccessfulRender(host, renderer.domElement, plan, itemHandles);
+      if (needsAnotherFrame) requestRender();
+    } catch {
+      failRuntime();
+    }
+  }
+
+  const setSceneState = (state: SpatialSceneState, animate = true) => {
+    if (disposed) return;
+    const isSameState = currentState?.id === state.id;
+    currentState = state;
+    const nextPosition = new THREE.Vector3().fromArray(state.cameraPosition);
+    const nextTarget = new THREE.Vector3().fromArray(state.cameraTarget);
+    if (!isSameState) {
+      if (animate) {
+        cameraAnimation = {
+          startedAt: performance.now(),
+          fromPosition: camera.position.clone(),
+          fromTarget: cameraTarget.clone(),
+          fromFov: camera.fov,
+          toPosition: nextPosition,
+          toTarget: nextTarget,
+          toFov: state.fieldOfView,
+        };
+      } else {
+        camera.position.copy(nextPosition);
+        cameraTarget.copy(nextTarget);
+        camera.fov = state.fieldOfView;
+        camera.updateProjectionMatrix();
+      }
+    }
+    const visiblePlacementIds = new Set(
+      spatialItemsForState(plan, state).map((item) => item.placementId),
+    );
+    for (const handle of itemHandles.values()) {
+      handle.root.visible = visiblePlacementIds.has(handle.item.placementId);
+    }
+    updateInspectionTargets(nextPosition);
+    requestMediaForState();
+    requestRender();
+  };
+
+  const setSelectedPlacement = (placementId?: string) => {
+    if (disposed) return;
+    selectedPlacementId = placementId;
+    updateInspectionTargets(camera.position);
+    requestMediaForState();
+    requestRender();
+  };
+
+  const updateInspectionTargets = (inspectionCameraPosition: THREE.Vector3) => {
+    for (const handle of itemHandles.values()) handle.targetPosition.copy(handle.basePosition);
+    const selected = selectedPlacementId ? itemHandles.get(selectedPlacementId) : undefined;
+    if (selected?.item.category === "piece") {
+      selected.root.visible = true;
+      selected.targetPosition.fromArray(
+        spatialInspectionPosition(selected.item, [
+          inspectionCameraPosition.x,
+          inspectionCameraPosition.y,
+          inspectionCameraPosition.z,
+        ]),
+      );
+    }
+  };
+
+  const requestMediaForState = () => {
+    if (!currentState) return;
+    const placementIds = spatialMediaPlacementIdsToLoad(plan, currentState, selectedPlacementId);
+    for (const placementId of placementIds) requestMediaForPlacement(placementId);
+  };
+
+  const requestMediaForPlacement = (placementId: string) => {
+    for (const binding of mediaBindings.get(placementId) ?? []) {
+      if (binding.requested) continue;
+      binding.requested = true;
+      const source = resolveSpatialMediaSource(binding.item.media, mediaLocators);
+      if (!source || !binding.item.media) continue;
+      const cacheKey = `${binding.item.media.assetId}\u0000${source}`;
+      let textureLoad = externalTextureLoads.get(cacheKey);
+      if (!textureLoad) {
+        textureLoad = loadGuardedTexture(source, resources, () => disposed);
+        externalTextureLoads.set(cacheKey, textureLoad);
+      }
+      void textureLoad.then((sourceTexture) => {
+        if (!sourceTexture || disposed) return;
+        const containedTexture = createContainedMediaTexture(
+          sourceTexture,
+          binding.surfaceWidth,
+          binding.surfaceHeight,
+        );
+        if (!containedTexture || disposed) {
+          containedTexture?.dispose();
+          return;
+        }
+        resources.textures.add(containedTexture);
+        binding.material.map = containedTexture;
+        binding.material.needsUpdate = true;
+        if (resources.textures.delete(binding.fallback)) binding.fallback.dispose();
+        requestRender();
+      });
+    }
+  };
+
+  const clearPointer = (event?: PointerEvent) => {
+    if (event && activePointerId !== undefined && event.pointerId !== activePointerId) return;
+    const pointerId = activePointerId;
+    activePointerId = undefined;
+    pointerStart = undefined;
+    if (pointerId !== undefined && renderer.domElement.hasPointerCapture(pointerId)) {
+      try { renderer.domElement.releasePointerCapture(pointerId); } catch { /* capture already ended */ }
+    }
+  };
+
+  const onPointerDown = (event: PointerEvent) => {
+    if (!event.isPrimary || event.button !== 0 || activePointerId !== undefined) return;
+    activePointerId = event.pointerId;
+    pointerStart = { x: event.clientX, y: event.clientY };
+    try { renderer.domElement.setPointerCapture(event.pointerId); } catch { clearPointer(event); }
+  };
+
+  const onPointerUp = (event: PointerEvent) => {
+    if (!event.isPrimary || event.button !== 0 || event.pointerId !== activePointerId || !pointerStart) return;
+    const start = pointerStart;
+    clearPointer(event);
+    const travel = Math.hypot(event.clientX - start.x, event.clientY - start.y);
+    if (travel > 7) return;
+    const bounds = renderer.domElement.getBoundingClientRect();
+    if (bounds.width === 0 || bounds.height === 0) return;
+    pointer.set(
+      ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
+      -((event.clientY - bounds.top) / bounds.height) * 2 + 1,
+    );
+    raycaster.setFromCamera(pointer, camera);
+    const hit = raycaster.intersectObjects(interactiveRoots, true)[0];
+    let object: THREE.Object3D | null = hit?.object ?? null;
+    while (object && typeof object.userData.placementId !== "string") object = object.parent;
+    if (object && typeof object.userData.placementId === "string") {
+      onItemActivate(object.userData.placementId);
+    }
+  };
+
+  const onContextLost = (event: Event) => {
+    event.preventDefault();
+    failRuntime();
+  };
+
+  const safeResize = () => {
+    if (disposed) return;
+    try {
+      const bounds = host.getBoundingClientRect();
+      const width = Math.max(1, Math.round(bounds.width));
+      const height = Math.max(1, Math.round(bounds.height));
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+      renderer.setSize(width, height, false);
+      requestRender();
+    } catch {
+      failRuntime();
+    }
+  };
+
+  try {
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.95;
+    renderer.shadowMap.enabled = false;
+    renderer.domElement.dataset.testid = "presence-spatial-three-canvas";
+    renderer.domElement.setAttribute("aria-hidden", "true");
+    host.replaceChildren(renderer.domElement);
+
+    scene.add(new THREE.HemisphereLight(0xf7f2e5, 0x17191d, 1.55));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
+    keyLight.position.set(5, 9, 8);
+    scene.add(keyLight);
+    const fillLight = new THREE.DirectionalLight(0xf2cbb9, 0.55);
+    fillLight.position.set(-7, 4, 1);
+    scene.add(fillLight);
+
+    for (const item of plan.items) {
+      if (!item.visible) continue;
+      const root = createSpatialObject(item, resources, mediaRuntime);
+      root.position.fromArray(item.transform.position);
+      root.rotation.set(...item.transform.rotation);
+      root.scale.fromArray(item.transform.scale);
+      markPlacement(root, item.placementId);
+      scene.add(root);
+      const handle = {
+        item,
+        root,
+        basePosition: root.position.clone(),
+        targetPosition: root.position.clone(),
+      };
+      itemHandles.set(item.placementId, handle);
+      if (item.actions.length > 0 || item.category === "piece") interactiveRoots.push(root);
+    }
+
+    renderer.domElement.addEventListener("pointerdown", onPointerDown);
+    renderer.domElement.addEventListener("pointerup", onPointerUp);
+    renderer.domElement.addEventListener("pointercancel", clearPointer);
+    renderer.domElement.addEventListener("pointerleave", clearPointer);
+    renderer.domElement.addEventListener("lostpointercapture", clearPointer);
+    renderer.domElement.addEventListener("webglcontextlost", onContextLost);
+    resizeObserver = typeof ResizeObserver === "undefined"
+      ? undefined
+      : new ResizeObserver(() => safeResize());
+    resizeObserver?.observe(host);
+    window.addEventListener("resize", safeResize);
+    safeResize();
+    setSceneState(initialState, false);
+    setSelectedPlacement(initialSelectedPlacementId);
+  } catch (error) {
+    dispose();
+    throw error;
+  }
+
+  return { setSceneState, setSelectedPlacement, dispose };
+}
+
+function createSpatialObject(
+  item: SpatialRenderItem,
+  resources: PlacementOwnedResources,
+  mediaRuntime: SpatialMediaRuntime,
+): THREE.Group {
+  const group = new THREE.Group();
+  const template = getSpatialGeometryTemplate(item);
+  const materialByPartKey = new Map<string, THREE.MeshStandardMaterial>();
+  group.userData.componentKey = item.componentKey;
+  group.userData.geometryTemplateSource = template.source;
+
+  for (const templatePart of template.parts) {
+    const materialKey = `${templatePart.materialSlot ?? "default"}:${templatePart.materialSide ?? "front"}:${templatePart.mediaSurface ? "media" : "solid"}`;
+    let material = materialByPartKey.get(materialKey);
+    if (!material) {
+      material = spatialMaterial(item, resources, templatePart.materialSlot);
+      material.side = threeMaterialSide(templatePart);
+      if (templatePart.mediaSurface) {
+        applyGeneratedMediaToMaterial(item, material, resources, mediaRuntime);
+      }
+      materialByPartKey.set(materialKey, material);
+    }
+    const mesh = new THREE.Mesh(templatePart.geometry, material);
+    mesh.position.fromArray(templatePart.position);
+    group.add(mesh);
+  }
+  return group;
+}
+
+function applyGeneratedMediaToMaterial(
+  item: SpatialRenderItem,
+  material: THREE.MeshStandardMaterial,
+  resources: PlacementOwnedResources,
+  mediaRuntime: SpatialMediaRuntime,
+): void {
+  const surfaceWidth = item.dimensions.width * Math.abs(item.transform.scale[0]);
+  const surfaceHeight = item.dimensions.height * Math.abs(item.transform.scale[1]);
+  const generatedTexture = createGeneratedMediaTexture(item, surfaceWidth, surfaceHeight);
+  resources.textures.add(generatedTexture);
+  material.map = generatedTexture;
+  material.color.set(0xffffff);
+  material.needsUpdate = true;
+  mediaRuntime.register({
+    item,
+    material,
+    fallback: generatedTexture,
+    surfaceWidth,
+    surfaceHeight,
+    requested: false,
+  });
+}
+
+function loadGuardedTexture(
+  source: string,
+  resources: PlacementOwnedResources,
+  isDisposed: () => boolean,
+): Promise<THREE.Texture | null> {
+  return new Promise((resolve) => {
+    new THREE.TextureLoader().load(
+      source,
+      (texture) => {
+        const dimensions = textureImageDimensions(texture);
+        if (isDisposed() || !dimensions || !isSpatialTextureDimensionSafe(dimensions.width, dimensions.height)) {
+          texture.dispose();
+          resolve(null);
+          return;
+        }
+        texture.colorSpace = THREE.SRGBColorSpace;
+        resources.textures.add(texture);
+        resolve(texture);
+      },
+      undefined,
+      () => resolve(null),
+    );
+  });
+}
+
+function textureImageDimensions(texture: THREE.Texture): { width: number; height: number } | null {
+  const image = texture.image as {
+    naturalWidth?: number;
+    naturalHeight?: number;
+    videoWidth?: number;
+    videoHeight?: number;
+    width?: number;
+    height?: number;
+  } | undefined;
+  if (!image) return null;
+  const width = image.naturalWidth ?? image.videoWidth ?? image.width;
+  const height = image.naturalHeight ?? image.videoHeight ?? image.height;
+  return typeof width === "number" && typeof height === "number" ? { width, height } : null;
+}
+
+function createContainedMediaTexture(
+  sourceTexture: THREE.Texture,
+  surfaceWidth: number,
+  surfaceHeight: number,
+): THREE.CanvasTexture | null {
+  const dimensions = textureImageDimensions(sourceTexture);
+  if (!dimensions) return null;
+  const mapping = spatialContainMapping(
+    dimensions.width,
+    dimensions.height,
+    surfaceWidth,
+    surfaceHeight,
+  );
+  if (!mapping) return null;
+  const canvas = document.createElement("canvas");
+  canvas.width = mapping.canvasWidth;
+  canvas.height = mapping.canvasHeight;
+  const context = canvas.getContext("2d");
+  if (!context) return null;
+  context.fillStyle = "#111318";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(
+    sourceTexture.image as CanvasImageSource,
+    mapping.drawX,
+    mapping.drawY,
+    mapping.drawWidth,
+    mapping.drawHeight,
+  );
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function threeMaterialSide(part: SpatialGeometryTemplatePart): THREE.Side {
+  switch (part.materialSide) {
+    case "back":
+      return THREE.BackSide;
+    case "double":
+      return THREE.DoubleSide;
+    default:
+      return THREE.FrontSide;
+  }
+}
+
+function createGeneratedMediaTexture(
+  item: SpatialRenderItem,
+  surfaceWidth: number,
+  surfaceHeight: number,
+): THREE.CanvasTexture {
+  const mapping = spatialContainMapping(1, 1, surfaceWidth, surfaceHeight, 512);
+  const canvas = document.createElement("canvas");
+  canvas.width = mapping?.canvasWidth ?? 512;
+  canvas.height = mapping?.canvasHeight ?? 512;
+  const context = canvas.getContext("2d");
+  if (context) {
+    const width = canvas.width;
+    const height = canvas.height;
+    const seed = hashText(item.media?.assetId ?? item.placementId);
+    const hue = seed % 360;
+    const gradient = context.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, `hsl(${hue} 28% 13%)`);
+    gradient.addColorStop(1, `hsl(${(hue + 58) % 360} 50% 34%)`);
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, width, height);
+    context.globalAlpha = 0.62;
+    context.fillStyle = `hsl(${(hue + 178) % 360} 72% 62%)`;
+    context.beginPath();
+    context.arc(width * 0.74, height * 0.25, Math.min(width, height) * 0.25, 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = `hsl(${(hue + 304) % 360} 48% 55%)`;
+    context.fillRect(-width * 0.06, height * 0.59, width * 0.82, Math.max(18, height * 0.19));
+    context.globalAlpha = 1;
+    context.fillStyle = "rgba(255,255,255,.92)";
+    context.font = `600 ${Math.max(14, Math.round(Math.min(width, height) * 0.047))}px system-ui, sans-serif`;
+    context.textBaseline = "bottom";
+    drawWrappedText(
+      context,
+      item.media?.alt ?? item.semanticLabel,
+      width * 0.067,
+      height * 0.934,
+      width * 0.86,
+      Math.max(18, height * 0.059),
+      3,
+    );
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function drawWrappedText(
+  context: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  bottom: number,
+  maxWidth: number,
+  lineHeight: number,
+  maxLines: number,
+) {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const candidate = line ? `${line} ${word}` : word;
+    if (context.measureText(candidate).width <= maxWidth || line === "") line = candidate;
+    else {
+      lines.push(line);
+      line = word;
+      if (lines.length === maxLines - 1) break;
+    }
+  }
+  if (line && lines.length < maxLines) lines.push(line);
+  lines.reverse().forEach((value, index) => context.fillText(value, x, bottom - index * lineHeight));
+}
+
+function spatialMaterial(
+  item: SpatialRenderItem,
+  resources: PlacementOwnedResources,
+  preferredSlot?: SpatialMaterialSlotId,
+): THREE.MeshStandardMaterial {
+  const slot = preferredSlot ?? item.primaryMaterialSlot;
+  const resolved =
+    (slot ? item.materials.find((material) => material.slot === slot) : undefined) ??
+    item.materials[0];
+  const preset = resolved ? SPATIAL_MATERIAL_PRESETS[resolved.presetId] : undefined;
+  const material = new THREE.MeshStandardMaterial({
+    color: resolved?.color ?? preset?.baseColor ?? "#a8a8a2",
+    roughness: preset?.roughness ?? 0.72,
+    metalness: preset?.metalness ?? 0,
+    emissive: preset?.emissive ?? "#000000",
+    emissiveIntensity: preset?.emissiveIntensity ?? 0,
+  });
+  resources.materials.add(material);
+  return material;
+}
+
+function markPlacement(object: THREE.Object3D, placementId: string) {
+  object.traverse((child) => {
+    child.userData.placementId = placementId;
+  });
+}
+
+function markSuccessfulRender(
+  host: HTMLDivElement,
+  canvas: HTMLCanvasElement,
+  plan: SpatialRenderPlan,
+  itemHandles: Map<string, RuntimeItemHandle>,
+) {
+  const renderedItems = [...itemHandles.values()].filter((handle) => handle.root.visible);
+  const componentKeys = [...new Set(renderedItems.map((handle) => handle.item.componentKey))]
+    .sort()
+    .join(",");
+  const count = String(renderedItems.length);
+  host.dataset.roomFingerprint = plan.fingerprint;
+  host.dataset.renderedItemCount = count;
+  host.dataset.componentKeys = componentKeys;
+  canvas.dataset.roomFingerprint = plan.fingerprint;
+  canvas.dataset.renderedItemCount = count;
+  canvas.dataset.componentKeys = componentKeys;
+}
+
+function sceneBackground(plan: SpatialRenderPlan): THREE.Color {
+  const shellMaterial = plan.items.find((item) => item.category === "shell")?.materials[0];
+  const color = shellMaterial
+    ? new THREE.Color(shellMaterial.color ?? SPATIAL_MATERIAL_PRESETS[shellMaterial.presetId].baseColor)
+    : new THREE.Color("#111318");
+  const luminance = color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722;
+  return luminance > 0.55 ? color.lerp(new THREE.Color("#ffffff"), 0.08) : color.multiplyScalar(0.72);
+}
+
+function hashText(value: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}

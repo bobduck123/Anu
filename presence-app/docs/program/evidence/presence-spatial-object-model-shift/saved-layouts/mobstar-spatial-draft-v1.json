@@ -1,0 +1,872 @@
+{
+  "schemaVersion": "presence-spatial-draft-v1",
+  "roomId": "mobstar-internal-proof-room",
+  "fixtureRevision": 1,
+  "roomFingerprint": "fnv1a-7175a324",
+  "savedAt": "2026-08-17T00:00:00.000Z",
+  "room": {
+    "schemaVersion": "presence-spatial-v1",
+    "id": "mobstar-internal-proof-room",
+    "label": "Mobstar internal spatial proof",
+    "fixtureKind": "mobstar-proof",
+    "revision": 1,
+    "seed": "mobstar-gate3-safe-placeholder-v1",
+    "bounds": {
+      "width": 18,
+      "height": 6,
+      "depth": 30
+    },
+    "entryStateId": "overview",
+    "cameraPath": {
+      "points": [
+        [
+          0,
+          2,
+          12
+        ],
+        [
+          0,
+          2,
+          5
+        ],
+        [
+          0,
+          2,
+          -5
+        ]
+      ],
+      "clearance": 0.4
+    },
+    "assets": [
+      {
+        "id": "mobstar-piece-a",
+        "kind": "image",
+        "locator": "generated:mobstar/piece-a",
+        "safety": "generated-placeholder",
+        "compressedBytes": 48000,
+        "eager": false,
+        "attribution": "Generated internal placeholder"
+      },
+      {
+        "id": "mobstar-piece-b",
+        "kind": "image",
+        "locator": "generated:mobstar/piece-b",
+        "safety": "generated-placeholder",
+        "compressedBytes": 52000,
+        "eager": false,
+        "attribution": "Generated internal placeholder"
+      },
+      {
+        "id": "mobstar-poster",
+        "kind": "poster",
+        "locator": "generated:mobstar/poster",
+        "safety": "generated-placeholder",
+        "compressedBytes": 36000,
+        "eager": true,
+        "attribution": "Generated internal placeholder"
+      },
+      {
+        "id": "mobstar-campaign",
+        "kind": "image",
+        "locator": "generated:mobstar/campaign-projection",
+        "safety": "generated-placeholder",
+        "compressedBytes": 62000,
+        "eager": false,
+        "attribution": "Generated internal campaign placeholder"
+      },
+      {
+        "id": "mobstar-merch",
+        "kind": "image",
+        "locator": "generated:mobstar/merch-placeholder",
+        "safety": "generated-placeholder",
+        "compressedBytes": 44000,
+        "eager": false,
+        "attribution": "Generated internal merchandise placeholder"
+      },
+      {
+        "id": "mobstar-brand-mark",
+        "kind": "logo",
+        "locator": "generated:mobstar/subtle-brand-mark",
+        "safety": "generated-placeholder",
+        "compressedBytes": 8000,
+        "eager": true,
+        "attribution": "Generated internal brand-treatment placeholder"
+      }
+    ],
+    "skins": [
+      {
+        "id": "mobstar-neutral-skin",
+        "label": "Mobstar neutral proof skin",
+        "materialPresets": {
+          "wall": "wall-charcoal",
+          "floor": "floor-dark-stone",
+          "tabletop": "tabletop-warm-stone",
+          "rack-metal": "rack-matte-black",
+          "fabric": "fabric-neutral",
+          "poster-decal": "poster-satin"
+        },
+        "colors": {
+          "wall": "#111318",
+          "logo-accent": "#e44c65"
+        },
+        "decalAssetIds": [
+          "mobstar-poster"
+        ]
+      }
+    ],
+    "media": [
+      {
+        "id": "mobstar-media-a",
+        "kind": "image",
+        "assetId": "mobstar-piece-a",
+        "alt": "Abstract generated garment placeholder A",
+        "safety": "generated-placeholder"
+      },
+      {
+        "id": "mobstar-media-b",
+        "kind": "image",
+        "assetId": "mobstar-piece-b",
+        "alt": "Abstract generated garment placeholder B",
+        "safety": "generated-placeholder"
+      },
+      {
+        "id": "mobstar-media-poster",
+        "kind": "poster",
+        "assetId": "mobstar-poster",
+        "alt": "Generated archive poster placeholder",
+        "safety": "generated-placeholder"
+      },
+      {
+        "id": "mobstar-media-campaign",
+        "kind": "image",
+        "assetId": "mobstar-campaign",
+        "alt": "Generated campaign projection placeholder",
+        "safety": "generated-placeholder"
+      },
+      {
+        "id": "mobstar-media-merch",
+        "kind": "image",
+        "assetId": "mobstar-merch",
+        "alt": "Generated merchandise placeholder",
+        "safety": "generated-placeholder"
+      },
+      {
+        "id": "mobstar-media-brand",
+        "kind": "logo",
+        "assetId": "mobstar-brand-mark",
+        "alt": "Generated Mobstar brand-mark placeholder",
+        "safety": "generated-placeholder"
+      }
+    ],
+    "actions": [
+      {
+        "id": "inspect-rack-a",
+        "kind": "inspect",
+        "label": "Inspect rack piece A",
+        "targetPlacementId": "rack-piece-a"
+      },
+      {
+        "id": "inspect-rack-b",
+        "kind": "inspect",
+        "label": "Inspect rack piece B",
+        "targetPlacementId": "rack-piece-b"
+      },
+      {
+        "id": "inspect-archive-poster",
+        "kind": "inspect",
+        "label": "Inspect archive poster",
+        "targetPlacementId": "archive-poster"
+      },
+      {
+        "id": "inspect-campaign",
+        "kind": "inspect",
+        "label": "Inspect campaign projection",
+        "targetPlacementId": "campaign-projection"
+      },
+      {
+        "id": "inspect-merch",
+        "kind": "inspect",
+        "label": "Inspect merchandise placeholder",
+        "targetPlacementId": "merch-piece"
+      },
+      {
+        "id": "inspect-brand",
+        "kind": "inspect",
+        "label": "Inspect the generated brand mark",
+        "targetPlacementId": "brand-mark-piece"
+      },
+      {
+        "id": "go-rack",
+        "kind": "navigate-state",
+        "label": "Focus the retail rack",
+        "targetStateId": "rack-focus"
+      },
+      {
+        "id": "go-campaign",
+        "kind": "navigate-state",
+        "label": "Focus the campaign wall",
+        "targetStateId": "campaign-focus"
+      }
+    ],
+    "placements": [
+      {
+        "id": "room-shell",
+        "order": 0,
+        "componentId": "presence.room-shell",
+        "version": "1.0.0",
+        "transform": {
+          "position": [
+            0,
+            3,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "anchor": {
+          "kind": "free"
+        },
+        "materialSlotOverrides": {
+          "wall": "wall-charcoal"
+        },
+        "skinRef": "mobstar-neutral-skin",
+        "actionRefs": [],
+        "visible": true,
+        "semanticLabel": "Dark internal room shell"
+      },
+      {
+        "id": "floor",
+        "order": 1,
+        "componentId": "presence.floor-slab",
+        "version": "1.0.0",
+        "transform": {
+          "position": [
+            0,
+            0.06,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "anchor": {
+          "kind": "floor"
+        },
+        "materialSlotOverrides": {
+          "floor": "floor-dark-stone"
+        },
+        "skinRef": "mobstar-neutral-skin",
+        "actionRefs": [],
+        "visible": true,
+        "semanticLabel": "Dark stone floor"
+      },
+      {
+        "id": "archive-wall",
+        "order": 2,
+        "componentId": "presence.wall-panel",
+        "version": "1.0.0",
+        "transform": {
+          "position": [
+            -5.8,
+            2.5,
+            -14.8
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "anchor": {
+          "kind": "wall"
+        },
+        "materialSlotOverrides": {
+          "wall": "wall-charcoal",
+          "poster-decal": "poster-satin"
+        },
+        "skinRef": "mobstar-neutral-skin",
+        "actionRefs": [],
+        "visible": true,
+        "semanticLabel": "Archive and poster wall"
+      },
+      {
+        "id": "campaign-wall",
+        "order": 3,
+        "componentId": "presence.projection-wall",
+        "version": "1.0.0",
+        "transform": {
+          "position": [
+            2.2,
+            2.5,
+            -14.7
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "anchor": {
+          "kind": "wall"
+        },
+        "materialSlotOverrides": {
+          "projection": "projection-emissive",
+          "wall": "wall-charcoal"
+        },
+        "skinRef": "mobstar-neutral-skin",
+        "actionRefs": [
+          "go-campaign"
+        ],
+        "visible": true,
+        "semanticLabel": "Campaign projection wall with subtle generated brand treatment"
+      },
+      {
+        "id": "secondary-divider",
+        "order": 4,
+        "componentId": "presence.divider-wall",
+        "version": "1.0.0",
+        "transform": {
+          "position": [
+            -5.8,
+            1.6,
+            -6
+          ],
+          "rotation": [
+            0,
+            0.2617993878,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "anchor": {
+          "kind": "floor"
+        },
+        "materialSlotOverrides": {
+          "wall": "wall-charcoal",
+          "logo-accent": "accent-signal"
+        },
+        "skinRef": "mobstar-neutral-skin",
+        "actionRefs": [],
+        "visible": true,
+        "semanticLabel": "Divider defining the secondary archive zone"
+      },
+      {
+        "id": "merch-table",
+        "order": 5,
+        "componentId": "presence.display-table",
+        "version": "1.0.0",
+        "transform": {
+          "position": [
+            -4.5,
+            0.45,
+            3
+          ],
+          "rotation": [
+            0,
+            0.2617993878,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "anchor": {
+          "kind": "floor"
+        },
+        "materialSlotOverrides": {
+          "tabletop": "tabletop-warm-stone"
+        },
+        "skinRef": "mobstar-neutral-skin",
+        "actionRefs": [],
+        "visible": true,
+        "semanticLabel": "Merchandise display table"
+      },
+      {
+        "id": "retail-plinth",
+        "order": 6,
+        "componentId": "presence.display-plinth",
+        "version": "1.0.0",
+        "transform": {
+          "position": [
+            4.7,
+            0.36,
+            4
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "anchor": {
+          "kind": "floor"
+        },
+        "materialSlotOverrides": {
+          "tabletop": "tabletop-warm-stone"
+        },
+        "skinRef": "mobstar-neutral-skin",
+        "actionRefs": [],
+        "visible": true,
+        "semanticLabel": "Retail display plinth"
+      },
+      {
+        "id": "retail-rack",
+        "order": 7,
+        "componentId": "presence.retail-rack",
+        "version": "1.0.0",
+        "transform": {
+          "position": [
+            4.7,
+            1.7,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "anchor": {
+          "kind": "floor"
+        },
+        "materialSlotOverrides": {
+          "rack-metal": "rack-matte-black"
+        },
+        "skinRef": "mobstar-neutral-skin",
+        "actionRefs": [
+          "go-rack"
+        ],
+        "visible": true,
+        "semanticLabel": "Reusable floor-mounted retail rack"
+      },
+      {
+        "id": "rack-piece-a",
+        "order": 8,
+        "componentId": "presence.piece-plane",
+        "version": "1.0.0",
+        "transform": {
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            0.7,
+            0.7,
+            0.7
+          ]
+        },
+        "anchor": {
+          "kind": "rack",
+          "parentPlacementId": "retail-rack",
+          "anchorId": "rack-slot-03"
+        },
+        "materialSlotOverrides": {
+          "fabric": "fabric-neutral"
+        },
+        "skinRef": "mobstar-neutral-skin",
+        "mediaRef": "mobstar-media-a",
+        "actionRefs": [
+          "inspect-rack-a"
+        ],
+        "visible": true,
+        "semanticLabel": "Generated garment placeholder A"
+      },
+      {
+        "id": "rack-piece-b",
+        "order": 9,
+        "componentId": "presence.piece-plane",
+        "version": "1.0.0",
+        "transform": {
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            0.7,
+            0.7,
+            0.7
+          ]
+        },
+        "anchor": {
+          "kind": "rack",
+          "parentPlacementId": "retail-rack",
+          "anchorId": "rack-slot-09"
+        },
+        "materialSlotOverrides": {
+          "fabric": "fabric-neutral"
+        },
+        "skinRef": "mobstar-neutral-skin",
+        "mediaRef": "mobstar-media-b",
+        "actionRefs": [
+          "inspect-rack-b"
+        ],
+        "visible": true,
+        "semanticLabel": "Generated garment placeholder B"
+      },
+      {
+        "id": "archive-poster",
+        "order": 10,
+        "componentId": "presence.piece-plane",
+        "version": "1.0.0",
+        "transform": {
+          "position": [
+            0,
+            0,
+            0.12
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            2.5,
+            2.4,
+            1
+          ]
+        },
+        "anchor": {
+          "kind": "wall",
+          "parentPlacementId": "archive-wall",
+          "anchorId": "wall-face"
+        },
+        "materialSlotOverrides": {
+          "poster-decal": "poster-satin"
+        },
+        "skinRef": "mobstar-neutral-skin",
+        "mediaRef": "mobstar-media-poster",
+        "actionRefs": [
+          "inspect-archive-poster"
+        ],
+        "visible": true,
+        "semanticLabel": "Generated archive poster"
+      },
+      {
+        "id": "campaign-projection",
+        "order": 11,
+        "componentId": "presence.piece-plane",
+        "version": "1.0.0",
+        "transform": {
+          "position": [
+            0,
+            0,
+            0.18
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            4.5,
+            3,
+            1
+          ]
+        },
+        "anchor": {
+          "kind": "projection",
+          "parentPlacementId": "campaign-wall",
+          "anchorId": "projection-cell-01"
+        },
+        "materialSlotOverrides": {
+          "projection": "projection-emissive"
+        },
+        "skinRef": "mobstar-neutral-skin",
+        "mediaRef": "mobstar-media-campaign",
+        "actionRefs": [
+          "inspect-campaign"
+        ],
+        "visible": true,
+        "semanticLabel": "Generated campaign projection"
+      },
+      {
+        "id": "merch-piece",
+        "order": 12,
+        "componentId": "presence.piece-plane",
+        "version": "1.0.0",
+        "transform": {
+          "position": [
+            0,
+            0.03,
+            0
+          ],
+          "rotation": [
+            -1.5707963268,
+            0,
+            0
+          ],
+          "scale": [
+            1.4,
+            0.8,
+            1
+          ]
+        },
+        "anchor": {
+          "kind": "surface",
+          "parentPlacementId": "merch-table",
+          "anchorId": "tabletop-grid"
+        },
+        "materialSlotOverrides": {
+          "paper": "paper-uncoated"
+        },
+        "skinRef": "mobstar-neutral-skin",
+        "mediaRef": "mobstar-media-merch",
+        "actionRefs": [
+          "inspect-merch"
+        ],
+        "visible": true,
+        "semanticLabel": "Generated merchandise table piece"
+      },
+      {
+        "id": "brand-mark-piece",
+        "order": 13,
+        "componentId": "presence.piece-plane",
+        "version": "1.0.0",
+        "transform": {
+          "position": [
+            0,
+            1.95,
+            0.14
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            2,
+            0.45,
+            1
+          ]
+        },
+        "anchor": {
+          "kind": "wall",
+          "parentPlacementId": "archive-wall",
+          "anchorId": "wall-face"
+        },
+        "materialSlotOverrides": {
+          "logo-accent": "accent-signal"
+        },
+        "skinRef": "mobstar-neutral-skin",
+        "mediaRef": "mobstar-media-brand",
+        "actionRefs": [
+          "inspect-brand"
+        ],
+        "visible": true,
+        "semanticLabel": "Generated Mobstar brand-mark Piece"
+      }
+    ],
+    "states": [
+      {
+        "id": "overview",
+        "label": "Overview",
+        "cameraPosition": [
+          0,
+          3.4,
+          12
+        ],
+        "cameraTarget": [
+          1.5,
+          2.2,
+          -2
+        ],
+        "fieldOfView": 55,
+        "reducedMotionStateId": "overview-static"
+      },
+      {
+        "id": "overview-static",
+        "label": "Overview without motion",
+        "cameraPosition": [
+          0,
+          3.4,
+          12
+        ],
+        "cameraTarget": [
+          1.5,
+          2.2,
+          -2
+        ],
+        "fieldOfView": 55
+      },
+      {
+        "id": "rack-focus",
+        "label": "Retail rack focus",
+        "cameraPosition": [
+          0,
+          2.8,
+          5.5
+        ],
+        "cameraTarget": [
+          4.7,
+          2.2,
+          0
+        ],
+        "fieldOfView": 48,
+        "focusPlacementId": "retail-rack",
+        "reducedMotionStateId": "rack-static"
+      },
+      {
+        "id": "rack-static",
+        "label": "Retail rack without motion",
+        "cameraPosition": [
+          0,
+          2.8,
+          5.5
+        ],
+        "cameraTarget": [
+          4.7,
+          2.2,
+          0
+        ],
+        "fieldOfView": 48,
+        "focusPlacementId": "retail-rack"
+      },
+      {
+        "id": "campaign-focus",
+        "label": "Campaign wall focus",
+        "cameraPosition": [
+          0,
+          3,
+          5
+        ],
+        "cameraTarget": [
+          2.2,
+          2.5,
+          -14.7
+        ],
+        "fieldOfView": 50,
+        "focusPlacementId": "campaign-wall",
+        "reducedMotionStateId": "campaign-static"
+      },
+      {
+        "id": "campaign-static",
+        "label": "Campaign wall without motion",
+        "cameraPosition": [
+          0,
+          3,
+          5
+        ],
+        "cameraTarget": [
+          2.2,
+          2.5,
+          -14.7
+        ],
+        "fieldOfView": 50,
+        "focusPlacementId": "campaign-wall"
+      }
+    ],
+    "semanticFallback": [
+      {
+        "placementId": "retail-rack",
+        "label": "Retail garment rack",
+        "description": "Open the rack-focused state.",
+        "actionRefs": [
+          "go-rack"
+        ]
+      },
+      {
+        "placementId": "rack-piece-a",
+        "label": "Generated garment placeholder A",
+        "actionRefs": [
+          "inspect-rack-a"
+        ]
+      },
+      {
+        "placementId": "rack-piece-b",
+        "label": "Generated garment placeholder B",
+        "actionRefs": [
+          "inspect-rack-b"
+        ]
+      },
+      {
+        "placementId": "archive-poster",
+        "label": "Generated archive poster placeholder",
+        "actionRefs": [
+          "inspect-archive-poster"
+        ]
+      },
+      {
+        "placementId": "campaign-wall",
+        "label": "Campaign projection wall",
+        "description": "Open the campaign-focused state.",
+        "actionRefs": [
+          "go-campaign"
+        ]
+      },
+      {
+        "placementId": "campaign-projection",
+        "label": "Generated campaign projection placeholder",
+        "actionRefs": [
+          "inspect-campaign"
+        ]
+      },
+      {
+        "placementId": "merch-piece",
+        "label": "Generated merchandise table placeholder",
+        "actionRefs": [
+          "inspect-merch"
+        ]
+      },
+      {
+        "placementId": "brand-mark-piece",
+        "label": "Generated Mobstar brand-mark placeholder",
+        "actionRefs": [
+          "inspect-brand"
+        ]
+      }
+    ]
+  }
+}

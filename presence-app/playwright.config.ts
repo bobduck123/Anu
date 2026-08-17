@@ -31,7 +31,17 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: {
+          args: [
+            "--enable-webgl",
+            "--enable-unsafe-swiftshader",
+            "--ignore-gpu-blocklist",
+            "--use-angle=swiftshader",
+          ],
+        },
+      },
     },
     {
       name: "firefox",
@@ -53,7 +63,7 @@ export default defineConfig({
       },
     },
     {
-      command: `cmd /c npm run dev -- --hostname 127.0.0.1 --port ${appPort} --webpack`,
+      command: `npm.cmd run dev -- --hostname 127.0.0.1 --port ${appPort} --webpack`,
       url: `http://127.0.0.1:${appPort}`,
       reuseExistingServer: false,
       timeout: 120_000,
@@ -64,6 +74,7 @@ export default defineConfig({
         NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS: "11,101,202",
         NEXT_PUBLIC_SUPABASE_URL: "https://presence-e2e.supabase.test",
         NEXT_PUBLIC_SUPABASE_ANON_KEY: "presence-e2e-public-key",
+        PRESENCE_INTERNAL_SPATIAL_OBJECT_MODEL: "1",
       },
     },
   ],
