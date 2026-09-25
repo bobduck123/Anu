@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { PresenceEnquiryInbox } from '@/components/presence/PresenceControlComponents';
 import { AnuPageHero } from '@/ui-system/anu/surfacePrimitives';
 
-export default async function PresenceEnquiriesPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
+export default async function PresenceEnquiriesPage({ params }: { params: Promise<{ id: string }> }) {
   const resolved = await params;
   const nodeId = Number(resolved.id);
 

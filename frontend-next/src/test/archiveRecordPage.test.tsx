@@ -131,7 +131,7 @@ describe('Archive record route', () => {
       ),
     );
 
-    render(await ArchiveRecordPage({ params: { record: 'flood-resilience-brief' } }));
+    render(await ArchiveRecordPage({ params: Promise.resolve({ record: 'flood-resilience-brief' }) }));
 
     expect(screen.getByText('Flood resilience trust brief')).toBeInTheDocument();
     expect(screen.getByText(/Detailed methods and status notes for flood resilience readiness/i)).toBeInTheDocument();
@@ -245,7 +245,7 @@ describe('Archive record route', () => {
       ),
     );
 
-    render(await ArchiveRecordPage({ params: { record: 'governance-memory-note' } }));
+    render(await ArchiveRecordPage({ params: Promise.resolve({ record: 'governance-memory-note' }) }));
 
     expect(screen.getByText('Governance memory trust note')).toBeInTheDocument();
     expect(screen.getByText(/Trust appendix body from governance packet/i)).toBeInTheDocument();
@@ -261,7 +261,7 @@ describe('Archive record route', () => {
       .mockResolvedValueOnce(new Response(JSON.stringify({ ok: false }), { status: 404 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ ok: false }), { status: 404 }));
 
-    render(await ArchiveRecordPage({ params: { record: 'missing-record' } }));
+    render(await ArchiveRecordPage({ params: Promise.resolve({ record: 'missing-record' }) }));
 
     expect(screen.getByText('missing-record')).toBeInTheDocument();
     expect(screen.getByText('Degraded honesty')).toBeInTheDocument();

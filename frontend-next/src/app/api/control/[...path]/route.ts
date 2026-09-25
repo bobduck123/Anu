@@ -88,7 +88,7 @@ const PROXY_RULES: readonly ProxyRule[] = [
 ] as const;
 
 type RouteParams = { path?: string[] };
-type RouteContext = { params: RouteParams | Promise<RouteParams> };
+type RouteContext = { params: Promise<RouteParams> };
 
 type ControlSession = {
   userId: string;
@@ -457,8 +457,3 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   return handle(request, context);
 }
-
-export const __testables = {
-  resolveRule,
-  getControlPlaneSharedSecret,
-};

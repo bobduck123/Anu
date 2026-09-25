@@ -7,8 +7,8 @@ import {
   type ArchiveDegradedHonesty,
 } from '@/lib/api/publicTrust';
 
-export default async function ArchiveRecordPage({ params }: { params: { record: string } }) {
-  const recordRef = params.record;
+export default async function ArchiveRecordPage({ params }: { params: Promise<{ record: string }> }) {
+  const recordRef = (await params).record;
   const fallbackSponsorFeed: PublicSponsorDisclosureFeed = {
     disclosures: [],
     disclosureState: 'degraded',

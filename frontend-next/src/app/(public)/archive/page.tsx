@@ -2,7 +2,7 @@ import { ArchiveShell } from '@/components/archive/ArchiveShell';
 import { fetchPublicArchiveSummaries, normalizeArchiveTitlePrefix } from '@/lib/api/publicArchive';
 
 interface ArchiveIndexPageProps {
-  searchParams?: Promise<{ type?: string | string[] | undefined; page?: string | string[] | undefined; title_prefix?: string | string[] | undefined }> | { type?: string | string[] | undefined; page?: string | string[] | undefined; title_prefix?: string | string[] | undefined };
+  searchParams?: Promise<{ type?: string | string[] | undefined; page?: string | string[] | undefined; title_prefix?: string | string[] | undefined }>;
 }
 
 export default async function ArchiveIndexPage({ searchParams }: ArchiveIndexPageProps) {

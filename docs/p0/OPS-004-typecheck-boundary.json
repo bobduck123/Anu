@@ -1,0 +1,17 @@
+[
+  {
+    "case": "stale dev generated reference excluded",
+    "exit": 0,
+    "output": "\n> frontend-next@0.1.0 typecheck\n> next typegen && tsc --noEmit\n\nGenerating route types...\n\u2713 Types generated successfully\n"
+  },
+  {
+    "case": "real source type error rejected",
+    "exit": 2,
+    "output": "\n> frontend-next@0.1.0 typecheck\n> next typegen && tsc --noEmit\n\nGenerating route types...\n\u2713 Types generated successfully\nsrc/p0-negative-typecheck.ts(1,14): error TS2322: Type 'string' is not assignable to type 'number'.\n"
+  },
+  {
+    "case": "standard check after fixture removal",
+    "exit": 0,
+    "output": "\n> frontend-next@0.1.0 typecheck\n> next typegen && tsc --noEmit\n\nGenerating route types...\n\u2713 Types generated successfully\n"
+  }
+]

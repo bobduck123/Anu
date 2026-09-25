@@ -17,7 +17,7 @@ function stripHtml(value?: string | null) {
   return (value || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
 }
 
-export async function generateMetadata({ params }: { params: Promise<CollectionDetailParams> | CollectionDetailParams }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<CollectionDetailParams> }): Promise<Metadata> {
   const resolved = await params;
   const detail = await fetchPublicPresenceCollection(resolved.username, resolved.collectionId, { server: true });
   if (!detail) {
@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: { params: Promise<CollectionD
   };
 }
 
-export default async function PublicPresenceCollectionDetailPage({ params }: { params: Promise<CollectionDetailParams> | CollectionDetailParams }) {
+export default async function PublicPresenceCollectionDetailPage({ params }: { params: Promise<CollectionDetailParams> }) {
   const resolved = await params;
   const detail = await fetchPublicPresenceCollection(resolved.username, resolved.collectionId, { server: true });
   if (!detail) {

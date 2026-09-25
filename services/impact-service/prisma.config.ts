@@ -29,7 +29,8 @@ const migrationUrl =
 const explicitShadowDatabaseUrl = firstPresent(['SHADOW_DATABASE_URL']);
 
 // Shadow DB is only required for `prisma migrate dev` style workflows.
-// Deploy builds run `prisma migrate deploy`, so we should not infer a shadow URL
+// Explicit deployment migrations use `prisma migrate deploy`; compilation does not.
+// We should not infer a shadow URL
 // from DIRECT_URL/POSTGRES_URL_NON_POOLING. Doing so can accidentally point
 // shadow + main at the same database and fail the build.
 const shadowDatabaseUrl =
