@@ -7,7 +7,14 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:spatial": "tsx --test lib/presence/spatial/*.test.ts",
+    "test:spatial-assets": "tsx --test lib/presence/spatial/assets/*.test.ts",
+    "ingest:spatial-assets": "tsx scripts/ingest-spatial-assets.ts",
+    "select:mobstar-components": "tsx scripts/select-mobstar-components.ts",
+    "test:e2e:spatial": "playwright test tests/e2e/presence-spatial-object-model.spec.ts --project=chromium --retries=0",
+    "evidence:spatial:mobstar": "tsx scripts/generate-spatial-layout-evidence.ts mobstar",
+    "evidence:spatial:bbb": "tsx scripts/generate-spatial-layout-evidence.ts bbb"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",
@@ -15,15 +22,18 @@
     "lucide-react": "^1.14.0",
     "next": "^16.2.7",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.185.4",
     "playwright": "^1.59.1",
     "tailwindcss": "^4",
+    "tsx": "4.20.6",
     "typescript": "^5"
   }
 }

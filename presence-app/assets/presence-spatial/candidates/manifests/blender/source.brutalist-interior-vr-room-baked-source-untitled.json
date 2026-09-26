@@ -1,0 +1,103 @@
+{
+  "contentHash": "e0143432c9e0e429107b9cd8225d81294f496353fcaa547e06935adaecba8f69",
+  "result": {
+    "ok": true,
+    "blenderVersion": "5.1.1",
+    "sourcePath": "C:/Dev/presence pieces/brutalist-interior-vr-room-baked/source/Untitled.glb",
+    "objects": [
+      {
+        "index": 0,
+        "name": "Cube",
+        "meshObjectCount": 1,
+        "triangleCount": 11240,
+        "materialNames": [
+          "Material"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Cube"
+        ],
+        "file": "obj-000.glb",
+        "fileBytes": 75076,
+        "thumbnail": "obj-000.webp",
+        "bounds": {
+          "min": [
+            -5.3481,
+            0,
+            -3.3927
+          ],
+          "max": [
+            5.3481,
+            4.2229,
+            3.3927
+          ],
+          "dimensions": {
+            "width": 10.6961,
+            "height": 4.2229,
+            "depth": 6.7854
+          },
+          "center": [
+            0,
+            2.1115,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      }
+    ],
+    "roomKit": {
+      "shapeOnly": {
+        "file": "roomkit-shape.glb",
+        "fileBytes": 77096
+      },
+      "textured": {
+        "file": "roomkit-textured.glb",
+        "fileBytes": 684212
+      },
+      "thumbnail": "roomkit.webp",
+      "resizedImages": [
+        "concrete_pavement_arm_2k",
+        "concrete_pavement_diff_2k",
+        "concrete_pavement_nor_gl_2k",
+        "Untitled"
+      ]
+    },
+    "warnings": [],
+    "descendedWrappers": [],
+    "importSeconds": 0.16,
+    "sceneTriangleCount": 11244,
+    "sceneBounds": {
+      "min": [
+        -1,
+        0.0006,
+        -3.3927
+      ],
+      "max": [
+        9.7,
+        4.2236,
+        3.3927
+      ],
+      "dimensions": {
+        "width": 10.7,
+        "height": 4.2229,
+        "depth": 6.7854
+      },
+      "center": [
+        4.35,
+        2.1121,
+        0
+      ]
+    },
+    "sceneObjectCount": 3,
+    "sceneMaterialNames": [
+      "Material",
+      "concrete_pavement",
+      "Material.001"
+    ],
+    "geometryCompression": "draco",
+    "separableObjectCount": 3,
+    "uniqueObjectCount": 3,
+    "eligibleObjectCount": 1
+  }
+}

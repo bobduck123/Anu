@@ -1,0 +1,978 @@
+{
+  "contentHash": "47f8cead13b773aaf76e71da65bc584b239b3e9298ead413b11bd0cf5811ebcb",
+  "result": {
+    "ok": true,
+    "blenderVersion": "5.1.1",
+    "sourcePath": "C:/Dev/presence pieces/old_church_modeling_-_interior_scene.glb",
+    "objects": [
+      {
+        "index": 0,
+        "name": "Plane.001",
+        "meshObjectCount": 3,
+        "triangleCount": 136894,
+        "materialNames": [
+          "banc"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Plane.001"
+        ],
+        "file": "obj-000.glb",
+        "fileBytes": 1165156,
+        "thumbnail": "obj-000.webp",
+        "bounds": {
+          "min": [
+            -4.9447,
+            0,
+            -4.6874
+          ],
+          "max": [
+            4.9447,
+            0.7556,
+            4.6874
+          ],
+          "dimensions": {
+            "width": 9.8893,
+            "height": 0.7556,
+            "depth": 9.3747
+          },
+          "center": [
+            0,
+            0.3778,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 1,
+        "name": "Circle.020",
+        "meshObjectCount": 2,
+        "triangleCount": 124008,
+        "materialNames": [
+          "colonne-ext"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Circle.020"
+        ],
+        "file": "obj-001.glb",
+        "fileBytes": 471808,
+        "thumbnail": "obj-001.webp",
+        "bounds": {
+          "min": [
+            -19.2224,
+            0,
+            -11.4644
+          ],
+          "max": [
+            19.2224,
+            3.8382,
+            11.4644
+          ],
+          "dimensions": {
+            "width": 38.4447,
+            "height": 3.8382,
+            "depth": 22.9287
+          },
+          "center": [
+            0,
+            1.9191,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 2,
+        "name": "Cylinder.004",
+        "meshObjectCount": 2,
+        "triangleCount": 94550,
+        "materialNames": [
+          "colonne"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Cylinder.004"
+        ],
+        "file": "obj-002.glb",
+        "fileBytes": 434232,
+        "thumbnail": "obj-002.webp",
+        "bounds": {
+          "min": [
+            -16.8366,
+            0,
+            -6.3032
+          ],
+          "max": [
+            16.8366,
+            13.6967,
+            6.3032
+          ],
+          "dimensions": {
+            "width": 33.6732,
+            "height": 13.6967,
+            "depth": 12.6064
+          },
+          "center": [
+            0,
+            6.8483,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 3,
+        "name": "Circle.055",
+        "meshObjectCount": 1,
+        "triangleCount": 43104,
+        "materialNames": [
+          "arche.002"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Circle.055"
+        ],
+        "file": "obj-003.glb",
+        "fileBytes": 358828,
+        "thumbnail": "obj-003.webp",
+        "bounds": {
+          "min": [
+            -18.7165,
+            0,
+            -10.9058
+          ],
+          "max": [
+            18.7165,
+            15.1417,
+            10.9058
+          ],
+          "dimensions": {
+            "width": 37.433,
+            "height": 15.1417,
+            "depth": 21.8116
+          },
+          "center": [
+            0,
+            7.5709,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 4,
+        "name": "chain.004",
+        "meshObjectCount": 1,
+        "triangleCount": 38784,
+        "materialNames": [
+          "chain"
+        ],
+        "instanceCount": 2,
+        "instanceNames": [
+          "chain.004",
+          "chain.005"
+        ],
+        "file": "obj-004.glb",
+        "fileBytes": 271220,
+        "thumbnail": "obj-004.webp",
+        "bounds": {
+          "min": [
+            -0.0295,
+            0,
+            -0.0258
+          ],
+          "max": [
+            0.0295,
+            3.9087,
+            0.0258
+          ],
+          "dimensions": {
+            "width": 0.059,
+            "height": 3.9087,
+            "depth": 0.0515
+          },
+          "center": [
+            0,
+            1.9544,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 5,
+        "name": "Circle.016",
+        "meshObjectCount": 2,
+        "triangleCount": 37306,
+        "materialNames": [
+          "material",
+          "pied-autel"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Circle.016"
+        ],
+        "file": "obj-005.glb",
+        "fileBytes": 371640,
+        "thumbnail": "obj-005.webp",
+        "bounds": {
+          "min": [
+            -11.5977,
+            0,
+            -1.079
+          ],
+          "max": [
+            11.5977,
+            18.3784,
+            1.079
+          ],
+          "dimensions": {
+            "width": 23.1954,
+            "height": 18.3784,
+            "depth": 2.1579
+          },
+          "center": [
+            0,
+            9.1892,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 6,
+        "name": "Cylinder.002",
+        "meshObjectCount": 1,
+        "triangleCount": 15654,
+        "materialNames": [
+          "pied-colonne"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Cylinder.002"
+        ],
+        "file": "obj-006.glb",
+        "fileBytes": 133328,
+        "thumbnail": "obj-006.webp",
+        "bounds": {
+          "min": [
+            -17.1773,
+            0,
+            -6.5537
+          ],
+          "max": [
+            17.1773,
+            1.9584,
+            6.5537
+          ],
+          "dimensions": {
+            "width": 34.3547,
+            "height": 1.9584,
+            "depth": 13.1074
+          },
+          "center": [
+            0,
+            0.9792,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 7,
+        "name": "Circle.000",
+        "meshObjectCount": 1,
+        "triangleCount": 13090,
+        "materialNames": [
+          "arche.001"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Circle.000"
+        ],
+        "file": "obj-007.glb",
+        "fileBytes": 123940,
+        "thumbnail": "obj-007.webp",
+        "bounds": {
+          "min": [
+            -16.1966,
+            0,
+            -6.0728
+          ],
+          "max": [
+            16.1966,
+            5.2263,
+            6.0728
+          ],
+          "dimensions": {
+            "width": 32.3932,
+            "height": 5.2263,
+            "depth": 12.1456
+          },
+          "center": [
+            0,
+            2.6131,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 8,
+        "name": "Circle.050",
+        "meshObjectCount": 1,
+        "triangleCount": 7304,
+        "materialNames": [
+          "mur-bas-ext"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Circle.050"
+        ],
+        "file": "obj-008.glb",
+        "fileBytes": 92032,
+        "thumbnail": "obj-008.webp",
+        "bounds": {
+          "min": [
+            -18.6441,
+            0,
+            -11.3169
+          ],
+          "max": [
+            18.6441,
+            6.8679,
+            11.3169
+          ],
+          "dimensions": {
+            "width": 37.2882,
+            "height": 6.8679,
+            "depth": 22.6337
+          },
+          "center": [
+            0,
+            3.434,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 9,
+        "name": "Circle.019",
+        "meshObjectCount": 1,
+        "triangleCount": 5896,
+        "materialNames": [
+          "arche"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Circle.019"
+        ],
+        "file": "obj-009.glb",
+        "fileBytes": 64316,
+        "thumbnail": "obj-009.webp",
+        "bounds": {
+          "min": [
+            -18.4355,
+            0,
+            -10.6806
+          ],
+          "max": [
+            18.4355,
+            15.185,
+            10.6806
+          ],
+          "dimensions": {
+            "width": 36.8711,
+            "height": 15.185,
+            "depth": 21.3611
+          },
+          "center": [
+            0,
+            7.5925,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 10,
+        "name": "TexturesCom_PersianCarpets0012_1_alphamasked_S",
+        "meshObjectCount": 1,
+        "triangleCount": 3872,
+        "materialNames": [
+          "drap"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "TexturesCom_PersianCarpets0012_1_alphamasked_S"
+        ],
+        "file": "obj-010.glb",
+        "fileBytes": 21692,
+        "thumbnail": "obj-010.webp",
+        "bounds": {
+          "min": [
+            -0.6133,
+            0,
+            -1.3901
+          ],
+          "max": [
+            0.6133,
+            0.4921,
+            1.3901
+          ],
+          "dimensions": {
+            "width": 1.2266,
+            "height": 0.4921,
+            "depth": 2.7801
+          },
+          "center": [
+            0,
+            0.246,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 11,
+        "name": "ampoules.008",
+        "meshObjectCount": 1,
+        "triangleCount": 2288,
+        "materialNames": [
+          "ampoule"
+        ],
+        "instanceCount": 2,
+        "instanceNames": [
+          "ampoules.008",
+          "ampoules.011"
+        ],
+        "file": "obj-011.glb",
+        "fileBytes": 11376,
+        "thumbnail": "obj-011.webp",
+        "bounds": {
+          "min": [
+            -0.7478,
+            0,
+            -0.7478
+          ],
+          "max": [
+            0.7478,
+            0.1111,
+            0.7478
+          ],
+          "dimensions": {
+            "width": 1.4957,
+            "height": 0.1111,
+            "depth": 1.4957
+          },
+          "center": [
+            0,
+            0.0555,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 12,
+        "name": "ampoules.009",
+        "meshObjectCount": 1,
+        "triangleCount": 2288,
+        "materialNames": [
+          "ampoule"
+        ],
+        "instanceCount": 2,
+        "instanceNames": [
+          "ampoules.009",
+          "ampoules.010"
+        ],
+        "file": "obj-012.glb",
+        "fileBytes": 11116,
+        "thumbnail": "obj-012.webp",
+        "bounds": {
+          "min": [
+            -1.2559,
+            0,
+            -1.2559
+          ],
+          "max": [
+            1.2559,
+            0.1111,
+            1.2559
+          ],
+          "dimensions": {
+            "width": 2.5118,
+            "height": 0.1111,
+            "depth": 2.5118
+          },
+          "center": [
+            0,
+            0.0555,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 13,
+        "name": "Circle",
+        "meshObjectCount": 1,
+        "triangleCount": 1920,
+        "materialNames": [
+          "verre-or"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Circle"
+        ],
+        "file": "obj-013.glb",
+        "fileBytes": 15136,
+        "thumbnail": "obj-013.webp",
+        "bounds": {
+          "min": [
+            -0.0843,
+            0,
+            -0.1037
+          ],
+          "max": [
+            0.0843,
+            0.1059,
+            0.1037
+          ],
+          "dimensions": {
+            "width": 0.1687,
+            "height": 0.1059,
+            "depth": 0.2075
+          },
+          "center": [
+            0,
+            0.0529,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 14,
+        "name": "Circle.006",
+        "meshObjectCount": 1,
+        "triangleCount": 1540,
+        "materialNames": [
+          "mur-bas"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Circle.006"
+        ],
+        "file": "obj-014.glb",
+        "fileBytes": 22512,
+        "thumbnail": "obj-014.webp",
+        "bounds": {
+          "min": [
+            -16.3257,
+            0,
+            -6.0728
+          ],
+          "max": [
+            16.3257,
+            5.8696,
+            6.0728
+          ],
+          "dimensions": {
+            "width": 32.6514,
+            "height": 5.8696,
+            "depth": 12.1456
+          },
+          "center": [
+            0,
+            2.9348,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 15,
+        "name": "Circle.001",
+        "meshObjectCount": 1,
+        "triangleCount": 858,
+        "materialNames": [
+          "mur-haut"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Circle.001"
+        ],
+        "file": "obj-015.glb",
+        "fileBytes": 13148,
+        "thumbnail": "obj-015.webp",
+        "bounds": {
+          "min": [
+            -16.7378,
+            0,
+            -6.2494
+          ],
+          "max": [
+            16.7378,
+            12.166,
+            6.2494
+          ],
+          "dimensions": {
+            "width": 33.4757,
+            "height": 12.166,
+            "depth": 12.4987
+          },
+          "center": [
+            0,
+            6.083,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 16,
+        "name": "Circle.013",
+        "meshObjectCount": 1,
+        "triangleCount": 768,
+        "materialNames": [
+          "arche.005"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Circle.013"
+        ],
+        "file": "obj-016.glb",
+        "fileBytes": 7988,
+        "thumbnail": "obj-016.webp",
+        "bounds": {
+          "min": [
+            -2.167,
+            0,
+            -5.434
+          ],
+          "max": [
+            2.167,
+            4.3008,
+            5.434
+          ],
+          "dimensions": {
+            "width": 4.3341,
+            "height": 4.3008,
+            "depth": 10.868
+          },
+          "center": [
+            0,
+            2.1504,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 17,
+        "name": "Plane.004",
+        "meshObjectCount": 1,
+        "triangleCount": 430,
+        "materialNames": [
+          "autel"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Plane.004"
+        ],
+        "file": "obj-017.glb",
+        "fileBytes": 7976,
+        "thumbnail": "obj-017.webp",
+        "bounds": {
+          "min": [
+            -0.7856,
+            0,
+            -1.2799
+          ],
+          "max": [
+            0.7856,
+            0.7784,
+            1.2799
+          ],
+          "dimensions": {
+            "width": 1.5713,
+            "height": 0.7784,
+            "depth": 2.5598
+          },
+          "center": [
+            0,
+            0.3892,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 18,
+        "name": "Plane.000",
+        "meshObjectCount": 2,
+        "triangleCount": 374,
+        "materialNames": [
+          "estrade-centre",
+          "estrade-contour"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Plane.000"
+        ],
+        "file": "obj-018.glb",
+        "fileBytes": 8532,
+        "thumbnail": "obj-018.webp",
+        "bounds": {
+          "min": [
+            -3.9923,
+            0,
+            -3.5635
+          ],
+          "max": [
+            3.9923,
+            0.3903,
+            3.5635
+          ],
+          "dimensions": {
+            "width": 7.9845,
+            "height": 0.3903,
+            "depth": 7.127
+          },
+          "center": [
+            0,
+            0.1951,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 19,
+        "name": "Cube.003",
+        "meshObjectCount": 1,
+        "triangleCount": 180,
+        "materialNames": [
+          "mur-bas.002"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Cube.003"
+        ],
+        "file": "obj-019.glb",
+        "fileBytes": 2856,
+        "thumbnail": "obj-019.webp",
+        "bounds": {
+          "min": [
+            -0.0222,
+            0,
+            -11.6734
+          ],
+          "max": [
+            0.0222,
+            20.168,
+            11.6734
+          ],
+          "dimensions": {
+            "width": 0.0444,
+            "height": 20.168,
+            "depth": 23.3469
+          },
+          "center": [
+            0,
+            10.084,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 20,
+        "name": "Cube.000",
+        "meshObjectCount": 1,
+        "triangleCount": 96,
+        "materialNames": [
+          "debord-mur"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Cube.000"
+        ],
+        "file": "obj-020.glb",
+        "fileBytes": 3656,
+        "thumbnail": "obj-020.webp",
+        "bounds": {
+          "min": [
+            -16.418,
+            0,
+            -5.6096
+          ],
+          "max": [
+            16.418,
+            0.3351,
+            5.6096
+          ],
+          "dimensions": {
+            "width": 32.836,
+            "height": 0.3351,
+            "depth": 11.2192
+          },
+          "center": [
+            0,
+            0.1675,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 21,
+        "name": "Circle.051",
+        "meshObjectCount": 1,
+        "triangleCount": 30,
+        "materialNames": [
+          "material_24"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Circle.051"
+        ],
+        "file": "obj-021.glb",
+        "fileBytes": 2168,
+        "thumbnail": "obj-021.webp",
+        "bounds": {
+          "min": [
+            -19.9844,
+            0,
+            -11.365
+          ],
+          "max": [
+            19.9844,
+            0.0445,
+            11.365
+          ],
+          "dimensions": {
+            "width": 39.9688,
+            "height": 0.0445,
+            "depth": 22.7299
+          },
+          "center": [
+            0,
+            0.0222,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      }
+    ],
+    "roomKit": {
+      "shapeOnly": {
+        "file": "roomkit-shape.glb",
+        "fileBytes": 3910860
+      },
+      "textured": null,
+      "thumbnail": "roomkit.webp",
+      "resizedImages": []
+    },
+    "warnings": [
+      {
+        "code": "duplicates-collapsed",
+        "message": "35 separable objects collapsed to 32 unique shapes; repeated instances share one candidate."
+      }
+    ],
+    "descendedWrappers": [
+      "Sketchfab_model",
+      "Root"
+    ],
+    "importSeconds": 3.59,
+    "sceneTriangleCount": 574640,
+    "sceneBounds": {
+      "min": [
+        -25.3098,
+        -16.4079,
+        -11.6629
+      ],
+      "max": [
+        15.1082,
+        5.0371,
+        11.684
+      ],
+      "dimensions": {
+        "width": 40.4179,
+        "height": 21.445,
+        "depth": 23.3469
+      },
+      "center": [
+        -5.1008,
+        -5.6854,
+        0.0106
+      ]
+    },
+    "sceneObjectCount": 80,
+    "sceneMaterialNames": [
+      "ampoule",
+      "arche.002",
+      "banc",
+      "pied-colonne",
+      "mur-bas",
+      "colonne",
+      "arche",
+      "colonne-ext",
+      "mur-bas-ext",
+      "material_24",
+      "arche.001",
+      "arche.005",
+      "mur-haut",
+      "debord-mur",
+      "vitrail-droite",
+      "vitrail-gauche",
+      "vitrail-fond",
+      "vitrail-fond.001",
+      "vitrail-fond.002",
+      "vitrail-fond.003",
+      "vitrail-fond.004",
+      "vitrail-fond.005",
+      "vitrail-bas",
+      "estrade-contour",
+      "estrade-centre",
+      "drap",
+      "autel",
+      "Doors_Old_Wooden_1",
+      "mur-bas.002",
+      "chain",
+      "pied-autel",
+      "material",
+      "verre-or"
+    ],
+    "geometryCompression": "draco",
+    "separableObjectCount": 35,
+    "uniqueObjectCount": 32,
+    "eligibleObjectCount": 22
+  }
+}

@@ -1,0 +1,48 @@
+import { SPATIAL_SCHEMA_VERSION, type SpatialRoomDefinition } from "../model.ts";
+
+export const BBB_PROJECTION_WALL_FIXTURE = {
+  schemaVersion: SPATIAL_SCHEMA_VERSION,
+  id: "bbb-projection-wall-proof",
+  label: "BBB reusable projection-wall proof",
+  fixtureKind: "bbb-projection-proof",
+  revision: 1,
+  seed: "bbb-gate3-public-safe-v1",
+  bounds: { width: 18, height: 6, depth: 30 },
+  entryStateId: "projection-overview",
+  cameraPath: { points: [[0, 2, 11], [0, 2, 4], [0, 2, -3]], clearance: 0.4 },
+  assets: [
+    { id: "bbb-threshold-signal", kind: "image", locator: "public:bbb-pilot/threshold-signal.png", safety: "public-safe", compressedBytes: 2_512_625, eager: true, attribution: "Public-safe BBB pilot placeholder" },
+    { id: "bbb-archive-rhythm", kind: "image", locator: "public:bbb-pilot/archive-rhythm.png", safety: "public-safe", compressedBytes: 3_443_530, eager: false, attribution: "Public-safe BBB pilot placeholder" },
+  ],
+  skins: [
+    { id: "bbb-projection-skin", label: "BBB projection proof skin", materialPresets: { wall: "wall-plaster", projection: "projection-emissive", "logo-accent": "accent-signal" }, colors: { wall: "#f2efe8", "logo-accent": "#ef5b3d" }, decalAssetIds: [] },
+  ],
+  media: [
+    { id: "bbb-threshold-media", kind: "image", assetId: "bbb-threshold-signal", alt: "Public-safe threshold signal placeholder", safety: "public-safe" },
+    { id: "bbb-archive-media", kind: "image", assetId: "bbb-archive-rhythm", alt: "Public-safe archive rhythm placeholder", safety: "public-safe" },
+  ],
+  actions: [
+    { id: "inspect-bbb-01", kind: "inspect", label: "Inspect projection one", targetPlacementId: "projection-piece-01" },
+    { id: "inspect-bbb-02", kind: "inspect", label: "Inspect projection two", targetPlacementId: "projection-piece-02" },
+    { id: "next-bbb", kind: "sequence-next", label: "Move to next projection" },
+    { id: "previous-bbb", kind: "sequence-previous", label: "Move to previous projection" },
+  ],
+  placements: [
+    { id: "bbb-room-shell", order: 0, componentId: "presence.room-shell", version: "1.0.0", transform: { position: [0, 3, 0], rotation: [0, 0, 0], scale: [1, 1, 1] }, anchor: { kind: "free" }, materialSlotOverrides: { wall: "wall-plaster" }, skinRef: "bbb-projection-skin", actionRefs: [], visible: true, semanticLabel: "Light internal room shell" },
+    { id: "bbb-floor", order: 1, componentId: "presence.floor-slab", version: "1.0.0", transform: { position: [0, 0.06, 0], rotation: [0, 0, 0], scale: [1, 1, 1] }, anchor: { kind: "floor" }, materialSlotOverrides: { floor: "floor-dark-stone" }, actionRefs: [], visible: true, semanticLabel: "Projection room floor" },
+    { id: "bbb-projection-wall", order: 2, componentId: "presence.projection-wall", version: "1.0.0", transform: { position: [0, 2.5, -14.7], rotation: [0, 0, 0], scale: [1, 1, 1] }, anchor: { kind: "wall" }, materialSlotOverrides: { projection: "projection-emissive", wall: "wall-plaster" }, skinRef: "bbb-projection-skin", actionRefs: ["next-bbb", "previous-bbb"], visible: true, semanticLabel: "Reusable BBB projection wall" },
+    { id: "projection-piece-01", order: 3, componentId: "presence.piece-plane", version: "1.0.0", transform: { position: [-2.6, 1.1, 0.18], rotation: [0, 0, 0], scale: [1.8, 1.5, 1] }, anchor: { kind: "projection", parentPlacementId: "bbb-projection-wall", anchorId: "projection-cell-01" }, materialSlotOverrides: { projection: "projection-emissive" }, skinRef: "bbb-projection-skin", mediaRef: "bbb-threshold-media", actionRefs: ["inspect-bbb-01"], visible: true, semanticLabel: "Threshold signal projection" },
+    { id: "projection-piece-02", order: 4, componentId: "presence.piece-plane", version: "1.0.0", transform: { position: [0, 0, 0.18], rotation: [0, 0, 0], scale: [1.8, 1.5, 1] }, anchor: { kind: "projection", parentPlacementId: "bbb-projection-wall", anchorId: "projection-cell-02" }, materialSlotOverrides: { projection: "projection-emissive" }, skinRef: "bbb-projection-skin", mediaRef: "bbb-archive-media", actionRefs: ["inspect-bbb-02"], visible: true, semanticLabel: "Archive rhythm projection" },
+    { id: "projection-piece-03", order: 5, componentId: "presence.piece-plane", version: "1.0.0", transform: { position: [2.6, -1.1, 0.18], rotation: [0, 0, 0], scale: [1.8, 1.5, 1] }, anchor: { kind: "projection", parentPlacementId: "bbb-projection-wall", anchorId: "projection-cell-03" }, materialSlotOverrides: { projection: "projection-emissive" }, skinRef: "bbb-projection-skin", mediaRef: "bbb-threshold-media", actionRefs: ["next-bbb", "previous-bbb"], visible: true, semanticLabel: "Threshold sequence projection" },
+  ],
+  states: [
+    { id: "projection-overview", label: "Projection overview", cameraPosition: [0, 3, 8], cameraTarget: [0, 2.5, -14.7], fieldOfView: 52, focusPlacementId: "bbb-projection-wall", reducedMotionStateId: "projection-static" },
+    { id: "projection-static", label: "Static projection overview", cameraPosition: [0, 3, 8], cameraTarget: [0, 2.5, -14.7], fieldOfView: 52, focusPlacementId: "bbb-projection-wall" },
+  ],
+  semanticFallback: [
+    { placementId: "bbb-projection-wall", label: "BBB projection sequence", description: "Step between public-safe projection placeholders.", actionRefs: ["previous-bbb", "next-bbb"] },
+    { placementId: "projection-piece-01", label: "Threshold signal placeholder", actionRefs: ["inspect-bbb-01"] },
+    { placementId: "projection-piece-02", label: "Archive rhythm placeholder", actionRefs: ["inspect-bbb-02"] },
+    { placementId: "projection-piece-03", label: "Threshold sequence placeholder", actionRefs: ["previous-bbb", "next-bbb"] },
+  ],
+} satisfies SpatialRoomDefinition;

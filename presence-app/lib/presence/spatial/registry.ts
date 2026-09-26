@@ -1,0 +1,675 @@
+import type { SpatialComponentDefinition, SpatialComponentRef, SpatialMaterialSlotId } from "./model.ts";
+import { CANDIDATE_COMPONENT_DEFINITIONS, CANDIDATE_COMPONENT_OPTIONS } from "./candidateOptions.ts";
+import { spatialComponentKey } from "./model.ts";
+
+export type SpatialComponentAssetCategory =
+  | "room-architecture"
+  | "wall-system"
+  | "display-surface"
+  | "retail-fixture"
+  | "lighting-fixture"
+  | "soft-architecture"
+  | "projection-surface"
+  | "piece-carrier";
+
+export interface SpatialComponentCatalogMetadata extends SpatialComponentRef {
+  assetCategory: SpatialComponentAssetCategory;
+  assetStrategy: "procedural-placeholder" | "presence-authored-procedural" | "procedural-proxy-with-candidate-glb";
+  creativeStatus: "prototype" | "review" | "approved" | "rejected";
+  admissionStatus: "not-evaluated" | "candidate" | "admitted" | "rejected";
+  origin: {
+    convention: "center" | "floor-center" | "back-center";
+    offset: readonly [number, number, number];
+    unit: "metre";
+    upAxis: "y";
+  };
+  pivot: {
+    convention: "component-origin" | "floor-contact" | "wall-contact";
+    offset: readonly [number, number, number];
+  };
+  rawAssetIncluded: false;
+}
+
+const identity = { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] } as const;
+const internalLicense = {
+  licenseId: "presence-internal-generated-v1",
+  sourceKind: "generated-placeholder",
+  source: "presence-spatial-gate3",
+  attribution: "Generated internal Presence proof geometry",
+  internalOnly: true,
+} as const;
+const candidateLicense = {
+  licenseId: "presence-authored-gate4-candidate-v1",
+  sourceKind: "presence-authored",
+  source: "presence-spatial-gate4-candidate",
+  attribution: "Presence-authored internal candidate geometry",
+  internalOnly: true,
+} as const;
+const internalUseCandidateAssetLicense = {
+  licenseId: "presence-internal-use-candidate-asset-v1",
+  sourceKind: "third-party",
+  source: "presence-spatial-candidate-internal-use",
+  attribution: "Optimized candidate GLB cleared for internal runtime proof only; not admitted",
+  internalOnly: true,
+} as const;
+
+const SPATIAL_CORE_COMPONENTS = [
+  {
+    componentId: "presence.room-shell",
+    version: "1.0.0",
+    label: "Room shell",
+    category: "shell",
+    dimensions: { width: 18, height: 6, depth: 30 },
+    geometry: { kind: "primitive", primitive: "box" },
+    placement: { allowedAnchorKinds: ["free"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: [],
+    materialSlots: ["wall"],
+    license: internalLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "core" },
+    mobileFallback: { strategy: "simplified", note: "Use a shallower shell while preserving semantic order." },
+  },
+  {
+    componentId: "presence.floor-slab",
+    version: "1.0.0",
+    label: "Floor slab",
+    category: "floor",
+    dimensions: { width: 18, height: 0.12, depth: 30 },
+    geometry: { kind: "primitive", primitive: "box" },
+    placement: { allowedAnchorKinds: ["floor"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: [],
+    materialSlots: ["floor"],
+    license: internalLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "core" },
+    mobileFallback: { strategy: "same", note: "Primitive floor is retained." },
+  },
+  {
+    componentId: "presence.wall-panel",
+    version: "1.0.0",
+    label: "Wall panel",
+    category: "wall",
+    dimensions: { width: 6, height: 5, depth: 0.18 },
+    geometry: { kind: "primitive", primitive: "box" },
+    placement: { allowedAnchorKinds: ["wall", "free"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: [
+      { id: "wall-face", kind: "wall", transform: identity, accepts: ["projection", "piece", "action"], capacity: 48 },
+    ],
+    materialSlots: ["wall", "poster-decal", "logo-accent"],
+    license: internalLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "core" },
+    mobileFallback: { strategy: "same", note: "Primitive wall remains readable on mobile." },
+  },
+  {
+    componentId: "presence.divider-wall",
+    version: "1.0.0",
+    label: "Divider wall",
+    category: "wall",
+    dimensions: { width: 4.8, height: 3.2, depth: 0.16 },
+    geometry: { kind: "primitive", primitive: "box" },
+    placement: { allowedAnchorKinds: ["floor", "free"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: [
+      { id: "divider-face-a", kind: "wall", transform: { position: [0, 0, 0.09], rotation: [0, 0, 0], scale: [1, 1, 1] }, accepts: ["piece", "action"], capacity: 12 },
+      { id: "divider-face-b", kind: "wall", transform: { position: [0, 0, -0.09], rotation: [0, Math.PI, 0], scale: [1, 1, 1] }, accepts: ["piece", "action"], capacity: 12 },
+    ],
+    materialSlots: ["wall", "poster-decal", "logo-accent"],
+    license: internalLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "core" },
+    mobileFallback: { strategy: "simplified", note: "Retain one bounded divider plane without blocking the entry path." },
+  },
+  {
+    componentId: "presence.display-table",
+    version: "1.0.0",
+    label: "Display table",
+    category: "surface",
+    dimensions: { width: 3.2, height: 0.9, depth: 1.4 },
+    geometry: { kind: "primitive", primitive: "box" },
+    placement: { allowedAnchorKinds: ["floor"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: [
+      { id: "tabletop-grid", kind: "surface", transform: { position: [0, 0.47, 0], rotation: [0, 0, 0], scale: [1, 1, 1] }, accepts: ["piece", "action"], capacity: 12 },
+    ],
+    materialSlots: ["tabletop", "logo-accent"],
+    license: internalLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "core" },
+    mobileFallback: { strategy: "simplified", note: "Retain one compact display surface with semantic Piece access." },
+  },
+  {
+    componentId: "presence.display-plinth",
+    version: "1.0.0",
+    label: "Display plinth",
+    category: "surface",
+    dimensions: { width: 4.2, height: 0.72, depth: 1.8 },
+    geometry: { kind: "primitive", primitive: "box" },
+    placement: { allowedAnchorKinds: ["floor"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: [
+      { id: "surface-top", kind: "surface", transform: { position: [0, 0.4, 0], rotation: [0, 0, 0], scale: [1, 1, 1] }, accepts: ["rack", "piece", "action"], capacity: 8 },
+    ],
+    materialSlots: ["tabletop"],
+    license: internalLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "core" },
+    mobileFallback: { strategy: "simplified", note: "Collapse to one display surface." },
+  },
+  {
+    componentId: "presence.retail-rack",
+    version: "1.0.0",
+    label: "Retail garment rack",
+    category: "rack",
+    dimensions: { width: 5.6, height: 3.4, depth: 1.4 },
+    geometry: { kind: "primitive", primitive: "rack" },
+    placement: { allowedAnchorKinds: ["floor"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: Array.from({ length: 12 }, (_, index) => ({
+      id: `rack-slot-${String(index + 1).padStart(2, "0")}`,
+      kind: "rack" as const,
+      transform: { position: [-2.2 + index * 0.4, 0.7, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
+      accepts: ["piece"] as const,
+      capacity: 1,
+    })),
+    materialSlots: ["rack-metal"],
+    license: internalLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "enhanced" },
+    mobileFallback: { strategy: "simplified", note: "Retain a six-slot rack with direct selection." },
+  },
+  {
+    componentId: "presence.projection-wall",
+    version: "1.0.0",
+    label: "Projection wall",
+    category: "projection",
+    dimensions: { width: 9, height: 5, depth: 0.3 },
+    geometry: { kind: "primitive", primitive: "projection-field" },
+    placement: { allowedAnchorKinds: ["wall", "free"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: Array.from({ length: 32 }, (_, index) => ({
+      id: `projection-cell-${String(index + 1).padStart(2, "0")}`,
+      kind: "projection" as const,
+      transform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
+      accepts: ["piece"] as const,
+      capacity: 1,
+    })),
+    materialSlots: ["projection", "wall"],
+    license: internalLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "enhanced" },
+    mobileFallback: { strategy: "simplified", note: "Use a bounded swipeable image sequence." },
+  },
+  {
+    componentId: "presence.piece-plane",
+    version: "1.0.0",
+    label: "Piece plane",
+    category: "piece",
+    dimensions: { width: 1.1, height: 1.5, depth: 0.05 },
+    geometry: { kind: "primitive", primitive: "plane" },
+    placement: { allowedAnchorKinds: ["wall", "surface", "rack", "projection", "free"], collision: "parent-contained", requiresParent: true, blocksCameraPath: false, floorClearance: 0 },
+    anchors: [],
+    materialSlots: ["fabric", "paper", "projection", "poster-decal", "logo-accent"],
+    license: internalLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: false, performanceTier: "core" },
+    mobileFallback: { strategy: "same", note: "Render media or semantic placeholder." },
+  },
+  {
+    componentId: "presence.boutique-shell",
+    version: "1.0.0",
+    label: "Open boutique shell candidate",
+    category: "shell",
+    dimensions: { width: 20, height: 6, depth: 36 },
+    geometry: { kind: "primitive", primitive: "open-shell" },
+    placement: { allowedAnchorKinds: ["free"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: [],
+    materialSlots: ["wall"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "enhanced" },
+    mobileFallback: { strategy: "semantic-only", note: "Use the branded static fallback and full semantic room." },
+  },
+  {
+    componentId: "presence.floor-slab",
+    version: "2.0.0",
+    label: "Boutique floor slab candidate",
+    category: "floor",
+    dimensions: { width: 20, height: 0.12, depth: 36 },
+    geometry: { kind: "primitive", primitive: "box" },
+    placement: { allowedAnchorKinds: ["floor"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: [],
+    materialSlots: ["floor"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "core" },
+    mobileFallback: { strategy: "semantic-only", note: "Retain floor identity in the branded static fallback." },
+  },
+  {
+    componentId: "presence.ribbed-wall",
+    version: "1.0.0",
+    label: "Ribbed identity wall candidate",
+    category: "wall",
+    dimensions: { width: 6.8, height: 5.4, depth: 0.36 },
+    geometry: { kind: "primitive", primitive: "ribbed-wall" },
+    placement: { allowedAnchorKinds: ["wall", "free"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: [
+      { id: "identity-face", kind: "wall", transform: { position: [0, 0, 0.48], rotation: [0, 0, 0], scale: [1, 1, 1] }, accepts: ["piece"], capacity: 3 },
+    ],
+    materialSlots: ["wall", "logo-accent"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "enhanced" },
+    mobileFallback: { strategy: "semantic-only", note: "Expose the identity media in the branded static fallback." },
+  },
+  {
+    componentId: "presence.display-bay",
+    version: "1.0.0",
+    label: "Sculptural display bay candidate",
+    category: "surface",
+    dimensions: { width: 6.4, height: 4.6, depth: 1.5 },
+    geometry: { kind: "primitive", primitive: "display-bay" },
+    placement: { allowedAnchorKinds: ["floor"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: Array.from({ length: 6 }, (_, index) => ({
+      id: `display-cell-${String(index + 1).padStart(2, "0")}`,
+      kind: "wall" as const,
+      transform: { position: [-2 + (index % 3) * 2, -0.9 + Math.floor(index / 3) * 1.5, 0.82], rotation: [0, 0, 0], scale: [1, 1, 1] },
+      accepts: ["piece"] as const,
+      capacity: 1,
+    })),
+    materialSlots: ["wall", "tabletop", "rack-metal"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "hero" },
+    mobileFallback: { strategy: "semantic-only", note: "Represent the bay as a branded media group with semantic Piece access." },
+  },
+  {
+    componentId: "presence.rounded-island",
+    version: "1.0.0",
+    label: "Rounded display island candidate",
+    category: "surface",
+    dimensions: { width: 3.6, height: 0.78, depth: 1.9 },
+    geometry: { kind: "primitive", primitive: "rounded-island" },
+    placement: { allowedAnchorKinds: ["floor"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: Array.from({ length: 3 }, (_, index) => ({
+      id: `island-cell-${String(index + 1).padStart(2, "0")}`,
+      kind: "surface" as const,
+      transform: { position: [-1.05 + index * 1.05, 0.43, 0], rotation: [-Math.PI / 2, 0, 0], scale: [1, 1, 1] },
+      accepts: ["piece"] as const,
+      capacity: 1,
+    })),
+    materialSlots: ["tabletop", "rack-metal"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "enhanced" },
+    mobileFallback: { strategy: "semantic-only", note: "Keep island Pieces in spatial order within the branded fallback." },
+  },
+  {
+    componentId: "presence.candidate-display-island",
+    version: "1.0.0",
+    label: "Candidate GLB display island proof",
+    category: "surface",
+    dimensions: { width: 1.5713, height: 0.7784, depth: 2.5598 },
+    geometry: { kind: "primitive", primitive: "product-block" },
+    renderGeometry: {
+      kind: "glb",
+      url: "/presence-spatial/candidates/components/candidate.table.old-church-modeling-interior-sce-ffd7-017.glb",
+      compression: "draco",
+      decoderPath: "/presence-spatial/draco/gltf/",
+      fallbackPrimitive: "product-block",
+      runtimeSizeKb: 7.79,
+      decoderSizeKb: 244.99609375,
+    },
+    placement: { allowedAnchorKinds: ["floor"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: [
+      { id: "candidate-island-top", kind: "surface", transform: { position: [0, 0.43, 0], rotation: [0, 0, 0], scale: [1, 1, 1] }, accepts: ["piece"], capacity: 1 },
+    ],
+    materialSlots: ["tabletop", "rack-metal"],
+    license: internalUseCandidateAssetLicense,
+    runtime: { compressedBytes: 7_976, sourceBytes: 7_976, eager: false, performanceTier: "core" },
+    mobileFallback: { strategy: "semantic-only", note: "Use the proxy component and semantic item if GLB or Draco loading is unavailable." },
+  },
+  {
+    componentId: "presence.suspended-rack",
+    version: "1.0.0",
+    label: "Suspended architecture rack candidate",
+    category: "rack",
+    dimensions: { width: 8.4, height: 4, depth: 1.8 },
+    geometry: { kind: "primitive", primitive: "suspended-rack" },
+    placement: { allowedAnchorKinds: ["floor"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: Array.from({ length: 12 }, (_, index) => ({
+      id: `garment-slot-${String(index + 1).padStart(2, "0")}`,
+      kind: "rack" as const,
+      transform: { position: [-3.55 + index * 0.645, 0.18, 0.05], rotation: [0, 0, 0], scale: [1, 1, 1] },
+      accepts: ["piece"] as const,
+      capacity: 1,
+    })),
+    materialSlots: ["rack-metal", "tabletop"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "hero" },
+    mobileFallback: { strategy: "semantic-only", note: "Preserve the rack sequence and direct garment actions semantically." },
+  },
+  {
+    componentId: "presence.garment-hanger",
+    version: "1.0.0",
+    label: "Garment on hanger candidate",
+    category: "piece",
+    dimensions: { width: 1.05, height: 1.7, depth: 0.2 },
+    geometry: { kind: "primitive", primitive: "garment-hanger" },
+    placement: { allowedAnchorKinds: ["rack"], collision: "parent-contained", requiresParent: true, blocksCameraPath: false, floorClearance: 0 },
+    anchors: [
+      { id: "hanger-garment-face", kind: "surface", transform: { position: [0, 0.05, 0.12], rotation: [-Math.PI / 2, 0, 0], scale: [1, 1, 1] }, accepts: ["piece", "action"], capacity: 1 },
+    ],
+    materialSlots: ["fabric", "rack-metal"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: false, performanceTier: "enhanced" },
+    mobileFallback: { strategy: "semantic-only", note: "Expose garment media and inspection action without 3D." },
+  },
+  {
+    componentId: "presence.framed-media",
+    version: "1.0.0",
+    label: "Framed media candidate",
+    category: "piece",
+    dimensions: { width: 2, height: 2.6, depth: 0.18 },
+    geometry: { kind: "primitive", primitive: "framed-media" },
+    placement: { allowedAnchorKinds: ["wall", "free"], collision: "parent-contained", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: [],
+    materialSlots: ["poster-decal", "rack-metal", "logo-accent"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: false, performanceTier: "enhanced" },
+    mobileFallback: { strategy: "semantic-only", note: "Render safe media when present, otherwise retain an honest semantic item." },
+  },
+  {
+    componentId: "presence.projection-wall",
+    version: "2.0.0",
+    label: "Campaign projection grid candidate",
+    category: "projection",
+    dimensions: { width: 7.8, height: 4.8, depth: 0.36 },
+    geometry: { kind: "primitive", primitive: "projection-grid" },
+    placement: { allowedAnchorKinds: ["wall", "free"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: Array.from({ length: 6 }, (_, index) => ({
+      id: `campaign-cell-${String(index + 1).padStart(2, "0")}`,
+      kind: "projection" as const,
+      transform: { position: [-2.45 + (index % 3) * 2.45, 1.15 - Math.floor(index / 3) * 2.3, 0.22], rotation: [0, 0, 0], scale: [1, 1, 1] },
+      accepts: ["piece"] as const,
+      capacity: 1,
+    })),
+    materialSlots: ["projection", "wall", "rack-metal"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "hero" },
+    mobileFallback: { strategy: "semantic-only", note: "Present campaign media as a bounded branded static group." },
+  },
+  {
+    componentId: "presence.display-shelf",
+    version: "1.0.0",
+    label: "Display shelf candidate",
+    category: "surface",
+    dimensions: { width: 3.6, height: 2.4, depth: 0.56 },
+    geometry: { kind: "primitive", primitive: "display-shelf" },
+    placement: { allowedAnchorKinds: ["floor", "wall"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: Array.from({ length: 6 }, (_, index) => ({
+      id: `shelf-slot-${String(index + 1).padStart(2, "0")}`,
+      kind: "wall" as const,
+      transform: { position: [-1.1 + (index % 3) * 1.1, -0.68 + Math.floor(index / 3) * 1.25, 0.31], rotation: [0, 0, 0], scale: [1, 1, 1] },
+      accepts: ["piece"] as const,
+      capacity: 1,
+    })),
+    materialSlots: ["tabletop", "rack-metal"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "core" },
+    mobileFallback: { strategy: "semantic-only", note: "Preserve shelf Pieces in their authored order." },
+  },
+  {
+    componentId: "presence.text-sign-card",
+    version: "1.0.0",
+    label: "Text and sign card candidate",
+    category: "piece",
+    dimensions: { width: 1.6, height: 0.9, depth: 0.08 },
+    geometry: { kind: "primitive", primitive: "sign-card" },
+    placement: { allowedAnchorKinds: ["floor", "wall", "free"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: [],
+    materialSlots: ["paper", "poster-decal"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: false, performanceTier: "core" },
+    mobileFallback: { strategy: "semantic-only", note: "Retain the card label, media and actions semantically." },
+  },
+  {
+    componentId: "presence.product-display-block",
+    version: "1.0.0",
+    label: "Product display block candidate",
+    category: "surface",
+    dimensions: { width: 1.05, height: 0.9, depth: 1.05 },
+    geometry: { kind: "primitive", primitive: "product-block" },
+    placement: { allowedAnchorKinds: ["floor"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: [
+      { id: "product-top", kind: "surface", transform: { position: [0, 0.48, 0], rotation: [0, 0, 0], scale: [1, 1, 1] }, accepts: ["piece"], capacity: 1 },
+    ],
+    materialSlots: ["tabletop", "logo-accent"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "core" },
+    mobileFallback: { strategy: "semantic-only", note: "Expose the assigned product Piece and action semantically." },
+  },
+  {
+    componentId: "presence.light-fixture",
+    version: "1.0.0",
+    label: "Light fixture candidate",
+    category: "light",
+    dimensions: { width: 0.5, height: 2.2, depth: 0.5 },
+    geometry: { kind: "primitive", primitive: "light-fixture" },
+    placement: { allowedAnchorKinds: ["floor", "free"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: [],
+    materialSlots: ["rack-metal", "logo-accent"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "core" },
+    mobileFallback: { strategy: "semantic-only", note: "Lighting identity falls back to the room lighting profile." },
+  },
+  {
+    componentId: "presence.drape-divider",
+    version: "1.0.0",
+    label: "Soft drape divider candidate",
+    category: "wall",
+    dimensions: { width: 3.8, height: 3.2, depth: 0.18 },
+    geometry: { kind: "primitive", primitive: "drape-divider" },
+    placement: { allowedAnchorKinds: ["floor", "free"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: [
+      { id: "drape-face", kind: "wall", transform: { position: [0, 0, 0.1], rotation: [0, 0, 0], scale: [1, 1, 1] }, accepts: ["piece"], capacity: 4 },
+    ],
+    materialSlots: ["fabric", "rack-metal"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "enhanced" },
+    mobileFallback: { strategy: "semantic-only", note: "Preserve the secondary zone label without simulating cloth." },
+  },
+  {
+    componentId: "presence.archive-wall",
+    version: "1.0.0",
+    label: "Archive wall candidate",
+    category: "wall",
+    dimensions: { width: 7.2, height: 4.4, depth: 0.28 },
+    geometry: { kind: "primitive", primitive: "archive-wall" },
+    placement: { allowedAnchorKinds: ["wall", "free"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: Array.from({ length: 12 }, (_, index) => ({
+      id: `archive-cell-${String(index + 1).padStart(2, "0")}`,
+      kind: "wall" as const,
+      transform: {
+        position: [-2.55 + (index % 4) * 1.7, 1.32 - Math.floor(index / 4) * 1.32, 0.18],
+        rotation: [0, 0, 0],
+        scale: [1, 1, 1],
+      },
+      accepts: ["piece", "action"] as const,
+      capacity: 1,
+    })),
+    materialSlots: ["wall", "paper", "poster-decal", "rack-metal"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "enhanced" },
+    mobileFallback: { strategy: "semantic-only", note: "Expose archive media and actions as an ordered list." },
+  },
+  {
+    componentId: "presence.listening-station",
+    version: "1.0.0",
+    label: "Listening station candidate",
+    category: "surface",
+    dimensions: { width: 2.6, height: 1.25, depth: 1.6 },
+    geometry: { kind: "primitive", primitive: "listening-station" },
+    placement: { allowedAnchorKinds: ["floor", "free"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: [
+      { id: "listening-media", kind: "surface", transform: { position: [0, 0.68, 0], rotation: [-Math.PI / 2, 0, 0], scale: [1, 1, 1] }, accepts: ["piece", "action"], capacity: 4 },
+    ],
+    materialSlots: ["tabletop", "rack-metal", "logo-accent"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "enhanced" },
+    mobileFallback: { strategy: "semantic-only", note: "Expose audio/media titles and listen/open-link actions semantically." },
+  },
+  {
+    componentId: "presence.spherical-gallery",
+    version: "1.0.0",
+    label: "Spherical gallery candidate",
+    category: "projection",
+    dimensions: { width: 4.8, height: 4.8, depth: 4.8 },
+    geometry: { kind: "primitive", primitive: "spherical-gallery" },
+    placement: { allowedAnchorKinds: ["floor", "free"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: Array.from({ length: 12 }, (_, index) => {
+      const angle = index / 12 * Math.PI * 2;
+      const y = index % 3 === 0 ? 0.95 : index % 3 === 1 ? 0 : -0.95;
+      return {
+        id: `sphere-cell-${String(index + 1).padStart(2, "0")}`,
+        kind: "projection" as const,
+        transform: {
+          position: [Math.cos(angle) * 1.7, y, Math.sin(angle) * 1.7],
+          rotation: [0, -angle + Math.PI / 2, 0],
+          scale: [1, 1, 1],
+        },
+        accepts: ["piece", "action"] as const,
+        capacity: 1,
+      };
+    }),
+    materialSlots: ["projection", "rack-metal", "logo-accent"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "hero" },
+    mobileFallback: { strategy: "semantic-only", note: "Fallback is an ordered gallery/card list with the same media and actions." },
+  },
+] as const satisfies readonly SpatialComponentDefinition[];
+
+export const SPATIAL_COMPONENTS: readonly SpatialComponentDefinition[] = [
+  ...SPATIAL_CORE_COMPONENTS,
+  ...CANDIDATE_COMPONENT_DEFINITIONS,
+];
+
+const AUTHORABLE_RENDERED_MATERIAL_SLOTS: Readonly<Record<string, readonly SpatialMaterialSlotId[]>> = {
+  "presence.room-shell@1.0.0": ["wall"],
+  "presence.floor-slab@1.0.0": ["floor"],
+  "presence.wall-panel@1.0.0": ["wall"],
+  "presence.divider-wall@1.0.0": ["wall"],
+  "presence.display-table@1.0.0": ["tabletop"],
+  "presence.display-plinth@1.0.0": ["tabletop"],
+  "presence.retail-rack@1.0.0": ["rack-metal"],
+  "presence.projection-wall@1.0.0": ["projection", "wall"],
+  "presence.rounded-island@1.0.0": ["tabletop", "rack-metal"],
+  "presence.display-shelf@1.0.0": ["tabletop", "rack-metal"],
+  "presence.framed-media@1.0.0": ["poster-decal", "rack-metal"],
+  "presence.text-sign-card@1.0.0": ["paper", "poster-decal"],
+  "presence.product-display-block@1.0.0": ["tabletop", "logo-accent"],
+  "presence.light-fixture@1.0.0": ["rack-metal", "logo-accent"],
+  "presence.drape-divider@1.0.0": ["fabric", "rack-metal"],
+  "presence.archive-wall@1.0.0": ["wall", "paper", "poster-decal", "rack-metal"],
+  "presence.listening-station@1.0.0": ["tabletop", "rack-metal", "logo-accent"],
+  "presence.spherical-gallery@1.0.0": ["projection", "rack-metal", "logo-accent"],
+};
+
+/** Slots whose materials are represented by actual geometry in the bounded operator palette. */
+export function spatialAuthoringMaterialSlots(ref: SpatialComponentRef): readonly SpatialMaterialSlotId[] {
+  if (ref.componentId.startsWith("candidate.")) return spatialComponent(ref)?.materialSlots ?? [];
+  return AUTHORABLE_RENDERED_MATERIAL_SLOTS[spatialComponentKey(ref)] ?? [];
+}
+
+const placeholderMetadata = (
+  componentId: string,
+  assetCategory: SpatialComponentAssetCategory,
+  originConvention: SpatialComponentCatalogMetadata["origin"]["convention"],
+  pivotConvention: SpatialComponentCatalogMetadata["pivot"]["convention"],
+): SpatialComponentCatalogMetadata => ({
+  componentId,
+  version: "1.0.0",
+  assetCategory,
+  assetStrategy: "procedural-placeholder",
+  creativeStatus: "prototype",
+  admissionStatus: "not-evaluated",
+  origin: { convention: originConvention, offset: [0, 0, 0], unit: "metre", upAxis: "y" },
+  pivot: { convention: pivotConvention, offset: [0, 0, 0] },
+  rawAssetIncluded: false,
+});
+
+const candidateMetadata = (
+  componentId: string,
+  version: string,
+  assetCategory: SpatialComponentAssetCategory,
+  originConvention: SpatialComponentCatalogMetadata["origin"]["convention"],
+  pivotConvention: SpatialComponentCatalogMetadata["pivot"]["convention"],
+  assetStrategy: SpatialComponentCatalogMetadata["assetStrategy"] = "presence-authored-procedural",
+): SpatialComponentCatalogMetadata => ({
+  componentId,
+  version,
+  assetCategory,
+  assetStrategy,
+  creativeStatus: "prototype",
+  admissionStatus: "not-evaluated",
+  origin: { convention: originConvention, offset: [0, 0, 0], unit: "metre", upAxis: "y" },
+  pivot: { convention: pivotConvention, offset: [0, 0, 0] },
+  rawAssetIncluded: false,
+});
+
+/** Admission-neutral metadata for the initial generated catalog; no raw asset files are bundled. */
+const SPATIAL_CORE_COMPONENT_CATALOG = [
+  placeholderMetadata("presence.room-shell", "room-architecture", "center", "component-origin"),
+  placeholderMetadata("presence.floor-slab", "room-architecture", "floor-center", "floor-contact"),
+  placeholderMetadata("presence.wall-panel", "wall-system", "back-center", "wall-contact"),
+  placeholderMetadata("presence.divider-wall", "wall-system", "floor-center", "floor-contact"),
+  placeholderMetadata("presence.display-table", "display-surface", "floor-center", "floor-contact"),
+  placeholderMetadata("presence.display-plinth", "display-surface", "floor-center", "floor-contact"),
+  placeholderMetadata("presence.retail-rack", "retail-fixture", "floor-center", "floor-contact"),
+  placeholderMetadata("presence.projection-wall", "projection-surface", "back-center", "wall-contact"),
+  placeholderMetadata("presence.piece-plane", "piece-carrier", "center", "component-origin"),
+  candidateMetadata("presence.boutique-shell", "1.0.0", "room-architecture", "center", "component-origin"),
+  candidateMetadata("presence.floor-slab", "2.0.0", "room-architecture", "floor-center", "floor-contact"),
+  candidateMetadata("presence.ribbed-wall", "1.0.0", "wall-system", "back-center", "wall-contact"),
+  candidateMetadata("presence.display-bay", "1.0.0", "display-surface", "floor-center", "floor-contact"),
+  candidateMetadata("presence.rounded-island", "1.0.0", "display-surface", "floor-center", "floor-contact"),
+  candidateMetadata("presence.candidate-display-island", "1.0.0", "display-surface", "floor-center", "floor-contact", "procedural-proxy-with-candidate-glb"),
+  candidateMetadata("presence.suspended-rack", "1.0.0", "retail-fixture", "floor-center", "floor-contact"),
+  candidateMetadata("presence.garment-hanger", "1.0.0", "piece-carrier", "center", "component-origin"),
+  candidateMetadata("presence.framed-media", "1.0.0", "piece-carrier", "center", "component-origin"),
+  candidateMetadata("presence.projection-wall", "2.0.0", "projection-surface", "back-center", "wall-contact"),
+  candidateMetadata("presence.display-shelf", "1.0.0", "display-surface", "floor-center", "floor-contact"),
+  candidateMetadata("presence.text-sign-card", "1.0.0", "piece-carrier", "center", "component-origin"),
+  candidateMetadata("presence.product-display-block", "1.0.0", "display-surface", "floor-center", "floor-contact"),
+  candidateMetadata("presence.light-fixture", "1.0.0", "lighting-fixture", "floor-center", "floor-contact"),
+  candidateMetadata("presence.drape-divider", "1.0.0", "soft-architecture", "floor-center", "floor-contact"),
+  candidateMetadata("presence.archive-wall", "1.0.0", "wall-system", "back-center", "wall-contact"),
+  candidateMetadata("presence.listening-station", "1.0.0", "display-surface", "floor-center", "floor-contact"),
+  candidateMetadata("presence.spherical-gallery", "1.0.0", "projection-surface", "center", "component-origin"),
+] as const satisfies readonly SpatialComponentCatalogMetadata[];
+
+const CANDIDATE_COMPONENT_CATALOG = CANDIDATE_COMPONENT_OPTIONS.map((option): SpatialComponentCatalogMetadata => ({
+  componentId: option.componentId,
+  version: option.version,
+  assetCategory: option.group === "lighting"
+    ? "lighting-fixture"
+    : option.group === "soft-architecture"
+      ? "soft-architecture"
+      : "display-surface",
+  assetStrategy: option.renderMode === "draco-visual-geometry"
+    ? "procedural-proxy-with-candidate-glb"
+    : "presence-authored-procedural",
+  creativeStatus: "prototype",
+  admissionStatus: "not-evaluated",
+  origin: { convention: "floor-center", offset: [0, 0, 0], unit: "metre", upAxis: "y" },
+  pivot: { convention: "floor-contact", offset: [0, 0, 0] },
+  rawAssetIncluded: false,
+}));
+
+export const SPATIAL_COMPONENT_CATALOG: readonly SpatialComponentCatalogMetadata[] = [
+  ...SPATIAL_CORE_COMPONENT_CATALOG,
+  ...CANDIDATE_COMPONENT_CATALOG,
+];
+
+const COMPONENT_METADATA_MAP = new Map(SPATIAL_COMPONENT_CATALOG.map((metadata) => [spatialComponentKey(metadata), metadata]));
+
+const COMPONENT_MAP = new Map(SPATIAL_COMPONENTS.map((definition) => [spatialComponentKey(definition), definition]));
+
+export function spatialComponent(ref: SpatialComponentRef): SpatialComponentDefinition | undefined {
+  return COMPONENT_MAP.get(spatialComponentKey(ref));
+}
+
+export function requireSpatialComponent(ref: SpatialComponentRef): SpatialComponentDefinition {
+  const definition = spatialComponent(ref);
+  if (!definition) throw new Error(`Unknown spatial component ${spatialComponentKey(ref)}.`);
+  return definition;
+}
+
+export function spatialComponentEntries(): readonly SpatialComponentDefinition[] {
+  return SPATIAL_COMPONENTS;
+}
+
+export function spatialComponentCatalogMetadata(ref: SpatialComponentRef): SpatialComponentCatalogMetadata | undefined {
+  return COMPONENT_METADATA_MAP.get(spatialComponentKey(ref));
+}

@@ -1,0 +1,98 @@
+{
+  "contentHash": "2f513a15b35560a3187ca7605fdd1b46813a64741beb9ac603b557c63339c527",
+  "result": {
+    "ok": true,
+    "blenderVersion": "5.1.1",
+    "sourcePath": "C:/Dev/presence pieces/urban-interior-moody-vr-room-baked/source/Untitled.glb",
+    "objects": [
+      {
+        "index": 0,
+        "name": "Plane",
+        "meshObjectCount": 1,
+        "triangleCount": 6518,
+        "materialNames": [
+          "conc"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Plane"
+        ],
+        "file": "obj-000.glb",
+        "fileBytes": 58676,
+        "thumbnail": "obj-000.webp",
+        "bounds": {
+          "min": [
+            -26.8625,
+            0,
+            -6.2015
+          ],
+          "max": [
+            26.8625,
+            12.2922,
+            6.2015
+          ],
+          "dimensions": {
+            "width": 53.7249,
+            "height": 12.2922,
+            "depth": 12.4029
+          },
+          "center": [
+            0,
+            6.1461,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      }
+    ],
+    "roomKit": {
+      "shapeOnly": {
+        "file": "roomkit-shape.glb",
+        "fileBytes": 58628
+      },
+      "textured": {
+        "file": "roomkit-textured.glb",
+        "fileBytes": 163084
+      },
+      "thumbnail": "roomkit.webp",
+      "resizedImages": [
+        "Untitled"
+      ]
+    },
+    "warnings": [],
+    "descendedWrappers": [],
+    "importSeconds": 0.12,
+    "sceneTriangleCount": 6518,
+    "sceneBounds": {
+      "min": [
+        -11.1484,
+        0,
+        -6.2015
+      ],
+      "max": [
+        42.5766,
+        12.2922,
+        6.2015
+      ],
+      "dimensions": {
+        "width": 53.7249,
+        "height": 12.2922,
+        "depth": 12.4029
+      },
+      "center": [
+        15.7141,
+        6.1461,
+        0
+      ]
+    },
+    "sceneObjectCount": 1,
+    "sceneMaterialNames": [
+      "conc"
+    ],
+    "geometryCompression": "draco",
+    "separableObjectCount": 1,
+    "uniqueObjectCount": 1,
+    "eligibleObjectCount": 1
+  }
+}

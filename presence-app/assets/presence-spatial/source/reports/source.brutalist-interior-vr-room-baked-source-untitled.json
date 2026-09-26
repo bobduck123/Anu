@@ -1,0 +1,217 @@
+{
+  "schemaVersion": "presence-spatial-assets.v0",
+  "sourceAssetId": "source.brutalist-interior-vr-room-baked-source-untitled",
+  "sourceFilename": "Untitled.glb",
+  "sourcePath": "brutalist-interior-vr-room-baked/source/Untitled.glb",
+  "absoluteSourcePath": "C:\\Dev\\presence pieces\\brutalist-interior-vr-room-baked\\source\\Untitled.glb",
+  "fileBytes": 42793900,
+  "format": "glb",
+  "gltfVersion": "2.0",
+  "contentHash": "e0143432c9e0e429107b9cd8225d81294f496353fcaa547e06935adaecba8f69",
+  "nodeCount": 3,
+  "sceneRootCount": 3,
+  "topLevelNodeCount": 3,
+  "separationRootPath": [],
+  "meshCount": 3,
+  "primitiveCount": 3,
+  "materialCount": 3,
+  "imageCount": 4,
+  "textureCount": 5,
+  "animationCount": 0,
+  "cameraCount": 0,
+  "lightCount": 0,
+  "triangleCount": 11244,
+  "textureBytes": 42188332,
+  "geometryBytes": 601628,
+  "otherBufferBytes": 8,
+  "bounds": {
+    "min": [
+      -1,
+      0.0006,
+      -3.3927
+    ],
+    "max": [
+      9.7,
+      4.2236,
+      3.3927
+    ],
+    "dimensions": {
+      "width": 10.7,
+      "height": 4.223,
+      "depth": 6.7854
+    },
+    "center": [
+      4.35,
+      2.1121,
+      0
+    ]
+  },
+  "appearsSingleObject": false,
+  "appearsMultiObject": true,
+  "appearsCompleteInterior": true,
+  "hasSeparableNodes": true,
+  "loosePartSplitUseful": false,
+  "classifications": [
+    "multi-object-source",
+    "complete-interior-source",
+    "candidate-roomkit-source",
+    "texture-heavy-source",
+    "needs-license-review"
+  ],
+  "interiorSignals": [
+    "source path names a space: interior, room",
+    "wide footprint (10.7 units across)",
+    "room-scale height (4.223 units)",
+    "3 materials"
+  ],
+  "scaleReview": {
+    "required": false,
+    "measuredHeight": 4.223,
+    "assumedInteriorHeight": 3.2,
+    "suggestedUniformScale": null,
+    "note": "Measured height 4.223 is consistent with a metre-scaled interior."
+  },
+  "license": {
+    "status": "needs-review",
+    "source": "unknown",
+    "declaredCopyright": null,
+    "declaredGenerator": "Khronos glTF Blender I/O v4.4.56",
+    "declaredAuthor": null,
+    "declaredTitle": null,
+    "declaredLicense": null,
+    "sidecarFiles": [],
+    "filenameHints": [],
+    "evidence": [
+      "asset.generator present in the glTF header"
+    ]
+  },
+  "extensionsUsed": [
+    "KHR_materials_transmission",
+    "KHR_materials_ior"
+  ],
+  "extensionsRequired": [],
+  "topLevelNodes": [
+    {
+      "nodeIndex": 0,
+      "name": "Cube",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Cube"
+      ],
+      "materialNames": [
+        "Material"
+      ],
+      "triangleCount": 11240,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -1,
+          0.0006,
+          -3.3927
+        ],
+        "max": [
+          9.6961,
+          4.2236,
+          3.3927
+        ],
+        "dimensions": {
+          "width": 10.6961,
+          "height": 4.223,
+          "depth": 6.7854
+        },
+        "center": [
+          4.3481,
+          2.1121,
+          0
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 1,
+      "name": "Plane",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Plane"
+      ],
+      "materialNames": [
+        "concrete_pavement"
+      ],
+      "triangleCount": 2,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -1,
+          1,
+          -1
+        ],
+        "max": [
+          1,
+          1,
+          1
+        ],
+        "dimensions": {
+          "width": 2,
+          "height": 0,
+          "depth": 2
+        },
+        "center": [
+          0,
+          1,
+          0
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 2,
+      "name": "Plane.001",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Plane.001"
+      ],
+      "materialNames": [
+        "Material.001"
+      ],
+      "triangleCount": 2,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -1,
+          0.1429,
+          -2.62
+        ],
+        "max": [
+          9.7,
+          0.1429,
+          2.62
+        ],
+        "dimensions": {
+          "width": 10.7,
+          "height": 0,
+          "depth": 5.24
+        },
+        "center": [
+          4.35,
+          0.1429,
+          0
+        ]
+      },
+      "hasSkin": false
+    }
+  ],
+  "warnings": [
+    {
+      "code": "no-license-metadata",
+      "message": "No embedded, sidecar or filename licence signal was found."
+    },
+    {
+      "code": "over-source-budget",
+      "message": "Source file is 40.8 MB. It is source material only and must not be treated as a Presence runtime asset."
+    },
+    {
+      "code": "huge-texture-payload",
+      "message": "Embedded textures account for 40.2 MB; textured exports require resizing and recompression."
+    }
+  ]
+}

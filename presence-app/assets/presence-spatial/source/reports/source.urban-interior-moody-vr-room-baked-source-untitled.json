@@ -1,0 +1,143 @@
+{
+  "schemaVersion": "presence-spatial-assets.v0",
+  "sourceAssetId": "source.urban-interior-moody-vr-room-baked-source-untitled",
+  "sourceFilename": "Untitled.glb",
+  "sourcePath": "urban-interior-moody-vr-room-baked/source/Untitled.glb",
+  "absoluteSourcePath": "C:\\Dev\\presence pieces\\urban-interior-moody-vr-room-baked\\source\\Untitled.glb",
+  "fileBytes": 24053404,
+  "format": "glb",
+  "gltfVersion": "2.0",
+  "contentHash": "2f513a15b35560a3187ca7605fdd1b46813a64741beb9ac603b557c63339c527",
+  "nodeCount": 1,
+  "sceneRootCount": 1,
+  "topLevelNodeCount": 1,
+  "separationRootPath": [],
+  "meshCount": 1,
+  "primitiveCount": 1,
+  "materialCount": 1,
+  "imageCount": 1,
+  "textureCount": 2,
+  "animationCount": 0,
+  "cameraCount": 0,
+  "lightCount": 0,
+  "triangleCount": 6518,
+  "textureBytes": 23636863,
+  "geometryBytes": 414788,
+  "otherBufferBytes": 1,
+  "bounds": {
+    "min": [
+      -11.1484,
+      0,
+      -6.2015
+    ],
+    "max": [
+      42.5766,
+      12.2922,
+      6.2015
+    ],
+    "dimensions": {
+      "width": 53.725,
+      "height": 12.2922,
+      "depth": 12.403
+    },
+    "center": [
+      15.7141,
+      6.1461,
+      0
+    ]
+  },
+  "appearsSingleObject": true,
+  "appearsMultiObject": false,
+  "appearsCompleteInterior": true,
+  "hasSeparableNodes": false,
+  "loosePartSplitUseful": false,
+  "classifications": [
+    "single-object-source",
+    "complete-interior-source",
+    "candidate-roomkit-source",
+    "texture-heavy-source",
+    "needs-license-review"
+  ],
+  "interiorSignals": [
+    "source path names a space: interior, room",
+    "wide footprint (53.725 units across)",
+    "room-scale height (12.2922 units)"
+  ],
+  "scaleReview": {
+    "required": true,
+    "measuredHeight": 12.2922,
+    "assumedInteriorHeight": 3.2,
+    "suggestedUniformScale": 0.2603,
+    "note": "Measured height 12.2922 is outside the plausible 2.2-12 metre interior range. A uniform scale of 0.2603 would give a 3.2 metre ceiling. This is a suggestion for a human to confirm; the pipeline does not rescale geometry."
+  },
+  "license": {
+    "status": "needs-review",
+    "source": "unknown",
+    "declaredCopyright": null,
+    "declaredGenerator": "Khronos glTF Blender I/O v4.4.56",
+    "declaredAuthor": null,
+    "declaredTitle": null,
+    "declaredLicense": null,
+    "sidecarFiles": [],
+    "filenameHints": [],
+    "evidence": [
+      "asset.generator present in the glTF header"
+    ]
+  },
+  "extensionsUsed": [
+    "KHR_materials_specular"
+  ],
+  "extensionsRequired": [],
+  "topLevelNodes": [
+    {
+      "nodeIndex": 0,
+      "name": "Plane",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Plane"
+      ],
+      "materialNames": [
+        "conc"
+      ],
+      "triangleCount": 6518,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -11.1484,
+          0,
+          -6.2015
+        ],
+        "max": [
+          42.5766,
+          12.2922,
+          6.2015
+        ],
+        "dimensions": {
+          "width": 53.725,
+          "height": 12.2922,
+          "depth": 12.403
+        },
+        "center": [
+          15.7141,
+          6.1461,
+          0
+        ]
+      },
+      "hasSkin": false
+    }
+  ],
+  "warnings": [
+    {
+      "code": "no-license-metadata",
+      "message": "No embedded, sidecar or filename licence signal was found."
+    },
+    {
+      "code": "huge-texture-payload",
+      "message": "Embedded textures account for 22.5 MB; textured exports require resizing and recompression."
+    },
+    {
+      "code": "scale-check-required",
+      "message": "Measured height 12.2922 is outside the plausible 2.2-12 metre interior range. A uniform scale of 0.2603 would give a 3.2 metre ceiling. This is a suggestion for a human to confirm; the pipeline does not rescale geometry."
+    }
+  ]
+}

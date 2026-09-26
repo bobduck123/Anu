@@ -1,0 +1,1105 @@
+{
+  "contentHash": "8d0beb24b8854a1c333be310e4d3886f5840ed2a23524395c34bae830f04eb67",
+  "result": {
+    "ok": true,
+    "blenderVersion": "5.1.1",
+    "sourcePath": "C:/Dev/presence pieces/star_wars_the_clone_wars_venator_prefab.glb",
+    "objects": [
+      {
+        "index": 0,
+        "name": "Small_DoorFrame",
+        "meshObjectCount": 1,
+        "triangleCount": 9898,
+        "materialNames": [
+          "VenatorV3_SmallDoor_WallLight"
+        ],
+        "instanceCount": 6,
+        "instanceNames": [
+          "Small_DoorFrame",
+          "Small_DoorFrame1",
+          "Small_DoorFrame4",
+          "Small_DoorFrame5",
+          "Small_DoorFrame6",
+          "Small_DoorFrame7"
+        ],
+        "file": "obj-000.glb",
+        "fileBytes": 48844,
+        "thumbnail": "obj-000.webp",
+        "bounds": {
+          "min": [
+            -1.1407,
+            0,
+            -0.1374
+          ],
+          "max": [
+            1.1407,
+            2.5801,
+            0.1374
+          ],
+          "dimensions": {
+            "width": 2.2814,
+            "height": 2.5801,
+            "depth": 0.2748
+          },
+          "center": [
+            0,
+            1.29,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 1,
+        "name": "Small_DoorFrame2",
+        "meshObjectCount": 1,
+        "triangleCount": 9898,
+        "materialNames": [
+          "VenatorV3_SmallDoor_WallLight"
+        ],
+        "instanceCount": 2,
+        "instanceNames": [
+          "Small_DoorFrame2",
+          "Small_DoorFrame3"
+        ],
+        "file": "obj-001.glb",
+        "fileBytes": 48904,
+        "thumbnail": "obj-001.webp",
+        "bounds": {
+          "min": [
+            -0.1374,
+            0,
+            -1.1407
+          ],
+          "max": [
+            0.1374,
+            2.5801,
+            1.1407
+          ],
+          "dimensions": {
+            "width": 0.2748,
+            "height": 2.5801,
+            "depth": 2.2814
+          },
+          "center": [
+            0,
+            1.29,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 2,
+        "name": "VenatorLights",
+        "meshObjectCount": 1,
+        "triangleCount": 8730,
+        "materialNames": [
+          "VenatorV3_SmallDoor_WallLight"
+        ],
+        "instanceCount": 12,
+        "instanceNames": [
+          "VenatorLights",
+          "VenatorLights1",
+          "VenatorLights11",
+          "VenatorLights13",
+          "VenatorLights15",
+          "VenatorLights17",
+          "VenatorLights18",
+          "VenatorLights2",
+          "VenatorLights20",
+          "VenatorLights21",
+          "VenatorLights3",
+          "VenatorLights5"
+        ],
+        "file": "obj-002.glb",
+        "fileBytes": 38020,
+        "thumbnail": "obj-002.webp",
+        "bounds": {
+          "min": [
+            -0.3825,
+            0,
+            -0.0104
+          ],
+          "max": [
+            0.3825,
+            2.5828,
+            0.0104
+          ],
+          "dimensions": {
+            "width": 0.765,
+            "height": 2.5828,
+            "depth": 0.0209
+          },
+          "center": [
+            0,
+            1.2914,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 3,
+        "name": "VenatorLights19",
+        "meshObjectCount": 1,
+        "triangleCount": 8730,
+        "materialNames": [
+          "VenatorV3_SmallDoor_WallLight"
+        ],
+        "instanceCount": 4,
+        "instanceNames": [
+          "VenatorLights19",
+          "VenatorLights4",
+          "VenatorLights7",
+          "VenatorLights9"
+        ],
+        "file": "obj-003.glb",
+        "fileBytes": 38184,
+        "thumbnail": "obj-003.webp",
+        "bounds": {
+          "min": [
+            -0.0104,
+            0,
+            -0.3825
+          ],
+          "max": [
+            0.0104,
+            2.5828,
+            0.3825
+          ],
+          "dimensions": {
+            "width": 0.0209,
+            "height": 2.5828,
+            "depth": 0.765
+          },
+          "center": [
+            0,
+            1.2914,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 4,
+        "name": "LargeDoorFrame",
+        "meshObjectCount": 1,
+        "triangleCount": 3344,
+        "materialNames": [
+          "VenatorV3_LargeDoor"
+        ],
+        "instanceCount": 3,
+        "instanceNames": [
+          "LargeDoorFrame",
+          "LargeDoorFrame1",
+          "LargeDoorFrame4"
+        ],
+        "file": "obj-004.glb",
+        "fileBytes": 27940,
+        "thumbnail": "obj-004.webp",
+        "bounds": {
+          "min": [
+            -0.2601,
+            0,
+            -2.127
+          ],
+          "max": [
+            0.2601,
+            2.5831,
+            2.127
+          ],
+          "dimensions": {
+            "width": 0.5202,
+            "height": 2.5831,
+            "depth": 4.2539
+          },
+          "center": [
+            0,
+            1.2916,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 5,
+        "name": "LargeDoorFrame2",
+        "meshObjectCount": 1,
+        "triangleCount": 3344,
+        "materialNames": [
+          "VenatorV3_LargeDoor"
+        ],
+        "instanceCount": 2,
+        "instanceNames": [
+          "LargeDoorFrame2",
+          "LargeDoorFrame3"
+        ],
+        "file": "obj-005.glb",
+        "fileBytes": 27996,
+        "thumbnail": "obj-005.webp",
+        "bounds": {
+          "min": [
+            -2.127,
+            0,
+            -0.2601
+          ],
+          "max": [
+            2.127,
+            2.5831,
+            0.2601
+          ],
+          "dimensions": {
+            "width": 4.2539,
+            "height": 2.5831,
+            "depth": 0.5202
+          },
+          "center": [
+            0,
+            1.2916,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 6,
+        "name": "WallPanel14",
+        "meshObjectCount": 1,
+        "triangleCount": 1840,
+        "materialNames": [
+          "VenatorV3_WallPanels"
+        ],
+        "instanceCount": 6,
+        "instanceNames": [
+          "WallPanel14",
+          "WallPanel2",
+          "WallPanel41",
+          "WallPanel47",
+          "WallPanel50",
+          "WallPanel9"
+        ],
+        "file": "obj-006.glb",
+        "fileBytes": 14352,
+        "thumbnail": "obj-006.webp",
+        "bounds": {
+          "min": [
+            -0.4072,
+            0,
+            -0.152
+          ],
+          "max": [
+            0.4072,
+            2.7532,
+            0.152
+          ],
+          "dimensions": {
+            "width": 0.8143,
+            "height": 2.7532,
+            "depth": 0.3039
+          },
+          "center": [
+            0,
+            1.3766,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 7,
+        "name": "LargeDoor_End",
+        "meshObjectCount": 1,
+        "triangleCount": 1716,
+        "materialNames": [
+          "VenatorV3_LargeDoor"
+        ],
+        "instanceCount": 2,
+        "instanceNames": [
+          "LargeDoor_End",
+          "LargeDoor_End2"
+        ],
+        "file": "obj-007.glb",
+        "fileBytes": 16916,
+        "thumbnail": "obj-007.webp",
+        "bounds": {
+          "min": [
+            -0.1312,
+            0,
+            -2.127
+          ],
+          "max": [
+            0.1312,
+            2.5831,
+            2.127
+          ],
+          "dimensions": {
+            "width": 0.2625,
+            "height": 2.5831,
+            "depth": 4.2539
+          },
+          "center": [
+            0,
+            1.2916,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 8,
+        "name": "LargeDoor_End1",
+        "meshObjectCount": 1,
+        "triangleCount": 1716,
+        "materialNames": [
+          "VenatorV3_LargeDoor"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "LargeDoor_End1"
+        ],
+        "file": "obj-008.glb",
+        "fileBytes": 16972,
+        "thumbnail": "obj-008.webp",
+        "bounds": {
+          "min": [
+            -2.127,
+            0,
+            -0.1312
+          ],
+          "max": [
+            2.127,
+            2.5831,
+            0.1312
+          ],
+          "dimensions": {
+            "width": 4.2539,
+            "height": 2.5831,
+            "depth": 0.2625
+          },
+          "center": [
+            0,
+            1.2916,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 9,
+        "name": "WallPanel13",
+        "meshObjectCount": 1,
+        "triangleCount": 1217,
+        "materialNames": [
+          "VenatorV3_WallPanels"
+        ],
+        "instanceCount": 4,
+        "instanceNames": [
+          "WallPanel13",
+          "WallPanel4",
+          "WallPanel40",
+          "WallPanel49"
+        ],
+        "file": "obj-009.glb",
+        "fileBytes": 13020,
+        "thumbnail": "obj-009.webp",
+        "bounds": {
+          "min": [
+            -0.3826,
+            0,
+            -0.0302
+          ],
+          "max": [
+            0.3826,
+            2.5828,
+            0.0302
+          ],
+          "dimensions": {
+            "width": 0.7652,
+            "height": 2.5828,
+            "depth": 0.0604
+          },
+          "center": [
+            0,
+            1.2914,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 10,
+        "name": "WallPanel18",
+        "meshObjectCount": 1,
+        "triangleCount": 1216,
+        "materialNames": [
+          "VenatorV3_WallPanels"
+        ],
+        "instanceCount": 2,
+        "instanceNames": [
+          "WallPanel18",
+          "WallPanel26"
+        ],
+        "file": "obj-010.glb",
+        "fileBytes": 13100,
+        "thumbnail": "obj-010.webp",
+        "bounds": {
+          "min": [
+            -0.0302,
+            0,
+            -0.3826
+          ],
+          "max": [
+            0.0302,
+            2.5828,
+            0.3826
+          ],
+          "dimensions": {
+            "width": 0.0604,
+            "height": 2.5828,
+            "depth": 0.7652
+          },
+          "center": [
+            0,
+            1.2914,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 11,
+        "name": "WallPanel54",
+        "meshObjectCount": 1,
+        "triangleCount": 1216,
+        "materialNames": [
+          "VenatorV3_WallPanels"
+        ],
+        "instanceCount": 2,
+        "instanceNames": [
+          "WallPanel54",
+          "WallPanel60"
+        ],
+        "file": "obj-011.glb",
+        "fileBytes": 12596,
+        "thumbnail": "obj-011.webp",
+        "bounds": {
+          "min": [
+            -0.3826,
+            0,
+            -0.0302
+          ],
+          "max": [
+            0.3826,
+            2.5828,
+            0.0302
+          ],
+          "dimensions": {
+            "width": 0.7652,
+            "height": 2.5828,
+            "depth": 0.0604
+          },
+          "center": [
+            0,
+            1.2914,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 12,
+        "name": "Venator_Door",
+        "meshObjectCount": 1,
+        "triangleCount": 891,
+        "materialNames": [
+          "VenatorV3_SmallDoor_WallLight"
+        ],
+        "instanceCount": 2,
+        "instanceNames": [
+          "Venator_Door",
+          "Venator_Door2"
+        ],
+        "file": "obj-012.glb",
+        "fileBytes": 8768,
+        "thumbnail": "obj-012.webp",
+        "bounds": {
+          "min": [
+            -0.0214,
+            0,
+            -0.759
+          ],
+          "max": [
+            0.0214,
+            2.2056,
+            0.759
+          ],
+          "dimensions": {
+            "width": 0.0428,
+            "height": 2.2056,
+            "depth": 1.5179
+          },
+          "center": [
+            0,
+            1.1028,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 13,
+        "name": "Venator_Door1",
+        "meshObjectCount": 1,
+        "triangleCount": 891,
+        "materialNames": [
+          "VenatorV3_SmallDoor_WallLight"
+        ],
+        "instanceCount": 6,
+        "instanceNames": [
+          "Venator_Door1",
+          "Venator_Door3",
+          "Venator_Door4",
+          "Venator_Door5",
+          "Venator_Door6",
+          "Venator_Door7"
+        ],
+        "file": "obj-013.glb",
+        "fileBytes": 8716,
+        "thumbnail": "obj-013.webp",
+        "bounds": {
+          "min": [
+            -0.759,
+            0,
+            -0.0214
+          ],
+          "max": [
+            0.759,
+            2.2056,
+            0.0214
+          ],
+          "dimensions": {
+            "width": 1.5179,
+            "height": 2.2056,
+            "depth": 0.0428
+          },
+          "center": [
+            0,
+            1.1028,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 14,
+        "name": "WallPanel11",
+        "meshObjectCount": 1,
+        "triangleCount": 798,
+        "materialNames": [
+          "VenatorV3_WallPanels"
+        ],
+        "instanceCount": 16,
+        "instanceNames": [
+          "WallPanel11",
+          "WallPanel12",
+          "WallPanel33",
+          "WallPanel36",
+          "WallPanel38",
+          "WallPanel44",
+          "WallPanel46",
+          "WallPanel5",
+          "WallPanel51",
+          "WallPanel55",
+          "WallPanel57",
+          "WallPanel58"
+        ],
+        "file": "obj-014.glb",
+        "fileBytes": 8956,
+        "thumbnail": "obj-014.webp",
+        "bounds": {
+          "min": [
+            -0.3825,
+            0,
+            -0.029
+          ],
+          "max": [
+            0.3825,
+            2.5828,
+            0.029
+          ],
+          "dimensions": {
+            "width": 0.765,
+            "height": 2.5828,
+            "depth": 0.0579
+          },
+          "center": [
+            0,
+            1.2914,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 15,
+        "name": "WallPanel15",
+        "meshObjectCount": 1,
+        "triangleCount": 798,
+        "materialNames": [
+          "VenatorV3_WallPanels"
+        ],
+        "instanceCount": 6,
+        "instanceNames": [
+          "WallPanel15",
+          "WallPanel19",
+          "WallPanel21",
+          "WallPanel23",
+          "WallPanel28",
+          "WallPanel31"
+        ],
+        "file": "obj-015.glb",
+        "fileBytes": 9004,
+        "thumbnail": "obj-015.webp",
+        "bounds": {
+          "min": [
+            -0.029,
+            0,
+            -0.3825
+          ],
+          "max": [
+            0.029,
+            2.5828,
+            0.3825
+          ],
+          "dimensions": {
+            "width": 0.0579,
+            "height": 2.5828,
+            "depth": 0.765
+          },
+          "center": [
+            0,
+            1.2914,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 16,
+        "name": "WallPanel10",
+        "meshObjectCount": 1,
+        "triangleCount": 366,
+        "materialNames": [
+          "VenatorV3_WallPanels"
+        ],
+        "instanceCount": 8,
+        "instanceNames": [
+          "WallPanel10",
+          "WallPanel34",
+          "WallPanel42",
+          "WallPanel52",
+          "WallPanel53",
+          "WallPanel56",
+          "WallPanel59",
+          "WallPanel8"
+        ],
+        "file": "obj-016.glb",
+        "fileBytes": 4988,
+        "thumbnail": "obj-016.webp",
+        "bounds": {
+          "min": [
+            -0.3825,
+            0,
+            -0.0181
+          ],
+          "max": [
+            0.3825,
+            2.5828,
+            0.0181
+          ],
+          "dimensions": {
+            "width": 0.765,
+            "height": 2.5828,
+            "depth": 0.0361
+          },
+          "center": [
+            0,
+            1.2914,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 17,
+        "name": "WallPanel16",
+        "meshObjectCount": 1,
+        "triangleCount": 366,
+        "materialNames": [
+          "VenatorV3_WallPanels"
+        ],
+        "instanceCount": 4,
+        "instanceNames": [
+          "WallPanel16",
+          "WallPanel20",
+          "WallPanel24",
+          "WallPanel29"
+        ],
+        "file": "obj-017.glb",
+        "fileBytes": 5048,
+        "thumbnail": "obj-017.webp",
+        "bounds": {
+          "min": [
+            -0.0181,
+            0,
+            -0.3825
+          ],
+          "max": [
+            0.0181,
+            2.5828,
+            0.3825
+          ],
+          "dimensions": {
+            "width": 0.0361,
+            "height": 2.5828,
+            "depth": 0.765
+          },
+          "center": [
+            0,
+            1.2914,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 18,
+        "name": "VenatorPipe",
+        "meshObjectCount": 1,
+        "triangleCount": 200,
+        "materialNames": [
+          "VenatorV3_SmallDoor_WallLight"
+        ],
+        "instanceCount": 8,
+        "instanceNames": [
+          "VenatorPipe",
+          "VenatorPipe1",
+          "VenatorPipe2",
+          "VenatorPipe3",
+          "VenatorPipe4",
+          "VenatorPipe5",
+          "VenatorPipe6",
+          "VenatorPipe7"
+        ],
+        "file": "obj-018.glb",
+        "fileBytes": 2552,
+        "thumbnail": "obj-018.webp",
+        "bounds": {
+          "min": [
+            -0.1036,
+            0,
+            -0.1036
+          ],
+          "max": [
+            0.1036,
+            2.5809,
+            0.1036
+          ],
+          "dimensions": {
+            "width": 0.2072,
+            "height": 2.5809,
+            "depth": 0.2072
+          },
+          "center": [
+            0,
+            1.2904,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 19,
+        "name": "L_Door_Part1",
+        "meshObjectCount": 1,
+        "triangleCount": 66,
+        "materialNames": [
+          "VenatorV3_LargeDoor"
+        ],
+        "instanceCount": 4,
+        "instanceNames": [
+          "L_Door_Part1",
+          "L_Door_Part11",
+          "L_Door_Part12",
+          "L_Door_Part2"
+        ],
+        "file": "obj-019.glb",
+        "fileBytes": 2672,
+        "thumbnail": "obj-019.webp",
+        "bounds": {
+          "min": [
+            -1.7066,
+            0,
+            -0.1097
+          ],
+          "max": [
+            1.7066,
+            2.4203,
+            0.1097
+          ],
+          "dimensions": {
+            "width": 3.4133,
+            "height": 2.4203,
+            "depth": 0.2194
+          },
+          "center": [
+            0,
+            1.2101,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 20,
+        "name": "L_Door_Part10",
+        "meshObjectCount": 1,
+        "triangleCount": 66,
+        "materialNames": [
+          "VenatorV3_LargeDoor"
+        ],
+        "instanceCount": 6,
+        "instanceNames": [
+          "L_Door_Part10",
+          "L_Door_Part5",
+          "L_Door_Part6",
+          "L_Door_Part7",
+          "L_Door_Part8",
+          "L_Door_Part9"
+        ],
+        "file": "obj-020.glb",
+        "fileBytes": 2620,
+        "thumbnail": "obj-020.webp",
+        "bounds": {
+          "min": [
+            -0.1097,
+            0,
+            -1.7066
+          ],
+          "max": [
+            0.1097,
+            2.4203,
+            1.7066
+          ],
+          "dimensions": {
+            "width": 0.2194,
+            "height": 2.4203,
+            "depth": 3.4133
+          },
+          "center": [
+            0,
+            1.2101,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 21,
+        "name": "VenatorLight",
+        "meshObjectCount": 1,
+        "triangleCount": 30,
+        "materialNames": [
+          "VenatorV3_SmallDoor_WallLight"
+        ],
+        "instanceCount": 38,
+        "instanceNames": [
+          "VenatorLight",
+          "VenatorLight1",
+          "VenatorLight10",
+          "VenatorLight11",
+          "VenatorLight12",
+          "VenatorLight13",
+          "VenatorLight14",
+          "VenatorLight15",
+          "VenatorLight16",
+          "VenatorLight17",
+          "VenatorLight18",
+          "VenatorLight19"
+        ],
+        "file": "obj-021.glb",
+        "fileBytes": 2076,
+        "thumbnail": "obj-021.webp",
+        "bounds": {
+          "min": [
+            -0.3838,
+            0,
+            -2.0932
+          ],
+          "max": [
+            0.3838,
+            0.1676,
+            2.0932
+          ],
+          "dimensions": {
+            "width": 0.7676,
+            "height": 0.1676,
+            "depth": 4.1863
+          },
+          "center": [
+            0,
+            0.0838,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 22,
+        "name": "VenatorLight22",
+        "meshObjectCount": 1,
+        "triangleCount": 30,
+        "materialNames": [
+          "VenatorV3_SmallDoor_WallLight"
+        ],
+        "instanceCount": 11,
+        "instanceNames": [
+          "VenatorLight22",
+          "VenatorLight23",
+          "VenatorLight25",
+          "VenatorLight26",
+          "VenatorLight27",
+          "VenatorLight28",
+          "VenatorLight29",
+          "VenatorLight30",
+          "VenatorLight31",
+          "VenatorLight32",
+          "VenatorLight42"
+        ],
+        "file": "obj-022.glb",
+        "fileBytes": 2136,
+        "thumbnail": "obj-022.webp",
+        "bounds": {
+          "min": [
+            -2.0932,
+            0,
+            -0.3838
+          ],
+          "max": [
+            2.0932,
+            0.1676,
+            0.3838
+          ],
+          "dimensions": {
+            "width": 4.1863,
+            "height": 0.1676,
+            "depth": 0.7676
+          },
+          "center": [
+            0,
+            0.0838,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      }
+    ],
+    "roomKit": {
+      "shapeOnly": {
+        "file": "roomkit-shape.glb",
+        "fileBytes": 1825096
+      },
+      "textured": {
+        "file": "roomkit-textured.glb",
+        "fileBytes": 2147484
+      },
+      "thumbnail": "roomkit.webp",
+      "resizedImages": [
+        "Image_0",
+        "Image_1",
+        "Image_10",
+        "Image_11",
+        "Image_12",
+        "Image_2",
+        "Image_3",
+        "Image_4",
+        "Image_5",
+        "Image_6",
+        "Image_7",
+        "Image_8",
+        "Image_9"
+      ]
+    },
+    "warnings": [
+      {
+        "code": "duplicates-collapsed",
+        "message": "158 separable objects collapsed to 26 unique shapes; repeated instances share one candidate."
+      }
+    ],
+    "descendedWrappers": [
+      "Sketchfab_model",
+      "PreviewSet.fbx",
+      "RootNode",
+      "VenatorPrefabSet"
+    ],
+    "importSeconds": 0.62,
+    "sceneTriangleCount": 294322,
+    "sceneBounds": {
+      "min": [
+        -20.1564,
+        -1.3632,
+        -4.4583
+      ],
+      "max": [
+        11.0024,
+        1.3899,
+        11.2895
+      ],
+      "dimensions": {
+        "width": 31.1588,
+        "height": 2.7532,
+        "depth": 15.7479
+      },
+      "center": [
+        -4.577,
+        0.0133,
+        3.4156
+      ]
+    },
+    "sceneObjectCount": 320,
+    "sceneMaterialNames": [
+      "VenatorV3_SmallDoor_WallLight",
+      "VenatorV3_WallPanels",
+      "VenatorV3_LargeDoor",
+      "Venator_Floor"
+    ],
+    "geometryCompression": "draco",
+    "separableObjectCount": 158,
+    "uniqueObjectCount": 26,
+    "eligibleObjectCount": 23
+  }
+}

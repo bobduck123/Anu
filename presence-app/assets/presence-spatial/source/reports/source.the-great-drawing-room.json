@@ -1,0 +1,651 @@
+{
+  "schemaVersion": "presence-spatial-assets.v0",
+  "sourceAssetId": "source.the-great-drawing-room",
+  "sourceFilename": "the_great_drawing_room.glb",
+  "sourcePath": "the_great_drawing_room.glb",
+  "absoluteSourcePath": "C:\\Dev\\presence pieces\\the_great_drawing_room.glb",
+  "fileBytes": 71432908,
+  "format": "glb",
+  "gltfVersion": "2.0",
+  "contentHash": "12da174cbd5a1d3fcd252e0725e314bc26758e356e2b93a1797aa9da35285297",
+  "nodeCount": 17,
+  "sceneRootCount": 1,
+  "topLevelNodeCount": 15,
+  "separationRootPath": [
+    "Sketchfab_model",
+    "model.obj.cleaner.materialmerger.gles"
+  ],
+  "meshCount": 15,
+  "primitiveCount": 15,
+  "materialCount": 1,
+  "imageCount": 1,
+  "textureCount": 1,
+  "animationCount": 0,
+  "cameraCount": 0,
+  "lightCount": 0,
+  "triangleCount": 999999,
+  "textureBytes": 28158667,
+  "geometryBytes": 43259828,
+  "otherBufferBytes": 1,
+  "bounds": {
+    "min": [
+      -8.0962,
+      0.1549,
+      -8.0109
+    ],
+    "max": [
+      6.1956,
+      5.8646,
+      5.9832
+    ],
+    "dimensions": {
+      "width": 14.2918,
+      "height": 5.7097,
+      "depth": 13.9941
+    },
+    "center": [
+      -0.9503,
+      3.0098,
+      -1.0138
+    ]
+  },
+  "appearsSingleObject": false,
+  "appearsMultiObject": true,
+  "appearsCompleteInterior": true,
+  "hasSeparableNodes": true,
+  "loosePartSplitUseful": false,
+  "classifications": [
+    "multi-object-source",
+    "complete-interior-source",
+    "candidate-roomkit-source",
+    "geometry-heavy-source",
+    "needs-license-review"
+  ],
+  "interiorSignals": [
+    "source path names a space: room",
+    "15 meshes suggest an arranged scene",
+    "15 mesh-bearing nodes across the scene",
+    "wide footprint (14.2918 units across)",
+    "room-scale height (5.7097 units)"
+  ],
+  "scaleReview": {
+    "required": false,
+    "measuredHeight": 5.7097,
+    "assumedInteriorHeight": 3.2,
+    "suggestedUniformScale": null,
+    "note": "Measured height 5.7097 is consistent with a metre-scaled interior."
+  },
+  "license": {
+    "status": "needs-review",
+    "source": "embedded",
+    "declaredCopyright": null,
+    "declaredGenerator": "Sketchfab-16.12.0",
+    "declaredAuthor": "The Hallwyl Museum (Hallwylska museet) (https://sketchfab.com/TheHallwylMuseum)",
+    "declaredTitle": "The Great Drawing Room",
+    "declaredLicense": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+    "sidecarFiles": [],
+    "filenameHints": [],
+    "evidence": [
+      "asset.generator present in the glTF header",
+      "author/creator recorded in embedded metadata",
+      "title recorded in embedded metadata",
+      "licence string recorded in embedded metadata"
+    ]
+  },
+  "extensionsUsed": [
+    "KHR_materials_unlit"
+  ],
+  "extensionsRequired": [],
+  "topLevelNodes": [
+    {
+      "nodeIndex": 2,
+      "name": "Object_2",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Object_0"
+      ],
+      "materialNames": [
+        "model_Material_u1_v1"
+      ],
+      "triangleCount": 87429,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -8.0962,
+          0.1549,
+          -8.0109
+        ],
+        "max": [
+          6.1956,
+          5.8646,
+          5.9832
+        ],
+        "dimensions": {
+          "width": 14.2918,
+          "height": 5.7097,
+          "depth": 13.9941
+        },
+        "center": [
+          -0.9503,
+          3.0098,
+          -1.0138
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 3,
+      "name": "Object_3",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Object_1"
+      ],
+      "materialNames": [
+        "model_Material_u1_v1"
+      ],
+      "triangleCount": 92556,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -6.3935,
+          0.4409,
+          -6.3175
+        ],
+        "max": [
+          6.0493,
+          5.8472,
+          5.1613
+        ],
+        "dimensions": {
+          "width": 12.4428,
+          "height": 5.4063,
+          "depth": 11.4788
+        },
+        "center": [
+          -0.1721,
+          3.1441,
+          -0.5781
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 4,
+      "name": "Object_4",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Object_2"
+      ],
+      "materialNames": [
+        "model_Material_u1_v1"
+      ],
+      "triangleCount": 87630,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -6.4887,
+          0.2301,
+          -6.2981
+        ],
+        "max": [
+          5.74,
+          5.4877,
+          5.1372
+        ],
+        "dimensions": {
+          "width": 12.2287,
+          "height": 5.2576,
+          "depth": 11.4353
+        },
+        "center": [
+          -0.3743,
+          2.8589,
+          -0.5804
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 5,
+      "name": "Object_5",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Object_3"
+      ],
+      "materialNames": [
+        "model_Material_u1_v1"
+      ],
+      "triangleCount": 77280,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -6.8072,
+          0.4492,
+          -6.1828
+        ],
+        "max": [
+          5.4495,
+          5.4855,
+          5.0228
+        ],
+        "dimensions": {
+          "width": 12.2567,
+          "height": 5.0363,
+          "depth": 11.2056
+        },
+        "center": [
+          -0.6789,
+          2.9674,
+          -0.58
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 6,
+      "name": "Object_6",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Object_4"
+      ],
+      "materialNames": [
+        "model_Material_u1_v1"
+      ],
+      "triangleCount": 75156,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -6.4091,
+          0.1549,
+          -6.5067
+        ],
+        "max": [
+          5.3425,
+          5.4795,
+          5.1483
+        ],
+        "dimensions": {
+          "width": 11.7516,
+          "height": 5.3246,
+          "depth": 11.655
+        },
+        "center": [
+          -0.5333,
+          2.8172,
+          -0.6792
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 7,
+      "name": "Object_7",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Object_5"
+      ],
+      "materialNames": [
+        "model_Material_u1_v1"
+      ],
+      "triangleCount": 72621,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -6.5107,
+          0.4138,
+          -6.4251
+        ],
+        "max": [
+          5.6741,
+          5.8472,
+          5.1786
+        ],
+        "dimensions": {
+          "width": 12.1848,
+          "height": 5.4334,
+          "depth": 11.6037
+        },
+        "center": [
+          -0.4183,
+          3.1305,
+          -0.6232
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 8,
+      "name": "Object_8",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Object_6"
+      ],
+      "materialNames": [
+        "model_Material_u1_v1"
+      ],
+      "triangleCount": 65066,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -6.4837,
+          0.2728,
+          -6.6067
+        ],
+        "max": [
+          6.163,
+          5.4772,
+          5.1119
+        ],
+        "dimensions": {
+          "width": 12.6467,
+          "height": 5.2044,
+          "depth": 11.7186
+        },
+        "center": [
+          -0.1603,
+          2.875,
+          -0.7474
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 9,
+      "name": "Object_9",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Object_7"
+      ],
+      "materialNames": [
+        "model_Material_u1_v1"
+      ],
+      "triangleCount": 68547,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -6.5162,
+          0.4364,
+          -6.2973
+        ],
+        "max": [
+          5.3478,
+          5.4793,
+          5.1778
+        ],
+        "dimensions": {
+          "width": 11.864,
+          "height": 5.0429,
+          "depth": 11.4751
+        },
+        "center": [
+          -0.5842,
+          2.9579,
+          -0.5597
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 10,
+      "name": "Object_10",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Object_8"
+      ],
+      "materialNames": [
+        "model_Material_u1_v1"
+      ],
+      "triangleCount": 61150,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -6.4913,
+          0.1549,
+          -6.3275
+        ],
+        "max": [
+          5.3418,
+          5.476,
+          5.1806
+        ],
+        "dimensions": {
+          "width": 11.8331,
+          "height": 5.3211,
+          "depth": 11.5081
+        },
+        "center": [
+          -0.5747,
+          2.8154,
+          -0.5734
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 11,
+      "name": "Object_11",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Object_9"
+      ],
+      "materialNames": [
+        "model_Material_u1_v1"
+      ],
+      "triangleCount": 60266,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -6.4786,
+          0.3093,
+          -6.5032
+        ],
+        "max": [
+          5.3151,
+          5.47,
+          5.1777
+        ],
+        "dimensions": {
+          "width": 11.7937,
+          "height": 5.1607,
+          "depth": 11.6809
+        },
+        "center": [
+          -0.5817,
+          2.8897,
+          -0.6627
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 12,
+      "name": "Object_12",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Object_10"
+      ],
+      "materialNames": [
+        "model_Material_u1_v1"
+      ],
+      "triangleCount": 61674,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -6.1687,
+          0.2741,
+          -6.5067
+        ],
+        "max": [
+          4.2207,
+          5.8646,
+          4.5191
+        ],
+        "dimensions": {
+          "width": 10.3894,
+          "height": 5.5905,
+          "depth": 11.0258
+        },
+        "center": [
+          -0.974,
+          3.0694,
+          -0.9938
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 13,
+      "name": "Object_13",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Object_11"
+      ],
+      "materialNames": [
+        "model_Material_u1_v1"
+      ],
+      "triangleCount": 61417,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -6.3705,
+          0.4641,
+          -5.9951
+        ],
+        "max": [
+          3.9488,
+          5.4847,
+          5.1395
+        ],
+        "dimensions": {
+          "width": 10.3193,
+          "height": 5.0206,
+          "depth": 11.1346
+        },
+        "center": [
+          -1.2108,
+          2.9744,
+          -0.4278
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 14,
+      "name": "Object_14",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Object_12"
+      ],
+      "materialNames": [
+        "model_Material_u1_v1"
+      ],
+      "triangleCount": 47919,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -6.5345,
+          0.2708,
+          -6.4149
+        ],
+        "max": [
+          4.2611,
+          5.4792,
+          5.1814
+        ],
+        "dimensions": {
+          "width": 10.7956,
+          "height": 5.2084,
+          "depth": 11.5963
+        },
+        "center": [
+          -1.1367,
+          2.875,
+          -0.6168
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 15,
+      "name": "Object_15",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Object_13"
+      ],
+      "materialNames": [
+        "model_Material_u1_v1"
+      ],
+      "triangleCount": 44291,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -6.5649,
+          0.3761,
+          -6.4857
+        ],
+        "max": [
+          5.1605,
+          5.4769,
+          5.18
+        ],
+        "dimensions": {
+          "width": 11.7254,
+          "height": 5.1008,
+          "depth": 11.6657
+        },
+        "center": [
+          -0.7022,
+          2.9265,
+          -0.6528
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 16,
+      "name": "Object_16",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Object_14"
+      ],
+      "materialNames": [
+        "model_Material_u1_v1"
+      ],
+      "triangleCount": 36997,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -6.5056,
+          0.4471,
+          -6.314
+        ],
+        "max": [
+          4.8308,
+          5.4877,
+          5.1786
+        ],
+        "dimensions": {
+          "width": 11.3364,
+          "height": 5.0406,
+          "depth": 11.4926
+        },
+        "center": [
+          -0.8374,
+          2.9674,
+          -0.5677
+        ]
+      },
+      "hasSkin": false
+    }
+  ],
+  "warnings": [
+    {
+      "code": "over-source-budget",
+      "message": "Source file is 68.1 MB. It is source material only and must not be treated as a Presence runtime asset."
+    },
+    {
+      "code": "huge-texture-payload",
+      "message": "Embedded textures account for 26.9 MB; textured exports require resizing and recompression."
+    }
+  ]
+}
