@@ -12,6 +12,7 @@ const organizerStatusMock = vi.fn();
 const organizerApplyMock = vi.fn();
 const timebankListMock = vi.fn();
 const burnoutMeMock = vi.fn();
+const onboardingGetMock = vi.fn();
 
 let desktopEnabled = false;
 
@@ -55,6 +56,10 @@ vi.mock('@/lib/api/endpoints', () => ({
   burnoutApi: { me: () => burnoutMeMock() },
 }));
 
+vi.mock('@/lib/api/onboarding', () => ({
+  onboardingApi: { get: () => onboardingGetMock() },
+}));
+
 vi.mock('@/ui/patterns/profile-desktop', () => ({
   DesktopCanvas: () => <div data-testid="desktop-canvas">desktop</div>,
 }));
@@ -75,6 +80,8 @@ describe('ProfilePage', () => {
     organizerApplyMock.mockReset();
     timebankListMock.mockReset();
     burnoutMeMock.mockReset();
+    onboardingGetMock.mockReset();
+    onboardingGetMock.mockResolvedValue({ complete: false });
 
     meMock.mockResolvedValue({
       id: 7,
@@ -152,5 +159,19 @@ describe('ProfilePage', () => {
 
     await waitFor(() => expect(screen.getByTestId('desktop-canvas')).toBeInTheDocument());
     expect(screen.getByText(/classic cockpit remains primary/i)).toBeInTheDocument();
+  });
+
+  it('uses confirmed account state rather than a browser-only completion marker', async () => {
+    window.localStorage.setItem('onboarding_complete', 'true');
+    render(<ProfilePage />);
+    expect(await screen.findByText('Profile cockpit')).toBeInTheDocument();
+    expect(screen.queryByText('Journey complete')).not.toBeInTheDocument();
+    expect(onboardingGetMock).toHaveBeenCalled();
+  });
+
+  it('shows completion when the member account confirms it', async () => {
+    onboardingGetMock.mockResolvedValue({ complete: true });
+    render(<ProfilePage />);
+    expect(await screen.findByText('Journey complete')).toBeInTheDocument();
   });
 });

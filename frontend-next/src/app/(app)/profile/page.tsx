@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthGateCard from '@/components/auth/AuthGateCard';
 import { api, TodoResponse, NotificationResponse, Challenge, Article } from '@/lib/api';
+import { onboardingApi } from '@/lib/api/onboarding';
 import { burnoutApi, timebankApi, type TimeEntry } from '@/lib/api/endpoints';
 import { useFeatureFlag } from '@/lib/featureFlags';
 import { getThresholdState } from '@/lib/tenantSemantics';
@@ -213,12 +214,16 @@ export default function ProfilePage() {
   }, [authLoading, isAuthenticated, user]);
 
   useEffect(() => {
-    try {
-      setOnboardingComplete(localStorage.getItem('onboarding_complete') === 'true');
-    } catch {
+    if (authLoading || !isAuthenticated) {
       setOnboardingComplete(false);
+      return;
     }
-  }, []);
+    let cancelled = false;
+    void onboardingApi.get()
+      .then((state) => { if (!cancelled) setOnboardingComplete(state.complete); })
+      .catch(() => { if (!cancelled) setOnboardingComplete(false); });
+    return () => { cancelled = true; };
+  }, [authLoading, isAuthenticated, user]);
 
   useEffect(() => {
     if (profile) {

@@ -45,6 +45,14 @@ hell_bp = Blueprint("hell", __name__)
 
 ACTIVE_NEED_STATUSES = ["VERIFIED", "ROUTING_ACTIVE", "PARTIALLY_FULFILLED", "FULFILLED_PENDING_PROOF"]
 STEWARD_ROLES = {"board_member", "node_admin", "platform_admin", "treasury_guardian"}
+ONBOARDING_INTERESTS = {
+    "Climate Action",
+    "Community Care",
+    "Environmental Justice",
+    "Education",
+    "Food Systems",
+    "Local Policy",
+}
 
 
 def _resolve_node_id(user: User | None, payload: dict[str, Any] | None = None) -> int:
@@ -404,6 +412,76 @@ def list_microcosms_route():
         "updated_at": proj.updated_at.isoformat() if proj.updated_at else None,
     } for proj, micro in rows]
     return ok({"microcosms": payload, "count": len(payload)})
+
+
+def _onboarding_state(user: User) -> dict[str, Any]:
+    available = db.session.query(Microcosm).join(
+        MicrocosmProjectionRead,
+        MicrocosmProjectionRead.microcosm_id == Microcosm.id,
+    ).filter(
+        Microcosm.node_id == user.node_id,
+        MicrocosmProjectionRead.node_id == user.node_id,
+        MicrocosmProjectionRead.status == "ACTIVE",
+    ).order_by(Microcosm.id).all()
+    joined = [
+        {"id": micro.id, "name": micro.name}
+        for micro in user.microcosms
+        if micro.node_id == user.node_id
+    ]
+    joined.sort(key=lambda micro: micro["id"])
+    interests = user.onboarding_interests_json or []
+    return {
+        "interests": interests,
+        "joined_microcosms": joined,
+        "microcosms": [{"id": micro.id, "name": micro.name, "description": micro.description} for micro in available],
+        "complete": bool(interests and joined),
+    }
+
+
+@hell_bp.route("/hell/onboarding", methods=["GET", "POST"])
+@limiter.limit("30 per minute")
+def participant_onboarding():
+    verify_jwt_in_request()
+    user = get_current_user()
+    if not user:
+        return error("unauthorized", "Sign in to continue onboarding", status=401)
+    if user.node_id is None:
+        return error("node_required", "A community account is required", status=409)
+    if request.method == "GET":
+        return ok(_onboarding_state(user))
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return error("validation_error", "Onboarding details are required", status=400)
+    interests = payload.get("interests")
+    microcosm_id = payload.get("microcosm_id")
+    if (
+        not isinstance(interests, list)
+        or not 1 <= len(interests) <= len(ONBOARDING_INTERESTS)
+        or any(not isinstance(value, str) or value not in ONBOARDING_INTERESTS for value in interests)
+        or len(set(interests)) != len(interests)
+        or type(microcosm_id) is not int
+        or microcosm_id <= 0
+    ):
+        return error("validation_error", "Choose interests and a microcosm", status=400)
+
+    micro = db.session.query(Microcosm).join(
+        MicrocosmProjectionRead,
+        MicrocosmProjectionRead.microcosm_id == Microcosm.id,
+    ).filter(
+        Microcosm.id == microcosm_id,
+        Microcosm.node_id == user.node_id,
+        MicrocosmProjectionRead.node_id == user.node_id,
+        MicrocosmProjectionRead.status == "ACTIVE",
+    ).first()
+    if not micro:
+        return error("not_found", "This microcosm is not available to your community", status=404)
+
+    if user not in micro.members:
+        micro.members.append(user)
+    user.onboarding_interests_json = interests
+    db.session.commit()
+    return ok(_onboarding_state(user))
 
 
 @hell_bp.route("/microcosms", methods=["POST"])
