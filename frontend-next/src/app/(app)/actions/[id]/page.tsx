@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamicImport from 'next/dynamic';
-import { api, Action, ActionProof, ActionImpactMetric } from '@/lib/api';
+import { api, Action, ActionImpactMetric } from '@/lib/api';
+import { ActionCommitmentPanel } from '@/components/actions/ActionCommitmentPanel';
 
 const MapView = dynamicImport(() => import('@/components/shared/MapView'), { ssr: false });
 
@@ -14,25 +15,17 @@ export default function ActionDetailPage() {
   const [action, setAction] = useState<Action | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [proofs, setProofs] = useState<ActionProof[]>([]);
   const [metrics, setMetrics] = useState<ActionImpactMetric[]>([]);
-  const [proofForm, setProofForm] = useState({ before_url: '', after_url: '', proof_url: '' });
   const [metricForm, setMetricForm] = useState({ label: '', value: '', unit: '' });
-  const [submittingProof, setSubmittingProof] = useState(false);
   const [submittingMetric, setSubmittingMetric] = useState(false);
-  const [imageMode, setImageMode] = useState<'before' | 'after'>('before');
 
   useEffect(() => {
     const load = async () => {
       try {
         const data = await api.actions.getById(actionId);
         setAction(data);
-        const [proofData, metricData] = await Promise.all([
-          api.actions.getProofs(actionId),
-          api.actions.getMetrics(actionId),
-        ]);
-        setProofs(proofData);
-        setMetrics(metricData);
+        const metricResult = await api.actions.getMetrics(actionId).catch(() => []);
+        setMetrics(metricResult);
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to load action';
         setError(message);
@@ -67,7 +60,6 @@ export default function ActionDetailPage() {
   if (!action) return null;
 
   const hasLocation = action.location?.coordinates;
-  const hasVerified = proofs.some((proof) => proof.verified);
   const markers = hasLocation ? [{
     id: action._id,
     lat: action.location!.coordinates[1],
@@ -85,11 +77,6 @@ export default function ActionDetailPage() {
             <h1 className="text-3xl font-semibold" style={{ fontFamily: 'var(--font-serif)' }}>
               {action.title}
             </h1>
-            {hasVerified && (
-              <span className="inline-flex items-center mt-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-[var(--color-sage-light)] text-[var(--color-forest)]">
-                Impact Verified
-              </span>
-            )}
           </div>
           <Link href="/actions" className="btn-pill btn-pill-outline text-sm">Back</Link>
         </div>
@@ -110,7 +97,7 @@ export default function ActionDetailPage() {
             <div>{new Date(action.endDate).toLocaleDateString()}</div>
           </div>
           <div>
-            <div className="text-[var(--color-muted-foreground)] mb-1">Completions</div>
+            <div className="text-[var(--color-muted-foreground)] mb-1">Legacy completions</div>
             <div className="font-mono-data">{action.completions}</div>
           </div>
           <div>
@@ -127,71 +114,9 @@ export default function ActionDetailPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          <div className="card-civic">
-            <h2 className="text-lg font-semibold mb-3">Action Replay</h2>
-            {proofs.length === 0 ? (
-              <p className="text-sm text-[var(--color-muted-foreground)]">No proof uploaded yet.</p>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <button onClick={() => setImageMode('before')} className={`btn-pill text-xs ${imageMode === 'before' ? 'btn-pill-primary' : 'btn-pill-outline'}`}>
-                    Before
-                  </button>
-                  <button onClick={() => setImageMode('after')} className={`btn-pill text-xs ${imageMode === 'after' ? 'btn-pill-primary' : 'btn-pill-outline'}`}>
-                    After
-                  </button>
-                </div>
-                {proofs[0] && (
-                  <div className="border border-[var(--color-border)] rounded-lg p-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={imageMode === 'before' ? proofs[0].before_url || proofs[0].proof_url : proofs[0].after_url || proofs[0].proof_url}
-                      alt="Proof"
-                      className="w-full rounded-lg"
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-            <div className="mt-4 space-y-2">
-              <input
-                value={proofForm.before_url}
-                onChange={(e) => setProofForm((p) => ({ ...p, before_url: e.target.value }))}
-                placeholder="Before photo URL"
-                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm"
-              />
-              <input
-                value={proofForm.after_url}
-                onChange={(e) => setProofForm((p) => ({ ...p, after_url: e.target.value }))}
-                placeholder="After photo URL"
-                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm"
-              />
-              <input
-                value={proofForm.proof_url}
-                onChange={(e) => setProofForm((p) => ({ ...p, proof_url: e.target.value }))}
-                placeholder="Proof media URL"
-                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm"
-              />
-              <button
-                onClick={async () => {
-                  setSubmittingProof(true);
-                  try {
-                    const created = await api.actions.addProof(actionId, proofForm);
-                    setProofs((prev) => [created, ...prev]);
-                    setProofForm({ before_url: '', after_url: '', proof_url: '' });
-                  } finally {
-                    setSubmittingProof(false);
-                  }
-                }}
-                disabled={submittingProof}
-                className="btn-pill btn-pill-sage text-sm w-full"
-              >
-                {submittingProof ? 'Saving...' : 'Upload Proof'}
-              </button>
-            </div>
-          </div>
+        <ActionCommitmentPanel actionId={actionId} />
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           <div className="card-civic">
             <h2 className="text-lg font-semibold mb-3">Impact Metrics</h2>
             <div className="space-y-2 mb-4">
