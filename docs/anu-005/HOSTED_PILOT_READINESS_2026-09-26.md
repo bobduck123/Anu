@@ -6,6 +6,10 @@
 
 The owner reconnected the previously working database. Read-only probes now show backend `/readiness` 200 with `status=ok`, `checks.database=ok`, and `ready=true`; frontend-proxied actions and impact summary both return 200. The frontend `/commitments` page and backend `/api/commitments/actions/1/outcome` route still return 404. Database connectivity is resolved, while the ANU code deployment, migration state and real member/steward journey remain unverified. **Decision remains HOLD.**
 
+## Production push follow-up at 13:24 UTC
+
+Remote `main` advanced to merge commit `9dbf2f375a8bff5d15a8bc1ba6eb8e53929211c6` (`Merge branch 'feat/spatial-authoring-baseline'`). It includes the spatial branch, but none of OPS-004 `bf68437`, ANU-003 `80389e6`, ANU-004 `ac7a8d4`, or reconciliation `a57f603`. The new merge changes no files under the ANU frontend, core API or impact service relative to the earlier `main` pin. The production database remains healthy (`/readiness` 200), and public actions and impact summary reads return 200, but `/commitments` and `/commitments/review` return 404 and the direct reviewed-outcome API route returns 404. Browser QA at `/actions/1` still shows “Completions 1” and the legacy “Upload Proof” button. The impact summary response contains `actions_completed=1` without `verified_action_points`. These are **legacy production values**, not validated steward-reviewed outcomes. No member, steward, point or historical-row write was attempted. **Decision remains HOLD.**
+
 ## Scope and source
 
 - Read-only check of the frontend `https://maanara.vercel.app` and core API `https://anu-back-end.vercel.app`. The owner confirmed `maanara.vercel.app` is the intended pilot host and that Vercel deploys it from the Git repository.
