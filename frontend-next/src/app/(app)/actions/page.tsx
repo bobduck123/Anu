@@ -178,20 +178,6 @@ export default function ActionsPage() {
     [filteredActions, selectedActionId],
   );
 
-  const handleComplete = useCallback(
-    async (actionId: string) => {
-      try {
-        await api.actions.complete(actionId);
-        await loadActions();
-        setNotice('Action completed. The field record now reflects the new completion.');
-      } catch (error) {
-        console.error('Failed to complete action:', error);
-        setNotice('Could not complete the action right now.');
-      }
-    },
-    [loadActions],
-  );
-
   const handleAddToTodo = useCallback(async (action: Action) => {
     try {
       await api.todos.addAction(action._id, action.title);
@@ -377,9 +363,9 @@ export default function ActionsPage() {
           <Link href={`/actions/${selectedAction._id}`} className="anu-earth-top-link">
             Open full action record
           </Link>
-          <AnuControlButton tone="active" iconLeft={CheckCircle2} onClick={() => void handleComplete(selectedAction._id)}>
-            Complete action
-          </AnuControlButton>
+          <AnuControlLink tone="active" href={`/actions/${selectedAction._id}`}>
+            Commit or report completion
+          </AnuControlLink>
           <AnuControlButton tone="default" iconLeft={Plus} onClick={() => void handleAddToTodo(selectedAction)}>
             Add to to-do
           </AnuControlButton>
@@ -448,9 +434,9 @@ export default function ActionsPage() {
                     <AnuActionLink href={`/actions/${action._id}`} tone="secondary">
                       Details
                     </AnuActionLink>
-                    <AnuControlButton tone="active" onClick={() => void handleComplete(action._id)}>
-                      Complete
-                    </AnuControlButton>
+                    <AnuControlLink tone="active" href={`/actions/${action._id}`}>
+                      Commit or report completion
+                    </AnuControlLink>
                     <AnuControlButton tone="default" onClick={() => void handleAddToTodo(action)}>
                       Add to to-do
                     </AnuControlButton>

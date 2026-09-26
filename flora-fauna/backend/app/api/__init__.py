@@ -61,6 +61,7 @@ from .crisis_sim import crisis_sim_bp
 from .impact import impact_bp
 from .synergy import synergy_bp
 from .hell import hell_bp
+from .action_commitments import action_commitments_bp
 from .wcle import wcle_bp
 from .calendar import calendar_bp
 from .admin_tenants import admin_tenants_bp
@@ -147,6 +148,7 @@ api_bp.register_blueprint(crisis_sim_bp)
 api_bp.register_blueprint(impact_bp)
 api_bp.register_blueprint(synergy_bp)
 api_bp.register_blueprint(hell_bp)
+api_bp.register_blueprint(action_commitments_bp)
 api_bp.register_blueprint(wcle_bp)
 api_bp.register_blueprint(calendar_bp)
 api_bp.register_blueprint(admin_tenants_bp)

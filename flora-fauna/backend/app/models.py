@@ -387,6 +387,29 @@ class ActionProof(db.Model):
     created_at = db.Column(db.DateTime, default=utcnow)
 
 
+class ActionCommitment(db.Model):
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'action_id', name='uq_action_commitment_user_action'),
+        db.Index('ix_action_commitment_node_status', 'node_id', 'status'),
+    )
+    id = db.Column(db.Integer, primary_key=True)
+    node_id = db.Column(db.Integer, db.ForeignKey('node.id'), nullable=False)
+    action_id = db.Column(db.Integer, db.ForeignKey('action.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.String(24), nullable=False, default='CONFIRMED')
+    evidence_url = db.Column(db.String(500), nullable=True)
+    evidence_note = db.Column(db.String(1000), nullable=True)
+    review_note = db.Column(db.String(1000), nullable=True)
+    reviewed_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    confirmed_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+    cancelled_at = db.Column(db.DateTime, nullable=True)
+    submitted_at = db.Column(db.DateTime, nullable=True)
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+    action = db.relationship('Action')
+    participant = db.relationship('User', foreign_keys=[user_id])
+    reviewer = db.relationship('User', foreign_keys=[reviewed_by_id])
+
+
 class ActionImpactMetric(db.Model):
     __table_args__ = (
         db.Index('ix_action_metric_action_id', 'action_id'),

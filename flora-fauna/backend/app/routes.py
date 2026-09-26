@@ -1,6 +1,6 @@
 import os
 from flask import Blueprint, request, jsonify, current_app as app, g, send_from_directory
-from .models import User, Action, Todo, db, Event, Article, Venue, Feedback, Notification, Favorite, Ticket, Message, Microcosm, Comment, ActionProof, ActionImpactMetric, EventPrimitive, StoryPost, AuditRecord
+from .models import User, Action, Todo, db, Event, Article, Venue, Feedback, Notification, Favorite, Ticket, Message, Microcosm, Comment, ActionProof, ActionCommitment, ActionImpactMetric, EventPrimitive, StoryPost, AuditRecord
 from .security.mode_guard import require_mode_allows
 from datetime import datetime, timedelta
 from flask_jwt_extended import get_jwt, get_jwt_identity
@@ -468,6 +468,8 @@ def delete_action(action_id):
     if user.role != 'organizer':
         return jsonify({'message': 'Permission denied'}), 403
     action = Action.query.get_or_404(action_id)
+    if ActionCommitment.query.filter_by(action_id=action_id).first():
+        return jsonify({'message': 'Action has participant commitments and cannot be deleted'}), 409
     # Clean up dependent records to avoid FK constraint errors
     Todo.query.filter_by(action_id=action_id).delete(synchronize_session=False)
     ActionProof.query.filter_by(action_id=action_id).delete(synchronize_session=False)
