@@ -42,6 +42,7 @@ class User(db.Model):
     profile_theme = db.Column(db.String(50), default='default')
     location = db.Column(db.String(200), nullable=True)
     website_url = db.Column(db.String(300), nullable=True)
+    onboarding_interests_json = db.Column(db.JSON, nullable=True)
     points = db.Column(db.Integer, default=0)
     level = db.Column(db.Integer, default=1)
     points_to_level_up = db.Column(db.Integer, default=100)

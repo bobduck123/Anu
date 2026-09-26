@@ -15,7 +15,7 @@ function publicUrl(slug: string) {
   return `${siteUrl()}/p/${encodeURIComponent(slug)}`;
 }
 
-export async function generateMetadata({ params }: { params: Promise<PublicPresenceParams> | PublicPresenceParams }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<PublicPresenceParams> }): Promise<Metadata> {
   const resolved = await params;
   const node = await fetchPublicPresenceNode(resolved.username, { server: true });
   if (!node) {
@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: { params: Promise<PublicPrese
   };
 }
 
-export default async function PublicPresencePage({ params }: { params: Promise<PublicPresenceParams> | PublicPresenceParams }) {
+export default async function PublicPresencePage({ params }: { params: Promise<PublicPresenceParams> }) {
   const resolved = await params;
   const node = await fetchPublicPresenceNode(resolved.username, { server: true });
   if (!node) {

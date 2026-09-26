@@ -519,7 +519,7 @@ describe('Presence Nodes frontend', () => {
   it('returns not found for missing or unpublished public nodes', async () => {
     fetchPublicPresenceNodeMock.mockResolvedValueOnce(null);
 
-    await expect(PublicPresencePage({ params: { username: 'missing-node' } })).rejects.toThrow('NEXT_NOT_FOUND');
+    await expect(PublicPresencePage({ params: Promise.resolve({ username: 'missing-node' }) })).rejects.toThrow('NEXT_NOT_FOUND');
   });
 
   it('validates and submits the enquiry form successfully', async () => {

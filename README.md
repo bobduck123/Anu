@@ -2,7 +2,7 @@
 
 Anu is a civic commons platform for mutual aid, governance, impact pools, and creator-driven cultural surfaces.
 
-**New to this project?** Start with **[QUICKSTART.md](./QUICKSTART.md)** to get running in 5 minutes.
+**New to this project?** Use the service-specific commands below first. Historical setup and deployment documents may contain database-mutating commands that are not required for local typechecks or compilation.
 
 ## 📊 Architecture
 
@@ -31,20 +31,32 @@ supabase.postgres
 
 ## 🚀 Quick Start
 
+There is no root npm application or root `package.json`. Run commands from the relevant service directory. Use Node 24 for the Node services and a local Python environment for the core backend.
+
 ```bash
-# 1. Clone and install dependencies
-git clone https://github.com/bobduck123/Anu.git
-cd Anu
-npm install
-
-# 2. Configure services (see QUICKSTART.md)
-bash scripts/setup-database.sh
-
-# 3. Run all services
+# Civic frontend, from the repository root
+cd frontend-next
+npm ci
+npm run typecheck
 npm run dev
-
-# 4. Open http://localhost:3000
+# Open http://localhost:3000
 ```
+
+`npm run typecheck` regenerates current route types with `next typegen` before TypeScript checks them. The TypeScript configuration excludes stale development-cache validators under `.next/dev`; freshly generated `.next/types` validators remain checked. No generated source files need manual editing or deletion.
+
+```bash
+# Impact service, in a separate terminal from the repository root
+cd services/impact-service
+npm ci
+npm run typecheck
+npm run build
+npm run test:non-db
+```
+
+The impact build generates the Prisma client and compiles TypeScript. It does **not** deploy migrations, seed a database or contact a production database. Database changes are a separate reviewed release step: an authorised operator verifies the target and runs `npm run prisma:migrate:deploy`. Do not run migrations as a setup shortcut. Development migration and seed commands remain explicitly mutating operations.
+
+For backend setup, follow its service requirements and use a disposable local database. The P0 regression command is `python -m pytest -q -p no:cacheprovider tests/test_public_connectors.py tests/test_node_isolation.py` from `flora-fauna/backend`; these tests create synthetic in-memory databases. Presence has its own npm application under `presence-app` and is subject to the V3.4 gated plan.
+
 
 For detailed setup: [QUICKSTART.md](./QUICKSTART.md)
 

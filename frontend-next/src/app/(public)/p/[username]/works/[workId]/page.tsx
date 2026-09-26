@@ -17,7 +17,7 @@ function stripHtml(value?: string | null) {
   return (value || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
 }
 
-export async function generateMetadata({ params }: { params: Promise<WorkDetailParams> | WorkDetailParams }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<WorkDetailParams> }): Promise<Metadata> {
   const resolved = await params;
   const detail = await fetchPublicPresenceWork(resolved.username, resolved.workId, { server: true });
   if (!detail) {
@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: { params: Promise<WorkDetailP
   };
 }
 
-export default async function PublicPresenceWorkDetailPage({ params }: { params: Promise<WorkDetailParams> | WorkDetailParams }) {
+export default async function PublicPresenceWorkDetailPage({ params }: { params: Promise<WorkDetailParams> }) {
   const resolved = await params;
   const detail = await fetchPublicPresenceWork(resolved.username, resolved.workId, { server: true });
   if (!detail) {
