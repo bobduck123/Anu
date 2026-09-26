@@ -6,6 +6,7 @@
 
 - Read-only check of the frontend `https://maanara.vercel.app` and core API `https://anu-back-end.vercel.app`. The owner confirmed `maanara.vercel.app` is the intended pilot host and that Vercel deploys it from the Git repository.
 - Source commits are local: ANU-003 `80389e6`, ANU-004 `ac7a8d4`, reconciliation `a57f603` (with OPS-004 in their ancestry). `git ls-remote origin refs/heads/main` returned `2d35848516f09d50cc4d8c06f38f2311d9d8e860`; none of the three ANU branches requested appeared among the remote refs. This shows those local changes are not in the remote main source. It does not by itself identify an independently deployed preview.
+- Follow-up branch check: remote `feat/spatial-authoring-baseline` is `0df0d9197f8d176c43bf880cc6a2f7e6bc3389c9`. None of OPS-004 `bf68437`, ANU-003 `80389e6`, ANU-004 `ac7a8d4`, reconciliation `a57f603`, or this readiness report is an ancestor of it. Its diff from `main` has no files under `frontend-next`, `flora-fauna/backend`, or `services/impact-service`. A Vercel preview of that branch cannot validate the ANU outcome changes.
 - No separate pilot host is expected from the owner's clarification. Permissioned member/steward test access was not available in this check.
 
 ## Gate evidence
