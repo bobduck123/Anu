@@ -1398,7 +1398,7 @@ def regeneration_create_log():
 
     is_new_completion = requested_status == "completed" and not was_completed
     action = Action.query.get(link.action_id)
-    if action and is_new_completion:
+    if action and action.node_id is None and is_new_completion:
         action.completions = int(action.completions or 0) + 1
 
     if is_new_completion:

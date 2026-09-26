@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 const actionsGetAllMock = vi.fn();
-const actionsCompleteMock = vi.fn();
 const todosAddActionMock = vi.fn();
 
 vi.mock('next/dynamic', () => ({
@@ -26,7 +25,6 @@ vi.mock('@/lib/api', () => ({
   api: {
     actions: {
       getAll: (...args: unknown[]) => actionsGetAllMock(...args),
-      complete: (...args: unknown[]) => actionsCompleteMock(...args),
     },
     todos: {
       addAction: (...args: unknown[]) => todosAddActionMock(...args),
@@ -50,9 +48,7 @@ import ActionsPage from '@/app/(app)/actions/page';
 describe('ActionsPage', () => {
   beforeEach(() => {
     actionsGetAllMock.mockReset();
-    actionsCompleteMock.mockReset();
     todosAddActionMock.mockReset();
-    actionsCompleteMock.mockResolvedValue({ success: true });
     todosAddActionMock.mockResolvedValue(undefined);
     actionsGetAllMock.mockResolvedValue([
       {
@@ -112,7 +108,7 @@ describe('ActionsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'List' }));
 
     expect(screen.getByText('List backup')).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Complete' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: 'Commit or report completion' }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('button', { name: 'Add to to-do' }).length).toBeGreaterThan(0);
   });
 });

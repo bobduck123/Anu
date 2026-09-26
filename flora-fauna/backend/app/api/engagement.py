@@ -6,6 +6,7 @@ from ..extensions import db
 from ..models import (
     User,
     Action,
+    ActionCommitment,
     Event,
     Article,
     Todo,
@@ -38,6 +39,26 @@ from .utils import ok
 engagement_bp = Blueprint("engagement", __name__, url_prefix="/engagement")
 
 
+def _verified_action_counts(action_ids):
+    if not action_ids:
+        return {}
+    return dict(db.session.query(
+        ActionCommitment.action_id, func.count(ActionCommitment.id),
+    ).filter(
+        ActionCommitment.action_id.in_(action_ids),
+        ActionCommitment.status == "VERIFIED",
+    ).group_by(ActionCommitment.action_id).all())
+
+
+def _reviewed_action_payload(action, verified_count):
+    return {
+        **action.to_dict(),
+        "legacy_completions": action.completions or 0,
+        "completions": verified_count,
+        "verified_outcomes": verified_count,
+    }
+
+
 @engagement_bp.route("/impact-summary", methods=["GET"])
 def impact_summary():
     node_id = getattr(g, "node_id", None)
@@ -55,8 +76,16 @@ def impact_summary():
     total_events = event_query.count()
     total_articles = article_query.count()
     total_members = user_query.count()
-    total_completions = db.session.query(func.coalesce(func.sum(Action.completions), 0)).filter(Action.node_id == node_id) \
-        .scalar() if node_id else db.session.query(func.coalesce(func.sum(Action.completions), 0)).scalar()
+    verified_query = ActionCommitment.query.filter_by(status="VERIFIED")
+    if node_id:
+        verified_query = verified_query.filter_by(node_id=node_id)
+    total_completions = verified_query.count()
+    verified_points_query = db.session.query(func.coalesce(func.sum(ActionCommitment.awarded_points), 0)).filter(
+        ActionCommitment.status == "VERIFIED",
+    )
+    if node_id:
+        verified_points_query = verified_points_query.filter(ActionCommitment.node_id == node_id)
+    verified_action_points = int(verified_points_query.scalar() or 0)
     total_points = db.session.query(func.coalesce(func.sum(User.points), 0)).filter(User.node_id == node_id) \
         .scalar() if node_id else db.session.query(func.coalesce(func.sum(User.points), 0)).scalar()
     total_event_attendance = db.session.query(func.coalesce(func.sum(Event.attendees), 0)).filter(Event.node_id == node_id) \
@@ -91,6 +120,7 @@ def impact_summary():
         "completions": int(total_completions or 0),
         "points": int(total_points or 0),
         "actions_completed": int(total_completions or 0),
+        "verified_action_points": verified_action_points,
         "event_attendance": int(total_event_attendance or 0),
         "volunteer_hours": int(completed_todos or 0),
         "relief_paid_cents": int(relief_paid),
@@ -164,14 +194,21 @@ def recommendations():
         items = recommend_events(limit=limit, lat=lat, lng=lng)
         return ok({"type": "events", "items": [e.to_dict() for e in items]})
     items = recommend_actions(limit=limit, lat=lat, lng=lng)
-    return ok({"type": "actions", "items": [a.to_dict() for a in items]})
+    verified = _verified_action_counts([a.id for a in items])
+    return ok({"type": "actions", "items": [_reviewed_action_payload(a, verified.get(a.id, 0)) for a in items]})
 
 
 @engagement_bp.route("/discover-feed", methods=["GET"])
 def discover_feed():
     now = datetime.utcnow()
     upcoming_events = Event.query.filter(Event.date >= now).order_by(Event.date.asc()).limit(6).all()
-    top_actions = Action.query.order_by(db.func.coalesce(Action.completions, 0).desc(), Action.created_at.desc()).limit(6).all()
+    verified_by_action = db.session.query(
+        ActionCommitment.action_id,
+        func.count(ActionCommitment.id).label("verified_count"),
+    ).filter(ActionCommitment.status == "VERIFIED").group_by(ActionCommitment.action_id).subquery()
+    top_actions = Action.query.outerjoin(
+        verified_by_action, verified_by_action.c.action_id == Action.id,
+    ).order_by(func.coalesce(verified_by_action.c.verified_count, 0).desc(), Action.created_at.desc()).limit(6).all()
     microcosms = Microcosm.query.order_by(Microcosm.id.desc()).limit(6).all()
     stories = StoryPost.query.order_by(StoryPost.created_at.desc()).limit(4).all()
     articles = Article.query.order_by(Article.created_at.desc()).limit(4).all()
@@ -186,10 +223,11 @@ def discover_feed():
         top_actions = Action.query.order_by(Action.created_at.desc()).limit(3).all()
     if not microcosms:
         microcosms = Microcosm.query.order_by(Microcosm.id.asc()).limit(3).all()
+    top_action_counts = _verified_action_counts([action.id for action in top_actions])
 
     return ok({
         "upcoming_events": [e.to_dict() for e in upcoming_events],
-        "top_actions": [a.to_dict() for a in top_actions],
+        "top_actions": [_reviewed_action_payload(a, top_action_counts.get(a.id, 0)) for a in top_actions],
         "active_microcosms": [{
             "id": m.id,
             "name": m.name,
@@ -422,6 +460,14 @@ def challenge_applies(challenge, user):
 
 def progress_for_challenge(challenge, user, week_start, week_end):
     if challenge.challenge_type == "complete_actions":
+        if user.node_id is not None:
+            return ActionCommitment.query.filter(
+                ActionCommitment.user_id == user.id,
+                ActionCommitment.node_id == user.node_id,
+                ActionCommitment.status == "VERIFIED",
+                ActionCommitment.reviewed_at >= week_start,
+                ActionCommitment.reviewed_at < week_end,
+            ).count()
         return Todo.query.filter(
             Todo.user_id == user.id,
             Todo.is_completed.is_(True),
@@ -559,6 +605,7 @@ def collaborative_progress(challenge, week_start, week_end):
 def score_actions():
     now = datetime.utcnow()
     actions = Action.query.order_by(Action.created_at.desc()).limit(100).all()
+    verified = _verified_action_counts([action.id for action in actions])
     scored = []
     for action in actions:
         days = (now - (action.created_at or now)).days
@@ -567,7 +614,7 @@ def score_actions():
         if action.end_date:
             days_left = (action.end_date - now).days
             closing = 5 if days_left <= 3 else 0
-        score = (action.completions or 0) * 3 + (action.points_assigned or 0) / 10 + recency + closing
+        score = verified.get(action.id, 0) * 3 + (action.points_assigned or 0) / 10 + recency + closing
         label = "Trending"
         if action.created_at and (now - action.created_at).days <= 7:
             label = "New"
@@ -576,7 +623,7 @@ def score_actions():
         scored.append({
             "score": score,
             "label": label,
-            "item": action.to_dict(),
+            "item": _reviewed_action_payload(action, verified.get(action.id, 0)),
         })
     scored.sort(key=lambda x: x["score"], reverse=True)
     return [
@@ -615,7 +662,13 @@ def score_events():
 
 
 def recommend_actions(limit=6, lat=None, lng=None):
-    query = Action.query.order_by(Action.completions.desc(), Action.created_at.desc())
+    verified = db.session.query(
+        ActionCommitment.action_id,
+        func.count(ActionCommitment.id).label("verified_count"),
+    ).filter(ActionCommitment.status == "VERIFIED").group_by(ActionCommitment.action_id).subquery()
+    query = Action.query.outerjoin(verified, verified.c.action_id == Action.id).order_by(
+        func.coalesce(verified.c.verified_count, 0).desc(), Action.created_at.desc(),
+    )
     actions = query.limit(50).all()
     if lat is None or lng is None:
         return actions[:limit]

@@ -302,7 +302,13 @@ def get_actions():
     if getattr(g, "node_id", None):
         query = query.filter_by(node_id=g.node_id)
     actions, pagination = _maybe_paginate(query.order_by(Action.id.desc()))
-    payload = [action.to_dict() for action in actions]
+    action_ids = [action.id for action in actions]
+    verified = dict(db.session.query(ActionCommitment.action_id, db.func.count(ActionCommitment.id)).filter(
+        ActionCommitment.action_id.in_(action_ids),
+        ActionCommitment.status == 'VERIFIED',
+    ).group_by(ActionCommitment.action_id).all()) if action_ids else {}
+    payload = [{**action.to_dict(), 'legacy_completions': action.completions or 0,
+                'completions': verified.get(action.id, 0), 'verified_outcomes': verified.get(action.id, 0)} for action in actions]
     if pagination:
         return jsonify({"data": payload, "pagination": pagination}), 200
     return jsonify(payload), 200
@@ -380,7 +386,8 @@ def create_action():
     )
     db.session.add(new_action)
     db.session.commit()
-    return jsonify(new_action.to_dict()), 201
+    return jsonify({**new_action.to_dict(), 'legacy_completions': new_action.completions or 0,
+                    'completions': 0, 'verified_outcomes': 0}), 201
 
 
 @routes.route('/api/actions/<int:action_id>', methods=['PUT'])
@@ -448,13 +455,17 @@ def update_action(action_id):
         action.recurrence = data['recurrence']
 
     db.session.commit()
-    return jsonify(action.to_dict()), 200
+    verified_count = ActionCommitment.query.filter_by(action_id=action_id, status='VERIFIED').count()
+    return jsonify({**action.to_dict(), 'legacy_completions': action.completions or 0,
+                    'completions': verified_count, 'verified_outcomes': verified_count}), 200
 
 
 @routes.route('/api/actions/<int:action_id>', methods=['GET'])
 def get_action_detail(action_id):
     action = Action.query.get_or_404(action_id)
-    return jsonify(action.to_dict()), 200
+    verified_count = ActionCommitment.query.filter_by(action_id=action_id, status='VERIFIED').count()
+    return jsonify({**action.to_dict(), 'legacy_completions': action.completions or 0,
+                    'completions': verified_count, 'verified_outcomes': verified_count}), 200
 
 
 @routes.route('/api/actions/<int:action_id>', methods=['DELETE'])
@@ -500,8 +511,12 @@ def complete_action(action_id):
     action = Action.query.get(action_id)
     if not action:
         return jsonify({"error": {"code": "not_found", "message": "Action not found"}}), 404
-    action.completions = (action.completions or 0) + 1
+    if action.node_id is not None:
+        return jsonify({"error": {"code": "review_required", "message": "Confirm a commitment and submit evidence for steward review"}}), 409
     todo = Todo.query.filter_by(user_id=user.id, action_id=action_id).first()
+    if todo and todo.is_completed:
+        return jsonify({"success": True, "newCompletions": action.completions or 0, "alreadyCompleted": True}), 200
+    action.completions = (action.completions or 0) + 1
     if todo:
         todo.is_completed = True
         if todo.completed_at is None:
@@ -541,6 +556,7 @@ def complete_action(action_id):
 def get_action(action_id):
     action = Action.query.get(action_id)
     if action:
+        verified_count = ActionCommitment.query.filter_by(action_id=action_id, status='VERIFIED').count()
         return jsonify({
             'id': action.id,
             'title': action.title,
@@ -548,7 +564,9 @@ def get_action(action_id):
             'instructions': action.instructions,
             'city': action.city,
             'country': action.country,
-            'completions': action.completions,
+            'completions': verified_count,
+            'verified_outcomes': verified_count,
+            'legacy_completions': action.completions or 0,
             'end_date': action.end_date.strftime('%Y-%m-%d') if action.end_date else None
         })
     return jsonify({'message': 'Action not found'}), 404
@@ -556,7 +574,9 @@ def get_action(action_id):
 
 @routes.route('/api/actions/<int:action_id>/proofs', methods=['GET'])
 def get_action_proofs(action_id):
-    Action.query.get_or_404(action_id)
+    action = Action.query.get_or_404(action_id)
+    if action.node_id is not None:
+        return jsonify({"error": {"code": "review_required", "message": "Legacy proof records are not a public outcome projection"}}), 410
     proofs = ActionProof.query.filter_by(action_id=action_id).order_by(ActionProof.created_at.desc()).all()
     payload = [{
         "id": proof.id,
@@ -577,7 +597,9 @@ def create_action_proof(action_id):
     user = _current_user()
     if not user:
         return jsonify({"message": "User not found"}), 404
-    Action.query.get_or_404(action_id)
+    action = Action.query.get_or_404(action_id)
+    if action.node_id is not None:
+        return jsonify({"error": {"code": "review_required", "message": "Submit evidence through a confirmed commitment"}}), 409
     data = request.get_json() or {}
     proof = ActionProof(
         action_id=action_id,
@@ -1468,22 +1490,28 @@ def get_prioritized_actions():
 
     physical_actions = Action.query.filter_by(is_online=False, is_global=False).all()
     online_actions = Action.query.filter_by(is_online=True).all()
+    action_ids = [action.id for action in physical_actions + online_actions]
+    verified = dict(db.session.query(ActionCommitment.action_id, db.func.count(ActionCommitment.id)).filter(
+        ActionCommitment.action_id.in_(action_ids), ActionCommitment.status == 'VERIFIED',
+    ).group_by(ActionCommitment.action_id).all()) if action_ids else {}
 
-    # Sort physical actions by distance, end date, and completions
+    # Sort physical actions by distance, end date, and reviewed outcomes.
     physical_actions.sort(key=lambda x: (
         calculate_distance(user_location[0], user_location[1], x.latitude, x.longitude),
         x.end_date,
-        x.completions
+        verified.get(x.id, 0)
     ))
 
-    # Sort online actions by end date and completions
+    # Sort online actions by end date and reviewed outcomes.
     online_actions.sort(key=lambda x: (
         x.end_date,
-        x.completions
+        verified.get(x.id, 0)
     ))
 
     actions = physical_actions + online_actions
-    return jsonify([action.to_dict() for action in actions[:max_display]])
+    return jsonify([{**action.to_dict(), 'legacy_completions': action.completions or 0,
+                     'completions': verified.get(action.id, 0), 'verified_outcomes': verified.get(action.id, 0)}
+                    for action in actions[:max_display]])
 
 
 @routes.route('/api/tickets/<int:id>', methods=['DELETE'])

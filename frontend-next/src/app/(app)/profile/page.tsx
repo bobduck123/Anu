@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthGateCard from '@/components/auth/AuthGateCard';
 import { api, TodoResponse, NotificationResponse, Challenge, Article } from '@/lib/api';
@@ -488,7 +489,7 @@ export default function ProfilePage() {
                             <p className="font-semibold text-[var(--color-foreground)]">{todo.title}</p>
                             <p className="mt-2 text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{todo.details}</p>
                           </div>
-                          <AnuChip tone="muted">{todo.points_assigned} pts</AnuChip>
+                          <AnuChip tone="muted">{todo.points_assigned} possible pts</AnuChip>
                         </div>
                       </div>
                     ))}
@@ -498,7 +499,8 @@ export default function ProfilePage() {
                 )}
               </AnuChamberCard>
               <div className="space-y-6">
-                <AnuChamberCard eyebrow="Completed" title="Finished work" tone="affirmed">
+                <AnuChamberCard eyebrow="Legacy records" title="To-do completions" tone="default">
+                  <p className="mb-4 text-sm text-[color:rgba(246,212,203,0.82)]">These older to-do records are separate from steward-verified outcomes. <Link href="/commitments" className="underline">View reviewed commitments</Link></p>
                   {completedTodos.length ? (
                     <div className="space-y-3">
                       {completedTodos.map((todo) => (
@@ -506,7 +508,7 @@ export default function ProfilePage() {
                           <div className="flex items-center justify-between gap-3">
                             <div>
                               <p className="font-semibold text-[var(--color-foreground)] line-through decoration-white/30">{todo.title}</p>
-                              <p className="mt-1 text-xs text-[color:rgba(246,212,203,0.64)]">{todo.points_assigned} pts earned</p>
+                              <p className="mt-1 text-xs text-[color:rgba(246,212,203,0.64)]">{todo.points_assigned} configured points; award history is separate</p>
                             </div>
                             <CheckCircle2 className="h-5 w-5 text-[#f6d4cb]" />
                           </div>
@@ -514,7 +516,7 @@ export default function ProfilePage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">No completed actions yet.</p>
+                    <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">No legacy to-do completions.</p>
                   )}
                 </AnuChamberCard>
                 <AnuChamberCard eyebrow="State" title="Challenges and wellbeing" tone={burnout?.risk && burnout.risk !== 'low' ? 'alert' : 'default'}>

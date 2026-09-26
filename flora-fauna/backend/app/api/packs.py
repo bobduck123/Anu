@@ -8,6 +8,7 @@ from ..models import (
     DiscoveryPackItem,
     DiscoveryPackCompletion,
     Action,
+    ActionCommitment,
     Event,
     ImpactCreditTx,
     Node,
@@ -89,10 +90,14 @@ def get_pack(pack_id):
     action_ids = [i.item_id for i in items if i.item_type == "action"]
     event_ids = [i.item_id for i in items if i.item_type == "event"]
     actions = Action.query.filter(Action.id.in_(action_ids)).all() if action_ids else []
+    verified = dict(db.session.query(ActionCommitment.action_id, db.func.count(ActionCommitment.id)).filter(
+        ActionCommitment.action_id.in_(action_ids), ActionCommitment.status == "VERIFIED",
+    ).group_by(ActionCommitment.action_id).all()) if action_ids else {}
     events = Event.query.filter(Event.id.in_(event_ids)).all() if event_ids else []
     payload_items = [{
         "item_type": "action",
-        "item": action.to_dict(),
+        "item": {**action.to_dict(), "legacy_completions": action.completions or 0,
+                 "completions": verified.get(action.id, 0), "verified_outcomes": verified.get(action.id, 0)},
     } for action in actions] + [{
         "item_type": "event",
         "item": event.to_dict(),

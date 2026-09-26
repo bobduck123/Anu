@@ -275,6 +275,7 @@ export interface ImpactSummary {
   completions: number;
   points: number;
   actions_completed?: number;
+  verified_action_points?: number;
   event_attendance?: number;
   volunteer_hours?: number;
   relief_paid_cents?: number;
@@ -346,17 +347,6 @@ export interface PoolMetrics {
   active_pools: number;
   total_target_cents: number;
   total_balance_cents: number;
-}
-
-export interface ActionProof {
-  id: number;
-  action_id: number;
-  user_id: number;
-  before_url?: string;
-  after_url?: string;
-  proof_url?: string;
-  verified: boolean;
-  created_at?: string;
 }
 
 export interface ActionImpactMetric {
@@ -579,6 +569,7 @@ type ActionResponse = {
   recurrence: string;
   user_id: string | number;
   completions: number;
+  verified_outcomes?: number;
   trend_label?: string;
   trend_score?: number;
 };
@@ -691,7 +682,7 @@ const normalizeAction = (action: ActionResponse): Action => ({
   pointsAssigned: action.points_assigned,
   recurrence: action.recurrence,
   ownerId: String(action.user_id),
-  completions: action.completions,
+  completions: action.verified_outcomes ?? 0,
   trendLabel: action.trend_label,
   trendScore: action.trend_score,
 });
@@ -725,25 +716,7 @@ export const api = {
   engagement: {
     getImpactSummary: async (): Promise<ImpactSummary> => {
       const res = await fetch(`${API_BASE}/api/engagement/impact-summary`);
-      if (!res.ok) {
-        if (res.status === 404 || res.status >= 500) {
-          console.warn('Impact summary API not available, using fallback');
-          return {
-            actions: 12,
-            events: 5,
-            articles: 7,
-            members: 48,
-            completions: 22,
-            points: 1250,
-            actions_completed: 22,
-            event_attendance: 120,
-            volunteer_hours: 64,
-            relief_paid_cents: 18500,
-            savings_cents: 42000,
-          };
-        }
-        throw new Error('Failed to fetch impact summary');
-      }
+      if (!res.ok) throw new Error('Failed to fetch impact summary');
       const data = await res.json();
       return data.data || data;
     },
@@ -753,27 +726,8 @@ export const api = {
       });
       if (!res.ok) {
         if (res.status === 404 || res.status >= 500) {
-          console.warn('Challenges API not available, using fallback');
-          return [
-            {
-              id: 'complete_actions_3',
-              title: 'Complete 3 Actions',
-              description: 'Finish three actions to boost your impact streak.',
-              target: 3,
-              progress: 1,
-              reward_points: 25,
-              status: 'in_progress',
-            },
-            {
-              id: 'host_event_1',
-              title: 'Host an Event',
-              description: 'Create a community event.',
-              target: 1,
-              progress: 0,
-              reward_points: 40,
-              status: 'in_progress',
-            },
-          ];
+          console.warn('Challenges API not available, returning no challenges');
+          return [];
         }
         throw new Error('Failed to fetch challenges');
       }
@@ -1389,18 +1343,6 @@ export const api = {
       const data = await res.json() as ActionResponse;
       return normalizeAction(data);
     },
-    complete: async (actionId: string): Promise<{ success: boolean; newCompletions: number }> => {
-      const res = await fetch(`${API_BASE}/complete_action/${actionId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
-      });
-      if (!res.ok) {
-        console.warn('Complete action failed or unavailable, simulating success for alpha testing');
-        return { success: true, newCompletions: 0 };
-      }
-      const data = await res.json();
-      return data.data || data;
-    },
     delete: async (actionId: string): Promise<void> => {
       const res = await fetch(`${API_BASE}/api/actions/${actionId}`, {
         method: 'DELETE',
@@ -1413,42 +1355,6 @@ export const api = {
         }
         throw new Error('Failed to delete action');
       }
-    },
-    getProofs: async (actionId: string): Promise<ActionProof[]> => {
-      const res = await fetch(`${API_BASE}/api/actions/${actionId}/proofs`);
-      if (!res.ok) {
-        if (res.status === 404 || res.status >= 500) {
-          console.warn('Proofs API not available, returning empty list');
-          return [];
-        }
-        throw new Error('Failed to fetch proofs');
-      }
-      const data = await res.json();
-      if (Array.isArray(data)) return data;
-      return data.data || data.proofs || [];
-    },
-    addProof: async (actionId: string, payload: { before_url?: string; after_url?: string; proof_url?: string }): Promise<ActionProof> => {
-      const res = await fetch(`${API_BASE}/api/actions/${actionId}/proofs`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        if (res.status === 401 || res.status === 403 || res.status === 404 || res.status >= 500) {
-          console.warn('Add proof failed, using mock');
-          return {
-            id: Date.now(),
-            action_id: Number(actionId),
-            user_id: 0,
-            before_url: payload.before_url,
-            after_url: payload.after_url,
-            proof_url: payload.proof_url,
-            verified: true,
-          };
-        }
-        throw new Error('Failed to add proof');
-      }
-      return res.json();
     },
     getMetrics: async (actionId: string): Promise<ActionImpactMetric[]> => {
       const res = await fetch(`${API_BASE}/api/actions/${actionId}/metrics`);
@@ -2059,4 +1965,3 @@ export const api = {
     },
   },
 };
-

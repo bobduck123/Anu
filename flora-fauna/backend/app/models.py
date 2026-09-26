@@ -405,6 +405,8 @@ class ActionCommitment(db.Model):
     cancelled_at = db.Column(db.DateTime, nullable=True)
     submitted_at = db.Column(db.DateTime, nullable=True)
     reviewed_at = db.Column(db.DateTime, nullable=True)
+    awarded_points = db.Column(db.Integer, nullable=True)
+    points_awarded_at = db.Column(db.DateTime, nullable=True)
     action = db.relationship('Action')
     participant = db.relationship('User', foreign_keys=[user_id])
     reviewer = db.relationship('User', foreign_keys=[reviewed_by_id])

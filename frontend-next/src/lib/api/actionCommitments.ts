@@ -13,6 +13,7 @@ export interface ActionCommitment {
   confirmed_at: string;
   submitted_at: string | null;
   reviewed_at: string | null;
+  awarded_points: number | null;
   participant_id?: number;
   participant_name?: string;
 }

@@ -27,6 +27,7 @@ export default function MyCommitmentsPage() {
         {records.map((record) => <article key={record.id} className="rounded-lg border border-[var(--color-border)] p-4">
           <h2 className="font-semibold">{record.action_title}</h2>
           <p>Status: {record.status.replaceAll('_', ' ').toLowerCase()}</p>
+          {record.status === 'VERIFIED' && typeof record.awarded_points === 'number' ? <p>{record.awarded_points > 0 ? `${record.awarded_points} points awarded after review.` : 'No additional action points awarded.'}</p> : null}
           {record.review_note ? <p>Steward note: {record.review_note}</p> : null}
           <Link href={`/actions/${record.action_id}`} className="underline">Open action and commitment</Link>
         </article>)}
