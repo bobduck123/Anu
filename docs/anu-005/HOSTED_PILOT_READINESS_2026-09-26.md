@@ -2,6 +2,10 @@
 
 **Decision: HOLD.** At 10:20 UTC, the documented public hosts could not serve action or impact totals, and the reconciliation code was not in the remote main branch. No hosted outcome total is accepted as pilot evidence.
 
+## Follow-up at 12:55 UTC
+
+The owner reconnected the previously working database. Read-only probes now show backend `/readiness` 200 with `status=ok`, `checks.database=ok`, and `ready=true`; frontend-proxied actions and impact summary both return 200. The frontend `/commitments` page and backend `/api/commitments/actions/1/outcome` route still return 404. Database connectivity is resolved, while the ANU code deployment, migration state and real member/steward journey remain unverified. **Decision remains HOLD.**
+
 ## Scope and source
 
 - Read-only check of the frontend `https://maanara.vercel.app` and core API `https://anu-back-end.vercel.app`. The owner confirmed `maanara.vercel.app` is the intended pilot host and that Vercel deploys it from the Git repository.
