@@ -7,8 +7,9 @@ from flask_jwt_extended import verify_jwt_in_request
 from sqlalchemy.exc import IntegrityError
 
 from ..extensions import db, limiter
-from ..models import Action, ActionCommitment, AuditRecord, User, utcnow
+from ..models import Action, ActionCommitment, ActionProof, AuditRecord, ImpactCreditTx, Todo, User, utcnow
 from ..security.policy import get_current_user
+from ..services.feature_flag_service import is_enabled
 from .utils import error, ok
 
 
@@ -28,8 +29,9 @@ def _action_for_member(action_id: int, user: User):
     return Action.query.filter_by(id=action_id, node_id=user.node_id).first()
 
 
-def _record_for_member(commitment_id: int, user: User, *, steward: bool = False):
-    record = ActionCommitment.query.filter_by(id=commitment_id, node_id=user.node_id).first()
+def _record_for_member(commitment_id: int, user: User, *, steward: bool = False, for_update: bool = False):
+    query = ActionCommitment.query.filter_by(id=commitment_id, node_id=user.node_id)
+    record = (query.with_for_update() if for_update else query).first()
     if not record:
         return None
     if record.user_id != user.id and not (steward and user.role in STEWARD_ROLES):
@@ -49,6 +51,7 @@ def _serialize(record: ActionCommitment, *, steward: bool = False):
         "confirmed_at": record.confirmed_at.isoformat() if record.confirmed_at else None,
         "submitted_at": record.submitted_at.isoformat() if record.submitted_at else None,
         "reviewed_at": record.reviewed_at.isoformat() if record.reviewed_at else None,
+        "awarded_points": record.awarded_points,
     }
     if steward:
         data["participant_id"] = record.user_id
@@ -63,7 +66,12 @@ def _audit(record: ActionCommitment, actor: User, transition: str):
         action=f"action_commitment_{transition}",
         entity_type="action_commitment",
         entity_id=str(record.id),
-        payload={"action_id": record.action_id, "participant_id": record.user_id, "status": record.status},
+        payload={
+            "action_id": record.action_id,
+            "participant_id": record.user_id,
+            "status": record.status,
+            "awarded_points": record.awarded_points if transition == "verified" else None,
+        },
     ))
 
 
@@ -91,6 +99,8 @@ def participant_action_commitment(action_id: int):
         record.reviewed_by_id = None
         record.submitted_at = None
         record.reviewed_at = None
+        record.awarded_points = None
+        record.points_awarded_at = None
     else:
         record = ActionCommitment(node_id=user.node_id, action_id=action_id, user_id=user.id)
         db.session.add(record)
@@ -191,7 +201,7 @@ def review_action_completion(commitment_id: int):
     user = _member()
     if not user or user.role not in STEWARD_ROLES:
         return error("forbidden", "Steward access is required", status=403)
-    record = _record_for_member(commitment_id, user, steward=True)
+    record = _record_for_member(commitment_id, user, steward=True, for_update=True)
     if not record:
         return error("not_found", "Commitment not found", status=404)
     if record.user_id == user.id:
@@ -212,6 +222,41 @@ def review_action_completion(commitment_id: int):
     record.review_note = note.strip() or None
     record.reviewed_by_id = user.id
     record.reviewed_at = utcnow()
+    if target == "VERIFIED" and record.points_awarded_at is None:
+        participant = User.query.filter_by(id=record.user_id, node_id=record.node_id).with_for_update().one()
+        legacy_completed = Todo.query.filter_by(
+            user_id=record.user_id, action_id=record.action_id, is_completed=True,
+        ).first() is not None
+        legacy_proof_reward = ActionProof.query.filter_by(
+            user_id=record.user_id, action_id=record.action_id, verified=True,
+        ).first() is not None
+        legacy_action_audit = AuditRecord.query.filter_by(
+            actor_id=record.user_id,
+            action="action_completed",
+            entity_type="action",
+            entity_id=str(record.action_id),
+        ).first() is not None
+        # Historical reward paths lack a shared award key; preserve the reviewed outcome without paying twice.
+        amount = 0 if (legacy_completed or legacy_proof_reward or legacy_action_audit) else max(0, int(record.action.points_assigned or 0))
+        participant.points = int(participant.points or 0) + amount
+        participant.level = max(1, int(participant.level or 1))
+        participant.points_to_level_up = max(1, int(participant.points_to_level_up or 100))
+        while participant.points >= participant.points_to_level_up:
+            participant.points -= participant.points_to_level_up
+            participant.level += 1
+            participant.points_to_level_up = int(participant.points_to_level_up * 1.5)
+        record.awarded_points = amount
+        record.points_awarded_at = utcnow()
+        if amount > 0 and is_enabled("civic_credit_engine"):
+            db.session.add(ImpactCreditTx(
+                user_id=participant.id,
+                node_id=record.node_id,
+                tx_type="earn",
+                amount=amount,
+                source_type="action_commitment_verified",
+                description=f"Steward-verified action: {record.action.title}",
+                reference_id=str(record.id),
+            ))
     _audit(record, user, "verified" if decision == "verify" else "changes_requested")
     db.session.commit()
     return ok(_serialize(record, steward=True))

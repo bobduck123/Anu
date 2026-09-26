@@ -77,6 +77,7 @@ export function ActionCommitmentPanel({ actionId }: { actionId: string }) {
       ) : (
         <div className="space-y-4">
           {record ? <p role="status">Status: <strong>{statusLabel[record.status]}</strong></p> : <p>No commitment has been confirmed yet.</p>}
+          {record?.status === 'VERIFIED' && typeof record.awarded_points === 'number' ? <p>{record.awarded_points > 0 ? `${record.awarded_points} points awarded after steward review.` : 'No additional action points awarded.'}</p> : null}
           {record?.review_note ? <p>Steward note: {record.review_note}</p> : null}
           {record?.evidence_url ? <p>Evidence: <a className="underline" href={record.evidence_url} target="_blank" rel="noopener noreferrer">Open submitted link</a></p> : null}
           {error ? <p role="alert" className="text-[var(--color-danger)]">{error}</p> : null}

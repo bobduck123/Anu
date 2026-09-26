@@ -215,9 +215,9 @@ export function buildImpactCelestialPacket(
   const outcomes = [
     {
       id: 'impact-actions',
-      label: 'Action completions',
+      label: 'Verified action outcomes',
       value: summary.actions_completed ?? summary.completions ?? 0,
-      unit: 'completions',
+      unit: 'outcomes',
       x: 0.24,
       y: 0.62,
       z: 0.48,
@@ -637,4 +637,3 @@ export function buildMemeticCelestialPacket(
     updatedAt: new Date().toISOString(),
   };
 }
-

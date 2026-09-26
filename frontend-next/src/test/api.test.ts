@@ -53,6 +53,7 @@ describe('api client', () => {
           recurrence: 'once',
           user_id: 7,
           completions: 3,
+          verified_outcomes: 2,
         },
       ]),
     });
@@ -74,9 +75,19 @@ describe('api client', () => {
       pointsAssigned: 50,
       recurrence: 'once',
       ownerId: '7',
-      completions: 3,
+      completions: 2,
     });
     expect(actions[0].location?.coordinates).toEqual([-118.25, 34.05]);
+  });
+
+  it('does not invent outcome totals when the impact summary is unavailable', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 503 });
+    await expect(api.engagement.getImpactSummary()).rejects.toThrow('Failed to fetch impact summary');
+  });
+
+  it('does not invent action challenge progress when the service is unavailable', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 503 });
+    await expect(api.engagement.getChallenges()).resolves.toEqual([]);
   });
 
   it('surfaces article publish errors instead of creating mock content', async () => {
@@ -193,28 +204,6 @@ describe('api client', () => {
       feedUrl: 'https://feeds.bbci.co.uk/news/world/rss.xml',
     });
     expect(feed.stale).toBe(false);
-  });
-
-  it('uses auth headers when completing actions', async () => {
-    getParticipantAuthHeadersMock.mockResolvedValueOnce({ Authorization: 'Bearer supabase-token' });
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ success: true, newCompletions: 4 }),
-    });
-
-    const result = await api.actions.complete('abc');
-
-    expect(result).toEqual({ success: true, newCompletions: 4 });
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('/complete_action/abc'),
-      expect.objectContaining({
-        method: 'POST',
-        headers: expect.objectContaining({
-          Authorization: 'Bearer supabase-token',
-        }),
-      })
-    );
-    expect(getParticipantAuthHeadersMock).toHaveBeenCalledWith({ allowLegacyTokenFallback: false });
   });
 
   it('falls back to mock comment when API fails', async () => {

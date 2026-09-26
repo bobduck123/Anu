@@ -55,7 +55,7 @@ export default function VolunteerDashboard() {
               <TrendingUp className="w-5 h-5 text-[var(--color-forest)]" />
             </div>
             <div>
-              <p className="text-xs text-[var(--color-muted-foreground)]">Actions Completed</p>
+              <p className="text-xs text-[var(--color-muted-foreground)]">Verified action outcomes</p>
               <p className="text-xl font-bold font-mono-data">{data.impact?.completions ?? 0}</p>
             </div>
           </div>

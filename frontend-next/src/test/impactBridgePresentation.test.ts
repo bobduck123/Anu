@@ -19,7 +19,7 @@ describe('buildImpactOutcomeSignals', () => {
     );
 
     expect(outcomes).toHaveLength(4);
-    expect(outcomes[0]?.groundedValue).toBe('12 completions');
+    expect(outcomes[0]?.groundedValue).toBe('12 verified outcomes');
     expect(outcomes[1]?.groundedValue).toBe('48 attendees');
     expect(outcomes[2]?.groundedValue).toBe('$185');
     expect(outcomes[3]?.groundedValue).toBe('$9,900');

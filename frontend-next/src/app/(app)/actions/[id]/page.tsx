@@ -89,7 +89,7 @@ export default function ActionDetailPage() {
             <div>{action.actionType}</div>
           </div>
           <div>
-            <div className="text-[var(--color-muted-foreground)] mb-1">Points</div>
+            <div className="text-[var(--color-muted-foreground)] mb-1">Possible points after review</div>
             <div className="font-mono-data">{action.pointsAssigned}</div>
           </div>
           <div>
@@ -97,7 +97,7 @@ export default function ActionDetailPage() {
             <div>{new Date(action.endDate).toLocaleDateString()}</div>
           </div>
           <div>
-            <div className="text-[var(--color-muted-foreground)] mb-1">Legacy completions</div>
+            <div className="text-[var(--color-muted-foreground)] mb-1">Verified outcomes</div>
             <div className="font-mono-data">{action.completions}</div>
           </div>
           <div>

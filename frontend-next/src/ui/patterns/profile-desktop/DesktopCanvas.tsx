@@ -82,7 +82,7 @@ function TodosWidget({ todos }: { todos: Array<{ id: number; title: string; is_c
           {pending.slice(0, 10).map((t) => (
             <div key={t.id} className="flex items-center justify-between text-sm p-2 rounded bg-[color:rgba(246,212,203,0.05)]">
               <span className="truncate">{t.title}</span>
-              <span className="text-xs opacity-40 ml-2 shrink-0">{t.points_assigned}pts</span>
+              <span className="text-xs opacity-40 ml-2 shrink-0">{t.points_assigned} possible pts</span>
             </div>
           ))}
         </div>

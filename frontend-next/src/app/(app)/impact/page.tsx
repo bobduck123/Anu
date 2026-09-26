@@ -713,7 +713,7 @@ export default function ImpactHomePage() {
               <div className="anu-earth-hud-line">
                 <span className="anu-earth-hud-key">Actions</span>
                 <span className="anu-earth-hud-rule" />
-                <span className="anu-earth-hud-value">{actionsCompleted} completed</span>
+                <span className="anu-earth-hud-value">{actionsCompleted} verified outcomes</span>
               </div>
               <div className="anu-earth-hud-line">
                 <span className="anu-earth-hud-key">Attendance</span>

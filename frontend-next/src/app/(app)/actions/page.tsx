@@ -229,7 +229,7 @@ export default function ActionsPage() {
           lat: action.location!.coordinates[1],
           lng: action.location!.coordinates[0],
           title: action.title,
-          popup: `<strong>${action.title}</strong><br/>${action.pointsAssigned} points<br/>${action.completions} completions`,
+          popup: `<strong>${action.title}</strong><br/>${action.pointsAssigned} possible points<br/>${action.completions} verified outcomes`,
           color: getActionKind(action) === 'camp' ? ('forest' as const) : ('accent' as const),
         })),
     [filteredActions],
@@ -244,7 +244,7 @@ export default function ActionsPage() {
     () =>
       filteredActions.map((action) => ({
         id: action._id,
-        title: `${action.title} (${action.pointsAssigned} pts)`,
+        title: `${action.title} (${action.pointsAssigned} possible pts)`,
         start: new Date(action.startDate),
         end: new Date(action.endDate),
         color: getActionKind(action) === 'camp' ? 'var(--color-sage)' : 'var(--color-accent)',
@@ -264,8 +264,8 @@ export default function ActionsPage() {
             summary={action.details}
             meta={formatDateRange(action)}
             badges={[
-              `${action.pointsAssigned} pts`,
-              `${action.completions} completions`,
+              `${action.pointsAssigned} possible pts`,
+              `${action.completions} verified outcomes`,
               getBadge(action),
               action.isOnline ? 'online' : action.isGlobal ? 'global' : 'local',
             ]}
@@ -312,10 +312,10 @@ export default function ActionsPage() {
       badges={
         <>
           <AnuChip tone="accent" icon={Package2}>
-            {selectedAction.pointsAssigned} pts
+            {selectedAction.pointsAssigned} possible pts
           </AnuChip>
           <AnuChip tone="muted" icon={CheckCircle2}>
-            {selectedAction.completions} completions
+            {selectedAction.completions} verified outcomes
           </AnuChip>
           <AnuChip tone="muted" icon={selectedAction.isOnline ? Globe2 : Compass}>
             {selectedAction.isOnline ? 'Online' : selectedAction.isGlobal ? 'Global' : 'Local'}
@@ -333,7 +333,7 @@ export default function ActionsPage() {
           <AnuInstrumentationCard
             label="Momentum"
             value={getBadge(selectedAction)}
-            detail={`${selectedAction.completions} completions recorded so far.`}
+            detail={`${selectedAction.completions} steward-verified outcomes recorded so far.`}
             tone={selectedAction.completions > 0 ? 'steady' : 'warning'}
           />
         </div>
@@ -406,7 +406,7 @@ export default function ActionsPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <AnuChip tone="muted">{filteredActions.length} visible</AnuChip>
-            <AnuChip tone="muted">{totalCompletions} completions</AnuChip>
+            <AnuChip tone="muted">{totalCompletions} verified outcomes</AnuChip>
           </div>
         </div>
 
@@ -427,8 +427,8 @@ export default function ActionsPage() {
                   <p className="text-sm leading-6 text-[color:rgba(246,212,203,0.82)]">{action.details}</p>
                   <div className="flex flex-wrap gap-2">
                     <AnuChip tone="muted">{formatDateRange(action)}</AnuChip>
-                    <AnuChip tone="muted">{action.pointsAssigned} pts</AnuChip>
-                    <AnuChip tone="muted">{action.completions} completions</AnuChip>
+                    <AnuChip tone="muted">{action.pointsAssigned} possible pts</AnuChip>
+                    <AnuChip tone="muted">{action.completions} verified outcomes</AnuChip>
                   </div>
                   <div className="flex flex-wrap gap-3">
                     <AnuActionLink href={`/actions/${action._id}`} tone="secondary">
@@ -498,12 +498,12 @@ export default function ActionsPage() {
               <div className="anu-earth-hud-line">
                 <span className="anu-earth-hud-key">Points</span>
                 <span className="anu-earth-hud-rule" />
-                <span className="anu-earth-hud-value">{totalPoints.toLocaleString()} field points</span>
+                <span className="anu-earth-hud-value">{totalPoints.toLocaleString()} possible points</span>
               </div>
               <div className="anu-earth-hud-line">
                 <span className="anu-earth-hud-key">Follow-through</span>
                 <span className="anu-earth-hud-rule" />
-                <span className="anu-earth-hud-value">{totalCompletions.toLocaleString()} completions logged</span>
+                <span className="anu-earth-hud-value">{totalCompletions.toLocaleString()} verified outcomes</span>
               </div>
             </div>
           }

@@ -39,11 +39,11 @@ export function buildImpactOutcomeSignals(
     {
       id: 'actions-completed',
       title: 'Grounded action follow-through',
-      groundedValue: `${actionsCompleted} completions`,
-      groundedDetail: 'Actions completed through the field become the most direct proof that contribution is actually moving into practice.',
-      ascentDetail: 'Completions rise out of the terrain as evidence that grounded effort is holding.',
+      groundedValue: `${actionsCompleted} verified outcomes`,
+      groundedDetail: 'Steward-verified action commitments show where contribution has moved into practice.',
+      ascentDetail: 'Reviewed outcomes rise out of the terrain as evidence of grounded effort.',
       celestialInfluence: 'This lifts the weight of public trust and future coordination signals without displaying a permanent tether.',
-      provenance: 'Derived from the live impact summary action completion count.',
+      provenance: 'Derived from the live impact summary count of steward-verified action commitments.',
     },
     {
       id: 'event-attendance',
