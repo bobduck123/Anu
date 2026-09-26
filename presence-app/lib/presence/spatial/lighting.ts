@@ -28,6 +28,34 @@ export const SPATIAL_LIGHTING_PROFILES: Readonly<Record<SpatialLightingProfileId
       { id: "gallery-fill", kind: "directional", color: "#dfe8ff", intensity: 0.4, position: [-5, 3, -2] },
     ],
   },
+  /**
+   * Rack / lookbook display lighting.
+   *
+   * Deliberately built from hemisphere, ambient and DIRECTIONAL lights only.
+   * Directional lights are infinite and parallel, so only their direction has
+   * any effect — the profile therefore lights a rack correctly wherever that
+   * rack stands, in any room. That is what keeps it reusable, unlike a profile
+   * built from spots and points pinned to one fixture's coordinates.
+   *
+   * The intent, in order: a warm front key so garment fronts read; a cool side
+   * fill so a dark garment keeps its shape instead of going flat; a warm rim
+   * from behind to separate the rack from the wall; and a lifted hemisphere
+   * ground plus a small ambient so black artwork never falls to pure black.
+   */
+  "lookbook-rack-warm": {
+    id: "lookbook-rack-warm",
+    label: "Lookbook rack warm",
+    background: "#15171c",
+    toneMappingExposure: 1.18,
+    lights: [
+      { id: "rack-sky", kind: "hemisphere", color: "#fdf3e2", groundColor: "#2b2f38", intensity: 1.38 },
+      // Small, but it is what stops a black garment disappearing entirely.
+      { id: "rack-ambient", kind: "ambient", color: "#cfd6e2", intensity: 0.42 },
+      { id: "rack-front-key", kind: "directional", color: "#fff1dc", intensity: 1.95, position: [2.5, 5.5, 9], target: [0, 1.6, 0] },
+      { id: "rack-side-fill", kind: "directional", color: "#dce6ff", intensity: 0.7, position: [-8, 3.5, 4], target: [0, 1.6, 0] },
+      { id: "rack-rim", kind: "directional", color: "#ffd9ab", intensity: 0.95, position: [-3, 4.5, -9], target: [0, 2, 0] },
+    ],
+  },
   "boutique-product-warm": {
     id: "boutique-product-warm",
     label: "Warm product-first boutique",
@@ -37,9 +65,10 @@ export const SPATIAL_LIGHTING_PROFILES: Readonly<Record<SpatialLightingProfileId
       { id: "boutique-hemi", kind: "hemisphere", color: "#f5e7cf", groundColor: "#111216", intensity: 0.88 },
       { id: "boutique-ambient", kind: "ambient", color: "#d8d3ca", intensity: 0.18 },
       { id: "entry-fill", kind: "directional", color: "#eee5da", intensity: 1.05, position: [-5, 6, 12], target: [0, 1.4, -6] },
-      { id: "left-display", kind: "spot", color: "#ffd6a2", intensity: 58, position: [-5.2, 5.2, 1], target: [-5.2, 1.4, -2], distance: 18, angle: 0.62, penumbra: 0.62 },
-      { id: "rack-wash", kind: "spot", color: "#ffd9ad", intensity: 82, position: [8.2, 5.1, -1], target: [8.5, 1.8, -5], distance: 20, angle: 0.7, penumbra: 0.58 },
+      { id: "left-display", kind: "spot", color: "#ffd6a2", intensity: 62, position: [-5.2, 5.2, 1], target: [-5.2, 1.4, -2], distance: 18, angle: 0.62, penumbra: 0.62 },
+      { id: "rack-wash", kind: "spot", color: "#ffd9ad", intensity: 78, position: [8.2, 5.1, -1], target: [8.5, 1.8, -5], distance: 20, angle: 0.7, penumbra: 0.58 },
       { id: "island-pool", kind: "point", color: "#ffc98f", intensity: 46, position: [0, 3.8, 1], distance: 12 },
+      { id: "plinth-edge", kind: "point", color: "#ffe7c4", intensity: 24, position: [-2.8, 2.4, 3.8], distance: 8 },
       { id: "rear-campaign", kind: "spot", color: "#ffe0b8", intensity: 46, position: [0, 5, -12], target: [0, 2.5, -16], distance: 12, angle: 0.7, penumbra: 0.7 },
       { id: "rack-edge", kind: "point", color: "#fff0d6", intensity: 34, position: [6.8, 2.8, -7], distance: 9 },
     ],

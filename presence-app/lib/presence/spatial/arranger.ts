@@ -1,12 +1,22 @@
 import { compileSpatialRoom } from "./compile.ts";
+import { CANDIDATE_ARRANGER_COMPONENT_OPTIONS } from "./candidateOptions.ts";
 import { MOBSTAR_SPATIAL_ROOM_FIXTURE } from "./fixtures/mobstar.ts";
+import {
+  resolvePresencePlacementOption,
+  resolvePresenceRoomKit,
+} from "./optionAliases.ts";
 import type {
   SpatialAnchorDefinition,
   SpatialAnchorKind,
   SpatialActionRef,
+  SpatialArrangementKind,
+  SpatialArrangementOverflowPolicy,
+  SpatialContentBinding,
   SpatialMaterialPresetId,
   SpatialMaterialSlotId,
   SpatialMediaRef,
+  PieceType,
+  SpatialPieceLibraryItem,
   SpatialPlacement,
   SpatialRoomDefinition,
   SpatialSkinRef,
@@ -19,22 +29,11 @@ import {
   DEFAULT_SPATIAL_SNAP_SETTINGS,
   snapSpatialTransform,
 } from "./placement.ts";
+import { SPATIAL_GARMENT_ASPECT_RANGE } from "./model.ts";
+import type { SpatialGarmentArticleType } from "./model.ts";
 import { spatialComponent } from "./registry.ts";
 
-export type ArrangerComponentId =
-  | "presence.wall-panel"
-  | "presence.divider-wall"
-  | "presence.display-table"
-  | "presence.retail-rack"
-  | "presence.display-plinth"
-  | "presence.projection-wall"
-  | "presence.rounded-island"
-  | "presence.display-shelf"
-  | "presence.framed-media"
-  | "presence.text-sign-card"
-  | "presence.product-display-block"
-  | "presence.light-fixture"
-  | "presence.drape-divider";
+export type ArrangerComponentId = string;
 
 export interface ArrangerComponentOption {
   componentId: ArrangerComponentId;
@@ -42,9 +41,23 @@ export interface ArrangerComponentOption {
   label: string;
   anchorKind: "floor" | "wall" | "free";
   materialSlotOverrides: SpatialPlacement["materialSlotOverrides"];
+  optionRef?: SpatialPlacement["optionRef"];
 }
 
-export const ARRANGER_COMPONENT_OPTIONS = [
+export type ArrangerCapabilityTag =
+  | "floor-placeable"
+  | "wall-placeable"
+  | "free-placeable"
+  | "surface-host"
+  | "media-capable"
+  | "skin-capable"
+  | "material-slots"
+  | "action-capable"
+  | "glb-optional"
+  | "proxy-only"
+  | "fallback-safe";
+
+export const ARRANGER_CORE_COMPONENT_OPTIONS = [
   {
     componentId: "presence.wall-panel",
     version: "1.0.0",
@@ -138,31 +151,71 @@ export const ARRANGER_COMPONENT_OPTIONS = [
   },
 ] as const satisfies readonly ArrangerComponentOption[];
 
+export const ARRANGER_COMPONENT_OPTIONS = [
+  ...ARRANGER_CORE_COMPONENT_OPTIONS,
+  ...CANDIDATE_ARRANGER_COMPONENT_OPTIONS,
+] as const satisfies readonly ArrangerComponentOption[];
+
+const CAPABILITY_TAG_ORDER: readonly ArrangerCapabilityTag[] = [
+  "floor-placeable",
+  "wall-placeable",
+  "free-placeable",
+  "surface-host",
+  "media-capable",
+  "skin-capable",
+  "material-slots",
+  "action-capable",
+  "glb-optional",
+  "proxy-only",
+  "fallback-safe",
+];
+
 export type ArrangerMutationResult =
   | { ok: true; room: SpatialRoomDefinition; issues: readonly [] }
   | { ok: false; room: SpatialRoomDefinition; issues: readonly SpatialValidationIssue[] };
 
-const MOVABLE_FLOOR_COMPONENTS = new Set<ArrangerComponentId>([
-  "presence.divider-wall",
-  "presence.display-table",
-  "presence.retail-rack",
-  "presence.display-plinth",
-  "presence.rounded-island",
-  "presence.display-shelf",
-  "presence.text-sign-card",
-  "presence.product-display-block",
-  "presence.light-fixture",
-  "presence.drape-divider",
-]);
-const MOVABLE_WALL_COMPONENTS = new Set<ArrangerComponentId>([
-  "presence.wall-panel",
-  "presence.projection-wall",
-  "presence.framed-media",
-]);
+export type ArrangerRoomKitResult =
+  | { ok: true; room: SpatialRoomDefinition; issues: readonly [] }
+  | { ok: false; issues: readonly SpatialValidationIssue[] };
+
+const MOVABLE_FLOOR_COMPONENTS = new Set<ArrangerComponentId>(
+  ARRANGER_COMPONENT_OPTIONS
+    .filter((option) => option.anchorKind === "floor" || option.anchorKind === "free")
+    .map((option) => option.componentId),
+);
+const MOVABLE_WALL_COMPONENTS = new Set<ArrangerComponentId>(
+  ARRANGER_COMPONENT_OPTIONS
+    .filter((option) => option.anchorKind === "wall")
+    .map((option) => option.componentId),
+);
 
 const PIECE_PARENT_ANCHOR_KINDS = new Set<SpatialAnchorKind>(["wall", "surface", "rack", "projection"]);
 const NON_STACKING_WALL_COMPONENTS = new Set(["presence.wall-panel", "presence.projection-wall"]);
 const MAX_ARRANGER_SEARCH_ATTEMPTS = 20_000;
+const PIECE_LIBRARY_TIMESTAMP = "2026-08-18T00:00:00.000Z";
+const PIECE_TYPES: readonly PieceType[] = [
+  "image",
+  "video",
+  "audio",
+  "garment",
+  "product",
+  "event",
+  "flyer",
+  "text",
+  "link",
+  "gallery",
+  "collection",
+  "archive-item",
+];
+const GARMENT_DISPLAY_COMPONENTS = new Set<string>([
+  "presence.display-bay",
+  "presence.display-plinth",
+  "presence.display-shelf",
+  "presence.product-display-block",
+  "presence.rounded-island",
+  "presence.candidate-display-island",
+  "presence.garment-hanger",
+]);
 
 export const AUTHORING_CONTRAST_SKIN_ID = "presence-authoring-contrast-skin";
 
@@ -179,6 +232,32 @@ const AUTHORING_CONTRAST_SKIN: SpatialSkinRef = {
   },
   decalAssetIds: [],
 };
+
+export function arrangerComponentCapabilityTags(
+  option: Pick<ArrangerComponentOption, "componentId" | "version" | "anchorKind">,
+): readonly ArrangerCapabilityTag[] {
+  const definition = spatialComponent(option);
+  const tags = new Set<ArrangerCapabilityTag>();
+  tags.add(`${option.anchorKind}-placeable` as ArrangerCapabilityTag);
+  if (definition) {
+    if (definition.anchors.some((anchor) => (
+      PIECE_PARENT_ANCHOR_KINDS.has(anchor.kind) && anchor.accepts.includes("piece")
+    ))) {
+      tags.add("surface-host");
+      tags.add("media-capable");
+    }
+    if (definition.category === "piece" || definition.category === "projection") {
+      tags.add("media-capable");
+    }
+    if (definition.materialSlots.length > 0) tags.add("material-slots");
+    if (definition.renderGeometry?.kind === "glb") tags.add("glb-optional");
+    else tags.add("proxy-only");
+    tags.add("fallback-safe");
+  }
+  tags.add("skin-capable");
+  tags.add("action-capable");
+  return CAPABILITY_TAG_ORDER.filter((tag) => tags.has(tag));
+}
 
 /**
  * Creates a validation-ready Mobstar arranger draft without carrying the proof
@@ -209,7 +288,27 @@ export function createBlankMobstarSpatialRoom(): SpatialRoomDefinition {
     label: "Mobstar blank spatial arranger draft",
     revision: 1,
     seed: "mobstar-arranger-blank-v1",
-    assets: MOBSTAR_SPATIAL_ROOM_FIXTURE.assets.map((asset) => ({ ...asset })),
+    assets: [
+      ...MOBSTAR_SPATIAL_ROOM_FIXTURE.assets.map((asset) => ({ ...asset })),
+      {
+        id: "presence-sample-audio",
+        kind: "audio",
+        locator: "public:presence-spatial/samples/audio-placeholder",
+        safety: "public-safe",
+        compressedBytes: 0,
+        eager: false,
+        attribution: "Public-safe operator sample reference; no playback proof claimed.",
+      },
+      {
+        id: "presence-sample-video",
+        kind: "video",
+        locator: "public:presence-spatial/samples/video-placeholder",
+        safety: "public-safe",
+        compressedBytes: 0,
+        eager: false,
+        attribution: "Public-safe operator sample reference; no playback proof claimed.",
+      },
+    ],
     skins: [
       ...MOBSTAR_SPATIAL_ROOM_FIXTURE.skins.map((skin) => ({
         ...skin,
@@ -224,12 +323,100 @@ export function createBlankMobstarSpatialRoom(): SpatialRoomDefinition {
         decalAssetIds: [],
       },
     ],
-    media: MOBSTAR_SPATIAL_ROOM_FIXTURE.media.map((media) => ({ ...media })),
+    media: [
+      ...MOBSTAR_SPATIAL_ROOM_FIXTURE.media.map((media) => ({ ...media })),
+      { id: "presence-sample-audio", kind: "audio", assetId: "presence-sample-audio", alt: "Public-safe audio sample reference", safety: "public-safe" },
+      { id: "presence-sample-video", kind: "video", assetId: "presence-sample-video", alt: "Public-safe video sample reference", safety: "public-safe" },
+    ],
+    pieceLibrary: defaultArrangerPieceLibrary(),
     actions: [],
     placements: foundationPlacements,
+    contentBindings: [],
     states: overviewStates,
     semanticFallback: [],
   };
+}
+
+export function createRoomFromPresenceRoomKitOption(optionId: string, version = "0.1.0"): ArrangerRoomKitResult {
+  const kit = resolvePresenceRoomKit({ optionId, version });
+  if (!kit) {
+    return { ok: false, issues: [issue(`options.${optionId}`, "unknown-room-kit-option", `Room kit option ${optionId}@${version} does not exist.`)] };
+  }
+  if (!kit.status.startsWith("available-now")) {
+    return { ok: false, issues: [issue(`options.${optionId}`, "room-kit-deferred", `${kit.name} is ${kit.status} and cannot be loaded as an active room.`)] };
+  }
+
+  const base = createBlankMobstarSpatialRoom();
+  const shellDefinition = spatialComponent(kit.shellComponentRef);
+  const floorDefinition = spatialComponent(kit.floorComponentRef);
+  if (!shellDefinition || !floorDefinition) {
+    return { ok: false, issues: [issue(`options.${optionId}`, "unknown-component", "Room kit shell or floor component is not registered.")] };
+  }
+
+  const roomKitRef = { optionId: kit.optionId, version: kit.version };
+  const foundation: SpatialPlacement[] = [
+    {
+      id: "room-shell",
+      order: 0,
+      componentId: kit.shellComponentRef.componentId,
+      version: kit.shellComponentRef.version,
+      optionRef: roomKitRef,
+      transform: { position: [0, shellDefinition.dimensions.height / 2, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
+      anchor: { kind: "free" },
+      materialSlotOverrides: { wall: "wall-charcoal" },
+      actionRefs: [],
+      visible: true,
+      semanticLabel: `${kit.name} shell`,
+    },
+    {
+      id: "floor",
+      order: 1,
+      componentId: kit.floorComponentRef.componentId,
+      version: kit.floorComponentRef.version,
+      optionRef: roomKitRef,
+      transform: { position: [0, floorDefinition.dimensions.height / 2, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
+      anchor: { kind: "floor" },
+      materialSlotOverrides: { floor: materialPresetForRoomKitFloor(kit.optionId) },
+      actionRefs: [],
+      visible: true,
+      semanticLabel: `${kit.name} floor`,
+    },
+  ];
+  const starters: SpatialPlacement[] = kit.starterComponentPlacements.map((starter, index) => ({
+    id: nextStableId(`roomkit-${starter.id}`, [...foundation.map((placement) => placement.id), ...kit.starterComponentPlacements.slice(0, index).map((placement) => `roomkit-${placement.id}`)]),
+    order: index + foundation.length,
+    componentId: starter.componentRef.componentId,
+    version: starter.componentRef.version,
+    optionRef: { ...starter.optionRef },
+    transform: starter.transform,
+    anchor: { kind: starter.anchorKind },
+    materialSlotOverrides: { ...starter.materialSlotOverrides },
+    actionRefs: [],
+    visible: true,
+    semanticLabel: starter.semanticLabel,
+  }));
+  const placements = [...foundation, ...starters];
+  const room: SpatialRoomDefinition = {
+    ...base,
+    id: kit.optionId.replace(/^presence\./, "presence-option-").replaceAll(".", "-"),
+    label: kit.name,
+    fixtureKind: "generic-proof",
+    revision: 1,
+    seed: `${kit.optionId}@${kit.version}`,
+    bounds: kit.dimensions,
+    lightingProfileId: kit.lightingProfile,
+    placements,
+    actions: [],
+    pieceLibrary: base.pieceLibrary?.map((piece) => ({ ...piece, mediaRefs: [...piece.mediaRefs], actionRefs: [...piece.actionRefs], tags: [...piece.tags], collectionRefs: [...piece.collectionRefs] })) ?? [],
+    contentBindings: [],
+    semanticFallback: placements.map((placement) => ({ placementId: placement.id, label: placement.semanticLabel, actionRefs: [] })),
+    states: base.states.map((state) => ({
+      ...state,
+      visiblePlacementIds: state.visiblePlacementIds ? placements.map((placement) => placement.id) : undefined,
+    })),
+  };
+  const compiled = compileSpatialRoom(room);
+  return compiled.ok ? { ok: true, room: compiled.room, issues: [] } : { ok: false, issues: compiled.issues };
 }
 
 /** Adds one registered arranger fixture at the first deterministic valid grid point. */
@@ -238,12 +425,38 @@ export function addArrangerComponent(room: SpatialRoomDefinition, componentId: s
   if (!option) {
     return reject(room, "placements", "arranger-component", `Component ${componentId} is not available in the internal arranger.`);
   }
+  return addResolvedArrangerComponent(room, option);
+}
+
+/** Adds a stable Presence option alias while retaining the resolved component ref for rendering. */
+export function addArrangerOption(room: SpatialRoomDefinition, optionId: string, version = "0.1.0"): ArrangerMutationResult {
+  const resolved = resolvePresencePlacementOption({ optionId, version });
+  if (!resolved.ok) {
+    return reject(room, `options.${optionId}`, "option-unavailable", resolved.reason);
+  }
+  return addResolvedArrangerComponent(room, {
+    componentId: resolved.componentRef.componentId,
+    version: resolved.componentRef.version,
+    label: resolved.label,
+    anchorKind: resolved.anchorKind,
+    materialSlotOverrides: resolved.materialSlotOverrides,
+    optionRef: resolved.optionRef,
+  });
+}
+
+function addResolvedArrangerComponent(
+  room: SpatialRoomDefinition,
+  option: ArrangerComponentOption,
+): ArrangerMutationResult {
   const definition = spatialComponent({ componentId: option.componentId, version: option.version });
   if (!definition) {
-    return reject(room, "placements", "unknown-component", `Component ${componentId}@${option.version} is not registered.`);
+    return reject(room, "placements", "unknown-component", `Component ${option.componentId}@${option.version} is not registered.`);
   }
 
-  const placementId = nextStableId(`arranger-${componentId.replace(/^presence\./, "").replaceAll(".", "-")}`, room.placements.map((item) => item.id));
+  const placementId = nextStableId(
+    `arranger-${option.componentId.replace(/^(presence|candidate)\./, "").replaceAll(".", "-")}`,
+    room.placements.map((item) => item.id),
+  );
   const order = nextPlacementOrder(room);
   const skinRef = room.skins[0]?.id;
   let lastIssues: readonly SpatialValidationIssue[] = [];
@@ -263,6 +476,7 @@ export function addArrangerComponent(room: SpatialRoomDefinition, componentId: s
       order,
       componentId: option.componentId,
       version: option.version,
+      ...(option.optionRef ? { optionRef: { ...option.optionRef } } : {}),
       transform: {
         position: [x, definition.dimensions.height / 2, z],
         rotation: [0, option.anchorKind === "wall" && z > 0 ? Math.PI : 0, 0],
@@ -303,11 +517,14 @@ export function addArrangerComponent(room: SpatialRoomDefinition, componentId: s
 }
 
 export function isArrangerMovablePlacement(placement: SpatialPlacement): boolean {
-  if (placement.anchor.kind === "floor") {
-    return MOVABLE_FLOOR_COMPONENTS.has(placement.componentId as ArrangerComponentId);
+  const option = arrangerOptionForPlacement(placement);
+  if (option) {
+    return (placement.anchor.kind === "floor" || placement.anchor.kind === "free")
+      ? option.anchorKind === "floor" || option.anchorKind === "free"
+      : placement.anchor.kind === "wall" && option.anchorKind === "wall";
   }
-  return placement.anchor.kind === "wall"
-    && MOVABLE_WALL_COMPONENTS.has(placement.componentId as ArrangerComponentId);
+  if (placement.anchor.kind === "floor") return MOVABLE_FLOOR_COMPONENTS.has(placement.componentId as ArrangerComponentId);
+  return placement.anchor.kind === "wall" && MOVABLE_WALL_COMPONENTS.has(placement.componentId as ArrangerComponentId);
 }
 
 /** Moves a floor fixture by a delta and snaps x/z to the 0.25 m arranger grid. */
@@ -690,6 +907,243 @@ export function assignArrangerMedia(
   return acceptCandidate(room, reflowArrangerChildren(withPiece, parent, childIds));
 }
 
+export type ArrangerBindingActionKind = "open-link" | "listen" | "watch" | "enquire";
+
+export interface ArrangerPieceLibraryInput {
+  pieceType: PieceType;
+  label: string;
+  caption?: string;
+  mediaId?: string;
+  actionKind?: ArrangerBindingActionKind;
+  actionLabel?: string;
+  href?: string;
+  tags?: readonly string[];
+  collectionRefs?: readonly string[];
+  safety?: SpatialPieceLibraryItem["safety"];
+}
+
+export interface ArrangerPieceBindingInput {
+  pieceId: string;
+  arrangementKind: SpatialArrangementKind;
+  overflowPolicy?: SpatialArrangementOverflowPolicy;
+}
+
+export interface ArrangerContentBindingInput {
+  mediaId: string;
+  arrangementKind: SpatialArrangementKind;
+  overflowPolicy?: SpatialArrangementOverflowPolicy;
+  actionKind?: ArrangerBindingActionKind;
+  actionLabel?: string;
+  href?: string;
+  caption?: string;
+}
+
+export function bindArrangerContentToHost(
+  room: SpatialRoomDefinition,
+  hostPlacementId: string,
+  input: ArrangerContentBindingInput,
+): ArrangerMutationResult {
+  const host = room.placements.find((candidate) => candidate.id === hostPlacementId);
+  if (!host) return missingPlacement(room, hostPlacementId);
+  const media = room.media.find((candidate) => candidate.id === input.mediaId);
+  if (!media) return reject(room, `media.${input.mediaId}`, "missing-media", `Media ${input.mediaId} does not exist in this room.`);
+  const definition = spatialComponent(host);
+  if (!definition) return reject(room, `placements.${hostPlacementId}`, "unknown-component", "Selected host component is not registered.");
+  const hostCapacity = hostBindingCapacity(host);
+  if (hostCapacity < 1) {
+    return reject(room, `placements.${hostPlacementId}`, "anchor-type", "This object cannot host bound owner content.");
+  }
+  const existingBindings = listArrangerContentBindings(room, hostPlacementId);
+  const overflowPolicy = input.overflowPolicy ?? host.contentArrangement?.overflowPolicy ?? "overflow-list";
+  if (overflowPolicy === "reject-over-capacity" && existingBindings.length >= hostCapacity) {
+    return reject(room, `placements.${hostPlacementId}.contentArrangement`, "anchor-capacity", "This host is at capacity and reject-over-capacity is active.");
+  }
+  const actionKind = input.actionKind ?? defaultBindingActionKind(media);
+  if (actionKind === "listen" && media.kind !== "audio") {
+    return reject(room, `media.${media.id}.kind`, "media-kind", "Listen actions require audio media.");
+  }
+  if (actionKind === "watch" && media.kind !== "video") {
+    return reject(room, `media.${media.id}.kind`, "media-kind", "Watch actions require video media.");
+  }
+  const href = input.href?.trim();
+  const actionLabel = boundedText((input.actionLabel || defaultBindingActionLabel(actionKind, media.alt)).trim(), 160);
+  if (!href || !isSafeArrangerHref(href)) {
+    return reject(room, `contentBindings.${hostPlacementId}.actionRefs`, "unsafe-link", "Bound content actions require a credential-free HTTPS URL.");
+  }
+  if (!actionLabel) {
+    return reject(room, `contentBindings.${hostPlacementId}.actionRefs`, "action-label", "Bound content actions require a non-empty label.");
+  }
+
+  const bindingId = nextStableId(`binding-${media.id}`, [
+    ...(room.contentBindings ?? []).map((binding) => binding.id),
+  ]);
+  const actionId = nextStableId(`${actionKind}-${bindingId}`, room.actions.map((action) => action.id));
+  const nextOrder = existingBindings.reduce((maximum, binding) => Math.max(maximum, binding.order), -1) + 1;
+  const binding: SpatialContentBinding = {
+    id: bindingId,
+    hostPlacementId,
+    pieceRef: `piece:${bindingId}`,
+    pieceType: pieceTypeForMedia(media),
+    label: boundedText(media.alt, 200),
+    ...(input.caption ? { caption: boundedText(input.caption, 500) } : {}),
+    mediaRefs: [media.id],
+    actionRefs: [actionId],
+    order: nextOrder,
+    arrangementRole: nextOrder === 0 ? "primary" : "supporting",
+  };
+  const contentArrangement = {
+    kind: input.arrangementKind,
+    overflowPolicy,
+    capacity: host.contentArrangement?.capacity ?? hostCapacity,
+    ...(host.contentArrangement?.pageSize ? { pageSize: host.contentArrangement.pageSize } : {}),
+    seed: host.contentArrangement?.seed ?? `${host.componentId}@${host.version}:${host.id}`,
+  };
+  const candidate: SpatialRoomDefinition = {
+    ...room,
+    revision: room.revision + 1,
+    actions: [...room.actions, { id: actionId, kind: actionKind, label: actionLabel, href }],
+    placements: room.placements.map((placement) => placement.id === hostPlacementId
+      ? { ...placement, contentArrangement }
+      : placement),
+    contentBindings: [...(room.contentBindings ?? []), binding],
+  };
+  return acceptCandidate(room, candidate);
+}
+
+export function createArrangerPieceLibraryItem(
+  room: SpatialRoomDefinition,
+  input: ArrangerPieceLibraryInput,
+): ArrangerMutationResult {
+  if (!PIECE_TYPES.includes(input.pieceType)) {
+    return reject(room, "pieceLibrary.pieceType", "piece-type", "Unsupported piece type.");
+  }
+  const label = boundedText(input.label.trim(), 200);
+  if (!label) return reject(room, "pieceLibrary.label", "piece-label", "Piece title is required.");
+  const media = input.mediaId ? room.media.find((candidate) => candidate.id === input.mediaId) : undefined;
+  if (input.mediaId && !media) return reject(room, `media.${input.mediaId}`, "missing-media", `Media ${input.mediaId} does not exist in this room.`);
+  if (media && !pieceMediaCompatible(input.pieceType, media)) {
+    return reject(room, `pieceLibrary.${input.pieceType}.mediaRefs`, "piece-media-kind", `Piece type ${input.pieceType} cannot use ${media.kind} media.`);
+  }
+
+  const actionKind = input.actionKind ?? defaultPieceActionKind(input.pieceType, media);
+  const href = input.href?.trim();
+  const actionLabel = boundedText((input.actionLabel || defaultPieceActionLabel(actionKind, label)).trim(), 160);
+  if ((href || input.actionLabel?.trim()) && !href) {
+    return reject(room, "pieceLibrary.actionRefs", "unsafe-link", "Piece actions require a credential-free HTTPS URL.");
+  }
+  if (href && !isSafeArrangerHref(href)) {
+    return reject(room, "pieceLibrary.actionRefs", "unsafe-link", "Piece actions require a credential-free HTTPS URL.");
+  }
+  if (href && !pieceActionCompatible(input.pieceType, actionKind)) {
+    return reject(room, "pieceLibrary.actionRefs", "piece-action-kind", `${actionKind} actions are incompatible with ${input.pieceType} pieces.`);
+  }
+  if (href && !actionLabel) {
+    return reject(room, "pieceLibrary.actionRefs", "action-label", "Piece actions require a non-empty label.");
+  }
+
+  const pieceId = nextStableId(`piece-${label}`, (room.pieceLibrary ?? []).map((piece) => piece.id));
+  const actionId = href ? nextStableId(`${actionKind}-${pieceId}`, room.actions.map((action) => action.id)) : undefined;
+  const piece: SpatialPieceLibraryItem = {
+    id: pieceId,
+    pieceType: input.pieceType,
+    label,
+    ...(input.caption?.trim() ? { caption: boundedText(input.caption.trim(), 500) } : {}),
+    mediaRefs: media ? [media.id] : [],
+    actionRefs: actionId ? [actionId] : [],
+    tags: normalizeTagRefs(input.tags ?? []),
+    collectionRefs: normalizeTagRefs(input.collectionRefs ?? []),
+    safety: input.safety ?? (media?.safety === "public-safe" ? "public-safe" : "internal-fixture"),
+    createdAt: PIECE_LIBRARY_TIMESTAMP,
+    updatedAt: PIECE_LIBRARY_TIMESTAMP,
+  };
+  const candidate: SpatialRoomDefinition = {
+    ...room,
+    revision: room.revision + 1,
+    ...(actionId && href ? { actions: [...room.actions, { id: actionId, kind: actionKind, label: actionLabel, href }] } : {}),
+    pieceLibrary: [...(room.pieceLibrary ?? []), piece],
+  };
+  return acceptCandidate(room, candidate);
+}
+
+export function bindArrangerPieceToHost(
+  room: SpatialRoomDefinition,
+  hostPlacementId: string,
+  input: ArrangerPieceBindingInput,
+): ArrangerMutationResult {
+  const host = room.placements.find((candidate) => candidate.id === hostPlacementId);
+  if (!host) return missingPlacement(room, hostPlacementId);
+  const piece = (room.pieceLibrary ?? []).find((candidate) => candidate.id === input.pieceId);
+  if (!piece) return reject(room, `pieceLibrary.${input.pieceId}`, "missing-piece", `Piece ${input.pieceId} does not exist in the internal Piece Library.`);
+  const definition = spatialComponent(host);
+  if (!definition) return reject(room, `placements.${hostPlacementId}`, "unknown-component", "Selected host component is not registered.");
+  if (!hostSupportsPieceType(host, piece.pieceType)) {
+    return reject(room, `pieceLibrary.${piece.id}.pieceType`, "piece-host-compatibility", hostPieceCompatibilityMessage(host, definition.label, piece.pieceType));
+  }
+  const hostCapacity = hostBindingCapacity(host);
+  if (hostCapacity < 1) {
+    return reject(room, `placements.${hostPlacementId}`, "anchor-type", "This object cannot host bound owner content.");
+  }
+  const existingBindings = listArrangerContentBindings(room, hostPlacementId);
+  const overflowPolicy = input.overflowPolicy ?? host.contentArrangement?.overflowPolicy ?? "overflow-list";
+  if (overflowPolicy === "reject-over-capacity" && existingBindings.length >= hostCapacity) {
+    return reject(room, `placements.${hostPlacementId}.contentArrangement`, "anchor-capacity", "This host is at capacity and reject-over-capacity is active.");
+  }
+  const missingMedia = piece.mediaRefs.find((mediaId) => !room.media.some((media) => media.id === mediaId));
+  if (missingMedia) return reject(room, `pieceLibrary.${piece.id}.mediaRefs`, "missing-media", `Piece media ${missingMedia} does not exist.`);
+  const missingAction = piece.actionRefs.find((actionId) => !room.actions.some((action) => action.id === actionId));
+  if (missingAction) return reject(room, `pieceLibrary.${piece.id}.actionRefs`, "missing-action", `Piece action ${missingAction} does not exist.`);
+
+  const bindingId = nextStableId(`binding-${piece.id}`, [
+    ...(room.contentBindings ?? []).map((binding) => binding.id),
+  ]);
+  const nextOrder = existingBindings.reduce((maximum, binding) => Math.max(maximum, binding.order), -1) + 1;
+  const binding: SpatialContentBinding = {
+    id: bindingId,
+    hostPlacementId,
+    pieceRef: `piece-library:${piece.id}`,
+    pieceType: piece.pieceType,
+    label: piece.label,
+    ...(piece.caption ? { caption: piece.caption } : {}),
+    mediaRefs: piece.mediaRefs,
+    actionRefs: piece.actionRefs,
+    order: nextOrder,
+    arrangementRole: nextOrder === 0 ? "primary" : "supporting",
+    ...(piece.pieceType === "garment"
+      ? {
+        garmentArticleType: piece.garmentArticleType ?? "generic",
+        // All five artwork channels, not just front/back. Copying only
+        // front/back meant a shoe — whose artwork lives in the display,
+        // outer-side and top channels — lost its artwork the moment it was
+        // bound, and was then reported as missing artwork despite the operator
+        // having assigned it. `setArrangerPieceGarmentArtwork` already mirrors
+        // all five onto existing bindings, so binding was the odd one out.
+        ...(piece.frontImageRef ? { frontImageRef: piece.frontImageRef } : {}),
+        ...(piece.backImageRef ? { backImageRef: piece.backImageRef } : {}),
+        ...(piece.displayImageRef ? { displayImageRef: piece.displayImageRef } : {}),
+        ...(piece.outerSideImageRef ? { outerSideImageRef: piece.outerSideImageRef } : {}),
+        ...(piece.topImageRef ? { topImageRef: piece.topImageRef } : {}),
+        ...(piece.artworkAspect !== undefined ? { artworkAspect: piece.artworkAspect } : {}),
+      }
+      : {}),
+  };
+  const contentArrangement = {
+    kind: input.arrangementKind,
+    overflowPolicy,
+    capacity: host.contentArrangement?.capacity ?? hostCapacity,
+    ...(host.contentArrangement?.pageSize ? { pageSize: host.contentArrangement.pageSize } : {}),
+    seed: host.contentArrangement?.seed ?? `${host.componentId}@${host.version}:${host.id}`,
+  };
+  const candidate: SpatialRoomDefinition = {
+    ...room,
+    revision: room.revision + 1,
+    placements: room.placements.map((placement) => placement.id === hostPlacementId
+      ? { ...placement, contentArrangement }
+      : placement),
+    contentBindings: [...(room.contentBindings ?? []), binding],
+  };
+  return acceptCandidate(room, candidate);
+}
+
 /** Reorders direct Piece children and remaps deterministic anchor/layout positions. */
 export function reorderArrangerPiece(
   room: SpatialRoomDefinition,
@@ -735,20 +1189,248 @@ export function listArrangerChildPieces(
     .sort((left, right) => left.order - right.order || left.id.localeCompare(right.id));
 }
 
+export function listArrangerContentBindings(
+  room: Pick<SpatialRoomDefinition, "contentBindings">,
+  hostPlacementId: string,
+): readonly SpatialContentBinding[] {
+  return (room.contentBindings ?? [])
+    .filter((binding) => binding.hostPlacementId === hostPlacementId)
+    .slice()
+    .sort((left, right) => left.order - right.order || left.id.localeCompare(right.id));
+}
+
+/**
+ * Rack slot state for the authoring UI.
+ *
+ * Capacity comes from the arrangement spec where present, falling back to the
+ * host's anchor capacity, so slot count follows content rather than baked anchors.
+ */
+export interface ArrangerRackSlotState {
+  hostPlacementId: string;
+  capacity: number;
+  occupied: number;
+  open: number;
+  overflow: number;
+  slots: readonly {
+    index: number;
+    bindingId?: string;
+    label?: string;
+    pieceType?: PieceType;
+    overflowed: boolean;
+    missingArtwork: boolean;
+  }[];
+}
+
+/**
+ * Default arrangement for a host.
+ *
+ * Rack-anchored hosts hang their content on a rail; wall-anchored hosts use a
+ * wall grid. Picking this from the host's own anchor contract keeps operators
+ * from having to know the arrangement vocabulary.
+ */
+export function defaultArrangementKindForHost(host: SpatialPlacement): SpatialArrangementKind {
+  const definition = spatialComponent(host);
+  if (definition?.geometry.kind === "primitive" && definition.geometry.primitive === "spherical-gallery") return "spherical";
+  const anchors = definition?.anchors ?? [];
+  if (anchors.some((anchor) => anchor.kind === "rack" && anchor.accepts.includes("piece"))) return "rack-row";
+  if (anchors.some((anchor) => anchor.kind === "wall" && anchor.accepts.includes("piece"))) return "wall-grid";
+  if (definition?.category === "projection") return "grid";
+  return "grid";
+}
+
+export function arrangerRackSlotState(
+  room: SpatialRoomDefinition,
+  hostPlacementId: string,
+): ArrangerRackSlotState | undefined {
+  const host = room.placements.find((candidate) => candidate.id === hostPlacementId);
+  if (!host) return undefined;
+  const capacity = Math.max(1, host.contentArrangement?.capacity ?? hostBindingCapacity(host));
+  const bindings = listArrangerContentBindings(room, hostPlacementId);
+  const slots = Array.from({ length: Math.max(capacity, bindings.length) }, (_, index) => {
+    const binding = bindings[index];
+    const missingArtwork = binding?.pieceType === "garment"
+      && !binding.frontImageRef
+      && !binding.backImageRef
+      && binding.mediaRefs.length === 0;
+    return {
+      index,
+      ...(binding ? { bindingId: binding.id, label: binding.label, pieceType: binding.pieceType } : {}),
+      overflowed: index >= capacity,
+      missingArtwork: Boolean(missingArtwork),
+    };
+  });
+  return {
+    hostPlacementId,
+    capacity,
+    occupied: bindings.length,
+    open: Math.max(0, capacity - bindings.length),
+    overflow: Math.max(0, bindings.length - capacity),
+    slots,
+  };
+}
+
+/**
+ * Moves a bound piece one slot left or right.
+ *
+ * Order is rewritten densely from zero so slot order, binding order and semantic
+ * fallback order stay identical after every move.
+ */
+export function moveArrangerContentBinding(
+  room: SpatialRoomDefinition,
+  hostPlacementId: string,
+  bindingId: string,
+  direction: -1 | 1,
+): ArrangerMutationResult {
+  const host = room.placements.find((candidate) => candidate.id === hostPlacementId);
+  if (!host) return missingPlacement(room, hostPlacementId);
+  if (direction !== -1 && direction !== 1) {
+    return reject(room, `contentBindings.${bindingId}.order`, "reorder-direction", "Reorder direction must be -1 or 1.");
+  }
+  const bindings = listArrangerContentBindings(room, hostPlacementId).slice();
+  const index = bindings.findIndex((binding) => binding.id === bindingId);
+  if (index < 0) return reject(room, `contentBindings.${bindingId}`, "missing-binding", `Binding ${bindingId} is not bound to this host.`);
+  const target = index + direction;
+  if (target < 0 || target >= bindings.length) {
+    return reject(room, `contentBindings.${bindingId}.order`, "reorder-bounds", "This garment is already at the end of the rack.");
+  }
+  const swapped = bindings[index];
+  bindings[index] = bindings[target];
+  bindings[target] = swapped;
+  return acceptCandidate(room, withDenseBindingOrder(room, hostPlacementId, bindings));
+}
+
+/** Removes a bound piece from a host, keeping the remaining order dense and stable. */
+export function removeArrangerContentBinding(
+  room: SpatialRoomDefinition,
+  hostPlacementId: string,
+  bindingId: string,
+): ArrangerMutationResult {
+  const host = room.placements.find((candidate) => candidate.id === hostPlacementId);
+  if (!host) return missingPlacement(room, hostPlacementId);
+  const bindings = listArrangerContentBindings(room, hostPlacementId);
+  if (!bindings.some((binding) => binding.id === bindingId)) {
+    return reject(room, `contentBindings.${bindingId}`, "missing-binding", `Binding ${bindingId} is not bound to this host.`);
+  }
+  const remaining = bindings.filter((binding) => binding.id !== bindingId);
+  return acceptCandidate(room, withDenseBindingOrder(room, hostPlacementId, remaining));
+}
+
+function withDenseBindingOrder(
+  room: SpatialRoomDefinition,
+  hostPlacementId: string,
+  ordered: readonly SpatialContentBinding[],
+): SpatialRoomDefinition {
+  const reordered = ordered.map((binding, index) => ({
+    ...binding,
+    order: index,
+    arrangementRole: index === 0 ? "primary" as const : "supporting" as const,
+  }));
+  const others = (room.contentBindings ?? []).filter((binding) => binding.hostPlacementId !== hostPlacementId);
+  return {
+    ...room,
+    revision: room.revision + 1,
+    contentBindings: [...others, ...reordered],
+  };
+}
+
+export interface ArrangerGarmentArtworkInput {
+  garmentArticleType?: SpatialGarmentArticleType;
+  frontImageRef?: string | null;
+  backImageRef?: string | null;
+  displayImageRef?: string | null;
+  outerSideImageRef?: string | null;
+  topImageRef?: string | null;
+  artworkAspect?: number | null;
+}
+
+/**
+ * Assigns garment article and artwork refs to a Piece Library item, and mirrors
+ * them onto that piece's existing bindings so a garment already on a rack picks
+ * up the change without being rebound.
+ *
+ * Only media ids are stored. Passing `null` clears a ref.
+ */
+export function setArrangerPieceGarmentArtwork(
+  room: SpatialRoomDefinition,
+  pieceId: string,
+  input: ArrangerGarmentArtworkInput,
+): ArrangerMutationResult {
+  const piece = (room.pieceLibrary ?? []).find((candidate) => candidate.id === pieceId);
+  if (!piece) return reject(room, `pieceLibrary.${pieceId}`, "missing-piece", `Piece ${pieceId} does not exist in the internal Piece Library.`);
+  if (piece.pieceType !== "garment") {
+    return reject(room, `pieceLibrary.${pieceId}.pieceType`, "garment-artwork-ref", "Only garment pieces carry garment artwork refs.");
+  }
+  const refKeys = ["frontImageRef", "backImageRef", "displayImageRef", "outerSideImageRef", "topImageRef"] as const;
+  for (const key of refKeys) {
+    const value = input[key];
+    if (value && !room.media.some((media) => media.id === value)) {
+      return reject(room, `pieceLibrary.${pieceId}.${key}`, "missing-media", `Garment artwork media ${value} does not exist in this room.`);
+    }
+  }
+  if (input.artworkAspect !== undefined && input.artworkAspect !== null) {
+    const aspect = input.artworkAspect;
+    if (!Number.isFinite(aspect) || aspect < SPATIAL_GARMENT_ASPECT_RANGE.min || aspect > SPATIAL_GARMENT_ASPECT_RANGE.max) {
+      return reject(room, `pieceLibrary.${pieceId}.artworkAspect`, "garment-aspect", `Artwork aspect must be between ${SPATIAL_GARMENT_ASPECT_RANGE.min} and ${SPATIAL_GARMENT_ASPECT_RANGE.max}.`);
+    }
+  }
+
+  const applyRefs = <T extends object>(target: T): T => {
+    const next = { ...target } as Record<string, unknown>;
+    if (input.garmentArticleType) next.garmentArticleType = input.garmentArticleType;
+    for (const key of refKeys) {
+      const value = input[key];
+      if (value === undefined) continue;
+      if (value === null) delete next[key];
+      else next[key] = value;
+    }
+    if (input.artworkAspect === null) delete next.artworkAspect;
+    else if (input.artworkAspect !== undefined) next.artworkAspect = input.artworkAspect;
+    return next as T;
+  };
+
+  const candidate: SpatialRoomDefinition = {
+    ...room,
+    revision: room.revision + 1,
+    pieceLibrary: (room.pieceLibrary ?? []).map((item) => (item.id === pieceId
+      ? applyRefs({ ...item, updatedAt: item.updatedAt })
+      : item)),
+    contentBindings: (room.contentBindings ?? []).map((binding) => (binding.pieceRef === `piece-library:${pieceId}`
+      ? applyRefs(binding)
+      : binding)),
+  };
+  return acceptCandidate(room, candidate);
+}
+
+export function listArrangerPieceLibrary(
+  room: Pick<SpatialRoomDefinition, "pieceLibrary">,
+): readonly SpatialPieceLibraryItem[] {
+  return (room.pieceLibrary ?? [])
+    .slice()
+    .sort((left, right) => left.label.localeCompare(right.label) || left.id.localeCompare(right.id));
+}
+
+export function listArrangerHostSupportedPieceTypes(host?: SpatialPlacement): readonly PieceType[] {
+  if (!host) return [];
+  return PIECE_TYPES.filter((pieceType) => hostSupportsPieceType(host, pieceType));
+}
+
 export function listArrangerCompatibleMedia(
   room: SpatialRoomDefinition,
   parentPlacementId: string,
 ): readonly SpatialMediaRef[] {
   const parent = room.placements.find((candidate) => candidate.id === parentPlacementId);
   if (!parent) return [];
+  const bindingCapacity = hostBindingCapacity(parent);
+  const bindingCount = listArrangerContentBindings(room, parentPlacementId).length;
+  const bindingPolicy = parent.contentArrangement?.overflowPolicy ?? "overflow-list";
   const hasCapacity = compatiblePieceAnchors(parent).some((anchor) => (
     anchorOccupancy(room, parentPlacementId, anchor.id) < anchor.capacity
-  ));
+  )) || (bindingCapacity > 0 && (bindingCount < bindingCapacity || bindingPolicy !== "reject-over-capacity"));
   return hasCapacity ? room.media : [];
 }
 
 export function isArrangerMediaParent(placement: SpatialPlacement): boolean {
-  return compatiblePieceAnchors(placement).length > 0;
+  return compatiblePieceAnchors(placement).length > 0 || hostBindingCapacity(placement) > 0;
 }
 
 function replacePlacement(
@@ -781,9 +1463,27 @@ function replacePlacementData(
 }
 
 function arrangerOptionForPlacement(placement: SpatialPlacement): ArrangerComponentOption | undefined {
-  return ARRANGER_COMPONENT_OPTIONS.find((option) => (
+  const registered = ARRANGER_COMPONENT_OPTIONS.find((option) => (
     option.componentId === placement.componentId && option.version === placement.version
   ));
+  if (registered) return registered;
+  if (!placement.optionRef) return undefined;
+  const resolved = resolvePresencePlacementOption(placement.optionRef);
+  if (!resolved.ok) return undefined;
+  return {
+    componentId: resolved.componentRef.componentId,
+    version: resolved.componentRef.version,
+    label: resolved.label,
+    anchorKind: resolved.anchorKind,
+    materialSlotOverrides: resolved.materialSlotOverrides,
+    optionRef: resolved.optionRef,
+  };
+}
+
+function materialPresetForRoomKitFloor(optionId: string): SpatialMaterialPresetId {
+  if (optionId.includes("white-cube")) return "floor-gallery-white";
+  if (optionId.includes("ribbed")) return "floor-polished-charcoal";
+  return "floor-dark-stone";
 }
 
 function duplicateSpatialAction(
@@ -799,6 +1499,9 @@ function duplicateSpatialAction(
     case "sequence-previous":
     case "sequence-next":
     case "open-link":
+    case "listen":
+    case "watch":
+    case "enquire":
     case "disabled-placeholder":
       return { ...action, id };
   }
@@ -891,6 +1594,162 @@ function compatiblePieceAnchors(parent: SpatialPlacement): readonly SpatialAncho
     PIECE_PARENT_ANCHOR_KINDS.has(anchor.kind) && anchor.accepts.includes("piece")
   ));
 }
+
+function hostBindingCapacity(parent: SpatialPlacement): number {
+  const definition = spatialComponent(parent);
+  if (!definition) return 0;
+  const anchorCapacity = compatiblePieceAnchors(parent).reduce((sum, anchor) => sum + anchor.capacity, 0);
+  if (definition.geometry.kind === "primitive" && definition.geometry.primitive === "spherical-gallery") {
+    return Math.max(anchorCapacity, 40);
+  }
+  if (anchorCapacity > 0) return anchorCapacity;
+  return definition.category === "piece" || definition.category === "projection" ? 1 : 0;
+}
+
+function defaultBindingActionKind(media: SpatialMediaRef): ArrangerBindingActionKind {
+  if (media.kind === "audio") return "listen";
+  if (media.kind === "video") return "watch";
+  return "open-link";
+}
+
+function defaultBindingActionLabel(kind: ArrangerBindingActionKind, mediaAlt: string): string {
+  if (kind === "listen") return `Listen to ${mediaAlt}`;
+  if (kind === "watch") return `Watch ${mediaAlt}`;
+  if (kind === "enquire") return `Enquire about ${mediaAlt}`;
+  return `Open ${mediaAlt}`;
+}
+
+function pieceTypeForMedia(media: SpatialMediaRef): PieceType {
+  if (media.kind === "audio") return "audio";
+  if (media.kind === "video") return "video";
+  if (media.kind === "poster") return "archive-item";
+  return "image";
+}
+
+function defaultArrangerPieceLibrary(): readonly SpatialPieceLibraryItem[] {
+  return [
+    {
+      id: "piece-library-garment-image",
+      pieceType: "image",
+      label: "Library image work",
+      caption: "Internal fixture piece using a generated placeholder image.",
+      mediaRefs: ["mobstar-media-a"],
+      actionRefs: [],
+      tags: ["sample", "image"],
+      collectionRefs: ["sample-collection"],
+      safety: "internal-fixture",
+      createdAt: PIECE_LIBRARY_TIMESTAMP,
+      updatedAt: PIECE_LIBRARY_TIMESTAMP,
+    },
+    {
+      id: "piece-library-archive-poster",
+      pieceType: "archive-item",
+      label: "Library archive poster",
+      caption: "Internal fixture archive item for host-binding QA.",
+      mediaRefs: ["mobstar-media-poster"],
+      actionRefs: [],
+      tags: ["sample", "archive"],
+      collectionRefs: ["sample-collection"],
+      safety: "internal-fixture",
+      createdAt: PIECE_LIBRARY_TIMESTAMP,
+      updatedAt: PIECE_LIBRARY_TIMESTAMP,
+    },
+    {
+      id: "piece-library-audio-sample",
+      pieceType: "audio",
+      label: "Library audio sample",
+      caption: "Public-safe audio reference. No playback proof is claimed.",
+      mediaRefs: ["presence-sample-audio"],
+      actionRefs: [],
+      tags: ["sample", "audio"],
+      collectionRefs: ["sample-collection"],
+      safety: "public-safe",
+      createdAt: PIECE_LIBRARY_TIMESTAMP,
+      updatedAt: PIECE_LIBRARY_TIMESTAMP,
+    },
+  ];
+}
+
+function defaultPieceActionKind(pieceType: PieceType, media?: SpatialMediaRef): ArrangerBindingActionKind {
+  if (pieceType === "audio" || media?.kind === "audio") return "listen";
+  if (pieceType === "video" || media?.kind === "video") return "watch";
+  return "open-link";
+}
+
+function defaultPieceActionLabel(kind: ArrangerBindingActionKind, label: string): string {
+  if (kind === "listen") return `Listen to ${label}`;
+  if (kind === "watch") return `Watch ${label}`;
+  if (kind === "enquire") return `Enquire about ${label}`;
+  return `Open ${label}`;
+}
+
+function pieceMediaCompatible(pieceType: PieceType, media: SpatialMediaRef): boolean {
+  if (pieceType === "audio") return media.kind === "audio";
+  if (pieceType === "video") return media.kind === "video";
+  if (pieceType === "archive-item" || pieceType === "flyer") return media.kind === "poster" || media.kind === "image";
+  if (pieceType === "image" || pieceType === "gallery" || pieceType === "collection" || pieceType === "product" || pieceType === "garment") {
+    return media.kind === "image" || media.kind === "poster" || media.kind === "logo";
+  }
+  return true;
+}
+
+function pieceActionCompatible(pieceType: PieceType, actionKind: ArrangerBindingActionKind): boolean {
+  if (actionKind === "listen") return pieceType === "audio";
+  if (actionKind === "watch") return pieceType === "video" || pieceType === "gallery";
+  return true;
+}
+
+function hostSupportsPieceType(host: SpatialPlacement, pieceType: PieceType): boolean {
+  if (host.componentId === "presence.framed-media" || host.componentId === "presence.piece-plane") {
+    return ["image", "video", "text", "link", "archive-item", "flyer"].includes(pieceType);
+  }
+  if (host.componentId === "presence.archive-wall") {
+    return ["archive-item", "image", "text", "flyer", "event", "link", "gallery", "collection"].includes(pieceType);
+  }
+  if (host.componentId === "presence.listening-station") {
+    return ["audio", "link", "text", "collection"].includes(pieceType);
+  }
+  if (host.componentId === "presence.spherical-gallery") {
+    return ["image", "video", "text", "link", "gallery", "collection"].includes(pieceType);
+  }
+  const definition = spatialComponent(host);
+  if (pieceType === "garment") {
+    if (definition?.category === "rack") return definition.anchors.some((anchor) => anchor.kind === "rack" && anchor.accepts.includes("piece"));
+    return GARMENT_DISPLAY_COMPONENTS.has(host.componentId);
+  }
+  if (definition?.category === "projection") return ["image", "video", "gallery", "collection"].includes(pieceType);
+  if (definition?.category === "piece") return ["image", "text", "link", "archive-item", "flyer"].includes(pieceType);
+  if (definition?.anchors.some((anchor) => anchor.kind === "projection" && anchor.accepts.includes("piece"))) {
+    return ["image", "video", "gallery", "collection"].includes(pieceType);
+  }
+  if (definition?.anchors.some((anchor) => (anchor.kind === "wall" || anchor.kind === "surface") && anchor.accepts.includes("piece"))) {
+    return ["image", "text", "link", "product", "event", "flyer", "archive-item", "gallery", "collection"].includes(pieceType);
+  }
+  return false;
+}
+
+function hostPieceCompatibilityMessage(host: SpatialPlacement, hostLabel: string, rejectedPieceType: PieceType): string {
+  const supported = listArrangerHostSupportedPieceTypes(host);
+  if (rejectedPieceType === "garment") {
+    const hasRackAnchor = spatialComponent(host)?.anchors.some((anchor) => anchor.kind === "rack" && anchor.accepts.includes("piece")) ?? false;
+    if (!hasRackAnchor && !GARMENT_DISPLAY_COMPONENTS.has(host.componentId)) {
+      return "This host cannot accept garment pieces. Rack binding requires a rack anchor or a garment-capable display surface.";
+    }
+  }
+  if (supported.length > 0) {
+    return `${hostLabel} accepts ${supported.join(", ")} pieces, but not ${rejectedPieceType}.`;
+  }
+  return `${hostLabel} cannot host ${rejectedPieceType} pieces because it has no compatible Piece binding contract.`;
+}
+
+function normalizeTagRefs(values: readonly string[]): readonly string[] {
+  return values
+    .map((value) => value.trim().toLowerCase().replace(/[^a-z0-9._:-]+/g, "-").replace(/[-.:]+$/g, ""))
+    .filter((value, index, items) => value.length > 0 && ID_PATTERN_COMPAT.test(value) && items.indexOf(value) === index)
+    .slice(0, 16);
+}
+
+const ID_PATTERN_COMPAT = /^[a-z0-9][a-z0-9._:-]{0,119}$/;
 
 function anchorOccupancy(room: SpatialRoomDefinition, parentPlacementId: string, anchorId: string): number {
   return room.placements.filter((placement) => (

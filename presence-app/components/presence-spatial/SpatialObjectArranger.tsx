@@ -11,36 +11,74 @@ import {
 } from "react";
 import {
   ARRANGER_COMPONENT_OPTIONS,
+  ARRANGER_CORE_COMPONENT_OPTIONS,
+  addArrangerOption,
   addArrangerComponent,
+  arrangerComponentCapabilityTags,
   assignArrangerMaterialPreset,
   assignArrangerMedia,
   assignArrangerOpenLink,
   assignArrangerPlacementMedia,
   assignArrangerSkin,
+  bindArrangerPieceToHost,
+  bindArrangerContentToHost,
+  createArrangerPieceLibraryItem,
   createBlankMobstarSpatialRoom,
+  createRoomFromPresenceRoomKitOption,
   deleteArrangerPlacement,
   duplicateArrangerPlacement,
   isArrangerMediaParent,
   isArrangerMovablePlacement,
+  arrangerRackSlotState,
+  setArrangerPieceGarmentArtwork,
+  defaultArrangementKindForHost,
+  listArrangerContentBindings,
+  moveArrangerContentBinding,
+  removeArrangerContentBinding,
   listArrangerCompatibleMedia,
+  listArrangerHostSupportedPieceTypes,
+  listArrangerPieceLibrary,
   moveArrangerPlacement,
   moveArrangerPlacementTo,
   reorderArrangerPiece,
   rotateArrangerPlacement,
+  type ArrangerBindingActionKind,
 } from "@/lib/presence/spatial/arranger";
+import {
+  CANDIDATE_COMPONENT_OPTIONS,
+  CANDIDATE_ROOM_KIT_OPTIONS,
+  candidateComponentGroups,
+  type CandidateComponentOption,
+} from "@/lib/presence/spatial/candidateOptions";
 import { compileSpatialRoom } from "@/lib/presence/spatial/compile";
+import { ALPHA_GARMENT_RACK_FIXTURE } from "@/lib/presence/spatial/fixtures/alphaGarmentRack";
 import { BBB_PROJECTION_WALL_FIXTURE } from "@/lib/presence/spatial/fixtures/bbbProjectionWall";
+import { DRACO_DISPLAY_ISLAND_PROOF_FIXTURE } from "@/lib/presence/spatial/fixtures/dracoDisplayIslandProof";
 import { MOBSTAR_SPATIAL_ROOM_FIXTURE } from "@/lib/presence/spatial/fixtures/mobstar";
 import { MOBSTAR_GATE4_SPATIAL_ROOM_FIXTURE } from "@/lib/presence/spatial/fixtures/mobstarGate4";
+import { SPATIAL_ARRANGEMENT_KINDS, SPATIAL_GARMENT_HANG_PROFILES } from "@/lib/presence/spatial/model";
+import type { ArrangerGarmentArtworkInput } from "@/lib/presence/spatial/arranger";
 import type {
+  SpatialArrangementKind,
+  SpatialArrangementOverflowPolicy,
   SpatialDraftEnvelope,
+  SpatialGarmentArticleType,
+  SpatialPieceLibraryItem,
   SpatialMaterialPresetId,
   SpatialMaterialSlotId,
+  PieceType,
   SpatialPlacement,
   SpatialRoomDefinition,
   SpatialValidationIssue,
 } from "@/lib/presence/spatial/model";
 import { SPATIAL_MATERIAL_PRESETS } from "@/lib/presence/spatial/materials";
+import {
+  PRESENCE_OPTION_ALIASES,
+  PRESENCE_ROOM_KIT_CONTAINERS,
+  presenceOptionPaletteGroups,
+  type PresenceOptionAlias,
+  type PresenceRoomKitContainer,
+} from "@/lib/presence/spatial/optionAliases";
 import { resolveSpatialPlacementTransform } from "@/lib/presence/spatial/placement";
 import { spatialAuthoringMaterialSlots, spatialComponent } from "@/lib/presence/spatial/registry";
 import {
@@ -52,8 +90,16 @@ import {
 import { SpatialRoomViewport } from "./SpatialRoomViewport";
 import styles from "./SpatialObjectArranger.module.css";
 
-const ADDABLE_COMPONENTS = ARRANGER_COMPONENT_OPTIONS;
+const ADDABLE_COMPONENTS = ARRANGER_CORE_COMPONENT_OPTIONS;
+const CANDIDATE_COMPONENT_GROUPS = candidateComponentGroups();
+const PRESENCE_OPTION_GROUPS = presenceOptionPaletteGroups();
 const EDITOR_COMPONENT_IDS: ReadonlySet<string> = new Set(ADDABLE_COMPONENTS.map((entry) => entry.componentId));
+const EDITOR_CANDIDATE_COMPONENT_IDS: ReadonlySet<string> = new Set(CANDIDATE_COMPONENT_OPTIONS.map((entry) => entry.componentId));
+const PRESENCE_OPTION_COMPONENT_IDS: ReadonlySet<string> = new Set(
+  PRESENCE_OPTION_ALIASES
+    .map((entry) => entry.componentRef?.componentId)
+    .filter((componentId): componentId is string => Boolean(componentId)),
+);
 const MAX_IMPORT_BYTES = 256 * 1024;
 const PALETTE_LABELS: Readonly<Record<string, string>> = {
   "presence.wall-panel": "Wall",
@@ -70,6 +116,42 @@ type ArrangerMutationResult =
   | { ok: true; room: SpatialRoomDefinition }
   | { ok: false; room: SpatialRoomDefinition; issues: readonly SpatialValidationIssue[] };
 
+/** Artwork channels an operator can assign, per article. */
+function garmentArtworkFields(article: SpatialGarmentArticleType): readonly {
+  key: "frontImageRef" | "backImageRef" | "displayImageRef" | "outerSideImageRef" | "topImageRef";
+  label: string;
+}[] {
+  if (article === "shoe") {
+    // Footwear is not a front/back garment, so it is offered display/side/top.
+    return [
+      { key: "displayImageRef", label: "Display artwork" },
+      { key: "outerSideImageRef", label: "Outer side artwork" },
+      { key: "topImageRef", label: "Top artwork" },
+    ];
+  }
+  return [
+    { key: "frontImageRef", label: "Front artwork" },
+    { key: "backImageRef", label: "Back artwork" },
+    { key: "displayImageRef", label: "Display fallback" },
+  ];
+}
+
+function garmentArtworkWarnings(piece: SpatialPieceLibraryItem): readonly string[] {
+  const article = piece.garmentArticleType ?? "generic";
+  const warnings: string[] = [];
+  if (article === "shoe") {
+    warnings.push("Shoes use display/outer-side/top artwork on a low stand proxy. They do not hang, and front/back wrapping is not implemented.");
+    if (!piece.displayImageRef && !piece.outerSideImageRef && !piece.topImageRef) {
+      warnings.push("No shoe artwork assigned — the carrier will render invisible.");
+    }
+  } else {
+    if (!piece.frontImageRef && !piece.displayImageRef) warnings.push("No front artwork assigned — the carrier will render invisible.");
+    if (!piece.backImageRef) warnings.push("No back artwork assigned — the front image will be reused behind.");
+  }
+  warnings.push("Carrier geometry is invisible by default and is proxy quality, not admitted art.");
+  return warnings;
+}
+
 export function SpatialObjectArranger() {
   const initialRoom = useMemo(() => cloneRoom(MOBSTAR_SPATIAL_ROOM_FIXTURE), []);
   const [room, setRoom] = useState<SpatialRoomDefinition>(initialRoom);
@@ -82,6 +164,21 @@ export function SpatialObjectArranger() {
   const [selectedSkinId, setSelectedSkinId] = useState(initialRoom.skins[0]?.id ?? "");
   const [linkLabel, setLinkLabel] = useState("Open link");
   const [linkHref, setLinkHref] = useState("https://example.com");
+  // null means "follow the selected host". Rendered QA found a hard-coded
+  // wall-grid default here, which made rack-row unreachable for every operator.
+  const [bindingArrangementOverride, setBindingArrangementOverride] = useState<SpatialArrangementKind | null>(null);
+  const [bindingOverflowPolicy, setBindingOverflowPolicy] = useState<SpatialArrangementOverflowPolicy>("overflow-list");
+  const [bindingActionKind, setBindingActionKind] = useState<ArrangerBindingActionKind>("open-link");
+  const [selectedPieceId, setSelectedPieceId] = useState(initialRoom.pieceLibrary?.[0]?.id ?? "");
+  const [pieceType, setPieceType] = useState<PieceType>("image");
+  const [debugCarriers, setDebugCarriers] = useState(false);
+  const [pieceTitle, setPieceTitle] = useState("Untitled internal piece");
+  const [pieceCaption, setPieceCaption] = useState("");
+  const [pieceMediaId, setPieceMediaId] = useState(initialRoom.media[0]?.id ?? "");
+  const [pieceActionKind, setPieceActionKind] = useState<ArrangerBindingActionKind>("open-link");
+  const [pieceActionLabel, setPieceActionLabel] = useState("Open piece");
+  const [pieceActionHref, setPieceActionHref] = useState("https://example.com/piece");
+  const [pieceTags, setPieceTags] = useState("internal, sample");
   const [draggingPlacementId, setDraggingPlacementId] = useState<string>();
   const [diagnostics, setDiagnostics] = useState<readonly SpatialValidationIssue[]>([]);
   const [status, setStatus] = useState("Loaded the bundled Mobstar proof fixture.");
@@ -104,16 +201,61 @@ export function SpatialObjectArranger() {
   );
   const previewCompile = previewSource === "saved" && savedCompile?.ok ? savedCompile : currentCompile;
   const selectedPlacement = room.placements.find((placement) => placement.id === selectedPlacementId);
+  const pieceLibrary = useMemo(() => listArrangerPieceLibrary(room), [room]);
+  const selectedLibraryPiece = pieceLibrary.find((piece) => piece.id === selectedPieceId) ?? pieceLibrary[0];
+  const hostSupportedPieceTypes = useMemo(
+    () => listArrangerHostSupportedPieceTypes(selectedPlacement),
+    [selectedPlacement],
+  );
+
+  useEffect(() => {
+    if (!selectedLibraryPiece && pieceLibrary[0]) setSelectedPieceId(pieceLibrary[0].id);
+  }, [pieceLibrary, selectedLibraryPiece]);
+  useEffect(() => {
+    // Changing host re-derives the arrangement rather than carrying the previous
+    // host's choice across, so a rack never inherits a wall grid.
+    setBindingArrangementOverride(null);
+  }, [selectedPlacementId]);
   const selectedDefinition = selectedPlacement ? spatialComponent(selectedPlacement) : undefined;
   const selectedTransform = selectedPlacement
     ? resolveSpatialPlacementTransform(room, selectedPlacement)
     : undefined;
+  const componentRefsUsed = useMemo(
+    () => (currentCompile.ok
+      ? Array.from(new Set(currentCompile.plan.items.map((item) => item.componentKey))).sort()
+      : []),
+    [currentCompile],
+  );
+  const selectedRenderItem = currentCompile.ok && selectedPlacement
+    ? currentCompile.plan.items.find((item) => item.placementId === selectedPlacement.id)
+    : undefined;
+  const selectedFallbackItem = currentCompile.ok && selectedPlacement
+    ? currentCompile.plan.semanticFallback.find((item) => item.placementId === selectedPlacement.id)
+    : undefined;
+  const selectedActions = selectedPlacement
+    ? selectedPlacement.actionRefs
+      .map((actionId) => room.actions.find((action) => action.id === actionId))
+      .filter((action): action is NonNullable<typeof action> => Boolean(action))
+    : [];
   const assignedPieces = useMemo(
     () => room.placements
       .filter((placement) => placement.anchor.parentPlacementId === selectedPlacementId && placement.componentId === "presence.piece-plane")
       .sort((left, right) => left.order - right.order || left.id.localeCompare(right.id)),
     [room.placements, selectedPlacementId],
   );
+  const boundPieces = useMemo(
+    () => selectedPlacementId ? listArrangerContentBindings(room, selectedPlacementId) : [],
+    [room, selectedPlacementId],
+  );
+  const bindingArrangementKind: SpatialArrangementKind = bindingArrangementOverride
+    ?? (selectedPlacement ? defaultArrangementKindForHost(selectedPlacement) : "wall-grid");
+  const rackSlotState = useMemo(
+    () => (selectedPlacementId ? arrangerRackSlotState(room, selectedPlacementId) : undefined),
+    [room, selectedPlacementId],
+  );
+  const selectedBindingArrangement = currentCompile.ok && selectedPlacement
+    ? currentCompile.plan.contentBindingArrangements.find((arrangement) => arrangement.hostPlacementId === selectedPlacement.id)
+    : undefined;
   const editablePlacements = useMemo(
     () => room.placements.filter((placement) => (
       !placement.anchor.parentPlacementId && placement.componentId !== "presence.piece-plane"
@@ -121,10 +263,21 @@ export function SpatialObjectArranger() {
     [room.placements],
   );
   const reusableObjectCount = useMemo(
-    () => editablePlacements.filter((placement) => EDITOR_COMPONENT_IDS.has(placement.componentId)).length,
+    () => editablePlacements.filter((placement) => (
+      EDITOR_COMPONENT_IDS.has(placement.componentId) || EDITOR_CANDIDATE_COMPONENT_IDS.has(placement.componentId)
+      || PRESENCE_OPTION_COMPONENT_IDS.has(placement.componentId) || Boolean(placement.optionRef)
+    )).length,
     [editablePlacements],
   );
-  const selectedPaletteObject = Boolean(selectedPlacement && EDITOR_COMPONENT_IDS.has(selectedPlacement.componentId));
+  const selectedPaletteObject = Boolean(
+    selectedPlacement
+    && (
+      EDITOR_COMPONENT_IDS.has(selectedPlacement.componentId)
+      || EDITOR_CANDIDATE_COMPONENT_IDS.has(selectedPlacement.componentId)
+      || PRESENCE_OPTION_COMPONENT_IDS.has(selectedPlacement.componentId)
+      || Boolean(selectedPlacement.optionRef)
+    ),
+  );
   const selectedMaterialSlots = selectedDefinition && selectedPlacement
     ? spatialAuthoringMaterialSlots(selectedPlacement)
     : [];
@@ -143,6 +296,7 @@ export function SpatialObjectArranger() {
   );
   const isMediaParent = Boolean(selectedPlacement && isArrangerMediaParent(selectedPlacement));
   const canAssignMedia = isMediaParent && compatibleMedia.length > 0;
+  const canBindContent = isMediaParent && compatibleMedia.length > 0;
   const dirty = currentCompile.ok
     ? currentCompile.plan.fingerprint !== savedEnvelope?.roomFingerprint
     : true;
@@ -244,6 +398,30 @@ export function SpatialObjectArranger() {
     setStatus(`Loaded ${label}. No browser draft was changed.`);
   }
 
+  function assignGarmentArtwork(input: ArrangerGarmentArtworkInput) {
+    if (!selectedLibraryPiece) return;
+    applyMutation(
+      setArrangerPieceGarmentArtwork(room, selectedLibraryPiece.id, input),
+      `Updated garment artwork for ${selectedLibraryPiece.label}.`,
+    );
+  }
+
+  function moveRackBinding(bindingId: string, direction: -1 | 1) {
+    if (!selectedPlacementId) return;
+    applyMutation(
+      moveArrangerContentBinding(room, selectedPlacementId, bindingId, direction),
+      `Moved ${bindingId} ${direction === -1 ? "left" : "right"} on the rack.`,
+    );
+  }
+
+  function removeRackBinding(bindingId: string) {
+    if (!selectedPlacementId) return;
+    applyMutation(
+      removeArrangerContentBinding(room, selectedPlacementId, bindingId),
+      `Removed ${bindingId} from the rack.`,
+    );
+  }
+
   function applyMutation(result: ArrangerMutationResult, successMessage: string) {
     invalidatePendingImport();
     if (!result.ok) {
@@ -261,6 +439,38 @@ export function SpatialObjectArranger() {
     const before = new Set(room.placements.map((placement) => placement.id));
     const result = addArrangerComponent(room, componentId);
     if (applyMutation(result, `Added ${paletteLabel(componentId)} on the snapped grid.`)) {
+      const added = result.room.placements.find((placement) => !before.has(placement.id));
+      if (added) setSelectedPlacementId(added.id);
+    }
+  }
+
+  function handleAddCandidate(option: CandidateComponentOption) {
+    if (option.usability !== "selectable-internal") {
+      setDiagnostics([{
+        path: `candidateOptions.${option.componentId}`,
+        code: "candidate-disabled",
+        message: option.disabledReasons.join("; ") || "This candidate is deferred for review and cannot be placed.",
+      }]);
+      setStatus("Candidate option is deferred. The working layout is unchanged.");
+      return;
+    }
+    handleAdd(option.componentId);
+  }
+
+  function handleLoadRoomKitOption(kit: PresenceRoomKitContainer) {
+    const result = createRoomFromPresenceRoomKitOption(kit.optionId, kit.version);
+    if (!result.ok) {
+      setDiagnostics(result.issues);
+      setStatus(`${kit.name} could not be loaded. The working layout is unchanged.`);
+      return;
+    }
+    loadWorkspace(result.room, `${kit.name} option`);
+  }
+
+  function handleAddPresenceOption(option: PresenceOptionAlias) {
+    const before = new Set(room.placements.map((placement) => placement.id));
+    const result = addArrangerOption(room, option.optionId, option.version);
+    if (applyMutation(result, `Added ${option.name} as ${option.optionId}@${option.version}.`)) {
       const added = result.room.placements.find((placement) => !before.has(placement.id));
       if (added) setSelectedPlacementId(added.id);
     }
@@ -348,6 +558,53 @@ export function SpatialObjectArranger() {
     applyMutation(
       assignArrangerOpenLink(room, selectedPlacement.id, linkLabel, linkHref),
       `Assigned the ${linkLabel.trim()} action to ${selectedPlacement.semanticLabel}.`,
+    );
+  }
+
+  function handleBindContent() {
+    if (!selectedPlacement || !selectedMediaId) return;
+    const media = room.media.find((candidate) => candidate.id === selectedMediaId);
+    applyMutation(
+      bindArrangerContentToHost(room, selectedPlacement.id, {
+        mediaId: selectedMediaId,
+        arrangementKind: bindingArrangementKind,
+        overflowPolicy: bindingOverflowPolicy,
+        actionKind: bindingActionKind,
+        actionLabel: linkLabel,
+        href: linkHref,
+      }),
+      `Bound ${media?.alt ?? "content"} to ${selectedPlacement.semanticLabel}.`,
+    );
+  }
+
+  function handleCreatePiece() {
+    const before = new Set((room.pieceLibrary ?? []).map((piece) => piece.id));
+    const result = createArrangerPieceLibraryItem(room, {
+      pieceType,
+      label: pieceTitle,
+      caption: pieceCaption,
+      mediaId: pieceMediaId || undefined,
+      actionKind: pieceActionKind,
+      actionLabel: pieceActionLabel,
+      href: pieceActionHref,
+      tags: pieceTags.split(","),
+      collectionRefs: ["operator-library"],
+    });
+    if (applyMutation(result, `Created ${pieceTitle.trim() || "piece"} in the internal Piece Library.`)) {
+      const added = result.room.pieceLibrary?.find((piece) => !before.has(piece.id));
+      if (added) setSelectedPieceId(added.id);
+    }
+  }
+
+  function handleBindSelectedPiece() {
+    if (!selectedPlacement || !selectedLibraryPiece) return;
+    applyMutation(
+      bindArrangerPieceToHost(room, selectedPlacement.id, {
+        pieceId: selectedLibraryPiece.id,
+        arrangementKind: bindingArrangementKind,
+        overflowPolicy: bindingOverflowPolicy,
+      }),
+      `Bound ${selectedLibraryPiece.label} from the internal Piece Library to ${selectedPlacement.semanticLabel}.`,
     );
   }
 
@@ -579,7 +836,9 @@ export function SpatialObjectArranger() {
           <button onClick={() => loadWorkspace(createBlankMobstarSpatialRoom(), "a new Mobstar layout")} type="button">Create Mobstar</button>
           <button onClick={() => loadWorkspace(MOBSTAR_SPATIAL_ROOM_FIXTURE, "Mobstar fixture")} type="button">Load Mobstar</button>
           <button data-testid="presence-spatial-load-mobstar-gate4" onClick={() => loadWorkspace(MOBSTAR_GATE4_SPATIAL_ROOM_FIXTURE, "Mobstar Gate 4 candidate")} type="button">Load Gate 4 candidate</button>
+          <button data-testid="presence-spatial-load-draco-proof" onClick={() => loadWorkspace(DRACO_DISPLAY_ISLAND_PROOF_FIXTURE, "Draco GLB proof")} type="button">Load Draco proof</button>
           <button onClick={() => loadWorkspace(BBB_PROJECTION_WALL_FIXTURE, "BBB projection fixture")} type="button">Load BBB</button>
+          <button data-testid="presence-spatial-load-alpha-garment-rack" onClick={() => loadWorkspace(ALPHA_GARMENT_RACK_FIXTURE, "alpha-masked garment rack evidence fixture")} type="button">Load alpha garment rack</button>
         </div>
         <div className={styles.toolbarGroup}>
           <span className={styles.groupLabel}>Browser draft</span>
@@ -609,6 +868,97 @@ export function SpatialObjectArranger() {
 
       <div className={styles.operatorGrid}>
         <aside className={styles.controlRail} aria-label="Arranger controls">
+          <section className={styles.panel} data-testid="presence-spatial-roomkit-options">
+            <div className={styles.panelHeading}>
+              <div><span>00</span><h2>Rooms</h2></div>
+              <small>Stable option refs</small>
+            </div>
+            <div className={styles.candidateOptionList}>
+              {PRESENCE_ROOM_KIT_CONTAINERS.map((kit) => {
+                const available = kit.status.startsWith("available-now");
+                return (
+                  <article className={styles.candidateOption} data-disabled={!available} key={`${kit.optionId}@${kit.version}`}>
+                    <div>
+                      <strong>{kit.name}</strong>
+                      <small>{kit.optionId}@{kit.version}</small>
+                    </div>
+                    <dl>
+                      <div><dt>Kind</dt><dd>room-kit / {kit.category}</dd></div>
+                      <div><dt>Size</dt><dd>{formatRoomKitDimensions(kit.dimensions)}</dd></div>
+                      <div><dt>Strategy</dt><dd>{kit.fallbackMode}</dd></div>
+                      <div><dt>Status</dt><dd>{kit.status}</dd></div>
+                    </dl>
+                    <small className={kit.warnings.length > 0 ? styles.warningLine : undefined}>{kit.warnings.join(", ") || "none"}</small>
+                    <div className={styles.capabilityTags} aria-label={`${kit.optionId} option labels`}>
+                      <i>{kit.materialPreset}</i>
+                      <i>{kit.lightingProfile}</i>
+                      <i>{kit.payloadEstimate.eagerRuntimeBytes} eager bytes</i>
+                      <i>fallback-safe</i>
+                    </div>
+                    <button
+                      data-testid={`presence-spatial-load-option-${testIdToken(kit.optionId)}`}
+                      disabled={!available}
+                      onClick={() => handleLoadRoomKitOption(kit)}
+                      type="button"
+                    >
+                      Load room kit
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className={styles.panel} data-testid="presence-spatial-option-aliases">
+            <div className={styles.panelHeading}>
+              <div><span>0A</span><h2>Presence options</h2></div>
+              <small>Curated alias layer</small>
+            </div>
+            <div className={styles.candidateGroups}>
+              {PRESENCE_OPTION_GROUPS.map((group) => (
+                <div key={group.label}>
+                  <h3>{group.label}</h3>
+                  <div className={styles.candidateOptionList}>
+                    {group.options.map((option) => {
+                      const available = (option.status.startsWith("available-now") || option.status === "internal-experimental") && Boolean(option.componentRef);
+                      return (
+                        <article className={styles.candidateOption} data-disabled={!available} key={`${option.optionId}@${option.version}`}>
+                          <div>
+                            <strong>{option.name}</strong>
+                            <small>{option.optionId}@{option.version}</small>
+                          </div>
+                          <dl>
+                            <div><dt>Kind</dt><dd>{option.kind}</dd></div>
+                            <div><dt>Category</dt><dd>{option.category}</dd></div>
+                            <div><dt>Strategy</dt><dd>{option.implementationStrategy}</dd></div>
+                            <div><dt>Status</dt><dd>{option.status}</dd></div>
+                            <div><dt>Placement</dt><dd>{option.placementType}</dd></div>
+                            <div><dt>Review</dt><dd>{option.reviewStatus}</dd></div>
+                          </dl>
+                          <small>{option.supportedCustomisations.join(", ") || "no active customisation"}</small>
+                          {option.warnings.length > 0 ? <small className={styles.warningLine}>{option.warnings.join(", ")}</small> : null}
+                          <div className={styles.capabilityTags} aria-label={`${option.optionId} capability labels`}>
+                            <i>{option.fallbackBehaviour.includes("proxy") || option.fallbackBehaviour.includes("semantic") ? "fallback-safe" : "fallback-visible"}</i>
+                            <i>{option.componentRef ? "component-ref" : "no-component-ref"}</i>
+                            <i>{option.admissionStatus}</i>
+                          </div>
+                          <button
+                            data-testid={`presence-spatial-add-option-${testIdToken(option.optionId)}`}
+                            disabled={!available}
+                            onClick={() => handleAddPresenceOption(option)}
+                            type="button"
+                          >
+                            Add option ref
+                          </button>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
           <section className={styles.panel}>
             <div className={styles.panelHeading}>
               <div><span>01</span><h2>Add objects</h2></div>
@@ -616,7 +966,93 @@ export function SpatialObjectArranger() {
             </div>
             <div className={styles.addGrid}>
               {ADDABLE_COMPONENTS.map((entry) => (
-                <button key={entry.componentId} onClick={() => handleAdd(entry.componentId)} type="button">+ {paletteLabel(entry.componentId)}</button>
+                <button
+                  aria-label={`+ ${paletteLabel(entry.componentId)}`}
+                  key={entry.componentId}
+                  onClick={() => handleAdd(entry.componentId)}
+                  type="button"
+                >
+                  <span>+ {paletteLabel(entry.componentId)}</span>
+                  <small
+                    aria-hidden="true"
+                    className={styles.capabilityTags}
+                    data-testid={`presence-spatial-palette-tags-${testIdToken(entry.componentId)}`}
+                  >
+                    {arrangerComponentCapabilityTags(entry).map((tag) => <i key={tag}>{tag}</i>)}
+                  </small>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className={styles.panel} data-testid="presence-spatial-candidate-room-kits">
+            <div className={styles.panelHeading}>
+              <div><span>1A</span><h2>Room kits</h2></div>
+              <small>Deferred internal options</small>
+            </div>
+            <div className={styles.candidateOptionList}>
+              {CANDIDATE_ROOM_KIT_OPTIONS.map((option) => (
+                <article className={styles.candidateOption} data-disabled={option.usability !== "selectable-internal"} key={option.roomKitId}>
+                  <div>
+                    <strong>{option.category}</strong>
+                    <small>{option.roomKitId}</small>
+                  </div>
+                  <p>{option.sourceName}</p>
+                  <dl>
+                    <div><dt>Size</dt><dd>{formatDimensions(option.dimensions)}</dd></div>
+                    <div><dt>Payload</dt><dd>{option.runtimeSizeKb.toFixed(1)} KB - {option.payloadStatus}</dd></div>
+                    <div><dt>Status</dt><dd>{option.usability}</dd></div>
+                  </dl>
+                  <small className={styles.warningLine}>{option.disabledReasons.join(", ")}</small>
+                  <div className={styles.capabilityTags} aria-label={`${option.roomKitId} status labels`}>
+                    {option.statusLabels.map((tag) => <i key={tag}>{tag}</i>)}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className={styles.panel} data-testid="presence-spatial-candidate-components">
+            <div className={styles.panelHeading}>
+              <div><span>1B</span><h2>Candidate assets</h2></div>
+              <small>{CANDIDATE_COMPONENT_OPTIONS.length} filtered options</small>
+            </div>
+            <div className={styles.candidateGroups}>
+              {CANDIDATE_COMPONENT_GROUPS.map((group) => (
+                <div key={group.group}>
+                  <h3>{group.group}</h3>
+                  <div className={styles.candidateOptionList}>
+                    {group.options.map((option) => (
+                      <article className={styles.candidateOption} data-disabled={option.usability !== "selectable-internal"} key={option.componentId}>
+                        <div>
+                          <strong>{option.role}</strong>
+                          <small>{option.componentId}@{option.version}</small>
+                        </div>
+                        <p>{option.observedAs}</p>
+                        <dl>
+                          <div><dt>Observed</dt><dd>{option.categoryGuess}</dd></div>
+                          <div><dt>Size</dt><dd>{formatDimensions(option.dimensions)}</dd></div>
+                          <div><dt>Runtime</dt><dd>{option.runtimeSizeKb.toFixed(1)} KB - {option.renderMode}</dd></div>
+                          <div><dt>Placement</dt><dd>{option.placementType}</dd></div>
+                          <div><dt>Slots</dt><dd>{option.presenceMaterialSlots.join(", ") || "none"}</dd></div>
+                          <div><dt>Anchors</dt><dd>{option.anchors.join(", ") || "none"}</dd></div>
+                        </dl>
+                        {option.warningFlags.length > 0 ? <small className={styles.warningLine}>{option.warningFlags.join(", ")}</small> : null}
+                        <div className={styles.capabilityTags} aria-label={`${option.componentId} status labels`}>
+                          {option.statusLabels.map((tag) => <i key={tag}>{tag}</i>)}
+                        </div>
+                        <button
+                          data-testid={`presence-spatial-add-candidate-${testIdToken(option.componentId)}`}
+                          disabled={option.usability !== "selectable-internal"}
+                          onClick={() => handleAddCandidate(option)}
+                          type="button"
+                        >
+                          Add candidate ref
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </section>
@@ -624,7 +1060,7 @@ export function SpatialObjectArranger() {
           <section className={styles.panel}>
             <div className={styles.panelHeading}>
               <div><span>02</span><h2>Objects</h2></div>
-              <small><span data-testid="presence-spatial-object-count">{reusableObjectCount} core objects</span> - {editablePlacements.length - reusableObjectCount} foundation</small>
+              <small><span data-testid="presence-spatial-object-count">{reusableObjectCount} palette objects</span> - {editablePlacements.length - reusableObjectCount} foundation</small>
             </div>
             <div className={styles.objectList}>
               {editablePlacements.map((placement) => (
@@ -738,13 +1174,269 @@ export function SpatialObjectArranger() {
             ) : <p className={styles.empty}>Select a foundation or reusable object to customise its supported slots.</p>}
           </section>
 
+          {selectedLibraryPiece?.pieceType === "garment" ? (
+            <section className={styles.panel} data-testid="presence-spatial-garment-artwork">
+              <div className={styles.panelHeading}>
+                <div><span>04C</span><h2>Garment Artwork</h2></div>
+                <small>{selectedLibraryPiece.label}</small>
+              </div>
+              <div className={styles.assignmentControls}>
+                <div className={styles.inlineFields}>
+                  <label>
+                    <span>Article type</span>
+                    <select
+                      onChange={(event) => assignGarmentArtwork({ garmentArticleType: event.target.value as SpatialGarmentArticleType })}
+                      value={selectedLibraryPiece.garmentArticleType ?? "generic"}
+                    >
+                      {["shirt", "pant", "shoe", "generic"].map((article) => (
+                        <option key={article} value={article}>{article}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Artwork aspect</span>
+                    <select
+                      onChange={(event) => assignGarmentArtwork({
+                        artworkAspect: event.target.value === "" ? null : Number(event.target.value),
+                      })}
+                      value={selectedLibraryPiece.artworkAspect ?? ""}
+                    >
+                      <option value="">Article default</option>
+                      {[0.4, 0.6, 0.9, 1.2, 1.6].map((aspect) => (
+                        <option key={aspect} value={aspect}>{aspect}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                {garmentArtworkFields(selectedLibraryPiece.garmentArticleType ?? "generic").map((field) => (
+                  <label key={field.key}>
+                    <span>{field.label}</span>
+                    <select
+                      onChange={(event) => assignGarmentArtwork({ [field.key]: event.target.value || null })}
+                      value={(selectedLibraryPiece[field.key] as string | undefined) ?? ""}
+                    >
+                      <option value="">No artwork ref</option>
+                      {room.media
+                        .filter((media) => media.kind === "image" || media.kind === "poster" || media.kind === "logo")
+                        .map((media) => <option key={media.id} value={media.id}>{media.alt} ({media.kind})</option>)}
+                    </select>
+                  </label>
+                ))}
+                <ul className={styles.diagnostics}>
+                  <li>
+                    Rack presentation: {SPATIAL_GARMENT_HANG_PROFILES[selectedLibraryPiece.garmentArticleType ?? "generic"].hardware}
+                    {" · rail drop "}
+                    {SPATIAL_GARMENT_HANG_PROFILES[selectedLibraryPiece.garmentArticleType ?? "generic"].railDrop}m
+                  </li>
+                  {garmentArtworkWarnings(selectedLibraryPiece).map((warning) => (
+                    <li key={warning}>{warning}</li>
+                  ))}
+                </ul>
+                <label>
+                  <input
+                    checked={debugCarriers}
+                    onChange={(event) => setDebugCarriers(event.target.checked)}
+                    type="checkbox"
+                  />
+                  <span>Show carrier bounds (debug only — not final visual quality)</span>
+                </label>
+              </div>
+            </section>
+          ) : null}
+
+          {rackSlotState && rackSlotState.occupied > 0 ? (
+            <section className={styles.panel} data-testid="presence-spatial-rack-slots">
+              <div className={styles.panelHeading}>
+                <div><span>04B</span><h2>Rack Slots</h2></div>
+                <small>
+                  {rackSlotState.occupied}/{rackSlotState.capacity} filled
+                  {rackSlotState.overflow > 0 ? ` · ${rackSlotState.overflow} overflow` : ` · ${rackSlotState.open} open`}
+                </small>
+              </div>
+              <ol className={styles.assignmentControls} data-testid="presence-spatial-rack-slot-list">
+                {rackSlotState.slots.filter((slot) => slot.bindingId).map((slot) => (
+                  <li key={slot.bindingId} data-slot-index={slot.index} data-overflowed={slot.overflowed}>
+                    <div className={styles.inlineFields}>
+                      <span>
+                        {slot.index + 1}. {slot.label}
+                        {slot.overflowed ? " (overflow)" : ""}
+                        {slot.missingArtwork ? " — no artwork assigned" : ""}
+                      </span>
+                      <button
+                        onClick={() => moveRackBinding(slot.bindingId!, -1)}
+                        title="Move left"
+                        type="button"
+                      >
+                        ←
+                      </button>
+                      <button
+                        onClick={() => moveRackBinding(slot.bindingId!, 1)}
+                        title="Move right"
+                        type="button"
+                      >
+                        →
+                      </button>
+                      <button onClick={() => removeRackBinding(slot.bindingId!)} title="Remove from rack" type="button">
+                        Remove
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ) : null}
+
+          <section className={styles.panel} data-testid="presence-spatial-piece-library">
+            <div className={styles.panelHeading}>
+              <div><span>04A</span><h2>Piece Library</h2></div>
+              <small>{pieceLibrary.length} internal pieces</small>
+            </div>
+            <div className={styles.assignmentControls}>
+              <div className={styles.inlineFields}>
+                <label>
+                  <span>Piece title</span>
+                  <input maxLength={200} onChange={(event) => setPieceTitle(event.target.value)} value={pieceTitle} />
+                </label>
+                <label>
+                  <span>Piece type</span>
+                  <select onChange={(event) => setPieceType(event.target.value as PieceType)} value={pieceType}>
+                    {["image", "video", "audio", "garment", "text", "link", "product", "event", "flyer", "archive-item", "gallery", "collection"].map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <label>
+                <span>Piece caption</span>
+                <textarea maxLength={500} onChange={(event) => setPieceCaption(event.target.value)} rows={2} value={pieceCaption} />
+              </label>
+              <div className={styles.inlineFields}>
+                <label>
+                  <span>Piece media</span>
+                  <select onChange={(event) => setPieceMediaId(event.target.value)} value={pieceMediaId}>
+                    <option value="">No media ref</option>
+                    {room.media.map((media) => <option key={media.id} value={media.id}>{media.alt} ({media.kind})</option>)}
+                  </select>
+                </label>
+                <label>
+                  <span>Piece action kind</span>
+                  <select onChange={(event) => setPieceActionKind(event.target.value as ArrangerBindingActionKind)} value={pieceActionKind}>
+                    <option value="open-link">open-link</option>
+                    <option value="listen">listen</option>
+                    <option value="watch">watch</option>
+                    <option value="enquire">enquire</option>
+                  </select>
+                </label>
+              </div>
+              <div className={styles.inlineFields}>
+                <label>
+                  <span>Piece action label</span>
+                  <input maxLength={160} onChange={(event) => setPieceActionLabel(event.target.value)} value={pieceActionLabel} />
+                </label>
+                <label>
+                  <span>Piece HTTPS link</span>
+                  <input inputMode="url" onChange={(event) => setPieceActionHref(event.target.value)} value={pieceActionHref} />
+                </label>
+              </div>
+              <label>
+                <span>Piece tags</span>
+                <input maxLength={160} onChange={(event) => setPieceTags(event.target.value)} value={pieceTags} />
+              </label>
+              <button disabled={!pieceTitle.trim()} onClick={handleCreatePiece} type="button">Create internal piece</button>
+              <label>
+                <span>Library piece</span>
+                <select onChange={(event) => setSelectedPieceId(event.target.value)} value={selectedLibraryPiece?.id ?? ""}>
+                  {pieceLibrary.map((piece) => <option key={piece.id} value={piece.id}>{piece.label} ({piece.pieceType})</option>)}
+                </select>
+              </label>
+              <ol className={styles.pieceList} data-testid="presence-spatial-piece-library-list">
+                {pieceLibrary.map((piece) => (
+                  <li data-selected={piece.id === selectedLibraryPiece?.id || undefined} key={piece.id}>
+                    <span><strong>{piece.label}</strong><small>{piece.pieceType} / {piece.safety}</small></span>
+                    <span>{piece.mediaRefs.join(", ") || "no media"} / {piece.actionRefs.join(", ") || "no actions"}</span>
+                  </li>
+                ))}
+              </ol>
+              <p className={styles.hint}>Pieces are internal browser-local records. They carry media/action ids only, not upload blobs or copied model data.</p>
+            </div>
+          </section>
+
           <section className={styles.panel}>
             <div className={styles.panelHeading}>
               <div><span>05</span><h2>Assign Pieces</h2></div>
-              <small>{assignedPieces.length} assigned</small>
+              <small>{boundPieces.length} bound / {assignedPieces.length} placed</small>
             </div>
             {selectedPlacement && isMediaParent ? (
               <div className={styles.assignmentControls}>
+                <div className={styles.bindingBox} data-testid="presence-spatial-binding-panel">
+                  <dl>
+                    <div><dt>Selected host</dt><dd data-testid="presence-spatial-binding-host">{selectedPlacement.id}</dd></div>
+                    <div><dt>Supported binding types</dt><dd data-testid="presence-spatial-piece-host-support">{hostSupportedPieceTypes.join(", ") || "none"}</dd></div>
+                    <div><dt>Overflow</dt><dd data-testid="presence-spatial-binding-overflow">{selectedBindingArrangement ? `${selectedBindingArrangement.overflow.visibleCount}/${selectedBindingArrangement.overflow.totalCount} visible, ${selectedBindingArrangement.overflow.overflowCount} overflow via ${selectedBindingArrangement.policy}` : "none"}</dd></div>
+                  </dl>
+                  <label>
+                    <span>Selected library piece</span>
+                    <select onChange={(event) => setSelectedPieceId(event.target.value)} value={selectedLibraryPiece?.id ?? ""}>
+                      {pieceLibrary.map((piece) => <option key={piece.id} value={piece.id}>{piece.label} ({piece.pieceType})</option>)}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Binding media</span>
+                    <select disabled={!canBindContent} onChange={(event) => setSelectedMediaId(event.target.value)} value={canBindContent ? selectedMediaId : ""}>
+                      {!canBindContent ? <option value="">No compatible media or capacity</option> : null}
+                      {compatibleMedia.map((media) => <option key={media.id} value={media.id}>{media.alt} ({media.kind})</option>)}
+                    </select>
+                  </label>
+                  <div className={styles.inlineFields}>
+                    <label>
+                      <span>Arrangement</span>
+                      <select
+                        onChange={(event) => setBindingArrangementOverride(event.target.value as SpatialArrangementKind)}
+                        value={bindingArrangementKind}
+                      >
+                        {SPATIAL_ARRANGEMENT_KINDS.map((kind) => (
+                          <option key={kind} value={kind}>
+                            {kind}
+                            {bindingArrangementOverride === null && kind === bindingArrangementKind ? " (host default)" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      <span>Overflow policy</span>
+                      <select onChange={(event) => setBindingOverflowPolicy(event.target.value as SpatialArrangementOverflowPolicy)} value={bindingOverflowPolicy}>
+                        <option value="overflow-list">overflow-list</option>
+                        <option value="paginate">paginate</option>
+                        <option value="show-all-if-possible">show-all-if-possible</option>
+                        <option value="reject-over-capacity">reject-over-capacity</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span>Binding action</span>
+                      <select onChange={(event) => setBindingActionKind(event.target.value as ArrangerBindingActionKind)} value={bindingActionKind}>
+                        <option value="open-link">open-link</option>
+                        <option value="listen">listen</option>
+                        <option value="watch">watch</option>
+                        <option value="enquire">enquire</option>
+                      </select>
+                    </label>
+                  </div>
+                  <button disabled={!canBindContent || !selectedLibraryPiece} onClick={handleBindSelectedPiece} type="button">Bind selected library piece</button>
+                  <button disabled={!canBindContent || !selectedMediaId || !linkLabel.trim() || !linkHref.trim()} onClick={handleBindContent} type="button">Bind content to host</button>
+                  <ol className={styles.pieceList} data-testid="presence-spatial-bound-pieces">
+                    {boundPieces.map((piece) => (
+                      <li key={piece.id}>
+                        <span><strong>{piece.label}</strong><small>{piece.pieceType} / {piece.arrangementRole}</small></span>
+                        <span>{piece.actionRefs.join(", ")}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  {selectedBindingArrangement ? (
+                    <p className={styles.hint} data-testid="presence-spatial-binding-fallback">
+                      Fallback rows: {selectedBindingArrangement.fallbackRows.map((row) => `${row.label} (${row.actionRefs.join(", ") || "no actions"})`).join("; ")}
+                    </p>
+                  ) : <p className={styles.hint}>Bindings save as refs and order only; transforms are derived during compile.</p>}
+                </div>
                 <label>
                   <span>{selectedDefinition?.category === "projection" ? "Gallery / media" : "Piece media"}</span>
                   <select disabled={!canAssignMedia} onChange={(event) => setSelectedMediaId(event.target.value)} value={canAssignMedia ? selectedMediaId : ""}>
@@ -798,7 +1490,7 @@ export function SpatialObjectArranger() {
             selectedPlacementId={selectedPlacementId}
           />
           <div className={styles.legend}>
-            {ADDABLE_COMPONENTS.map((entry) => <span key={entry.componentId}><i data-component={entry.componentId} />{paletteLabel(entry.componentId)}</span>)}
+            {ARRANGER_COMPONENT_OPTIONS.map((entry) => <span key={`${entry.componentId}@${entry.version}`}><i data-component={entry.componentId} />{paletteLabel(entry.componentId)}</span>)}
           </div>
         </section>
       </div>
@@ -831,10 +1523,87 @@ export function SpatialObjectArranger() {
         <div>
           <p className={styles.eyebrow}>Strict validation</p>
           <h2>{diagnostics.length > 0 ? `${diagnostics.length} rejected condition${diagnostics.length === 1 ? "" : "s"}` : "Last valid state active"}</h2>
+          {diagnostics[0] ? <p className={styles.diagnosticAdvice}>{diagnosticAdvice(diagnostics[0])}</p> : null}
         </div>
         {diagnostics.length > 0 ? (
-          <ul>{diagnostics.slice(0, 8).map((issue, index) => <li key={`${issue.path}-${issue.code}-${index}`}><code>{issue.code}</code><span>{issue.message}</span><small>{issue.path}</small></li>)}</ul>
+          <ul data-testid="presence-spatial-diagnostics">{diagnostics.slice(0, 8).map((issue, index) => (
+            <li key={`${issue.path}-${issue.code}-${index}`}>
+              <code>{diagnosticTitle(issue)}</code>
+              <span>{issue.message}</span>
+              <small>{issue.path}</small>
+            </li>
+          ))}</ul>
         ) : <p>Every accepted edit has compiled through the shared schema and placement rules.</p>}
+      </section>
+
+      <section className={styles.inspectorPanel} data-testid="presence-spatial-layout-inspector">
+        <div>
+          <p className={styles.eyebrow}>Saved-layout inspector</p>
+          <h2>Readable state, not raw JSON</h2>
+          <p>Use this to verify component refs, overrides and fallback status before export.</p>
+        </div>
+        <div className={styles.inspectorGrid}>
+          <dl>
+            <div>
+              <dt>Layout size</dt>
+              <dd data-testid="presence-spatial-inspector-layout-size">{currentCompile.ok ? formatBytes(currentCompile.plan.budgets.layoutJsonBytes) : "Invalid"}</dd>
+            </div>
+            <div>
+              <dt>Object count</dt>
+              <dd>{room.placements.length} placements / {reusableObjectCount} core objects</dd>
+            </div>
+            <div>
+              <dt>Content bindings</dt>
+              <dd data-testid="presence-spatial-inspector-content-bindings">{room.contentBindings?.length ?? 0} bindings / {currentCompile.ok ? currentCompile.plan.contentBindingArrangements.length : 0} arranged hosts</dd>
+            </div>
+            <div>
+              <dt>Component refs</dt>
+              <dd data-testid="presence-spatial-inspector-component-refs">{componentRefsUsed.join(", ") || "None"}</dd>
+            </div>
+          </dl>
+          <dl>
+            <div>
+              <dt>Selected object</dt>
+              <dd data-testid="presence-spatial-inspector-selected-id">{selectedPlacement?.id ?? "None selected"}</dd>
+            </div>
+            <div>
+              <dt>Component</dt>
+              <dd data-testid="presence-spatial-inspector-selected-component">{selectedPlacement ? `${selectedPlacement.componentId}@${selectedPlacement.version}` : "None selected"}</dd>
+            </div>
+            <div>
+              <dt>Option alias</dt>
+              <dd data-testid="presence-spatial-inspector-option-ref">{selectedPlacement?.optionRef ? `${selectedPlacement.optionRef.optionId}@${selectedPlacement.optionRef.version}` : "resolved component only"}</dd>
+            </div>
+            <div>
+              <dt>Transform</dt>
+              <dd>{selectedTransform ? `x ${selectedTransform.position[0].toFixed(2)}, y ${selectedTransform.position[1].toFixed(2)}, z ${selectedTransform.position[2].toFixed(2)}, yaw ${Math.round(selectedTransform.rotation[1] * 180 / Math.PI)} deg` : "None selected"}</dd>
+            </div>
+            <div>
+              <dt>Material overrides</dt>
+              <dd data-testid="presence-spatial-inspector-material-overrides">{selectedPlacement ? formatRecord(selectedPlacement.materialSlotOverrides) : "None selected"}</dd>
+            </div>
+            <div>
+              <dt>Media / skin refs</dt>
+              <dd data-testid="presence-spatial-inspector-media-skin">{selectedPlacement ? `media ${selectedPlacement.mediaRef ?? "none"} / skin ${selectedPlacement.skinRef ?? "none"}` : "None selected"}</dd>
+            </div>
+            <div>
+              <dt>Action refs</dt>
+              <dd data-testid="presence-spatial-inspector-action-refs">{selectedPlacement ? selectedActions.map((action) => `${action.id}:${action.kind}`).join(", ") || "none" : "None selected"}</dd>
+            </div>
+            <div>
+              <dt>Fallback status</dt>
+              <dd data-testid="presence-spatial-inspector-fallback">{selectedPlacement ? (selectedFallbackItem ? `semantic row: ${selectedFallbackItem.label}` : `${selectedDefinition?.mobileFallback.strategy ?? "unknown"} component fallback`) : "None selected"}{selectedBindingArrangement ? ` / bound rows ${selectedBindingArrangement.fallbackRows.length}` : ""}</dd>
+            </div>
+            <div>
+              <dt>Arrangement / overflow</dt>
+              <dd data-testid="presence-spatial-inspector-arrangement">{selectedBindingArrangement ? `${selectedBindingArrangement.kind}, ${selectedBindingArrangement.policy}, overflow ${selectedBindingArrangement.overflow.overflowCount}` : selectedPlacement?.contentArrangement ? `${selectedPlacement.contentArrangement.kind}, ${selectedPlacement.contentArrangement.overflowPolicy}` : "none"}</dd>
+            </div>
+            <div>
+              <dt>GLB status</dt>
+              <dd data-testid="presence-spatial-inspector-glb-status">{selectedRenderItem?.renderGeometry?.kind === "glb" ? `${selectedRenderItem.renderGeometry.compression} optional GLB` : "proxy-only"}</dd>
+            </div>
+          </dl>
+        </div>
       </section>
 
       <section className={styles.previewPanel}>
@@ -853,6 +1622,7 @@ export function SpatialObjectArranger() {
         {previewCompile.ok ? (
           <SpatialRoomViewport
             ariaLabel={`${previewSource === "saved" ? "Saved" : "Current"} ${room.label} visitor preview`}
+            debugCarriers={debugCarriers}
             plan={previewCompile.plan}
           />
         ) : (
@@ -886,7 +1656,15 @@ function TopDownRoomPlan({
   const height = 600;
   const xScale = width / room.bounds.width;
   const zScale = height / room.bounds.depth;
-  const objects = room.placements.filter((placement) => EDITOR_COMPONENT_IDS.has(placement.componentId));
+  const objects = room.placements.filter((placement) => (
+    !placement.anchor.parentPlacementId
+    && (
+      EDITOR_COMPONENT_IDS.has(placement.componentId)
+      || EDITOR_CANDIDATE_COMPONENT_IDS.has(placement.componentId)
+      || PRESENCE_OPTION_COMPONENT_IDS.has(placement.componentId)
+      || Boolean(placement.optionRef)
+    )
+  ));
 
   return (
     <svg
@@ -971,10 +1749,67 @@ function formatBytes(value: number): string {
   return value < 1024 ? `${value} B` : `${(value / 1024).toFixed(1)} KB`;
 }
 
+function formatDimensions(value: readonly [number, number, number]): string {
+  return `${value[0].toFixed(2)} x ${value[1].toFixed(2)} x ${value[2].toFixed(2)} m`;
+}
+
+function formatRoomKitDimensions(value: SpatialRoomDefinition["bounds"]): string {
+  return `${value.width.toFixed(2)} x ${value.height.toFixed(2)} x ${value.depth.toFixed(2)} m`;
+}
+
 function paletteLabel(componentId: string): string {
   return PALETTE_LABELS[componentId]
-    ?? ADDABLE_COMPONENTS.find((entry) => entry.componentId === componentId)?.label
+    ?? ARRANGER_COMPONENT_OPTIONS.find((entry) => entry.componentId === componentId)?.label
     ?? componentId;
+}
+
+function diagnosticTitle(issue: SpatialValidationIssue): string {
+  const labels: Record<string, string> = {
+    "anchor-capacity": "Capacity exceeded",
+    "anchor-kind": "Invalid anchor",
+    "anchor-missing": "Invalid anchor",
+    "anchor-mismatch": "Invalid anchor",
+    "anchor-type": "Incompatible host",
+    collision: "Collision",
+    "media-surface": "Incompatible media",
+    "not-arranger-editable": "Locked object",
+    "not-arranger-movable": "Locked object",
+    "orphan-anchor": "Invalid anchor",
+    "parent-in-use": "Child objects attached",
+    "parent-missing": "Invalid parent",
+    "piece-host-compatibility": "Incompatible host",
+    "preset-slot": "Unsupported material",
+    "room-bounds": "Outside room bounds",
+    "unsafe-link": "Invalid action URL",
+    "unsupported-slot": "Unsupported material",
+  };
+  return labels[issue.code] ?? issue.code;
+}
+
+function diagnosticAdvice(issue: SpatialValidationIssue): string {
+  const advice: Record<string, string> = {
+    "anchor-capacity": "That host has no remaining compatible Piece slots. Select another surface or remove an assigned Piece first.",
+    "anchor-type": "The selected object cannot host that Piece or media type. Choose a rack, surface, projection wall, or compatible media carrier.",
+    collision: "The requested position overlaps another solid object. Move it to an open grid cell.",
+    "media-surface": "This object has no direct media/decal/projection surface. Use Assign Pieces on a compatible host instead.",
+    "not-arranger-editable": "Foundation and child Piece placements are protected from this operation.",
+    "not-arranger-movable": "Foundation and anchored Piece placements stay locked; select a reusable floor or wall object.",
+    "piece-host-compatibility": "Choose a host that lists the selected Piece type under Supported binding types.",
+    "preset-slot": "Choose a material preset that belongs to the selected material slot.",
+    "room-bounds": "The object would leave the validated room volume. The last valid position is preserved.",
+    "unsafe-link": "Use a credential-free HTTPS URL. HTTP, javascript, local and credentialed URLs are rejected.",
+    "unsupported-slot": "This component does not expose that material slot. Select a supported slot from the dropdown.",
+  };
+  return advice[issue.code] ?? "The rejected edit was not applied; the last valid draft and preview are still active.";
+}
+
+function formatRecord(record: Record<string, string>): string {
+  const entries = Object.entries(record);
+  return entries.length > 0 ? entries.map(([key, value]) => `${key}: ${value}`).join(", ") : "none";
+}
+
+function testIdToken(value: string): string {
+  return value.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
 }
 
 function localStorageIssue(error: unknown): SpatialValidationIssue {

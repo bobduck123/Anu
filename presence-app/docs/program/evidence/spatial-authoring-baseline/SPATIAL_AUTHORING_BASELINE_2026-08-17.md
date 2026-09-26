@@ -72,7 +72,7 @@ The screenshots prove workflow and renderer data flow, not final art direction. 
 - Direct media is intentionally limited to registered piece/projection media surfaces.
 - Skin material/colour presets render; decal asset layers are not yet a renderer capability and are not claimed by this baseline.
 - Mobile preserves content/actions but places internal operator controls before the compact visitor preview.
-- Optimized model candidates under `assets/presence-spatial/` remain deferred until a generic GLTF/Draco component resolver exists.
+- Optimized model candidates remain outside the authoring-baseline room. A later Draco runtime packet added a generic optional GLB render-geometry resolver, but authoring still treats proxy/procedural geometry as the source of truth and candidate admission remains separate.
 
 ## Rollback
 

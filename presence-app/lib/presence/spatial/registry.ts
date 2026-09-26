@@ -1,4 +1,5 @@
 import type { SpatialComponentDefinition, SpatialComponentRef, SpatialMaterialSlotId } from "./model.ts";
+import { CANDIDATE_COMPONENT_DEFINITIONS, CANDIDATE_COMPONENT_OPTIONS } from "./candidateOptions.ts";
 import { spatialComponentKey } from "./model.ts";
 
 export type SpatialComponentAssetCategory =
@@ -13,7 +14,7 @@ export type SpatialComponentAssetCategory =
 
 export interface SpatialComponentCatalogMetadata extends SpatialComponentRef {
   assetCategory: SpatialComponentAssetCategory;
-  assetStrategy: "procedural-placeholder" | "presence-authored-procedural";
+  assetStrategy: "procedural-placeholder" | "presence-authored-procedural" | "procedural-proxy-with-candidate-glb";
   creativeStatus: "prototype" | "review" | "approved" | "rejected";
   admissionStatus: "not-evaluated" | "candidate" | "admitted" | "rejected";
   origin: {
@@ -44,8 +45,15 @@ const candidateLicense = {
   attribution: "Presence-authored internal candidate geometry",
   internalOnly: true,
 } as const;
+const internalUseCandidateAssetLicense = {
+  licenseId: "presence-internal-use-candidate-asset-v1",
+  sourceKind: "third-party",
+  source: "presence-spatial-candidate-internal-use",
+  attribution: "Optimized candidate GLB cleared for internal runtime proof only; not admitted",
+  internalOnly: true,
+} as const;
 
-export const SPATIAL_COMPONENTS = [
+const SPATIAL_CORE_COMPONENTS = [
   {
     componentId: "presence.room-shell",
     version: "1.0.0",
@@ -278,6 +286,31 @@ export const SPATIAL_COMPONENTS = [
     mobileFallback: { strategy: "semantic-only", note: "Keep island Pieces in spatial order within the branded fallback." },
   },
   {
+    componentId: "presence.candidate-display-island",
+    version: "1.0.0",
+    label: "Candidate GLB display island proof",
+    category: "surface",
+    dimensions: { width: 1.5713, height: 0.7784, depth: 2.5598 },
+    geometry: { kind: "primitive", primitive: "product-block" },
+    renderGeometry: {
+      kind: "glb",
+      url: "/presence-spatial/candidates/components/candidate.table.old-church-modeling-interior-sce-ffd7-017.glb",
+      compression: "draco",
+      decoderPath: "/presence-spatial/draco/gltf/",
+      fallbackPrimitive: "product-block",
+      runtimeSizeKb: 7.79,
+      decoderSizeKb: 244.99609375,
+    },
+    placement: { allowedAnchorKinds: ["floor"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: [
+      { id: "candidate-island-top", kind: "surface", transform: { position: [0, 0.43, 0], rotation: [0, 0, 0], scale: [1, 1, 1] }, accepts: ["piece"], capacity: 1 },
+    ],
+    materialSlots: ["tabletop", "rack-metal"],
+    license: internalUseCandidateAssetLicense,
+    runtime: { compressedBytes: 7_976, sourceBytes: 7_976, eager: false, performanceTier: "core" },
+    mobileFallback: { strategy: "semantic-only", note: "Use the proxy component and semantic item if GLB or Draco loading is unavailable." },
+  },
+  {
     componentId: "presence.suspended-rack",
     version: "1.0.0",
     label: "Suspended architecture rack candidate",
@@ -305,7 +338,9 @@ export const SPATIAL_COMPONENTS = [
     dimensions: { width: 1.05, height: 1.7, depth: 0.2 },
     geometry: { kind: "primitive", primitive: "garment-hanger" },
     placement: { allowedAnchorKinds: ["rack"], collision: "parent-contained", requiresParent: true, blocksCameraPath: false, floorClearance: 0 },
-    anchors: [],
+    anchors: [
+      { id: "hanger-garment-face", kind: "surface", transform: { position: [0, 0.05, 0.12], rotation: [-Math.PI / 2, 0, 0], scale: [1, 1, 1] }, accepts: ["piece", "action"], capacity: 1 },
+    ],
     materialSlots: ["fabric", "rack-metal"],
     license: candidateLicense,
     runtime: { compressedBytes: 0, sourceBytes: 0, eager: false, performanceTier: "enhanced" },
@@ -425,7 +460,80 @@ export const SPATIAL_COMPONENTS = [
     runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "enhanced" },
     mobileFallback: { strategy: "semantic-only", note: "Preserve the secondary zone label without simulating cloth." },
   },
+  {
+    componentId: "presence.archive-wall",
+    version: "1.0.0",
+    label: "Archive wall candidate",
+    category: "wall",
+    dimensions: { width: 7.2, height: 4.4, depth: 0.28 },
+    geometry: { kind: "primitive", primitive: "archive-wall" },
+    placement: { allowedAnchorKinds: ["wall", "free"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: Array.from({ length: 12 }, (_, index) => ({
+      id: `archive-cell-${String(index + 1).padStart(2, "0")}`,
+      kind: "wall" as const,
+      transform: {
+        position: [-2.55 + (index % 4) * 1.7, 1.32 - Math.floor(index / 4) * 1.32, 0.18],
+        rotation: [0, 0, 0],
+        scale: [1, 1, 1],
+      },
+      accepts: ["piece", "action"] as const,
+      capacity: 1,
+    })),
+    materialSlots: ["wall", "paper", "poster-decal", "rack-metal"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "enhanced" },
+    mobileFallback: { strategy: "semantic-only", note: "Expose archive media and actions as an ordered list." },
+  },
+  {
+    componentId: "presence.listening-station",
+    version: "1.0.0",
+    label: "Listening station candidate",
+    category: "surface",
+    dimensions: { width: 2.6, height: 1.25, depth: 1.6 },
+    geometry: { kind: "primitive", primitive: "listening-station" },
+    placement: { allowedAnchorKinds: ["floor", "free"], collision: "solid", requiresParent: false, blocksCameraPath: true, floorClearance: 0 },
+    anchors: [
+      { id: "listening-media", kind: "surface", transform: { position: [0, 0.68, 0], rotation: [-Math.PI / 2, 0, 0], scale: [1, 1, 1] }, accepts: ["piece", "action"], capacity: 4 },
+    ],
+    materialSlots: ["tabletop", "rack-metal", "logo-accent"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "enhanced" },
+    mobileFallback: { strategy: "semantic-only", note: "Expose audio/media titles and listen/open-link actions semantically." },
+  },
+  {
+    componentId: "presence.spherical-gallery",
+    version: "1.0.0",
+    label: "Spherical gallery candidate",
+    category: "projection",
+    dimensions: { width: 4.8, height: 4.8, depth: 4.8 },
+    geometry: { kind: "primitive", primitive: "spherical-gallery" },
+    placement: { allowedAnchorKinds: ["floor", "free"], collision: "overlap-allowed", requiresParent: false, blocksCameraPath: false, floorClearance: 0 },
+    anchors: Array.from({ length: 12 }, (_, index) => {
+      const angle = index / 12 * Math.PI * 2;
+      const y = index % 3 === 0 ? 0.95 : index % 3 === 1 ? 0 : -0.95;
+      return {
+        id: `sphere-cell-${String(index + 1).padStart(2, "0")}`,
+        kind: "projection" as const,
+        transform: {
+          position: [Math.cos(angle) * 1.7, y, Math.sin(angle) * 1.7],
+          rotation: [0, -angle + Math.PI / 2, 0],
+          scale: [1, 1, 1],
+        },
+        accepts: ["piece", "action"] as const,
+        capacity: 1,
+      };
+    }),
+    materialSlots: ["projection", "rack-metal", "logo-accent"],
+    license: candidateLicense,
+    runtime: { compressedBytes: 0, sourceBytes: 0, eager: true, performanceTier: "hero" },
+    mobileFallback: { strategy: "semantic-only", note: "Fallback is an ordered gallery/card list with the same media and actions." },
+  },
 ] as const satisfies readonly SpatialComponentDefinition[];
+
+export const SPATIAL_COMPONENTS: readonly SpatialComponentDefinition[] = [
+  ...SPATIAL_CORE_COMPONENTS,
+  ...CANDIDATE_COMPONENT_DEFINITIONS,
+];
 
 const AUTHORABLE_RENDERED_MATERIAL_SLOTS: Readonly<Record<string, readonly SpatialMaterialSlotId[]>> = {
   "presence.room-shell@1.0.0": ["wall"],
@@ -443,10 +551,14 @@ const AUTHORABLE_RENDERED_MATERIAL_SLOTS: Readonly<Record<string, readonly Spati
   "presence.product-display-block@1.0.0": ["tabletop", "logo-accent"],
   "presence.light-fixture@1.0.0": ["rack-metal", "logo-accent"],
   "presence.drape-divider@1.0.0": ["fabric", "rack-metal"],
+  "presence.archive-wall@1.0.0": ["wall", "paper", "poster-decal", "rack-metal"],
+  "presence.listening-station@1.0.0": ["tabletop", "rack-metal", "logo-accent"],
+  "presence.spherical-gallery@1.0.0": ["projection", "rack-metal", "logo-accent"],
 };
 
 /** Slots whose materials are represented by actual geometry in the bounded operator palette. */
 export function spatialAuthoringMaterialSlots(ref: SpatialComponentRef): readonly SpatialMaterialSlotId[] {
+  if (ref.componentId.startsWith("candidate.")) return spatialComponent(ref)?.materialSlots ?? [];
   return AUTHORABLE_RENDERED_MATERIAL_SLOTS[spatialComponentKey(ref)] ?? [];
 }
 
@@ -473,11 +585,12 @@ const candidateMetadata = (
   assetCategory: SpatialComponentAssetCategory,
   originConvention: SpatialComponentCatalogMetadata["origin"]["convention"],
   pivotConvention: SpatialComponentCatalogMetadata["pivot"]["convention"],
+  assetStrategy: SpatialComponentCatalogMetadata["assetStrategy"] = "presence-authored-procedural",
 ): SpatialComponentCatalogMetadata => ({
   componentId,
   version,
   assetCategory,
-  assetStrategy: "presence-authored-procedural",
+  assetStrategy,
   creativeStatus: "prototype",
   admissionStatus: "not-evaluated",
   origin: { convention: originConvention, offset: [0, 0, 0], unit: "metre", upAxis: "y" },
@@ -486,7 +599,7 @@ const candidateMetadata = (
 });
 
 /** Admission-neutral metadata for the initial generated catalog; no raw asset files are bundled. */
-export const SPATIAL_COMPONENT_CATALOG = [
+const SPATIAL_CORE_COMPONENT_CATALOG = [
   placeholderMetadata("presence.room-shell", "room-architecture", "center", "component-origin"),
   placeholderMetadata("presence.floor-slab", "room-architecture", "floor-center", "floor-contact"),
   placeholderMetadata("presence.wall-panel", "wall-system", "back-center", "wall-contact"),
@@ -501,6 +614,7 @@ export const SPATIAL_COMPONENT_CATALOG = [
   candidateMetadata("presence.ribbed-wall", "1.0.0", "wall-system", "back-center", "wall-contact"),
   candidateMetadata("presence.display-bay", "1.0.0", "display-surface", "floor-center", "floor-contact"),
   candidateMetadata("presence.rounded-island", "1.0.0", "display-surface", "floor-center", "floor-contact"),
+  candidateMetadata("presence.candidate-display-island", "1.0.0", "display-surface", "floor-center", "floor-contact", "procedural-proxy-with-candidate-glb"),
   candidateMetadata("presence.suspended-rack", "1.0.0", "retail-fixture", "floor-center", "floor-contact"),
   candidateMetadata("presence.garment-hanger", "1.0.0", "piece-carrier", "center", "component-origin"),
   candidateMetadata("presence.framed-media", "1.0.0", "piece-carrier", "center", "component-origin"),
@@ -510,7 +624,33 @@ export const SPATIAL_COMPONENT_CATALOG = [
   candidateMetadata("presence.product-display-block", "1.0.0", "display-surface", "floor-center", "floor-contact"),
   candidateMetadata("presence.light-fixture", "1.0.0", "lighting-fixture", "floor-center", "floor-contact"),
   candidateMetadata("presence.drape-divider", "1.0.0", "soft-architecture", "floor-center", "floor-contact"),
+  candidateMetadata("presence.archive-wall", "1.0.0", "wall-system", "back-center", "wall-contact"),
+  candidateMetadata("presence.listening-station", "1.0.0", "display-surface", "floor-center", "floor-contact"),
+  candidateMetadata("presence.spherical-gallery", "1.0.0", "projection-surface", "center", "component-origin"),
 ] as const satisfies readonly SpatialComponentCatalogMetadata[];
+
+const CANDIDATE_COMPONENT_CATALOG = CANDIDATE_COMPONENT_OPTIONS.map((option): SpatialComponentCatalogMetadata => ({
+  componentId: option.componentId,
+  version: option.version,
+  assetCategory: option.group === "lighting"
+    ? "lighting-fixture"
+    : option.group === "soft-architecture"
+      ? "soft-architecture"
+      : "display-surface",
+  assetStrategy: option.renderMode === "draco-visual-geometry"
+    ? "procedural-proxy-with-candidate-glb"
+    : "presence-authored-procedural",
+  creativeStatus: "prototype",
+  admissionStatus: "not-evaluated",
+  origin: { convention: "floor-center", offset: [0, 0, 0], unit: "metre", upAxis: "y" },
+  pivot: { convention: "floor-contact", offset: [0, 0, 0] },
+  rawAssetIncluded: false,
+}));
+
+export const SPATIAL_COMPONENT_CATALOG: readonly SpatialComponentCatalogMetadata[] = [
+  ...SPATIAL_CORE_COMPONENT_CATALOG,
+  ...CANDIDATE_COMPONENT_CATALOG,
+];
 
 const COMPONENT_METADATA_MAP = new Map(SPATIAL_COMPONENT_CATALOG.map((metadata) => [spatialComponentKey(metadata), metadata]));
 

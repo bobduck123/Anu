@@ -95,7 +95,7 @@ The runtime validator enforces 100 KB layout, 3 MB eager, and 12 MB internal tot
 2. Rotated components use world-axis AABB collision. This is deliberately conservative and can reject spatially valid near-overlaps.
 3. Browser `localStorage` and its rollback are best effort, non-transactional and device-local.
 4. The component Asset API is an in-repo registry contract, not a hosted service. Cache reuse is process/browser-runtime reuse by `componentId@version`.
-5. Asset-backed geometry has a cached bounds fallback only. There is no GLB loader, compression pipeline, CDN policy, or admitted production model.
+5. Original Gate 3 asset-backed geometry had a cached bounds fallback only and no GLB loader. Later 2026-08-17 Draco runtime evidence added generic, lazy optional GLB loading for internal proof components; this did not add a CDN policy or admitted production model.
 6. Mobile and reduced-motion currently use semantic fallback, not reduced 3D.
 7. BBB's total lazy media is 5.96 MB and must be optimised before public use.
 8. The 546,602-byte Three chunk is acceptable for this internal isolated proof but has not passed a public-route performance budget.
@@ -106,7 +106,7 @@ The runtime validator enforces 100 KB layout, 3 MB eager, and 12 MB internal tot
 ## Failure-condition review
 
 - DOM/CSS-only mock: not present; a real lazy Three.js renderer is exercised by E2E.
-- Raw unoptimised GLTF/GLB runtime: not present; model locators are rejected and no loader ships.
+- Raw unoptimised GLTF/GLB runtime: not present; model locators reject raw/source GLB/GLTF. Later Draco evidence ships only an optimized internal proof GLB plus lazy decoder files, not source models or admitted production assets.
 - Mobstar hardcoded in renderer: not present; Mobstar is a data fixture consumed by shared compilation and rendering.
 - BBB remains only a page gallery: not true for this proof; a second fixture uses the shared projection-wall primitive while the protected public gallery remains unchanged.
 - Arranger cannot save/reload: not true; two-generation browser round trip is verified.

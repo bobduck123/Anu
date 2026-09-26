@@ -41,3 +41,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 /test-results/
+
+# Presence spatial asset ingestion: generated binaries are regenerable by
+# `npm run ingest:spatial-assets`. Manifests, reports and thumbnails are kept.
+/assets/presence-spatial/candidates/**/*.glb
+/assets/presence-spatial/candidates/.staging/
+/assets/presence-spatial/source/raw/*
+!/assets/presence-spatial/source/raw/.gitkeep
+!/assets/presence-spatial/source/raw/README.md

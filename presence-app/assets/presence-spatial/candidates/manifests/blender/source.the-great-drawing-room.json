@@ -1,0 +1,661 @@
+{
+  "contentHash": "12da174cbd5a1d3fcd252e0725e314bc26758e356e2b93a1797aa9da35285297",
+  "result": {
+    "ok": true,
+    "blenderVersion": "5.1.1",
+    "sourcePath": "C:/Dev/presence pieces/the_great_drawing_room.glb",
+    "objects": [
+      {
+        "index": 0,
+        "name": "Object_3",
+        "meshObjectCount": 1,
+        "triangleCount": 92556,
+        "materialNames": [
+          "model_Material_u1_v1"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Object_3"
+        ],
+        "file": "obj-000.glb",
+        "fileBytes": 385616,
+        "thumbnail": "obj-000.webp",
+        "bounds": {
+          "min": [
+            -6.2214,
+            0,
+            -5.7394
+          ],
+          "max": [
+            6.2214,
+            5.4063,
+            5.7394
+          ],
+          "dimensions": {
+            "width": 12.4427,
+            "height": 5.4063,
+            "depth": 11.4788
+          },
+          "center": [
+            0,
+            2.7031,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 1,
+        "name": "Object_4",
+        "meshObjectCount": 1,
+        "triangleCount": 87630,
+        "materialNames": [
+          "model_Material_u1_v1"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Object_4"
+        ],
+        "file": "obj-001.glb",
+        "fileBytes": 391456,
+        "thumbnail": "obj-001.webp",
+        "bounds": {
+          "min": [
+            -6.1143,
+            0,
+            -5.7177
+          ],
+          "max": [
+            6.1143,
+            5.2576,
+            5.7177
+          ],
+          "dimensions": {
+            "width": 12.2287,
+            "height": 5.2576,
+            "depth": 11.4353
+          },
+          "center": [
+            0,
+            2.6288,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 2,
+        "name": "Object_2",
+        "meshObjectCount": 1,
+        "triangleCount": 87429,
+        "materialNames": [
+          "model_Material_u1_v1"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Object_2"
+        ],
+        "file": "obj-002.glb",
+        "fileBytes": 397276,
+        "thumbnail": "obj-002.webp",
+        "bounds": {
+          "min": [
+            -7.1459,
+            0,
+            -6.997
+          ],
+          "max": [
+            7.1459,
+            5.7097,
+            6.997
+          ],
+          "dimensions": {
+            "width": 14.2918,
+            "height": 5.7097,
+            "depth": 13.994
+          },
+          "center": [
+            0,
+            2.8548,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 3,
+        "name": "Object_5",
+        "meshObjectCount": 1,
+        "triangleCount": 77280,
+        "materialNames": [
+          "model_Material_u1_v1"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Object_5"
+        ],
+        "file": "obj-003.glb",
+        "fileBytes": 398696,
+        "thumbnail": "obj-003.webp",
+        "bounds": {
+          "min": [
+            -6.1283,
+            0,
+            -5.6028
+          ],
+          "max": [
+            6.1283,
+            5.0363,
+            5.6028
+          ],
+          "dimensions": {
+            "width": 12.2567,
+            "height": 5.0363,
+            "depth": 11.2056
+          },
+          "center": [
+            0,
+            2.5182,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 4,
+        "name": "Object_6",
+        "meshObjectCount": 1,
+        "triangleCount": 75156,
+        "materialNames": [
+          "model_Material_u1_v1"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Object_6"
+        ],
+        "file": "obj-004.glb",
+        "fileBytes": 404140,
+        "thumbnail": "obj-004.webp",
+        "bounds": {
+          "min": [
+            -5.8758,
+            0,
+            -5.8275
+          ],
+          "max": [
+            5.8758,
+            5.3246,
+            5.8275
+          ],
+          "dimensions": {
+            "width": 11.7516,
+            "height": 5.3246,
+            "depth": 11.655
+          },
+          "center": [
+            0,
+            2.6623,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 5,
+        "name": "Object_7",
+        "meshObjectCount": 1,
+        "triangleCount": 72621,
+        "materialNames": [
+          "model_Material_u1_v1"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Object_7"
+        ],
+        "file": "obj-005.glb",
+        "fileBytes": 405576,
+        "thumbnail": "obj-005.webp",
+        "bounds": {
+          "min": [
+            -6.0924,
+            0,
+            -5.8019
+          ],
+          "max": [
+            6.0924,
+            5.4334,
+            5.8019
+          ],
+          "dimensions": {
+            "width": 12.1848,
+            "height": 5.4334,
+            "depth": 11.6037
+          },
+          "center": [
+            0,
+            2.7167,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 6,
+        "name": "Object_9",
+        "meshObjectCount": 1,
+        "triangleCount": 68547,
+        "materialNames": [
+          "model_Material_u1_v1"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Object_9"
+        ],
+        "file": "obj-006.glb",
+        "fileBytes": 417308,
+        "thumbnail": "obj-006.webp",
+        "bounds": {
+          "min": [
+            -5.932,
+            0,
+            -5.7375
+          ],
+          "max": [
+            5.932,
+            5.043,
+            5.7375
+          ],
+          "dimensions": {
+            "width": 11.864,
+            "height": 5.043,
+            "depth": 11.4751
+          },
+          "center": [
+            0,
+            2.5215,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 7,
+        "name": "Object_8",
+        "meshObjectCount": 1,
+        "triangleCount": 65066,
+        "materialNames": [
+          "model_Material_u1_v1"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Object_8"
+        ],
+        "file": "obj-007.glb",
+        "fileBytes": 412576,
+        "thumbnail": "obj-007.webp",
+        "bounds": {
+          "min": [
+            -6.3233,
+            0,
+            -5.8593
+          ],
+          "max": [
+            6.3233,
+            5.2043,
+            5.8593
+          ],
+          "dimensions": {
+            "width": 12.6467,
+            "height": 5.2043,
+            "depth": 11.7186
+          },
+          "center": [
+            0,
+            2.6022,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 8,
+        "name": "Object_12",
+        "meshObjectCount": 1,
+        "triangleCount": 61674,
+        "materialNames": [
+          "model_Material_u1_v1"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Object_12"
+        ],
+        "file": "obj-008.glb",
+        "fileBytes": 428556,
+        "thumbnail": "obj-008.webp",
+        "bounds": {
+          "min": [
+            -5.1947,
+            0,
+            -5.5129
+          ],
+          "max": [
+            5.1947,
+            5.5905,
+            5.5129
+          ],
+          "dimensions": {
+            "width": 10.3894,
+            "height": 5.5905,
+            "depth": 11.0258
+          },
+          "center": [
+            0,
+            2.7952,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 9,
+        "name": "Object_13",
+        "meshObjectCount": 1,
+        "triangleCount": 61417,
+        "materialNames": [
+          "model_Material_u1_v1"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Object_13"
+        ],
+        "file": "obj-009.glb",
+        "fileBytes": 430088,
+        "thumbnail": "obj-009.webp",
+        "bounds": {
+          "min": [
+            -5.1596,
+            0,
+            -5.5673
+          ],
+          "max": [
+            5.1596,
+            5.0207,
+            5.5673
+          ],
+          "dimensions": {
+            "width": 10.3193,
+            "height": 5.0207,
+            "depth": 11.1346
+          },
+          "center": [
+            0,
+            2.5103,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 10,
+        "name": "Object_10",
+        "meshObjectCount": 1,
+        "triangleCount": 61150,
+        "materialNames": [
+          "model_Material_u1_v1"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Object_10"
+        ],
+        "file": "obj-010.glb",
+        "fileBytes": 417868,
+        "thumbnail": "obj-010.webp",
+        "bounds": {
+          "min": [
+            -5.9166,
+            0,
+            -5.7541
+          ],
+          "max": [
+            5.9166,
+            5.3211,
+            5.7541
+          ],
+          "dimensions": {
+            "width": 11.8331,
+            "height": 5.3211,
+            "depth": 11.5081
+          },
+          "center": [
+            0,
+            2.6606,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 11,
+        "name": "Object_11",
+        "meshObjectCount": 1,
+        "triangleCount": 60266,
+        "materialNames": [
+          "model_Material_u1_v1"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Object_11"
+        ],
+        "file": "obj-011.glb",
+        "fileBytes": 423144,
+        "thumbnail": "obj-011.webp",
+        "bounds": {
+          "min": [
+            -5.8968,
+            0,
+            -5.8404
+          ],
+          "max": [
+            5.8968,
+            5.1607,
+            5.8404
+          ],
+          "dimensions": {
+            "width": 11.7937,
+            "height": 5.1607,
+            "depth": 11.6808
+          },
+          "center": [
+            0,
+            2.5803,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 12,
+        "name": "Object_14",
+        "meshObjectCount": 1,
+        "triangleCount": 47919,
+        "materialNames": [
+          "model_Material_u1_v1"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Object_14"
+        ],
+        "file": "obj-012.glb",
+        "fileBytes": 435884,
+        "thumbnail": "obj-012.webp",
+        "bounds": {
+          "min": [
+            -5.3978,
+            0,
+            -5.7981
+          ],
+          "max": [
+            5.3978,
+            5.2084,
+            5.7981
+          ],
+          "dimensions": {
+            "width": 10.7956,
+            "height": 5.2084,
+            "depth": 11.5963
+          },
+          "center": [
+            0,
+            2.6042,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 13,
+        "name": "Object_15",
+        "meshObjectCount": 1,
+        "triangleCount": 44291,
+        "materialNames": [
+          "model_Material_u1_v1"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Object_15"
+        ],
+        "file": "obj-013.glb",
+        "fileBytes": 431156,
+        "thumbnail": "obj-013.webp",
+        "bounds": {
+          "min": [
+            -5.8627,
+            0,
+            -5.8329
+          ],
+          "max": [
+            5.8627,
+            5.1008,
+            5.8329
+          ],
+          "dimensions": {
+            "width": 11.7254,
+            "height": 5.1008,
+            "depth": 11.6657
+          },
+          "center": [
+            0,
+            2.5504,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 14,
+        "name": "Object_16",
+        "meshObjectCount": 1,
+        "triangleCount": 36997,
+        "materialNames": [
+          "model_Material_u1_v1"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Object_16"
+        ],
+        "file": "obj-014.glb",
+        "fileBytes": 397520,
+        "thumbnail": "obj-014.webp",
+        "bounds": {
+          "min": [
+            -5.6682,
+            0,
+            -5.7463
+          ],
+          "max": [
+            5.6682,
+            5.0406,
+            5.7463
+          ],
+          "dimensions": {
+            "width": 11.3364,
+            "height": 5.0406,
+            "depth": 11.4926
+          },
+          "center": [
+            0,
+            2.5203,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      }
+    ],
+    "roomKit": {
+      "shapeOnly": {
+        "file": "roomkit-shape.glb",
+        "fileBytes": 6168352
+      },
+      "textured": {
+        "file": "roomkit-textured.glb",
+        "fileBytes": 6374664
+      },
+      "thumbnail": "roomkit.webp",
+      "resizedImages": [
+        "Image_0"
+      ]
+    },
+    "warnings": [],
+    "descendedWrappers": [
+      "Sketchfab_model",
+      "model.obj.cleaner.materialmerger.gles"
+    ],
+    "importSeconds": 1.36,
+    "sceneTriangleCount": 999999,
+    "sceneBounds": {
+      "min": [
+        -8.0962,
+        0.1549,
+        -8.0109
+      ],
+      "max": [
+        6.1956,
+        5.8646,
+        5.9832
+      ],
+      "dimensions": {
+        "width": 14.2918,
+        "height": 5.7097,
+        "depth": 13.994
+      },
+      "center": [
+        -0.9503,
+        3.0097,
+        -1.0139
+      ]
+    },
+    "sceneObjectCount": 17,
+    "sceneMaterialNames": [
+      "model_Material_u1_v1"
+    ],
+    "geometryCompression": "draco",
+    "separableObjectCount": 15,
+    "uniqueObjectCount": 15,
+    "eligibleObjectCount": 15
+  }
+}

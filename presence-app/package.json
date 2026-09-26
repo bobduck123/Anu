@@ -9,6 +9,9 @@
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "test:spatial": "tsx --test lib/presence/spatial/*.test.ts",
+    "test:spatial-assets": "tsx --test lib/presence/spatial/assets/*.test.ts",
+    "ingest:spatial-assets": "tsx scripts/ingest-spatial-assets.ts",
+    "select:mobstar-components": "tsx scripts/select-mobstar-components.ts",
     "test:e2e:spatial": "playwright test tests/e2e/presence-spatial-object-model.spec.ts --project=chromium --retries=0",
     "evidence:spatial:mobstar": "tsx scripts/generate-spatial-layout-evidence.ts mobstar",
     "evidence:spatial:bbb": "tsx scripts/generate-spatial-layout-evidence.ts bbb"

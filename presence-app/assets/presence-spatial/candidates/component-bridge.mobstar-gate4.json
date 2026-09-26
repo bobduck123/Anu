@@ -1,0 +1,553 @@
+{
+  "registryVersion": "mobstar-gate4-candidate.v0",
+  "generatedAt": "2026-08-17T00:00:00.000Z",
+  "gate": "mobstar-gate4",
+  "admission": "internal-use-candidates-only",
+  "admissionNote": "Every entry is cleared for internal Mobstar Gate 4 use only. Nothing here is an admitted Presence component, nothing is production-ready, nothing is public-launch-ready, and no independent legal verification was performed.",
+  "targets": {
+    "materialStylePreset": "warm-nocturnal-boutique",
+    "lightingProfile": "boutique-product-warm"
+  },
+  "components": [
+    {
+      "componentId": "candidate.table.old-church-modeling-interior-sce-ffd7-017",
+      "version": "0.1.0",
+      "role": "display-island",
+      "runtimeAsset": "assets/presence-spatial/candidates/components/candidate.table.old-church-modeling-interior-sce-ffd7-017.glb",
+      "materialSlots": [
+        "top",
+        "legs",
+        "base"
+      ],
+      "presenceMaterialSlots": [
+        "tabletop",
+        "rack-metal"
+      ],
+      "anchors": [
+        "center",
+        "top-center",
+        "front-center",
+        "back-center",
+        "left-center",
+        "right-center",
+        "surface-top"
+      ],
+      "anchorDefinitions": [
+        {
+          "id": "center",
+          "type": "reference",
+          "position": [
+            0,
+            0.389,
+            0
+          ]
+        },
+        {
+          "id": "top-center",
+          "type": "surface",
+          "position": [
+            0,
+            0.778,
+            0
+          ]
+        },
+        {
+          "id": "front-center",
+          "type": "display",
+          "position": [
+            0,
+            0.389,
+            1.28
+          ]
+        },
+        {
+          "id": "back-center",
+          "type": "display",
+          "position": [
+            0,
+            0.389,
+            -1.28
+          ]
+        },
+        {
+          "id": "left-center",
+          "type": "display",
+          "position": [
+            -0.786,
+            0.389,
+            0
+          ]
+        },
+        {
+          "id": "right-center",
+          "type": "display",
+          "position": [
+            0.786,
+            0.389,
+            0
+          ]
+        },
+        {
+          "id": "surface-top",
+          "type": "surface",
+          "position": [
+            0,
+            0.778,
+            0
+          ]
+        }
+      ],
+      "placement": "floor",
+      "runtimeSizeKb": 7.8,
+      "status": "candidate-cleared-for-internal-use",
+      "suggestedStylePreset": "warm-nocturnal-boutique",
+      "suggestedLightingProfile": "boutique-product-warm"
+    },
+    {
+      "componentId": "candidate.chair.interior-7-3bc1-013",
+      "version": "0.1.0",
+      "role": "product-riser",
+      "runtimeAsset": "assets/presence-spatial/candidates/components/candidate.chair.interior-7-3bc1-013.glb",
+      "materialSlots": [
+        "frame",
+        "fabric",
+        "legs"
+      ],
+      "presenceMaterialSlots": [
+        "rack-metal",
+        "fabric"
+      ],
+      "anchors": [
+        "center",
+        "top-center",
+        "front-center",
+        "back-center",
+        "left-center",
+        "right-center",
+        "surface-top"
+      ],
+      "anchorDefinitions": [
+        {
+          "id": "center",
+          "type": "reference",
+          "position": [
+            0,
+            0.247,
+            0
+          ]
+        },
+        {
+          "id": "top-center",
+          "type": "surface",
+          "position": [
+            0,
+            0.493,
+            0
+          ]
+        },
+        {
+          "id": "front-center",
+          "type": "display",
+          "position": [
+            0,
+            0.247,
+            0.211
+          ]
+        },
+        {
+          "id": "back-center",
+          "type": "display",
+          "position": [
+            0,
+            0.247,
+            -0.211
+          ]
+        },
+        {
+          "id": "left-center",
+          "type": "display",
+          "position": [
+            -0.175,
+            0.247,
+            0
+          ]
+        },
+        {
+          "id": "right-center",
+          "type": "display",
+          "position": [
+            0.175,
+            0.247,
+            0
+          ]
+        },
+        {
+          "id": "surface-top",
+          "type": "surface",
+          "position": [
+            0,
+            0.493,
+            0
+          ]
+        }
+      ],
+      "placement": "floor",
+      "runtimeSizeKb": 11.6,
+      "status": "candidate-cleared-for-internal-use",
+      "suggestedStylePreset": "warm-nocturnal-boutique",
+      "suggestedLightingProfile": "boutique-product-warm"
+    },
+    {
+      "componentId": "candidate.decorative-prop.interior-7-3bc1-009",
+      "version": "0.1.0",
+      "role": "showroom-seating",
+      "runtimeAsset": "assets/presence-spatial/candidates/components/candidate.decorative-prop.interior-7-3bc1-009.glb",
+      "materialSlots": [
+        "primary",
+        "secondary",
+        "accent"
+      ],
+      "presenceMaterialSlots": [
+        "wall",
+        "floor",
+        "logo-accent"
+      ],
+      "anchors": [
+        "center",
+        "top-center",
+        "front-center",
+        "back-center",
+        "left-center",
+        "right-center",
+        "surface-top"
+      ],
+      "anchorDefinitions": [
+        {
+          "id": "center",
+          "type": "reference",
+          "position": [
+            0,
+            0.162,
+            0
+          ]
+        },
+        {
+          "id": "top-center",
+          "type": "surface",
+          "position": [
+            0,
+            0.323,
+            0
+          ]
+        },
+        {
+          "id": "front-center",
+          "type": "display",
+          "position": [
+            0,
+            0.162,
+            0.192
+          ]
+        },
+        {
+          "id": "back-center",
+          "type": "display",
+          "position": [
+            0,
+            0.162,
+            -0.192
+          ]
+        },
+        {
+          "id": "left-center",
+          "type": "display",
+          "position": [
+            -0.192,
+            0.162,
+            0
+          ]
+        },
+        {
+          "id": "right-center",
+          "type": "display",
+          "position": [
+            0.192,
+            0.162,
+            0
+          ]
+        },
+        {
+          "id": "surface-top",
+          "type": "surface",
+          "position": [
+            0,
+            0.323,
+            0
+          ]
+        }
+      ],
+      "placement": "surface",
+      "runtimeSizeKb": 51.8,
+      "status": "candidate-cleared-for-internal-use",
+      "suggestedStylePreset": "warm-nocturnal-boutique",
+      "suggestedLightingProfile": "boutique-product-warm"
+    },
+    {
+      "componentId": "candidate.chair.interior-7-3bc1-000",
+      "version": "0.1.0",
+      "role": "display-lighting-fixture",
+      "runtimeAsset": "assets/presence-spatial/candidates/components/candidate.chair.interior-7-3bc1-000.glb",
+      "materialSlots": [
+        "frame",
+        "fabric",
+        "legs"
+      ],
+      "presenceMaterialSlots": [
+        "rack-metal",
+        "fabric"
+      ],
+      "anchors": [
+        "center",
+        "top-center",
+        "front-center",
+        "back-center",
+        "left-center",
+        "right-center",
+        "surface-top"
+      ],
+      "anchorDefinitions": [
+        {
+          "id": "center",
+          "type": "reference",
+          "position": [
+            0,
+            0.429,
+            0
+          ]
+        },
+        {
+          "id": "top-center",
+          "type": "surface",
+          "position": [
+            0,
+            0.857,
+            0
+          ]
+        },
+        {
+          "id": "front-center",
+          "type": "display",
+          "position": [
+            0,
+            0.429,
+            0.213
+          ]
+        },
+        {
+          "id": "back-center",
+          "type": "display",
+          "position": [
+            0,
+            0.429,
+            -0.213
+          ]
+        },
+        {
+          "id": "left-center",
+          "type": "display",
+          "position": [
+            -0.206,
+            0.429,
+            0
+          ]
+        },
+        {
+          "id": "right-center",
+          "type": "display",
+          "position": [
+            0.206,
+            0.429,
+            0
+          ]
+        },
+        {
+          "id": "surface-top",
+          "type": "surface",
+          "position": [
+            0,
+            0.857,
+            0
+          ]
+        }
+      ],
+      "placement": "floor",
+      "runtimeSizeKb": 323.8,
+      "status": "candidate-cleared-for-internal-use",
+      "suggestedStylePreset": "warm-nocturnal-boutique",
+      "suggestedLightingProfile": "boutique-product-warm"
+    },
+    {
+      "componentId": "candidate.shelf.retopo-g-555780-0ae2-013",
+      "version": "0.1.0",
+      "role": "soft-division-drape",
+      "runtimeAsset": "assets/presence-spatial/candidates/components/candidate.shelf.retopo-g-555780-0ae2-013.glb",
+      "materialSlots": [
+        "wood",
+        "frame",
+        "base"
+      ],
+      "presenceMaterialSlots": [
+        "tabletop",
+        "rack-metal"
+      ],
+      "anchors": [
+        "center",
+        "top-center",
+        "front-center",
+        "back-center",
+        "left-center",
+        "right-center",
+        "surface-top"
+      ],
+      "anchorDefinitions": [
+        {
+          "id": "center",
+          "type": "reference",
+          "position": [
+            0,
+            1.037,
+            0
+          ]
+        },
+        {
+          "id": "top-center",
+          "type": "surface",
+          "position": [
+            0,
+            2.074,
+            0
+          ]
+        },
+        {
+          "id": "front-center",
+          "type": "display",
+          "position": [
+            0,
+            1.037,
+            0.565
+          ]
+        },
+        {
+          "id": "back-center",
+          "type": "display",
+          "position": [
+            0,
+            1.037,
+            -0.565
+          ]
+        },
+        {
+          "id": "left-center",
+          "type": "display",
+          "position": [
+            -0.144,
+            1.037,
+            0
+          ]
+        },
+        {
+          "id": "right-center",
+          "type": "display",
+          "position": [
+            0.144,
+            1.037,
+            0
+          ]
+        },
+        {
+          "id": "surface-top",
+          "type": "surface",
+          "position": [
+            0,
+            2.074,
+            0
+          ]
+        }
+      ],
+      "placement": "floor",
+      "runtimeSizeKb": 127,
+      "status": "candidate-cleared-for-internal-use",
+      "suggestedStylePreset": "warm-nocturnal-boutique",
+      "suggestedLightingProfile": "boutique-product-warm"
+    }
+  ],
+  "roomKits": [
+    {
+      "roomKitId": "candidate.roomkit.warehouse-17b3",
+      "version": "0.1.0",
+      "role": "showroom-shell",
+      "runtimeAsset": "assets/presence-spatial/candidates/roomkits/candidate.roomkit.warehouse-17b3.glb",
+      "fallbackAsset": "assets/presence-spatial/candidates/roomkits/candidate.roomkit.warehouse-17b3.shape.glb",
+      "dimensions": [
+        10.7,
+        4.2229,
+        6.7854
+      ],
+      "runtimeSizeKb": 668.2,
+      "status": "candidate-cleared-for-internal-use",
+      "usage": "use-whole-or-mine"
+    }
+  ],
+  "proceduralFallbacks": [
+    {
+      "role": "garment-rack",
+      "status": "missing-suitable-candidate",
+      "reason": "The candidate registry contains zero rack-category components. No ingested source is a retail environment, so no garment rail or rack exists to extract.",
+      "recommendedFallback": {
+        "kind": "procedural-primitive",
+        "primitive": "suspended-rack",
+        "note": "Use the suspended-rack primitive from the Gate 4 art-direction lane with the rack-matte-black preset. This is the single most important Mobstar fixture and must be procedural for this gate."
+      }
+    },
+    {
+      "role": "garment-carrier",
+      "status": "missing-suitable-candidate",
+      "reason": "No garment, hanger or mannequin geometry exists anywhere in the batch.",
+      "recommendedFallback": {
+        "kind": "procedural-primitive",
+        "primitive": "garment-hanger",
+        "note": "Use the garment-hanger primitive with fabric-garment-dark and fabric-garment-signal so individual Pieces can be hung on rack slot anchors."
+      }
+    },
+    {
+      "role": "projection-media-wall",
+      "status": "missing-suitable-candidate",
+      "reason": "No projection-surface candidate exists. The only large flat panel in the batch carries a third-party baked brand graphic and was rejected on sight.",
+      "recommendedFallback": {
+        "kind": "procedural-primitive",
+        "primitive": "projection-grid",
+        "note": "Use the projection-grid primitive with projection-campaign-warm. Campaign media must be an assigned media ref, never baked geometry."
+      }
+    },
+    {
+      "role": "poster-archive-surface",
+      "status": "missing-suitable-candidate",
+      "reason": "No poster or frame candidate exists in the registry.",
+      "recommendedFallback": {
+        "kind": "procedural-primitive",
+        "primitive": "framed-media",
+        "note": "Use the framed-media primitive with poster-decal slots so archive imagery stays a swappable media ref."
+      }
+    },
+    {
+      "role": "wall-treatment",
+      "status": "missing-suitable-candidate",
+      "reason": "No standalone wall-treatment component is usable. The ribbed surface exists only inside the brutalist room kit, and the only extracted wall panels are franchise geometry or branded graphics.",
+      "recommendedFallback": {
+        "kind": "procedural-primitive",
+        "primitive": "ribbed-wall",
+        "note": "Use the ribbed-wall primitive with wall-charcoal, or mine the ribbed surface out of the brutalist room kit in a later pass."
+      }
+    }
+  ]
+}

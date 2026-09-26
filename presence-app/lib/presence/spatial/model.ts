@@ -111,6 +111,7 @@ export type SpatialLogicalRef =
   | `space:${string}`
   | `room:${string}`
   | `piece:${string}`
+  | `piece-library:${string}`
   | `action:${string}`;
 
 export interface SpatialEntryPoint {
@@ -347,7 +348,10 @@ export type SpatialPrimitiveKind =
   | "sign-card"
   | "product-block"
   | "light-fixture"
-  | "drape-divider";
+  | "drape-divider"
+  | "archive-wall"
+  | "listening-station"
+  | "spherical-gallery";
 export type SpatialPerformanceTier = "core" | "enhanced" | "hero";
 export type SpatialAnchorKind = "floor" | "wall" | "surface" | "rack" | "projection" | "free";
 export type SpatialMaterialSlotId =
@@ -393,7 +397,11 @@ export type SpatialMaterialPresetId =
   | "rack-boutique-blackened"
   | "fabric-garment-dark"
   | "fabric-garment-signal"
-  | "projection-campaign-warm";
+  | "projection-campaign-warm"
+  | "wall-lookbook-graphite"
+  | "floor-lookbook-slate"
+  | "tabletop-lookbook-riser"
+  | "rack-lookbook-steel";
 
 export type SpatialMaterialStylePresetId =
   | "white-gallery"
@@ -405,12 +413,14 @@ export type SpatialMaterialStylePresetId =
   | "archive-paper"
   | "boutique-chrome"
   | "projection-blackout"
-  | "warm-nocturnal-boutique";
+  | "warm-nocturnal-boutique"
+  | "lookbook-rack";
 
 export type SpatialLightingProfileId =
   | "spatial-core-neutral"
   | "gallery-soft"
-  | "boutique-product-warm";
+  | "boutique-product-warm"
+  | "lookbook-rack-warm";
 
 export type SpatialInteractionProfileId =
   | "piece-inspect-near"
@@ -475,6 +485,11 @@ export interface SpatialComponentRef {
   version: string;
 }
 
+export interface SpatialOptionRef {
+  optionId: string;
+  version: string;
+}
+
 export interface SpatialAnchorDefinition {
   id: string;
   kind: SpatialAnchorKind;
@@ -506,6 +521,17 @@ export interface SpatialRuntimeAssetProfile {
   performanceTier: SpatialPerformanceTier;
 }
 
+export type SpatialRenderGeometry =
+  | {
+      kind: "glb";
+      url: string;
+      compression: "none" | "draco";
+      decoderPath?: string;
+      fallbackPrimitive: SpatialPrimitiveKind;
+      runtimeSizeKb: number;
+      decoderSizeKb?: number;
+    };
+
 export interface SpatialMobileFallback {
   strategy: "same" | "simplified" | "semantic-only";
   componentRef?: SpatialComponentRef;
@@ -519,6 +545,7 @@ export interface SpatialComponentDefinition extends SpatialComponentRef {
   geometry:
     | { kind: "primitive"; primitive: SpatialPrimitiveKind }
     | { kind: "asset"; assetId: string };
+  renderGeometry?: SpatialRenderGeometry;
   placement: SpatialComponentPlacementContract;
   anchors: readonly SpatialAnchorDefinition[];
   materialSlots: readonly SpatialMaterialSlotId[];
@@ -529,7 +556,7 @@ export interface SpatialComponentDefinition extends SpatialComponentRef {
 
 export interface SpatialAssetRef {
   id: string;
-  kind: "shape" | "image" | "poster" | "logo";
+  kind: "shape" | "image" | "poster" | "logo" | "audio" | "video";
   locator: string;
   safety: "generated-placeholder" | "public-safe";
   compressedBytes: number;
@@ -547,7 +574,7 @@ export interface SpatialSkinRef {
 
 export interface SpatialMediaRef {
   id: string;
-  kind: "image" | "poster" | "logo" | "placeholder";
+  kind: "image" | "poster" | "logo" | "placeholder" | "audio" | "video";
   assetId: string;
   alt: string;
   safety: "generated-placeholder" | "public-safe";
@@ -578,7 +605,7 @@ export type SpatialActionRef =
       disabledReason?: never;
     })
   | (SpatialActionRefBase & {
-      kind: "open-link";
+      kind: "open-link" | "listen" | "watch" | "enquire";
       href: string;
       targetPlacementId?: never;
       targetStateId?: never;
@@ -597,11 +624,201 @@ export interface SpatialPlacementAnchor {
   anchorId?: string;
 }
 
+export type SpatialArrangementKind = "grid" | "row" | "wall-grid" | "spherical" | "rack-row";
+
+/**
+ * Every implemented arrangement, in operator-facing order.
+ *
+ * The authoring UI renders this list directly. Rendered QA found a hand-written
+ * option list that had silently omitted `rack-row`, which made three completed
+ * passes of rack work unreachable; deriving the list removes that failure mode.
+ */
+export const SPATIAL_ARRANGEMENT_KINDS = [
+  "rack-row",
+  "wall-grid",
+  "grid",
+  "row",
+  "spherical",
+] as const satisfies readonly SpatialArrangementKind[];
+
+/**
+ * Article a garment carrier represents.
+ *
+ * The carrier supplies bounds, hang point and inspection framing only. It never
+ * contributes a visible silhouette: the client artwork's alpha channel does that,
+ * so one carrier serves a cropped tee and a long coat equally.
+ */
+export type SpatialGarmentArticleType = "shirt" | "pant" | "shoe" | "generic";
+
+export const SPATIAL_GARMENT_ARTICLE_TYPES = ["shirt", "pant", "shoe", "generic"] as const satisfies readonly SpatialGarmentArticleType[];
+
+/**
+ * Which artwork surface a garment media ref feeds.
+ *
+ * Shirts and pants read front/back. Shoes deliberately do not: footwear is shown
+ * from the outer side and above, so pretending a shoe has a "back print" would
+ * be a false model rather than a missing feature.
+ */
+export type SpatialGarmentArtworkRole = "front" | "back" | "display" | "outer-side" | "top";
+
+/**
+ * Default artwork aspect (width / height) per article.
+ *
+ * `SpatialMediaRef` carries no intrinsic dimensions, so a per-article default is
+ * used unless a piece supplies an explicit `artworkAspect`. A pant plane is tall
+ * and narrow; a shoe plane is wide and short.
+ */
+export const SPATIAL_GARMENT_DEFAULT_ASPECT: Readonly<Record<SpatialGarmentArticleType, number>> = {
+  shirt: 0.95,
+  pant: 0.46,
+  shoe: 1.6,
+  generic: 0.9,
+};
+
+/**
+ * How an article presents on a rack.
+ *
+ * Shared by the arrangement (which places the slot on the rail) and the geometry
+ * template (which builds artwork and hardware inside the carrier), so a pant
+ * cannot hang from a shirt's shoulder line in one and not the other.
+ *
+ * All offsets are in metres unless noted.
+ */
+export interface SpatialGarmentHangProfile {
+  /** Extra vertical offset at the rail. Negative hangs lower. */
+  railDrop: number;
+  /** Artwork centre within the carrier volume, as a fraction of its height. */
+  artworkCentreY: number;
+  /** Visible hardware silhouette at the attachment point. */
+  hardware: "hook-bar" | "clamp-bar" | "stand";
+  /** Hardware attachment height within the carrier volume, as a fraction. */
+  hardwareY: number;
+  /** Forward offset from the rail plane, for articles presented rather than hung. */
+  forwardOffset: number;
+  /** Uniform scale nudge for rack presentation. */
+  rackScale: number;
+  /** Interaction profile used when this article is inspected. */
+  inspectionProfileId: SpatialInteractionProfileId;
+}
+
+export const SPATIAL_GARMENT_HANG_PROFILES: Readonly<Record<SpatialGarmentArticleType, SpatialGarmentHangProfile>> = {
+  // Hangs from the shoulder line on a normal hanger.
+  shirt: {
+    railDrop: 0,
+    artworkCentreY: -0.02,
+    hardware: "hook-bar",
+    hardwareY: 0.39,
+    forwardOffset: 0,
+    rackScale: 1,
+    inspectionProfileId: "rack-turn-outward",
+  },
+  // Hangs lower and from a waistband clamp, not a shoulder line.
+  pant: {
+    railDrop: -0.34,
+    artworkCentreY: -0.08,
+    hardware: "clamp-bar",
+    // The clamp grips the waistband at the top of the carrier so the trousers
+    // hang beneath it; the whole assembly then drops lower on the rail.
+    hardwareY: 0.45,
+    forwardOffset: 0,
+    rackScale: 1,
+    inspectionProfileId: "rack-turn-outward",
+  },
+  // Footwear does not hang. It sits low on a small stand, presented forward.
+  // This is a rack-display proxy, not solved footwear.
+  shoe: {
+    railDrop: -0.62,
+    artworkCentreY: -0.24,
+    hardware: "stand",
+    hardwareY: -0.3,
+    forwardOffset: 0.08,
+    rackScale: 0.82,
+    inspectionProfileId: "piece-inspect-near",
+  },
+  // Unchanged Stage A presentation.
+  generic: {
+    railDrop: 0,
+    artworkCentreY: -0.04,
+    hardware: "hook-bar",
+    hardwareY: 0.39,
+    forwardOffset: 0,
+    rackScale: 1,
+    inspectionProfileId: "rack-turn-outward",
+  },
+};
+
+/** Bounds for an operator-supplied artwork aspect override. */
+export const SPATIAL_GARMENT_ASPECT_RANGE = { min: 0.2, max: 4 } as const;
+
+export type SpatialArrangementOverflowPolicy =
+  | "show-all-if-possible"
+  | "paginate"
+  | "overflow-list"
+  | "reject-over-capacity";
+
+export interface SpatialContentArrangement {
+  kind: SpatialArrangementKind;
+  overflowPolicy: SpatialArrangementOverflowPolicy;
+  capacity: number;
+  pageSize?: number;
+  seed?: string;
+}
+
+export interface SpatialContentBinding {
+  id: string;
+  hostPlacementId: string;
+  pieceRef: SpatialLogicalRef;
+  pieceType: PieceType;
+  label: string;
+  caption?: string;
+  mediaRefs: readonly string[];
+  actionRefs: readonly string[];
+  order: number;
+  arrangementRole: "primary" | "supporting" | "overflow";
+  /** Garment carrier article; absent for non-garment bindings. */
+  garmentArticleType?: SpatialGarmentArticleType;
+  /** Media id for the front print layer. Resolved against `room.media`. */
+  frontImageRef?: string;
+  /** Media id for the back print layer; may differ from the front. */
+  backImageRef?: string;
+  /** Neutral display image, and the only artwork channel a shoe is expected to use. */
+  displayImageRef?: string;
+  /** Footwear outer-side artwork. */
+  outerSideImageRef?: string;
+  /** Footwear top/three-quarter artwork. */
+  topImageRef?: string;
+  /** Artwork width / height override; falls back to the per-article default. */
+  artworkAspect?: number;
+}
+
+export interface SpatialPieceLibraryItem {
+  id: string;
+  pieceType: PieceType;
+  label: string;
+  caption?: string;
+  mediaRefs: readonly string[];
+  actionRefs: readonly string[];
+  tags: readonly string[];
+  collectionRefs: readonly string[];
+  safety: "internal-fixture" | "public-safe";
+  createdAt: string;
+  updatedAt: string;
+  garmentArticleType?: SpatialGarmentArticleType;
+  frontImageRef?: string;
+  backImageRef?: string;
+  displayImageRef?: string;
+  outerSideImageRef?: string;
+  topImageRef?: string;
+  artworkAspect?: number;
+}
+
 export interface SpatialPlacement extends SpatialComponentRef {
   id: string;
   order: number;
+  optionRef?: SpatialOptionRef;
   transform: SpatialTransform;
   anchor: SpatialPlacementAnchor;
+  contentArrangement?: SpatialContentArrangement;
   materialSlotOverrides: Partial<Record<SpatialMaterialSlotId, SpatialMaterialPresetId>>;
   skinRef?: string;
   mediaRef?: string;
@@ -634,6 +851,37 @@ export interface SpatialSemanticItem {
   actionRefs: readonly string[];
 }
 
+export interface SpatialContentOverflowState {
+  hostPlacementId: string;
+  kind: SpatialArrangementKind;
+  policy: SpatialArrangementOverflowPolicy;
+  totalCount: number;
+  visibleCount: number;
+  overflowCount: number;
+  pageCount: number;
+  rejected: boolean;
+}
+
+export interface SpatialCompiledContentSlot {
+  bindingId: string;
+  hostPlacementId: string;
+  placementId: string;
+  order: number;
+  visible: boolean;
+  overflowed: boolean;
+  transform: SpatialTransform;
+  anchorKind: SpatialAnchorKind;
+}
+
+export interface SpatialCompiledContentArrangement {
+  hostPlacementId: string;
+  kind: SpatialArrangementKind;
+  policy: SpatialArrangementOverflowPolicy;
+  slots: readonly SpatialCompiledContentSlot[];
+  overflow: SpatialContentOverflowState;
+  fallbackRows: readonly SpatialSemanticItem[];
+}
+
 export interface SpatialFallbackPresentation {
   eyebrow: string;
   title: string;
@@ -660,7 +908,9 @@ export interface SpatialRoomDefinition {
   skins: readonly SpatialSkinRef[];
   media: readonly SpatialMediaRef[];
   actions: readonly SpatialActionRef[];
+  pieceLibrary?: readonly SpatialPieceLibraryItem[];
   placements: readonly SpatialPlacement[];
+  contentBindings?: readonly SpatialContentBinding[];
   states: readonly SpatialSceneState[];
   semanticFallback: readonly SpatialSemanticItem[];
 }
@@ -687,11 +937,30 @@ export interface SpatialRenderItem extends SpatialComponentRef {
   componentKey: string;
   category: SpatialComponentCategory;
   geometry: SpatialComponentDefinition["geometry"];
+  renderGeometry?: SpatialRenderGeometry;
   dimensions: SpatialDimensions;
   transform: SpatialTransform;
   materials: readonly SpatialResolvedMaterial[];
   primaryMaterialSlot: SpatialMaterialSlotId;
   media?: SpatialMediaRef;
+  /**
+   * Garment artwork channel.
+   *
+   * Front and back are separate media so a back print can differ from the front.
+   * `missingArtwork` is surfaced honestly rather than rendering an empty carrier
+   * as if it had succeeded.
+   */
+  garment?: {
+    articleType: SpatialGarmentArticleType;
+    frontMedia?: SpatialMediaRef;
+    backMedia?: SpatialMediaRef;
+    displayMedia?: SpatialMediaRef;
+    outerSideMedia?: SpatialMediaRef;
+    topMedia?: SpatialMediaRef;
+    /** Resolved artwork width / height for this piece. */
+    aspect: number;
+    missingArtwork: boolean;
+  };
   interaction?: SpatialInteractionProfile;
   actions: readonly SpatialActionRef[];
   visible: boolean;
@@ -714,12 +983,14 @@ export interface SpatialRenderPlan {
   eagerAssetIds: readonly string[];
   lazyAssetIds: readonly string[];
   items: readonly SpatialRenderItem[];
+  contentBindingArrangements: readonly SpatialCompiledContentArrangement[];
   states: readonly SpatialSceneState[];
   semanticFallback: readonly SpatialSemanticItem[];
   budgets: {
     layoutJsonBytes: number;
     eagerCompressedAssetBytes: number;
     totalCompressedAssetBytes: number;
+    lazyDecoderBytes: number;
   };
 }
 

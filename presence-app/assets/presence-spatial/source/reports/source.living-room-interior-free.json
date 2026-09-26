@@ -1,0 +1,804 @@
+{
+  "schemaVersion": "presence-spatial-assets.v0",
+  "sourceAssetId": "source.living-room-interior-free",
+  "sourceFilename": "living_room_interior_free.glb",
+  "sourcePath": "living_room_interior_free.glb",
+  "absoluteSourcePath": "C:\\Dev\\presence pieces\\living_room_interior_free.glb",
+  "fileBytes": 17876032,
+  "format": "glb",
+  "gltfVersion": "2.0",
+  "contentHash": "23cf9de143a2d9d39e29940464389dd70fc3187835e8b3c5f1fc463adfb89f62",
+  "nodeCount": 44,
+  "sceneRootCount": 1,
+  "topLevelNodeCount": 20,
+  "separationRootPath": [
+    "Sketchfab_model",
+    "3ce6ca67227f4cf0809b60b0c8d0183f.fbx",
+    "RootNode"
+  ],
+  "meshCount": 19,
+  "primitiveCount": 19,
+  "materialCount": 12,
+  "imageCount": 16,
+  "textureCount": 16,
+  "animationCount": 0,
+  "cameraCount": 0,
+  "lightCount": 0,
+  "triangleCount": 23230,
+  "textureBytes": 15413256,
+  "geometryBytes": 2432496,
+  "otherBufferBytes": 0,
+  "bounds": {
+    "min": [
+      -15.5939,
+      -1.3803,
+      -22.4525
+    ],
+    "max": [
+      22.2204,
+      23.7363,
+      33.2722
+    ],
+    "dimensions": {
+      "width": 37.8143,
+      "height": 25.1166,
+      "depth": 55.7247
+    },
+    "center": [
+      3.3133,
+      11.178,
+      5.4098
+    ]
+  },
+  "appearsSingleObject": false,
+  "appearsMultiObject": true,
+  "appearsCompleteInterior": true,
+  "hasSeparableNodes": true,
+  "loosePartSplitUseful": false,
+  "classifications": [
+    "multi-object-source",
+    "complete-interior-source",
+    "candidate-roomkit-source",
+    "texture-heavy-source",
+    "needs-license-review"
+  ],
+  "interiorSignals": [
+    "source path names a space: interior, room",
+    "19 meshes suggest an arranged scene",
+    "19 mesh-bearing nodes across the scene",
+    "wide footprint (55.7247 units across)",
+    "room-scale height (25.1166 units)",
+    "12 materials"
+  ],
+  "scaleReview": {
+    "required": true,
+    "measuredHeight": 25.1166,
+    "assumedInteriorHeight": 3.2,
+    "suggestedUniformScale": 0.1274,
+    "note": "Measured height 25.1166 is outside the plausible 2.2-12 metre interior range. A uniform scale of 0.1274 would give a 3.2 metre ceiling. This is a suggestion for a human to confirm; the pipeline does not rescale geometry."
+  },
+  "license": {
+    "status": "needs-review",
+    "source": "embedded",
+    "declaredCopyright": null,
+    "declaredGenerator": "Sketchfab-17.15.0",
+    "declaredAuthor": "dasy444 (https://sketchfab.com/dasy444)",
+    "declaredTitle": "living room interior FREE",
+    "declaredLicense": "SKETCHFAB Standard (https://sketchfab.com/licenses)",
+    "sidecarFiles": [],
+    "filenameHints": [],
+    "evidence": [
+      "asset.generator present in the glTF header",
+      "author/creator recorded in embedded metadata",
+      "title recorded in embedded metadata",
+      "licence string recorded in embedded metadata"
+    ]
+  },
+  "extensionsUsed": [
+    "KHR_materials_specular"
+  ],
+  "extensionsRequired": [],
+  "topLevelNodes": [
+    {
+      "nodeIndex": 3,
+      "name": "Cube",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Cube_Material.003_0"
+      ],
+      "materialNames": [
+        "Material.003"
+      ],
+      "triangleCount": 76,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -10.0235,
+          -1.3803,
+          -20.1092
+        ],
+        "max": [
+          11.5861,
+          17.3624,
+          -16.9436
+        ],
+        "dimensions": {
+          "width": 21.6096,
+          "height": 18.7427,
+          "depth": 3.1656
+        },
+        "center": [
+          0.7813,
+          7.9911,
+          -18.5264
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 5,
+      "name": "Cube.001",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Cube.001_Material.006_0"
+      ],
+      "materialNames": [
+        "Material.006"
+      ],
+      "triangleCount": 10,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -4.923,
+          0.3781,
+          -10.9411
+        ],
+        "max": [
+          6.2875,
+          0.8292,
+          0.2694
+        ],
+        "dimensions": {
+          "width": 11.2105,
+          "height": 0.4511,
+          "depth": 11.2105
+        },
+        "center": [
+          0.6822,
+          0.6037,
+          -5.3359
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 7,
+      "name": "Cube.002",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Cube.002_Material.008_0"
+      ],
+      "materialNames": [
+        "Material.008"
+      ],
+      "triangleCount": 28,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -13.2623,
+          17.5356,
+          -19.729
+        ],
+        "max": [
+          15.2778,
+          22.8625,
+          1
+        ],
+        "dimensions": {
+          "width": 28.5401,
+          "height": 5.3269,
+          "depth": 20.729
+        },
+        "center": [
+          1.0077,
+          20.1991,
+          -9.3645
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 9,
+      "name": "Cube.003",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Cube.003_Material.002_0"
+      ],
+      "materialNames": [
+        "Material.002"
+      ],
+      "triangleCount": 64,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          9.713,
+          0.3532,
+          -20.9234
+        ],
+        "max": [
+          22.2204,
+          18.1412,
+          -16.405
+        ],
+        "dimensions": {
+          "width": 12.5074,
+          "height": 17.788,
+          "depth": 4.5184
+        },
+        "center": [
+          15.9667,
+          9.2472,
+          -18.6642
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 11,
+      "name": "Cylinder",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Cylinder_Material.010_0"
+      ],
+      "materialNames": [
+        "Material.010"
+      ],
+      "triangleCount": 508,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -0.4944,
+          16.8803,
+          -18.9258
+        ],
+        "max": [
+          0.4944,
+          20.9587,
+          16.6263
+        ],
+        "dimensions": {
+          "width": 0.9888,
+          "height": 4.0784,
+          "depth": 35.5521
+        },
+        "center": [
+          0,
+          18.9195,
+          -1.1497
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 13,
+      "name": "Cylinder.001",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Cylinder.001_Material.010_0"
+      ],
+      "materialNames": [
+        "Material.010"
+      ],
+      "triangleCount": 94,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -7.4529,
+          19.9916,
+          15.2067
+        ],
+        "max": [
+          8.0197,
+          20.7502,
+          15.9654
+        ],
+        "dimensions": {
+          "width": 15.4726,
+          "height": 0.7586,
+          "depth": 0.7587
+        },
+        "center": [
+          0.2834,
+          20.3709,
+          15.5861
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 15,
+      "name": "Cylinder.002",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Cylinder.002_Material.010_0"
+      ],
+      "materialNames": [
+        "Material.010"
+      ],
+      "triangleCount": 94,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -12.7052,
+          17.0066,
+          -7.0953
+        ],
+        "max": [
+          0.0746,
+          17.7652,
+          -6.3366
+        ],
+        "dimensions": {
+          "width": 12.7798,
+          "height": 0.7586,
+          "depth": 0.7587
+        },
+        "center": [
+          -6.3153,
+          17.3859,
+          -6.7159
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 17,
+      "name": "Cylinder.003",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Cylinder.003_Material.010_0"
+      ],
+      "materialNames": [
+        "Material.010"
+      ],
+      "triangleCount": 94,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -12.7052,
+          17.0066,
+          -5.8628
+        ],
+        "max": [
+          0.0746,
+          17.7652,
+          -5.1041
+        ],
+        "dimensions": {
+          "width": 12.7798,
+          "height": 0.7586,
+          "depth": 0.7587
+        },
+        "center": [
+          -6.3153,
+          17.3859,
+          -5.4834
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 19,
+      "name": "Cylinder.004",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Cylinder.004_Material.010_0"
+      ],
+      "materialNames": [
+        "Material.010"
+      ],
+      "triangleCount": 508,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -1.5537,
+          17.4056,
+          -18.9258
+        ],
+        "max": [
+          -0.5649,
+          21.4839,
+          16.6263
+        ],
+        "dimensions": {
+          "width": 0.9888,
+          "height": 4.0783,
+          "depth": 35.5521
+        },
+        "center": [
+          -1.0593,
+          19.4448,
+          -1.1497
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 21,
+      "name": "Plane",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Plane_����_0"
+      ],
+      "materialNames": [
+        "material"
+      ],
+      "triangleCount": 4,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -15.5939,
+          0.8271,
+          -22.4525
+        ],
+        "max": [
+          21.7232,
+          0.8271,
+          24.7161
+        ],
+        "dimensions": {
+          "width": 37.3171,
+          "height": 0,
+          "depth": 47.1686
+        },
+        "center": [
+          3.0646,
+          0.8271,
+          1.1318
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 23,
+      "name": "Plane.001",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Plane.001_Material.001_0"
+      ],
+      "materialNames": [
+        "Material.001"
+      ],
+      "triangleCount": 24,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -15.3679,
+          0.3294,
+          -17.3176
+        ],
+        "max": [
+          11.9898,
+          23.5252,
+          4.2637
+        ],
+        "dimensions": {
+          "width": 27.3577,
+          "height": 23.1958,
+          "depth": 21.5813
+        },
+        "center": [
+          -1.689,
+          11.9273,
+          -6.5269
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 25,
+      "name": "Plane.002",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Plane.002_Material.001_0"
+      ],
+      "materialNames": [
+        "Material.001"
+      ],
+      "triangleCount": 14,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -15.5939,
+          -0.2717,
+          11.9126
+        ],
+        "max": [
+          16.5051,
+          23.2621,
+          18.2873
+        ],
+        "dimensions": {
+          "width": 32.099,
+          "height": 23.5338,
+          "depth": 6.3747
+        },
+        "center": [
+          0.4556,
+          11.4952,
+          15.1
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 27,
+      "name": "Plane.003",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Plane.003_Material.002_0"
+      ],
+      "materialNames": [
+        "Material.002"
+      ],
+      "triangleCount": 2,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -14.965,
+          0.3294,
+          4.2637
+        ],
+        "max": [
+          -14.965,
+          23.7363,
+          14.7111
+        ],
+        "dimensions": {
+          "width": 0,
+          "height": 23.4069,
+          "depth": 10.4474
+        },
+        "center": [
+          -14.965,
+          12.0329,
+          9.4874
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 29,
+      "name": "Plane.004",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "Plane.004_Material.002_0"
+      ],
+      "materialNames": [
+        "Material.002"
+      ],
+      "triangleCount": 2,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -15.5939,
+          20.958,
+          -22.4525
+        ],
+        "max": [
+          14.8717,
+          20.958,
+          16.6276
+        ],
+        "dimensions": {
+          "width": 30.4656,
+          "height": 0,
+          "depth": 39.0801
+        },
+        "center": [
+          -0.3611,
+          20.958,
+          -2.9124
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 31,
+      "name": "Spot",
+      "meshNodeCount": 0,
+      "meshNames": [],
+      "materialNames": [],
+      "triangleCount": 0,
+      "primitiveCount": 0,
+      "bounds": null,
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 34,
+      "name": "material",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "material_Material.004_0"
+      ],
+      "materialNames": [
+        "Material.004"
+      ],
+      "triangleCount": 3916,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -7.9086,
+          0.5451,
+          -18.7685
+        ],
+        "max": [
+          20.1378,
+          4.5509,
+          -1.9203
+        ],
+        "dimensions": {
+          "width": 28.0464,
+          "height": 4.0058,
+          "depth": 16.8482
+        },
+        "center": [
+          6.1146,
+          2.548,
+          -10.3444
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 36,
+      "name": "material.001",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "material.001_Material.009_0"
+      ],
+      "materialNames": [
+        "Material.009"
+      ],
+      "triangleCount": 9498,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -14.6222,
+          0.6341,
+          -9.2522
+        ],
+        "max": [
+          5.8289,
+          14.3471,
+          14.762
+        ],
+        "dimensions": {
+          "width": 20.4511,
+          "height": 13.713,
+          "depth": 24.0142
+        },
+        "center": [
+          -4.3966,
+          7.4906,
+          2.7549
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 38,
+      "name": "material.002",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "material.002_Material.011_0"
+      ],
+      "materialNames": [
+        "Material.011"
+      ],
+      "triangleCount": 4486,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -11.1198,
+          0.7275,
+          -15.2281
+        ],
+        "max": [
+          13.1418,
+          7.4442,
+          1.0665
+        ],
+        "dimensions": {
+          "width": 24.2616,
+          "height": 6.7167,
+          "depth": 16.2946
+        },
+        "center": [
+          1.011,
+          4.0859,
+          -7.0808
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 40,
+      "name": "material.003",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "material.003_Material.012_0"
+      ],
+      "materialNames": [
+        "Material.012"
+      ],
+      "triangleCount": 3806,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -11.3857,
+          0.2796,
+          -15.7895
+        ],
+        "max": [
+          12.6828,
+          22.0569,
+          33.2722
+        ],
+        "dimensions": {
+          "width": 24.0685,
+          "height": 21.7773,
+          "depth": 49.0617
+        },
+        "center": [
+          0.6486,
+          11.1682,
+          8.7413
+        ]
+      },
+      "hasSkin": false
+    },
+    {
+      "nodeIndex": 42,
+      "name": "������ ����������������8_20260512190452",
+      "meshNodeCount": 1,
+      "meshNames": [
+        "������ ����������������8_20260512190452_������ ����������������8_20260512190452_0"
+      ],
+      "materialNames": [
+        "8_20260512190452"
+      ],
+      "triangleCount": 2,
+      "primitiveCount": 1,
+      "bounds": {
+        "min": [
+          -5.7431,
+          1.3808,
+          -19.8043
+        ],
+        "max": [
+          10.4908,
+          18.1345,
+          -19.8043
+        ],
+        "dimensions": {
+          "width": 16.2339,
+          "height": 16.7537,
+          "depth": 0
+        },
+        "center": [
+          2.3739,
+          9.7577,
+          -19.8043
+        ]
+      },
+      "hasSkin": false
+    }
+  ],
+  "warnings": [
+    {
+      "code": "scale-check-required",
+      "message": "Measured height 25.1166 is outside the plausible 2.2-12 metre interior range. A uniform scale of 0.1274 would give a 3.2 metre ceiling. This is a suggestion for a human to confirm; the pipeline does not rescale geometry."
+    }
+  ]
+}

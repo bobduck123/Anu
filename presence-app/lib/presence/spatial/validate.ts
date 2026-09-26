@@ -9,6 +9,7 @@ import {
   type SpatialAssetRef,
   type SpatialComponentDefinition,
   type SpatialMediaRef,
+  type SpatialPieceLibraryItem,
   type SpatialPlacement,
   type SpatialRoomDefinition,
   type SpatialSceneState,
@@ -42,7 +43,7 @@ export function validateSpatialRoomDefinition(value: unknown): SpatialValidation
   if (!room) return failure(issues);
   exactKeys(room, [
     "schemaVersion", "id", "label", "fixtureKind", "revision", "seed", "bounds", "entryStateId",
-    "cameraPath", "lightingProfileId", "fallbackPresentation", "assets", "skins", "media", "actions", "placements", "states", "semanticFallback",
+    "cameraPath", "lightingProfileId", "fallbackPresentation", "assets", "skins", "media", "actions", "pieceLibrary", "placements", "contentBindings", "states", "semanticFallback",
   ], "$", issues);
   literal(room.schemaVersion, SPATIAL_SCHEMA_VERSION, "schemaVersion", issues);
   identifier(room.id, "id", issues);
@@ -64,7 +65,9 @@ export function validateSpatialRoomDefinition(value: unknown): SpatialValidation
   array(room.skins, "skins", issues, 64, skinRef);
   array(room.media, "media", issues, MAX_ASSETS, mediaRef);
   array(room.actions, "actions", issues, MAX_ASSETS, actionRef);
+  if (room.pieceLibrary !== undefined) array(room.pieceLibrary, "pieceLibrary", issues, MAX_PLACEMENTS, pieceLibraryItem);
   array(room.placements, "placements", issues, MAX_PLACEMENTS, placement);
+  if (room.contentBindings !== undefined) array(room.contentBindings, "contentBindings", issues, MAX_PLACEMENTS, contentBinding);
   array(room.states, "states", issues, MAX_STATES, sceneState);
   array(room.semanticFallback, "semanticFallback", issues, MAX_PLACEMENTS, semanticItem);
 
@@ -81,7 +84,7 @@ export function validateSpatialComponentDefinition(value: unknown): SpatialValid
   const component = record(value, "$", issues);
   if (!component) return failure(issues);
   exactKeys(component, [
-    "componentId", "version", "label", "category", "dimensions", "geometry", "placement", "anchors",
+    "componentId", "version", "label", "category", "dimensions", "geometry", "renderGeometry", "placement", "anchors",
     "materialSlots", "license", "runtime", "mobileFallback",
   ], "$", issues);
   identifier(component.componentId, "componentId", issues);
@@ -90,6 +93,7 @@ export function validateSpatialComponentDefinition(value: unknown): SpatialValid
   oneOf(component.category, [...COMPONENT_CATEGORIES], "category", issues);
   dimensions(component.dimensions, "dimensions", issues);
   geometry(component.geometry, "geometry", issues);
+  if (component.renderGeometry !== undefined) renderGeometry(component.renderGeometry, "renderGeometry", issues);
   placementContract(component.placement, "placement", issues);
   array(component.anchors, "anchors", issues, 128, anchorDefinition);
   if (Array.isArray(component.anchors)) {
@@ -139,7 +143,9 @@ function validateRoomReferences(room: SpatialRoomDefinition, issues: SpatialVali
   unique(room.skins, "skins", issues);
   unique(room.media, "media", issues);
   unique(room.actions, "actions", issues);
+  unique(room.pieceLibrary ?? [], "pieceLibrary", issues);
   unique(room.placements, "placements", issues);
+  unique(room.contentBindings ?? [], "contentBindings", issues);
   unique(room.states, "states", issues);
   const assets = new Map(room.assets.map((item) => [item.id, item]));
   const skins = new Map(room.skins.map((item) => [item.id, item]));
@@ -196,6 +202,18 @@ function validateRoomReferences(room: SpatialRoomDefinition, issues: SpatialVali
     if (item.targetPlacementId && !placements.has(item.targetPlacementId)) add(issues, `actions.${item.id}.targetPlacementId`, "missing-placement", "Action target placement does not exist.");
     if (item.targetStateId && !states.has(item.targetStateId)) add(issues, `actions.${item.id}.targetStateId`, "missing-state", "Action target state does not exist.");
   }
+  for (const piece of room.pieceLibrary ?? []) {
+    for (const mediaId of piece.mediaRefs) {
+      const mediaRef = media.get(mediaId);
+      if (!mediaRef) add(issues, `pieceLibrary.${piece.id}.mediaRefs`, "missing-media", `Piece media ${mediaId} does not exist.`);
+      else validatePieceMediaKind(piece, mediaRef, issues);
+    }
+    for (const actionId of piece.actionRefs) {
+      const action = actions.get(actionId);
+      if (!action) add(issues, `pieceLibrary.${piece.id}.actionRefs`, "missing-action", `Piece action ${actionId} does not exist.`);
+      else validatePieceActionKind(piece, action, issues);
+    }
+  }
   for (const item of room.placements) {
     const definition = spatialComponent(item);
     if (!definition) {
@@ -213,6 +231,31 @@ function validateRoomReferences(room: SpatialRoomDefinition, issues: SpatialVali
     for (const [slot, presetId] of Object.entries(item.materialSlotOverrides)) {
       if (!definition.materialSlots.includes(slot as never)) add(issues, `placements.${item.id}.materialSlotOverrides.${slot}`, "unsupported-slot", "Component does not expose this material slot.");
       if (!materialPresetMatchesSlot(slot as never, presetId as never)) add(issues, `placements.${item.id}.materialSlotOverrides.${slot}`, "preset-slot", "Material preset does not match its slot.");
+    }
+  }
+  for (const binding of room.contentBindings ?? []) {
+    const host = placements.get(binding.hostPlacementId);
+    if (!host) {
+      add(issues, `contentBindings.${binding.id}.hostPlacementId`, "missing-placement", "Content binding host placement does not exist.");
+    } else if (!host.contentArrangement) {
+      add(issues, `contentBindings.${binding.id}.hostPlacementId`, "missing-arrangement", "Content binding host requires a contentArrangement spec.");
+    }
+    for (const mediaId of binding.mediaRefs) {
+      if (!media.has(mediaId)) add(issues, `contentBindings.${binding.id}.mediaRefs`, "missing-media", `Bound media ${mediaId} does not exist.`);
+    }
+    for (const [key, artworkId] of [
+      ["frontImageRef", binding.frontImageRef],
+      ["backImageRef", binding.backImageRef],
+      ["displayImageRef", binding.displayImageRef],
+      ["outerSideImageRef", binding.outerSideImageRef],
+      ["topImageRef", binding.topImageRef],
+    ] as const) {
+      if (artworkId && !media.has(artworkId)) {
+        add(issues, `contentBindings.${binding.id}.${key}`, "missing-media", `Garment artwork media ${artworkId} does not exist.`);
+      }
+    }
+    for (const actionId of binding.actionRefs) {
+      if (!actions.has(actionId)) add(issues, `contentBindings.${binding.id}.actionRefs`, "missing-action", `Bound action ${actionId} does not exist.`);
     }
   }
   for (const state of room.states) {
@@ -263,7 +306,7 @@ function assetRef(value: unknown, path: string, issues: SpatialValidationIssue[]
   const item = record(value, path, issues); if (!item) return;
   exactKeys(item, ["id", "kind", "locator", "safety", "compressedBytes", "eager", "attribution"], path, issues);
   identifier(item.id, `${path}.id`, issues);
-  oneOf(item.kind, ["shape", "image", "poster", "logo"], `${path}.kind`, issues);
+  oneOf(item.kind, ["shape", "image", "poster", "logo", "audio", "video"], `${path}.kind`, issues);
   oneOf(item.safety, ["generated-placeholder", "public-safe"], `${path}.safety`, issues);
   validateLogicalAssetLocator(item.locator, item.safety, `${path}.locator`, issues);
   integer(item.compressedBytes, `${path}.compressedBytes`, issues, 0, SPATIAL_TOTAL_ASSET_BUDGET_BYTES);
@@ -283,7 +326,7 @@ function skinRef(value: unknown, path: string, issues: SpatialValidationIssue[])
 function mediaRef(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
   const item = record(value, path, issues); if (!item) return;
   exactKeys(item, ["id", "kind", "assetId", "alt", "safety"], path, issues);
-  identifier(item.id, `${path}.id`, issues); oneOf(item.kind, ["image", "poster", "logo", "placeholder"], `${path}.kind`, issues);
+  identifier(item.id, `${path}.id`, issues); oneOf(item.kind, ["image", "poster", "logo", "placeholder", "audio", "video"], `${path}.kind`, issues);
   identifier(item.assetId, `${path}.assetId`, issues); text(item.alt, `${path}.alt`, issues);
   oneOf(item.safety, ["generated-placeholder", "public-safe"], `${path}.safety`, issues);
 }
@@ -291,7 +334,7 @@ function mediaRef(value: unknown, path: string, issues: SpatialValidationIssue[]
 function actionRef(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
   const item = record(value, path, issues); if (!item) return;
   identifier(item.id, `${path}.id`, issues);
-  oneOf(item.kind, ["inspect", "navigate-state", "sequence-previous", "sequence-next", "open-link", "disabled-placeholder"], `${path}.kind`, issues);
+  oneOf(item.kind, ["inspect", "navigate-state", "sequence-previous", "sequence-next", "open-link", "listen", "watch", "enquire", "disabled-placeholder"], `${path}.kind`, issues);
   text(item.label, `${path}.label`, issues, 160);
   if (item.kind === "inspect") {
     exactKeys(item, ["id", "kind", "label", "targetPlacementId"], path, issues);
@@ -302,7 +345,7 @@ function actionRef(value: unknown, path: string, issues: SpatialValidationIssue[
   } else if (item.kind === "disabled-placeholder") {
     exactKeys(item, ["id", "kind", "label", "disabledReason"], path, issues);
     if (!text(item.disabledReason, `${path}.disabledReason`, issues)) add(issues, path, "disabled-reason", "Disabled actions require an honest reason.");
-  } else if (item.kind === "open-link") {
+  } else if (item.kind === "open-link" || item.kind === "listen" || item.kind === "watch" || item.kind === "enquire") {
     exactKeys(item, ["id", "kind", "label", "href"], path, issues);
     safeExternalHref(item.href, `${path}.href`, issues);
   } else if (item.kind === "sequence-previous" || item.kind === "sequence-next") {
@@ -314,10 +357,11 @@ function actionRef(value: unknown, path: string, issues: SpatialValidationIssue[
 
 function placement(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
   const item = record(value, path, issues); if (!item) return;
-  exactKeys(item, ["id", "order", "componentId", "version", "transform", "anchor", "materialSlotOverrides", "skinRef", "mediaRef", "interactionProfileId", "actionRefs", "visible", "semanticLabel"], path, issues);
+  exactKeys(item, ["id", "order", "componentId", "version", "optionRef", "transform", "anchor", "contentArrangement", "materialSlotOverrides", "skinRef", "mediaRef", "interactionProfileId", "actionRefs", "visible", "semanticLabel"], path, issues);
   identifier(item.id, `${path}.id`, issues); integer(item.order, `${path}.order`, issues, 0, MAX_PLACEMENTS * 4);
   identifier(item.componentId, `${path}.componentId`, issues);
   if (typeof item.version !== "string" || !VERSION_PATTERN.test(item.version)) add(issues, `${path}.version`, "version", "Invalid component version.");
+  if (item.optionRef !== undefined) optionRef(item.optionRef, `${path}.optionRef`, issues);
   transform(item.transform, `${path}.transform`, issues);
   const anchor = record(item.anchor, `${path}.anchor`, issues);
   if (anchor) {
@@ -330,6 +374,91 @@ function placement(value: unknown, path: string, issues: SpatialValidationIssue[
   optionalIdentifier(item.skinRef, `${path}.skinRef`, issues); optionalIdentifier(item.mediaRef, `${path}.mediaRef`, issues);
   if (item.interactionProfileId !== undefined) oneOf(item.interactionProfileId, Object.keys(SPATIAL_INTERACTION_PROFILES), `${path}.interactionProfileId`, issues);
   stringArray(item.actionRefs, `${path}.actionRefs`, issues, null, 32); boolean(item.visible, `${path}.visible`, issues); text(item.semanticLabel, `${path}.semanticLabel`, issues, 200);
+  if (item.contentArrangement !== undefined) contentArrangement(item.contentArrangement, `${path}.contentArrangement`, issues);
+}
+
+function contentArrangement(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
+  const item = record(value, path, issues); if (!item) return;
+  exactKeys(item, ["kind", "overflowPolicy", "capacity", "pageSize", "seed"], path, issues);
+  oneOf(item.kind, ["grid", "row", "wall-grid", "spherical", "rack-row"], `${path}.kind`, issues);
+  oneOf(item.overflowPolicy, ["show-all-if-possible", "paginate", "overflow-list", "reject-over-capacity"], `${path}.overflowPolicy`, issues);
+  integer(item.capacity, `${path}.capacity`, issues, 1, 512);
+  if (item.pageSize !== undefined) integer(item.pageSize, `${path}.pageSize`, issues, 1, 512);
+  optionalText(item.seed, `${path}.seed`, issues);
+}
+
+function contentBinding(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
+  const item = record(value, path, issues); if (!item) return;
+  exactKeys(item, ["id", "hostPlacementId", "pieceRef", "pieceType", "label", "caption", "mediaRefs", "actionRefs", "order", "arrangementRole", "garmentArticleType", "frontImageRef", "backImageRef", "displayImageRef", "outerSideImageRef", "topImageRef", "artworkAspect"], path, issues);
+  identifier(item.id, `${path}.id`, issues);
+  identifier(item.hostPlacementId, `${path}.hostPlacementId`, issues);
+  logicalRef(item.pieceRef, `${path}.pieceRef`, issues);
+  oneOf(item.pieceType, ["image", "video", "audio", "garment", "product", "event", "flyer", "text", "link", "gallery", "collection", "archive-item"], `${path}.pieceType`, issues);
+  text(item.label, `${path}.label`, issues, 200);
+  optionalText(item.caption, `${path}.caption`, issues);
+  stringArray(item.mediaRefs, `${path}.mediaRefs`, issues, null, 8);
+  stringArray(item.actionRefs, `${path}.actionRefs`, issues, null, 8);
+  integer(item.order, `${path}.order`, issues, 0, MAX_PLACEMENTS * 4);
+  oneOf(item.arrangementRole, ["primary", "supporting", "overflow"], `${path}.arrangementRole`, issues);
+  garmentFields(item, path, issues);
+}
+
+/**
+ * Garment carrier fields.
+ *
+ * Article type and front/back artwork refs are optional everywhere, but a piece
+ * that declares an article type must be a garment: silently accepting
+ * `garmentArticleType` on an audio piece would hide an authoring mistake.
+ */
+function garmentFields(item: Record<string, unknown>, path: string, issues: SpatialValidationIssue[]): void {
+  if (item.garmentArticleType !== undefined) {
+    oneOf(item.garmentArticleType, ["shirt", "pant", "shoe", "generic"], `${path}.garmentArticleType`, issues);
+    if (item.pieceType !== "garment") {
+      add(issues, `${path}.garmentArticleType`, "garment-article-type", "Only garment pieces may declare a garment article type.");
+    }
+  }
+  if (item.artworkAspect !== undefined) {
+    const aspect = item.artworkAspect;
+    if (typeof aspect !== "number" || !Number.isFinite(aspect) || aspect < 0.2 || aspect > 4) {
+      add(issues, `${path}.artworkAspect`, "garment-aspect", "Artwork aspect must be a number between 0.2 and 4.");
+    }
+    if (item.pieceType !== "garment") {
+      add(issues, `${path}.artworkAspect`, "garment-artwork-ref", "Only garment pieces may declare an artwork aspect.");
+    }
+  }
+  for (const key of ["frontImageRef", "backImageRef", "displayImageRef", "outerSideImageRef", "topImageRef"] as const) {
+    if (item[key] === undefined) continue;
+    identifier(item[key], `${path}.${key}`, issues);
+    if (item.pieceType !== "garment") {
+      add(issues, `${path}.${key}`, "garment-artwork-ref", "Only garment pieces may declare front/back artwork refs.");
+    }
+  }
+}
+
+function pieceLibraryItem(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
+  const item = record(value, path, issues); if (!item) return;
+  exactKeys(item, ["id", "pieceType", "label", "caption", "mediaRefs", "actionRefs", "tags", "collectionRefs", "safety", "createdAt", "updatedAt", "garmentArticleType", "frontImageRef", "backImageRef", "displayImageRef", "outerSideImageRef", "topImageRef", "artworkAspect"], path, issues);
+  identifier(item.id, `${path}.id`, issues);
+  oneOf(item.pieceType, ["image", "video", "audio", "garment", "product", "event", "flyer", "text", "link", "gallery", "collection", "archive-item"], `${path}.pieceType`, issues);
+  text(item.label, `${path}.label`, issues, 200);
+  optionalText(item.caption, `${path}.caption`, issues);
+  stringArray(item.mediaRefs, `${path}.mediaRefs`, issues, null, 8);
+  stringArray(item.actionRefs, `${path}.actionRefs`, issues, null, 8);
+  stringArray(item.tags, `${path}.tags`, issues, null, 16);
+  stringArray(item.collectionRefs, `${path}.collectionRefs`, issues, null, 16);
+  oneOf(item.safety, ["internal-fixture", "public-safe"], `${path}.safety`, issues);
+  garmentFields(item, path, issues);
+  text(item.createdAt, `${path}.createdAt`, issues, 64);
+  text(item.updatedAt, `${path}.updatedAt`, issues, 64);
+}
+
+function optionRef(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
+  const item = record(value, path, issues); if (!item) return;
+  exactKeys(item, ["optionId", "version"], path, issues);
+  identifier(item.optionId, `${path}.optionId`, issues);
+  if (typeof item.version !== "string" || !/^(?:future|[0-9][0-9]{0,3}(?:\.[0-9]{1,4}){0,2})$/.test(item.version)) {
+    add(issues, `${path}.version`, "option-version", "Invalid option alias version.");
+  }
 }
 
 function sceneState(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
@@ -365,10 +494,38 @@ function geometry(value: unknown, path: string, issues: SpatialValidationIssue[]
       "box", "plane", "cylinder", "rack", "projection-field", "open-shell", "ribbed-wall",
       "display-bay", "rounded-island", "suspended-rack", "garment-hanger", "framed-media", "projection-grid",
       "display-shelf", "sign-card", "product-block", "light-fixture", "drape-divider",
+      "archive-wall", "listening-station", "spherical-gallery",
     ], `${path}.primitive`, issues);
   } else if (item.kind === "asset") {
     exactKeys(item, ["kind", "assetId"], path, issues); identifier(item.assetId, `${path}.assetId`, issues);
   } else add(issues, `${path}.kind`, "geometry-kind", "Geometry must be primitive or asset reference.");
+}
+
+function renderGeometry(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
+  const item = record(value, path, issues); if (!item) return;
+  if (item.kind === "glb") {
+    exactKeys(item, ["kind", "url", "compression", "decoderPath", "fallbackPrimitive", "runtimeSizeKb", "decoderSizeKb"], path, issues);
+    validateRuntimeModelUrl(item.url, `${path}.url`, issues);
+    oneOf(item.compression, ["none", "draco"], `${path}.compression`, issues);
+    if (item.decoderPath !== undefined) validateDecoderPath(item.decoderPath, `${path}.decoderPath`, issues);
+    oneOf(item.fallbackPrimitive, [
+      "box", "plane", "cylinder", "rack", "projection-field", "open-shell", "ribbed-wall",
+      "display-bay", "rounded-island", "suspended-rack", "garment-hanger", "framed-media", "projection-grid",
+      "display-shelf", "sign-card", "product-block", "light-fixture", "drape-divider",
+      "archive-wall", "listening-station", "spherical-gallery",
+    ], `${path}.fallbackPrimitive`, issues);
+    finite(item.runtimeSizeKb, `${path}.runtimeSizeKb`, issues, 0.001, SPATIAL_TOTAL_ASSET_BUDGET_BYTES / 1024);
+    if (item.decoderSizeKb !== undefined) finite(item.decoderSizeKb, `${path}.decoderSizeKb`, issues, 0.001, SPATIAL_TOTAL_ASSET_BUDGET_BYTES / 1024);
+    if (item.compression === "none" && item.decoderPath !== undefined) {
+      add(issues, `${path}.decoderPath`, "decoder-unused", "Decoder paths are only valid for compressed GLB geometry.");
+    }
+    if (item.compression === "none" && item.decoderSizeKb !== undefined) {
+      add(issues, `${path}.decoderSizeKb`, "decoder-unused", "Decoder byte cost is only valid for compressed GLB geometry.");
+    }
+    if (item.compression === "draco" && typeof item.decoderPath !== "string") {
+      add(issues, `${path}.decoderPath`, "decoder-required", "Draco-compressed GLB geometry requires a decoder path.");
+    }
+  } else add(issues, `${path}.kind`, "render-geometry-kind", "Render geometry must be a GLB reference.");
 }
 
 function placementContract(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
@@ -503,6 +660,40 @@ function validateLogicalAssetLocator(
   }
 }
 
+function logicalRef(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
+  if (typeof value !== "string" || value.length > 248 || value.includes("://") || value.includes("\\") || !/^[a-z][a-z-]*:[a-z0-9][a-z0-9._:/-]{0,220}$/i.test(value)) {
+    add(issues, path, "logical-ref", "Expected a lightweight logical ref, not a raw URL or blob.");
+  }
+}
+
+function validateRuntimeModelUrl(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
+  if (typeof value !== "string" || value.length > 248 || !value.startsWith("/") || value.includes("://") || value.includes("\\") || value.includes("..")) {
+    add(issues, path, "unsafe-model-url", "Runtime GLB URLs must be normalized same-origin public paths.");
+    return;
+  }
+  const segments = value.slice(1).split("/");
+  const normalized = segments.length >= 3 && segments.every((segment) => /^[a-z0-9][a-z0-9._-]{0,119}$/i.test(segment));
+  if (
+    !normalized
+    || !value.startsWith("/presence-spatial/")
+    || !/\.glb$/i.test(value)
+    || /(?:^|\/)(?:source|raw)(?:\/|$)/i.test(value)
+    || /\.gltf$/i.test(value)
+  ) {
+    add(issues, path, "unsafe-model-url", "Runtime model URLs must point to optimized internal public GLB assets, never source/raw GLB or GLTF files.");
+  }
+}
+
+function validateDecoderPath(value: unknown, path: string, issues: SpatialValidationIssue[]): void {
+  if (typeof value !== "string" || value.length > 160 || !value.startsWith("/") || value.includes("://") || value.includes("\\") || value.includes("..")) {
+    add(issues, path, "unsafe-decoder-path", "Decoder paths must be normalized same-origin public directories.");
+    return;
+  }
+  if (!value.startsWith("/presence-spatial/draco/") || !value.endsWith("/")) {
+    add(issues, path, "unsafe-decoder-path", "Draco decoder files must live under /presence-spatial/draco/.");
+  }
+}
+
 function array<T>(value: unknown, path: string, issues: SpatialValidationIssue[], max: number, validate: (item: unknown, itemPath: string, issues: SpatialValidationIssue[]) => void): value is T[] {
   if (!Array.isArray(value)) { add(issues, path, "array", "Expected an array."); return false; }
   if (value.length > max) add(issues, path, "array-size", `Maximum ${max} entries.`);
@@ -534,7 +725,39 @@ function exactKeys(value: Record<string, unknown>, allowed: readonly string[], p
   for (const key of allowed) if (!(key in value) && !OPTIONAL_KEYS.has(key)) add(issues, `${path}.${key}`, "missing-key", "Required field is missing.");
 }
 
-const OPTIONAL_KEYS = new Set(["componentRef", "skinRef", "mediaRef", "interactionProfileId", "lightingProfileId", "fallbackPresentation", "brandMediaRef", "heroMediaRef", "targetPlacementId", "targetStateId", "disabledReason", "parentPlacementId", "anchorId", "focusPlacementId", "visiblePlacementIds", "reducedMotionStateId", "description"]);
+function validatePieceMediaKind(
+  piece: SpatialPieceLibraryItem,
+  mediaRef: SpatialMediaRef,
+  issues: SpatialValidationIssue[],
+): void {
+  const compatible = piece.pieceType === "audio"
+    ? mediaRef.kind === "audio"
+    : piece.pieceType === "video"
+      ? mediaRef.kind === "video"
+      : piece.pieceType === "archive-item" || piece.pieceType === "flyer"
+        ? mediaRef.kind === "poster" || mediaRef.kind === "image"
+        : piece.pieceType === "image" || piece.pieceType === "gallery" || piece.pieceType === "collection" || piece.pieceType === "product"
+          ? mediaRef.kind === "image" || mediaRef.kind === "poster" || mediaRef.kind === "logo"
+          : true;
+  if (!compatible) {
+    add(issues, `pieceLibrary.${piece.id}.mediaRefs`, "piece-media-kind", `Piece type ${piece.pieceType} is incompatible with ${mediaRef.kind} media.`);
+  }
+}
+
+function validatePieceActionKind(
+  piece: SpatialPieceLibraryItem,
+  action: SpatialActionRef,
+  issues: SpatialValidationIssue[],
+): void {
+  if (action.kind === "listen" && piece.pieceType !== "audio") {
+    add(issues, `pieceLibrary.${piece.id}.actionRefs`, "piece-action-kind", "Listen actions require an audio piece.");
+  }
+  if (action.kind === "watch" && piece.pieceType !== "video" && piece.pieceType !== "gallery") {
+    add(issues, `pieceLibrary.${piece.id}.actionRefs`, "piece-action-kind", "Watch actions require a video or gallery piece.");
+  }
+}
+
+const OPTIONAL_KEYS = new Set(["componentRef", "renderGeometry", "decoderPath", "decoderSizeKb", "optionRef", "contentArrangement", "contentBindings", "pieceLibrary", "skinRef", "mediaRef", "interactionProfileId", "lightingProfileId", "fallbackPresentation", "brandMediaRef", "heroMediaRef", "targetPlacementId", "targetStateId", "disabledReason", "href", "parentPlacementId", "anchorId", "focusPlacementId", "visiblePlacementIds", "reducedMotionStateId", "description", "caption", "pageSize", "seed", "garmentArticleType", "frontImageRef", "backImageRef", "displayImageRef", "outerSideImageRef", "topImageRef", "artworkAspect", "garment"]);
 
 function identifier(value: unknown, path: string, issues: SpatialValidationIssue[]): value is string { if (typeof value !== "string" || !ID_PATTERN.test(value)) { add(issues, path, "id", "Invalid stable identifier."); return false; } return true; }
 function optionalIdentifier(value: unknown, path: string, issues: SpatialValidationIssue[]): void { if (value !== undefined) identifier(value, path, issues); }

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   AUTHORING_CONTRAST_SKIN_ID,
   ARRANGER_COMPONENT_OPTIONS,
+  ARRANGER_CORE_COMPONENT_OPTIONS,
   addArrangerComponent,
   assignArrangerMaterialPreset,
   assignArrangerMedia,
@@ -36,13 +37,16 @@ test("blank Mobstar arranger room is a strict, compilable shell with assignable 
   assert.deepEqual(room.placements.map((placement) => placement.id), ["room-shell", "floor"]);
   assert.deepEqual(room.actions, []);
   assert.deepEqual(room.semanticFallback, []);
-  assert.equal(room.media.length, MOBSTAR_SPATIAL_ROOM_FIXTURE.media.length);
+  assert.equal(room.media.length, MOBSTAR_SPATIAL_ROOM_FIXTURE.media.length + 2);
+  assert.equal(room.media.some((media) => media.kind === "audio"), true);
+  assert.equal(room.media.some((media) => media.kind === "video"), true);
+  assert.deepEqual(room.contentBindings, []);
 });
 
 test("all thirteen reusable arranger components use registered candidate refs and deterministic valid grid positions", () => {
-  assert.equal(ARRANGER_COMPONENT_OPTIONS.length, 13);
+  assert.equal(ARRANGER_CORE_COMPONENT_OPTIONS.length, 13);
   let room = createBlankMobstarSpatialRoom();
-  for (const option of ARRANGER_COMPONENT_OPTIONS) {
+  for (const option of ARRANGER_CORE_COMPONENT_OPTIONS) {
     assert.ok(spatialComponent(option), `${option.componentId}@${option.version} must be registered`);
     assert.notEqual(spatialComponentCatalogMetadata(option)?.admissionStatus, "admitted");
     const result = addArrangerComponent(room, option.componentId);

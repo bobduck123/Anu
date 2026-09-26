@@ -68,6 +68,7 @@ test("all composite material styles resolve every required slot correctly", () =
     "archive-paper",
     "boutique-chrome",
     "industrial-concrete",
+    "lookbook-rack",
     "nocturnal-black-gallery",
     "polished-charcoal-tile",
     "projection-blackout",

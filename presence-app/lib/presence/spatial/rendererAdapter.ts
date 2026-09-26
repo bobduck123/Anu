@@ -182,6 +182,9 @@ export function resolveSpatialActionIntent(
     case "sequence-next":
       return { kind: "sequence", direction: 1, actionId: action.id };
     case "open-link":
+    case "listen":
+    case "watch":
+    case "enquire":
       return { kind: "open-link", href: action.href, actionId: action.id };
     case "disabled-placeholder":
       return {
@@ -259,6 +262,7 @@ export function resolveSpatialMediaSource(
   locators: SafeSpatialMediaLocatorMap,
 ): string | null {
   if (!media) return null;
+  if (media.kind === "audio" || media.kind === "video") return null;
   const locator = locators[media.assetId];
   if (!locator || locator.safety !== media.safety || !isSafeSpatialMediaSource(locator.src)) return null;
   return locator.src;
@@ -268,6 +272,22 @@ export function isSafeSpatialMediaSource(source: string): boolean {
   if (!source.startsWith("/") || source.startsWith("//") || source.includes("\\")) return false;
   const [pathname] = source.split(/[?#]/, 1);
   return pathname.split("/").every((segment) => segment !== "." && segment !== "..");
+}
+
+/**
+ * Every media ref an item can render: the placement's own ref plus any garment
+ * artwork channel. Order is stable so callers can rely on it.
+ */
+export function spatialItemMediaRefs(item: SpatialRenderItem): readonly SpatialMediaRef[] {
+  const refs: SpatialMediaRef[] = [];
+  if (item.media) refs.push(item.media);
+  const garment = item.garment;
+  if (garment) {
+    for (const media of [garment.frontMedia, garment.backMedia, garment.displayMedia, garment.outerSideMedia, garment.topMedia]) {
+      if (media && !refs.some((existing) => existing.id === media.id)) refs.push(media);
+    }
+  }
+  return refs;
 }
 
 export function spatialMediaPlacementIdsToLoad(
@@ -282,8 +302,14 @@ export function spatialMediaPlacementIdsToLoad(
   return new Set(
     plan.items
       .filter((item) => {
-        if (!item.visible || !item.media) return false;
-        if (eagerAssetIds.has(item.media.assetId)) return true;
+        if (!item.visible) return false;
+        // Garment artwork lives on the garment channels, not on the placement's
+        // single media ref. Requiring `item.media` here meant no garment was
+        // ever scheduled for texture loading, so garment artwork never left the
+        // procedural placeholder no matter what an operator assigned.
+        const mediaRefs = spatialItemMediaRefs(item);
+        if (mediaRefs.length === 0) return false;
+        if (mediaRefs.some((media) => eagerAssetIds.has(media.assetId))) return true;
         if (item.placementId === selectedPlacementId) return true;
         if (item.placementId === state.focusPlacementId) return true;
         return explicitlyVisibleIds?.has(item.placementId) ?? false;

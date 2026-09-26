@@ -1,0 +1,1207 @@
+{
+  "contentHash": "379677c8dd2f3a6373dc7e942e23ddd6543a0d608dab8b1396b45c4b2b1cf90f",
+  "result": {
+    "ok": true,
+    "blenderVersion": "5.1.1",
+    "sourcePath": "C:/Dev/presence pieces/coffee+shop+GLD/coffee shop.glb",
+    "objects": [
+      {
+        "index": 0,
+        "name": "Empty",
+        "meshObjectCount": 6,
+        "triangleCount": 606980,
+        "materialNames": [
+          "vray roasted coffee package 472 001",
+          "Carpaint Gloss Medium Grey",
+          "car_metallic_paint_04",
+          "MAML_int_Plastic_Black_Flaky",
+          "Procedural Glass Eevee",
+          " coffee bean"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Empty"
+        ],
+        "file": "obj-000.glb",
+        "fileBytes": 2523668,
+        "thumbnail": "obj-000.webp",
+        "bounds": {
+          "min": [
+            -0.3174,
+            0,
+            -0.703
+          ],
+          "max": [
+            0.3174,
+            0.6325,
+            0.703
+          ],
+          "dimensions": {
+            "width": 0.6348,
+            "height": 0.6325,
+            "depth": 1.4059
+          },
+          "center": [
+            0,
+            0.3162,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 1,
+        "name": "Bovenkap",
+        "meshObjectCount": 46,
+        "triangleCount": 436962,
+        "materialNames": [
+          "B.001",
+          "Procedural Glass Eevee",
+          "car_metallic_paint_04",
+          "car_metallic_paint_01",
+          "donat",
+          "peanut2",
+          "peanut",
+          "uyf.001",
+          "Material #87",
+          "cake",
+          "uyf",
+          "donatf",
+          "Material #81",
+          "15 - Default",
+          "uyfg"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Bovenkap"
+        ],
+        "file": "obj-001.glb",
+        "fileBytes": 600552,
+        "thumbnail": "obj-001.webp",
+        "bounds": {
+          "min": [
+            -0.4744,
+            0,
+            -0.4758
+          ],
+          "max": [
+            0.4744,
+            1.1498,
+            0.4758
+          ],
+          "dimensions": {
+            "width": 0.9489,
+            "height": 1.1498,
+            "depth": 0.9516
+          },
+          "center": [
+            0,
+            0.5749,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 2,
+        "name": "Sofa",
+        "meshObjectCount": 17,
+        "triangleCount": 319746,
+        "materialNames": [
+          "pu_leather_01",
+          "pu_leather_01.001",
+          "car_metallic_paint_01",
+          "car_metallic_paint_01.004",
+          "car_metallic_paint_04",
+          "white.006",
+          "paper-2.002",
+          "Leaves-D.007",
+          "paper.001",
+          "rose.002",
+          "branch.003"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Sofa"
+        ],
+        "file": "obj-002.glb",
+        "fileBytes": 769256,
+        "thumbnail": "obj-002.webp",
+        "bounds": {
+          "min": [
+            -1.7049,
+            0,
+            -1.2966
+          ],
+          "max": [
+            1.7049,
+            1.2922,
+            1.2966
+          ],
+          "dimensions": {
+            "width": 3.4098,
+            "height": 1.2922,
+            "depth": 2.5932
+          },
+          "center": [
+            0,
+            0.6461,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 3,
+        "name": "Sofa.001",
+        "meshObjectCount": 17,
+        "triangleCount": 319746,
+        "materialNames": [
+          "pu_leather_01",
+          "pu_leather_01.001",
+          "car_metallic_paint_01",
+          "car_metallic_paint_01.004",
+          "car_metallic_paint_04",
+          "white.006",
+          "paper-2.002",
+          "Leaves-D.007",
+          "paper.001",
+          "rose.002",
+          "branch.003"
+        ],
+        "instanceCount": 2,
+        "instanceNames": [
+          "Sofa.001",
+          "Sofa.002"
+        ],
+        "file": "obj-003.glb",
+        "fileBytes": 769252,
+        "thumbnail": "obj-003.webp",
+        "bounds": {
+          "min": [
+            -1.7049,
+            0,
+            -1.2966
+          ],
+          "max": [
+            1.7049,
+            1.2491,
+            1.2966
+          ],
+          "dimensions": {
+            "width": 3.4098,
+            "height": 1.2491,
+            "depth": 2.5932
+          },
+          "center": [
+            0,
+            0.6245,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 4,
+        "name": "Coffee_vending_machine_Station",
+        "meshObjectCount": 18,
+        "triangleCount": 115481,
+        "materialNames": [
+          "B",
+          "vray_Trash_Logo",
+          "light.001",
+          "car_metallic_paint_01",
+          "vray_Vendista_V2_5_Display_2",
+          "MAML_int_Plastic_Black_Flaky",
+          "vray_Vendista_V2_5_Display_1",
+          "vray_Sugar_White",
+          "Procedural Glass Eevee",
+          "light.002",
+          "car_metallic_paint_04",
+          "Material",
+          "Material.004",
+          "Material.008",
+          "Material.007",
+          "vray_1883_Label",
+          "Material.012"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Coffee_vending_machine_Station"
+        ],
+        "file": "obj-004.glb",
+        "fileBytes": 755092,
+        "thumbnail": "obj-004.webp",
+        "bounds": {
+          "min": [
+            -0.3991,
+            0,
+            -0.645
+          ],
+          "max": [
+            0.3991,
+            2.35,
+            0.645
+          ],
+          "dimensions": {
+            "width": 0.7983,
+            "height": 2.35,
+            "depth": 1.29
+          },
+          "center": [
+            0,
+            1.175,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 5,
+        "name": "Plane.008",
+        "meshObjectCount": 1,
+        "triangleCount": 104704,
+        "materialNames": [
+          "Carpaint Metallic Pure White",
+          "car_metallic_paint_04"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Plane.008"
+        ],
+        "file": "obj-005.glb",
+        "fileBytes": 459772,
+        "thumbnail": "obj-005.webp",
+        "bounds": {
+          "min": [
+            -1.6118,
+            0,
+            -3.8473
+          ],
+          "max": [
+            1.6118,
+            1.6124,
+            3.8473
+          ],
+          "dimensions": {
+            "width": 3.2236,
+            "height": 1.6124,
+            "depth": 7.6947
+          },
+          "center": [
+            0,
+            0.8062,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 6,
+        "name": "Pottery.007",
+        "meshObjectCount": 5,
+        "triangleCount": 80734,
+        "materialNames": [
+          "white.006",
+          "paper-2.002",
+          "Leaves-D.007",
+          "paper.001",
+          "rose.002",
+          "branch.003"
+        ],
+        "instanceCount": 4,
+        "instanceNames": [
+          "Pottery.007",
+          "Pottery.008",
+          "Pottery.009",
+          "Pottery.010"
+        ],
+        "file": "obj-006.glb",
+        "fileBytes": 332564,
+        "thumbnail": "obj-006.webp",
+        "bounds": {
+          "min": [
+            -0.2161,
+            0,
+            -0.1866
+          ],
+          "max": [
+            0.2161,
+            0.6708,
+            0.1866
+          ],
+          "dimensions": {
+            "width": 0.4322,
+            "height": 0.6708,
+            "depth": 0.3733
+          },
+          "center": [
+            0,
+            0.3354,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 7,
+        "name": "Layer_001.001",
+        "meshObjectCount": 1,
+        "triangleCount": 69526,
+        "materialNames": [
+          "car_metallic_paint_01"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Layer_001.001"
+        ],
+        "file": "obj-007.glb",
+        "fileBytes": 368184,
+        "thumbnail": "obj-007.webp",
+        "bounds": {
+          "min": [
+            -0.0052,
+            0,
+            -0.614
+          ],
+          "max": [
+            0.0052,
+            1.3342,
+            0.614
+          ],
+          "dimensions": {
+            "width": 0.0103,
+            "height": 1.3342,
+            "depth": 1.228
+          },
+          "center": [
+            0,
+            0.6671,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 8,
+        "name": "Empty.001",
+        "meshObjectCount": 51,
+        "triangleCount": 68544,
+        "materialNames": [
+          "Styrofoam"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Empty.001"
+        ],
+        "file": "obj-008.glb",
+        "fileBytes": 14060,
+        "thumbnail": "obj-008.webp",
+        "bounds": {
+          "min": [
+            -0.1139,
+            0,
+            -0.2746
+          ],
+          "max": [
+            0.1139,
+            0.2393,
+            0.2746
+          ],
+          "dimensions": {
+            "width": 0.2278,
+            "height": 0.2393,
+            "depth": 0.5491
+          },
+          "center": [
+            0,
+            0.1197,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 9,
+        "name": "G-__555573.001",
+        "meshObjectCount": 1,
+        "triangleCount": 59717,
+        "materialNames": [
+          "light",
+          "car_metallic_paint_04.001",
+          "car_metallic_paint_01.001",
+          "brushed_metal_05",
+          "light.003"
+        ],
+        "instanceCount": 21,
+        "instanceNames": [
+          "G-__555573.001",
+          "G-__555573.002",
+          "G-__555573.003",
+          "G-__555573.004",
+          "G-__555573.005",
+          "G-__555573.006",
+          "G-__555573.007",
+          "G-__555573.008",
+          "G-__555573.009",
+          "G-__555573.010",
+          "G-__555573.011",
+          "G-__555573.012"
+        ],
+        "file": "obj-009.glb",
+        "fileBytes": 154544,
+        "thumbnail": "obj-009.webp",
+        "bounds": {
+          "min": [
+            -0.0653,
+            0,
+            -0.0653
+          ],
+          "max": [
+            0.0653,
+            1.2915,
+            0.0653
+          ],
+          "dimensions": {
+            "width": 0.1305,
+            "height": 1.2915,
+            "depth": 0.1305
+          },
+          "center": [
+            0,
+            0.6458,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 10,
+        "name": "G-__555573.032",
+        "meshObjectCount": 1,
+        "triangleCount": 59717,
+        "materialNames": [
+          "light",
+          "car_metallic_paint_04.001",
+          "car_metallic_paint_01.001",
+          "brushed_metal_05",
+          "light.003"
+        ],
+        "instanceCount": 12,
+        "instanceNames": [
+          "G-__555573.032",
+          "G-__555573.033",
+          "G-__555573.034",
+          "G-__555573.035",
+          "G-__555573.036",
+          "G-__555573.037",
+          "G-__555573.038",
+          "G-__555573.039",
+          "G-__555573.040",
+          "G-__555573.041",
+          "G-__555573.042",
+          "G-__555573.043"
+        ],
+        "file": "obj-010.glb",
+        "fileBytes": 154476,
+        "thumbnail": "obj-010.webp",
+        "bounds": {
+          "min": [
+            -0.0368,
+            0,
+            -0.0368
+          ],
+          "max": [
+            0.0368,
+            0.7287,
+            0.0368
+          ],
+          "dimensions": {
+            "width": 0.0737,
+            "height": 0.7287,
+            "depth": 0.0737
+          },
+          "center": [
+            0,
+            0.3644,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 11,
+        "name": "G-__555573.023",
+        "meshObjectCount": 1,
+        "triangleCount": 58588,
+        "materialNames": [
+          "light",
+          "Procedural Glass Eevee",
+          "car_metallic_paint_01.001",
+          "brushed_metal_05",
+          "car_metallic_paint_01"
+        ],
+        "instanceCount": 6,
+        "instanceNames": [
+          "G-__555573.023",
+          "G-__555573.024",
+          "G-__555573.025",
+          "G-__555573.026",
+          "G-__555573.027",
+          "G-__555573.028"
+        ],
+        "file": "obj-011.glb",
+        "fileBytes": 147244,
+        "thumbnail": "obj-011.webp",
+        "bounds": {
+          "min": [
+            -0.1077,
+            0,
+            -0.1198
+          ],
+          "max": [
+            0.1077,
+            0.5554,
+            0.1198
+          ],
+          "dimensions": {
+            "width": 0.2154,
+            "height": 0.5554,
+            "depth": 0.2397
+          },
+          "center": [
+            0,
+            0.2777,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 12,
+        "name": "G-__555573.015",
+        "meshObjectCount": 1,
+        "triangleCount": 56897,
+        "materialNames": [
+          "light",
+          "Procedural Glass Eevee",
+          "car_metallic_paint_01.001",
+          "brushed_metal_05",
+          "car_metallic_paint_01"
+        ],
+        "instanceCount": 5,
+        "instanceNames": [
+          "G-__555573.015",
+          "G-__555573.016",
+          "G-__555573.017",
+          "G-__555573.018",
+          "G-__555573.019"
+        ],
+        "file": "obj-012.glb",
+        "fileBytes": 140944,
+        "thumbnail": "obj-012.webp",
+        "bounds": {
+          "min": [
+            -0.2229,
+            0,
+            -0.2234
+          ],
+          "max": [
+            0.2229,
+            1.1948,
+            0.2234
+          ],
+          "dimensions": {
+            "width": 0.4458,
+            "height": 1.1948,
+            "depth": 0.4467
+          },
+          "center": [
+            0,
+            0.5974,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 13,
+        "name": "Retopo_G-__555780",
+        "meshObjectCount": 1,
+        "triangleCount": 43440,
+        "materialNames": [
+          "velvet"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Retopo_G-__555780"
+        ],
+        "file": "obj-013.glb",
+        "fileBytes": 130068,
+        "thumbnail": "obj-013.webp",
+        "bounds": {
+          "min": [
+            -0.1444,
+            0,
+            -0.5651
+          ],
+          "max": [
+            0.1444,
+            2.0739,
+            0.5651
+          ],
+          "dimensions": {
+            "width": 0.2888,
+            "height": 2.0739,
+            "depth": 1.1302
+          },
+          "center": [
+            0,
+            1.0369,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 14,
+        "name": "Layer_001",
+        "meshObjectCount": 1,
+        "triangleCount": 43228,
+        "materialNames": [
+          "car_metallic_paint_01"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Layer_001"
+        ],
+        "file": "obj-014.glb",
+        "fileBytes": 269900,
+        "thumbnail": "obj-014.webp",
+        "bounds": {
+          "min": [
+            -0.9173,
+            0,
+            -0.0132
+          ],
+          "max": [
+            0.9173,
+            2.4919,
+            0.0132
+          ],
+          "dimensions": {
+            "width": 1.8345,
+            "height": 2.4919,
+            "depth": 0.0264
+          },
+          "center": [
+            0,
+            1.2459,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 15,
+        "name": "Cupcake with a raspberry",
+        "meshObjectCount": 2,
+        "triangleCount": 41496,
+        "materialNames": [
+          "porcelain white.008",
+          "Material.002"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Cupcake with a raspberry"
+        ],
+        "file": "obj-015.glb",
+        "fileBytes": 144852,
+        "thumbnail": "obj-015.webp",
+        "bounds": {
+          "min": [
+            -0.1572,
+            0,
+            -0.1572
+          ],
+          "max": [
+            0.1572,
+            0.1261,
+            0.1572
+          ],
+          "dimensions": {
+            "width": 0.3145,
+            "height": 0.1261,
+            "depth": 0.3145
+          },
+          "center": [
+            0,
+            0.063,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 16,
+        "name": "Cylinder.002",
+        "meshObjectCount": 1,
+        "triangleCount": 30494,
+        "materialNames": [
+          "car_metallic_paint_01.002"
+        ],
+        "instanceCount": 3,
+        "instanceNames": [
+          "Cylinder.002",
+          "Cylinder.464",
+          "Cylinder.466"
+        ],
+        "file": "obj-016.glb",
+        "fileBytes": 89572,
+        "thumbnail": "obj-016.webp",
+        "bounds": {
+          "min": [
+            -0.1351,
+            0,
+            -0.1351
+          ],
+          "max": [
+            0.1351,
+            0.8456,
+            0.1351
+          ],
+          "dimensions": {
+            "width": 0.2703,
+            "height": 0.8456,
+            "depth": 0.2703
+          },
+          "center": [
+            0,
+            0.4228,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 17,
+        "name": "Cylinder.005",
+        "meshObjectCount": 1,
+        "triangleCount": 30494,
+        "materialNames": [
+          "car_metallic_paint_01.002"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Cylinder.005"
+        ],
+        "file": "obj-017.glb",
+        "fileBytes": 89620,
+        "thumbnail": "obj-017.webp",
+        "bounds": {
+          "min": [
+            -0.1377,
+            0,
+            -0.1377
+          ],
+          "max": [
+            0.1377,
+            0.8617,
+            0.1377
+          ],
+          "dimensions": {
+            "width": 0.2754,
+            "height": 0.8617,
+            "depth": 0.2754
+          },
+          "center": [
+            0,
+            0.4308,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 18,
+        "name": "Cylinder.007",
+        "meshObjectCount": 1,
+        "triangleCount": 30494,
+        "materialNames": [
+          "car_metallic_paint_01.002"
+        ],
+        "instanceCount": 3,
+        "instanceNames": [
+          "Cylinder.007",
+          "Cylinder.296",
+          "Cylinder.368"
+        ],
+        "file": "obj-018.glb",
+        "fileBytes": 89576,
+        "thumbnail": "obj-018.webp",
+        "bounds": {
+          "min": [
+            -0.1414,
+            0,
+            -0.1414
+          ],
+          "max": [
+            0.1414,
+            0.8848,
+            0.1414
+          ],
+          "dimensions": {
+            "width": 0.2828,
+            "height": 0.8848,
+            "depth": 0.2828
+          },
+          "center": [
+            0,
+            0.4424,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 19,
+        "name": "Cylinder.008",
+        "meshObjectCount": 1,
+        "triangleCount": 30494,
+        "materialNames": [
+          "car_metallic_paint_01.002"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Cylinder.008"
+        ],
+        "file": "obj-019.glb",
+        "fileBytes": 89604,
+        "thumbnail": "obj-019.webp",
+        "bounds": {
+          "min": [
+            -0.1472,
+            0,
+            -0.1472
+          ],
+          "max": [
+            0.1472,
+            0.9213,
+            0.1472
+          ],
+          "dimensions": {
+            "width": 0.2945,
+            "height": 0.9213,
+            "depth": 0.2945
+          },
+          "center": [
+            0,
+            0.4606,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 20,
+        "name": "Cylinder.009",
+        "meshObjectCount": 1,
+        "triangleCount": 30494,
+        "materialNames": [
+          "car_metallic_paint_01.002"
+        ],
+        "instanceCount": 2,
+        "instanceNames": [
+          "Cylinder.009",
+          "Cylinder.202"
+        ],
+        "file": "obj-020.glb",
+        "fileBytes": 89604,
+        "thumbnail": "obj-020.webp",
+        "bounds": {
+          "min": [
+            -0.1582,
+            0,
+            -0.1582
+          ],
+          "max": [
+            0.1582,
+            0.9896,
+            0.1582
+          ],
+          "dimensions": {
+            "width": 0.3163,
+            "height": 0.9896,
+            "depth": 0.3163
+          },
+          "center": [
+            0,
+            0.4948,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 21,
+        "name": "Cylinder.010",
+        "meshObjectCount": 1,
+        "triangleCount": 30494,
+        "materialNames": [
+          "car_metallic_paint_01.002"
+        ],
+        "instanceCount": 3,
+        "instanceNames": [
+          "Cylinder.010",
+          "Cylinder.223",
+          "Cylinder.408"
+        ],
+        "file": "obj-021.glb",
+        "fileBytes": 89576,
+        "thumbnail": "obj-021.webp",
+        "bounds": {
+          "min": [
+            -0.1477,
+            0,
+            -0.1477
+          ],
+          "max": [
+            0.1477,
+            0.9243,
+            0.1477
+          ],
+          "dimensions": {
+            "width": 0.2954,
+            "height": 0.9243,
+            "depth": 0.2954
+          },
+          "center": [
+            0,
+            0.4622,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 22,
+        "name": "Cylinder.011",
+        "meshObjectCount": 1,
+        "triangleCount": 30494,
+        "materialNames": [
+          "car_metallic_paint_01.002"
+        ],
+        "instanceCount": 3,
+        "instanceNames": [
+          "Cylinder.011",
+          "Cylinder.021",
+          "Cylinder.148"
+        ],
+        "file": "obj-022.glb",
+        "fileBytes": 89576,
+        "thumbnail": "obj-022.webp",
+        "bounds": {
+          "min": [
+            -0.1325,
+            0,
+            -0.1325
+          ],
+          "max": [
+            0.1325,
+            0.8288,
+            0.1325
+          ],
+          "dimensions": {
+            "width": 0.2649,
+            "height": 0.8288,
+            "depth": 0.2649
+          },
+          "center": [
+            0,
+            0.4144,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      },
+      {
+        "index": 23,
+        "name": "Cylinder.012",
+        "meshObjectCount": 1,
+        "triangleCount": 30494,
+        "materialNames": [
+          "car_metallic_paint_01.002"
+        ],
+        "instanceCount": 1,
+        "instanceNames": [
+          "Cylinder.012"
+        ],
+        "file": "obj-023.glb",
+        "fileBytes": 89576,
+        "thumbnail": "obj-023.webp",
+        "bounds": {
+          "min": [
+            -0.1657,
+            0,
+            -0.1657
+          ],
+          "max": [
+            0.1657,
+            1.0366,
+            0.1657
+          ],
+          "dimensions": {
+            "width": 0.3313,
+            "height": 1.0366,
+            "depth": 0.3313
+          },
+          "center": [
+            0,
+            0.5183,
+            0
+          ]
+        },
+        "looseParts": [],
+        "warnings": []
+      }
+    ],
+    "roomKit": {
+      "shapeOnly": {
+        "file": "roomkit-shape.glb",
+        "fileBytes": 8743624
+      },
+      "textured": null,
+      "thumbnail": "roomkit.webp",
+      "resizedImages": []
+    },
+    "warnings": [
+      {
+        "code": "duplicates-collapsed",
+        "message": "662 separable objects collapsed to 291 unique shapes; repeated instances share one candidate."
+      },
+      {
+        "code": "export-cap-reached",
+        "message": "289 unique objects exceeded the export cap of 24; the remainder stay manifest-only."
+      }
+    ],
+    "descendedWrappers": [],
+    "importSeconds": 2.51,
+    "sceneTriangleCount": 20316637,
+    "sceneBounds": {
+      "min": [
+        -11.5026,
+        -0.0036,
+        -6.2867
+      ],
+      "max": [
+        9.4125,
+        5.2157,
+        5.6513
+      ],
+      "dimensions": {
+        "width": 20.9151,
+        "height": 5.2193,
+        "depth": 11.938
+      },
+      "center": [
+        -1.0451,
+        2.606,
+        -0.3177
+      ]
+    },
+    "sceneObjectCount": 850,
+    "sceneMaterialNames": [
+      "Wet concrete wall",
+      "light.001",
+      "car_metallic_paint_01",
+      "light.002",
+      "B",
+      "Material.003",
+      "Material.006",
+      "Material.011",
+      "Material.005",
+      "Material.010",
+      "Material.001",
+      "Procedural Glass Eevee",
+      "car_metallic_paint_01.002",
+      "light",
+      "car_metallic_paint_04.001",
+      "car_metallic_paint_01.001",
+      "brushed_metal_05",
+      "light.003",
+      "car_metallic_paint_04",
+      "pu_leather_01.002",
+      "car_metallic_paint_01.003",
+      "white.006",
+      "paper.001",
+      "paper-2.002",
+      "rose.002",
+      "branch.003",
+      "Leaves-D.007",
+      "AR3DMat Procedural Realistic Mirror",
+      "pu_leather_01",
+      "pu_leather_01.001",
+      "car_metallic_paint_01.004",
+      "Material.002",
+      "porcelain white.008",
+      "Cap of Cup.001",
+      "Side Cap of Cup.001",
+      "Cup Of  Coffee.001",
+      "Paper.001",
+      "Bottom of cup.001",
+      "velvet",
+      "Carpaint Metallic Pure White",
+      "case",
+      "white",
+      "lid-red",
+      "vray_Trash_Logo",
+      "Material.012",
+      "MAML_int_Plastic_Black_Flaky",
+      "vray_1883_Label",
+      "Material",
+      "Material.004",
+      "Material.008",
+      "Material.007",
+      "vray_Sugar_White",
+      "vray_Vendista_V2_5_Display_2",
+      "vray_Vendista_V2_5_Display_1",
+      "B.001",
+      "donat",
+      "uyfg",
+      "15 - Default",
+      "Material #81",
+      "donatf",
+      "Material #87",
+      "cake",
+      "uyf",
+      "peanut2"
+    ],
+    "geometryCompression": "draco",
+    "separableObjectCount": 662,
+    "uniqueObjectCount": 291,
+    "eligibleObjectCount": 289
+  }
+}

@@ -4,8 +4,10 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { SPATIAL_MATERIAL_PRESETS } from "@/lib/presence/spatial/materials";
 import type {
+  SpatialGarmentArtworkRole,
   SpatialMaterialSlotId,
   SpatialLightDefinition,
+  SpatialMediaRef,
   SpatialRenderItem,
   SpatialRenderPlan,
   SpatialSceneState,
@@ -26,6 +28,10 @@ import {
   getSpatialGeometryTemplate,
   type SpatialGeometryTemplatePart,
 } from "./threeGeometryCache";
+import {
+  collectGlbInstanceResources,
+  loadSpatialGlbRenderGeometry,
+} from "./threeGlbRenderGeometry";
 
 export interface ThreeSpatialRendererProps {
   plan: SpatialRenderPlan;
@@ -34,6 +40,8 @@ export interface ThreeSpatialRendererProps {
   mediaLocators: SafeSpatialMediaLocatorMap;
   onItemActivate: (placementId: string) => void;
   onRuntimeFailure: () => void;
+  /** Internal authoring aid: reveals invisible garment carriers. Never persisted. */
+  debugCarriers?: boolean;
 }
 
 interface RuntimeItemHandle {
@@ -52,9 +60,15 @@ interface SpatialThreeRuntime {
 }
 
 interface PlacementOwnedResources {
+  geometries: Set<THREE.BufferGeometry>;
   materials: Set<THREE.Material>;
   textures: Set<THREE.Texture>;
 }
+
+/** Alpha cutoff for garment artwork. Mid-range keeps soft edges without haloing. */
+const SPATIAL_ARTWORK_ALPHA_TEST = 0.5;
+/** Ghost opacity used only when the internal carrier debug toggle is on. */
+const SPATIAL_CARRIER_DEBUG_OPACITY = 0.28;
 
 interface SpatialMediaBinding {
   item: SpatialRenderItem;
@@ -63,6 +77,14 @@ interface SpatialMediaBinding {
   surfaceWidth: number;
   surfaceHeight: number;
   requested: boolean;
+  /**
+   * Alpha artwork surfaces must keep their transparency through the contain
+   * step. Opaque media surfaces (projection walls, posters) keep the letterbox
+   * backing, which is what makes them read as a screen rather than a cut-out.
+   */
+  alphaArtwork: boolean;
+  /** Garment front/back artwork overrides the placement's single media ref. */
+  mediaOverride?: SpatialMediaRef;
 }
 
 interface SpatialMediaRuntime {
@@ -76,6 +98,7 @@ export function ThreeSpatialRenderer({
   mediaLocators,
   onItemActivate,
   onRuntimeFailure,
+  debugCarriers = false,
 }: ThreeSpatialRendererProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const runtimeRef = useRef<SpatialThreeRuntime | null>(null);
@@ -85,7 +108,7 @@ export function ThreeSpatialRenderer({
     () => spatialMediaLocatorSignature(mediaLocators),
     [mediaLocators],
   );
-  const runtimeKey = `${plan.fingerprint}\u0000${locatorSignature}`;
+  const runtimeKey = `${plan.fingerprint}\u0000${locatorSignature}\u0000${debugCarriers ? "debug" : "clean"}`;
 
   useEffect(() => {
     activateRef.current = onItemActivate;
@@ -106,6 +129,7 @@ export function ThreeSpatialRenderer({
         mediaLocators,
         onItemActivate: (placementId) => activateRef.current(placementId),
         onRuntimeFailure: () => failureRef.current(),
+        debugCarriers,
       });
       runtimeRef.current = runtime;
       return () => {
@@ -147,6 +171,7 @@ function createSpatialThreeRuntime(input: {
   mediaLocators: SafeSpatialMediaLocatorMap;
   onItemActivate: (placementId: string) => void;
   onRuntimeFailure: () => void;
+  debugCarriers?: boolean;
 }): SpatialThreeRuntime {
   const {
     host,
@@ -158,6 +183,7 @@ function createSpatialThreeRuntime(input: {
     onRuntimeFailure,
   } = input;
   const resources: PlacementOwnedResources = {
+    geometries: new Set(),
     materials: new Set(),
     textures: new Set(),
   };
@@ -173,6 +199,11 @@ function createSpatialThreeRuntime(input: {
   const interactiveRoots: THREE.Object3D[] = [];
   const mediaBindings = new Map<string, SpatialMediaBinding[]>();
   const externalTextureLoads = new Map<string, Promise<THREE.Texture | null>>();
+  const renderGeometryStats = {
+    requested: plan.items.filter((item) => item.renderGeometry?.kind === "glb").length,
+    loaded: 0,
+    failed: 0,
+  };
   const cameraTarget = new THREE.Vector3(0, 1.5, 0);
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
@@ -222,6 +253,9 @@ function createSpatialThreeRuntime(input: {
     renderer.domElement.removeEventListener("pointerleave", clearPointer);
     renderer.domElement.removeEventListener("lostpointercapture", clearPointer);
     renderer.domElement.removeEventListener("webglcontextlost", onContextLost);
+    for (const geometry of resources.geometries) {
+      try { geometry.dispose(); } catch { /* continue disposing the remaining runtime */ }
+    }
     for (const texture of resources.textures) {
       try { texture.dispose(); } catch { /* continue disposing the remaining runtime */ }
     }
@@ -237,6 +271,9 @@ function createSpatialThreeRuntime(input: {
     delete host.dataset.componentKeys;
     delete host.dataset.roomFingerprint;
     delete host.dataset.lightingProfile;
+    delete host.dataset.glbRenderRequestedCount;
+    delete host.dataset.glbRenderLoadedCount;
+    delete host.dataset.glbRenderFailedCount;
   };
 
   const failRuntime = () => {
@@ -369,9 +406,14 @@ function createSpatialThreeRuntime(input: {
     for (const binding of mediaBindings.get(placementId) ?? []) {
       if (binding.requested) continue;
       binding.requested = true;
-      const source = resolveSpatialMediaSource(binding.item.media, mediaLocators);
-      if (!source || !binding.item.media) continue;
-      const cacheKey = `${binding.item.media.assetId}\u0000${source}`;
+      // A garment's artwork overrides the placement's single media ref. Reading
+      // `binding.item.media` here ignored the override entirely, so garment
+      // front/back artwork could never be fetched and every garment kept its
+      // procedural placeholder.
+      const media = binding.mediaOverride ?? binding.item.media;
+      const source = resolveSpatialMediaSource(media, mediaLocators);
+      if (!source || !media) continue;
+      const cacheKey = `${media.assetId}\u0000${source}`;
       let textureLoad = externalTextureLoads.get(cacheKey);
       if (!textureLoad) {
         textureLoad = loadGuardedTexture(source, resources, () => disposed);
@@ -383,6 +425,7 @@ function createSpatialThreeRuntime(input: {
           sourceTexture,
           binding.surfaceWidth,
           binding.surfaceHeight,
+          binding.alphaArtwork,
         );
         if (!containedTexture || disposed) {
           containedTexture?.dispose();
@@ -470,7 +513,7 @@ function createSpatialThreeRuntime(input: {
 
     for (const item of plan.items) {
       if (!item.visible) continue;
-      const root = createSpatialObject(item, resources, mediaRuntime);
+      const root = createSpatialObject(item, resources, mediaRuntime, input.debugCarriers ?? false);
       root.position.fromArray(item.transform.position);
       root.rotation.set(...item.transform.rotation);
       root.scale.fromArray(item.transform.scale);
@@ -486,6 +529,14 @@ function createSpatialThreeRuntime(input: {
       };
       itemHandles.set(item.placementId, handle);
       if (item.actions.length > 0 || item.interaction) interactiveRoots.push(root);
+      requestRenderGeometryForItem({
+        item,
+        root,
+        resources,
+        renderGeometryStats,
+        requestRender,
+        isDisposed: () => disposed,
+      });
     }
 
     renderer.domElement.addEventListener("pointerdown", onPointerDown);
@@ -514,21 +565,42 @@ function createSpatialObject(
   item: SpatialRenderItem,
   resources: PlacementOwnedResources,
   mediaRuntime: SpatialMediaRuntime,
+  debugCarriers = false,
 ): THREE.Group {
   const group = new THREE.Group();
+  const proxyGroup = new THREE.Group();
+  proxyGroup.name = "proxy-geometry";
   const template = getSpatialGeometryTemplate(item);
   const materialByPartKey = new Map<string, THREE.MeshStandardMaterial>();
   group.userData.componentKey = item.componentKey;
   group.userData.geometryTemplateSource = template.source;
 
   for (const [partIndex, templatePart] of template.parts.entries()) {
-    const materialKey = `${templatePart.materialSlot ?? "default"}:${templatePart.materialSide ?? "front"}:${templatePart.mediaSurface ? `media-${partIndex}` : "solid"}`;
+    // Carrier and artwork must never share a material: hiding the carrier must
+    // not hide the artwork. The key keeps them in separate buckets.
+    const materialKey = [
+      templatePart.materialSlot ?? "default",
+      templatePart.materialSide ?? "front",
+      templatePart.mediaSurface ? `media-${partIndex}` : "solid",
+      templatePart.carrier ? "carrier" : "visible",
+      templatePart.alphaArtwork ? `alpha-${templatePart.mediaRole ?? "any"}` : "opaque",
+    ].join(":");
     let material = materialByPartKey.get(materialKey);
     if (!material) {
       material = spatialMaterial(item, resources, templatePart.materialSlot);
       material.side = threeMaterialSide(templatePart);
-      if (templatePart.mediaSurface) {
-        applyGeneratedMediaToMaterial(item, material, resources, mediaRuntime);
+      if (templatePart.carrier) {
+        applyCarrierVisibility(material, debugCarriers);
+      } else if (templatePart.mediaSurface) {
+        if (templatePart.alphaArtwork) applyArtworkAlpha(material);
+        applyGeneratedMediaToMaterial(
+          item,
+          material,
+          resources,
+          mediaRuntime,
+          templatePart.alphaArtwork === true,
+          garmentMediaForRole(item, templatePart.mediaRole),
+        );
       }
       materialByPartKey.set(materialKey, material);
     }
@@ -536,9 +608,62 @@ function createSpatialObject(
     mesh.position.fromArray(templatePart.position);
     if (templatePart.rotation) mesh.rotation.set(...templatePart.rotation);
     if (templatePart.scale) mesh.scale.fromArray(templatePart.scale);
-    group.add(mesh);
+    proxyGroup.add(mesh);
   }
+  group.add(proxyGroup);
   return group;
+}
+
+function requestRenderGeometryForItem(input: {
+  item: SpatialRenderItem;
+  root: THREE.Group;
+  resources: PlacementOwnedResources;
+  renderGeometryStats: { requested: number; loaded: number; failed: number };
+  requestRender: () => void;
+  isDisposed: () => boolean;
+}): void {
+  const { item, root, resources, renderGeometryStats, requestRender, isDisposed } = input;
+  if (item.renderGeometry?.kind !== "glb") return;
+  root.userData.renderGeometryStatus = "loading";
+  void loadSpatialGlbRenderGeometry(item.renderGeometry, item.dimensions)
+    .then((loaded) => {
+      if (isDisposed()) {
+        disposeGlbInstance(loaded);
+        return;
+      }
+      loaded.name = "glb-render-geometry";
+      loaded.userData.geometryTemplateSource = "glb-render-geometry";
+      markPlacement(loaded, item.placementId);
+      const collected = collectGlbInstanceResources(loaded);
+      for (const geometry of collected.geometries) resources.geometries.add(geometry);
+      for (const material of collected.materials) resources.materials.add(material);
+      for (const texture of collected.textures) resources.textures.add(texture);
+      root.add(loaded);
+      const proxy = root.getObjectByName("proxy-geometry");
+      if (proxy) proxy.visible = false;
+      root.userData.renderGeometryStatus = "loaded";
+      renderGeometryStats.loaded += 1;
+      requestRender();
+    })
+    .catch(() => {
+      if (isDisposed()) return;
+      root.userData.renderGeometryStatus = "failed";
+      renderGeometryStats.failed += 1;
+      requestRender();
+    });
+}
+
+function disposeGlbInstance(object: THREE.Object3D): void {
+  const collected = collectGlbInstanceResources(object);
+  for (const geometry of collected.geometries) {
+    try { geometry.dispose(); } catch { /* best-effort orphan cleanup */ }
+  }
+  for (const texture of collected.textures) {
+    try { texture.dispose(); } catch { /* best-effort orphan cleanup */ }
+  }
+  for (const material of collected.materials) {
+    try { material.dispose(); } catch { /* best-effort orphan cleanup */ }
+  }
 }
 
 function applyGeneratedMediaToMaterial(
@@ -546,6 +671,8 @@ function applyGeneratedMediaToMaterial(
   material: THREE.MeshStandardMaterial,
   resources: PlacementOwnedResources,
   mediaRuntime: SpatialMediaRuntime,
+  alphaArtwork: boolean,
+  mediaOverride?: SpatialMediaRef,
 ): void {
   const surfaceWidth = item.dimensions.width * Math.abs(item.transform.scale[0]);
   const surfaceHeight = item.dimensions.height * Math.abs(item.transform.scale[1]);
@@ -562,6 +689,8 @@ function applyGeneratedMediaToMaterial(
     surfaceWidth,
     surfaceHeight,
     requested: false,
+    alphaArtwork,
+    ...(mediaOverride ? { mediaOverride } : {}),
   });
 }
 
@@ -609,6 +738,7 @@ function createContainedMediaTexture(
   sourceTexture: THREE.Texture,
   surfaceWidth: number,
   surfaceHeight: number,
+  preserveAlpha: boolean,
 ): THREE.CanvasTexture | null {
   const dimensions = textureImageDimensions(sourceTexture);
   if (!dimensions) return null;
@@ -624,8 +754,16 @@ function createContainedMediaTexture(
   canvas.height = mapping.canvasHeight;
   const context = canvas.getContext("2d");
   if (!context) return null;
-  context.fillStyle = "#111318";
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  if (!preserveAlpha) {
+    // An opaque backing is correct for a projection wall or poster: it should
+    // read as a screen, and the letterbox bars must not be see-through.
+    //
+    // It is wrong for garment artwork. Filling here painted over the alpha
+    // channel, so `alphaTest` had nothing left to carve and every garment
+    // rendered as a full rectangle no matter what artwork was assigned.
+    context.fillStyle = "#111318";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+  }
   context.drawImage(
     sourceTexture.image as CanvasImageSource,
     mapping.drawX,
@@ -741,6 +879,57 @@ function spatialMaterial(
   return material;
 }
 
+/**
+ * Invisible carrier material.
+ *
+ * The mesh stays in the scene so it still contributes bounds and remains
+ * raycast-selectable, but it writes neither colour nor depth. Selection of a
+ * garment therefore works across the whole carrier volume rather than only
+ * where the artwork happens to be opaque.
+ */
+function applyCarrierVisibility(material: THREE.MeshStandardMaterial, debug = false): void {
+  material.transparent = true;
+  // Debug mode reveals the carrier as a faint ghost for authoring QA only. It
+  // never changes artwork, saved data, or the public meaning of the room, and it
+  // is not an indication of final visual quality.
+  material.opacity = debug ? SPATIAL_CARRIER_DEBUG_OPACITY : 0;
+  material.depthWrite = false;
+  material.colorWrite = debug;
+  material.wireframe = debug;
+  material.needsUpdate = true;
+}
+
+/**
+ * Alpha-tested artwork material.
+ *
+ * `alphaTest` is preferred over blended transparency: it writes depth correctly,
+ * so a rail of overlapping garment planes does not depend on sort order.
+ */
+function applyArtworkAlpha(material: THREE.MeshStandardMaterial): void {
+  material.transparent = false;
+  material.alphaTest = SPATIAL_ARTWORK_ALPHA_TEST;
+  material.depthWrite = true;
+  material.needsUpdate = true;
+}
+
+function garmentMediaForRole(
+  item: SpatialRenderItem,
+  role: SpatialGarmentArtworkRole | undefined,
+): SpatialMediaRef | undefined {
+  const garment = item.garment;
+  if (!role || !garment) return undefined;
+  // Each channel falls back along an honest chain rather than leaving a plane
+  // blank: a back print falls back to the front, and footwear falls back to its
+  // display image, which is the shoe's primary channel.
+  switch (role) {
+    case "front": return garment.frontMedia ?? garment.displayMedia;
+    case "back": return garment.backMedia ?? garment.frontMedia ?? garment.displayMedia;
+    case "display": return garment.displayMedia ?? garment.outerSideMedia ?? garment.frontMedia;
+    case "outer-side": return garment.outerSideMedia ?? garment.topMedia ?? garment.displayMedia;
+    case "top": return garment.topMedia ?? garment.displayMedia;
+  }
+}
+
 function markPlacement(object: THREE.Object3D, placementId: string) {
   object.traverse((child) => {
     child.userData.placementId = placementId;
@@ -762,10 +951,16 @@ function markSuccessfulRender(
   host.dataset.lightingProfile = plan.lighting.id;
   host.dataset.renderedItemCount = count;
   host.dataset.componentKeys = componentKeys;
+  host.dataset.glbRenderRequestedCount = String(plan.items.filter((item) => item.renderGeometry?.kind === "glb").length);
+  host.dataset.glbRenderLoadedCount = String([...itemHandles.values()].filter((handle) => handle.root.userData.renderGeometryStatus === "loaded").length);
+  host.dataset.glbRenderFailedCount = String([...itemHandles.values()].filter((handle) => handle.root.userData.renderGeometryStatus === "failed").length);
   canvas.dataset.roomFingerprint = plan.fingerprint;
   canvas.dataset.lightingProfile = plan.lighting.id;
   canvas.dataset.renderedItemCount = count;
   canvas.dataset.componentKeys = componentKeys;
+  canvas.dataset.glbRenderRequestedCount = host.dataset.glbRenderRequestedCount;
+  canvas.dataset.glbRenderLoadedCount = host.dataset.glbRenderLoadedCount;
+  canvas.dataset.glbRenderFailedCount = host.dataset.glbRenderFailedCount;
 }
 
 function addSpatialLighting(scene: THREE.Scene, definitions: readonly SpatialLightDefinition[]) {

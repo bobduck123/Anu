@@ -1,0 +1,1401 @@
+{
+  "schemaVersion": "presence-spatial-assets.v0",
+  "shortlistVersion": "mobstar-gate4-shortlist.v0",
+  "generatedAt": "2026-08-17T00:00:00.000Z",
+  "sourceRegistry": "assets/presence-spatial/candidates/manifests/candidate-registry.json",
+  "gate": "mobstar-gate4",
+  "criteria": [
+    "useful for a dark luxury streetwear showroom",
+    "good silhouette when viewed shape-only",
+    "usable scale, or an explicitly recorded scale doubt",
+    "low payload and inside its budget tier",
+    "clear material slots",
+    "at least one anchor",
+    "a rendered thumbnail good enough to judge from",
+    "not obvious junk, service equipment or a grouped extraction",
+    "not a redundant duplicate of a better candidate",
+    "no third-party brand or franchise identity baked into geometry"
+  ],
+  "totals": {
+    "registryComponents": 118,
+    "registryRoomKits": 8,
+    "passedAutomatedFilter": 35,
+    "visuallyReviewed": 11,
+    "selected": 6,
+    "rejected": 3
+  },
+  "entries": [
+    {
+      "candidateId": "candidate.chair.interior-7-3bc1-000",
+      "kind": "component",
+      "sourceAssetId": "source.interior-7",
+      "category": "chair",
+      "observedAs": "Studio light head on a collapsible tripod stand — a lighting fixture, not a chair",
+      "role": "display-lighting-fixture",
+      "decision": "use-for-mobstar-gate4",
+      "scores": {
+        "visualQuality": 3,
+        "scaleConfidence": 2,
+        "mobstarFit": 3,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.4114,
+        0.857,
+        0.4266
+      ],
+      "runtimeSizeKb": 323.8,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.chair.interior-7-3bc1-000.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.43m x 0.86m"
+      ],
+      "notes": [
+        "A visible studio light is a credible showroom prop for a streetwear brand and supports the campaign/photography framing.",
+        "Recorded height of 0.86 m is short for a light stand; the stand may be extracted collapsed, or the source scale is off.",
+        "323.8 KB, within the simple-component budget but the heaviest of the selected props.",
+        "Geometry only — it emits nothing. Actual lighting comes from the Gate 4 lighting profile, not from this mesh."
+      ]
+    },
+    {
+      "candidateId": "candidate.chair.interior-7-3bc1-013",
+      "kind": "component",
+      "sourceAssetId": "source.interior-7",
+      "category": "chair",
+      "observedAs": "Three stacked chunky sculptural blocks forming a stepped riser — not a chair",
+      "role": "product-riser",
+      "decision": "use-for-mobstar-gate4",
+      "scores": {
+        "visualQuality": 3,
+        "scaleConfidence": 2,
+        "mobstarFit": 4,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.3508,
+        0.4931,
+        0.4219
+      ],
+      "runtimeSizeKb": 11.6,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.chair.interior-7-3bc1-013.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.42m x 0.49m"
+      ],
+      "notes": [
+        "Stacked raw blocks are a current streetwear-retail display idiom; this is a strong Mobstar fit despite the wrong category guess.",
+        "0.35 x 0.49 x 0.42 m is a plausible riser, but absolute scale is inherited from a source whose units are unconfirmed.",
+        "11.6 KB. Cheap enough to place several across the floor.",
+        "needs-3d-review to confirm the blocks are solid and the stack is stable-looking from all sides."
+      ]
+    },
+    {
+      "candidateId": "candidate.decorative-prop.interior-7-3bc1-009",
+      "kind": "component",
+      "sourceAssetId": "source.interior-7",
+      "category": "decorative-prop",
+      "observedAs": "Wire-frame tub armchair with a thin seat pad",
+      "role": "showroom-seating",
+      "decision": "use-for-mobstar-gate4",
+      "scores": {
+        "visualQuality": 3,
+        "scaleConfidence": 1,
+        "mobstarFit": 2,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.3848,
+        0.323,
+        0.3844
+      ],
+      "runtimeSizeKb": 51.8,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.decorative-prop.interior-7-3bc1-009.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.38m x 0.32m"
+      ],
+      "notes": [
+        "Good open wire silhouette that will not visually block a small showroom floor.",
+        "Recorded dimensions of 0.38 x 0.32 x 0.38 m are far too small for a real armchair, so the source scale is wrong or the extraction is partial.",
+        "scaleConfidence scored 1 for that reason; do not place without a 3D scale pass.",
+        "51.8 KB. Fit is moderate: it reads more cafe than luxury streetwear and may be replaced by an authored bench."
+      ]
+    },
+    {
+      "candidateId": "candidate.roomkit.warehouse-17b3",
+      "kind": "roomkit",
+      "sourceAssetId": "source.brutalist-interior-vr-room-baked-source-untitled",
+      "category": "warehouse",
+      "observedAs": "Brutalist interior shell with vertical ribbed/fluted concrete walls and a stepped ceiling",
+      "role": "showroom-shell",
+      "decision": "use-for-mobstar-gate4",
+      "scores": {
+        "visualQuality": 3,
+        "scaleConfidence": 4,
+        "mobstarFit": 3,
+        "needs3dReview": false
+      },
+      "dimensions": [
+        10.7,
+        4.2229,
+        6.7854
+      ],
+      "runtimeSizeKb": 668.2,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 6,
+      "anchorCount": 0,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.roomkit.warehouse-17b3.webp",
+      "filterTrace": [
+        "roomkit-budget: within-budget",
+        "scale-review-required: false"
+      ],
+      "notes": [
+        "The strongest architectural match in the batch for a dark luxury showroom: heavy ribbed concrete reads as sculptural rather than domestic.",
+        "Metre-scaled at 10.7 x 4.2 x 6.8, so no rescale is needed — rare in this batch.",
+        "668 KB textured, comfortably inside the 3 MB room-kit eager budget.",
+        "Directly compatible with the ribbed-wall primitive and warm-nocturnal-boutique style added in the Gate 4 art-direction lane.",
+        "Thumbnail views the shell from outside; interior read still needs a 3D pass before it drives final art direction."
+      ]
+    },
+    {
+      "candidateId": "candidate.shelf.retopo-g-555780-0ae2-013",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "shelf",
+      "observedAs": "Full-height gathered fabric curtain / drape — not a shelf",
+      "role": "soft-division-drape",
+      "decision": "use-for-mobstar-gate4",
+      "scores": {
+        "visualQuality": 3,
+        "scaleConfidence": 3,
+        "mobstarFit": 3,
+        "needs3dReview": false
+      },
+      "dimensions": [
+        0.2888,
+        2.0739,
+        1.1302
+      ],
+      "runtimeSizeKb": 127,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.shelf.retopo-g-555780-0ae2-013.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 1.13m x 2.07m"
+      ],
+      "notes": [
+        "Convincing cloth folds. Useful as a fitting-area division or a soft backdrop behind a garment display.",
+        "2.07 m tall is a credible drape height and consistent with a metre-scaled source.",
+        "127 KB. Maps cleanly onto the fabric material slot, so it can take fabric-garment-dark from the Gate 4 palette.",
+        "Single-sided cloth: check backface behaviour in 3D before placing it where both sides are visible."
+      ]
+    },
+    {
+      "candidateId": "candidate.table.old-church-modeling-interior-sce-ffd7-017",
+      "kind": "component",
+      "sourceAssetId": "source.old-church-modeling-interior-scene",
+      "category": "table",
+      "observedAs": "Clean rectangular stone slab on a recessed stepped base — reads as a sculptural plinth, not a table",
+      "role": "display-island",
+      "decision": "use-for-mobstar-gate4",
+      "scores": {
+        "visualQuality": 4,
+        "scaleConfidence": 3,
+        "mobstarFit": 4,
+        "needs3dReview": false
+      },
+      "dimensions": [
+        1.5713,
+        0.7784,
+        2.5598
+      ],
+      "runtimeSizeKb": 7.8,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.table.old-church-modeling-interior-sce-ffd7-017.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 2.56m x 0.78m"
+      ],
+      "notes": [
+        "The standout find of the batch. Silhouette is clean, symmetrical and reads immediately as a premium central display island.",
+        "1.57 x 0.78 x 2.56 m is a usable island footprint at a natural 0.78 m display height.",
+        "7.8 KB shape-only — two orders of magnitude inside the simple-component budget.",
+        "Originally a church altar; stripped of texture it carries no religious signal, but a reviewer should confirm that framing is acceptable.",
+        "Pairs with the rounded-island / display-bay primitives in the Gate 4 lane as the authored counterpart."
+      ]
+    },
+    {
+      "candidateId": "candidate.chair.coffee-shop-gld-coffee-shop-0ae2-012",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "chair",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.4458,
+        1.1948,
+        0.4467
+      ],
+      "runtimeSizeKb": 137.6,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.chair.coffee-shop-gld-coffee-shop-0ae2-012.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.45m x 1.19m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.chair.coffee-shop-gld-coffee-shop-0ae2-020",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "chair",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.3163,
+        0.9896,
+        0.3163
+      ],
+      "runtimeSizeKb": 87.5,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.chair.coffee-shop-gld-coffee-shop-0ae2-020.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.32m x 0.99m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.chair.coffee-shop-gld-coffee-shop-0ae2-023",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "chair",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.3313,
+        1.0366,
+        0.3313
+      ],
+      "runtimeSizeKb": 87.5,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.chair.coffee-shop-gld-coffee-shop-0ae2-023.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.33m x 1.04m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.chair.interior-7-3bc1-008",
+      "kind": "component",
+      "sourceAssetId": "source.interior-7",
+      "category": "chair",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.3702,
+        0.4095,
+        0.2977
+      ],
+      "runtimeSizeKb": 47.9,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.chair.interior-7-3bc1-008.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.37m x 0.41m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.chair.interior-7-3bc1-012",
+      "kind": "component",
+      "sourceAssetId": "source.interior-7",
+      "category": "chair",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.3047,
+        0.4796,
+        0.3315
+      ],
+      "runtimeSizeKb": 35.2,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.chair.interior-7-3bc1-012.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.33m x 0.48m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.chair.interior-7-3bc1-014",
+      "kind": "component",
+      "sourceAssetId": "source.interior-7",
+      "category": "chair",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.5125,
+        0.4931,
+        0.4681
+      ],
+      "runtimeSizeKb": 11.7,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.chair.interior-7-3bc1-014.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.51m x 0.49m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.chair.pottery-007-0ae2-006",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "chair",
+      "observedAs": "Terracotta vase with flowering stems",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": 3,
+        "scaleConfidence": 3,
+        "mobstarFit": 1,
+        "needs3dReview": false
+      },
+      "dimensions": [
+        0.4322,
+        0.6708,
+        0.3733
+      ],
+      "runtimeSizeKb": 324.8,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.chair.pottery-007-0ae2-006.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.43m x 0.67m"
+      ],
+      "notes": [
+        "Competently modelled and could suit a warmer, more domestic Presence.",
+        "Florals work against the dark luxury streetwear direction, so it is deferred rather than rejected outright."
+      ]
+    },
+    {
+      "candidateId": "candidate.column.coffee-shop-gld-coffee-shop-0ae2-011",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "column",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.2154,
+        0.5554,
+        0.2397
+      ],
+      "runtimeSizeKb": 143.8,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 2,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.column.coffee-shop-gld-coffee-shop-0ae2-011.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 2",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.24m x 0.56m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.column.interior-7-3bc1-015",
+      "kind": "component",
+      "sourceAssetId": "source.interior-7",
+      "category": "column",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.1549,
+        1.5343,
+        0.1544
+      ],
+      "runtimeSizeKb": 7.5,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 2,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.column.interior-7-3bc1-015.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 2",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.15m x 1.53m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.decorative-prop.coffee-shop-gld-coffee-shop-0ae2-008",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "decorative-prop",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.2278,
+        0.2393,
+        0.5491
+      ],
+      "runtimeSizeKb": 13.7,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.decorative-prop.coffee-shop-gld-coffee-shop-0ae2-008.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.55m x 0.24m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.decorative-prop.interior-7-3bc1-016",
+      "kind": "component",
+      "sourceAssetId": "source.interior-7",
+      "category": "decorative-prop",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.0494,
+        0.3504,
+        0.2245
+      ],
+      "runtimeSizeKb": 2.6,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.decorative-prop.interior-7-3bc1-016.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.22m x 0.35m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.shelf.interior-7-3bc1-018",
+      "kind": "component",
+      "sourceAssetId": "source.interior-7",
+      "category": "shelf",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.5487,
+        3.7078,
+        0.4665
+      ],
+      "runtimeSizeKb": 2.6,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.shelf.interior-7-3bc1-018.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.55m x 3.71m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.sofa.sofa-001-0ae2-003",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "sofa",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        3.4098,
+        1.2491,
+        2.5932
+      ],
+      "runtimeSizeKb": 751.2,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.sofa.sofa-001-0ae2-003.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 3.41m x 1.25m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.table.coffee-shop-gld-coffee-shop-0ae2-000",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "table",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.6348,
+        0.6325,
+        1.4059
+      ],
+      "runtimeSizeKb": 2464.5,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.table.coffee-shop-gld-coffee-shop-0ae2-000.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 1.41m x 0.63m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.unknown-object.coffee-shop-gld-coffee-shop-0ae2-007",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "unknown-object",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.0103,
+        1.3342,
+        1.228
+      ],
+      "runtimeSizeKb": 359.6,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.unknown-object.coffee-shop-gld-coffee-shop-0ae2-007.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 1.23m x 1.33m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.unknown-object.coffee-shop-gld-coffee-shop-0ae2-016",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "unknown-object",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.2703,
+        0.8456,
+        0.2703
+      ],
+      "runtimeSizeKb": 87.5,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 6,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.unknown-object.coffee-shop-gld-coffee-shop-0ae2-016.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 6",
+        "plausible-showroom-scale: 0.27m x 0.85m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.unknown-object.coffee-shop-gld-coffee-shop-0ae2-017",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "unknown-object",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.2754,
+        0.8617,
+        0.2754
+      ],
+      "runtimeSizeKb": 87.5,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 6,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.unknown-object.coffee-shop-gld-coffee-shop-0ae2-017.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 6",
+        "plausible-showroom-scale: 0.28m x 0.86m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.unknown-object.coffee-shop-gld-coffee-shop-0ae2-018",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "unknown-object",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.2828,
+        0.8848,
+        0.2828
+      ],
+      "runtimeSizeKb": 87.5,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 6,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.unknown-object.coffee-shop-gld-coffee-shop-0ae2-018.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 6",
+        "plausible-showroom-scale: 0.28m x 0.88m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.unknown-object.coffee-shop-gld-coffee-shop-0ae2-019",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "unknown-object",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.2945,
+        0.9213,
+        0.2945
+      ],
+      "runtimeSizeKb": 87.5,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 6,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.unknown-object.coffee-shop-gld-coffee-shop-0ae2-019.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 6",
+        "plausible-showroom-scale: 0.29m x 0.92m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.unknown-object.coffee-shop-gld-coffee-shop-0ae2-021",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "unknown-object",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.2954,
+        0.9243,
+        0.2954
+      ],
+      "runtimeSizeKb": 87.5,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 6,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.unknown-object.coffee-shop-gld-coffee-shop-0ae2-021.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 6",
+        "plausible-showroom-scale: 0.30m x 0.92m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.unknown-object.coffee-shop-gld-coffee-shop-0ae2-022",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "unknown-object",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.2649,
+        0.8288,
+        0.2649
+      ],
+      "runtimeSizeKb": 87.5,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 6,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.unknown-object.coffee-shop-gld-coffee-shop-0ae2-022.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 6",
+        "plausible-showroom-scale: 0.26m x 0.83m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.unknown-object.interior-7-3bc1-004",
+      "kind": "component",
+      "sourceAssetId": "source.interior-7",
+      "category": "unknown-object",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        1.3807,
+        0.3599,
+        1.3072
+      ],
+      "runtimeSizeKb": 56.7,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.unknown-object.interior-7-3bc1-004.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 1.38m x 0.36m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.unknown-object.interior-7-3bc1-005",
+      "kind": "component",
+      "sourceAssetId": "source.interior-7",
+      "category": "unknown-object",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.6191,
+        0.3314,
+        1.0299
+      ],
+      "runtimeSizeKb": 50.6,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.unknown-object.interior-7-3bc1-005.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 1.03m x 0.33m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.unknown-object.interior-7-3bc1-006",
+      "kind": "component",
+      "sourceAssetId": "source.interior-7",
+      "category": "unknown-object",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.9864,
+        0.3314,
+        0.4862
+      ],
+      "runtimeSizeKb": 50.6,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.unknown-object.interior-7-3bc1-006.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.99m x 0.33m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.unknown-object.interior-7-3bc1-010",
+      "kind": "component",
+      "sourceAssetId": "source.interior-7",
+      "category": "unknown-object",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        0.9591,
+        0.3517,
+        0.4411
+      ],
+      "runtimeSizeKb": 39.6,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.unknown-object.interior-7-3bc1-010.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.96m x 0.35m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.unknown-object.texturescom-persiancarpets0012-1-alphama-ffd7-010",
+      "kind": "component",
+      "sourceAssetId": "source.old-church-modeling-interior-scene",
+      "category": "unknown-object",
+      "observedAs": "not visually reviewed in this pass",
+      "role": null,
+      "decision": "maybe-use-later",
+      "scores": {
+        "visualQuality": null,
+        "scaleConfidence": null,
+        "mobstarFit": null,
+        "needs3dReview": true
+      },
+      "dimensions": [
+        1.2266,
+        0.4921,
+        2.7801
+      ],
+      "runtimeSizeKb": 21.2,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.unknown-object.texturescom-persiancarpets0012-1-alphama-ffd7-010.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 2.78m x 0.49m"
+      ],
+      "notes": [
+        "Passed the automated filter but was not visually reviewed in this pass; treat as unassessed."
+      ]
+    },
+    {
+      "candidateId": "candidate.sofa.sofa-0ae2-002",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "sofa",
+      "observedAs": "A complete lounge seating set — sofa, two tub chairs, coffee table and two planters extracted as one object",
+      "role": null,
+      "decision": "needs-manual-cleanup",
+      "scores": {
+        "visualQuality": 3,
+        "scaleConfidence": 3,
+        "mobstarFit": 1,
+        "needs3dReview": false
+      },
+      "dimensions": [
+        3.4098,
+        1.2922,
+        2.5932
+      ],
+      "runtimeSizeKb": 751.2,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.sofa.sofa-0ae2-002.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 3.41m x 1.29m"
+      ],
+      "notes": [
+        "The extraction is a grouping, not a component: six distinct objects share one node in the source.",
+        "Would need splitting before any of its parts could be used, and the resulting sofa still reads cafe-lounge rather than showroom.",
+        "751 KB for the whole group."
+      ]
+    },
+    {
+      "candidateId": "candidate.shelf.coffee-vending-machine-station-0ae2-004",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "shelf",
+      "observedAs": "Coffee vending machine with 'COFFEE POINT' lettering modelled into the housing",
+      "role": null,
+      "decision": "reject",
+      "scores": {
+        "visualQuality": 3,
+        "scaleConfidence": 4,
+        "mobstarFit": 0,
+        "needs3dReview": false
+      },
+      "dimensions": [
+        0.7983,
+        2.35,
+        1.29
+      ],
+      "runtimeSizeKb": 737.4,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.shelf.coffee-vending-machine-station-0ae2-004.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 1.29m x 2.35m"
+      ],
+      "notes": [
+        "Well modelled and correctly scaled at 2.35 m tall, but semantically wrong and brand-contaminated."
+      ],
+      "rejectionReason": "Third-party branded fixture with baked lettering; wrong fixture type for a streetwear showroom."
+    },
+    {
+      "candidateId": "candidate.table.bovenkap-0ae2-001",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "table",
+      "observedAs": "Rounded appliance hood or waste-bin housing",
+      "role": null,
+      "decision": "reject",
+      "scores": {
+        "visualQuality": 2,
+        "scaleConfidence": 3,
+        "mobstarFit": 0,
+        "needs3dReview": false
+      },
+      "dimensions": [
+        0.9489,
+        1.1498,
+        0.9516
+      ],
+      "runtimeSizeKb": 586.5,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.table.bovenkap-0ae2-001.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 0.95m x 1.15m"
+      ],
+      "notes": [
+        "586 KB for an object with no showroom role."
+      ],
+      "rejectionReason": "Service equipment, not showroom furniture."
+    },
+    {
+      "candidateId": "candidate.wall.coffee-shop-gld-coffee-shop-0ae2-014",
+      "kind": "component",
+      "sourceAssetId": "source.coffee-shop-gld-coffee-shop",
+      "category": "wall",
+      "observedAs": "Wall panel carrying a third-party baked brand graphic reading 'ENJOY YOUR TIME WITH COFFEE'",
+      "role": null,
+      "decision": "reject",
+      "scores": {
+        "visualQuality": 2,
+        "scaleConfidence": 3,
+        "mobstarFit": 0,
+        "needs3dReview": false
+      },
+      "dimensions": [
+        1.8345,
+        2.4919,
+        0.0264
+      ],
+      "runtimeSizeKb": 263.6,
+      "budgetStatus": "within-budget",
+      "materialSlotCount": 3,
+      "anchorCount": 7,
+      "thumbnail": "assets/presence-spatial/candidates/thumbnails/candidate.wall.coffee-shop-gld-coffee-shop-0ae2-014.webp",
+      "filterTrace": [
+        "has-runtime-asset",
+        "budget-ok: within-budget",
+        "has-thumbnail",
+        "material-slots: 3",
+        "anchors: 7",
+        "plausible-showroom-scale: 1.83m x 2.49m"
+      ],
+      "notes": [
+        "By metadata alone this looked like an ideal 1.83 x 2.49 m media wall: right size, right category, flat, 263 KB.",
+        "On sight it is unusable. Baking a third party's brand into shared component geometry is exactly what the component-reference model exists to prevent.",
+        "This single row justifies the cost of thumbnail-driven review over metadata scoring."
+      ],
+      "rejectionReason": "Another brand's identity is baked into the geometry."
+    }
+  ],
+  "unfilledRoles": [
+    {
+      "role": "garment-rack",
+      "status": "missing-suitable-candidate",
+      "reason": "The candidate registry contains zero rack-category components. No ingested source is a retail environment, so no garment rail or rack exists to extract.",
+      "recommendedFallback": {
+        "kind": "procedural-primitive",
+        "primitive": "suspended-rack",
+        "note": "Use the suspended-rack primitive from the Gate 4 art-direction lane with the rack-matte-black preset. This is the single most important Mobstar fixture and must be procedural for this gate."
+      }
+    },
+    {
+      "role": "garment-carrier",
+      "status": "missing-suitable-candidate",
+      "reason": "No garment, hanger or mannequin geometry exists anywhere in the batch.",
+      "recommendedFallback": {
+        "kind": "procedural-primitive",
+        "primitive": "garment-hanger",
+        "note": "Use the garment-hanger primitive with fabric-garment-dark and fabric-garment-signal so individual Pieces can be hung on rack slot anchors."
+      }
+    },
+    {
+      "role": "projection-media-wall",
+      "status": "missing-suitable-candidate",
+      "reason": "No projection-surface candidate exists. The only large flat panel in the batch carries a third-party baked brand graphic and was rejected on sight.",
+      "recommendedFallback": {
+        "kind": "procedural-primitive",
+        "primitive": "projection-grid",
+        "note": "Use the projection-grid primitive with projection-campaign-warm. Campaign media must be an assigned media ref, never baked geometry."
+      }
+    },
+    {
+      "role": "poster-archive-surface",
+      "status": "missing-suitable-candidate",
+      "reason": "No poster or frame candidate exists in the registry.",
+      "recommendedFallback": {
+        "kind": "procedural-primitive",
+        "primitive": "framed-media",
+        "note": "Use the framed-media primitive with poster-decal slots so archive imagery stays a swappable media ref."
+      }
+    },
+    {
+      "role": "wall-treatment",
+      "status": "missing-suitable-candidate",
+      "reason": "No standalone wall-treatment component is usable. The ribbed surface exists only inside the brutalist room kit, and the only extracted wall panels are franchise geometry or branded graphics.",
+      "recommendedFallback": {
+        "kind": "procedural-primitive",
+        "primitive": "ribbed-wall",
+        "note": "Use the ribbed-wall primitive with wall-charcoal, or mine the ribbed surface out of the brutalist room kit in a later pass."
+      }
+    }
+  ]
+}

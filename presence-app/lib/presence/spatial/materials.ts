@@ -63,12 +63,30 @@ export const SPATIAL_MATERIAL_PRESETS: Readonly<Record<SpatialMaterialPresetId, 
   "poster-archive": { id: "poster-archive", slot: "poster-decal", label: "Archive poster stock", baseColor: "#b9a984", roughness: 0.9, metalness: 0 },
   "accent-signal": { id: "accent-signal", slot: "logo-accent", label: "Signal accent", baseColor: "#f2c52e", roughness: 0.4, metalness: 0.08, emissive: "#8c260f", emissiveIntensity: 0.2 },
   "wall-warm-sculptural": { id: "wall-warm-sculptural", slot: "wall", label: "Warm sculptural plaster", baseColor: "#d6cdbf", roughness: 0.72, metalness: 0.01 },
-  "wall-boutique-charcoal": { id: "wall-boutique-charcoal", slot: "wall", label: "Readable boutique charcoal", baseColor: "#202226", roughness: 0.62, metalness: 0.08 },
-  "tabletop-pale-sculptural": { id: "tabletop-pale-sculptural", slot: "tabletop", label: "Pale sculptural display", baseColor: "#cfc6b8", roughness: 0.48, metalness: 0.02 },
-  "rack-boutique-blackened": { id: "rack-boutique-blackened", slot: "rack-metal", label: "Blackened boutique steel", baseColor: "#2c2e33", roughness: 0.24, metalness: 0.72 },
-  "fabric-garment-dark": { id: "fabric-garment-dark", slot: "fabric", label: "Dark garment textile", baseColor: "#18191d", roughness: 0.86, metalness: 0 },
+  "wall-boutique-charcoal": { id: "wall-boutique-charcoal", slot: "wall", label: "Readable boutique charcoal", baseColor: "#191b20", roughness: 0.58, metalness: 0.08 },
+  "tabletop-pale-sculptural": { id: "tabletop-pale-sculptural", slot: "tabletop", label: "Pale sculptural display", baseColor: "#d9d1c4", roughness: 0.42, metalness: 0.02 },
+  "rack-boutique-blackened": { id: "rack-boutique-blackened", slot: "rack-metal", label: "Blackened boutique steel", baseColor: "#1f2228", roughness: 0.22, metalness: 0.78 },
+  "fabric-garment-dark": { id: "fabric-garment-dark", slot: "fabric", label: "Dark garment textile", baseColor: "#222027", roughness: 0.88, metalness: 0 },
   "fabric-garment-signal": { id: "fabric-garment-signal", slot: "fabric", label: "Signal garment textile", baseColor: "#a92b2f", roughness: 0.84, metalness: 0 },
-  "projection-campaign-warm": { id: "projection-campaign-warm", slot: "projection", label: "Warm campaign light", baseColor: "#d8c7b4", roughness: 0.4, metalness: 0, emissive: "#fff3df", emissiveIntensity: 0.3 },
+  // --- Rack / lookbook display treatment ---
+  //
+  // The rack metal is the important one. `rack-matte-black` is nearly black at
+  // metalness 0.86, and this renderer has no environment map, so a highly
+  // metallic surface has almost nothing to reflect and renders as a black
+  // silhouette — rail, uprights and every hanger vanish against a dark wall.
+  // This preset keeps a steel character but at a metalness the direct lights
+  // can actually model, so hardware reads as furniture without competing with
+  // the artwork.
+  "rack-lookbook-steel": { id: "rack-lookbook-steel", slot: "rack-metal", label: "Lookbook rack steel", baseColor: "#59606b", roughness: 0.55, metalness: 0.28 },
+  // Lifted off black so garments have something to sit against, still matte
+  // enough not to compete with them.
+  "wall-lookbook-graphite": { id: "wall-lookbook-graphite", slot: "wall", label: "Lookbook graphite wall", baseColor: "#2a2f38", roughness: 0.85, metalness: 0.02 },
+  "floor-lookbook-slate": { id: "floor-lookbook-slate", slot: "floor", label: "Lookbook slate floor", baseColor: "#212429", roughness: 0.82, metalness: 0.02 },
+  // The suspended rack renders a large base platform on the tabletop slot. In
+  // warm stone it was the brightest surface in frame and pulled the eye below
+  // the garments; this keeps it readable but subordinate.
+  "tabletop-lookbook-riser": { id: "tabletop-lookbook-riser", slot: "tabletop", label: "Lookbook rack riser", baseColor: "#34373d", roughness: 0.88, metalness: 0.01 },
+  "projection-campaign-warm": { id: "projection-campaign-warm", slot: "projection", label: "Warm campaign light", baseColor: "#dcc8b2", roughness: 0.34, metalness: 0, emissive: "#fff0d8", emissiveIntensity: 0.42 },
 };
 
 export const DEFAULT_PRESET_BY_SLOT: Readonly<Record<SpatialMaterialSlotId, SpatialMaterialPresetId>> = {
@@ -145,15 +163,26 @@ export const SPATIAL_MATERIAL_STYLE_PRESETS: Readonly<Record<SpatialMaterialStyl
     description: "Blackout architecture with a bounded emissive projection field.",
     slotPresets: styleSlots({ wall: "wall-projection-blackout", floor: "floor-dark-stone", projection: "projection-blackout", fabric: "fabric-nocturnal" }),
   },
+  "lookbook-rack": {
+    id: "lookbook-rack",
+    label: "Lookbook rack",
+    description: "Readable rack display: graphite architecture, steel fixtures and a subordinate rack riser, so alpha garment artwork stays the focus.",
+    slotPresets: styleSlots({
+      wall: "wall-lookbook-graphite",
+      floor: "floor-lookbook-slate",
+      tabletop: "tabletop-lookbook-riser",
+      "rack-metal": "rack-lookbook-steel",
+    }),
+  },
   "warm-nocturnal-boutique": {
     id: "warm-nocturnal-boutique",
     label: "Warm nocturnal boutique",
     description: "Polished charcoal, pale sculptural displays, black fixtures and product-first warm media light.",
     slotPresets: styleSlots({
-      wall: "wall-charcoal",
+      wall: "wall-boutique-charcoal",
       floor: "floor-polished-charcoal",
       tabletop: "tabletop-pale-sculptural",
-      "rack-metal": "rack-matte-black",
+      "rack-metal": "rack-boutique-blackened",
       fabric: "fabric-garment-dark",
       projection: "projection-campaign-warm",
     }),

@@ -36,6 +36,8 @@ export interface SpatialRoomViewportProps {
   ariaLabel?: string;
   onAction?: (action: SpatialActionRef, ownerPlacementId: string) => void;
   onSelectionChange?: (placementId: string | undefined) => void;
+  /** Internal authoring aid: reveals invisible garment carriers. Never persisted. */
+  debugCarriers?: boolean;
 }
 
 export function SpatialRoomViewport({
@@ -44,6 +46,7 @@ export function SpatialRoomViewport({
   initialStateId,
   className,
   ariaLabel = "Internal spatial room preview",
+  debugCarriers = false,
   onAction,
   onSelectionChange,
 }: SpatialRoomViewportProps) {
@@ -193,6 +196,7 @@ export function SpatialRoomViewport({
               mediaLocators={resolvedMediaLocators}
               onItemActivate={handleItemActivate}
               onRuntimeFailure={() => setRuntimeFailed(true)}
+              debugCarriers={debugCarriers}
               plan={plan}
               selectedPlacementId={selectedPlacementId}
             />

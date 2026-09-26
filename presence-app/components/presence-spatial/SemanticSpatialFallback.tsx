@@ -85,7 +85,7 @@ export function SemanticSpatialFallback({
             </div>
             {row.actions.length > 0 ? (
               <div className={styles.semanticActions} aria-label={`Actions for ${row.label}`}>
-                {row.actions.map((action) => action.kind === "open-link" ? (
+                {row.actions.map((action) => isLinkLikeAction(action) ? (
                   <a
                     data-testid={`presence-spatial-semantic-action-${row.placementId}-${action.id}`}
                     href={action.href}
@@ -118,6 +118,10 @@ export function SemanticSpatialFallback({
       </ol>
     </section>
   );
+}
+
+function isLinkLikeAction(action: SpatialActionRef): action is Extract<SpatialActionRef, { href: string }> {
+  return action.kind === "open-link" || action.kind === "listen" || action.kind === "watch" || action.kind === "enquire";
 }
 
 function BrandedStaticFallback({
