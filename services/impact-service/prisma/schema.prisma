@@ -191,6 +191,26 @@ model StripeEvent {
   @@schema("public")
 }
 
+// One durable receipt per scheduled job slot. No member-level data is stored here.
+model ScheduledJobRun {
+  id              String    @id @default(cuid())
+  jobName         String
+  scheduledAt     DateTime
+  status          String    // running | succeeded | failed
+  attempts        Int       @default(1)
+  startedAt       DateTime
+  finishedAt      DateTime?
+  result          Json?
+  error           String?
+  lastFailedAt    DateTime?
+  lastFailureCode String?
+
+  @@unique([jobName, scheduledAt])
+  @@index([jobName, status, scheduledAt])
+  @@map("ScheduledJobRuns")
+  @@schema("public")
+}
+
 // ============================================================================
 // FLORA FAUNA MEMETIC MUTUAL-AID SUBSYSTEM
 // ============================================================================
