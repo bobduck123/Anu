@@ -1,91 +1,61 @@
-import logger from '../utils/logger';
+import type { PrismaClient } from '@prisma/client';
 import { createPrismaClient } from '../lib/prisma';
 
-const prisma = createPrismaClient();
+export interface WeeklyDigestSummary {
+  period: { from: string; to: string };
+  metrics: {
+    newSubscriptions: number;
+    activeSubscriptions: number;
+    creditsGranted: number;
+    poolContributionsDollars: string;
+    activePools: number;
+  };
+}
 
-/**
- * Weekly digest job (runs Monday 08:00 UTC)
- * - Aggregate new subscriptions
- * - Aggregate credits granted
- * - Aggregate pool contributions
- * - Log summary (Phase 2: send emails)
- */
+/** Build an aggregate summary for the seven days ending at the scheduled slot. */
+export async function collectWeeklyDigest(
+  prisma: PrismaClient,
+  periodEnd: Date
+): Promise<WeeklyDigestSummary> {
+  const periodStart = new Date(periodEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const window = { gte: periodStart, lt: periodEnd };
+  const [newSubscriptions, creditResult, poolResult, activePools, activeSubscriptions] =
+    await Promise.all([
+      prisma.subscription.count({ where: { createdAt: window } }),
+      prisma.impactCreditTransaction.aggregate({
+        where: {
+          createdAt: window,
+          transactionType: { in: ['monthly_grant', 'streak_bonus'] }
+        },
+        _sum: { amountCredits: true }
+      }),
+      prisma.impactLedgerEntry.aggregate({
+        where: { createdAt: window, entryType: 'subscription_credit' },
+        _sum: { amountCents: true }
+      }),
+      prisma.impactPool.count({ where: { isActive: true } }),
+      prisma.subscription.count({ where: { status: 'active' } })
+    ]);
+
+  return {
+    period: { from: periodStart.toISOString(), to: periodEnd.toISOString() },
+    metrics: {
+      newSubscriptions,
+      activeSubscriptions,
+      creditsGranted: creditResult._sum.amountCredits ?? 0,
+      poolContributionsDollars: ((poolResult._sum.amountCents ?? 0) / 100).toFixed(2),
+      activePools
+    }
+  };
+}
+
+/** Legacy manual entry point; summary only, with no outbound delivery. */
 export const runWeeklyDigest = async (): Promise<void> => {
+  const { default: logger } = await import('../utils/logger');
+  const prisma = createPrismaClient();
   try {
     logger.info('Starting weekly digest');
-
-    const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const now = new Date();
-
-    // Count new subscriptions
-    const newSubscriptions = await prisma.subscription.count({
-      where: {
-        createdAt: {
-          gte: lastWeek,
-          lt: now
-        }
-      }
-    });
-
-    // Sum credits granted (monthly_grant + streak_bonus)
-    const creditResult = await prisma.impactCreditTransaction.aggregate({
-      where: {
-        createdAt: {
-          gte: lastWeek,
-          lt: now
-        },
-        transactionType: {
-          in: ['monthly_grant', 'streak_bonus']
-        }
-      },
-      _sum: { amountCredits: true }
-    });
-
-    const creditsGranted = creditResult._sum.amountCredits || 0;
-
-    // Sum pool contributions (subscription_credit entries)
-    const poolResult = await prisma.impactLedgerEntry.aggregate({
-      where: {
-        createdAt: {
-          gte: lastWeek,
-          lt: now
-        },
-        entryType: 'subscription_credit'
-      },
-      _sum: { amountCents: true }
-    });
-
-    const poolContributionsCents = poolResult._sum.amountCents || 0;
-
-    // Count active pools
-    const activePools = await prisma.impactPool.count({
-      where: { isActive: true }
-    });
-
-    // Count active subscriptions
-    const activeSubscriptions = await prisma.subscription.count({
-      where: { status: 'active' }
-    });
-
-    const digest = {
-      period: {
-        from: lastWeek.toISOString(),
-        to: now.toISOString()
-      },
-      metrics: {
-        newSubscriptions,
-        activeSubscriptions,
-        creditsGranted,
-        poolContributionsDollars: (poolContributionsCents / 100).toFixed(2),
-        activePools
-      }
-    };
-
-    logger.info(digest, 'Weekly digest summary');
-
-    // Phase 2: Send email digest to admins/organizers
-    // Implementation would go here
-
+    logger.info(await collectWeeklyDigest(prisma, new Date()), 'Weekly digest summary');
   } catch (err) {
     logger.error({ error: err }, 'Weekly digest failed');
     throw err;

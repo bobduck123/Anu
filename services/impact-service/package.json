@@ -12,6 +12,7 @@
     "prisma:migrate:deploy": "prisma migrate deploy --schema prisma/schema.prisma",
     "typecheck": "tsc --noEmit",
     "start": "node dist/server.js",
+    "job:weekly": "node dist/jobs/weeklyDigestCli.js",
     "test": "jest",
     "test:non-db": "jest --runInBand --testPathIgnorePatterns=tests/falak/falakDatabase.integration.test.ts --testPathIgnorePatterns=tests/maps/falakMapSandbox.database.test.ts",
     "test:release": "npm run -s test:non-db && npm run -s falak:verify:local && npm run -s falak:sandbox:verify",
