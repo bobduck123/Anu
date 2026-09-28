@@ -66,11 +66,10 @@ test("M1 private edits and Test as visitor leave both BBB public routes and payl
   await page.getByRole("button", { name: "Studio Home" }).click();
 
   await page.getByTestId("presence-studio-v3-shelf-trigger").click();
-  const noteCard = page.locator(".studio-v3-library-sections section")
-    .filter({ hasText: "Room-native BBB Pieces" })
-    .locator(".studio-v3-library-card")
+  const noteCard = page.locator(".studio-v3-library-card")
     .filter({ hasText: "Editable practice note" })
     .first();
+  await expect(noteCard).toBeVisible();
   await noteCard.getByRole("button", { name: "Inspect / edit" }).click();
   await page.getByTestId("presence-studio-v3-edit-action").click();
   await page.getByTestId("presence-studio-v3-piece-title").fill("Private M1 visitor rehearsal");

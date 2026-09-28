@@ -168,3 +168,56 @@ test("a valid Studio V2 draft is not blocked by legacy GGM scene readiness", () 
   assert.equal(report.critical.some((issue) => issue.id === "missing-primary-cta"), false);
   assert.equal(report.critical.some((issue) => issue.id === "missing-enquiry-routing"), false);
 });
+
+test("RCR-06 through RCR-11 contract failures block publish readiness by invocation", () => {
+  const report = buildReadinessReport({
+    config: {
+      ...readyDraft,
+      content_config: {
+        registry_contract: {
+          ownerReferences: [
+            { id: "user_123", displayName: "Unsafe owner", lifecycleState: "active", permission: "owner-dashboard" },
+            { id: "owner-b", displayName: "Second owner", lifecycleState: "withdrawn" },
+          ],
+          ownerships: [
+            { kind: "contested", ownerIds: ["user_123", "owner-b"], orderingBasis: "source order" },
+          ],
+          relations: [
+            { id: "work-1", ownerIds: ["owner-missing"] },
+          ],
+          testimonies: [
+            { ownerId: "user_123", quote: "Generated testimony.", generated: true },
+          ],
+          reducedMotion: [
+            {
+              declaration: "Reduced motion path skips terminal state.",
+              animatedTruthState: { visible: ["hero", "work"] },
+              reducedTruthState: { visible: ["hero"] },
+            },
+          ],
+          measurementReadiness: [
+            {
+              analyticsOnly: true,
+              measuredBox: { width: 0, height: 0 },
+              signals: { resizeObserver: false, boundedAnimationFrame: false, documentVisibility: false },
+            },
+          ],
+          compatibilityPairings: [
+            { lookId: "look-a", roomStyleId: "room-a", tier: "blocked", selectable: true },
+          ],
+          publishClaims: ["Gate 7 started"],
+          visitorStorage: true,
+        },
+      },
+    },
+    overview: overview({ ...readyDraft, status: "published" }),
+    node,
+    dirty: false,
+    mobilePreviewReviewed: true,
+  });
+
+  assert.equal(report.hasBlockingIssues, true);
+  for (const rcr of ["rcr-rcr-06", "rcr-rcr-07", "rcr-rcr-09", "rcr-rcr-10", "rcr-rcr-11"]) {
+    assert.equal(report.critical.some((issue) => issue.id.startsWith(rcr)), true, rcr);
+  }
+});

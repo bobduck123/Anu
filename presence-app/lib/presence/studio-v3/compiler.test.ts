@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import type { PresenceEditableConfig, PresenceNode } from "../../api/types.ts";
 import { presenceConfigFromStudioV2State, studioV2FromPresenceConfig } from "../studio-v2/adapters.ts";
 import {
@@ -32,6 +33,7 @@ import {
   setStudioV3ObjectSize,
   setStudioV3ObjectTreatment,
   setStudioV3ObjectVisibility,
+  setStudioV3PlacementCollection,
   toggleStudioV3ObjectFeatured,
   unplaceStudioV3Object,
   updateStudioV3ObjectCopy,
@@ -59,7 +61,37 @@ import {
   STUDIO_V3_HIDDEN_OR_UNAVAILABLE_REASON,
   STUDIO_V3_LOCAL_SCHEMA_VERSION,
   type StudioV3ComparableConfig,
+  type StudioV3Look,
 } from "./model.ts";
+import {
+  PRESENCE_ATMOSPHERE_DEFINITIONS,
+  PRESENCE_LOOK_DEFINITIONS,
+  PRESENCE_LOOK_ROOM_STYLE_COMPATIBILITY,
+  PRESENCE_MOTION_BEHAVIOUR_DEFINITIONS,
+  PRESENCE_OWNER_ACTIVE_ATMOSPHERE_DEFINITIONS,
+  PRESENCE_OWNER_ACTIVE_PIECE_TREATMENT_DEFINITIONS,
+  PRESENCE_PIECE_TREATMENT_DEFINITIONS,
+  PRESENCE_PUBLIC_PRESET_CANDIDATES,
+  PRESENCE_ROOM_STYLE_DEFINITIONS,
+  getPresenceLookSelectionStatus,
+  getPresencePublicPresetCandidateDefinition,
+  getPresenceRoomStyleSelectionStatus,
+  getPresenceStyleCandidateReadiness,
+  getPresenceStylePairingStatus,
+  initialStudioV3LookIdForBridge,
+  isPresenceLookRoomStyleCompatible,
+  isPresenceLookSelectable,
+  isPresencePublicPresetCandidateMetadataOnly,
+  isPresencePublicPresetCandidateSelectableInV3,
+  isPresenceRoomStyleSelectable,
+  isPresenceStylePairingAllowed,
+  presenceLookRoomStyleFallback,
+  presenceStylePairingGuardrail,
+  presenceStyleCompatibilityOwnerCopy,
+  resolvePresenceLookRoomStyleCompatibility,
+  studioV3RoomStyleIdForV2Layout,
+  type PresenceLookRoomStyleCompatibilityDefinition,
+} from "./styleCatalog.ts";
 import {
   applyStudioV3StructuralStage,
   cancelStudioV3StructuralStage,
@@ -77,6 +109,7 @@ import {
   STUDIO_V3_PRIVATE_METADATA_SECTION_MAX_BYTES,
   STUDIO_V3_ROOM_STYLE_DEFINITIONS,
 } from "./p1State.ts";
+import { summarizeStudioV3ContentSources } from "./sourceTruth.ts";
 import {
   collectionSourceRef,
   containsRawStudioV3SourceRef,
@@ -399,6 +432,40 @@ test("Room-qualified runtime Piece keys preserve legacy P1 source identity and r
   const compiled = compileStudioV3Document(restored.document, state);
   assert.equal(compiled.studioV2State.chambers.find((room) => room.id === "gallery")?.objects[0]?.title, "Edited Gallery");
   assert.equal(compiled.studioV2State.chambers.find((room) => room.id === "archive")?.objects[0]?.title, "Edited Archive");
+});
+
+test("content source summary separates owner Works from renderer-backed base material", async () => {
+  const emptyOwnerLibraryNode: PresenceNode = {
+    ...baseNode,
+    id: 1,
+    slug: "presence-contract-room",
+    display_name: "Presence Contract Room",
+    works: [],
+    collections: [],
+  };
+  const emptyFixture = await hydratedP1Fixture(emptyOwnerLibraryNode);
+  const emptySummary = summarizeStudioV3ContentSources(emptyFixture.document, "gallery");
+
+  assert.equal(emptySummary.canonicalWorkCount, 0);
+  assert.equal(emptySummary.collectionCount, 0);
+  assert.equal(emptySummary.roomNativePieceCount, 1);
+  assert.equal(emptySummary.activeRoomNativePieceCount, 1);
+  assert.equal(emptySummary.hasCanonicalWorks, false);
+  assert.equal(emptySummary.hasCollections, false);
+  assert.match(emptySummary.ownerWorksEmptyMessage, /No owner Works are connected yet/);
+  assert.match(emptySummary.collectionsEmptyMessage, /No Collections have been created/);
+  assert.match(emptySummary.roomAssignmentNotice, /inherited from the current room\/base config/);
+  assert.match(emptySummary.sourceNotice ?? "", /renderer-backed|room\/base material/);
+  assert.doesNotMatch(JSON.stringify(emptySummary), /GGM|placeholder|loaded-owner-library|work:\d+|collection:\d+/i);
+
+  const bbbFixture = await hydratedP1Fixture();
+  const bbbSummary = summarizeStudioV3ContentSources(bbbFixture.document, "gallery");
+  assert.equal(bbbSummary.canonicalWorkCount, 1);
+  assert.equal(bbbSummary.collectionCount, 1);
+  assert.equal(bbbSummary.hasCanonicalWorks, true);
+  assert.equal(bbbSummary.hasCollections, true);
+  assert.equal(bbbSummary.hasRendererBackedRoomMaterial, true);
+  assert.equal(bbbSummary.sourceNotice, bbbSummary.roomAssignmentNotice);
 });
 
 test("explicit placement overlays preserve empty Rooms instead of resurrecting durable placements", async () => {
@@ -1032,6 +1099,215 @@ test("compiler places Piece and Collection deterministically without leaking raw
   assert.equal(compiled.issues.filter((issue) => issue.severity === "error").length, 0);
   assert.equal(containsRawStudioV3SourceRef(compiled.publicRoom), false);
   assert.ok(compiled.publicRoom.chambers[0].objects.some((object) => object.id === firstPlacementId));
+});
+
+test("BBVision Work title edits persist as private overlays without mutating the canonical Work snapshot", async () => {
+  const bbbWorkRef = workSourceRef(2901);
+  const bbbNode: PresenceNode = {
+    ...baseNode,
+    works: [{
+      id: 2901,
+      collection_id: 291,
+      slug: "bbb-opening-image",
+      title: "Opening image",
+      year: "2026",
+      description: "Canonical BBBVision opening work.",
+      image_url: "/media/bbb-opening-image.jpg",
+      sort_order: 1,
+      is_visible: true,
+    }],
+    collections: [{ id: 291, title: "Threshold Sequence", is_visible: true }],
+  };
+  const fixture = await hydratedP1Fixture(bbbNode);
+  let document = placeStudioV3Piece(fixture.document, "gallery", bbbWorkRef);
+  const placementId = makeStudioV3PlacementId("gallery", bbbWorkRef);
+
+  document = updateStudioV3ObjectCopy(document, {
+    roomId: "gallery",
+    objectId: placementId,
+    title: "Opening image - private M2 proof",
+  });
+
+  assert.equal(document.pieces[bbbWorkRef]?.title, "Opening image");
+  assert.equal(document.objectEdits[makeStudioV3ObjectEditId("gallery", placementId)]?.sourceRef, bbbWorkRef);
+  assert.equal(document.objectEdits[makeStudioV3ObjectEditId("gallery", placementId)]?.title, "Opening image - private M2 proof");
+
+  const compiled = compileStudioV3Document(document, fixture.baseState);
+  const compiledPiece = compiled.studioV2State.chambers[0]?.objects.find((object) => object.id === placementId);
+  assert.equal(compiledPiece?.title, "Opening image - private M2 proof");
+
+  const metadata = projectStudioV3Metadata(document);
+  const serialized = JSON.stringify(metadata);
+  assert.equal(serialized.includes("fromWork"), false);
+  assert.equal(serialized.includes("bbb-opening-image"), false);
+  assert.equal(serialized.includes("/media/"), false);
+  assert.equal(isSafeStudioV3MetadataEnvelope(metadata), true);
+
+  const restoredFixture = await hydratedP1Fixture(bbbNode);
+  const restored = restoreStudioV3Metadata(restoredFixture.document, metadata);
+  assert.equal(restored.report.status, "exact");
+  assert.equal(restored.document.pieces[bbbWorkRef]?.title, "Opening image");
+  assert.equal(
+    restored.document.objectEdits[makeStudioV3ObjectEditId("gallery", placementId)]?.title,
+    "Opening image - private M2 proof",
+  );
+  assert.equal(
+    compileStudioV3Document(restored.document, restoredFixture.baseState)
+      .studioV2State.chambers[0]?.objects.find((object) => object.id === placementId)?.title,
+    "Opening image - private M2 proof",
+  );
+});
+
+test("BBVision private organisation persists placement and arrangement with title overlay", async () => {
+  const bbbWorkRef = workSourceRef(2901);
+  const bbbNode: PresenceNode = {
+    ...baseNode,
+    works: [{
+      id: 2901,
+      collection_id: 291,
+      slug: "bbb-opening-image",
+      title: "Opening image",
+      year: "2026",
+      description: "Canonical BBBVision opening work.",
+      image_url: "/media/bbb-opening-image.jpg",
+      sort_order: 1,
+      is_visible: true,
+    }],
+    collections: [{ id: 291, title: "Threshold Sequence", is_visible: true }],
+  };
+  const fixture = await hydratedP1Fixture(bbbNode);
+  let document = placeStudioV3Piece(fixture.document, "gallery", bbbWorkRef);
+  const placementId = makeStudioV3PlacementId("gallery", bbbWorkRef);
+  document = updateStudioV3ObjectCopy(document, {
+    roomId: "gallery",
+    objectId: placementId,
+    title: "Opening image - private M3 organisation proof",
+  });
+  const moved = moveStudioV3ObjectToZone(document, fixture.baseState, {
+    roomId: "gallery",
+    objectId: placementId,
+    zoneId: "main-wall",
+  });
+  assert.equal(moved.error, undefined);
+  document = moved.document;
+  document = setStudioV3ObjectSize(document, fixture.baseState, {
+    roomId: "gallery",
+    objectId: placementId,
+    size: "large",
+  }).document;
+
+  const metadata = projectStudioV3Metadata(document);
+  const placement = metadata.placements.find((row) => row.sourceRef === bbbWorkRef);
+  const edit = metadata.object_edits.find((row) => row.sourceRef === bbbWorkRef);
+  assert.deepEqual(placement, {
+    id: placementId,
+    roomId: "gallery",
+    objectId: placementId,
+    sourceRef: bbbWorkRef,
+    order: 0,
+    status: "placed",
+  });
+  assert.equal(edit?.title, "Opening image - private M3 organisation proof");
+  assert.equal(edit?.zoneId, "main-wall");
+  assert.equal(edit?.size, "large");
+  assert.equal(document.pieces[bbbWorkRef]?.title, "Opening image");
+  assert.equal(document.pieces[bbbWorkRef]?.fromWork?.collection_id, 291);
+
+  const restoredFixture = await hydratedP1Fixture(bbbNode);
+  const restored = restoreStudioV3Metadata(restoredFixture.document, metadata);
+  assert.equal(restored.report.status, "exact");
+  assert.equal(restored.document.pieces[bbbWorkRef]?.title, "Opening image");
+  assert.equal(restored.document.pieces[bbbWorkRef]?.fromWork?.collection_id, 291);
+  assert.equal(restored.document.rooms[0]?.placements[0]?.sourceRef, bbbWorkRef);
+  const restoredEdit = restored.document.objectEdits[makeStudioV3ObjectEditId("gallery", placementId)];
+  assert.equal(restoredEdit?.title, "Opening image - private M3 organisation proof");
+  assert.equal(restoredEdit?.zoneId, "main-wall");
+  assert.equal(restoredEdit?.size, "large");
+
+  const compiled = compileStudioV3Document(restored.document, restoredFixture.baseState).studioV2State.chambers[0]!;
+  const compiledPlacement = compiled.composition?.placements.find((row) => row.objectId === placementId);
+  assert.equal(compiled.objects.find((object) => object.id === placementId)?.title, "Opening image - private M3 organisation proof");
+  assert.equal(compiledPlacement?.zoneId, "main-wall");
+  assert.equal(compiledPlacement?.size, "large");
+});
+
+test("BBVision private Collection curation persists as a placement overlay without canonical membership mutation", async () => {
+  const bbbWorkRef = workSourceRef(2901);
+  const privateCollectionRef = collectionSourceRef(292);
+  const bbbNode: PresenceNode = {
+    ...baseNode,
+    works: [{
+      id: 2901,
+      collection_id: 291,
+      slug: "bbb-opening-image",
+      title: "Opening image",
+      year: "2026",
+      description: "Canonical BBBVision opening work.",
+      image_url: "/media/bbb-opening-image.jpg",
+      sort_order: 1,
+      is_visible: true,
+    }],
+    collections: [
+      { id: 291, title: "Threshold Sequence", is_visible: true },
+      { id: 292, title: "Gallery Field", is_visible: true },
+    ],
+  };
+  const fixture = await hydratedP1Fixture(bbbNode);
+  let document = placeStudioV3Piece(fixture.document, "gallery", bbbWorkRef);
+  const placementId = makeStudioV3PlacementId("gallery", bbbWorkRef);
+  document = updateStudioV3ObjectCopy(document, {
+    roomId: "gallery",
+    objectId: placementId,
+    title: "Opening image - private M2 proof",
+  });
+  document = moveStudioV3ObjectToZone(document, fixture.baseState, {
+    roomId: "gallery",
+    objectId: placementId,
+    zoneId: "main-wall",
+  }).document;
+  document = setStudioV3ObjectSize(document, fixture.baseState, {
+    roomId: "gallery",
+    objectId: placementId,
+    size: "large",
+  }).document;
+
+  const curated = setStudioV3PlacementCollection(document, {
+    roomId: "gallery",
+    objectId: placementId,
+    collectionSourceRef: privateCollectionRef,
+  });
+  assert.equal(curated.error, undefined);
+  document = curated.document;
+
+  assert.equal(document.pieces[bbbWorkRef]?.fromWork?.collection_id, 291);
+  assert.deepEqual(document.collections[privateCollectionRef]?.memberSourceRefs, []);
+  const metadata = projectStudioV3Metadata(document);
+  assert.equal(isSafeStudioV3MetadataEnvelope(metadata), true);
+  assert.equal(metadata.placements.find((row) => row.sourceRef === bbbWorkRef)?.collectionSourceRef, privateCollectionRef);
+  assert.equal(metadata.object_edits.find((row) => row.sourceRef === bbbWorkRef)?.title, "Opening image - private M2 proof");
+
+  const restoredFixture = await hydratedP1Fixture(bbbNode);
+  const restored = restoreStudioV3Metadata(restoredFixture.document, metadata);
+  assert.equal(restored.report.status, "exact");
+  assert.equal(restored.document.pieces[bbbWorkRef]?.fromWork?.collection_id, 291);
+  assert.equal(restored.document.rooms[0]?.placements[0]?.collectionSourceRef, privateCollectionRef);
+
+  const compiled = compileStudioV3Document(restored.document, restoredFixture.baseState).studioV2State.chambers[0]!;
+  const compiledObject = compiled.objects.find((object) => object.id === placementId);
+  const compiledPlacement = compiled.composition?.placements.find((row) => row.objectId === placementId);
+  assert.equal(compiledObject?.role, "collection-piece");
+  assert.equal(compiledObject?.title, "Opening image - private M2 proof");
+  assert.equal(compiledPlacement?.zoneId, "main-wall");
+  assert.equal(compiledPlacement?.size, "large");
+
+  const missingCollectionNode: PresenceNode = { ...bbbNode, collections: [bbbNode.collections![0]!] };
+  const missingCollectionFixture = await hydratedP1Fixture(missingCollectionNode);
+  const partialRestore = restoreStudioV3Metadata(missingCollectionFixture.document, metadata);
+  assert.equal(partialRestore.report.status, "partial");
+  assert.equal(partialRestore.report.issues.some((issue) => (
+    issue.kind === "missing-collection" && issue.reference === privateCollectionRef
+  )), true);
+  assert.equal(partialRestore.document.rooms[0]?.placements.length, 0);
 });
 
 test("owner Library exposes only canonical Collections and never synthesizes a fallback grouping", async () => {
@@ -2071,6 +2347,439 @@ test("P1 exposes three materially distinct Looks and a complete 3x3 compatibilit
   const filmMappings = STUDIO_V3_LOOK_ROOM_STYLE_COMPATIBILITY.filter((item) => item.roomStyleId === "film-strip-selected-works");
   assert.equal(filmMappings.every((item) => item.v2LayoutId === "film-strip-selected-works"), true);
   assert.equal(filmMappings.some((item) => item.publicStylePreset === "christina-liquid-gallery"), false);
+});
+
+test("M3A shared style catalog stages Atelier metadata while preserving Gate 3 active coverage", () => {
+  assert.deepEqual(PRESENCE_LOOK_DEFINITIONS.map((look) => look.id), [
+    "soft-editorial",
+    "nocturnal-gallery",
+    "zine-archive",
+    "brass-inlay",
+  ]);
+  assert.deepEqual(PRESENCE_ROOM_STYLE_DEFINITIONS.map((roomStyle) => roomStyle.id), [
+    "threshold-portal",
+    "gallery-wall",
+    "film-strip-selected-works",
+    "refractive-threshold",
+  ]);
+  assert.deepEqual(PRESENCE_PIECE_TREATMENT_DEFINITIONS.map((treatment) => treatment.id), [
+    "quiet-framed",
+    "luminous-depth",
+    "captioned-ledger",
+    "onion-inspection",
+    "scribe-reveal",
+    "measured-plate",
+  ]);
+  assert.deepEqual(PRESENCE_ATMOSPHERE_DEFINITIONS.map((atmosphere) => atmosphere.id), [
+    "paper-light",
+    "nocturnal-depth",
+    "ledger-scan",
+    "drawing-sheet",
+    "material-sampler",
+  ]);
+  assert.deepEqual(PRESENCE_MOTION_BEHAVIOUR_DEFINITIONS.map((motion) => motion.id), [
+    "still",
+    "gentle",
+    "living",
+  ]);
+
+  assert.equal(PRESENCE_LOOK_ROOM_STYLE_COMPATIBILITY.length, 10);
+  assert.equal(STUDIO_V3_LOOK_ROOM_STYLE_COMPATIBILITY.length, 9);
+  assert.equal(resolvePresenceLookRoomStyleCompatibility("nocturnal-gallery", "threshold-portal").tier, "flagship");
+  assert.equal(resolvePresenceLookRoomStyleCompatibility("soft-editorial", "gallery-wall").tier, "flagship");
+  assert.equal(resolvePresenceLookRoomStyleCompatibility("zine-archive", "film-strip-selected-works").tier, "experimental");
+  assert.equal(isPresenceLookRoomStyleCompatible("zine-archive", "threshold-portal"), true);
+  assert.equal(presenceLookRoomStyleFallback("zine-archive", "threshold-portal"), "film-strip-selected-works");
+  assert.equal(studioV3RoomStyleIdForV2Layout("portal-threshold"), "threshold-portal");
+  assert.equal(studioV3RoomStyleIdForV2Layout("unknown-layout"), "gallery-wall");
+
+  const christina = getPresencePublicPresetCandidateDefinition("christina-liquid-gallery");
+  assert.equal(christina.migrationStatus, "catalog-candidate");
+  assert.equal(christina.supportStatus, "metadata-only");
+  assert.equal(christina.candidateEvidenceStatus, "public-proof");
+  assert.equal(christina.candidateKind, "preset-composed-from-primitives");
+  assert.equal(christina.rendererSupport, "specialized-v2");
+  assert.equal(christina.evidenceStatus, "needs-audit");
+  assert.equal(christina.impliedLookRoomStylePair?.lookId, "soft-editorial");
+  assert.equal(christina.impliedLookRoomStylePair?.roomStyleId, "film-strip-selected-works");
+  assert.equal(christina.impliedLookRoomStylePair?.tier, "experimental");
+  assert.equal(christina.impliedLookRoomStylePair?.fallbackRoomStyleId, "gallery-wall");
+  assert.equal(christina.primitiveRequirements.some((requirement) => /Liquid gallery surface/.test(requirement)), true);
+  assert.equal(christina.primitiveRequirements.some((requirement) => /Reduced-motion contract/.test(requirement)), true);
+  assert.equal(christina.missingContracts.some((contract) => /No Christina V3 Look ID/.test(contract)), true);
+  assert.equal(christina.missingContracts.some((contract) => /No liquid motion behaviour token/.test(contract)), true);
+  assert.equal(PRESENCE_PUBLIC_PRESET_CANDIDATES.some((preset) => preset.id === "christina-liquid-gallery"), true);
+  assert.equal(
+    PRESENCE_LOOK_DEFINITIONS.some((look) => look.values.publicStylePreset === "christina-liquid-gallery"),
+    false,
+    "Christina stays metadata-only in M2 and is not exposed as a new V3 Look",
+  );
+});
+
+test("M3A Atelier catalog staging remains private metadata and outside active persistence", async () => {
+  const brass = PRESENCE_LOOK_DEFINITIONS.find((look) => look.id === "brass-inlay");
+  const refractive = PRESENCE_ROOM_STYLE_DEFINITIONS.find((roomStyle) => roomStyle.id === "refractive-threshold");
+  assert.ok(brass);
+  assert.ok(refractive);
+  assert.equal(brass.publicProjection.rendererSupport, "private-preview-only");
+  assert.equal(brass.publicProjection.publicStylePreset, "gallery-p2");
+  assert.equal(brass.values.roomStyleId, "refractive-threshold");
+  assert.equal(brass.values.atmosphere, "drawing-sheet");
+  assert.equal(brass.values.pieceTreatment, "measured-plate");
+  assert.equal(brass.values.motionIntensity, "living");
+  assert.equal(refractive.rendererSupport, "private-preview-only");
+  assert.deepEqual(refractive.defaultPieceTreatments, ["onion-inspection", "scribe-reveal", "measured-plate"]);
+
+  const pairing = resolvePresenceLookRoomStyleCompatibility("brass-inlay", "refractive-threshold");
+  assert.equal(pairing.tier, "blocked");
+  assert.equal(pairing.fallbackRoomStyleId, "gallery-wall");
+  assert.match(pairing.reason, /backend persistence are deferred/);
+  assert.equal(isPresenceStylePairingAllowed("brass-inlay", "refractive-threshold", { allowExperimental: true }), false);
+  assert.equal(isPresenceLookSelectable("brass-inlay", { allowExperimental: true }), false);
+  assert.equal(isPresenceRoomStyleSelectable("refractive-threshold", { allowExperimental: true }), false);
+  for (const lookId of ["soft-editorial", "nocturnal-gallery", "zine-archive"] as const) {
+    const crossPairing = resolvePresenceLookRoomStyleCompatibility(lookId, "refractive-threshold");
+    assert.equal(crossPairing.tier, "blocked");
+    assert.equal(isPresenceStylePairingAllowed(lookId, "refractive-threshold", { allowExperimental: true }), false);
+  }
+  for (const roomStyleId of ["threshold-portal", "gallery-wall", "film-strip-selected-works"] as const) {
+    const crossPairing = resolvePresenceLookRoomStyleCompatibility("brass-inlay", roomStyleId);
+    assert.equal(crossPairing.tier, "blocked");
+    assert.equal(isPresenceStylePairingAllowed("brass-inlay", roomStyleId, { allowExperimental: true }), false);
+  }
+
+  assert.equal(PRESENCE_PUBLIC_PRESET_CANDIDATES.some((preset) => (
+    String((preset as Record<string, unknown>).representedByLookId) === "brass-inlay"
+      || String((preset as Record<string, unknown>).representedByRoomStyleId) === "refractive-threshold"
+  )), false);
+  assert.equal(PRESENCE_MOTION_BEHAVIOUR_DEFINITIONS.some((motion) => (
+    ["seventy-five", "glass-drift", "approach"].includes(motion.id)
+  )), false);
+  assert.deepEqual(PRESENCE_OWNER_ACTIVE_ATMOSPHERE_DEFINITIONS.map((atmosphere) => atmosphere.id), [
+    "paper-light",
+    "nocturnal-depth",
+    "ledger-scan",
+  ]);
+  assert.deepEqual(PRESENCE_OWNER_ACTIVE_PIECE_TREATMENT_DEFINITIONS.map((treatment) => treatment.id), [
+    "quiet-framed",
+    "luminous-depth",
+    "captioned-ledger",
+  ]);
+  assert.equal(STUDIO_V3_P1_LOOKS.some((look) => look.id === "brass-inlay"), false);
+  assert.equal(STUDIO_V3_LOOK_ROOM_STYLE_COMPATIBILITY.some((row) => row.lookId === "brass-inlay"), false);
+
+  const fixture = await hydratedP1Fixture();
+  assert.equal(Object.hasOwn(fixture.document.looks, "brass-inlay"), false);
+  const attempted = applyStudioV3Look(fixture.document, "brass-inlay");
+  assert.equal(attempted.activeLookId, fixture.document.activeLookId);
+  assert.equal(attempted.diagnostics.some((issue) => issue.code === "look-unavailable"), true);
+
+  const compiled = compileStudioV3Document(fixture.document, fixture.baseState);
+  assert.notEqual(compiled.studioV2State.skin.experienceAtmosphere, "drawing-sheet");
+  assert.notEqual(compiled.studioV2State.skin.experiencePieceTreatment, "measured-plate");
+  assert.equal(compiled.issues.some((issue) => issue.code === "style-candidate-unavailable"), false);
+
+  const injected = compileStudioV3Document({
+    ...fixture.document,
+    activeLookId: "brass-inlay",
+    looks: { ...fixture.document.looks, "brass-inlay": brass.systemLook },
+  }, fixture.baseState);
+  assert.equal(injected.studioV2State.publicStylePreset, "gallery-p2");
+  assert.equal(injected.studioV2State.skin.experienceAtmosphere, "paper-light");
+  assert.equal(injected.studioV2State.skin.experiencePieceTreatment, "quiet-framed");
+
+  const refractiveStage = stageStudioV3RoomStyle(fixture.document, {
+    roomId: "gallery",
+    roomStyleId: "refractive-threshold",
+    now: "2026-07-30T00:00:00.000Z",
+  });
+  assert.equal(refractiveStage.status, "blocked");
+  assert.equal(refractiveStage.reason, "style-pairing-blocked");
+
+  const atmosphereOverride = applyStudioV3LayerOverride(fixture.document, {
+    scopeKind: "presence",
+    scopeId: String(fixture.document.nodeId),
+    layer: "presence-look",
+    value: { atmosphere: "drawing-sheet" },
+    provenance: "m3a-guardrail-test",
+  });
+  const treatmentOverride = applyStudioV3LayerOverride(fixture.document, {
+    scopeKind: "presence",
+    scopeId: String(fixture.document.nodeId),
+    layer: "piece-treatment",
+    value: { pieceTreatment: "measured-plate" },
+    provenance: "m3a-guardrail-test",
+  });
+  assert.equal(atmosphereOverride, fixture.document);
+  assert.equal(treatmentOverride, fixture.document);
+
+  const metadata = projectStudioV3Metadata(fixture.document);
+  const badAtmosphereMetadata = structuredClone(metadata);
+  badAtmosphereMetadata.layer_values.push({
+    scopeKind: "presence",
+    scopeId: String(fixture.document.nodeId),
+    layer: "presence-look",
+    value: { atmosphere: "drawing-sheet" },
+  });
+  const badTreatmentMetadata = structuredClone(metadata);
+  badTreatmentMetadata.layer_values.push({
+    scopeKind: "presence",
+    scopeId: String(fixture.document.nodeId),
+    layer: "piece-treatment",
+    value: { pieceTreatment: "measured-plate" },
+  });
+  assert.equal(isSafeStudioV3MetadataEnvelope(badAtmosphereMetadata), false);
+  assert.equal(isSafeStudioV3MetadataEnvelope(badTreatmentMetadata), false);
+});
+
+test("M4 public preset candidate readiness keeps Christina below supported V3 status", () => {
+  const gallery = getPresencePublicPresetCandidateDefinition("gallery-p2");
+  const bbbvision = getPresencePublicPresetCandidateDefinition("bbbvision-threshold-gallery");
+  const christina = getPresencePublicPresetCandidateDefinition("christina-liquid-gallery");
+
+  assert.equal(gallery.supportStatus, "supported");
+  assert.equal(gallery.candidateEvidenceStatus, "v3-proof");
+  assert.equal(gallery.representedByLookId, "soft-editorial");
+  assert.equal(gallery.representedByRoomStyleId, "gallery-wall");
+
+  assert.equal(bbbvision.supportStatus, "flagship");
+  assert.equal(bbbvision.candidateEvidenceStatus, "v3-proof");
+  assert.equal(bbbvision.representedByLookId, "nocturnal-gallery");
+  assert.equal(bbbvision.representedByRoomStyleId, "threshold-portal");
+
+  assert.equal(christina.supportStatus, "metadata-only");
+  assert.equal(christina.representedByLookId, undefined);
+  assert.equal(christina.representedByRoomStyleId, undefined);
+  assert.equal(christina.publicRendererSpecifics.some((specific) => /Hard-coded specialized React branch/.test(specific)), true);
+  assert.equal(christina.compatibilityRecommendation.includes("Keep hidden from V3 Look controls"), true);
+  assert.equal(
+    PRESENCE_PUBLIC_PRESET_CANDIDATES
+      .filter((preset) => preset.supportStatus === "metadata-only")
+      .map((preset) => preset.id)
+      .includes("christina-liquid-gallery"),
+    true,
+  );
+});
+
+test("M5 candidate readiness guardrails keep metadata-only presets non-selectable", () => {
+  const gallery = getPresenceStyleCandidateReadiness("gallery-p2");
+  const bbbvision = getPresenceStyleCandidateReadiness("bbbvision-threshold-gallery");
+  const christina = getPresenceStyleCandidateReadiness("christina-liquid-gallery", { allowExperimental: true });
+
+  assert.equal(gallery.selectableInV3, true);
+  assert.equal(gallery.status, "supported");
+  assert.equal(isPresencePublicPresetCandidateSelectableInV3("gallery-p2"), true);
+
+  assert.equal(bbbvision.selectableInV3, true);
+  assert.equal(bbbvision.status, "flagship");
+  assert.equal(isPresencePublicPresetCandidateSelectableInV3("bbbvision-threshold-gallery"), true);
+
+  assert.equal(christina.selectableInV3, false);
+  assert.equal(christina.status, "metadata-only");
+  assert.equal(christina.statusLabel, "Metadata-only candidate");
+  assert.equal(christina.fallbackLookId, "soft-editorial");
+  assert.equal(christina.fallbackRoomStyleId, "gallery-wall");
+  assert.match(christina.warning ?? "", /Reference only/);
+  assert.equal(isPresencePublicPresetCandidateMetadataOnly("christina-liquid-gallery"), true);
+  assert.equal(isPresencePublicPresetCandidateSelectableInV3("christina-liquid-gallery", { allowExperimental: true }), false);
+});
+
+test("M5 selection guardrails require explicit internal review for experimental pairings", () => {
+  const zineDefault = getPresenceStylePairingStatus("zine-archive", "film-strip-selected-works");
+  assert.equal(zineDefault.selectable, false);
+  assert.equal(zineDefault.preventsSelection, "experimental");
+  assert.match(zineDefault.warning ?? "", /Internal\/dev style pairing|Experimental pairings/);
+  assert.equal(isPresenceStylePairingAllowed("zine-archive", "film-strip-selected-works"), false);
+  assert.equal(isPresenceLookSelectable("zine-archive"), false);
+  assert.equal(isPresenceRoomStyleSelectable("film-strip-selected-works"), false);
+
+  const zineInternal = getPresenceStylePairingStatus("zine-archive", "film-strip-selected-works", { allowExperimental: true });
+  assert.equal(zineInternal.selectable, true);
+  assert.equal(zineInternal.tier, "experimental");
+  assert.match(zineInternal.warning ?? "", /Internal\/dev style pairing/);
+  assert.equal(isPresenceStylePairingAllowed("zine-archive", "film-strip-selected-works", { allowExperimental: true }), true);
+  assert.equal(isPresenceLookSelectable("zine-archive", { allowExperimental: true }), true);
+  assert.equal(isPresenceRoomStyleSelectable("film-strip-selected-works", { allowExperimental: true }), true);
+
+  const roomOne = getPresenceLookSelectionStatus("soft-editorial");
+  assert.equal(roomOne.selectable, true);
+  assert.equal(roomOne.tier, "flagship");
+  const threshold = getPresenceRoomStyleSelectionStatus("threshold-portal");
+  assert.equal(threshold.selectable, true);
+});
+
+test("M5 blocked pairing fixtures cannot become selectable and structural staging uses guardrails", () => {
+  const blockedFixture: PresenceLookRoomStyleCompatibilityDefinition = {
+    lookId: "soft-editorial",
+    roomStyleId: "threshold-portal",
+    tier: "blocked",
+    reason: "Test-only blocked pairing fixture.",
+    fallbackRoomStyleId: "gallery-wall",
+    ownerWarning: "This test fixture must not become selectable.",
+    evidenceStatus: "needs-audit",
+    v2LayoutId: "portal-threshold",
+    publicStylePreset: "gallery-p2",
+    worldId: "gallery",
+    collectionPresentationId: "threshold-feature",
+  };
+  const blocked = presenceStylePairingGuardrail(blockedFixture, { allowExperimental: true });
+  assert.equal(blocked.selectable, false);
+  assert.equal(blocked.preventsSelection, "blocked");
+  assert.equal(blocked.fallbackRoomStyleId, "gallery-wall");
+  const source = readFileSync("lib/presence/studio-v3/p1State.ts", "utf8");
+  assert.match(source, /isPresenceStylePairingAllowed/);
+  assert.match(source, /style-pairing-blocked/);
+});
+
+test("M5 private style guardrails reject or downgrade metadata-only public preset state", async () => {
+  const fixture = await hydratedP1Fixture();
+  const badLook: StudioV3Look = {
+    id: "named:christina-smuggle",
+    name: "Christina smuggle",
+    origin: "owner",
+    baseLookId: "soft-editorial",
+    provenance: "saved-from:soft-editorial",
+    values: {
+      ...STUDIO_V3_SOFT_EDITORIAL_LOOK.values,
+      publicStylePreset: "christina-liquid-gallery",
+      roomStyleId: "film-strip-selected-works",
+    },
+    createdAt: "2026-07-29T00:00:00.000Z",
+    updatedAt: "2026-07-29T00:00:00.000Z",
+  };
+  const badDocument = {
+    ...fixture.document,
+    activeLookId: badLook.id,
+    looks: { ...fixture.document.looks, [badLook.id]: badLook },
+    namedLooks: [...fixture.document.namedLooks, badLook],
+  };
+  const compiled = compileStudioV3Document(badDocument, fixture.baseState);
+  assert.equal(compiled.studioV2State.publicStylePreset, "gallery-p2");
+  assert.equal(compiled.studioV2State.worldId, "gallery");
+  assert.equal(compiled.issues.some((issue) => issue.code === "style-candidate-unavailable"), true);
+
+  const rejectedOverride = applyStudioV3LayerOverride(fixture.document, {
+    scopeKind: "presence",
+    scopeId: String(fixture.document.nodeId),
+    layer: "presence-look",
+    value: { publicStylePreset: "christina-liquid-gallery" },
+    provenance: "m5-guardrail-test",
+  });
+  assert.equal(rejectedOverride, fixture.document);
+
+  const validOverride = applyStudioV3LayerOverride(fixture.document, {
+    scopeKind: "presence",
+    scopeId: String(fixture.document.nodeId),
+    layer: "presence-look",
+    value: { publicStylePreset: "gallery-p2" },
+    provenance: "m5-guardrail-test",
+  });
+  assert.notEqual(validOverride, fixture.document);
+
+  const metadata = projectStudioV3Metadata(badDocument);
+  assert.equal(isSafeStudioV3MetadataEnvelope(metadata), false);
+});
+
+test("M5 owner controls consume guardrail helpers and avoid direct Christina selector exposure", () => {
+  const source = readFileSync("components/presence-studio-v3/StudioV3LookControls.tsx", "utf8");
+  assert.match(source, /getPresenceLookSelectionStatus/);
+  assert.match(source, /getPresenceRoomStyleSelectionStatus/);
+  assert.match(source, /isPresenceStylePairingAllowed/);
+  assert.match(source, /PRESENCE_OWNER_ACTIVE_ATMOSPHERE_DEFINITIONS/);
+  assert.match(source, /PRESENCE_OWNER_ACTIVE_PIECE_TREATMENT_DEFINITIONS/);
+  assert.doesNotMatch(source, /PRESENCE_ATMOSPHERE_DEFINITIONS\.map/);
+  assert.doesNotMatch(source, /PRESENCE_PIECE_TREATMENT_DEFINITIONS\.map/);
+  assert.match(source, /OWNER_REVIEW_STYLE_GUARDRAILS/);
+  assert.doesNotMatch(source, /christina-liquid-gallery/);
+});
+
+test("M3 compatibility owner copy surfaces flagship, experimental, fallback, and blocked messaging", () => {
+  const roomOne = presenceStyleCompatibilityOwnerCopy(
+    resolvePresenceLookRoomStyleCompatibility("soft-editorial", "gallery-wall"),
+  );
+  assert.equal(roomOne.tierLabel, "Flagship pairing");
+  assert.equal(roomOne.tierSummary, "Designed for the strongest version of this room.");
+  assert.match(roomOne.reason, /Room 1 control pair/);
+
+  const bbb = presenceStyleCompatibilityOwnerCopy(
+    resolvePresenceLookRoomStyleCompatibility("nocturnal-gallery", "threshold-portal"),
+  );
+  assert.equal(bbb.tierLabel, "Flagship pairing");
+  assert.match(bbb.reason, /BBVision flagship pair/);
+
+  const zine = presenceStyleCompatibilityOwnerCopy(
+    resolvePresenceLookRoomStyleCompatibility("zine-archive", "film-strip-selected-works"),
+  );
+  assert.equal(zine.tierLabel, "Experimental pairing");
+  assert.equal(zine.tierSummary, "Available for internal review only.");
+  assert.equal(zine.warning, "Internal/dev style pairing; public renderer proof is not complete.");
+
+  const fallback = presenceStyleCompatibilityOwnerCopy(
+    resolvePresenceLookRoomStyleCompatibility("zine-archive", "threshold-portal"),
+  );
+  assert.equal(fallback.fallbackRoomStyleName, "Film Strip / Selected Works");
+
+  assert.deepEqual(
+    PRESENCE_LOOK_ROOM_STYLE_COMPATIBILITY
+      .filter((item) => item.tier === "blocked")
+      .map((item) => `${item.lookId}:${item.roomStyleId}`),
+    ["brass-inlay:refractive-threshold"],
+  );
+  const blockedFixture: PresenceLookRoomStyleCompatibilityDefinition = {
+    lookId: "soft-editorial",
+    roomStyleId: "threshold-portal",
+    tier: "blocked",
+    reason: "Test-only blocked pairing fixture.",
+    fallbackRoomStyleId: "gallery-wall",
+    ownerWarning: "This test fixture must not become a production selectable pairing.",
+    evidenceStatus: "needs-audit",
+    v2LayoutId: "portal-threshold",
+    publicStylePreset: "gallery-p2",
+    worldId: "gallery",
+    collectionPresentationId: "threshold-feature",
+  };
+  const blocked = presenceStyleCompatibilityOwnerCopy(blockedFixture);
+  assert.equal(blocked.tierLabel, "Blocked pairing");
+  assert.equal(blocked.tierSummary, "Not available because this combination breaks the room experience.");
+  assert.equal(blocked.fallbackRoomStyleName, "Gallery Wall");
+  assert.match(blocked.warning ?? "", /test fixture/i);
+});
+
+test("M3 Look owner controls consume catalog compatibility fields without public renderer coupling", () => {
+  const source = readFileSync(new URL("../../../components/presence-studio-v3/StudioV3LookControls.tsx", import.meta.url), "utf8");
+  assert.match(source, /getPresenceStylePairingStatus/);
+  assert.match(source, /getPresenceLookSelectionStatus/);
+  assert.match(source, /data-testid="presence-studio-v3-style-compatibility"/);
+  assert.match(source, /safeOwnerControls/);
+  assert.match(source, /lockedElements/);
+  assert.match(source, /intendedWowMoment/);
+  assert.match(source, /mobileBehaviour/);
+  assert.match(source, /reducedMotionBehaviour/);
+  assert.match(source, /performanceExpectation/);
+  assert.doesNotMatch(source, /PresenceStudioV2PublicRoom|publicRoomFromStudioV2State|studioV2FromPresenceConfig/);
+});
+
+test("M2 catalog bridge preserves existing compiler starting Look decisions", () => {
+  assert.equal(initialStudioV3LookIdForBridge({
+    slug: "bbbvision",
+    publicStylePreset: "gallery-p2",
+    worldId: "gallery",
+  }), "nocturnal-gallery");
+  assert.equal(initialStudioV3LookIdForBridge({
+    slug: "other",
+    publicStylePreset: "bbbvision-threshold-gallery",
+    worldId: "gallery",
+  }), "nocturnal-gallery");
+  assert.equal(initialStudioV3LookIdForBridge({
+    slug: "archive",
+    publicStylePreset: "gallery-p2",
+    worldId: "zine",
+  }), "zine-archive");
+  assert.equal(initialStudioV3LookIdForBridge({
+    slug: "presence-contract-room",
+    publicStylePreset: "gallery-p2",
+    worldId: "gallery",
+  }), "soft-editorial");
 });
 
 test("Look facets compile into visible V2 experience axes while Room Style remains chamber-scoped", async () => {

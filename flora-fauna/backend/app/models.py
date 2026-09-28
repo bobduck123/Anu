@@ -2455,6 +2455,151 @@ class AuditLog(db.Model):
     created_at = db.Column(db.DateTime, default=utcnow)
 
 
+class PeachContribution(db.Model):
+    __tablename__ = "peach_contribution"
+    __table_args__ = (
+        db.CheckConstraint(
+            "review_status IN ('pending_review', 'held', 'accepted_private', 'rejected')",
+            name="ck_peach_contribution_review_status",
+        ),
+        db.CheckConstraint("public_display = false", name="ck_peach_contribution_public_display_false"),
+        db.Index("ix_peach_contribution_field_slug", "field_slug"),
+        db.Index("ix_peach_contribution_review_status", "review_status"),
+        db.Index("ix_peach_contribution_created_at", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    field_id = db.Column(db.String(120), nullable=False)
+    field_slug = db.Column(db.String(180), nullable=False)
+    contribution_type = db.Column(db.String(80), nullable=False)
+    contributor_chosen_credit = db.Column(db.String(200), nullable=False)
+    contact_method = db.Column(db.String(240), nullable=False)
+    body_text = db.Column(db.Text, nullable=False)
+    visibility_preference = db.Column(db.String(80), nullable=False)
+    credit_preference = db.Column(db.String(120), nullable=False)
+    permission_for_yield = db.Column(db.Boolean, default=False, nullable=False)
+    sensitive_material_flag = db.Column(db.Boolean, default=False, nullable=False)
+    youth_material_flag = db.Column(db.Boolean, default=False, nullable=False)
+    review_status = db.Column(db.String(40), default="pending_review", nullable=False)
+    public_display = db.Column(db.Boolean, default=False, nullable=False)
+    steward_note = db.Column(db.Text, nullable=True)
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+    reviewed_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    consent_records = db.relationship(
+        "PeachConsentRecord",
+        backref="contribution",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
+    review_events = db.relationship(
+        "PeachContributionReviewEvent",
+        backref="contribution",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
+
+
+class PeachConsentRecord(db.Model):
+    __tablename__ = "peach_consent_record"
+    __table_args__ = (
+        db.Index("ix_peach_consent_record_contribution", "contribution_id"),
+        db.Index("ix_peach_consent_record_created_at", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    contribution_id = db.Column(db.Integer, db.ForeignKey("peach_contribution.id"), nullable=False)
+    consent_version = db.Column(db.String(80), nullable=False)
+    consent_level = db.Column(db.String(80), nullable=False)
+    permission_for_yield = db.Column(db.Boolean, default=False, nullable=False)
+    credit_preference = db.Column(db.String(120), nullable=False)
+    visibility_preference = db.Column(db.String(80), nullable=False)
+    accepted_terms = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
+    steward_reviewed_at = db.Column(db.DateTime, nullable=True)
+    steward_reviewed_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+
+
+class PeachContributionReviewEvent(db.Model):
+    __tablename__ = "peach_contribution_review_event"
+    __table_args__ = (
+        db.Index("ix_peach_review_event_contribution", "contribution_id"),
+        db.Index("ix_peach_review_event_created_at", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    contribution_id = db.Column(db.Integer, db.ForeignKey("peach_contribution.id"), nullable=False)
+    previous_status = db.Column(db.String(40), nullable=False)
+    new_status = db.Column(db.String(40), nullable=False)
+    steward_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    steward_note = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
+
+
+class PeachConsentOperationRequest(db.Model):
+    __tablename__ = "peach_consent_operation_request"
+    __table_args__ = (
+        db.CheckConstraint(
+            "operation_type IN ('export', 'withdrawal')",
+            name="ck_peach_consent_operation_type",
+        ),
+        db.CheckConstraint(
+            "status IN ('pending_steward_review', 'in_review', 'completed', 'rejected')",
+            name="ck_peach_consent_operation_status",
+        ),
+        db.Index("ix_peach_consent_operation_contribution", "contribution_id"),
+        db.Index("ix_peach_consent_operation_status", "status"),
+        db.Index("ix_peach_consent_operation_created_at", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    contribution_id = db.Column(db.Integer, db.ForeignKey("peach_contribution.id"), nullable=True)
+    contributor_contact = db.Column(db.String(240), nullable=False)
+    contributor_credit_or_name = db.Column(db.String(200), nullable=False)
+    operation_type = db.Column(db.String(40), nullable=False)
+    request_detail = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(60), default="pending_steward_review", nullable=False)
+    steward_note = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+    reviewed_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+
+
+class PeachSupportIntent(db.Model):
+    __tablename__ = "peach_support_intent"
+    __table_args__ = (
+        db.CheckConstraint(
+            "support_type IN ('membership', 'one_off_support', 'sponsor_access', 'sponsor_field', 'sponsor_yield')",
+            name="ck_peach_support_intent_type",
+        ),
+        db.CheckConstraint(
+            "status IN ('manual_enquiry', 'pending_follow_up', 'closed')",
+            name="ck_peach_support_intent_status",
+        ),
+        db.CheckConstraint("payment_taken = false", name="ck_peach_support_intent_payment_not_taken"),
+        db.Index("ix_peach_support_intent_field_slug", "field_slug"),
+        db.Index("ix_peach_support_intent_status", "status"),
+        db.Index("ix_peach_support_intent_created_at", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    field_id = db.Column(db.String(120), nullable=True)
+    field_slug = db.Column(db.String(180), nullable=True)
+    support_type = db.Column(db.String(60), nullable=False)
+    supporter_name = db.Column(db.String(200), nullable=True)
+    supporter_contact = db.Column(db.String(240), nullable=True)
+    amount_intent = db.Column(db.String(80), nullable=True)
+    currency = db.Column(db.String(12), nullable=True)
+    note = db.Column(db.Text, nullable=True)
+    payment_taken = db.Column(db.Boolean, default=False, nullable=False)
+    status = db.Column(db.String(60), default="manual_enquiry", nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+
 class ImpactPool(db.Model):
     __table_args__ = (
         db.UniqueConstraint('node_id', 'slug', name='uq_impact_pool_node_slug'),

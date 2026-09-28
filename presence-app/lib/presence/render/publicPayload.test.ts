@@ -120,6 +120,31 @@ test("public payload scanners find restricted V2/editor strings and private medi
   );
 });
 
+test("public payload scanners catch RCR owner-principal and unsupported gate claim terms", () => {
+  assert.deepEqual(
+    findRestrictedPublicPayloadKeys({
+      ownerReference: {
+        tenantId: "tenant-1",
+        deliveryRecipient: "person@example.com",
+        permission: "owner-dashboard",
+        routeGuard: true,
+      },
+    }),
+    ["deliveryrecipient", "permission", "routeguard", "tenantid"],
+  );
+
+  assert.deepEqual(
+    findRestrictedPublicPayloadFragments({
+      claims: [
+        "This room is public-ready.",
+        "Gate 7 started.",
+        "Keep tenant route details private.",
+      ],
+    }),
+    ["gate 7 started", "public-ready", "tenant route"],
+  );
+});
+
 test("public payload can include sanitized Studio V2 projection when the pilot flag is enabled", () => {
   const previousEnabled = process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2;
   const previousPilotIds = process.env.NEXT_PUBLIC_PRESENCE_STUDIO_V2_PILOT_IDS;

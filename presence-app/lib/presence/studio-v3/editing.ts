@@ -11,7 +11,6 @@ import {
 } from "../studio-v2/layouts.ts";
 import {
   DEFAULT_STUDIO_V2_TRANSFORM,
-  STUDIO_V2_PUBLIC_STYLE_PRESETS,
   type StudioV2Object,
   type StudioV2State,
 } from "../studio-v2/model.ts";
@@ -29,10 +28,12 @@ import type {
 } from "./model.ts";
 import { studioV3RoomStyleDefinition } from "./p1Catalog.ts";
 import { remapStudioV3RoomForCurrentStyle } from "./p1State.ts";
+import { isPresencePublicPresetCandidateSelectableInV3, isStudioV3PublicStylePresetId } from "./styleCatalog.ts";
 import {
   findStudioV3LegacyPiece,
   findStudioV3Piece,
   makeStudioV3ObjectEditId,
+  type StudioV3CollectionSourceRef,
   type StudioV3SourceRef,
 } from "./sourceRefs.ts";
 
@@ -321,6 +322,52 @@ export function setStudioV3ObjectTreatment(
   };
 }
 
+export function setStudioV3PlacementCollection(
+  document: StudioV3Document,
+  input: {
+    roomId: string;
+    objectId: string;
+    collectionSourceRef: StudioV3CollectionSourceRef | null;
+  },
+): StudioV3EditingResult {
+  const context = findStudioV3ObjectContext(document, input.roomId, input.objectId);
+  if (!context?.placement) {
+    return { document, error: "Place this owner Work in the Room before private Collection curation." };
+  }
+  if (!context.sourceRef.startsWith("work:")) {
+    return { document, error: "Only owner Works can be privately curated into Collections in this slice." };
+  }
+  if (context.piece.sourceStatus !== "current") {
+    return { document, error: "Unavailable owner Works cannot be privately curated into Collections." };
+  }
+  if (input.collectionSourceRef) {
+    const collection = document.collections[input.collectionSourceRef];
+    if (!collection || collection.sourceStatus !== "current") {
+      return { document, error: "That Collection is unavailable in the owner Library." };
+    }
+    if (context.placement.collectionSourceRef === input.collectionSourceRef) return { document };
+  } else if (!context.placement.collectionSourceRef) {
+    return { document };
+  }
+  return {
+    document: {
+      ...document,
+      rooms: document.rooms.map((room) => room.id !== input.roomId ? room : {
+        ...room,
+        placements: room.placements.map((placement) => {
+          if (placement.id !== input.objectId) return placement;
+          if (!input.collectionSourceRef) {
+            const nextPlacement = { ...placement };
+            delete nextPlacement.collectionSourceRef;
+            return nextPlacement;
+          }
+          return { ...placement, collectionSourceRef: input.collectionSourceRef };
+        }),
+      }),
+    },
+  };
+}
+
 export function setStudioV3ObjectVisibility(
   document: StudioV3Document,
   input: { roomId: string; objectId: string; visibility: "visible" | "hidden" },
@@ -598,7 +645,8 @@ function isSafeLayerValue(value: StudioV3LayerOverrideValue): boolean {
     if (key === "shadowDepth" && !finiteRange(child, 0, 1)) return false;
     if (key === "headingWeight" && (!finiteRange(child, 300, 900) || !Number.isInteger(child))) return false;
     if (key === "motionIntensity" && !["still", "gentle", "living"].includes(String(child))) return false;
-    if (key === "publicStylePreset" && !(STUDIO_V2_PUBLIC_STYLE_PRESETS as readonly string[]).includes(String(child))) return false;
+    if (key === "publicStylePreset" && (!isStudioV3PublicStylePresetId(child)
+      || !isPresencePublicPresetCandidateSelectableInV3(child, { allowExperimental: true }))) return false;
     if (key === "roomStyleId" && !["threshold-portal", "gallery-wall", "film-strip-selected-works"].includes(String(child))) return false;
     if (key === "worldId" && !["gallery", "zine", "dj", "healing", "market", "archive", "carpenter", "consultant"].includes(String(child))) return false;
     if (key === "collectionPresentationId" && !["wall", "selected-sequence", "threshold-feature"].includes(String(child))) return false;

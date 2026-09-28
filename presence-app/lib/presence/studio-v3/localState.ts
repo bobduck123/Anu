@@ -10,6 +10,7 @@ import {
 import { isStudioV3CollectionSourceRef, isStudioV3PlacementId } from "./sourceRefs.ts";
 import { isSafeStudioV3MetadataEnvelope, type StudioV3PrivateMetadata } from "./p1State.ts";
 import { containsForbiddenStudioV3Text } from "./safety.ts";
+import { isPresencePublicPresetCandidateSelectableInV3, isStudioV3PublicStylePresetId } from "./styleCatalog.ts";
 
 export interface StudioV3OwnerPartitionResult {
   key: string | null;
@@ -609,7 +610,8 @@ function isSafeLookValues(value: unknown): value is StudioV3LookValues {
     typeof values.shadowDepth === "number" &&
     typeof values.headingWeight === "number" &&
     ["still", "gentle", "living"].includes(String(values.motionIntensity)) &&
-    typeof values.publicStylePreset === "string" && values.publicStylePreset.length > 0 &&
+    isStudioV3PublicStylePresetId(values.publicStylePreset) &&
+    isPresencePublicPresetCandidateSelectableInV3(values.publicStylePreset, { allowExperimental: true }) &&
     ["threshold-portal", "gallery-wall", "film-strip-selected-works"].includes(String(values.roomStyleId)) &&
     ["gallery", "zine", "dj", "healing", "market", "archive", "carpenter", "consultant"].includes(String(values.worldId)) &&
     ["wall", "selected-sequence", "threshold-feature"].includes(String(values.collectionPresentationId)) &&

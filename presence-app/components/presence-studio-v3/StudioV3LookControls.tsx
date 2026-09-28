@@ -1,10 +1,36 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import type { StudioV3Layer, StudioV3LayerOverrideValue, StudioV3LookValues } from "@/lib/presence/studio-v3";
+import {
+  PRESENCE_LOOK_DEFINITIONS,
+  PRESENCE_MOTION_BEHAVIOUR_DEFINITIONS,
+  PRESENCE_OWNER_ACTIVE_ATMOSPHERE_DEFINITIONS,
+  PRESENCE_OWNER_ACTIVE_PIECE_TREATMENT_DEFINITIONS,
+  PRESENCE_ROOM_STYLE_DEFINITIONS,
+  PRESENCE_TYPOGRAPHY_FACET_DEFINITIONS,
+  getPresenceLookDefinition,
+  getPresenceLookSelectionStatus,
+  getPresenceRoomStyleDefinition,
+  getPresenceRoomStyleSelectionStatus,
+  getPresenceStylePairingStatus,
+  isStudioV3LookId,
+  isStudioV3RoomStyleId,
+  isPresenceStylePairingAllowed,
+} from "@/lib/presence/studio-v3";
+import type {
+  PresenceLookDefinition,
+  PresenceStyleGuardrailOptions,
+  PresenceRoomStyleDefinition,
+  PresenceStyleSelectionStatus,
+  StudioV3Layer,
+  StudioV3LayerOverrideValue,
+  StudioV3LookId,
+  StudioV3LookValues,
+  StudioV3RoomStyleId,
+} from "@/lib/presence/studio-v3";
 
-export type StudioV3P1LookId = "soft-editorial" | "nocturnal-gallery" | "zine-archive";
-export type StudioV3P1RoomStyleId = "threshold-portal" | "gallery-wall" | "film-strip-selected-works";
+export type StudioV3P1LookId = StudioV3LookId;
+export type StudioV3P1RoomStyleId = StudioV3RoomStyleId;
 export type StudioV3CompareSide = "before" | "after";
 
 export interface StudioV3CompatibilitySummary {
@@ -29,60 +55,36 @@ export interface StudioV3StructuralPreviewView {
   summary: StudioV3CompatibilitySummary;
 }
 
-const LOOK_OPTIONS: ReadonlyArray<{
-  id: StudioV3P1LookId;
-  name: string;
-  description: string;
-  dimensions: string;
-  recommendedRoomStyle: string;
-}> = [
-  {
-    id: "soft-editorial",
-    name: "Soft Editorial",
-    description: "Airy editorial pacing with a light linen field and quiet framing.",
-    dimensions: "Spacious hierarchy · restrained treatment · still motion",
-    recommendedRoomStyle: "Gallery Wall",
-  },
-  {
-    id: "nocturnal-gallery",
-    name: "Nocturnal Gallery",
-    description: "A near-black threshold with concentrated signal, depth, and cinematic focus.",
-    dimensions: "Focused hierarchy · luminous treatment · gentle motion",
-    recommendedRoomStyle: "Threshold Portal",
-  },
-  {
-    id: "zine-archive",
-    name: "Zine Archive",
-    description: "A tactile ledger rhythm with assertive labels, clipped frames, and denser sequence.",
-    dimensions: "Archive hierarchy · captioned treatment · living motion",
-    recommendedRoomStyle: "Film Strip / Selected Works",
-  },
-];
+const OWNER_REVIEW_STYLE_GUARDRAILS: PresenceStyleGuardrailOptions = { allowExperimental: true };
 
-const ROOM_STYLE_OPTIONS: ReadonlyArray<{
-  id: StudioV3P1RoomStyleId;
-  name: string;
-  description: string;
-}> = [
-  {
-    id: "threshold-portal",
-    name: "Threshold Portal",
-    description: "One dominant arrival, framing statement, signal, and protected onward path.",
-  },
-  {
-    id: "gallery-wall",
-    name: "Gallery Wall",
-    description: "A paced exhibition wall with an opening work, supporting context, and exit.",
-  },
-  {
-    id: "film-strip-selected-works",
-    name: "Film Strip / Selected Works",
-    description: "One active Work at a time with previous, next, progress, and direct index movement.",
-  },
-];
+const LOOK_OPTIONS = PRESENCE_LOOK_DEFINITIONS.flatMap((definition) => {
+  const status = getPresenceLookSelectionStatus(definition.id, OWNER_REVIEW_STYLE_GUARDRAILS);
+  if (!status.selectable) return [];
+  return [{
+    id: definition.id,
+    name: definition.name,
+    description: definition.description,
+    dimensions: definition.dimensionSummary,
+    recommendedRoomStyle: studioV3RoomStyleName(definition.recommendedRoomStyleId),
+    guardrailLabel: status.label,
+    guardrailWarning: status.warning,
+  }];
+});
+
+const ROOM_STYLE_OPTIONS = PRESENCE_ROOM_STYLE_DEFINITIONS.flatMap((definition) => {
+  const status = getPresenceRoomStyleSelectionStatus(definition.id, OWNER_REVIEW_STYLE_GUARDRAILS);
+  if (!status.selectable) return [];
+  return [{
+    id: definition.id,
+    name: definition.name,
+    description: definition.description,
+    guardrailLabel: status.label,
+    guardrailWarning: status.warning,
+  }];
+});
 
 export function studioV3RoomStyleName(styleId: StudioV3P1RoomStyleId): string {
-  return ROOM_STYLE_OPTIONS.find((option) => option.id === styleId)?.name ?? styleId;
+  return PRESENCE_ROOM_STYLE_DEFINITIONS.find((option) => option.id === styleId)?.name ?? styleId;
 }
 
 export default function StudioV3LookControls({
@@ -135,6 +137,16 @@ export default function StudioV3LookControls({
   onRestoreStructural: () => void;
 }) {
   const interactionsFrozen = Boolean(structuralPreview);
+  const activeCatalogLookId = resolveActiveCatalogLookId(activeLookId, activeLookValues);
+  const activeCatalogRoomStyleId = resolveActiveCatalogRoomStyleId(activeRoomStyleId, activeLookValues);
+  const pairingRoomStyleId = structuralPreview?.targetStyleId ?? activeCatalogRoomStyleId;
+  const activeLookDefinition = getPresenceLookDefinition(activeCatalogLookId);
+  const activeRoomStyleDefinition = getPresenceRoomStyleDefinition(pairingRoomStyleId);
+  const styleCompatibility = getPresenceStylePairingStatus(
+    activeCatalogLookId,
+    pairingRoomStyleId,
+    OWNER_REVIEW_STYLE_GUARDRAILS,
+  );
   return (
     <div className="studio-v3-look-controls" data-testid="presence-studio-v3-look-controls">
       <div className="studio-v3-look-heading">
@@ -144,6 +156,13 @@ export default function StudioV3LookControls({
         </div>
         <p>Looks change atmosphere, hierarchy, treatment, density, motion, and journey on this owner-private canvas.</p>
       </div>
+
+      <StyleCatalogSummary
+        look={activeLookDefinition}
+        roomStyle={activeRoomStyleDefinition}
+        compatibility={styleCompatibility}
+        previewing={Boolean(structuralPreview)}
+      />
 
       <fieldset className="studio-v3-option-group">
         <legend>Presence Look</legend>
@@ -176,6 +195,7 @@ export default function StudioV3LookControls({
                 <span>{option.description}</span>
                 <small>{option.dimensions}</small>
                 <small>Recommended Room Style: {option.recommendedRoomStyle}</small>
+                {option.guardrailWarning && <small>{option.guardrailWarning}</small>}
               </button>
             );
           })}
@@ -189,13 +209,18 @@ export default function StudioV3LookControls({
           {ROOM_STYLE_OPTIONS.map((option, index) => {
             const active = activeRoomStyleId === option.id && !structuralPreview;
             const previewing = structuralPreview?.targetStyleId === option.id;
+            const allowed = isPresenceStylePairingAllowed(
+              activeCatalogLookId,
+              option.id,
+              OWNER_REVIEW_STYLE_GUARDRAILS,
+            );
             return (
               <button
                 key={option.id}
                 type="button"
                 className={`studio-v3-option-card room-style-${index + 1}${active ? " is-active" : ""}${previewing ? " is-previewing" : ""}`}
                 aria-pressed={active || previewing}
-                disabled={interactionsFrozen}
+                disabled={interactionsFrozen || !allowed}
                 onClick={() => onStageRoomStyle(option.id)}
                 data-testid={`presence-studio-v3-room-style-${option.id}`}
               >
@@ -203,7 +228,8 @@ export default function StudioV3LookControls({
                 <span className="studio-v3-room-style-number" aria-hidden="true">0{index + 1}</span>
                 <strong>{option.name}</strong>
                 <span>{option.description}</span>
-                <small>{active ? "Current structure" : previewing ? "Previewing" : "Preview structure"}</small>
+                <small>{!allowed ? "Blocked for this Look" : active ? "Current structure" : previewing ? "Previewing" : "Preview structure"}</small>
+                {option.guardrailWarning && <small>{option.guardrailWarning}</small>}
               </button>
             );
           })}
@@ -308,6 +334,116 @@ export default function StudioV3LookControls({
   );
 }
 
+function resolveActiveCatalogLookId(activeLookId: string, activeLookValues: StudioV3LookValues): StudioV3LookId {
+  if (isStudioV3LookId(activeLookId)) return activeLookId;
+  return PRESENCE_LOOK_DEFINITIONS.find((definition) => (
+    definition.values.publicStylePreset === activeLookValues.publicStylePreset &&
+    definition.values.worldId === activeLookValues.worldId &&
+    definition.values.atmosphere === activeLookValues.atmosphere &&
+    definition.values.pieceTreatment === activeLookValues.pieceTreatment
+  ))?.id ?? "soft-editorial";
+}
+
+function resolveActiveCatalogRoomStyleId(activeRoomStyleId: string, activeLookValues: StudioV3LookValues): StudioV3RoomStyleId {
+  if (isStudioV3RoomStyleId(activeRoomStyleId)) return activeRoomStyleId;
+  return isStudioV3RoomStyleId(activeLookValues.roomStyleId) ? activeLookValues.roomStyleId : "gallery-wall";
+}
+
+function formatCatalogList(values: readonly string[], fallback: string): string {
+  return values.length ? values.join(", ") : fallback;
+}
+
+function StyleCatalogSummary({
+  look,
+  roomStyle,
+  compatibility,
+  previewing,
+}: {
+  look: PresenceLookDefinition;
+  roomStyle: PresenceRoomStyleDefinition;
+  compatibility: PresenceStyleSelectionStatus;
+  previewing: boolean;
+}) {
+  return (
+    <section
+      className={`studio-v3-style-compatibility is-${compatibility.tier}`}
+      data-testid="presence-studio-v3-style-compatibility"
+      aria-live="polite"
+    >
+      <div className="studio-v3-style-compatibility-heading">
+        <div>
+          <p className="studio-v3-kicker">{previewing ? "Preview pairing" : "Current pairing"}</p>
+          <h3>{compatibility.label}</h3>
+          <p>{compatibility.summary}</p>
+        </div>
+        <strong>{look.name} / {roomStyle.name}</strong>
+      </div>
+      <p className="studio-v3-style-reason">{compatibility.reason}</p>
+      {(compatibility.warning || compatibility.fallbackRoomStyleId) && (
+        <div className="studio-v3-style-alerts">
+          {compatibility.warning && (
+            <p data-testid="presence-studio-v3-style-warning">{compatibility.warning}</p>
+          )}
+          {compatibility.fallbackRoomStyleId && (
+            <p data-testid="presence-studio-v3-style-fallback">Fallback: {studioV3RoomStyleName(compatibility.fallbackRoomStyleId)}</p>
+          )}
+        </div>
+      )}
+      <dl className="studio-v3-style-contract">
+        <div>
+          <dt>Look</dt>
+          <dd>{look.description}</dd>
+        </div>
+        <div>
+          <dt>Room Style</dt>
+          <dd>{roomStyle.description}</dd>
+        </div>
+        <div>
+          <dt>Safe controls</dt>
+          <dd>{formatCatalogList(look.safeOwnerControls, "None")}</dd>
+        </div>
+        <div>
+          <dt>Locked elements</dt>
+          <dd>{formatCatalogList(look.lockedElements, "None in this gate")}</dd>
+        </div>
+        <div>
+          <dt>Intended wow</dt>
+          <dd>{look.intendedWowMoment}</dd>
+        </div>
+        <div>
+          <dt>Mobile</dt>
+          <dd>{roomStyle.mobileBehaviour}</dd>
+        </div>
+        <div>
+          <dt>Reduced motion</dt>
+          <dd>{look.reducedMotionBehaviour}</dd>
+        </div>
+        <div>
+          <dt>Performance</dt>
+          <dd>{look.performanceExpectation}</dd>
+        </div>
+        <div>
+          <dt>Boundary</dt>
+          <dd>Owner-private Studio metadata only; public routes stay unchanged.</dd>
+        </div>
+      </dl>
+    </section>
+  );
+}
+
+interface StudioV3FacetOption {
+  id: string;
+  label: string;
+  detail: string;
+  layer: StudioV3Layer;
+  value: StudioV3LayerOverrideValue;
+  active: boolean;
+  background: string;
+  color: string;
+  symbol?: string;
+  locked?: boolean;
+}
+
 function StudioV3FacetControls({
   activeLookValues,
   disabled,
@@ -323,57 +459,69 @@ function StudioV3FacetControls({
     id: string;
     label: string;
     help: string;
-    options: Array<{
-      id: string;
-      label: string;
-      detail: string;
-      layer: StudioV3Layer;
-      value: StudioV3LayerOverrideValue;
-      active: boolean;
-      background: string;
-      color: string;
-      locked?: boolean;
-    }>;
+    options: StudioV3FacetOption[];
   }> = [
     {
       id: "background",
       label: "Background / surface atmosphere",
       help: "Changes the material field without moving the Room structure.",
-      options: [
-        { id: "paper", label: "Paper Light", detail: "Warm paper, soft grain", layer: "presence-look", value: { background: "#f7f3ea", texture: "paper", atmosphere: "paper-light" }, active: activeLookValues.background === "#f7f3ea", background: "#f7f3ea", color: "#17120a" },
-        { id: "night", label: "Nocturnal Depth", detail: "Black field, concentrated signal", layer: "presence-look", value: { background: "#050505", texture: "grain", atmosphere: "nocturnal-depth" }, active: activeLookValues.background === "#050505", background: "#050505", color: "#ffd84d" },
-        { id: "ledger", label: "Ledger Scan", detail: "Burgundy archive surface", layer: "presence-look", value: { background: "#2b1118", texture: "ledger", atmosphere: "ledger-scan" }, active: activeLookValues.background === "#2b1118", background: "#2b1118", color: "#f1c96a" },
-      ],
+      options: PRESENCE_OWNER_ACTIVE_ATMOSPHERE_DEFINITIONS.map((definition) => ({
+        id: definition.preview.optionId,
+        label: definition.label,
+        detail: definition.description,
+        layer: "presence-look",
+        value: definition.surfaceValue,
+        active: activeLookValues.atmosphere === definition.id,
+        background: definition.preview.background,
+        color: definition.preview.color,
+      })),
     },
     {
       id: "treatment",
       label: "Image treatment",
       help: "A registered visual treatment token for Pieces on the canvas.",
-      options: [
-        { id: "quiet", label: "Quiet Framed", detail: "Fine edge, low shadow", layer: "piece-treatment", value: { pieceTreatment: "quiet-framed" }, active: activeLookValues.pieceTreatment === "quiet-framed", background: "#eee6d6", color: "#594628" },
-        { id: "luminous", label: "Luminous Depth", detail: "Deep field, radiant edge", layer: "piece-treatment", value: { pieceTreatment: "luminous-depth" }, active: activeLookValues.pieceTreatment === "luminous-depth", background: "#090909", color: "#ffd84d" },
-        { id: "captioned", label: "Captioned Ledger", detail: "Indexed, tactile label", layer: "piece-treatment", value: { pieceTreatment: "captioned-ledger" }, active: activeLookValues.pieceTreatment === "captioned-ledger", background: "#d3b887", color: "#2b1118" },
-      ],
+      options: PRESENCE_OWNER_ACTIVE_PIECE_TREATMENT_DEFINITIONS.map((definition) => ({
+        id: definition.preview.optionId,
+        label: definition.label,
+        detail: definition.description,
+        layer: "piece-treatment",
+        value: { pieceTreatment: definition.id },
+        active: activeLookValues.pieceTreatment === definition.id,
+        background: definition.preview.background,
+        color: definition.preview.color,
+      })),
     },
     {
       id: "typography",
       label: "Typography / CTA style",
       help: "Adjusts existing heading and border tokens; link destinations stay unchanged.",
-      options: [
-        { id: "editorial", label: "Editorial", detail: "Quiet weight, hairline action", layer: "presence-look", value: { headingWeight: 600, borderStyle: "hairline" }, active: activeLookValues.headingWeight === 600 && activeLookValues.borderStyle === "hairline", background: "#fffaf0", color: "#15120f" },
-        { id: "signal", label: "Signal", detail: "Strong heading, framed action", layer: "presence-look", value: { headingWeight: 800, borderStyle: "framed" }, active: activeLookValues.headingWeight === 800 && activeLookValues.borderStyle === "framed", background: "#17120a", color: "#f3c85d" },
-        { id: "archive", label: "Archive", detail: "Ledger edge, indexed weight", layer: "presence-look", value: { headingWeight: 700, borderStyle: "ledger" }, active: activeLookValues.headingWeight === 700 && activeLookValues.borderStyle === "ledger", background: "#ead7a6", color: "#2b1118" },
-      ],
+      options: PRESENCE_TYPOGRAPHY_FACET_DEFINITIONS.map((definition) => ({
+        id: definition.id,
+        label: definition.label,
+        detail: definition.description,
+        layer: "presence-look",
+        value: definition.value,
+        active: activeLookValues.headingWeight === definition.value.headingWeight && activeLookValues.borderStyle === definition.value.borderStyle,
+        background: definition.preview.background,
+        color: definition.preview.color,
+      })),
     },
     {
       id: "motion",
       label: "Motion intensity",
       help: motionLocked ? "Motion / Atmosphere is locked. Unlocking is a later explicit action." : "Reduced-motion preferences continue to override decorative movement.",
-      options: [
-        { id: "still", label: "Still", detail: "No decorative movement", layer: "motion-atmosphere", value: { motionIntensity: "still" }, active: activeLookValues.motionIntensity === "still", background: "#e5e0d7", color: "#15120f", locked: motionLocked },
-        { id: "gentle", label: "Gentle", detail: "Measured ambient movement", layer: "motion-atmosphere", value: { motionIntensity: "gentle" }, active: activeLookValues.motionIntensity === "gentle", background: "#ccb882", color: "#15120f", locked: motionLocked },
-        { id: "living", label: "Living", detail: "Most expressive registered motion", layer: "motion-atmosphere", value: { motionIntensity: "living" }, active: activeLookValues.motionIntensity === "living", background: "#2b1118", color: "#f1c96a", locked: motionLocked },
-      ],
+      options: PRESENCE_MOTION_BEHAVIOUR_DEFINITIONS.map((definition) => ({
+        id: definition.id,
+        label: definition.label,
+        detail: definition.description,
+        layer: "motion-atmosphere",
+        value: { motionIntensity: definition.id },
+        active: activeLookValues.motionIntensity === definition.id,
+        background: definition.preview.background,
+        color: definition.preview.color,
+        symbol: definition.preview.symbol,
+        locked: motionLocked,
+      })),
     },
   ];
   return (
@@ -399,7 +547,7 @@ function StudioV3FacetControls({
                   aria-hidden="true"
                   style={{ "--facet-background": option.background, "--facet-color": option.color } as CSSProperties}
                 >
-                  {group.id === "motion" ? (option.id === "still" ? "—" : option.id === "gentle" ? "↝" : "≈") : "Aa"}
+                  {group.id === "motion" ? option.symbol : "Aa"}
                 </span>
                 <strong>{option.label}</strong>
                 <small>{option.locked ? "Locked" : option.detail}</small>

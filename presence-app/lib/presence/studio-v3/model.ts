@@ -17,12 +17,12 @@ import type { StudioV3CollectionSourceRef, StudioV3SourceRef } from "./sourceRef
 export const STUDIO_V3_LOCAL_SCHEMA_VERSION = "presence-studio-v3-p1-local-v1" as const;
 export const STUDIO_V3_HIDDEN_OR_UNAVAILABLE_REASON = "This Piece is hidden or unavailable in the owner Library." as const;
 
-export type StudioV3RoomStyleId = "threshold-portal" | "gallery-wall" | "film-strip-selected-works";
-export type StudioV3LookId = "soft-editorial" | "nocturnal-gallery" | "zine-archive";
+export type StudioV3RoomStyleId = "threshold-portal" | "gallery-wall" | "film-strip-selected-works" | "refractive-threshold";
+export type StudioV3LookId = "soft-editorial" | "nocturnal-gallery" | "zine-archive" | "brass-inlay";
 export type StudioV3CollectionPresentationId = "wall" | "selected-sequence" | "threshold-feature";
 export type StudioV3Density = "spacious" | "focused" | "dense";
-export type StudioV3Atmosphere = "paper-light" | "nocturnal-depth" | "ledger-scan";
-export type StudioV3PieceTreatment = "quiet-framed" | "luminous-depth" | "captioned-ledger";
+export type StudioV3Atmosphere = "paper-light" | "nocturnal-depth" | "ledger-scan" | "drawing-sheet" | "material-sampler";
+export type StudioV3PieceTreatment = "quiet-framed" | "luminous-depth" | "captioned-ledger" | "onion-inspection" | "scribe-reveal" | "measured-plate";
 export type StudioV3Journey = "editorial-browse" | "threshold-reveal" | "archive-index";
 export type StudioV3ModePreference = "simple" | "advanced-creative";
 export type StudioV3Layer =

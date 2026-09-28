@@ -8,6 +8,21 @@ import {
 } from "../studio-v2/layouts.ts";
 import { studioV3RoomStyleDefinition, STUDIO_V3_P1_LOOKS } from "./p1Catalog.ts";
 import {
+  isStudioV3CollectionPresentationId as isCatalogStudioV3CollectionPresentationId,
+  isStudioV3DensityId,
+  isStudioV3JourneyId,
+  isStudioV3MotionBehaviourId,
+  isPresencePersistableAtmosphereId,
+  isPresencePersistablePieceTreatmentId,
+  isPresencePersistableRoomStyleId,
+  isPresenceLookSelectable,
+  isPresencePublicPresetCandidateSelectableInV3,
+  isPresenceStylePairingAllowed,
+  isStudioV3LookId,
+  isStudioV3PublicStylePresetId,
+  isStudioV3WorldId,
+} from "./styleCatalog.ts";
+import {
   findStudioV3LegacyPiece,
   findStudioV3Piece,
   isStudioV3CollectionSourceRef,
@@ -79,7 +94,7 @@ export interface StudioV3StructuralStageReady {
 
 export interface StudioV3StructuralStageBlocked {
   status: "blocked";
-  reason: "room-missing" | "look-missing" | "savepoint-capacity";
+  reason: "room-missing" | "look-missing" | "look-unselectable" | "savepoint-capacity" | "style-pairing-blocked";
   originalDocument: StudioV3Document;
   stagedDocument: StudioV3Document;
   savepoint: StudioV3StructuralSavepoint;
@@ -166,6 +181,9 @@ export function stageStudioV3RoomStyle(
     override.scopeKind === "room" && override.scopeId === room.id && override.layer === "room-style"
   ));
   const targetStyle = roomStyleValue(matchingOverride?.value) ?? roomStyleValue(matchingLock?.value) ?? input.roomStyleId;
+  if (!isPresenceStylePairingAllowed(activeCatalogLookIdForGuardrail(document), targetStyle, STUDIO_V3_INTERNAL_REVIEW_STYLE_GUARDRAILS)) {
+    return blockedStage(document, "style-pairing-blocked");
+  }
   const remapped = remapRoomForStyle(document, room, targetStyle);
   const objectEdits = reconcileRoomStyleObjectEdits(document, room, remapped.room);
   const stagedDocument: StudioV3Document = {
@@ -201,6 +219,7 @@ export function stageStudioV3LookRoomStyleRecommendation(
   const look = document.looks[input.lookId] ?? STUDIO_V3_P1_LOOKS.find((candidate) => candidate.id === input.lookId);
   if (!room) return blockedStage(document, "room-missing");
   if (!look) return blockedStage(document, "look-missing");
+  if (!isPresenceLookSelectable(input.lookId, STUDIO_V3_INTERNAL_REVIEW_STYLE_GUARDRAILS)) return blockedStage(document, "look-unselectable");
 
   const matchingLock = document.locks.find((lock) =>
     lock.scopeKind === "room" && lock.scopeId === room.id && lock.layer === "room-style"
@@ -398,6 +417,7 @@ export const STUDIO_V3_PRIVATE_METADATA_MAX_BYTES = 256 * 1024;
 export const STUDIO_V3_PRIVATE_METADATA_SECTION_MAX_BYTES = 96 * 1024;
 export const STUDIO_V3_PRIVATE_METADATA_MAX_DEPTH = 9;
 export const STUDIO_V3_PRIVATE_METADATA_MAX_ITEMS = 160;
+const STUDIO_V3_INTERNAL_REVIEW_STYLE_GUARDRAILS = { allowExperimental: true } as const;
 
 export interface StudioV3ProjectedMetadata extends StudioV3PrivateMetadata {
   owner_mode: StudioV3Document["mode"];
@@ -482,6 +502,13 @@ export function restoreStudioV3Metadata(
     if (!findStudioV3Piece(document.pieces, parsedPlacement.sourceRef, parsedPlacement.roomId)) {
       issues.push({ kind: "missing-piece", reference: parsedPlacement.sourceRef });
       continue;
+    }
+    if (parsedPlacement.collectionSourceRef) {
+      const collection = document.collections[parsedPlacement.collectionSourceRef];
+      if (!collection || collection.sourceStatus !== "current") {
+        issues.push({ kind: "missing-collection", reference: parsedPlacement.collectionSourceRef });
+        continue;
+      }
     }
     if (!document.rooms.some((room) => room.id === parsedPlacement.roomId)) {
       return {
@@ -649,6 +676,12 @@ function blockedStage(document: StudioV3Document, reason: StudioV3StructuralStag
     compare: { before: comparison, after: comparison },
     impact: { accounting: [], preservedByLock: [], preservedByOverride: [] },
   };
+}
+
+function activeCatalogLookIdForGuardrail(document: StudioV3Document): StudioV3LookId {
+  const active = document.looks[document.activeLookId] ?? document.namedLooks.find((look) => look.id === document.activeLookId);
+  const baseLookId = active?.baseLookId ?? (isStudioV3LookId(active?.id) ? active.id : undefined);
+  return isStudioV3LookId(baseLookId) ? baseLookId : "soft-editorial";
 }
 
 function readyStage(
@@ -971,7 +1004,7 @@ function roomStyleValue(value: unknown): StudioV3RoomStyleId | null {
 }
 
 function isRoomStyleId(value: unknown): value is StudioV3RoomStyleId {
-  return value === "threshold-portal" || value === "gallery-wall" || value === "film-strip-selected-works";
+  return isPresencePersistableRoomStyleId(value);
 }
 
 function projectLookValues(values: Partial<StudioV3LookValues>): Record<string, unknown> {
@@ -1312,6 +1345,7 @@ function parseLookValues(value: Record<string, unknown>): StudioV3LookValues | n
   const required = Object.keys(template.values);
   if (required.some((key) => value[key] === undefined) || Object.keys(value).some((key) => !required.includes(key))) return null;
   if (!isSafeLookValueRecord(value, true)) return null;
+  if (!isPresencePublicPresetCandidateSelectableInV3(candidate.publicStylePreset, STUDIO_V3_INTERNAL_REVIEW_STYLE_GUARDRAILS)) return null;
   return structuredClone(candidate);
 }
 
@@ -1619,15 +1653,16 @@ function isSafeLookValueRecord(value: Record<string, unknown>, requireComplete: 
     if (key === "objectRadius" && (typeof child !== "number" || !Number.isFinite(child) || child < 0 || child > 40)) return false;
     if (key === "shadowDepth" && (typeof child !== "number" || !Number.isFinite(child) || child < 0 || child > 1)) return false;
     if (key === "headingWeight" && (typeof child !== "number" || !Number.isInteger(child) || child < 300 || child > 900)) return false;
-    if (key === "motionIntensity" && !["still", "gentle", "living"].includes(String(child))) return false;
-    if (key === "publicStylePreset" && !["gallery-p2", "christina-liquid-gallery", "bbbvision-threshold-gallery"].includes(String(child))) return false;
+    if (key === "motionIntensity" && !isStudioV3MotionBehaviourId(child)) return false;
+    if (key === "publicStylePreset" && (!isStudioV3PublicStylePresetId(child)
+      || !isPresencePublicPresetCandidateSelectableInV3(child, STUDIO_V3_INTERNAL_REVIEW_STYLE_GUARDRAILS))) return false;
     if (key === "roomStyleId" && !isRoomStyleId(child)) return false;
-    if (key === "worldId" && !["gallery", "zine", "dj", "healing", "market", "archive", "carpenter", "consultant"].includes(String(child))) return false;
-    if (key === "collectionPresentationId" && !isCollectionPresentationId(child)) return false;
-    if (key === "density" && !["spacious", "focused", "dense"].includes(String(child))) return false;
-    if (key === "pieceTreatment" && !["quiet-framed", "luminous-depth", "captioned-ledger"].includes(String(child))) return false;
-    if (key === "atmosphere" && !["paper-light", "nocturnal-depth", "ledger-scan"].includes(String(child))) return false;
-    if (key === "journey" && !["editorial-browse", "threshold-reveal", "archive-index"].includes(String(child))) return false;
+    if (key === "worldId" && !isStudioV3WorldId(child)) return false;
+    if (key === "collectionPresentationId" && !isCatalogStudioV3CollectionPresentationId(child)) return false;
+    if (key === "density" && !isStudioV3DensityId(child)) return false;
+    if (key === "pieceTreatment" && !isPresencePersistablePieceTreatmentId(child)) return false;
+    if (key === "atmosphere" && !isPresencePersistableAtmosphereId(child)) return false;
+    if (key === "journey" && !isStudioV3JourneyId(child)) return false;
   }
   return true;
 }

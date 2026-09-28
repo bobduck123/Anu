@@ -1,4 +1,5 @@
 import type { PresenceEditableConfig, PresenceEditorOverview, PresenceNode } from "@/lib/api/types";
+import { evaluateRcrContractInPresence } from "../presence/rcrContract.ts";
 import { resolveRenderModel } from "../presence/render/resolver.ts";
 import { isStudioV2PresenceConfig, studioV2FromPresenceConfig } from "../presence/studio-v2/index.ts";
 import { validateAssetUrl } from "./assetValidator.ts";
@@ -138,6 +139,7 @@ export function buildReadinessReport({
   const changedCount = diffEditableConfigs(overview?.published_public_config ?? overview?.published, config).length;
   add(changedCount > 0, "unpublished-changes", "recommended", "Draft differs from the live room.", "Review the draft-vs-published comparison before opening the room to visitors.", "preview");
   add(!mobilePreviewReviewed, "mobile-preview-not-reviewed", "polish", "Mobile preview has not been reviewed in this session.", "Check the small viewport before publishing visual changes.", "preview");
+  addRcrContractIssues(issues, config, node);
 
   const critical = issues.filter((issue) => issue.severity === "critical");
   const recommended = issues.filter((issue) => issue.severity === "recommended");
@@ -201,6 +203,7 @@ function buildStudioV2ReadinessReport({
   const changedCount = diffEditableConfigs(overview?.published_public_config ?? overview?.published, config).length;
   add(changedCount > 0, "unpublished-changes", "recommended", "Draft differs from the live room.", "Review the draft-vs-published comparison before opening the room to visitors.", "preview");
   add(!mobilePreviewReviewed, "mobile-preview-not-reviewed", "polish", "Mobile preview has not been reviewed in this session.", "Check the small viewport before publishing visual changes.", "preview");
+  addRcrContractIssues(issues, config, node);
 
   const critical = issues.filter((issue) => issue.severity === "critical");
   const recommended = issues.filter((issue) => issue.severity === "recommended");
@@ -221,6 +224,22 @@ function buildStudioV2ReadinessReport({
   function add(condition: boolean, id: string, severity: ReadinessSeverity, label: string, detail: string, tabId: string) {
     if (condition && !issues.some((issue) => issue.id === id)) {
       issues.push({ id, severity, label, detail, tabId });
+    }
+  }
+}
+
+function addRcrContractIssues(issues: ReadinessIssue[], config: PresenceEditableConfig, node: PresenceNode): void {
+  const contractIssues = evaluateRcrContractInPresence(config, node, { surface: "public" });
+  for (const issue of contractIssues) {
+    const id = `rcr-${issue.rcr.toLowerCase()}-${issue.id}-${hash(issue.path)}`;
+    if (!issues.some((existing) => existing.id === id)) {
+      issues.push({
+        id,
+        severity: "critical",
+        label: issue.label,
+        detail: `${issue.rcr}: ${issue.detail}`,
+        tabId: "preview",
+      });
     }
   }
 }
