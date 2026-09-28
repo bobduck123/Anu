@@ -58,3 +58,15 @@ jobs:
         with:
           python-version: '3.12'
       - run: python scripts/verify-env-contract.py
+
+  presence-rcr-tripwire:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: presence-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node scripts/check-rcr-container-keys.mjs
