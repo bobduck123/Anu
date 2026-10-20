@@ -1956,6 +1956,51 @@ def _normalize_link(raw: dict[str, Any], index: int) -> dict[str, Any] | None:
     }
 
 
+def replace_private_draft_links(node: PresenceNode, links: Any) -> list[PresenceLink]:
+    """Replace links only on a never-published private draft, after full validation."""
+    if (
+        node.status != "draft"
+        or node.visibility != "private"
+        or node.public_status == "public"
+        or node.published_at is not None
+        or node.archived_at is not None
+    ):
+        raise PresenceValidationError("Links can only be edited on a never-published private draft.")
+    if not isinstance(links, list):
+        raise PresenceValidationError("links must be an array.")
+    if len(links) > 50:
+        raise PresenceValidationError("A private draft can contain at most 50 links.")
+
+    normalized_links = []
+    allowed_fields = {"label", "url", "link_type", "icon", "is_visible"}
+    for index, raw in enumerate(links):
+        if not isinstance(raw, dict) or set(raw) - allowed_fields:
+            raise PresenceValidationError(f"links[{index}] has unsupported fields.")
+        if not isinstance(raw.get("label"), str) or not isinstance(raw.get("url"), str):
+            raise PresenceValidationError(f"links[{index}] requires a label and URL.")
+        if "is_visible" in raw and type(raw["is_visible"]) is not bool:
+            raise PresenceValidationError(f"links[{index}].is_visible must be a boolean.")
+        for field in ("link_type", "icon"):
+            if field in raw and raw[field] is not None and not isinstance(raw[field], str):
+                raise PresenceValidationError(f"links[{index}].{field} must be text.")
+        item = _normalize_link({**raw, "sort_order": index}, index)
+        if not item:
+            raise PresenceValidationError(f"links[{index}] requires a label and public http(s) URL.")
+        normalized_links.append(item)
+
+    for existing in list(node.links):
+        db.session.delete(existing)
+    db.session.flush()
+    for item in normalized_links:
+        db.session.add(PresenceLink(node_id=node.id, **item))
+    db.session.flush()
+    return (
+        PresenceLink.query.filter_by(node_id=node.id)
+        .order_by(PresenceLink.sort_order.asc(), PresenceLink.id.asc())
+        .all()
+    )
+
+
 def _normalize_service(raw: dict[str, Any], index: int) -> dict[str, Any] | None:
     title = _clean_text(raw.get("title"), max_length=160)
     if not title:

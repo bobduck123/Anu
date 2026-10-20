@@ -45,8 +45,10 @@ from ..services.presence_service import (
     ensure_unique_presence_slug,
     normalize_slug,
     publish_presence_node,
+    replace_private_draft_links,
     serialize_collection,
     serialize_enquiry,
+    serialize_link,
     serialize_nfc_tag,
     serialize_presence_node,
     serialize_service,
@@ -529,6 +531,41 @@ def get_owner_node(node_id):
     if err:
         return err
     return _owner_node_detail_response(node)
+
+
+@presence_owner_bp.route("/nodes/<int:node_id>/links", methods=["GET", "PUT"])
+@alpha_jwt_required()
+def owner_node_links(node_id):
+    node, err = _load_owned_node(node_id)
+    if err:
+        return err
+    if request.method == "GET":
+        links = sorted(node.links, key=lambda row: (row.sort_order or 0, row.id or 0))
+        return _ok([serialize_link(link) for link in links])
+    # Serialize with a concurrent publish; the state is rechecked after locking.
+    db.session.refresh(node, with_for_update=True)
+    err = _require_owner_node_access(node)
+    if err:
+        return err
+    if (
+        node.status != "draft"
+        or node.visibility != "private"
+        or node.public_status == "public"
+        or node.published_at is not None
+        or node.archived_at is not None
+    ):
+        return _err("draft_only", "Links can only be edited on a never-published private draft.", 409)
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict) or set(payload) != {"links"}:
+        return _err("validation_error", "A links array is required.", 400)
+    try:
+        links = replace_private_draft_links(node, payload["links"])
+        response = [serialize_link(link) for link in links]
+        db.session.commit()
+        return _ok(response)
+    except PresenceValidationError as exc:
+        db.session.rollback()
+        return _validation_error(exc)
 
 
 @presence_owner_bp.route("/nodes/<int:node_id>", methods=["PATCH"])
