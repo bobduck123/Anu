@@ -1,0 +1,645 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Presence current read API — observed subset",
+    "version": "0.1.0-observed-draft",
+    "description": "Documentation of six existing Flask GET routes. This is a partial current-state contract, not the proposed Presence V4 /api/v1 API or a production certification."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Current service origin; no hosted URL asserted"
+    }
+  ],
+  "x-contract-status": "draft-observed",
+  "x-v4-compatibility-gaps": [
+    "Current routes use /api/presence rather than /api/v1.",
+    "Resource IDs are integers rather than UUID/ULID.",
+    "The public list uses limit/offset rather than cursor pagination.",
+    "Public and owner success envelopes differ; neither matches the proposed V4 envelope.",
+    "Additional response fields remain unspecified in this subset."
+  ],
+  "paths": {
+    "/api/presence/public/nodes": {
+      "get": {
+        "operationId": "listCurrentPublicPresences",
+        "tags": [
+          "Public"
+        ],
+        "summary": "Observed Presence read route",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observed successful response from the existing Flask route",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicListEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited; legacy error shape not specified"
+          }
+        },
+        "security": [],
+        "x-source": "flora-fauna/backend/app/api/presence.py",
+        "x-implementation-status": "observed-subset"
+      }
+    },
+    "/api/presence/public/{slug}": {
+      "get": {
+        "operationId": "getCurrentPublicPresence",
+        "tags": [
+          "Public"
+        ],
+        "summary": "Observed Presence read route",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observed successful response from the existing Flask route",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicNodeEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found when unpublished, private, hidden or unknown"
+          }
+        },
+        "security": [],
+        "x-source": "flora-fauna/backend/app/api/presence.py",
+        "x-implementation-status": "observed-subset"
+      }
+    },
+    "/api/presence/public/{slug}/works/{work_id}": {
+      "get": {
+        "operationId": "getCurrentPublicWork",
+        "tags": [
+          "Public"
+        ],
+        "summary": "Observed Presence read route",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "work_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observed successful response from the existing Flask route",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicWorkEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found when unpublished, private, hidden or unknown"
+          }
+        },
+        "security": [],
+        "x-source": "flora-fauna/backend/app/api/presence.py",
+        "x-implementation-status": "observed-subset"
+      }
+    },
+    "/api/presence/public/{slug}/collections/{collection_id}": {
+      "get": {
+        "operationId": "getCurrentPublicCollection",
+        "tags": [
+          "Public"
+        ],
+        "summary": "Observed Presence read route",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "collection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observed successful response from the existing Flask route",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicCollectionEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found when unpublished, private, hidden or unknown"
+          }
+        },
+        "security": [],
+        "x-source": "flora-fauna/backend/app/api/presence.py",
+        "x-implementation-status": "observed-subset"
+      }
+    },
+    "/api/presence/owner/nodes": {
+      "get": {
+        "operationId": "listCurrentOwnerPresences",
+        "tags": [
+          "Owner"
+        ],
+        "summary": "Observed Presence read route",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Observed successful response from the existing Flask route",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerListEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-source": "flora-fauna/backend/app/api/presence_owner.py",
+        "x-implementation-status": "observed-subset"
+      }
+    },
+    "/api/presence/owner/nodes/{node_id}": {
+      "get": {
+        "operationId": "getCurrentOwnerPresence",
+        "tags": [
+          "Owner"
+        ],
+        "summary": "Observed Presence read route",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observed successful response from the existing Flask route",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerNodeEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-source": "flora-fauna/backend/app/api/presence_owner.py",
+        "x-implementation-status": "observed-subset"
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Existing owner JWT flow; no authentication change is specified here."
+      }
+    },
+    "schemas": {
+      "PublicCard": {
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "display_name",
+          "public_url"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "public_url": {
+            "type": "string"
+          },
+          "published_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": true
+      },
+      "PresenceNode": {
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "display_name",
+          "status",
+          "visibility",
+          "public_url"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "string"
+          },
+          "public_url": {
+            "type": "string"
+          },
+          "links": {
+            "type": "array"
+          },
+          "works": {
+            "type": "array"
+          },
+          "collections": {
+            "type": "array"
+          }
+        },
+        "additionalProperties": true
+      },
+      "PresenceWork": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "is_visible"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "is_visible": {
+            "type": "boolean"
+          },
+          "collection_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": true
+      },
+      "PresenceCollection": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "is_visible"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "is_visible": {
+            "type": "boolean"
+          },
+          "node_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": true
+      },
+      "PublicList": {
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicCard"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": true
+      },
+      "PublicWorkDetail": {
+        "type": "object",
+        "required": [
+          "node",
+          "work",
+          "collection"
+        ],
+        "properties": {
+          "node": {
+            "$ref": "#/components/schemas/PresenceNode"
+          },
+          "work": {
+            "$ref": "#/components/schemas/PresenceWork"
+          },
+          "collection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PresenceCollection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true
+      },
+      "PublicCollectionDetail": {
+        "type": "object",
+        "required": [
+          "node",
+          "collection",
+          "works"
+        ],
+        "properties": {
+          "node": {
+            "$ref": "#/components/schemas/PresenceNode"
+          },
+          "collection": {
+            "$ref": "#/components/schemas/PresenceCollection"
+          },
+          "works": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PresenceWork"
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "OwnerList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/PresenceNode"
+        }
+      },
+      "PublicListEnvelope": {
+        "type": "object",
+        "required": [
+          "ok",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PublicList"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "PublicNodeEnvelope": {
+        "type": "object",
+        "required": [
+          "ok",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PresenceNode"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "PublicWorkEnvelope": {
+        "type": "object",
+        "required": [
+          "ok",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PublicWorkDetail"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "PublicCollectionEnvelope": {
+        "type": "object",
+        "required": [
+          "ok",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PublicCollectionDetail"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "OwnerListEnvelope": {
+        "type": "object",
+        "required": [
+          "ok",
+          "data"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/OwnerList"
+          }
+        },
+        "additionalProperties": true
+      },
+      "OwnerNodeEnvelope": {
+        "type": "object",
+        "required": [
+          "ok",
+          "data"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PresenceNode"
+          }
+        },
+        "additionalProperties": true
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "required": [
+          "ok",
+          "error"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": false
+          },
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  }
+}
