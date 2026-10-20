@@ -49,6 +49,7 @@ jobs:
           python-version: '3.12'
       - run: pip install -r requirements.txt
       - run: python ../../scripts/smoke-core-runtime.py
+      - run: python -m pytest tests/test_presence_read_contract.py -q --disable-warnings
 
   contract-and-env:
     runs-on: ubuntu-latest
