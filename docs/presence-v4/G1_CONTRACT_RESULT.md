@@ -1,6 +1,6 @@
 # Presence V4 G1: observed read-contract foundation
 
-**Status:** Reviewable local draft. This does not pass proposed V4 G1 or change any V3.4 gate status.
+**Status:** Reviewable [draft PR #26](https://github.com/bobduck123/Anu/pull/26). This does not pass proposed V4 G1 or change any V3.4 gate status.
 
 ## Delivered
 
@@ -26,4 +26,4 @@ Core runtime smoke passed.
 
 This draft is an observed six-route subset. The test deliberately checks only the JSON Schema features used here; it is not full OpenAPI conformance, a hosted PostgreSQL test, a security audit, or proof of every rich payload field. No new API path, migration, SDK, frontend integration, auth change, publish behavior, or deployment is included.
 
-Before claiming V4 G1, review the G0 repo audit, decide the versioned API migration boundary, specify remaining write/error/authorization contracts, add negative tenant tests and generation/consumer checks, and obtain the required human gate review. This branch stays local until publication of this internal contract is explicitly approved.
+Before claiming V4 G1, review the G0 repo audit, decide the versioned API migration boundary, specify remaining write/error/authorization contracts, add negative tenant tests and generation/consumer checks, and obtain the required human gate review. The owner approved publication of this draft branch on 2026-10-20; merge and deployment remain subject to separate human approval.
