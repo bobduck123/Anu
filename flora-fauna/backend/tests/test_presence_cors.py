@@ -80,6 +80,26 @@ def test_options_preflight_on_owner_nodes_from_presence_frontend_succeeds():
     assert "GET" in allow_methods, f"GET must be allowed: {allow_methods}"
 
 
+def test_links_if_match_preflight_is_allowed_only_for_approved_origin():
+    app = _build_app([PRESENCE_ORIGIN])
+    client = app.test_client()
+    headers = {
+        "Access-Control-Request-Method": "PUT",
+        "Access-Control-Request-Headers": "authorization,content-type,if-match",
+    }
+    route = "/api/presence/owner/nodes/1/links"
+    approved = client.options(route, headers={**headers, "Origin": PRESENCE_ORIGIN})
+    assert approved.status_code in (200, 204)
+    assert approved.headers.get("Access-Control-Allow-Origin") == PRESENCE_ORIGIN
+    allowed = (approved.headers.get("Access-Control-Allow-Headers") or "").lower()
+    assert "if-match" in allowed
+    assert "authorization" in allowed
+    assert "put" in (approved.headers.get("Access-Control-Allow-Methods") or "").lower()
+
+    denied = client.options(route, headers={**headers, "Origin": DISALLOWED_ORIGIN})
+    assert denied.headers.get("Access-Control-Allow-Origin") is None
+
+
 def test_options_preflight_on_owner_media_upload_from_presence_frontend_succeeds():
     app = _build_app([PRESENCE_ORIGIN])
     client = app.test_client()
