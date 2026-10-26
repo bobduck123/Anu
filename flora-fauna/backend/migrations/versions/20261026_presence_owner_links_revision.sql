@@ -9,3 +9,8 @@ UPDATE presence_node
 SET published_at = COALESCE(updated_at, created_at, CURRENT_TIMESTAMP)
 WHERE published_at IS NULL
   AND (public_status = 'public' OR status = 'published');
+
+-- Re-run this file before re-enabling writes after any rollback to a server
+-- version that may have changed links without maintaining links_revision.
+-- Invalidating every prior If-Match token closes that rollback/re-upgrade ABA.
+UPDATE presence_node SET links_revision = links_revision + 1;

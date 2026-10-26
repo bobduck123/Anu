@@ -261,6 +261,65 @@ def _load_studio_room_draft(app, client, room_id, username="kit-owner"):
     return response.get_json()["data"]["draft"]["content_config"]["studio_room_draft"]
 
 
+def test_published_template_kit_draft_edit_keeps_link_history_locked():
+    app = _build_app()
+    _seed(app)
+    client = app.test_client()
+    created = _create_persisted_draft(app, client)
+    room_id = created["room_id"]
+    headers = _headers(app, "kit-owner")
+    published = client.post(f"/api/presence/owner/nodes/{room_id}/publish", headers=headers)
+    assert published.status_code == 200, published.get_json()
+    published_at = published.get_json()["data"]["published_at"]
+    assert published_at is not None
+
+    draft = _load_studio_room_draft(app, client, room_id)
+    draft["room"]["chambers"][0]["title"] = "Revised after publication"
+    edited = client.patch(
+        f"/api/presence/owner/studio-rooms/{room_id}/draft",
+        json={"studio_room_draft": draft}, headers=headers,
+    )
+    assert edited.status_code == 200, edited.get_json()
+    assert edited.get_json()["data"]["published_at"] == published_at
+
+    links_url = f"/api/presence/owner/nodes/{room_id}/links"
+    links = client.get(links_url, headers=headers)
+    assert links.status_code == 200
+    assert links.get_json()["meta"]["editable"] is False
+    assert links.get_json()["meta"]["lock_reason"] == "previously_published"
+    rejected = client.put(links_url, json={"links": []}, headers={
+        **headers, "If-Match": links.get_json()["meta"]["revision"]})
+    assert rejected.status_code == 409
+    assert rejected.get_json()["error"]["code"] == "draft_only"
+
+
+def test_template_kit_draft_edit_stamps_legacy_public_row_without_history():
+    app = _build_app()
+    _seed(app)
+    client = app.test_client()
+    created = _create_persisted_draft(app, client)
+    room_id = created["room_id"]
+    from manara_backend_app.extensions import db
+    from manara_backend_app.models import PresenceNode
+
+    with app.app_context():
+        node = db.session.get(PresenceNode, room_id)
+        node.public_status = "public"
+        node.visibility = "public"
+        node.published_at = None
+        db.session.commit()
+
+    draft = _load_studio_room_draft(app, client, room_id)
+    edited = client.patch(
+        f"/api/presence/owner/studio-rooms/{room_id}/draft",
+        json={"studio_room_draft": draft}, headers=_headers(app, "kit-owner"),
+    )
+    assert edited.status_code == 200, edited.get_json()
+    assert edited.get_json()["data"]["published_at"] is not None
+    links = client.get(f"/api/presence/owner/nodes/{room_id}/links", headers=_headers(app, "kit-owner"))
+    assert links.get_json()["meta"]["lock_reason"] == "previously_published"
+
+
 def test_backend_template_kit_contract_defines_owner_creatable_and_candidate_policy():
     _build_app()
 

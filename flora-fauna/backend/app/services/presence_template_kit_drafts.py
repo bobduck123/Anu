@@ -6,7 +6,9 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+from ..extensions import db
 from ..models import PresenceEditableConfig, PresenceNode, User
+from ..time_utils import now_utc
 
 from .presence_editor_config import (
     draft_config_for_room,
@@ -271,6 +273,10 @@ def update_template_kit_studio_room_draft(
     *,
     actor: User,
 ) -> tuple[PresenceEditableConfig, dict[str, Any]]:
+    # Use the same node lock as link replacement and explicit publication.
+    db.session.refresh(room, with_for_update=True)
+    if getattr(actor, "role", None) != "platform_admin" and room.owner_user_id != actor.id:
+        raise TemplateKitDraftPersistenceError("You do not have access to this Presence Node.", status=403, code="forbidden")
     media_asset_records_available()
     draft = draft_config_for_room(room)
     if not draft:
@@ -764,10 +770,11 @@ def _node_payload_for_kit(kit_id: str, kit: dict[str, str], payload: dict[str, A
 
 
 def _force_private_draft(node: PresenceNode, actor: User) -> None:
+    if node.published_at is None and (node.status == "published" or node.public_status == "public"):
+        node.published_at = now_utc()
     node.status = "draft"
     node.visibility = "private"
     node.public_status = "draft"
-    node.published_at = None
     if getattr(actor, "role", None) != "platform_admin":
         node.owner_user_id = actor.id
     if not node.tenant_id:

@@ -422,6 +422,7 @@ def _init_cors(app):
                     "Content-Type",
                     "Authorization",
                     "Accept",
+                    "If-Match",
                     "X-Requested-With",
                     "X-Request-ID",
                     "X-ANU-App-ID",
