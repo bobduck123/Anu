@@ -656,6 +656,58 @@ describe('Falak queries and visibility', () => {
     expect(adminNodes.items.some((node) => node.visibility === 'restricted')).toBe(true);
     expect(adminNodes.items.some((node) => node.visibility === 'tenant')).toBe(true);
   });
+
+  test('keeps public draft, archived and sensitive nodes out of every generic node read', async () => {
+    const { service, repository, publicContext, adminContext, nodeIds } = buildFixture();
+    const source = repository.state.nodes.get(nodeIds.publicVenue)!;
+    const hidden = [
+      { id: randomUUID(), status: 'draft' as const, sensitivityClass: 'normal' },
+      { id: randomUUID(), status: 'archived' as const, sensitivityClass: 'normal' },
+      { id: randomUUID(), status: 'active' as const, sensitivityClass: 'cultural-sensitive' }
+    ];
+
+    for (const [index, candidate] of hidden.entries()) {
+      repository.state.nodes.set(candidate.id, {
+        ...source,
+        ...candidate,
+        slug: `hidden-${index}`,
+        title: `Hidden ${index}`
+      });
+      await repository.createEdge(adminContext, {
+        fromNode: source.id,
+        toNode: candidate.id,
+        relation: 'nearby_test',
+        weight: 1,
+        validFrom: null,
+        validTo: null,
+        evidence: [],
+        metadata: {}
+      });
+    }
+
+    const hiddenIds = new Set<string>(hidden.map((node) => node.id));
+    const publicList = await service.listNodes(publicContext, { limit: 50 });
+    const draftList = await service.listNodes(publicContext, { limit: 50, status: 'draft' });
+    const nearby = await service.nearbyNodes(publicContext, {
+      lat: -35.2792,
+      lng: 149.1201,
+      radiusMeters: 1_000
+    });
+    const graph = await service.getGraph(publicContext, source.id, 1);
+    const adminList = await service.listNodes(adminContext, { limit: 50 });
+
+    expect(publicList.items.some((node) => hiddenIds.has(node.id))).toBe(false);
+    expect(draftList.items).toEqual([]);
+    expect(nearby.some((node) => hiddenIds.has(node.id))).toBe(false);
+    expect(graph.nodes.some((node) => hiddenIds.has(node.id))).toBe(false);
+    expect(graph.edges).toEqual([]);
+    expect(adminList.items.filter((node) => hiddenIds.has(node.id))).toHaveLength(3);
+    for (const id of hiddenIds) {
+      await expect(service.getNode(publicContext, id)).rejects.toMatchObject({ code: 'NODE_NOT_FOUND' });
+      await expect(service.getGraph(publicContext, id, 1)).rejects.toMatchObject({ code: 'NODE_NOT_FOUND' });
+      await expect(service.getNode(adminContext, id)).resolves.toMatchObject({ id });
+    }
+  });
 });
 
 describe('Falak ANU feature slice', () => {

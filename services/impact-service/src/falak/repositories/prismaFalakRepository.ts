@@ -436,7 +436,7 @@ function mapCurrencyRows(
     .sort((left, right) => left.currency.localeCompare(right.currency));
 }
 
-function canAccessNode(context: RequestContext, node: Pick<NodeRecord, 'tenantId' | 'visibility' | 'status'>): boolean {
+function canAccessNode(context: RequestContext, node: Pick<NodeRecord, 'tenantId' | 'visibility' | 'status' | 'sensitivityClass'>): boolean {
   if (node.status === 'deleted') {
     return false;
   }
@@ -446,7 +446,7 @@ function canAccessNode(context: RequestContext, node: Pick<NodeRecord, 'tenantId
   }
 
   if (context.plane === 'public' || !context.actor) {
-    return node.visibility === 'public';
+    return node.status === 'active' && node.visibility === 'public' && node.sensitivityClass === 'normal';
   }
 
   if (node.visibility === 'restricted') {
@@ -603,9 +603,19 @@ export class PrismaFalakRepository implements FalakRepository {
   }
 
   async listNodes(context: RequestContext, filters: ListNodesFilters): Promise<ListNodesResult> {
+    const publicRead = context.plane === 'public' || !context.actor;
+    if (publicRead && ((filters.status && filters.status !== 'active') ||
+      (filters.visibility && filters.visibility !== 'public'))) {
+      return { items: [], nextCursor: null };
+    }
     const whereClauses: Prisma.Sql[] = [
       Prisma.sql`n.tenant_id = ${context.tenantId}::uuid`
     ];
+
+    if (publicRead) {
+      whereClauses.push(Prisma.sql`n.status = 'active'::falak.falak_node_status`);
+      whereClauses.push(Prisma.sql`n.sensitivity_class = 'normal'`);
+    }
 
     if (filters.type) {
       whereClauses.push(Prisma.sql`n.type = ${filters.type}`);
@@ -1138,6 +1148,9 @@ export class PrismaFalakRepository implements FalakRepository {
   async nearbyNodes(context: RequestContext, filters: SpatialNearbyFilters): Promise<NodeRecord[]> {
     const allowedVisibilities = this.allowedVisibilities(context);
     const typeClause = filters.type ? Prisma.sql`AND n.type = ${filters.type}` : Prisma.sql``;
+    const publicClause = context.plane === 'public' || !context.actor
+      ? Prisma.sql`AND n.status = 'active'::falak.falak_node_status AND n.sensitivity_class = 'normal'`
+      : Prisma.sql``;
 
     // Nearby queries rely on PostGIS geography operators. Prisma cannot express
     // ST_DWithin/ST_Distance or computed distance projection safely through the ORM.
@@ -1152,6 +1165,7 @@ export class PrismaFalakRepository implements FalakRepository {
       CROSS JOIN anchor
       WHERE n.tenant_id = ${context.tenantId}::uuid
         AND n.status <> 'deleted'::falak.falak_node_status
+        ${publicClause}
         AND n.visibility IN (${Prisma.join(allowedVisibilities.map((value) => Prisma.sql`${value}::falak.falak_visibility`))})
         AND n.geometry IS NOT NULL
         AND falak.ST_DWithin(n.geometry::falak.geography, anchor.reference, ${filters.radiusMeters})

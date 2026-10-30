@@ -582,6 +582,11 @@ describeIfDatabase('Falak database invariants', () => {
       };
     });
 
+    await repository.transaction(fixture.tenantId, async (tx) => {
+      await tx.updateNode(fixture.contexts.admin, nearNode.id, { status: 'active', expectedVersion: nearNode.version });
+      await tx.updateNode(fixture.contexts.admin, farNode.id, { status: 'active', expectedVersion: farNode.version });
+    });
+
     const nodes = await repository.nearbyNodes(fixture.contexts.public, {
       lat: -35.279,
       lng: 149.1202,
@@ -651,6 +656,78 @@ describeIfDatabase('Falak database invariants', () => {
       statusCode: 404,
       code: 'NODE_NOT_FOUND'
     });
+  });
+
+  test('keeps draft, archived and sensitive public nodes out of live generic reads', async () => {
+    const fixture = await createFixture();
+    const hidden = await repository.transaction(fixture.tenantId, async (tx) => {
+      const venue = await tx.getNodeById(fixture.contexts.admin, fixture.nodeIds.publicVenue);
+      await tx.updateNode(fixture.contexts.admin, fixture.nodeIds.publicVenue, {
+        status: 'active',
+        expectedVersion: venue!.version
+      });
+
+      const candidates = [];
+      for (const [index, variant] of [
+        { status: 'draft' as const, sensitivityClass: 'normal' },
+        { status: 'archived' as const, sensitivityClass: 'normal' },
+        { status: 'active' as const, sensitivityClass: 'cultural-sensitive' }
+      ].entries()) {
+        const node = await tx.createNode(fixture.contexts.admin, {
+          type: 'venue',
+          visibility: 'public',
+          sensitivityClass: variant.sensitivityClass,
+          slug: `hidden-${index}-${fixture.tenantId}`,
+          title: `Hidden ${index}`,
+          summary: null,
+          metadata: {},
+          geometry: { type: 'Point', coordinates: [149.1201, -35.2792] },
+          timeStart: null,
+          timeEnd: null
+        });
+        if (variant.status !== 'draft') {
+          await tx.updateNode(fixture.contexts.admin, node.id, {
+            status: variant.status,
+            expectedVersion: node.version
+          });
+        }
+        await tx.createEdge(fixture.contexts.admin, {
+          fromNode: fixture.nodeIds.publicVenue,
+          toNode: node.id,
+          relation: 'nearby_test',
+          weight: 1,
+          validFrom: null,
+          validTo: null,
+          evidence: [],
+          metadata: {}
+        });
+        candidates.push(node.id);
+      }
+      return candidates;
+    });
+
+    const hiddenIds = new Set(hidden);
+    const publicList = await service.listNodes(fixture.contexts.public, { limit: 50 });
+    const draftList = await service.listNodes(fixture.contexts.public, { limit: 50, status: 'draft' });
+    const nearby = await service.nearbyNodes(fixture.contexts.public, {
+      lat: -35.2792,
+      lng: 149.1201,
+      radiusMeters: 1_000
+    });
+    const graph = await service.getGraph(fixture.contexts.public, fixture.nodeIds.publicVenue, 1);
+    const adminList = await service.listNodes(fixture.contexts.admin, { limit: 50 });
+
+    expect(publicList.items.some((node) => hiddenIds.has(node.id))).toBe(false);
+    expect(draftList.items).toEqual([]);
+    expect(nearby.some((node) => hiddenIds.has(node.id))).toBe(false);
+    expect(graph.nodes.some((node) => hiddenIds.has(node.id))).toBe(false);
+    expect(graph.edges.some((edge) => hiddenIds.has(edge.toNode))).toBe(false);
+    expect(adminList.items.filter((node) => hiddenIds.has(node.id))).toHaveLength(3);
+    for (const id of hiddenIds) {
+      await expect(service.getNode(fixture.contexts.public, id)).rejects.toMatchObject({ code: 'NODE_NOT_FOUND' });
+      await expect(service.getGraph(fixture.contexts.public, id, 1)).rejects.toMatchObject({ code: 'NODE_NOT_FOUND' });
+      await expect(service.getNode(fixture.contexts.admin, id)).resolves.toMatchObject({ id });
+    }
   });
 
   test('rejects federation links to non-public cross-tenant targets', async () => {
