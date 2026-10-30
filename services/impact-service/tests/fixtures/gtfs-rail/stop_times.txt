@@ -1,0 +1,12 @@
+trip_id,stop_id,stop_sequence
+T1,C1,0
+T1,R1,1
+T1,N1,2
+T2,C1,0
+T2,R1,1
+T2,E1,2
+T2,R1,3
+T3,N1,0
+T3,R1,1
+BT1,C1,0
+BT1,N1,1

@@ -870,7 +870,9 @@ model FalakTransportPattern {
   direction     String?  @db.VarChar(80)
   status        String   @default("active") @db.VarChar(20)
   sourceVersion String?  @map("source_version") @db.VarChar(120)
+  shapeHash     String?  @map("shape_hash") @db.VarChar(64)
   sourceAttribution String? @map("source_attribution") @db.VarChar(300)
+  sourceLicence String? @map("source_licence") @db.VarChar(200)
   sourceUrl     String?  @map("source_url") @db.VarChar(700)
   importedAt    DateTime? @map("imported_at") @db.Timestamptz(6)
   // Prisma cannot project PostGIS geometry; route shape reads use repository SQL.
