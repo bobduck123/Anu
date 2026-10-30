@@ -752,6 +752,7 @@ model FalakTenant {
   auditLogEntries  FalakAuditLog[]
   mapDefinitions   FalakMapDefinition[]
   mapJobs          FalakMapJob[]
+  transportPatterns FalakTransportPattern[]
 
   @@map("tenants")
   @@schema("falak")
@@ -840,6 +841,9 @@ model FalakNode {
   allocationProposalPools FalakAllocationProposal[] @relation("FalakAllocationProposalPool")
   allocationProposalTargets FalakAllocationProposal[] @relation("FalakAllocationProposalTarget")
   regionalAssignments FalakActorRole[] @relation("FalakActorRoleRegion")
+  transportNetworks FalakTransportPattern[] @relation("FalakTransportNetwork")
+  transportLines FalakTransportPattern[] @relation("FalakTransportLine")
+  transportCalls FalakTransportPatternCall[] @relation("FalakTransportStation")
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -850,6 +854,54 @@ model FalakNode {
   @@index([timeStart])
   @@index([timeEnd])
   @@map("nodes")
+  @@schema("falak")
+}
+
+// A network, line and station are ordinary canonical Falak nodes. A pattern is
+// an ordered variant of a line, so repeated station calls remain representable.
+model FalakTransportPattern {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String   @map("tenant_id") @db.Uuid
+  networkNodeId String   @map("network_node_id") @db.Uuid
+  lineNodeId    String   @map("line_node_id") @db.Uuid
+  sourceSlug    String   @map("source_slug") @db.VarChar(120)
+  externalId    String   @map("external_id") @db.VarChar(180)
+  label         String   @db.VarChar(220)
+  direction     String?  @db.VarChar(80)
+  status        String   @default("active") @db.VarChar(20)
+  sourceVersion String?  @map("source_version") @db.VarChar(120)
+  sourceAttribution String? @map("source_attribution") @db.VarChar(300)
+  sourceUrl     String?  @map("source_url") @db.VarChar(700)
+  importedAt    DateTime? @map("imported_at") @db.Timestamptz(6)
+  // Prisma cannot project PostGIS geometry; route shape reads use repository SQL.
+  geometry      Unsupported("geometry(LineString,4326)")?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  tenant        FalakTenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  network      FalakNode @relation("FalakTransportNetwork", fields: [networkNodeId], references: [id], onDelete: Restrict)
+  line         FalakNode @relation("FalakTransportLine", fields: [lineNodeId], references: [id], onDelete: Restrict)
+  calls        FalakTransportPatternCall[]
+
+  @@unique([tenantId, sourceSlug, externalId])
+  @@index([tenantId, networkNodeId, status])
+  @@index([tenantId, lineNodeId, status])
+  @@map("transport_patterns")
+  @@schema("falak")
+}
+
+model FalakTransportPatternCall {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patternId   String @map("pattern_id") @db.Uuid
+  sequence    Int
+  stationNodeId String @map("station_node_id") @db.Uuid
+  sourceStopId String? @map("source_stop_id") @db.VarChar(180)
+  distanceMeters Int? @map("distance_meters")
+  pattern     FalakTransportPattern @relation(fields: [patternId], references: [id], onDelete: Cascade)
+  station     FalakNode @relation("FalakTransportStation", fields: [stationNodeId], references: [id], onDelete: Restrict)
+
+  @@unique([patternId, sequence])
+  @@index([stationNodeId])
+  @@map("transport_pattern_calls")
   @@schema("falak")
 }
 
