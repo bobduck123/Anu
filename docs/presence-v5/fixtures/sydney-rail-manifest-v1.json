@@ -1,0 +1,129 @@
+{
+  "schema_version": "presence-experience-manifest-v1",
+  "experience": {
+    "room_id": 1,
+    "slug": "sydney-rail-fixture",
+    "owner_tenant_id": 1,
+    "experience_type": "spatial"
+  },
+  "publication": {
+    "status": "published",
+    "config_version": 1,
+    "published_at": "2026-10-30T00:00:00+00:00",
+    "content_sha256": "a5fec8cd790657f1332b7b59374c591af0a5b3bd5f42a788b6aa026fcfde2baa"
+  },
+  "scene": {
+    "module_id": "presence.sydney-rail",
+    "module_version": "1.0.0",
+    "runtime": {
+      "min_version": "1.0.0",
+      "max_version_exclusive": "2.0.0"
+    },
+    "parameter_schema_id": "sydney_rail_v1",
+    "parameters": {}
+  },
+  "assets": [
+    {
+      "id": "static_fallback",
+      "version": "1.0.0",
+      "uri": "https://assets.example.test/sydney-rail-fixture.png",
+      "media_type": "image/png",
+      "byte_size": 1024,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "role": "fallback"
+    }
+  ],
+  "bindings": [
+    {
+      "id": "network",
+      "kind": "falak.transport.network",
+      "falak_tenant_id": "00000000-0000-4000-8000-000000000001",
+      "mode": "snapshot",
+      "target_node_id": "00000000-0000-4000-8000-000000000010",
+      "cache_ttl_seconds": 0
+    },
+    {
+      "id": "line_patterns",
+      "kind": "falak.transport.line_patterns",
+      "falak_tenant_id": "00000000-0000-4000-8000-000000000001",
+      "mode": "snapshot",
+      "selection_key": "selected_line_id",
+      "cache_ttl_seconds": 0
+    },
+    {
+      "id": "station_events",
+      "kind": "falak.transport.station_discovery",
+      "falak_tenant_id": "00000000-0000-4000-8000-000000000001",
+      "mode": "snapshot",
+      "selection_key": "selected_station_id",
+      "cache_ttl_seconds": 0
+    }
+  ],
+  "navigation": {
+    "initial_scene": "network",
+    "scenes": [
+      {
+        "id": "network",
+        "label": "Sydney rail network"
+      },
+      {
+        "id": "station",
+        "label": "Station"
+      },
+      {
+        "id": "event",
+        "label": "Event"
+      }
+    ],
+    "transitions": [
+      {
+        "from_scene": "network",
+        "to_scene": "station",
+        "on": "rail.station.selected"
+      },
+      {
+        "from_scene": "station",
+        "to_scene": "event",
+        "on": "discovery.event.opened"
+      },
+      {
+        "from_scene": "event",
+        "to_scene": "station",
+        "on": "presence.entity.exited"
+      }
+    ]
+  },
+  "interactions": [
+    {
+      "event": "rail.line.selected",
+      "state_scope": "session"
+    },
+    {
+      "event": "rail.station.selected",
+      "state_scope": "session"
+    },
+    {
+      "event": "discovery.event.opened",
+      "state_scope": "session"
+    },
+    {
+      "event": "presence.entity.exited",
+      "state_scope": "session"
+    }
+  ],
+  "initial_state": {
+    "scene_id": "network",
+    "selected_line_id": null,
+    "selected_station_id": null
+  },
+  "performance": {
+    "target_fps": 30,
+    "max_texture_mb": 128,
+    "max_draw_calls": 500
+  },
+  "fallbacks": {
+    "reduced_motion": "minimal",
+    "no_webgl": "static_asset",
+    "static_asset_id": "static_fallback"
+  }
+}
