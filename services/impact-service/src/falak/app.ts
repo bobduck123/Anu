@@ -17,6 +17,7 @@ import { FalakMapService } from '../maps/services/falakMapService';
 import { AppError } from '../utils/errors';
 import logger from '../utils/logger';
 import { registerFalakRoutes } from './routes/registerFalakRoutes';
+import { registerPublicTransportRoutes } from './discovery/registerPublicTransportRoutes';
 import { PrismaFalakRepository } from './repositories/prismaFalakRepository';
 import { createFanoutPublisher } from './services/fanoutPublisher';
 import { AllocationWorkflowService } from './services/allocationWorkflowService';
@@ -69,6 +70,7 @@ export async function buildFalakApp(prisma: PrismaClient) {
         { name: 'Pools' },
         { name: 'Ledger' },
         { name: 'Spatial' },
+        { name: 'Transport' },
         { name: 'Federation' },
         { name: 'Education Maps' }
       ],
@@ -160,6 +162,7 @@ export async function buildFalakApp(prisma: PrismaClient) {
     impactQueryService
   });
   await registerMapRoutes(app, mapService, repository, runtimeConfig);
+  await registerPublicTransportRoutes(app, prisma, repository, runtimeConfig);
 
   app.get('/openapi.json', async () => app.swagger());
 

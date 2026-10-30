@@ -13,5 +13,6 @@ runCommand('npx', [
   'jest', '--runInBand',
   'tests/falak/falakDatabase.integration.test.ts',
   'tests/falak/transportTopology.database.test.ts',
-  'tests/falak/transportImport.database.test.ts'
+  'tests/falak/transportImport.database.test.ts',
+  'tests/falak/transportDiscovery.database.test.ts'
 ]);
