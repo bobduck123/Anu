@@ -714,6 +714,9 @@ class PresenceNode(db.Model):
     published_at = db.Column(db.DateTime, nullable=True)
     archived_at = db.Column(db.DateTime, nullable=True)
 
+    # Monotonic precondition for the owner draft-links replacement API.
+    links_revision = db.Column(db.Integer, nullable=False, default=1, server_default="1")
+
     sections = db.relationship("PresenceNodeSection", backref="node", lazy=True, cascade="all, delete-orphan")
     collections = db.relationship("PresenceCollection", backref="node", lazy=True, cascade="all, delete-orphan")
     works = db.relationship("PresenceWork", backref="node", lazy=True, cascade="all, delete-orphan")
@@ -986,6 +989,7 @@ class PresenceLink(db.Model):
     __table_args__ = (
         db.Index("ix_presence_link_node_order", "node_id", "sort_order"),
         db.Index("ix_presence_link_type", "link_type"),
+        {"sqlite_autoincrement": True},
     )
 
     id = db.Column(db.Integer, primary_key=True)

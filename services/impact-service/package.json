@@ -19,6 +19,7 @@
     "test:watch": "jest --watch",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
+    "transport:import": "ts-node scripts/import-gtfs-topology.ts",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node prisma/seed.ts",
     "prisma:seed:staging": "ts-node prisma/seed.staging.ts",

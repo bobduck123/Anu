@@ -1,0 +1,9 @@
+stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station
+C,Central,-33.883,151.207,1,
+C1,Central Platform 1,-33.883,151.207,0,C
+R,Redfern,-33.892,151.198,1,
+R1,Redfern Platform 1,-33.892,151.198,0,R
+N,Newtown,-33.898,151.179,1,
+N1,Newtown Platform 1,-33.898,151.179,0,N
+E,Erskineville,-33.901,151.188,1,
+E1,Erskineville Platform 1,-33.901,151.188,0,E

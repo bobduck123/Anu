@@ -1,0 +1,4 @@
+route_id,route_short_name,route_long_name,route_type
+L1,T-Alpha,Fixture Alpha,2
+L2,T-Beta,Fixture Beta,2
+B1,B-Other,Fixture Bus,3

@@ -45,8 +45,10 @@ from ..services.presence_service import (
     ensure_unique_presence_slug,
     normalize_slug,
     publish_presence_node,
+    replace_private_draft_links,
     serialize_collection,
     serialize_enquiry,
+    serialize_link,
     serialize_nfc_tag,
     serialize_presence_node,
     serialize_service,
@@ -120,8 +122,11 @@ _MEDIA_TARGETS = {
 }
 
 
-def _ok(data, status=200):
-    return jsonify({"ok": True, "data": data}), status
+def _ok(data, status=200, *, meta=None):
+    payload = {"ok": True, "data": data}
+    if meta is not None:
+        payload["meta"] = meta
+    return jsonify(payload), status
 
 
 def _err(code, message, status=400, **extra):
@@ -132,7 +137,31 @@ def _err(code, message, status=400, **extra):
 
 
 def _validation_error(exc: PresenceValidationError):
-    return _err("validation_error", str(exc), 400)
+    return _err("validation_error", str(exc), 400, **exc.details)
+
+
+def _links_revision(node: PresenceNode) -> str:
+    return f'"links-{node.links_revision}"'
+
+
+def _links_lock_reason(node: PresenceNode):
+    if node.archived_at is not None:
+        return "archived"
+    if node.published_at is not None:
+        return "previously_published"
+    if node.public_status == "public":
+        return "published"
+    if node.visibility != "private":
+        return "not_private"
+    if node.status != "draft":
+        return "not_draft"
+    return None
+
+
+def _links_meta(node: PresenceNode):
+    reason = _links_lock_reason(node)
+    return {"editable": reason is None, "lock_reason": reason,
+            "max_links": 50, "revision": _links_revision(node)}
 
 
 def _resolve_owner_user():
@@ -531,14 +560,53 @@ def get_owner_node(node_id):
     return _owner_node_detail_response(node)
 
 
+@presence_owner_bp.route("/nodes/<int:node_id>/links", methods=["GET", "PUT"])
+@alpha_jwt_required()
+def owner_node_links(node_id):
+    node, err = _load_owned_node(node_id)
+    if err:
+        return err
+    if request.method == "GET":
+        links = sorted(node.links, key=lambda row: (row.sort_order or 0, row.id or 0))
+        return _ok([serialize_link(link) for link in links], meta=_links_meta(node))
+    # Serialize with a concurrent publish; the state is rechecked after locking.
+    db.session.refresh(node, with_for_update=True)
+    err = _require_owner_node_access(node)
+    if err:
+        return err
+    reason = _links_lock_reason(node)
+    if reason:
+        return _err("draft_only", "Links can only be edited on a never-published private draft.", 409,
+                    lock_reason=reason)
+    if not request.headers.get("If-Match"):
+        return _err("precondition_required", "Send the revision from GET links in If-Match.", 428)
+    if request.headers["If-Match"] != _links_revision(node):
+        return _err("stale_draft", "Draft links changed; reload before saving.", 409,
+                    current_revision=_links_revision(node))
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict) or set(payload) != {"links"}:
+        return _err("validation_error", "A links array is required.", 400)
+    try:
+        links = replace_private_draft_links(node, payload["links"])
+        response = [serialize_link(link) for link in links]
+        db.session.commit()
+        return _ok(response, meta=_links_meta(node))
+    except PresenceValidationError as exc:
+        db.session.rollback()
+        return _validation_error(exc)
+
+
 @presence_owner_bp.route("/nodes/<int:node_id>", methods=["PATCH"])
 @alpha_jwt_required()
 def update_owner_node(node_id):
     node, err = _load_owned_node(node_id)
     if err:
         return err
+    payload = request.get_json(silent=True) or {}
+    if isinstance(payload, dict) and payload.get("public_status") == "public":
+        return _err("validation_error", "Use the explicit publish action.", 400)
     try:
-        update_presence_node(node, _filter_owner_node_update_payload(request.get_json(silent=True) or {}))
+        update_presence_node(node, _filter_owner_node_update_payload(payload))
         db.session.commit()
         return _owner_node_detail_response(node)
     except PresenceValidationError as exc:

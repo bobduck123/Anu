@@ -6,7 +6,7 @@ This environment exists to verify the Falak protocol against a live PostgreSQL +
 
 - It uses a dedicated Docker Compose file: `docker-compose.falak-local.yml`.
 - It uses a separate local-only env file: `.env.falak-local`.
-- It binds PostgreSQL on `localhost:5433`, not the app's normal database port.
+- It binds PostgreSQL on `localhost:55433`, not the app's normal database port.
 - It uses dedicated databases: `anu_falak_test` and `anu_falak_shadow`.
 - Safety guards block seed and integration commands unless the database target is clearly local and non-production.
 - Destructive verification commands also require `ALLOW_DB_RESET_FOR_TESTS=true`.
@@ -59,6 +59,8 @@ The integration suite explicitly verifies:
 - optimistic concurrency rejects stale node updates.
 - public callers cannot read restricted nodes.
 - federation links reject non-public cross-tenant targets.
+- transport patterns and calls enforce tenant and node-type integrity.
+- GTFS reimport is idempotent and source removals preserve curated graph edges.
 
 ## Why `migrate deploy` Is Used
 
@@ -87,7 +89,7 @@ The `.env.falak-local` template includes `SHADOW_DATABASE_URL` so any future sch
 - Prisma reports connection or migration errors.
   Confirm the container is healthy with `npm run falak:db:ps` and inspect logs with `npm run falak:db:logs`.
 
-- Port `5433` is already in use.
+- Port `55433` is already in use.
   Free that port or change only the local verification port values together in `docker-compose.falak-local.yml` and `.env.falak-local`.
 
 ## Safe Wipe And Recreate

@@ -1956,6 +1956,84 @@ def _normalize_link(raw: dict[str, Any], index: int) -> dict[str, Any] | None:
     }
 
 
+def replace_private_draft_links(node: PresenceNode, links: Any) -> list[PresenceLink]:
+    """Replace links only on a never-published private draft, after full validation."""
+    if (
+        node.status != "draft"
+        or node.visibility != "private"
+        or node.public_status == "public"
+        or node.published_at is not None
+        or node.archived_at is not None
+    ):
+        raise PresenceValidationError("Links can only be edited on a never-published private draft.")
+    if not isinstance(links, list):
+        raise PresenceValidationError("links must be an array.",
+                                      {"field_errors": [{"index": None, "field": None, "reason": "not_array"}]})
+    if len(links) > 50:
+        raise PresenceValidationError("A private draft can contain at most 50 links.",
+                                      {"field_errors": [{"index": None, "field": None, "reason": "too_many", "max": 50}]})
+
+    normalized_links = []
+    allowed_fields = {"id", "label", "url", "link_type", "icon", "is_visible"}
+    existing_by_id = {link.id: link for link in node.links}
+    retained_ids = set()
+    for index, raw in enumerate(links):
+        if not isinstance(raw, dict) or set(raw) - allowed_fields:
+            raise PresenceValidationError(f"links[{index}] has unsupported fields.",
+                                          {"field_errors": [{"index": index, "field": None, "reason": "unsupported_field"}]})
+        link_id = raw.get("id")
+        if link_id is not None:
+            if type(link_id) is not int or link_id not in existing_by_id or link_id in retained_ids:
+                raise PresenceValidationError(f"links[{index}].id is not an existing unique link.",
+                                              {"field_errors": [{"index": index, "field": "id", "reason": "invalid_id"}]})
+            retained_ids.add(link_id)
+        if not isinstance(raw.get("label"), str) or not isinstance(raw.get("url"), str):
+            field = "label" if not isinstance(raw.get("label"), str) else "url"
+            raise PresenceValidationError(f"links[{index}] requires a label and URL.",
+                                          {"field_errors": [{"index": index, "field": field, "reason": "required"}]})
+        for field, maximum in (("label", 120), ("url", 700), ("link_type", 80), ("icon", 80)):
+            if isinstance(raw.get(field), str) and len(raw[field].strip()) > maximum:
+                raise PresenceValidationError(f"links[{index}].{field} is too long.",
+                                              {"field_errors": [{"index": index, "field": field, "reason": "too_long", "max": maximum}]})
+        if "is_visible" in raw and type(raw["is_visible"]) is not bool:
+            raise PresenceValidationError(f"links[{index}].is_visible must be a boolean.",
+                                          {"field_errors": [{"index": index, "field": "is_visible", "reason": "not_boolean"}]})
+        for field in ("link_type", "icon"):
+            if field in raw and raw[field] is not None and not isinstance(raw[field], str):
+                raise PresenceValidationError(f"links[{index}].{field} must be text.",
+                                              {"field_errors": [{"index": index, "field": field, "reason": "not_text"}]})
+        try:
+            item = _normalize_link({**raw, "sort_order": index}, index)
+        except PresenceValidationError as exc:
+            raise PresenceValidationError(f"links[{index}].url must be a public http(s) URL.",
+                                          {"field_errors": [{"index": index, "field": "url", "reason": "unsafe_url"}]}) from exc
+        if not item:
+            field = "label" if not _clean_text(raw["label"]) else "url"
+            raise PresenceValidationError(f"links[{index}] requires a label and public http(s) URL.",
+                                          {"field_errors": [{"index": index, "field": field, "reason": "required" if not raw[field].strip() else "unsafe_url"}]})
+        normalized_links.append((link_id, item))
+
+    # Insert first, so even SQLite's rowid allocator cannot assign a deleted
+    # link's ID to a different link during this replacement.
+    for link_id, item in normalized_links:
+        if link_id is None:
+            db.session.add(PresenceLink(node_id=node.id, **item))
+        else:
+            for key, value in item.items():
+                setattr(existing_by_id[link_id], key, value)
+    db.session.flush()
+    for existing in list(node.links):
+        if existing.id not in retained_ids:
+            db.session.delete(existing)
+    node.links_revision += 1
+    db.session.flush()
+    return (
+        PresenceLink.query.filter_by(node_id=node.id)
+        .order_by(PresenceLink.sort_order.asc(), PresenceLink.id.asc())
+        .all()
+    )
+
+
 def _normalize_service(raw: dict[str, Any], index: int) -> dict[str, Any] | None:
     title = _clean_text(raw.get("title"), max_length=160)
     if not title:
@@ -2317,6 +2395,8 @@ def create_presence_node(data: dict[str, Any], *, actor: User | None) -> Presenc
         payload["tenant_id"] = actor.node_id
 
     node = PresenceNode(**payload)
+    if node.public_status == "public" or node.status == "published":
+        node.published_at = now_utc()
     db.session.add(node)
     db.session.flush()
     sync_presence_children(node, data)
@@ -2325,12 +2405,21 @@ def create_presence_node(data: dict[str, Any], *, actor: User | None) -> Presenc
 
 
 def update_presence_node(node: PresenceNode, data: dict[str, Any]) -> PresenceNode:
+    # All publication state changes must use the explicit publish/transition
+    # operations. Lock before checking so generic writes cannot race link saves.
+    db.session.refresh(node, with_for_update=True)
     payload = validate_node_payload(data, partial=True)
+    if ("public_status" in data and data["public_status"] == "public") or payload.get("status") == "published":
+        raise PresenceValidationError("Use the explicit publish action to make a Presence public.")
+    if node.public_status == "public" and node.published_at is None:
+        node.published_at = now_utc()
     if "slug" in payload:
         payload["slug"] = ensure_unique_presence_slug(payload["slug"], current_node_id=node.id)
     for key, value in payload.items():
         setattr(node, key, value)
     sync_presence_children(node, data)
+    if "links" in data:
+        node.links_revision += 1
     db.session.flush()
     return node
 
@@ -2784,8 +2873,10 @@ def update_presence_handover(item: PresenceWorkHandover, data: dict[str, Any]) -
 
 
 def publish_presence_node(node: PresenceNode) -> PresenceNode:
+    requested_visibility = node.visibility
+    db.session.refresh(node, with_for_update=True)
     node.status = "published"
-    node.visibility = node.visibility or "public"
+    node.visibility = requested_visibility or "public"
     if node.visibility in PRESENCE_PUBLIC_VISIBILITIES:
         node.public_status = "public"
     node.published_at = now_utc()
@@ -2797,6 +2888,9 @@ def publish_presence_node(node: PresenceNode) -> PresenceNode:
 def transition_presence_node(node: PresenceNode, status: str) -> PresenceNode:
     if status not in {"unpublished", "suspended", "archived"}:
         raise PresenceValidationError("Unsupported transition.")
+    db.session.refresh(node, with_for_update=True)
+    if (node.status == "published" or node.public_status == "public") and node.published_at is None:
+        node.published_at = now_utc()
     node.status = status
     if status == "archived":
         node.archived_at = now_utc()
