@@ -99,7 +99,7 @@ function canAccessNode(context: RequestContext, node: NodeRecord): boolean {
   }
 
   if (context.plane === 'public' || !context.actor) {
-    return node.visibility === 'public';
+    return node.status === 'active' && node.visibility === 'public' && node.sensitivityClass === 'normal';
   }
 
   if (node.visibility === 'restricted') {
