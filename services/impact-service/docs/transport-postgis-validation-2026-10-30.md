@@ -18,4 +18,4 @@ The importer dry run produced 379 stations, 94 lines and 730 patterns with zero 
 
 ## Limits and next gate
 
-This is a historical sample and proves parser, persistence and idempotency behavior for that bundle; it does not prove present-day Sydney network accuracy or the right to republish a current feed. No discovery endpoint, Presence manifest, publish behavior or public claim was built. Those remain separate scoped work after review of this evidence. The disposable cluster can be removed with `pg_dropcluster --stop 16 presence_v5` after review; this command targets only that named validation cluster.
+This is a historical sample and proves parser, persistence and idempotency behavior for that bundle; it does not prove present-day Sydney network accuracy or the right to republish a current feed. No discovery endpoint, Presence manifest, publish behavior or public claim was built. Those remain separate scoped work after review of this evidence. The disposable `presence_v5` cluster was removed with `pg_dropcluster --stop 16 presence_v5` after verification; PostgreSQL/PostGIS packages remain installed in Ubuntu WSL.
