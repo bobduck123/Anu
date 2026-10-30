@@ -9,4 +9,9 @@ assertSafeLocalDatabaseTarget('Falak local integration tests', ['DATABASE_URL', 
   requireResetPermission: true
 });
 
-runCommand('npx', ['jest', '--runInBand', 'tests/falak/falakDatabase.integration.test.ts']);
+runCommand('npx', [
+  'jest', '--runInBand',
+  'tests/falak/falakDatabase.integration.test.ts',
+  'tests/falak/transportTopology.database.test.ts',
+  'tests/falak/transportImport.database.test.ts'
+]);
